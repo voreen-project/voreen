@@ -49,7 +49,7 @@ GradientFilter::GradientFilter(GradientType gradientType, const tgt::vec3& spaci
     }
 }
 
-ParallelFilterValue3D GradientFilter::getValue(const Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue3D GradientFilter::getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     return gradientFunction_(sample, pos);
 }
 

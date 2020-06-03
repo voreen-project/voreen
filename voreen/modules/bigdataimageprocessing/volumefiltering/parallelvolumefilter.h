@@ -65,7 +65,7 @@ public:
     int zExtent() const;
 
     typedef std::function<InputType(const tgt::ivec3& pos)> Sample;
-    virtual OutputType getValue(const Sample& sample, const tgt::ivec3& pos) const = 0;
+    virtual OutputType getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const = 0;
 
     size_t getNumInputChannels() const;
     size_t getNumOutputChannels() const;
@@ -113,10 +113,13 @@ std::unique_ptr<VolumeRAM> ParallelVolumeFilter<InputType, OutputType>::getFilte
         return samplingStrategy_.sample(pos, srcDim, getValueFromReader);
     };
 
+    const auto& inputMetadata = src->getMetaData();
+    const auto& outputMetaData = getMetaData(inputMetadata);
+
     #pragma omp parallel for
     for(int y = 0; y < srcDim.y; ++y) {
         for(int x = 0; x < srcDim.x; ++x) {
-            OutputType val = getValue(sample, tgt::ivec3(x, y, z));
+            OutputType val = getValue(sample, tgt::ivec3(x, y, z), inputMetadata, outputMetaData);
             for(size_t d=0; d < OutputType::dim; ++d) {
                 slice->setVoxelNormalized(val[d], tgt::svec3(x,y,0), d);
             }

@@ -34,7 +34,7 @@ class MedianFilter : public ParallelVolumeFilter<ParallelFilterValue1D, Parallel
 public:
     MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string& sliceBaseType);
     virtual ~MedianFilter();
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
 private:
     tgt::ivec3 extent_;
 };
@@ -44,7 +44,7 @@ class MedianFilterVector : public ParallelVolumeFilter<ParallelFilterValue<T>, P
 public:
     MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy, const std::string& sliceBaseType);
     virtual ~MedianFilterVector();
-    ParallelFilterValue<T> getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos) const;
+    ParallelFilterValue<T> getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
 private:
     tgt::ivec3 extent_;
 };
@@ -61,7 +61,7 @@ MedianFilterVector<T>::~MedianFilterVector() {
 }
 
 template<typename T>
-ParallelFilterValue<T> MedianFilterVector<T>::getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue<T> MedianFilterVector<T>::getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     std::vector<T> values;
     values.reserve(tgt::hmul(extent_));
 

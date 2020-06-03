@@ -40,6 +40,7 @@
 #include "../volumefiltering/medianfilter.h"
 #include "../volumefiltering/morphologyfilter.h"
 #include "../volumefiltering/resamplefilter.h"
+#include "../volumefiltering/rescalefilter.h"
 #include "../volumefiltering/thresholdingfilter.h"
 #include "../volumefiltering/vorticityfilter.h"
 
@@ -51,6 +52,7 @@
 #include "../volumefilterproperties/medianfilterproperties.h"
 #include "../volumefilterproperties/morphologyfilterproperties.h"
 #include "../volumefilterproperties/resamplefilterproperties.h"
+#include "../volumefilterproperties/rescalefilterproperties.h"
 #include "../volumefilterproperties/thresholdingfilterproperties.h"
 #include "../volumefilterproperties/vorticityfilterproperties.h"
 
@@ -89,6 +91,7 @@ VolumeFilterList::VolumeFilterList()
     addFilter(new MedianFilterProperties());
     addFilter(new MorphologyFilterProperties());
     addFilter(new ResampleFilterProperties());
+    addFilter(new RescaleFilterProperties());
     addFilter(new ThresholdingFilterProperties());
     addFilter(new VorticityFilterProperties());
 

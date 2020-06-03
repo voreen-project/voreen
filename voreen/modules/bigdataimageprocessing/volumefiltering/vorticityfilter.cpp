@@ -38,7 +38,7 @@ VorticityFilter::VorticityFilter(GradientType gradientType, const tgt::vec3& spa
 {
 }
 
-ParallelFilterValue3D VorticityFilter::getValue(const Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue3D VorticityFilter::getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetaData, const SliceReaderMetaData& outputMetaData) const {
 
     // Calculate gradient for each, x, y and z.
     // TODO: this will sample the same position multiple times which could be improved
@@ -53,9 +53,9 @@ ParallelFilterValue3D VorticityFilter::getValue(const Sample& sample, const tgt:
         return ParallelFilterValue1D(sample(pos)[2]);
     };
 
-    tgt::vec3 gradientX = gradientX_.getValue(sampleX, pos).val_;
-    tgt::vec3 gradientY = gradientY_.getValue(sampleY, pos).val_;
-    tgt::vec3 gradientZ = gradientZ_.getValue(sampleZ, pos).val_;
+    tgt::vec3 gradientX = gradientX_.getValue(sampleX, pos, inputMetaData, outputMetaData).val_;
+    tgt::vec3 gradientY = gradientY_.getValue(sampleY, pos, inputMetaData, outputMetaData).val_;
+    tgt::vec3 gradientZ = gradientZ_.getValue(sampleZ, pos, inputMetaData, outputMetaData).val_;
 
     // Calculate vorticity from all gradients.
     tgt::vec3 vorticity;

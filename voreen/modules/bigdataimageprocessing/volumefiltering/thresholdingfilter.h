@@ -44,7 +44,7 @@ public:
     ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType,  const std::string& sliceBaseType);
     virtual ~ThresholdingFilter();
 
-    ParallelFilterValue<T> getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos) const;
+    ParallelFilterValue<T> getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
 
     ThresholdingStrategyType getThresholdingStrategyType() const;
 
@@ -94,7 +94,7 @@ static inline float getAbsoluteMagnitudeInternal(const T& value, typename std::e
 }
 
 template<typename T>
-ParallelFilterValue<T> ThresholdingFilter<T>::getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue<T> ThresholdingFilter<T>::getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
 
     T sampleValue = sample(pos);
     float value = getAbsoluteMagnitudeInternal<T>(sampleValue);

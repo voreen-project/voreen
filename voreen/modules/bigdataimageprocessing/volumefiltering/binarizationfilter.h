@@ -35,8 +35,9 @@ public:
 
     BinarizationFilter(float threshold);
     virtual ~BinarizationFilter();
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
 
 private:
 

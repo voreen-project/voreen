@@ -36,7 +36,7 @@ MedianFilter::MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<Para
 MedianFilter::~MedianFilter() {
 }
 
-ParallelFilterValue1D MedianFilter::getValue(const Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue1D MedianFilter::getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     std::vector<float> values;
     values.reserve(tgt::hmul(extent_));
 

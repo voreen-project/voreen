@@ -113,6 +113,9 @@ std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
 bool SliceReaderMetaData::isAccurate() const {
     return isAccurate_;
 }
+size_t SliceReaderMetaData::getNumChannels() const {
+    return minmax_.size();
+}
 
 // SliceReader -----------------------------------------------------------------------
 

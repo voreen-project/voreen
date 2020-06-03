@@ -162,7 +162,7 @@ public:
     VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy, const std::string sliceBaseType);
     virtual ~VesselnessFinalizer();
 
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
 
 private:
     tgt::ivec3 extent_;
@@ -711,7 +711,7 @@ VesselnessFinalizer::VesselnessFinalizer(const tgt::ivec3& extent, const Samplin
 VesselnessFinalizer::~VesselnessFinalizer() {
 }
 
-ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     int extent = zExtent();
 
     tgt::vec4 thisVal = sample(pos);

@@ -23,40 +23,47 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_GRADIENTFILTER_H
-#define VRN_GRADIENTFILTER_H
+#ifndef VRN_RESCALEFILTERPROPERTIES_H
+#define VRN_RESCALEFILTERPROPERTIES_H
 
-#include "parallelvolumefilter.h"
+#include "filterproperties.h"
+
+#include "../volumefiltering/rescalefilter.h"
 
 namespace voreen {
 
-enum GradientType{
-    VOG_CENTRAL_DIFFERENCE = 0,
-    VOG_LINEAR_REGRESSION = 1,
-    VOG_SOBEL = 2,
-};
-
-class GradientFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue3D> {
+class RescaleFilterProperties : public FilterProperties {
 public:
-    GradientFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string& sliceBaseType);
-    virtual ~GradientFilter() {}
+    RescaleFilterProperties();
 
-    ParallelFilterValue3D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
+    virtual std::string getVolumeFilterName() const;
 
-    GradientType getGradientType() const;
+    virtual void adjustPropertiesToInput(const VolumeBase& input);
+
+    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const;
+    virtual void restoreInstance(int instanceId);
+    virtual void storeInstance(int instanceId);
+    virtual void removeInstance(int instanceId);
+    virtual void addProperties();
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+    virtual std::vector<int> getStoredInstances() const;
 
 private:
 
-    ParallelFilterValue3D calcGradientCentralDifferences(const Sample& sample, const tgt::ivec3& pos);
-    ParallelFilterValue3D calcGradientLinearRegression(const Sample& sample, const tgt::ivec3& pos);
-    ParallelFilterValue3D calcGradientSobel(const Sample& sample, const tgt::ivec3& pos);
+    struct Settings : public Serializable {
+        float thresholdValue_;
+        float replacementValue_;
+        RescaleStrategyType rescaleStrategyType_;
 
-    std::function<ParallelFilterValue3D(const Sample&, const tgt::ivec3&)> gradientFunction_;
+        virtual void serialize(Serializer& s) const;
+        virtual void deserialize(Deserializer& s);
+    };
+    std::map<int, Settings> instanceSettings_;
 
-    const GradientType gradientType_;
-    const tgt::vec3 spacing_;
+    OptionProperty<RescaleStrategyType> rescaleStrategyType_;
 };
 
-} // namespace voreen
+}
 
 #endif

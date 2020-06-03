@@ -58,6 +58,7 @@ public:
     const RealWorldMapping& getRealworldMapping() const;
     std::unique_ptr<VolumeMinMax> getVolumeMinMax() const;
     bool isAccurate() const;
+    size_t getNumChannels() const;
 
 private:
     RealWorldMapping rwm_;

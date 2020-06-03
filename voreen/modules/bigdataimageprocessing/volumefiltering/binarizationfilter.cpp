@@ -38,8 +38,12 @@ BinarizationFilter::BinarizationFilter(float threshold)
 BinarizationFilter::~BinarizationFilter() {
 }
 
-ParallelFilterValue1D BinarizationFilter::getValue(const Sample& sample, const tgt::ivec3& pos) const {
+ParallelFilterValue1D BinarizationFilter::getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     return sample(pos) < threshold_ ? 0.0f : 1.0f;
+}
+
+SliceReaderMetaData BinarizationFilter::getMetaData(const SliceReaderMetaData& base) const {
+    return SliceReaderMetaData(RealWorldMapping(tgt::vec2(0.0, 1.0), ""));
 }
 
 } // namespace voreen

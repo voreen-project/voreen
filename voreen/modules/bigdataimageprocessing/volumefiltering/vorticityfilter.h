@@ -36,7 +36,7 @@ public:
     VorticityFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue3D>& samplingStrategy, const std::string& sliceBaseType);
     virtual ~VorticityFilter() {}
 
-    ParallelFilterValue3D getValue(const Sample& sample, const tgt::ivec3& pos) const;
+    ParallelFilterValue3D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetaData, const SliceReaderMetaData& outputMetaData) const;
 
     GradientType getGradientType() const;
 

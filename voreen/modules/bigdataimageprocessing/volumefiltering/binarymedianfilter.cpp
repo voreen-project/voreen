@@ -160,10 +160,12 @@ const std::string& BinaryMedianFilter::getSliceBaseType() const {
     return SLICE_BASE_TYPE;
 }
 
-
 bool BinaryMedianFilter::isObjectValue(float input) const {
     return input > binarizationThreshold_;
 }
 
+SliceReaderMetaData BinaryMedianFilter::getMetaData(const SliceReaderMetaData& base) const {
+    return SliceReaderMetaData(RealWorldMapping(tgt::vec2(0.0, 1.0), ""));
+}
 
 } // namespace voreen
