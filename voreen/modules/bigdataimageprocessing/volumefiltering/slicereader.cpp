@@ -55,7 +55,7 @@ SliceReaderMetaData SliceReaderMetaData::fromHDF5Volume(const HDF5FileVolume& vo
     SliceReaderMetaData srmm(rwm);
 
     bool accurate = true;
-    for(int c=0; c< volume.getNumberOfChannels(); ++c) {
+    for(int c=0; c<volume.getNumberOfChannels(); ++c) {
         std::unique_ptr<VolumeMinMax> vmm(volume.tryReadVolumeMinMax(c));
         if (vmm) {
             srmm.setMinMax(vmm->getMin(0), vmm->getMax(0), c);

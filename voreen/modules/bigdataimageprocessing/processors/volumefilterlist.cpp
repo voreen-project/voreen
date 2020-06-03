@@ -230,8 +230,13 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
 
     outputVolume->writeSpacing(inputVolume.getSpacing() * scale);
     outputVolume->writeOffset(inputVolume.getOffset() + additionalOffset * inputVolume.getSpacing());
-    outputVolume->writeRealWorldMapping(inputVolume.getRealWorldMapping());
     outputVolume->writePhysicalToWorldTransformation(inputVolume.getPhysicalToWorldMatrix());
+
+    const auto& srmd = sliceReader->getMetaData();
+    if(srmd.isAccurate()) {
+        outputVolume->writeVolumeMinMax(srmd.getVolumeMinMax().get());
+    }
+    outputVolume->writeRealWorldMapping(srmd.getRealworldMapping());
 
     return VolumeFilterListInput(
             std::move(sliceReader),
