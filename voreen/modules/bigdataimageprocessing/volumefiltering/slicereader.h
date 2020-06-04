@@ -40,7 +40,10 @@ namespace voreen {
 
 class SliceReaderMetaData {
 public:
+    // Does _not_ copy min/max values, since most of the time they are not valid for a filter/reader on top
     static SliceReaderMetaData fromBase(const SliceReaderMetaData& base);
+    // Copies min/max values if available. Use only when you are sure that the previous min/max values are accurate!
+    static SliceReaderMetaData fromBaseAccurate(const SliceReaderMetaData& base);
     static SliceReaderMetaData fromVolume(const VolumeBase& vol);
     static SliceReaderMetaData fromHDF5Volume(const HDF5FileVolume& volume);
 
@@ -50,20 +53,17 @@ public:
     SliceReaderMetaData(const SliceReaderMetaData&) = delete;
     SliceReaderMetaData(SliceReaderMetaData&&) = default;
 
-    void markAccurate();
+    void setMinMax(std::vector<tgt::vec2> minmax);
+    void setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm);
 
-    void setMinMax(float min, float max, size_t channel=0);
-    void setMinMaxNormalized(float minNorm, float maxNorm, size_t channel=0);
-
-    const RealWorldMapping& getRealworldMapping() const;
+    // Result may be null (no valid min/max data available)
     std::unique_ptr<VolumeMinMax> getVolumeMinMax() const;
-    bool isAccurate() const;
-    size_t getNumChannels() const;
+    const boost::optional<std::vector<tgt::vec2>>& getMinMax() const;
+    const RealWorldMapping& getRealworldMapping() const;
 
 private:
     RealWorldMapping rwm_;
-    std::vector<tgt::vec2> minmax_;
-    bool isAccurate_;
+    boost::optional<std::vector<tgt::vec2>> minmax_;
 };
 
 class SliceReader {

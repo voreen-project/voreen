@@ -236,8 +236,9 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     outputVolume->writePhysicalToWorldTransformation(inputVolume.getPhysicalToWorldMatrix());
 
     const auto& srmd = sliceReader->getMetaData();
-    if(srmd.isAccurate()) {
-        outputVolume->writeVolumeMinMax(srmd.getVolumeMinMax().get());
+    auto vmm = srmd.getVolumeMinMax();
+    if(vmm) {
+        outputVolume->writeVolumeMinMax(vmm.get());
     }
     outputVolume->writeRealWorldMapping(srmd.getRealworldMapping());
 

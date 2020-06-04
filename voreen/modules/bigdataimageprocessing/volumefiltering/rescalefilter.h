@@ -107,18 +107,33 @@ static inline T rescaleInternal(const T& value, RescaleStrategyType strategy) {
 template<typename T>
 ParallelFilterValue<T> RescaleFilter<T>::getValue(const typename RescaleFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     T inputNorm = sample(pos);
-    T inputRW = mapT(inputNorm, [&] (T i) { return inputMetadata.getRealworldMapping().normalizedToRealWorld(i);});
+    T inputRW = mapT(inputNorm, [&] (float i) { return inputMetadata.getRealworldMapping().normalizedToRealWorld(i);});
     T outputRW  = rescaleInternal(inputRW, strategy_);
-    T outputNorm = mapT(inputNorm, [&] (T i) { return outputMetaData.getRealworldMapping().realWorldToNormalized(i);});
+    T outputNorm = mapT(outputRW, [&] (float i) { return outputMetaData.getRealworldMapping().realWorldToNormalized(i);});
     return outputNorm;
 }
 
 template<typename T>
 SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& base) const {
     const auto& baseRwm = base.getRealworldMapping();
-    float min = rescaleInternal(baseRwm.getOffset(), strategy_);
-    float max = rescaleInternal(baseRwm.getOffset() + baseRwm.getScale(), strategy_);
+    float min, max;
+    // If we have accurate min/max information, we can construct a tight range for the RWM,
+    // otherwise we need to use the lower/upper bounds available via the RWM (since other values
+    // are not representable in the volume anyways).
+    if(base.getMinMax()) {
+        min = rescaleInternal(base.getMinMax()->at(0).x, strategy_);
+        max = rescaleInternal(base.getMinMax()->at(0).y, strategy_);
+
+        for(int c=1; c<base.getMinMax()->size(); ++c) {
+            min = std::min(min, rescaleInternal(base.getMinMax()->at(c).x, strategy_));
+            max = std::max(max, rescaleInternal(base.getMinMax()->at(c).y, strategy_));
+        }
+    } else {
+        min = rescaleInternal(baseRwm.getOffset(), strategy_);
+        max = rescaleInternal(baseRwm.getOffset() + baseRwm.getScale(), strategy_);
+    }
     SliceReaderMetaData md = [&] () {
+        auto baseUnit = baseRwm.getUnit().empty() ? "x" : baseRwm.getUnit();
         switch (strategy_) {
             case RESCALE_LOGARITHMIC_T:
                 return SliceReaderMetaData(RealWorldMapping(
@@ -132,15 +147,15 @@ SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& bas
                 tgtAssert(false, "Invalid strategy");
         }
     } ();
-    if(base.isAccurate()) {
-        auto vmm = base.getVolumeMinMax();
-        for(int c=0; c<base.getNumChannels(); ++c) {
-            md.setMinMax(
-                    rescaleInternal(vmm->getMin(c), strategy_),
-                    rescaleInternal(vmm->getMax(c), strategy_),
-                    c);
+    // If we have accurate min/max information from the base, we can also supply those ourselves.
+    if(base.getMinMax()) {
+        std::vector<tgt::vec2> minmax;
+        for(auto& mm : *base.getMinMax()) {
+            minmax.emplace_back(
+                    rescaleInternal(mm.x, strategy_),
+                    rescaleInternal(mm.y, strategy_));
         }
-        md.markAccurate();
+        md.setMinMax(minmax);
     }
     return md;
 }

@@ -29,20 +29,28 @@ namespace voreen {
 
 // SliceReaderMetaData ---------------------------------------------------------------
 SliceReaderMetaData SliceReaderMetaData::fromBase(const SliceReaderMetaData& base) {
-    SliceReaderMetaData srmm(base.rwm_);
-    srmm.minmax_ = base.minmax_;
-    srmm.isAccurate_ = false;
-    return srmm;
+    SliceReaderMetaData srmd(base.rwm_);
+    return srmd;
+}
+SliceReaderMetaData SliceReaderMetaData::fromBaseAccurate(const SliceReaderMetaData& base) {
+    SliceReaderMetaData srmd(base.rwm_);
+    const auto& mm = base.getMinMax();
+    if(mm) {
+        srmd.setMinMax(*mm);
+    }
+    return srmd;
 }
 
 SliceReaderMetaData SliceReaderMetaData::fromVolume(const VolumeBase& vol) {
-    SliceReaderMetaData srmm(vol.getRealWorldMapping());
+    SliceReaderMetaData srmd(vol.getRealWorldMapping());
     const auto vmm = vol.getDerivedData<VolumeMinMax>();
+
+    std::vector<tgt::vec2> minmax;
     for(int c=0; c<vol.getNumChannels(); ++c) {
-        srmm.setMinMax(vmm->getMin(c), vmm->getMax(c));
+        minmax.emplace_back(vmm->getMin(c), vmm->getMax(c));
     }
-    srmm.isAccurate_ = true;
-    return srmm;
+    srmd.setMinMax(minmax);
+    return srmd;
 }
 
 SliceReaderMetaData SliceReaderMetaData::fromHDF5Volume(const HDF5FileVolume& volume) {
@@ -52,44 +60,39 @@ SliceReaderMetaData SliceReaderMetaData::fromHDF5Volume(const HDF5FileVolume& vo
     if(rwmPtr) {
         rwm = *rwmPtr;
     }
-    SliceReaderMetaData srmm(rwm);
+    SliceReaderMetaData srmd(rwm);
 
-    bool accurate = true;
+    std::vector<tgt::vec2> minmax;
     for(int c=0; c<volume.getNumberOfChannels(); ++c) {
         std::unique_ptr<VolumeMinMax> vmm(volume.tryReadVolumeMinMax(c));
         if (vmm) {
-            srmm.setMinMax(vmm->getMin(0), vmm->getMax(0), c);
+            minmax.emplace_back(vmm->getMin(0), vmm->getMax(0));
         } else {
-            accurate = false;
+            return srmd;
         }
     }
-    srmm.isAccurate_ = accurate;
-    return srmm;
+    srmd.setMinMax(minmax);
+    return srmd;
 }
 
 SliceReaderMetaData::SliceReaderMetaData(RealWorldMapping rwm, size_t numChannels)
-    : minmax_()
-    , rwm_(rwm)
-    , isAccurate_(false)
+    : rwm_(rwm)
+    , minmax_(boost::none)
 {
-    tgtAssert(numChannels > 0, "Need at least one channel");
-    for(int c=0; c<numChannels; ++c) {
-        minmax_.emplace_back(std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+}
+
+void SliceReaderMetaData::setMinMax(std::vector<tgt::vec2> minmax) {
+    minmax_ = minmax;
+}
+
+void SliceReaderMetaData::setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm) {
+    minmax_ = std::vector<tgt::vec2>();
+    for(auto& mm : minmaxNorm) {
+        minmax_->emplace_back(
+                rwm_.normalizedToRealWorld(mm.x),
+                rwm_.normalizedToRealWorld(mm.y)
+                );
     }
-}
-
-void SliceReaderMetaData::markAccurate() {
-    isAccurate_ = true;
-}
-
-void SliceReaderMetaData::setMinMax(float min, float max, size_t channel) {
-    minmax_.at(channel).x = min;
-    minmax_.at(channel).y = max;
-}
-
-void SliceReaderMetaData::setMinMaxNormalized(float minNorm, float maxNorm, size_t channel) {
-    minmax_.at(channel).x = rwm_.normalizedToRealWorld(minNorm);
-    minmax_.at(channel).y = rwm_.normalizedToRealWorld(maxNorm);
 }
 
 const RealWorldMapping& SliceReaderMetaData::getRealworldMapping() const {
@@ -97,11 +100,14 @@ const RealWorldMapping& SliceReaderMetaData::getRealworldMapping() const {
 }
 
 std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
+    if(!minmax_) {
+        return std::unique_ptr<VolumeMinMax>(nullptr);
+    }
     std::vector<float> min;
     std::vector<float> max;
     std::vector<float> minNorm;
     std::vector<float> maxNorm;
-    for(auto mm : minmax_) {
+    for(auto mm : *minmax_) {
         min.push_back(mm.x);
         max.push_back(mm.y);
         minNorm.push_back(rwm_.realWorldToNormalized(mm.x));
@@ -110,11 +116,8 @@ std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
     return std::unique_ptr<VolumeMinMax>(new VolumeMinMax(min, max, minNorm, maxNorm));
 }
 
-bool SliceReaderMetaData::isAccurate() const {
-    return isAccurate_;
-}
-size_t SliceReaderMetaData::getNumChannels() const {
-    return minmax_.size();
+const boost::optional<std::vector<tgt::vec2>>& SliceReaderMetaData::getMinMax() const {
+    return minmax_;
 }
 
 // SliceReader -----------------------------------------------------------------------
@@ -138,14 +141,7 @@ const SliceReaderMetaData& SliceReader::getMetaData() const {
 // CachingSliceReader --------------------------------------------------------------------------
 
 CachingSliceReader::CachingSliceReader(std::unique_ptr<SliceReader>&& base, int neighborhoodSize)
-    : SliceReader(tgt::ivec3(base->getDimensions()), [&] () {
-            const auto& basemd = base->getMetaData();
-            auto srmm = SliceReaderMetaData::fromBase(basemd);
-            if(basemd.isAccurate()) {
-                srmm.markAccurate();
-            }
-            return srmm;
-        }())
+    : SliceReader(tgt::ivec3(base->getDimensions()), SliceReaderMetaData::fromBaseAccurate(base->getMetaData()))
     , base_(std::move(base))
     , slices_(2*neighborhoodSize+1, nullptr)
     , neighborhoodSize_(neighborhoodSize)
