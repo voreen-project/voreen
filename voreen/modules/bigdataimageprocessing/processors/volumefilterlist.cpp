@@ -277,29 +277,30 @@ void VolumeFilterList::adjustPropertiesToInput() {
 
     SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(*input);
 
-    // Adjust filter properties from top to bottom (i.e., first the filter that
-    // is actually applied to the volume first, then the second, etc.). In the
-    // process, we update `metadata` to always reflect the input of the current
-    // filter.
-    for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
+    // Here we only adjust the properties which match the currently selected instance.
+    // This if fine since the properties of other instances are not visible anyway.
+    if(selectedInstance_) {
+        for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
 
-        filterProperties_[instance.getItemId()]->adjustPropertiesToInput(metadata);
+            if(selectedInstance_->getInstanceId() == instance.getInstanceId()) {
+                filterProperties_[instance.getItemId()]->adjustPropertiesToInput(metadata);
+                break;
+            }
 
-        if(!instance.isActive()) {
-            LINFO("Filter: '" << instance.getName() << "' is not active. Skipping.");
-            continue;
+            if(!instance.isActive()) {
+                continue;
+            }
+
+            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
+
+            if(!filter) {
+                filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
+            }
+
+            tgtAssert(filter, "filter was null");
+
+            metadata = filter->getMetaData(metadata);
         }
-
-        VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
-
-        if(!filter) {
-            LWARNING("Filter: '" << instance.getName() << "' has not been configured yet. Taking default.");
-            filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
-        }
-
-        tgtAssert(filter, "filter was null");
-
-        metadata = filter->getMetaData(metadata);
     }
 }
 
