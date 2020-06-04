@@ -1049,7 +1049,7 @@ inline T VolumeElement<tgt::Matrix4<T> >::getChannel(const tgt::Matrix4<T>& t, s
 
 template<class T>
 inline void VolumeElement<tgt::Matrix4<T> >::setChannel(T value, tgt::Matrix4<T>& t, size_t channel) {
-    tgtAssert(channel < 9, "channel must be less than 16");
+    tgtAssert(channel < 16, "channel must be less than 16");
     t.elem[channel] = value;
 }
 

@@ -84,10 +84,6 @@ void VolumeChannelMerger::process() {
 
     volumeOutport_.clear();
 
-    if ((!volumeInport_.getData() && !volumeInport2_.getData() && !volumeInport3_.getData() && !volumeInport4_.getData()) || !refreshNecessary_) {
-        return;
-    }
-
     //get the available volumes in input order and push into vector
     std::vector<const VolumeBase*> volumes;
 
@@ -102,6 +98,10 @@ void VolumeChannelMerger::process() {
 
     if (volumeInport4_.getData())
         volumes.push_back(volumeInport4_.getData());
+
+    if(volumes.empty()) {
+        return;
+    }
 
     if (volumes.size() == 1) {
         //only one volume: just pass it through without further tests
@@ -184,24 +184,28 @@ Volume* VolumeChannelMerger::mergeVolumes(std::vector<const VolumeBase*> volumes
     VolumeRAM* mergedData = nullptr;
 
     //create volume fusion
-    if (volumes.at(0)->getFormat() == "uint8")
+    if (format == "uint8")
         mergedData = mergeVolumeRepresentations<uint8_t>(volumes);
-    else if (volumes.at(0)->getFormat() == "int8")
+    else if (format == "int8")
         mergedData = mergeVolumeRepresentations<int8_t>(volumes);
-    else if (volumes.at(0)->getFormat() == "uint16")
+    else if (format == "uint16")
         mergedData = mergeVolumeRepresentations<uint16_t>(volumes);
-    else if (volumes.at(0)->getFormat() == "int16")
+    else if (format == "int16")
         mergedData = mergeVolumeRepresentations<int16_t>(volumes);
-    else if (volumes.at(0)->getFormat() == "uint32")
+    else if (format == "uint32")
         mergedData = mergeVolumeRepresentations<uint32_t>(volumes);
-    else if (volumes.at(0)->getFormat() == "int32")
+    else if (format == "int32")
         mergedData = mergeVolumeRepresentations<int32_t>(volumes);
-    else if (volumes.at(0)->getFormat() == "float")
+    else if (format == "float")
         mergedData = mergeVolumeRepresentations<float>(volumes);
-    else if (volumes.at(0)->getFormat() == "double")
+    else if (format == "double")
         mergedData = mergeVolumeRepresentations<double>(volumes);
     else {
         LERROR("Format currently not supported: " << format);
+        return nullptr;
+    }
+
+    if(!mergedData) {
         return nullptr;
     }
 
