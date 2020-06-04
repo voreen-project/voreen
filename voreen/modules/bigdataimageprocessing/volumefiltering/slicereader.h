@@ -56,6 +56,11 @@ public:
     void setMinMax(std::vector<tgt::vec2> minmax);
     void setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm);
 
+    // Have a best guess for valid min/max values. If available, all actual
+    // min/max channels are considered. Otherwise the RWM will be used as a
+    // fallback.
+    tgt::vec2 estimateMinMax() const;
+
     // Result may be null (no valid min/max data available)
     std::unique_ptr<VolumeMinMax> getVolumeMinMax() const;
     const boost::optional<std::vector<tgt::vec2>>& getMinMax() const;

@@ -116,22 +116,9 @@ ParallelFilterValue<T> RescaleFilter<T>::getValue(const typename RescaleFilter<T
 template<typename T>
 SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& base) const {
     const auto& baseRwm = base.getRealworldMapping();
-    float min, max;
-    // If we have accurate min/max information, we can construct a tight range for the RWM,
-    // otherwise we need to use the lower/upper bounds available via the RWM (since other values
-    // are not representable in the volume anyways).
-    if(base.getMinMax()) {
-        min = rescaleInternal(base.getMinMax()->at(0).x, strategy_);
-        max = rescaleInternal(base.getMinMax()->at(0).y, strategy_);
 
-        for(int c=1; c<base.getMinMax()->size(); ++c) {
-            min = std::min(min, rescaleInternal(base.getMinMax()->at(c).x, strategy_));
-            max = std::max(max, rescaleInternal(base.getMinMax()->at(c).y, strategy_));
-        }
-    } else {
-        min = rescaleInternal(baseRwm.getOffset(), strategy_);
-        max = rescaleInternal(baseRwm.getOffset() + baseRwm.getScale(), strategy_);
-    }
+    tgt::vec2 minmax = base.estimateMinMax();
+
     SliceReaderMetaData md = [&] () {
         auto baseUnit = baseRwm.getUnit().empty() ? "x" : baseRwm.getUnit();
         switch (strategy_) {

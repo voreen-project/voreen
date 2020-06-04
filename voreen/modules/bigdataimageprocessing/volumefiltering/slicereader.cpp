@@ -99,6 +99,23 @@ const RealWorldMapping& SliceReaderMetaData::getRealworldMapping() const {
     return rwm_;
 }
 
+tgt::vec2 SliceReaderMetaData::estimateMinMax() const {
+    float min, max;
+    if(minmax_) {
+        min = minmax_->at(0).x;
+        max = minmax_->at(0).y;
+
+        for(int c=1; c<minmax_->size(); ++c) {
+            min = std::min(min, minmax_->at(c).x);
+            max = std::max(max, minmax_->at(c).x);
+        }
+    } else {
+        min = getRealworldMapping().getOffset();
+        max = getRealworldMapping().getScale() + min;
+    }
+    return tgt::vec2(min,max);
+}
+
 std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
     if(!minmax_) {
         return std::unique_ptr<VolumeMinMax>(nullptr);
