@@ -137,12 +137,12 @@ SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& bas
         switch (strategy_) {
             case RESCALE_LOGARITHMIC_T:
                 return SliceReaderMetaData(RealWorldMapping(
-                            tgt::vec2(min, max),
-                            "log(" + baseRwm.getUnit() + ")"));
+                            minmax,
+                            "log(" + baseUnit + ")"));
             case RESCALE_EXPONENTIAL_T:
                 return SliceReaderMetaData(RealWorldMapping(
-                            tgt::vec2(min, max),
-                            "exp(" + baseRwm.getUnit() + ")"));
+                            minmax,
+                            "exp(" + baseUnit + ")"));
             default:
                 tgtAssert(false, "Invalid strategy");
         }
