@@ -178,7 +178,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
     std::unique_ptr<HDF5FileVolume> fileVolume = HDF5FileVolume::openVolume(fileName, inFilePath, true);
 
     // Retrieve all needed information before handing the file volume over to volume disk
-    std::vector<VolumeDerivedData*> derivedData = fileVolume->readDerivedData(firstChannel); // TODO: how to handle non-separated?
+    std::vector<VolumeDerivedData*> derivedData = fileVolume->readDerivedData(firstChannel);
     std::unique_ptr<tgt::vec3> spacing(fileVolume->tryReadSpacing());
     std::unique_ptr<tgt::vec3> offset(fileVolume->tryReadOffset());
     std::unique_ptr<tgt::mat4> physicalToWorldTransformation(fileVolume->tryReadPhysicalToWorldTransformation());
@@ -195,7 +195,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
 
     // Set explicitly stored meta data and prioritize them.
     Vec3MetaData* spacingMetaData = dynamic_cast<Vec3MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_SPACING));
-    if (spacing.get()) {
+    if (spacing) {
         // If both are available we take meta data value since the HDF5 spacing may suffer from precision loss.
         if (spacingMetaData) {
             tgt::vec3 relativeError = tgt::abs((spacingMetaData->getValue() - *spacing) / spacingMetaData->getValue());
@@ -215,7 +215,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
         LWARNING("HDF5 File contains no spacing information. Assuming (1, 1, 1)");
 
     Vec3MetaData* offsetMetaData = dynamic_cast<Vec3MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_OFFSET));
-    if (offset.get()) {
+    if (offset) {
         vol->setOffset(*offset);
         if (offsetMetaData && offsetMetaData->getValue() != *offset) {
             LWARNING("Offset has been stored explicitly (" << *offset
@@ -228,7 +228,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
         LWARNING("HDF5 File contains no offset information. Assuming (0, 0, 0)");
 
     Mat4MetaData* physicalToWorldTransformationMetaData = dynamic_cast<Mat4MetaData*>(metaData.getMetaData(VolumeBase::META_DATA_NAME_TRANSFORMATION));
-    if (physicalToWorldTransformation.get()) {
+    if (physicalToWorldTransformation) {
         vol->setPhysicalToWorldMatrix(*physicalToWorldTransformation);
         if (physicalToWorldTransformationMetaData && physicalToWorldTransformationMetaData->getValue() != *physicalToWorldTransformation) {
             LWARNING("PhysicalToWorldTransformation has been stored explicitly (" << *physicalToWorldTransformation
@@ -253,7 +253,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
     }
 
     // Set real world mapping...
-    if(rwm.get()) {
+    if(rwm) {
         // ... from file if available
         vol->setRealWorldMapping(*rwm);
 

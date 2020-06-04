@@ -29,6 +29,7 @@
 #include "modules/hdf5/utils/hdf5utils.h"
 #include "voreen/core/datastructures/meta/realworldmappingmetadata.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/volume/histogram.h"
 #include "voreen/core/datastructures/volume/volumepreview.h"
 
@@ -172,6 +173,21 @@ public:
      * @note Locks hdf5libMutex.
      */
     void writeVolumeMinMax(const VolumeMinMax* mm) const;
+
+    /**
+     * Try to read VolumeMinMaxMagnitude information.
+     * @return A VolumeMinMaxMagnitude for this volume or 0 if that information is not available.
+     * @note The caller is responsible for deleting the returned object.
+     * @note Locks hdf5libMutex.
+     */
+    VolumeMinMaxMagnitude* tryReadVolumeMinMaxMagnitude() const;
+
+    /**
+     * Write the given VolumeMinMaxMagnitude to this file volume.
+     * @param mmm The VolumeMinMaxMagnitude.
+     * @note Locks hdf5libMutex.
+     */
+    void writeVolumeMinMaxMagnitude(const VolumeMinMaxMagnitude* mmm) const;
 
     /**
      * Try to read VolumeHistogramIntensity information.
@@ -433,6 +449,7 @@ private:
     static const std::string REALWORLDMAPPING_OFFSET_ATTRIBUTE_NAME;
     static const std::string REALWORLDMAPPING_UNIT_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_MINMAX_ATTRIBUTE_NAME;
+    static const std::string REPRESENTATION_MINMAXMAGNITUDE_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_HISTOGRAMINTENSITY_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_HISTOGRAMINTENSITY_METADATA_ATTRIBUTE_NAME;
     static const std::string REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_ATTRIBUTE_NAME;

@@ -27,6 +27,7 @@
 
 #include "../utils/hdf5utils.h" //Conversion and hdf5liblock
 #include "hdf5volumewriter.h" //Attribute names and conversion constants
+#include "voreen/core/datastructures/volume/volumedecorator.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
 #include "tgt/filesystem.h"
@@ -45,6 +46,7 @@ const std::string HDF5FileVolume::REALWORLDMAPPING_SCALE_ATTRIBUTE_NAME("realWor
 const std::string HDF5FileVolume::REALWORLDMAPPING_OFFSET_ATTRIBUTE_NAME("realWorldMapping_offset");
 const std::string HDF5FileVolume::REALWORLDMAPPING_UNIT_ATTRIBUTE_NAME("realWorldMapping_unit");
 const std::string HDF5FileVolume::REPRESENTATION_MINMAX_ATTRIBUTE_NAME("representation_minmax");
+const std::string HDF5FileVolume::REPRESENTATION_MINMAXMAGNITUDE_ATTRIBUTE_NAME("representation_minmaxmagnitude");
 const std::string HDF5FileVolume::REPRESENTATION_HISTOGRAMINTENSITY_ATTRIBUTE_NAME("representation_histogramintensity");
 const std::string HDF5FileVolume::REPRESENTATION_HISTOGRAMINTENSITY_METADATA_ATTRIBUTE_NAME("representation_histogramintensity_metadata");
 const std::string HDF5FileVolume::REPRESENTATION_HISTOGRAMINTENSITYGRADIENT_ATTRIBUTE_NAME("representation_histogramintensitygradient");
@@ -373,6 +375,45 @@ void HDF5FileVolume::writeVolumeMinMax(const VolumeMinMax* mm) const {
     writeArrayAttribute(*dataSet_, REPRESENTATION_MINMAX_ATTRIBUTE_NAME, values.data(), values.size());
 }
 
+VolumeMinMaxMagnitude* HDF5FileVolume::tryReadVolumeMinMaxMagnitude() const {
+    boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
+
+    // Check if min-max information is present and exit early if not.
+    if(!dataSet_->attrExists(REPRESENTATION_MINMAXMAGNITUDE_ATTRIBUTE_NAME)) {
+        LDEBUG("No VolumeMinMaxMagnitude information found.");
+        return nullptr;
+    }
+    // VolumeMinMaxMagnitude is serialized into 4 floats:
+    // min, max, minNormalized, maxNormalized.
+    const size_t dataSize = 4;
+
+    // First read VolumeMinMax data for all channels...
+    std::vector<float> values(dataSize);
+    try {
+        readArrayAttribute(*dataSet_, REPRESENTATION_MINMAXMAGNITUDE_ATTRIBUTE_NAME, values.data(), values.size());
+    } catch(H5::AttributeIException& error) {
+        LERROR("Error reading VolumeMinMaxMagnitude attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
+        return nullptr;
+    }
+
+    return new VolumeMinMaxMagnitude(values[0], values[1], values[2], values[3]);
+}
+
+void HDF5FileVolume::writeVolumeMinMaxMagnitude(const VolumeMinMaxMagnitude* mmm) const {
+    boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
+    tgtAssert(mmm, "No VolumeMinMaxMagnitude.");
+
+    std::vector<float> values;
+
+    // There are 4 floats to store: min and max, each as real world and normalized version.
+    values.push_back(mmm->getMinMagnitude());
+    values.push_back(mmm->getMaxMagnitude());
+    values.push_back(mmm->getMinNormalizedMagnitude());
+    values.push_back(mmm->getMaxNormalizedMagnitude());
+
+    writeArrayAttribute(*dataSet_, REPRESENTATION_MINMAXMAGNITUDE_ATTRIBUTE_NAME, values.data(), values.size());
+}
+
 VolumeHistogramIntensity* HDF5FileVolume::tryReadVolumeHistogramIntensity(size_t channel) const {
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
 
@@ -643,9 +684,17 @@ std::vector<VolumeDerivedData*> HDF5FileVolume::readDerivedData(size_t channel) 
     // and if found, add them to the vector which will be returned.
     std::vector<VolumeDerivedData*> data;
 
-    VolumeDerivedData* volumeMinMax = tryReadVolumeMinMax(channel);
+    VolumeMinMax* volumeMinMax = tryReadVolumeMinMax(channel);
     if(volumeMinMax) {
         data.push_back(volumeMinMax);
+    }
+
+    // VolumeMinMaxMagnitude is calculated for all channels but stored in the first one, only.
+    if(channel == 0) {
+        VolumeMinMaxMagnitude* volumeMinMaxMagnitude = tryReadVolumeMinMaxMagnitude();
+        if (volumeMinMaxMagnitude) {
+            data.push_back(volumeMinMaxMagnitude);
+        }
     }
 
     VolumeHistogramIntensity* volumeHistogramIntensity = tryReadVolumeHistogramIntensity(channel);
@@ -675,6 +724,9 @@ void HDF5FileVolume::writeDerivedData(const VolumeBase* vol) const {
     // new type. In that case issue a warning.
     if(vol->hasDerivedData<VolumeMinMax>()) {
         writeVolumeMinMax(vol->getDerivedData<VolumeMinMax>());
+    }
+    if(vol->hasDerivedData<VolumeMinMaxMagnitude>()) {
+        writeVolumeMinMaxMagnitude(vol->getDerivedData<VolumeMinMaxMagnitude>());
     }
     if(vol->hasDerivedData<VolumeHistogramIntensity>()) {
         writeVolumeHistogramIntensity(vol->getDerivedData<VolumeHistogramIntensity>());
@@ -707,18 +759,16 @@ MetaDataContainer HDF5FileVolume::readMetaData() const {
 void HDF5FileVolume::writeMetaData(const VolumeBase* vol) const {
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
 
-    // TODO: does not work for volume decorators!!
-    //  This could be solved by implementing a MetaDataContainerDecorator which is member of VolumeDecorator
-    //  and initialized using the decorated volume's MetaDataContainer.
-    const Volume* volume = dynamic_cast<const Volume*>(vol);
-    if(!volume) {
-        LWARNING("Could not write meta data: volume is probably a decorator!");
-        return;
+    // Since vol might be a decorator, we need to create a new MetaDataContainer
+    // and clone all values to ensure the decorated ones will be used.
+    MetaDataContainer container;
+    for(const std::string& key : vol->getMetaDataKeys()) {
+        container.addMetaData(key, vol->getMetaData(key)->clone());
     }
 
     std::stringstream stream;
     XmlSerializer serializer;
-    serializer.serialize("metaData", volume->getMetaDataContainer());
+    serializer.serialize("metaData", container);
     serializer.write(stream);
 
     writeStringAttribute(*dataSet_, METADATA_STRING_NAME, stream.str());
@@ -765,8 +815,7 @@ VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3&
     tgtAssert(dimensions.y + offset.y <= dimensions_.y, "Brick does not fit into file volume with the given offset in y dimension.");
     tgtAssert(dimensions.z + offset.z <= dimensions_.z, "Brick does not fit into file volume with the given offset in z dimension.");
 
-    const size_t numChannels = getNumberOfChannels();
-    tgtAssert(firstChannel + numberOfChannels <= numChannels, "Invalid channel range.");
+    tgtAssert(firstChannel + numberOfChannels <= getNumberOfChannels(), "Invalid channel range.");
 
     try {
         //Select the hyperslab (Brick + fourth dimension)
@@ -782,11 +831,11 @@ VolumeRAM* HDF5FileVolume::loadBrick(const tgt::svec3& offset, const tgt::svec3&
         fileSpace.selectHyperslab(H5S_SELECT_SET, count, start);
 
         //Memory space does not have an offset
-        H5::DataSpace memSpace(numChannels == 1 ? 3 : 4, count);
+        H5::DataSpace memSpace(getNumberOfChannels() == 1 ? 3 : 4, count);
 
         //Create the VolumeRAM and write the dataset selection to it.
         H5::DataType h5type = dataSet_->getDataType();
-        std::string format = VolumeFactory().getFormat(getBaseTypeFromDataType(h5type), numChannels);
+        std::string format = VolumeFactory().getFormat(getBaseTypeFromDataType(h5type), numberOfChannels);
         VolumeRAM* data = VolumeFactory().create(format, dimensions);
         if(!data) {
             throw tgt::IOException("Could not create VolumeRAM of format " + format);
@@ -812,8 +861,7 @@ void HDF5FileVolume::writeBrick(const VolumeRAM* vol, const tgt::svec3& offset, 
     tgtAssert(vol->getDimensions().y + offset.y <= dimensions_.y, "Brick does not fit into file volume with the given offset in y dimension.");
     tgtAssert(vol->getDimensions().z + offset.z <= dimensions_.z, "Brick does not fit into file volume with the given offset in z dimension.");
 
-    const size_t numChannels = getNumberOfChannels();
-    tgtAssert(firstChannel + numberOfChannels <= numChannels, "Invalid channel range.");
+    tgtAssert(firstChannel + numberOfChannels <= getNumberOfChannels(), "Invalid channel range.");
     tgtAssert(vol->getNumChannels() == numberOfChannels, "vol's number of channels must be exactly numberOfChannels.");
     tgtAssert(vol->getBaseType() == getBaseType(), "vol's base type does not match the file volume's");
 
@@ -831,7 +879,7 @@ void HDF5FileVolume::writeBrick(const VolumeRAM* vol, const tgt::svec3& offset, 
         fileSpace.selectHyperslab(H5S_SELECT_SET, count, start);
 
         //Memory space does not have an offset
-        H5::DataSpace memSpace(numChannels == 1 ? 3 : 4, count);
+        H5::DataSpace memSpace(getNumberOfChannels() == 1 ? 3 : 4, count);
 
         //Write the volume to disk.
         dataSet_->write(vol->getData(), dataSet_->getDataType(), memSpace, fileSpace);
