@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "vorticityfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -57,26 +58,23 @@ std::string VorticityFilterProperties::getVolumeFilterName() const {
     return "Vorticity";
 }
 
-void VorticityFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void VorticityFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    outsideVolumeValue_.setMinValue(mm->getMin());
-    outsideVolumeValue_.setMaxValue(mm->getMax());
+    outsideVolumeValue_.setMinValue(mm.x);
+    outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* VorticityFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* VorticityFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
     return new VorticityFilter(
             settings.gradientType_,
-            volume.getSpacing(),
+            inputmetadata.getSpacing(),
             SamplingStrategy<tgt::vec3>(settings.samplingStrategyType_, tgt::vec3(settings.outsideVolumeValue_)),
-            volume.getBaseType()
+            inputmetadata.getBaseType()
     );
 }
 void VorticityFilterProperties::restoreInstance(int instanceId) {

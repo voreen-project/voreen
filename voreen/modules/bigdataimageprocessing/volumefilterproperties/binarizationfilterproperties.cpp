@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "binarizationfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -41,28 +42,20 @@ std::string BinarizationFilterProperties::getVolumeFilterName() const {
     return "Binarization";
 }
 
-void BinarizationFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void BinarizationFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    threshold_.setMinValue(mm->getMin());
-    threshold_.setMaxValue(mm->getMax());
+    threshold_.setMinValue(mm.x);
+    threshold_.setMaxValue(mm.y);
 }
 
-VolumeFilter* BinarizationFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* BinarizationFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
 
-    RealWorldMapping rwm;
-    if (volume.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
-        rwm = volume.getRealWorldMapping();
-    }
-
-    return new BinarizationFilter(rwm.realWorldToNormalized(settings.threshold_));
+    return new BinarizationFilter(inputmetadata.getRealworldMapping().realWorldToNormalized(settings.threshold_));
 }
 void BinarizationFilterProperties::restoreInstance(int instanceId) {
     auto iter = instanceSettings_.find(instanceId);

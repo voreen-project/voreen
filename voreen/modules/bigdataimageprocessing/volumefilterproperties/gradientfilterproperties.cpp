@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "gradientfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -57,26 +58,23 @@ std::string GradientFilterProperties::getVolumeFilterName() const {
     return "Gradient";
 }
 
-void GradientFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void GradientFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    outsideVolumeValue_.setMinValue(mm->getMin());
-    outsideVolumeValue_.setMaxValue(mm->getMax());
+    outsideVolumeValue_.setMinValue(mm.x);
+    outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* GradientFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* GradientFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
     return new GradientFilter(
             settings.gradientType_,
-            volume.getSpacing(),
+            inputmetadata.getSpacing(),
             SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-            volume.getBaseType()
+            inputmetadata.getBaseType()
     );
 }
 void GradientFilterProperties::restoreInstance(int instanceId) {

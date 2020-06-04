@@ -47,10 +47,10 @@ std::string RescaleFilterProperties::getVolumeFilterName() const {
     return "Rescale Filter";
 }
 
-void RescaleFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
+void RescaleFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
 }
 
-VolumeFilter* RescaleFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* RescaleFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
@@ -59,7 +59,7 @@ VolumeFilter* RescaleFilterProperties::getVolumeFilter(const VolumeBase& volume,
     // Currently, only 1D rescale is supported.
     return new RescaleFilter1D(
             settings.rescaleStrategyType_,
-            volume.getBaseType()
+            inputmetadata.getBaseType()
     );
 }
 void RescaleFilterProperties::restoreInstance(int instanceId) {

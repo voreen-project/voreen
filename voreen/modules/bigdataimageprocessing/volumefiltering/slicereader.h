@@ -48,13 +48,20 @@ public:
     static SliceReaderMetaData fromHDF5Volume(const HDF5FileVolume& volume);
 
 
-    SliceReaderMetaData(RealWorldMapping rwm, size_t numChannels = 1);
+    SliceReaderMetaData(RealWorldMapping rwm, tgt::svec3 dimensions, size_t numChannels, std::string baseType, tgt::vec3 spacing);
     SliceReaderMetaData() = delete;
     SliceReaderMetaData(const SliceReaderMetaData&) = delete;
+    SliceReaderMetaData& operator=(const SliceReaderMetaData&) = delete;
     SliceReaderMetaData(SliceReaderMetaData&&) = default;
+    SliceReaderMetaData& operator=(SliceReaderMetaData&&) = default;
 
     void setMinMax(std::vector<tgt::vec2> minmax);
     void setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm);
+    void setDimensions(tgt::svec3 dimensions);
+    void setNumChannels(size_t numChannels);
+    void setBaseType(std::string baseType);
+    void setRealWorldMapping(RealWorldMapping rwm);
+    void setSpacing(tgt::vec3 spacing);
 
     // Have a best guess for valid min/max values. If available, all actual
     // min/max channels are considered. Otherwise the RWM will be used as a
@@ -65,10 +72,19 @@ public:
     std::unique_ptr<VolumeMinMax> getVolumeMinMax() const;
     const boost::optional<std::vector<tgt::vec2>>& getMinMax() const;
     const RealWorldMapping& getRealworldMapping() const;
+    tgt::svec3 getDimensions() const;
+    size_t getNumChannels() const;
+    std::string getBaseType() const;
+    RealWorldMapping getRealWorldMapping() const;
+    tgt::vec3 getSpacing() const;
 
 private:
     RealWorldMapping rwm_;
+    tgt::svec3 dimensions_;
     boost::optional<std::vector<tgt::vec2>> minmax_;
+    size_t numChannels_;
+    std::string baseType_;
+    tgt::vec3 spacing_;
 };
 
 class SliceReader {

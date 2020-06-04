@@ -29,11 +29,11 @@ namespace voreen {
 
 // SliceReaderMetaData ---------------------------------------------------------------
 SliceReaderMetaData SliceReaderMetaData::fromBase(const SliceReaderMetaData& base) {
-    SliceReaderMetaData srmd(base.rwm_);
+    SliceReaderMetaData srmd(base.rwm_, base.dimensions_, base.numChannels_, base.baseType_, base.spacing_);
     return srmd;
 }
 SliceReaderMetaData SliceReaderMetaData::fromBaseAccurate(const SliceReaderMetaData& base) {
-    SliceReaderMetaData srmd(base.rwm_);
+    SliceReaderMetaData srmd = SliceReaderMetaData::fromBase(base);
     const auto& mm = base.getMinMax();
     if(mm) {
         srmd.setMinMax(*mm);
@@ -42,7 +42,7 @@ SliceReaderMetaData SliceReaderMetaData::fromBaseAccurate(const SliceReaderMetaD
 }
 
 SliceReaderMetaData SliceReaderMetaData::fromVolume(const VolumeBase& vol) {
-    SliceReaderMetaData srmd(vol.getRealWorldMapping());
+    SliceReaderMetaData srmd(vol.getRealWorldMapping(), vol.getDimensions(), vol.getNumChannels(), vol.getBaseType(), vol.getSpacing());
     const auto vmm = vol.getDerivedData<VolumeMinMax>();
 
     std::vector<tgt::vec2> minmax;
@@ -60,7 +60,15 @@ SliceReaderMetaData SliceReaderMetaData::fromHDF5Volume(const HDF5FileVolume& vo
     if(rwmPtr) {
         rwm = *rwmPtr;
     }
-    SliceReaderMetaData srmd(rwm);
+
+    std::unique_ptr<tgt::vec3> spacingPtr(volume.tryReadSpacing());
+    tgt::vec3 spacing;
+    if(spacingPtr) {
+        spacing = *spacingPtr;
+    } else {
+        spacing = tgt::vec3::one;
+    }
+    SliceReaderMetaData srmd(rwm, volume.getDimensions(), volume.getNumberOfChannels(), volume.getBaseType(), spacing);
 
     std::vector<tgt::vec2> minmax;
     for(int c=0; c<volume.getNumberOfChannels(); ++c) {
@@ -75,9 +83,13 @@ SliceReaderMetaData SliceReaderMetaData::fromHDF5Volume(const HDF5FileVolume& vo
     return srmd;
 }
 
-SliceReaderMetaData::SliceReaderMetaData(RealWorldMapping rwm, size_t numChannels)
+SliceReaderMetaData::SliceReaderMetaData(RealWorldMapping rwm, tgt::svec3 dimensions, size_t numChannels, std::string baseType, tgt::vec3 spacing)
     : rwm_(rwm)
     , minmax_(boost::none)
+    , dimensions_(dimensions)
+    , numChannels_(numChannels)
+    , baseType_(baseType)
+    , spacing_(spacing)
 {
 }
 
@@ -95,8 +107,31 @@ void SliceReaderMetaData::setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm)
     }
 }
 
+void SliceReaderMetaData::setDimensions(tgt::svec3 dimensions) {
+    dimensions_ = dimensions;
+}
+
+void SliceReaderMetaData::setNumChannels(size_t numChannels) {
+    numChannels_ = numChannels;
+}
+
+void SliceReaderMetaData::setBaseType(std::string baseType) {
+    baseType_ = baseType;
+}
+
+void SliceReaderMetaData::setRealWorldMapping(RealWorldMapping rwm) {
+    rwm_ = rwm;
+}
+
+void SliceReaderMetaData::setSpacing(tgt::vec3 spacing) {
+    spacing_ = spacing;
+}
+
 const RealWorldMapping& SliceReaderMetaData::getRealworldMapping() const {
     return rwm_;
+}
+tgt::vec3 SliceReaderMetaData::getSpacing() const {
+    return spacing_;
 }
 
 tgt::vec2 SliceReaderMetaData::estimateMinMax() const {
@@ -135,6 +170,18 @@ std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
 
 const boost::optional<std::vector<tgt::vec2>>& SliceReaderMetaData::getMinMax() const {
     return minmax_;
+}
+tgt::svec3 SliceReaderMetaData::getDimensions() const {
+    return dimensions_;
+}
+size_t SliceReaderMetaData::getNumChannels() const {
+    return numChannels_;
+}
+std::string SliceReaderMetaData::getBaseType() const {
+    return baseType_;
+}
+RealWorldMapping SliceReaderMetaData::getRealWorldMapping() const {
+    return rwm_;
 }
 
 // SliceReader -----------------------------------------------------------------------

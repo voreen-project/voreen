@@ -43,7 +43,9 @@ ParallelFilterValue1D BinarizationFilter::getValue(const Sample& sample, const t
 }
 
 SliceReaderMetaData BinarizationFilter::getMetaData(const SliceReaderMetaData& base) const {
-    return SliceReaderMetaData(RealWorldMapping(tgt::vec2(0.0, 1.0), ""));
+    auto md = SliceReaderMetaData::fromBase(base);
+    md.setRealWorldMapping(RealWorldMapping(tgt::vec2(0.0, 1.0), ""));
+    return md;
 }
 
 } // namespace voreen

@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "morphologyfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -63,17 +64,14 @@ std::string MorphologyFilterProperties::getVolumeFilterName() const {
     return "Morphology Filter";
 }
 
-void MorphologyFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void MorphologyFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    outsideVolumeValue_.setMinValue(mm->getMin());
-    outsideVolumeValue_.setMaxValue(mm->getMax());
+    outsideVolumeValue_.setMinValue(mm.x);
+    outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* MorphologyFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* MorphologyFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
@@ -83,7 +81,7 @@ VolumeFilter* MorphologyFilterProperties::getVolumeFilter(const VolumeBase& volu
         settings.morphologyOperatorType_,
         settings.morphologyOperatorShape_,
         SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-        volume.getBaseType()
+        inputmetadata.getBaseType()
     );
 }
 void MorphologyFilterProperties::restoreInstance(int instanceId) {

@@ -25,6 +25,7 @@
 
 #include "resamplefilterproperties.h"
 #include "../volumefiltering/resamplefilter.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -44,20 +45,20 @@ std::string ResampleFilterProperties::getVolumeFilterName() const {
     return "Resample Filter";
 }
 
-void ResampleFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
+void ResampleFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     if(dimensions_.get() == RESAMPLE_DIM_DEFAULT_VALUE) {
         dimensions_.set(input.getDimensions());
     }
 }
 
-VolumeFilter* ResampleFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* ResampleFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
     return new ResampleFilter(
         settings.dimensions_,
-        volume.getBaseType(), volume.getNumChannels()
+        inputmetadata.getBaseType(), inputmetadata.getNumChannels()
     );
 }
 void ResampleFilterProperties::restoreInstance(int instanceId) {

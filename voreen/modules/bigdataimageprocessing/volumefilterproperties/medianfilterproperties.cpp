@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "medianfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -55,46 +56,43 @@ std::string MedianFilterProperties::getVolumeFilterName() const {
     return "Median Filter";
 }
 
-void MedianFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void MedianFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    outsideVolumeValue_.setMinValue(mm->getMin());
-    outsideVolumeValue_.setMaxValue(mm->getMax());
+    outsideVolumeValue_.setMinValue(mm.x);
+    outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* MedianFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* MedianFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
 
-    switch (volume.getNumChannels()) {
+    switch (inputmetadata.getNumChannels()) {
     case 1:
         return new MedianFilter(
                 tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
                 SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-                volume.getBaseType()
+                inputmetadata.getBaseType()
         );
     case 2:
         return new MedianFilter2D(
                 tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
                 SamplingStrategy<tgt::vec2>(settings.samplingStrategyType_, tgt::vec2(settings.outsideVolumeValue_)),
-                volume.getBaseType()
+                inputmetadata.getBaseType()
         );
     case 3:
         return new MedianFilter3D(
                 tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
                 SamplingStrategy<tgt::vec3>(settings.samplingStrategyType_, tgt::vec3(settings.outsideVolumeValue_)),
-                volume.getBaseType()
+                inputmetadata.getBaseType()
         );
     case 4:
         return new MedianFilter4D(
                 tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
                 SamplingStrategy<tgt::vec4>(settings.samplingStrategyType_, tgt::vec4(settings.outsideVolumeValue_)),
-                volume.getBaseType()
+                inputmetadata.getBaseType()
         );
     default:
         return nullptr;

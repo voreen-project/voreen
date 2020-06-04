@@ -67,7 +67,7 @@ RescaleFilter<T>::~RescaleFilter() {
 template<typename T, typename F>
 static inline T mapT(const T& value, F f, typename std::enable_if<!std::is_same<T, float>::value>::type* = 0) {
     T out;
-    for(int c=0; c<T::dim; ++c) {
+    for(int c=0; c<T::size; ++c) {
         out[c] = f(value[c]);
     }
     return out;
@@ -119,28 +119,29 @@ SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& bas
 
     tgt::vec2 minmax = base.estimateMinMax();
 
-    SliceReaderMetaData md = [&] () {
+    RealWorldMapping rwm = [&] () {
         auto baseUnit = baseRwm.getUnit().empty() ? "x" : baseRwm.getUnit();
         switch (strategy_) {
             case RESCALE_LOGARITHMIC_T:
-                return SliceReaderMetaData(RealWorldMapping(
-                            minmax,
-                            "log(" + baseUnit + ")"));
+                return RealWorldMapping(
+                            rescaleInternal(minmax, strategy_),
+                            "log(" + baseUnit + ")");
             case RESCALE_EXPONENTIAL_T:
-                return SliceReaderMetaData(RealWorldMapping(
-                            minmax,
-                            "exp(" + baseUnit + ")"));
+                return RealWorldMapping(
+                            rescaleInternal(minmax, strategy_),
+                            "exp(" + baseUnit + ")");
             default:
                 tgtAssert(false, "Invalid strategy");
         }
     } ();
+    auto md = SliceReaderMetaData::fromBase(base);
+    md.setRealWorldMapping(rwm);
+
     // If we have accurate min/max information from the base, we can also supply those ourselves.
     if(base.getMinMax()) {
         std::vector<tgt::vec2> minmax;
         for(auto& mm : *base.getMinMax()) {
-            minmax.emplace_back(
-                    rescaleInternal(mm.x, strategy_),
-                    rescaleInternal(mm.y, strategy_));
+            minmax.emplace_back(rescaleInternal(mm, strategy_));
         }
         md.setMinMax(minmax);
     }

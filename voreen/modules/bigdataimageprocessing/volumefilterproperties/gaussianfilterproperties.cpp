@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "gaussianfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -55,17 +56,14 @@ std::string GaussianFilterProperties::getVolumeFilterName() const {
     return "Gaussian Filter";
 }
 
-void GaussianFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void GaussianFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    outsideVolumeValue_.setMinValue(mm->getMin());
-    outsideVolumeValue_.setMaxValue(mm->getMax());
+    outsideVolumeValue_.setMinValue(mm.x);
+    outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* GaussianFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* GaussianFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
@@ -73,7 +71,7 @@ VolumeFilter* GaussianFilterProperties::getVolumeFilter(const VolumeBase& volume
     return new GaussianFilter(
         tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
         SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-        volume.getBaseType(), volume.getNumChannels()
+        inputmetadata.getBaseType(), inputmetadata.getNumChannels()
     );
 }
 void GaussianFilterProperties::restoreInstance(int instanceId) {

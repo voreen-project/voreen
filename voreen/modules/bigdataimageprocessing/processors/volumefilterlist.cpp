@@ -186,6 +186,8 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     VolumeFilterStackBuilder builder(inputVolume);
     std::string baseType = inputVolume.getBaseType();
     size_t numOutputChannels = inputVolume.getNumChannels();
+
+    SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(inputVolume);
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
 
         if(!instance.isActive()) {
@@ -193,10 +195,10 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
             continue;
         }
 
-        VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(inputVolume, instance.getInstanceId());
+        VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
         if(!filter) {
             LWARNING("Filter: '" << instance.getName() << "' has not been configured yet. Taking default.");
-            filter = filterProperties_[instance.getItemId()]->getVolumeFilter(inputVolume, FilterProperties::DEFAULT_SETTINGS);
+            filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
         }
         tgtAssert(filter, "filter was null");
         tgtAssert(numOutputChannels == filter->getNumInputChannels(), "channel mismatch");
@@ -205,6 +207,7 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
         baseType = filter->getSliceBaseType();
         numOutputChannels = filter->getNumOutputChannels();
 
+        metadata = filter->getMetaData(metadata);
         builder.addLayer(std::unique_ptr<VolumeFilter>(filter));
     }
 
@@ -266,13 +269,37 @@ void VolumeFilterList::processComputeOutput(VolumeFilterListOutput output) {
 }
 
 void VolumeFilterList::adjustPropertiesToInput() {
+
     const VolumeBase* input = inport_.getData();
     if(!input) {
         return;
     }
 
-    for(auto& filterProperties : filterProperties_) {
-        filterProperties->adjustPropertiesToInput(*input);
+    SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(*input);
+
+    // Adjust filter properties from top to bottom (i.e., first the filter that
+    // is actually applied to the volume first, then the second, etc.). In the
+    // process, we update `metadata` to always reflect the input of the current
+    // filter.
+    for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
+
+        filterProperties_[instance.getItemId()]->adjustPropertiesToInput(metadata);
+
+        if(!instance.isActive()) {
+            LINFO("Filter: '" << instance.getName() << "' is not active. Skipping.");
+            continue;
+        }
+
+        VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
+
+        if(!filter) {
+            LWARNING("Filter: '" << instance.getName() << "' has not been configured yet. Taking default.");
+            filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
+        }
+
+        tgtAssert(filter, "filter was null");
+
+        metadata = filter->getMetaData(metadata);
     }
 }
 
@@ -402,8 +429,10 @@ void VolumeFilterList::inputOutputChannelCheck() {
     if(inport_.hasData()) {
         const VolumeBase& volume = *inport_.getData();
         size_t numOutputChannels = volume.getNumChannels();
+        SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(volume);
+
         for (InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(volume, FilterProperties::DEFAULT_SETTINGS);
+            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
             tgtAssert(filter, "filter was null");
 
             if (numOutputChannels == filter->getNumInputChannels()) {
@@ -414,6 +443,8 @@ void VolumeFilterList::inputOutputChannelCheck() {
                 instance.setActive(false);
                 LERROR("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
             }
+
+            metadata = filter->getMetaData(metadata);
         }
     }
     else {

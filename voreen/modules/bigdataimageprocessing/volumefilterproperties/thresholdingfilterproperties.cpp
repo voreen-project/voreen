@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "thresholdingfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -49,34 +50,28 @@ std::string ThresholdingFilterProperties::getVolumeFilterName() const {
     return "Thresholding Filter";
 }
 
-void ThresholdingFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void ThresholdingFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    const auto& mm = input.estimateMinMax();
 
-    thresholdValue_.setMinValue(mm->getMin());
-    thresholdValue_.setMaxValue(mm->getMax());
-    replacementValue_.setMinValue(mm->getMin());
-    replacementValue_.setMaxValue(mm->getMax());
+    thresholdValue_.setMinValue(mm.x);
+    thresholdValue_.setMaxValue(mm.y);
+    replacementValue_.setMinValue(mm.x);
+    replacementValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
-    RealWorldMapping rwm;
-    if (volume.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
-        rwm = volume.getRealWorldMapping();
-    }
+    RealWorldMapping rwm = inputmetadata.getRealworldMapping();
 
     // Currently, only 1D thresholding is supported.
     return new ThresholdingFilter1D(
             rwm.realWorldToNormalized(settings.thresholdValue_),
             rwm.realWorldToNormalized(settings.replacementValue_),
             settings.thresholdingStrategyType_,
-            volume.getBaseType()
+            inputmetadata.getBaseType()
     );
 }
 void ThresholdingFilterProperties::restoreInstance(int instanceId) {

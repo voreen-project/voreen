@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "binarymedianfilterproperties.h"
+#include "../volumefiltering/slicereader.h"
 
 namespace voreen {
 
@@ -84,31 +85,24 @@ std::string BinaryMedianFilterProperties::getVolumeFilterName() const {
     return "Binary Median Filter";
 }
 
-void BinaryMedianFilterProperties::adjustPropertiesToInput(const VolumeBase& input) {
-    if (!input.hasDerivedData<VolumeMinMax>()) {
-        LINFO("Calculating VolumeMinMax. This may take a while...");
-    }
-    const VolumeMinMax* mm = input.getDerivedData<VolumeMinMax>();
+void BinaryMedianFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+    auto mm = input.estimateMinMax();
 
-    binarizationThreshold_.setMinValue(mm->getMin());
-    binarizationThreshold_.setMaxValue(mm->getMax());
+    binarizationThreshold_.setMinValue(mm.x);
+    binarizationThreshold_.setMaxValue(mm.y);
     binarizationThreshold_.adaptDecimalsToRange(2);
-    outsideVolumeValue_.setMinValue(mm->getMin());
-    outsideVolumeValue_.setMaxValue(mm->getMax());
+    outsideVolumeValue_.setMinValue(mm.x);
+    outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* BinaryMedianFilterProperties::getVolumeFilter(const VolumeBase& volume, int instanceId) const {
+VolumeFilter* BinaryMedianFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
         return nullptr;
     }
     Settings settings = instanceSettings_.at(instanceId);
-    RealWorldMapping rwm;
-    if (volume.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
-        rwm = volume.getRealWorldMapping();
-    }
     return new BinaryMedianFilter(
         tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-        rwm.realWorldToNormalized(settings.binarizationThreshold_),
+        inputmetadata.getRealWorldMapping().realWorldToNormalized(settings.binarizationThreshold_),
         settings.objectVoxelThreshold_,
         SamplingStrategy<float>(settings.samplingStrategyType_, settings.outsideVolumeValue_)
     );

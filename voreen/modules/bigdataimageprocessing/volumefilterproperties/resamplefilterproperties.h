@@ -39,9 +39,9 @@ public:
 
     virtual std::string getVolumeFilterName() const;
 
-    virtual void adjustPropertiesToInput(const VolumeBase& input);
+    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input);
 
-    virtual VolumeFilter* getVolumeFilter(const VolumeBase& volume, int instanceId) const;
+    virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const;
     virtual void restoreInstance(int instanceId);
     virtual void storeInstance(int instanceId);
     virtual void removeInstance(int instanceId);
