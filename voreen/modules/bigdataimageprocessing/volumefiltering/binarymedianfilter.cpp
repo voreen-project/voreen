@@ -167,6 +167,22 @@ bool BinaryMedianFilter::isObjectValue(float input) const {
 SliceReaderMetaData BinaryMedianFilter::getMetaData(const SliceReaderMetaData& base) const {
     auto md = SliceReaderMetaData::fromBase(base);
     md.setRealWorldMapping(RealWorldMapping(tgt::vec2(0.0, 1.0), ""));
+
+    if(base.getMinMax()) {
+        const auto& mm = *base.getMinMax();
+        float t = base.getRealworldMapping().normalizedToRealWorld(binarizationThreshold_);
+        float min = 0.0f;
+        float max = 1.0f;
+        tgtAssert(base.getNumChannels() == 1, "Invalid number of channels");
+        if(mm[0].x >= t) {
+            min = 1.0f;
+        } else if(mm[0].y < t) {
+            max = 0.0f;
+        }
+
+        md.setMinMax({tgt::vec2(min, max)});
+    }
+
     return md;
 }
 
