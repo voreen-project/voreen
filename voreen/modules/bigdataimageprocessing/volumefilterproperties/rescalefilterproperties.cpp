@@ -58,8 +58,7 @@ VolumeFilter* RescaleFilterProperties::getVolumeFilter(const SliceReaderMetaData
 
     // Currently, only 1D rescale is supported.
     return new RescaleFilter1D(
-            settings.rescaleStrategyType_,
-            inputmetadata.getBaseType()
+            settings.rescaleStrategyType_
     );
 }
 void RescaleFilterProperties::restoreInstance(int instanceId) {

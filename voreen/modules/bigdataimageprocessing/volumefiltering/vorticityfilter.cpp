@@ -29,11 +29,11 @@
 
 namespace voreen {
 
-VorticityFilter::VorticityFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue3D>& samplingStrategy, const std::string& sliceBaseType)
-    : ParallelVolumeFilter<ParallelFilterValue3D, ParallelFilterValue3D>(1, samplingStrategy, sliceBaseType)
-    , gradientX_(gradientType, spacing, SamplingStrategy<ParallelFilterValue1D>(samplingStrategy.type_, samplingStrategy.outsideVolumeValue_.val_[0]), sliceBaseType)
-    , gradientY_(gradientType, spacing, SamplingStrategy<ParallelFilterValue1D>(samplingStrategy.type_, samplingStrategy.outsideVolumeValue_.val_[1]), sliceBaseType)
-    , gradientZ_(gradientType, spacing, SamplingStrategy<ParallelFilterValue1D>(samplingStrategy.type_, samplingStrategy.outsideVolumeValue_.val_[2]), sliceBaseType)
+VorticityFilter::VorticityFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue3D>& samplingStrategy)
+    : ParallelVolumeFilter<ParallelFilterValue3D, ParallelFilterValue3D>(1, samplingStrategy)
+    , gradientX_(gradientType, spacing, SamplingStrategy<ParallelFilterValue1D>(samplingStrategy.type_, samplingStrategy.outsideVolumeValue_.val_[0]))
+    , gradientY_(gradientType, spacing, SamplingStrategy<ParallelFilterValue1D>(samplingStrategy.type_, samplingStrategy.outsideVolumeValue_.val_[1]))
+    , gradientZ_(gradientType, spacing, SamplingStrategy<ParallelFilterValue1D>(samplingStrategy.type_, samplingStrategy.outsideVolumeValue_.val_[2]))
     , gradientType_(gradientType)
 {
 }

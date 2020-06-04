@@ -40,7 +40,6 @@ public:
 
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
     int zExtent() const;
-    const std::string& getSliceBaseType() const;
     virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 
     // For now we only support single channel volumes

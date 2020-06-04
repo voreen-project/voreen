@@ -41,7 +41,7 @@ template<typename T>
 class RescaleFilter : public ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>> {
 public:
 
-    RescaleFilter(RescaleStrategyType strategy, const std::string& sliceBaseType);
+    RescaleFilter(RescaleStrategyType strategy);
     virtual ~RescaleFilter();
 
     ParallelFilterValue<T> getValue(const typename RescaleFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
@@ -54,8 +54,8 @@ private:
 // Implementation
 
 template<typename T>
-RescaleFilter<T>::RescaleFilter(RescaleStrategyType strategy, const std::string& sliceBaseType)
-    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE, sliceBaseType)
+RescaleFilter<T>::RescaleFilter(RescaleStrategyType strategy)
+    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE)
     , strategy_(strategy)
 {
 }

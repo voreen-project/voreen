@@ -156,10 +156,6 @@ int BinaryMedianFilter::zExtent() const {
     return extent_.z;
 }
 
-const std::string& BinaryMedianFilter::getSliceBaseType() const {
-    return SLICE_BASE_TYPE;
-}
-
 bool BinaryMedianFilter::isObjectValue(float input) const {
     return input > binarizationThreshold_;
 }
@@ -182,6 +178,8 @@ SliceReaderMetaData BinaryMedianFilter::getMetaData(const SliceReaderMetaData& b
 
         md.setMinMax({tgt::vec2(min, max)});
     }
+
+    md.setBaseType(SLICE_BASE_TYPE);
 
     return md;
 }

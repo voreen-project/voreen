@@ -30,7 +30,7 @@ namespace voreen {
 static const std::string BINARIZATION_SLICE_BASE_TYPE = "uint8";
 
 BinarizationFilter::BinarizationFilter(float threshold)
-    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D>(0, SamplingStrategy<ParallelFilterValue1D>::ASSERT_FALSE, BINARIZATION_SLICE_BASE_TYPE)
+    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue1D>(0, SamplingStrategy<ParallelFilterValue1D>::ASSERT_FALSE)
     , threshold_(threshold)
 {
 }
@@ -60,6 +60,8 @@ SliceReaderMetaData BinarizationFilter::getMetaData(const SliceReaderMetaData& b
 
         md.setMinMax({tgt::vec2(min, max)});
     }
+
+    md.setBaseType(BINARIZATION_SLICE_BASE_TYPE);
 
     return md;
 }

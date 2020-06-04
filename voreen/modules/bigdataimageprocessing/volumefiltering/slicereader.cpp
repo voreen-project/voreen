@@ -233,10 +233,6 @@ VolumeRAM* const& CachingSliceReader::getSlice(int dz) const {
     return slices_[neighborhoodSize_ + dz];
 }
 
-std::string CachingSliceReader::getBaseType() const {
-    return base_->getBaseType();
-}
-
 size_t CachingSliceReader::getNumChannels() const {
     return base_->getNumChannels();
 }
@@ -345,9 +341,6 @@ const VolumeRAM* VolumeSliceReader::getCurrentSlice() const {
     return currentSlice_.get();
 }
 
-std::string VolumeSliceReader::getBaseType() const {
-    return volume_.getBaseType();
-}
 size_t VolumeSliceReader::getNumChannels() const {
     return numChannels_;
 }
@@ -394,9 +387,6 @@ const VolumeRAM* HDF5VolumeSliceReader::getCurrentSlice() const {
     return currentSlice_.get();
 }
 
-std::string HDF5VolumeSliceReader::getBaseType() const {
-    return volume_.getBaseType();
-}
 size_t HDF5VolumeSliceReader::getNumChannels() const {
     return numChannels_;
 }
@@ -466,10 +456,6 @@ float FilteringSliceReader::getVoxelNormalized(const tgt::ivec3& xyz, size_t cha
 
 const VolumeRAM* FilteringSliceReader::getCurrentSlice() const {
     return currentSlice_.get();
-}
-
-std::string FilteringSliceReader::getBaseType() const {
-    return filter_->getSliceBaseType();
 }
 
 size_t FilteringSliceReader::getNumChannels() const {

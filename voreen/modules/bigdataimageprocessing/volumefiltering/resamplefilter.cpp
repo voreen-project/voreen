@@ -28,9 +28,8 @@
 
 namespace voreen {
 
-ResampleFilter::ResampleFilter(const tgt::svec3& targetDimensions, const std::string& sliceBaseType, size_t numChannels)
+ResampleFilter::ResampleFilter(const tgt::svec3& targetDimensions, size_t numChannels)
     : dimensions_(targetDimensions)
-    , sliceBaseType_(sliceBaseType)
     , numChannels_(numChannels)
 {
 }
@@ -46,7 +45,7 @@ std::unique_ptr<VolumeRAM> ResampleFilter::getFilteredSlice(const CachingSliceRe
     tgtAssert(z >= 0 && z<dim.z, "Invalid z pos in slice request");
 
     VolumeFactory volumeFactory;
-    std::string format = volumeFactory.getFormat(sliceBaseType_, numChannels_);
+    std::string format = volumeFactory.getFormat(src->getMetaData().getBaseType(), numChannels_);
     std::unique_ptr<VolumeRAM> outputSlice(volumeFactory.create(format, tgt::svec3(dim.xy(), 1)));
 
     tgt::vec3 thisToBaseScale(tgt::vec3(src->getDimensions()) / tgt::vec3(dimensions_));
@@ -67,10 +66,6 @@ std::unique_ptr<VolumeRAM> ResampleFilter::getFilteredSlice(const CachingSliceRe
 
 int ResampleFilter::zExtent() const {
     return 0;
-}
-
-const std::string& ResampleFilter::getSliceBaseType() const {
-    return sliceBaseType_;
 }
 
 size_t ResampleFilter::getNumInputChannels() const {

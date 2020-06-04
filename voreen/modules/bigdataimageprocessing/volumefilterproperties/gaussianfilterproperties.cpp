@@ -71,7 +71,7 @@ VolumeFilter* GaussianFilterProperties::getVolumeFilter(const SliceReaderMetaDat
     return new GaussianFilter(
         tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
         SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-        inputmetadata.getBaseType(), inputmetadata.getNumChannels()
+        inputmetadata.getNumChannels()
     );
 }
 void GaussianFilterProperties::restoreInstance(int instanceId) {

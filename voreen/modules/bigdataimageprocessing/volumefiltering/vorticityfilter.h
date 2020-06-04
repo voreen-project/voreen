@@ -33,7 +33,7 @@ namespace voreen {
 
 class VorticityFilter : public ParallelVolumeFilter<ParallelFilterValue3D, ParallelFilterValue3D> {
 public:
-    VorticityFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue3D>& samplingStrategy, const std::string& sliceBaseType);
+    VorticityFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue3D>& samplingStrategy);
     virtual ~VorticityFilter() {}
 
     ParallelFilterValue3D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetaData, const SliceReaderMetaData& outputMetaData) const;

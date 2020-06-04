@@ -59,9 +59,8 @@ template<typename InputType, typename OutputType>
 class ParallelVolumeFilter : public VolumeFilter {
 public:
 
-    ParallelVolumeFilter(int zExtent, const SamplingStrategy<InputType>& samplingStrategy, const std::string& sliceBaseType);
+    ParallelVolumeFilter(int zExtent, const SamplingStrategy<InputType>& samplingStrategy);
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
-    const std::string& getSliceBaseType() const;
     int zExtent() const;
 
     typedef std::function<InputType(const tgt::ivec3& pos)> Sample;
@@ -72,7 +71,6 @@ public:
 
 private:
     const SamplingStrategy<InputType> samplingStrategy_;
-    const std::string sliceBaseType_;
     const int zExtent_;
 };
 
@@ -84,9 +82,8 @@ private:
 // ParallelVolumeFilter ---------------------------------------------------------------------------
 
 template<typename InputType, typename OutputType>
-ParallelVolumeFilter<InputType, OutputType>::ParallelVolumeFilter(int zExtent, const SamplingStrategy<InputType>& samplingStrategy, const std::string& sliceBaseType)
+ParallelVolumeFilter<InputType, OutputType>::ParallelVolumeFilter(int zExtent, const SamplingStrategy<InputType>& samplingStrategy)
     : samplingStrategy_(samplingStrategy)
-    , sliceBaseType_(sliceBaseType)
     , zExtent_(zExtent)
 {
 }
@@ -97,8 +94,11 @@ std::unique_ptr<VolumeRAM> ParallelVolumeFilter<InputType, OutputType>::getFilte
 
     const tgt::ivec3& srcDim = src->getSignedDimensions();
 
+    const auto& inputMetadata = src->getMetaData();
+    const auto& outputMetaData = getMetaData(inputMetadata);
+
     VolumeFactory volumeFactory;
-    std::string format = volumeFactory.getFormat(sliceBaseType_, OutputType::dim);
+    std::string format = volumeFactory.getFormat(outputMetaData.getBaseType(), OutputType::dim);
     std::unique_ptr<VolumeRAM> slice(volumeFactory.create(format, tgt::svec3(srcDim.xy(), 1)));
 
     std::function<InputType(const tgt::ivec3& p)> getValueFromReader = [src] (const tgt::ivec3& p) {
@@ -113,9 +113,6 @@ std::unique_ptr<VolumeRAM> ParallelVolumeFilter<InputType, OutputType>::getFilte
         return samplingStrategy_.sample(pos, srcDim, getValueFromReader);
     };
 
-    const auto& inputMetadata = src->getMetaData();
-    const auto& outputMetaData = getMetaData(inputMetadata);
-
     #pragma omp parallel for
     for(int y = 0; y < srcDim.y; ++y) {
         for(int x = 0; x < srcDim.x; ++x) {
@@ -126,11 +123,6 @@ std::unique_ptr<VolumeRAM> ParallelVolumeFilter<InputType, OutputType>::getFilte
         }
     }
     return slice;
-}
-
-template<typename InputType, typename OutputType>
-const std::string& ParallelVolumeFilter<InputType, OutputType>::getSliceBaseType() const {
-    return sliceBaseType_;
 }
 
 template<typename InputType, typename OutputType>

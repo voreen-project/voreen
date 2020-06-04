@@ -41,7 +41,7 @@ template<typename T>
 class ThresholdingFilter : public ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>> {
 public:
 
-    ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType,  const std::string& sliceBaseType);
+    ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType);
     virtual ~ThresholdingFilter();
 
     ParallelFilterValue<T> getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
@@ -60,8 +60,8 @@ private:
 // Implementation
 
 template<typename T>
-ThresholdingFilter<T>::ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType, const std::string& sliceBaseType)
-    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE, sliceBaseType)
+ThresholdingFilter<T>::ThresholdingFilter(float threshold, const T& replacement, ThresholdingStrategyType thresholdingStrategyType)
+    : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE)
     , threshold_(threshold)
     , replacement_(replacement)
     , thresholdingStrategyType_(thresholdingStrategyType)

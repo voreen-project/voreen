@@ -80,8 +80,7 @@ VolumeFilter* MorphologyFilterProperties::getVolumeFilter(const SliceReaderMetaD
         tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
         settings.morphologyOperatorType_,
         settings.morphologyOperatorShape_,
-        SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-        inputmetadata.getBaseType()
+        SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_))
     );
 }
 void MorphologyFilterProperties::restoreInstance(int instanceId) {

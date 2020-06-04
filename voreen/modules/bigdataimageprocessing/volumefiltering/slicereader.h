@@ -96,7 +96,6 @@ public:
     virtual void seek(int z) = 0;
     virtual int getCurrentZPos() const = 0;
     virtual const VolumeRAM* getCurrentSlice() const = 0;
-    virtual std::string getBaseType() const = 0;
     virtual size_t getNumChannels() const = 0;
 
     const tgt::ivec3& getSignedDimensions() const;
@@ -122,7 +121,6 @@ public:
 
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
     const VolumeRAM* getCurrentSlice() const;
-    std::string getBaseType() const;
     size_t getNumChannels() const;
 
     int getZExtent() const;
@@ -146,7 +144,6 @@ public:
     void seek(int z);
     int getCurrentZPos() const;
     const VolumeRAM* getCurrentSlice() const;
-    std::string getBaseType() const;
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
     size_t getNumChannels() const;
 
@@ -167,7 +164,6 @@ public:
     void seek(int z);
     int getCurrentZPos() const;
     const VolumeRAM* getCurrentSlice() const;
-    std::string getBaseType() const;
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
     size_t getNumChannels() const;
 
@@ -191,7 +187,6 @@ public:
 
     float getVoxelNormalized(const tgt::ivec3& xyz, size_t channel = 0) const;
     const VolumeRAM* getCurrentSlice() const;
-    std::string getBaseType() const;
     size_t getNumChannels() const;
 
 protected:

@@ -184,8 +184,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
     const VolumeBase& inputVolume = *inputVolPtr;
 
     VolumeFilterStackBuilder builder(inputVolume);
-    std::string baseType = inputVolume.getBaseType();
-    size_t numOutputChannels = inputVolume.getNumChannels();
 
     SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(inputVolume);
     for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
@@ -201,17 +199,14 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
             filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
         }
         tgtAssert(filter, "filter was null");
-        tgtAssert(numOutputChannels == filter->getNumInputChannels(), "channel mismatch");
-
-        // Base and number of channels type of output volume is determined by last filter output type.
-        baseType = filter->getSliceBaseType();
-        numOutputChannels = filter->getNumOutputChannels();
 
         metadata = filter->getMetaData(metadata);
         builder.addLayer(std::unique_ptr<VolumeFilter>(filter));
     }
 
     std::unique_ptr<SliceReader> sliceReader = builder.build(0);
+    std::string baseType = sliceReader->getMetaData().getBaseType();
+    size_t numOutputChannels = sliceReader->getNumChannels();
 
     // Reset output volume to make sure it (and the hdf5filevolume) are not used any more
     outport_.setData(nullptr);

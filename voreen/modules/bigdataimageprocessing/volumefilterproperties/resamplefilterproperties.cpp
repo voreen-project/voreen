@@ -58,7 +58,7 @@ VolumeFilter* ResampleFilterProperties::getVolumeFilter(const SliceReaderMetaDat
     Settings settings = instanceSettings_.at(instanceId);
     return new ResampleFilter(
         settings.dimensions_,
-        inputmetadata.getBaseType(), inputmetadata.getNumChannels()
+        inputmetadata.getNumChannels()
     );
 }
 void ResampleFilterProperties::restoreInstance(int instanceId) {

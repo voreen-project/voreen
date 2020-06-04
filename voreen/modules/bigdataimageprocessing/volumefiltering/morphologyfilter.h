@@ -42,11 +42,10 @@ enum MorphologyOperatorShape {
 
 class MorphologyFilter : public VolumeFilter {
 public:
-    MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorType type, MorphologyOperatorShape shape, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType);
+    MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorType type, MorphologyOperatorShape shape, const SamplingStrategy<float>& samplingStrategy);
     virtual ~MorphologyFilter() {}
 
     int zExtent() const;
-    const std::string& getSliceBaseType() const;
 
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
 
@@ -68,7 +67,6 @@ private:
     const MorphologyOperatorType type_;
     const MorphologyOperatorShape shape_;
     const SamplingStrategy<float> samplingStrategy_;
-    const std::string sliceBaseType_;
 };
 
 } // namespace voreen

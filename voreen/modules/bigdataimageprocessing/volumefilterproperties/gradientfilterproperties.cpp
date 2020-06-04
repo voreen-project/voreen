@@ -73,8 +73,7 @@ VolumeFilter* GradientFilterProperties::getVolumeFilter(const SliceReaderMetaDat
     return new GradientFilter(
             settings.gradientType_,
             inputmetadata.getSpacing(),
-            SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
-            inputmetadata.getBaseType()
+            SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_))
     );
 }
 void GradientFilterProperties::restoreInstance(int instanceId) {

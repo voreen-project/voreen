@@ -38,7 +38,7 @@ enum GradientType{
 
 class GradientFilter : public ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue3D> {
 public:
-    GradientFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string& sliceBaseType);
+    GradientFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy);
     virtual ~GradientFilter() {}
 
     ParallelFilterValue3D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;

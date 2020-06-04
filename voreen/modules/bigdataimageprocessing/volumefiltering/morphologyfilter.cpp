@@ -34,12 +34,11 @@ namespace {
 
 namespace voreen {
 
-MorphologyFilter::MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorType type, MorphologyOperatorShape shape, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType)
+MorphologyFilter::MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorType type, MorphologyOperatorShape shape, const SamplingStrategy<float>& samplingStrategy)
     : extent_(extent)
     , type_(type)
     , shape_(shape)
     , samplingStrategy_(samplingStrategy)
-    , sliceBaseType_(sliceBaseType)
 {
     switch (type_) {
     case DILATION_T:
@@ -55,10 +54,6 @@ MorphologyFilter::MorphologyFilter(const tgt::ivec3& extent, MorphologyOperatorT
 
 int MorphologyFilter::zExtent() const {
     return extent_.z;
-}
-
-const std::string& MorphologyFilter::getSliceBaseType() const {
-    return sliceBaseType_;
 }
 
 std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSlice(const CachingSliceReader* src, int z) const {
@@ -86,8 +81,9 @@ MorphologyOperatorShape MorphologyFilter::getMorphologyOperatorShape() const {
 std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceCubeMorphology(const CachingSliceReader* src, int z) const {
 
     const tgt::ivec3& dim = src->getSignedDimensions();
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
-    std::unique_ptr<VolumeRAM> srcSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
+    std::string type = src->getMetaData().getBaseType();
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(type, tgt::svec3(dim.xy(), 1)));
+    std::unique_ptr<VolumeRAM> srcSlice(VolumeFactory().create(type, tgt::svec3(dim.xy(), 1)));
 
     SamplingStrategy<float>::Sampler getValueFromReader = [src](const tgt::ivec3& p) {
         return src->getVoxelNormalized(p);
@@ -145,7 +141,7 @@ std::unique_ptr<VolumeRAM> MorphologyFilter::getFilteredSliceSphereMorphology(co
 
     const tgt::ivec3& dim = src->getSignedDimensions();
     tgt::vec3 extentSq = extent_*extent_;
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(src->getMetaData().getBaseType(), tgt::svec3(dim.xy(), 1)));
 
     SamplingStrategy<float>::Sampler getValueFromReader = [src](const tgt::ivec3& p) {
         return src->getVoxelNormalized(p);

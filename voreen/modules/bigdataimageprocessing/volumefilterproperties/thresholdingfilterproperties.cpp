@@ -70,8 +70,7 @@ VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const SliceReaderMet
     return new ThresholdingFilter1D(
             rwm.realWorldToNormalized(settings.thresholdValue_),
             rwm.realWorldToNormalized(settings.replacementValue_),
-            settings.thresholdingStrategyType_,
-            inputmetadata.getBaseType()
+            settings.thresholdingStrategyType_
     );
 }
 void ThresholdingFilterProperties::restoreInstance(int instanceId) {

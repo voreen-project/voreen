@@ -29,8 +29,8 @@
 
 namespace voreen {
 
-GradientFilter::GradientFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy, const std::string& sliceBaseType)
-    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue3D>(1, samplingStrategy, sliceBaseType)
+GradientFilter::GradientFilter(GradientType gradientType, const tgt::vec3& spacing, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy)
+    : ParallelVolumeFilter<ParallelFilterValue1D, ParallelFilterValue3D>(1, samplingStrategy)
     , gradientType_(gradientType)
     , spacing_(spacing)
 {

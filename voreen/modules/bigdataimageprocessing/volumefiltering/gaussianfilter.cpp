@@ -52,23 +52,23 @@ int GaussianFilter::suitableExtent(float standardDeviation) {
     return static_cast<int>(2.5*standardDeviation-0.5f);
 }
 
-GaussianFilter::GaussianFilter(float standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
-    : GaussianFilter(tgt::vec3(standardDeviation), samplingStrategy, sliceBaseType, numChannels)
+GaussianFilter::GaussianFilter(float standardDeviation, const SamplingStrategy<float>& samplingStrategy, size_t numChannels)
+    : GaussianFilter(tgt::vec3(standardDeviation), samplingStrategy, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
-    : GaussianFilter(standardDeviation, GaussianFilter::suitableExtent(standardDeviation), samplingStrategy, sliceBaseType, numChannels)
+GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const SamplingStrategy<float>& samplingStrategy, size_t numChannels)
+    : GaussianFilter(standardDeviation, GaussianFilter::suitableExtent(standardDeviation), samplingStrategy, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
-    : GaussianFilter(tgt::ivec3(extent), samplingStrategy, sliceBaseType, numChannels)
+GaussianFilter::GaussianFilter(int extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels)
+    : GaussianFilter(tgt::ivec3(extent), samplingStrategy, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
-    : GaussianFilter(suitableStandardDeviation(extent), extent, samplingStrategy, sliceBaseType, numChannels)
+GaussianFilter::GaussianFilter(const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels)
+    : GaussianFilter(suitableStandardDeviation(extent), extent, samplingStrategy, numChannels)
 {
 }
 
@@ -95,19 +95,18 @@ static float* initHalfKernel(int extent, float standardDeviation) {
     return halfKernel;
 }
 
-GaussianFilter::GaussianFilter(float standardDeviation, int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
-    : GaussianFilter(tgt::vec3(standardDeviation), tgt::ivec3(extent), samplingStrategy, sliceBaseType, numChannels)
+GaussianFilter::GaussianFilter(float standardDeviation, int extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels)
+    : GaussianFilter(tgt::vec3(standardDeviation), tgt::ivec3(extent), samplingStrategy, numChannels)
 {
 }
 
-GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels)
+GaussianFilter::GaussianFilter(const tgt::vec3& standardDeviation, const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels)
     : neighborhoodDimensions_(extent)
     , kernelDimensions_(2*extent+tgt::ivec3::one)
     , halfKernelX_(initHalfKernel(extent.x, standardDeviation.x))
     , halfKernelY_(initHalfKernel(extent.y, standardDeviation.y))
     , halfKernelZ_(initHalfKernel(extent.z, standardDeviation.z))
     , samplingStrategy_(samplingStrategy)
-    , sliceBaseType_(sliceBaseType)
     , numChannels_(numChannels)
 {
     tgtAssert(tgt::hand(tgt::greaterThan(standardDeviation, tgt::vec3::zero)), "invalid standardDeviation");
@@ -138,7 +137,7 @@ std::unique_ptr<VolumeRAM> GaussianFilter::getFilteredSlice(const CachingSliceRe
 
     const tgt::ivec3& dim = src->getSignedDimensions();
     VolumeFactory volumeFactory;
-    std::string format = volumeFactory.getFormat(sliceBaseType_, numChannels_);
+    std::string format = volumeFactory.getFormat(src->getMetaData().getBaseType(), numChannels_);
     std::unique_ptr<VolumeRAM> outputSlice(volumeFactory.create(format, tgt::svec3(dim.xy(), 1)));
     std::unique_ptr<VolumeRAM> srcSlice(volumeFactory.create(format, tgt::svec3(dim.xy(), 1)));
 
@@ -212,10 +211,6 @@ std::unique_ptr<VolumeRAM> GaussianFilter::getFilteredSlice(const CachingSliceRe
 
 int GaussianFilter::zExtent() const {
     return neighborhoodDimensions_.z;
-}
-
-const std::string& GaussianFilter::getSliceBaseType() const {
-    return sliceBaseType_;
 }
 
 size_t GaussianFilter::getNumInputChannels() const {

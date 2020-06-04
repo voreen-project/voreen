@@ -73,8 +73,7 @@ VolumeFilter* VorticityFilterProperties::getVolumeFilter(const SliceReaderMetaDa
     return new VorticityFilter(
             settings.gradientType_,
             inputmetadata.getSpacing(),
-            SamplingStrategy<tgt::vec3>(settings.samplingStrategyType_, tgt::vec3(settings.outsideVolumeValue_)),
-            inputmetadata.getBaseType()
+            SamplingStrategy<tgt::vec3>(settings.samplingStrategyType_, tgt::vec3(settings.outsideVolumeValue_))
     );
 }
 void VorticityFilterProperties::restoreInstance(int instanceId) {

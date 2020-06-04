@@ -39,21 +39,20 @@ public:
     static tgt::vec3 suitableStandardDeviation(const tgt::ivec3& extent);
 
 
-    GaussianFilter(const tgt::vec3& standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels = 1);
-    GaussianFilter(float standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels = 1);
+    GaussianFilter(const tgt::vec3& standardDeviation, const SamplingStrategy<float>& samplingStrategy, size_t numChannels = 1);
+    GaussianFilter(float standardDeviation, const SamplingStrategy<float>& samplingStrategy, size_t numChannels = 1);
 
-    GaussianFilter(const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels = 1);
-    GaussianFilter(int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels = 1);
+    GaussianFilter(const tgt::ivec3& extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels = 1);
+    GaussianFilter(int extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels = 1);
 
-    GaussianFilter(const tgt::vec3& standardDeviation, const tgt::ivec3& zExtent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels = 1);
-    GaussianFilter(float standardDeviation, int extent, const SamplingStrategy<float>& samplingStrategy, const std::string& sliceBaseType, size_t numChannels = 1);
+    GaussianFilter(const tgt::vec3& standardDeviation, const tgt::ivec3& zExtent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels = 1);
+    GaussianFilter(float standardDeviation, int extent, const SamplingStrategy<float>& samplingStrategy, size_t numChannels = 1);
 
     virtual ~GaussianFilter();
 
 
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
     int zExtent() const;
-    const std::string& getSliceBaseType() const;
 
     size_t getNumInputChannels() const;
     size_t getNumOutputChannels() const;
@@ -70,7 +69,6 @@ private:
     float* halfKernelZ_;
 
     const SamplingStrategy<float> samplingStrategy_;
-    const std::string sliceBaseType_;
     size_t numChannels_;
 };
 
