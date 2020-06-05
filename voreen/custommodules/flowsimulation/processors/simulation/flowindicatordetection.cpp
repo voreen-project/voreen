@@ -346,11 +346,6 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
     size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
     if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
 
-        FlowIndicator& indicator = flowIndicators_[indicatorIdx];
-        indicator.radius_ = radius_.get();
-        indicator.type_ = indicatorType_.getValue();
-        indicator.flowProfile_ = flowProfile_.getValue();
-
         FlowIndicatorSettings& settings = flowIndicatorSettings_[indicatorIdx];
         settings.centerlinePosition_ = centerlinePosition_.get();
         settings.invertDirection_ = invertDirection_.get();
@@ -361,6 +356,9 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         settings.velocityCurveFile_ = velocityCurveFile_.get();
         settings.velocityCurvePeriodic_ = velocityCurvePeriodicity_.get();
 
+        FlowIndicator& indicator = flowIndicators_[indicatorIdx];
+        indicator.type_ = indicatorType_.getValue();
+
         if(needReinitialization) {
             FlowIndicatorType type = indicator.type_;
             int id = indicator.id_;
@@ -369,6 +367,11 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
             // Restore config.
             indicator.type_ = type;
             indicator.id_ = id;
+        }
+        else {
+            indicator.radius_ = radius_.get();
+            indicator.flowProfile_ = flowProfile_.getValue();
+            indicator.velocityCurve_ = createCurveFromSettings(settings);
         }
 
         // Update UI.
