@@ -125,7 +125,7 @@ private:
 class VesselnessFeatureExtractor : public VolumeFilter {
 public:
 
-    VesselnessFeatureExtractor(float alpha, float beta, float c, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string sliceBaseType, float scale);
+    VesselnessFeatureExtractor(float alpha, float beta, float c, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, float scale);
     virtual ~VesselnessFeatureExtractor();
 
     tgt::vec4 computeVesselnessFeatureVector(const SymMat3& hessian) const;
@@ -134,10 +134,8 @@ public:
     virtual int zExtent() const;
     virtual size_t getNumInputChannels() const;
     virtual size_t getNumOutputChannels() const;
-    virtual const std::string& getSliceBaseType() const;
 
 private:
-    const std::string sliceBaseType_;
     SamplingStrategy<float> samplingStrategy_;
 
     tgt::ivec3 extent_;
@@ -159,7 +157,7 @@ private:
 // by combinining v with a value of per-voxel uniformity of vessel directions in the neighborhood of all voxels.
 class VesselnessFinalizer : public ParallelVolumeFilter<ParallelFilterValue4D, ParallelFilterValue1D> {
 public:
-    VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy, const std::string sliceBaseType);
+    VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy);
     virtual ~VesselnessFinalizer();
 
     ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
@@ -450,9 +448,8 @@ tgt::mat3 SymMat3::toTgtMat() const {
 // VesselnessFeatureExtractor ---------------------------------------------------------------------------------------------------------
 //
 
-VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, const std::string sliceBaseType, float scale)
+VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, float scale)
     : samplingStrategy_(samplingStrategy)
-    , sliceBaseType_(sliceBaseType)
     , extent_(extent)
     //, two_alpha_squared_(2*alpha*alpha)
     //, two_beta_squared_(2*beta*beta)
@@ -538,7 +535,7 @@ std::unique_ptr<VolumeRAM> VesselnessFeatureExtractor::getFilteredSlice(const Ca
         }
     }
 
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(sliceBaseType_, tgt::svec3(dim.xy(), 1)));
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(src->getMetaData().getBaseType(), tgt::svec3(dim.xy(), 1)));
 
     // x
     #pragma omp parallel for
@@ -578,10 +575,6 @@ size_t VesselnessFeatureExtractor::getNumInputChannels() const {
 
 size_t VesselnessFeatureExtractor::getNumOutputChannels() const {
     return 1;
-}
-
-const std::string& VesselnessFeatureExtractor::getSliceBaseType() const {
-    return sliceBaseType_;
 }
 
 float satoVesselness(float l1, float l2, float l3, float two_alpha1_squared, float two_alpha2_squared) {
@@ -702,8 +695,8 @@ tgt::vec4 VesselnessFeatureExtractor::computeVesselnessFeatureVector(const SymMa
 
 
 
-VesselnessFinalizer::VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy, const std::string sliceBaseType)
-    : ParallelVolumeFilter<ParallelFilterValue4D, ParallelFilterValue1D>(extent.z, samplingStrategy, sliceBaseType)
+VesselnessFinalizer::VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy)
+    : ParallelVolumeFilter<ParallelFilterValue4D, ParallelFilterValue1D>(extent.z, samplingStrategy)
     , extent_(extent)
 {
 }
@@ -870,13 +863,13 @@ static void voxelwiseMax(SliceReader& reader, HDF5FileVolume& file, ProgressRepo
     }
 }
 
-static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tgt::vec3& standardDeviationVec, const std::string& baseType) {
+static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tgt::vec3& standardDeviationVec) {
     //tgt::ivec3 dirVesselnessExtent = tgt::ivec3::one;
     float scale = tgt::length(standardDeviationVec);
 
     return VolumeFilterStackBuilder(input)
-        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, baseType, scale)))
-        //.addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFinalizer(dirVesselnessExtent, SamplingStrategy<ParallelFilterValue4D>::MIRROR, baseType)))
+        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, scale)))
+        //.addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFinalizer(dirVesselnessExtent, SamplingStrategy<ParallelFilterValue4D>::MIRROR)))
         .build(0);
 }
 
@@ -900,8 +893,7 @@ VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
     // Close the volume output file
     outport_.clear();
 
-    //const std::string baseType = inputVol->getBaseType();
-    const std::string baseType = "float";
+    const std::string baseType = inputVol->getBaseType();
     const std::string volumeLocation = "/vol";
     const size_t numChannels = 1;
     const int deflateLevel = 1;
@@ -926,8 +918,7 @@ VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
             std::move(output),
             scaleSpaceSteps_.get(),
             minStandardDeviationVec_.get(),
-            maxStandardDeviationVec_.get(),
-            baseType
+            maxStandardDeviationVec_.get()
             );
 }
 
@@ -939,7 +930,7 @@ VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput 
 
     // Write first slices to volume
     {
-        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.minStandardDeviationVec, input.baseType);
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.minStandardDeviationVec);
 
         writeSlicesToHDF5File(*reader, *input.output, &progressReporter);
     }
@@ -947,7 +938,7 @@ VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput 
     // Now build max with the following scale space steps
     for(int step=1; step < input.scaleSpaceSteps; ++step) {
         auto stddev = input.getStandardDeviationForStep(step);
-        std::unique_ptr<SliceReader> reader = buildStack(input.input, stddev, input.baseType);
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, stddev);
 
         progressReporter.setProgressRange(tgt::vec2(stepProgressDelta*step, stepProgressDelta*(step+1)));
 

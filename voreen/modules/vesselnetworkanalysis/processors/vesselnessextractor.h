@@ -49,7 +49,6 @@ struct VesselnessExtractorInput {
     int scaleSpaceSteps;
     tgt::vec3 minStandardDeviationVec;
     tgt::vec3 maxStandardDeviationVec;
-    std::string baseType;
 
     VesselnessExtractorInput(
               const VolumeBase& input
@@ -57,14 +56,12 @@ struct VesselnessExtractorInput {
             , int scaleSpaceSteps
             , tgt::vec3 minStandardDeviationVec
             , tgt::vec3 maxStandardDeviationVec
-            , std::string baseType
             )
         : input(input)
         , output(std::move(output))
         , scaleSpaceSteps(scaleSpaceSteps)
         , minStandardDeviationVec(minStandardDeviationVec)
         , maxStandardDeviationVec(maxStandardDeviationVec)
-        , baseType(baseType)
     {
     }
 
@@ -75,7 +72,6 @@ struct VesselnessExtractorInput {
         , scaleSpaceSteps(old.scaleSpaceSteps)
         , minStandardDeviationVec(old.minStandardDeviationVec)
         , maxStandardDeviationVec(old.maxStandardDeviationVec)
-        , baseType(old.baseType)
     {
     }
 
