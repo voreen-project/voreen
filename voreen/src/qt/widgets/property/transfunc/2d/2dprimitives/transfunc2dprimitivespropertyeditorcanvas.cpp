@@ -43,6 +43,7 @@
 #include <QColorDialog>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QString>
 #include <QToolTip>
 #include <QImage>

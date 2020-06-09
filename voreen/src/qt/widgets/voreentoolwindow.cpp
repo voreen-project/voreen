@@ -32,6 +32,7 @@
 #include <QFrame>
 #include <QPainter>
 #include <iostream>
+#include <QPainterPath>
 
 namespace voreen {
 
