@@ -35,6 +35,7 @@ public:
     MedianFilter(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue1D>& samplingStrategy);
     virtual ~MedianFilter();
     ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 private:
     tgt::ivec3 extent_;
 };
@@ -45,6 +46,7 @@ public:
     MedianFilterVector(const tgt::ivec3& extent, const SamplingStrategy<T>& samplingStrategy);
     virtual ~MedianFilterVector();
     ParallelFilterValue<T> getValue(const typename MedianFilterVector<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 private:
     tgt::ivec3 extent_;
 };
@@ -87,6 +89,17 @@ ParallelFilterValue<T> MedianFilterVector<T>::getValue(const typename MedianFilt
     }
 
     return values[argMin];
+}
+
+template<typename T>
+SliceReaderMetaData MedianFilterVector<T>::getMetaData(const SliceReaderMetaData& base) const {
+    auto md = SliceReaderMetaData::fromBase(base);
+    if(base.getMinMaxBounds()) {
+        // We can only do this because the median filter never expands the
+        // range of possible values compared to the input.
+        md.setMinMaxBounds(*base.getMinMaxBounds());
+    }
+    return md;
 }
 
 typedef MedianFilterVector<tgt::vec2> MedianFilter2D;

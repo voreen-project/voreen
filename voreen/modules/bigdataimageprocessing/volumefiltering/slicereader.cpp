@@ -38,6 +38,10 @@ SliceReaderMetaData SliceReaderMetaData::fromBaseAccurate(const SliceReaderMetaD
     if(mm) {
         srmd.setMinMax(*mm);
     }
+    const auto& mmb = base.getMinMaxBounds();
+    if(mmb) {
+        srmd.setMinMaxBounds(*mmb);
+    }
     return srmd;
 }
 
@@ -107,6 +111,20 @@ void SliceReaderMetaData::setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm)
     }
 }
 
+void SliceReaderMetaData::setMinMaxBounds(std::vector<tgt::vec2> minmaxBounds) {
+    minmaxBounds_ = minmaxBounds;
+}
+
+void SliceReaderMetaData::setMinMaxBoundsNormalized(std::vector<tgt::vec2> minmaxBoundsNorm) {
+    minmax_ = std::vector<tgt::vec2>();
+    for(auto& mm : minmaxBoundsNorm) {
+        minmaxBounds_->emplace_back(
+                rwm_.normalizedToRealWorld(mm.x),
+                rwm_.normalizedToRealWorld(mm.y)
+                );
+    }
+}
+
 void SliceReaderMetaData::setDimensions(tgt::svec3 dimensions) {
     dimensions_ = dimensions;
 }
@@ -144,6 +162,11 @@ tgt::vec2 SliceReaderMetaData::estimateMinMax() const {
             min = std::min(min, minmax_->at(c).x);
             max = std::max(max, minmax_->at(c).x);
         }
+    } else if(minmaxBounds_) {
+        for(int c=1; c<minmaxBounds_->size(); ++c) {
+            min = std::min(min, minmaxBounds_->at(c).x);
+            max = std::max(max, minmaxBounds_->at(c).x);
+        }
     } else {
         min = getRealworldMapping().getOffset();
         max = getRealworldMapping().getScale() + min;
@@ -170,6 +193,9 @@ std::unique_ptr<VolumeMinMax> SliceReaderMetaData::getVolumeMinMax() const {
 
 const boost::optional<std::vector<tgt::vec2>>& SliceReaderMetaData::getMinMax() const {
     return minmax_;
+}
+const boost::optional<std::vector<tgt::vec2>>& SliceReaderMetaData::getMinMaxBounds() const {
+    return minmaxBounds_;
 }
 tgt::svec3 SliceReaderMetaData::getDimensions() const {
     return dimensions_;

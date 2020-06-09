@@ -76,5 +76,14 @@ size_t ResampleFilter::getNumOutputChannels() const {
     return numChannels_;
 }
 
+SliceReaderMetaData ResampleFilter::getMetaData(const SliceReaderMetaData& base) const {
+    auto md = SliceReaderMetaData::fromBase(base);
+    if(base.getMinMaxBounds()) {
+        // We can only do this because the median filter never expands the
+        // range of possible values compared to the input.
+        md.setMinMaxBounds(*base.getMinMaxBounds());
+    }
+    return md;
+}
 
 } // namespace voreen

@@ -53,6 +53,7 @@ public:
 
     std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
     int zExtent() const;
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 
     size_t getNumInputChannels() const;
     size_t getNumOutputChannels() const;

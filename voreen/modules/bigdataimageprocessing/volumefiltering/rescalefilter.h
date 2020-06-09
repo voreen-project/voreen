@@ -139,6 +139,7 @@ SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& bas
 
     // If we have accurate min/max information from the base, we can also supply those ourselves.
     if(base.getMinMax()) {
+        // Note that this mapping is ONLY possible because all supported functions are monotonically increasing!
         std::vector<tgt::vec2> minmax;
         for(auto& mm : *base.getMinMax()) {
             minmax.emplace_back(rescaleInternal(mm, strategy_));

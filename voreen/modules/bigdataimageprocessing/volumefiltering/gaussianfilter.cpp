@@ -221,5 +221,14 @@ size_t GaussianFilter::getNumOutputChannels() const {
     return numChannels_;
 }
 
+SliceReaderMetaData GaussianFilter::getMetaData(const SliceReaderMetaData& base) const {
+    auto md = SliceReaderMetaData::fromBase(base);
+    if(base.getMinMaxBounds()) {
+        // We can only do this because the Gaussian filter never expands the
+        // range of possible values compared to the input.
+        md.setMinMaxBounds(*base.getMinMaxBounds());
+    }
+    return md;
+}
 
 } // namespace voreen

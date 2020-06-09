@@ -45,6 +45,7 @@ public:
     virtual ~ThresholdingFilter();
 
     ParallelFilterValue<T> getValue(const typename ThresholdingFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 
     ThresholdingStrategyType getThresholdingStrategyType() const;
 
@@ -110,6 +111,17 @@ ParallelFilterValue<T> ThresholdingFilter<T>::getValue(const typename Thresholdi
 template<typename T>
 ThresholdingStrategyType ThresholdingFilter<T>::getThresholdingStrategyType() const {
     return thresholdingStrategyType_;
+}
+
+template<typename T>
+SliceReaderMetaData ThresholdingFilter<T>::getMetaData(const SliceReaderMetaData& base) const {
+    auto md = SliceReaderMetaData::fromBase(base);
+    if(base.getMinMaxBounds()) {
+        // We can only do this because the median filter never expands the
+        // range of possible values compared to the input.
+        md.setMinMaxBounds(*base.getMinMaxBounds());
+    }
+    return md;
 }
 
 typedef ThresholdingFilter<float>     ThresholdingFilter1D;

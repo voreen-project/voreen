@@ -57,6 +57,9 @@ public:
 
     void setMinMax(std::vector<tgt::vec2> minmax);
     void setMinMaxNormalized(std::vector<tgt::vec2> minmaxNorm);
+    void setMinMaxBounds(std::vector<tgt::vec2> minmax);
+    void setMinMaxBoundsNormalized(std::vector<tgt::vec2> minmaxNorm);
+
     void setDimensions(tgt::svec3 dimensions);
     void setNumChannels(size_t numChannels);
     void setBaseType(std::string baseType);
@@ -64,13 +67,15 @@ public:
     void setSpacing(tgt::vec3 spacing);
 
     // Have a best guess for valid min/max values. If available, all actual
-    // min/max channels are considered. Otherwise the RWM will be used as a
-    // fallback.
+    // min/max channels are considered. Next, the lower/upper bounds for
+    // min/max are considered, if available. Otherwise the RWM will be used as
+    // a fallback.
     tgt::vec2 estimateMinMax() const;
 
     // Result may be null (no valid min/max data available)
     std::unique_ptr<VolumeMinMax> getVolumeMinMax() const;
     const boost::optional<std::vector<tgt::vec2>>& getMinMax() const;
+    const boost::optional<std::vector<tgt::vec2>>& getMinMaxBounds() const;
     const RealWorldMapping& getRealworldMapping() const;
     tgt::svec3 getDimensions() const;
     size_t getNumChannels() const;
@@ -82,6 +87,7 @@ private:
     RealWorldMapping rwm_;
     tgt::svec3 dimensions_;
     boost::optional<std::vector<tgt::vec2>> minmax_;
+    boost::optional<std::vector<tgt::vec2>> minmaxBounds_; //lower bound(s) for min, upper bound(s) for max
     size_t numChannels_;
     std::string baseType_;
     tgt::vec3 spacing_;
