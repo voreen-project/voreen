@@ -52,6 +52,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , inport_(Port::INPORT, "inport", "Ensemble Datastructure Input", false)
     , seedMask_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
     , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
+    , sampleRegion_("sampleRegion", "Sample Region")
     , singleChannelSimilarityMeasure_("singleChannelSimilarityMeasure", "Single Field Similarity Measure")
     , isoValue_("isoValue", "Iso-Value", 0.5f, 0.0f, 1.0f)
     , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Field Similarity Measure")
@@ -65,6 +66,13 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     addPort(outport_);
 
     // Calculation
+
+    addProperty(sampleRegion_);
+    //sampleRegion_.addOption("bounds", "Ensemble Bounds"); // Disabled, because seeds should be comparable.
+    sampleRegion_.addOption("common", "Common Bounds");
+    sampleRegion_.addOption("roi", "Region of Interest");
+    sampleRegion_.select("roi"); // Old behavior.
+
     addProperty(singleChannelSimilarityMeasure_);
     singleChannelSimilarityMeasure_.addOption("isovalue", "Iso-Contours", MEASURE_ISOCONTOURS);
     singleChannelSimilarityMeasure_.addOption("generalized", "Generalized", MEASURE_GENERALIZED);
@@ -140,19 +148,26 @@ std::string SimilarityMatrixCreator::calculateHash() const {
 }
 
 SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
-    const EnsembleDataset* inputPtr = inport_.getThreadSafeData();
-    if (!inputPtr)
+    auto ensemble = inport_.getThreadSafeData();
+    if (!ensemble)
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
 
-    const EnsembleDataset& input = *inputPtr;
-
-    const tgt::Bounds& roi = input.getRoi(); // ROI is defined in physical coordinates.
-    if (!roi.isDefined()) {
-        throw InvalidInputException("ROI is not defined", InvalidInputException::S_ERROR);
+    tgt::Bounds bounds;
+    if (sampleRegion_.get() == "bounds") {
+        bounds = ensemble->getBounds();
+    }
+    else if (sampleRegion_.get() == "common") {
+        bounds = ensemble->getCommonBounds();
+    }
+    else if (sampleRegion_.get() == "roi") {
+        bounds = ensemble->getRoi();
+    }
+    else {
+        throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
     }
 
-    for(const std::string& fieldName : input.getCommonFieldNames()) {
-        size_t numChannels = input.getNumChannels(fieldName);
+    for(const std::string& fieldName : ensemble->getCommonFieldNames()) {
+        size_t numChannels = ensemble->getNumChannels(fieldName);
         if(numChannels != 1 && numChannels != 3) {
             throw InvalidInputException("Only volumes with 1 or 3 channels supported", InvalidInputException::S_ERROR);
         }
@@ -166,7 +181,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     std::vector<tgt::vec3> seedPoints;
     seedPoints.reserve(numSeedPoints_.get());
     if (seedMask) {
-        tgt::Bounds roiBounds = roi;
+        tgt::Bounds roiBounds = bounds;
         tgt::Bounds seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
 
         roiBounds.intersectVolume(seedMaskBounds);
@@ -218,7 +233,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         for (int k = 0; k<numSeedPoints_.get(); k++) {
             tgt::vec3 seedPoint;
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
-            seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+            seedPoint = bounds.getLLF() + seedPoint * bounds.diagonal();
             seedPoints.push_back(seedPoint);
         }
     }
@@ -228,10 +243,10 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         throw InvalidInputException("No seed points found", InvalidInputException::S_ERROR);
     }
 
-    std::unique_ptr<SimilarityMatrixList> outputMatrices(new SimilarityMatrixList(input));
+    std::unique_ptr<SimilarityMatrixList> outputMatrices(new SimilarityMatrixList(*ensemble));
 
     return SimilarityMatrixCreatorInput{
-            input,
+            std::move(ensemble),
             std::move(outputMatrices),
             std::move(seedPoints),
             singleChannelSimilarityMeasure_.getValue(),
@@ -249,23 +264,23 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
     progress.setProgress(0.0f);
 
-    const std::vector<std::string>& fieldNames = input.dataset.getCommonFieldNames();
+    const std::vector<std::string>& fieldNames = input.ensemble->getCommonFieldNames();
     for (size_t fi=0; fi<fieldNames.size(); fi++) {
 
         const std::string& fieldName = fieldNames[fi];
-        size_t numChannels = input.dataset.getNumChannels(fieldName);
+        size_t numChannels = input.ensemble->getNumChannels(fieldName);
         tgt::vec2 valueRange;
         if(numChannels == 1) {
-             valueRange = input.dataset.getValueRange(fieldName);
+             valueRange = input.ensemble->getValueRange(fieldName);
         }
         else {
             // If we use multi-channel volumes, we need to calculate the min. and max. magnitude in order
-            // to properly scale values later on to achieve a matrix whose values are within [0, 1].
-            valueRange = input.dataset.getMagnitudeRange(fieldName);
+            // to properly scale values later on to generate a matrix whose values are within [0, 1].
+            valueRange = input.ensemble->getMagnitudeRange(fieldName);
         }
 
         // Init empty flags.
-        const size_t numElements = input.dataset.getTotalNumTimeSteps() * seedPoints.size() * numChannels;
+        const size_t numElements = input.ensemble->getTotalNumTimeSteps() * seedPoints.size() * numChannels;
 #ifdef USE_MEMORY_MAPPED_FILES
         std::unique_ptr<DiskArrayStorage<float>> flagStorage;
         DiskArray<float> Flags;
@@ -306,9 +321,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #endif
 
             SubtaskProgressReporter runProgressReporter(progress,tgt::vec2(fi, 0.7f * (fi + 1)) / tgt::vec2(fieldNames.size()));
-            float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
+            float progressPerTimeStep = 1.0f / (input.ensemble->getTotalNumTimeSteps());
             size_t index = 0;
-            for (const EnsembleDataset::Run& run : input.dataset.getRuns()) {
+            for (const EnsembleDataset::Run& run : input.ensemble->getRuns()) {
                 for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
 
                     const VolumeBase* volume = timeStep.fieldNames_.at(fieldName);
@@ -317,8 +332,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 
                     VolumeRAMRepresentationLock lock(volume);
                     for (const tgt::vec3& seedPoint : seedPoints) {
+                        tgt::vec3 pos = physicalToVoxelMatrix * seedPoint;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            float value = lock->getVoxelNormalized(physicalToVoxelMatrix * seedPoint, channel);
+                            float value = lock->getVoxelNormalized(pos, channel);
                             value = rwm.normalizedToRealWorld(value);
 
 #ifdef USE_MEMORY_MAPPED_FILES
@@ -509,8 +525,12 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             else if (a == 0.0f && b == 0.0f) {
                                 statistics.addSample(0.0f);
                             }
-                            else {
+                            else { // Exactly one vector was zero.
+
+                                // We add a 'maximally different' sample (which leads, however, to a discontinuity).
                                 statistics.addSample(1.0f);
+                                // Instead, we could also fallback to the magnitude difference
+                                //statistics.addSample(std::abs(a-b)/valueRange.y);
                             }
                         }
                         else if(input.multiChannelSimilarityMeasure == MEASURE_CROSSPRODUCT) {

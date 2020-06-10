@@ -53,7 +53,7 @@ enum MultiChannelSimilarityMeasure {
 };
 
 struct SimilarityMatrixCreatorInput {
-    const EnsembleDataset& dataset;
+    PortDataPointer<EnsembleDataset> ensemble;
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
     std::vector<tgt::vec3> seedPoints;
     SingleChannelSimilarityMeasure singleChannelSimilarityMeasure;
@@ -90,6 +90,7 @@ private:
 
     std::string calculateHash() const;
 
+    StringOptionProperty sampleRegion_;
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
     FloatProperty isoValue_;
     OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;
