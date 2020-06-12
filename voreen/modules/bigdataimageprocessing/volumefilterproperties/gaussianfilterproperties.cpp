@@ -24,16 +24,15 @@
  ***********************************************************************************/
 
 #include "gaussianfilterproperties.h"
-#include "../volumefiltering/slicereader.h"
+#include "../volumefiltering/gaussianfilter.h"
 
 namespace voreen {
-
-GaussianFilterProperties::GaussianFilterProperties()
-    : extentX_(getId("extentx"), "Extent X", 1, 0, 100)
-    , extentY_(getId("extenty"), "Extent Y", 1, 0, 100)
-    , extentZ_(getId("extentz"), "Extent Z", 1, 0, 100)
-    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
-    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+GaussianFilterSettings::GaussianFilterSettings()
+    : extentX_(settingsId<GaussianFilterSettings>("extentx"), "Extent X", 1, 0, 100)
+    , extentY_(settingsId<GaussianFilterSettings>("extenty"), "Extent Y", 1, 0, 100)
+    , extentZ_(settingsId<GaussianFilterSettings>("extentz"), "Extent Z", 1, 0, 100)
+    , samplingStrategyType_(settingsId<GaussianFilterSettings>("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
+    , outsideVolumeValue_(settingsId<GaussianFilterSettings>("outsideVolumeValue"), "Outside Volume Value", 0, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
 {
     samplingStrategyType_.addOption("clamp", "Clamp", SamplingStrategyType::CLAMP_T);
     samplingStrategyType_.addOption("mirror", "Mirror", SamplingStrategyType::MIRROR_T);
@@ -44,104 +43,62 @@ GaussianFilterProperties::GaussianFilterProperties()
 
     // Update property state.
     samplingStrategyType_.invalidate();
+}
+GaussianFilterSettings& GaussianFilterSettings::operator=(const GaussianFilterSettings& other) {
+    copyPropertyValue(other.extentX_, extentX_);
+    copyPropertyValue(other.extentY_, extentY_);
+    copyPropertyValue(other.extentZ_, extentZ_);
+    copyPropertyValue(other.samplingStrategyType_, samplingStrategyType_);
+    copyPropertyValue(other.outsideVolumeValue_, outsideVolumeValue_);
 
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
-
-    // Add properties to list.
-    addProperties();
+    return *this;
 }
 
-std::string GaussianFilterProperties::getVolumeFilterName() const {
+std::string GaussianFilterSettings::getVolumeFilterName() {
     return "Gaussian Filter";
 }
 
-void GaussianFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void GaussianFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     const auto& mm = input.estimateMinMax();
 
     outsideVolumeValue_.setMinValue(mm.x);
     outsideVolumeValue_.setMaxValue(mm.y);
 }
-
-VolumeFilter* GaussianFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
+VolumeFilter* GaussianFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     return new GaussianFilter(
-        tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-        SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_)),
+        tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
+        SamplingStrategy<float>(samplingStrategyType_.getValue(), static_cast<float>(outsideVolumeValue_.get())),
         inputmetadata.getNumChannels()
     );
 }
-void GaussianFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    extentX_.set(settings.extentX_);
-    extentY_.set(settings.extentY_);
-    extentZ_.set(settings.extentZ_);
-    samplingStrategyType_.selectByValue(settings.samplingStrategyType_);
-    outsideVolumeValue_.set(settings.outsideVolumeValue_);
-}
-void GaussianFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.extentX_ = extentX_.get();
-    settings.extentY_ = extentY_.get();
-    settings.extentZ_ = extentZ_.get();
-    settings.samplingStrategyType_ = samplingStrategyType_.getValue();
-    settings.outsideVolumeValue_ = outsideVolumeValue_.get();
-}
-void GaussianFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void GaussianFilterProperties::addProperties() {
-    properties_.push_back(&extentX_);
-    properties_.push_back(&extentY_);
-    properties_.push_back(&extentZ_);
-    properties_.push_back(&samplingStrategyType_);
-    properties_.push_back(&outsideVolumeValue_);
-}
-void GaussianFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void GaussianFilterProperties::deserialize(Deserializer& s) {
-    try {
-        s.deserialize(getId("instanceSettings"), instanceSettings_);
-    }
-    catch (SerializationException&) {
-        s.removeLastError();
-        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
-    }
-}
-std::vector<int> GaussianFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
+void GaussianFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&extentX_);
+    output.push_back(&extentY_);
+    output.push_back(&extentZ_);
+    output.push_back(&samplingStrategyType_);
+    output.push_back(&outsideVolumeValue_);
 }
 
-void GaussianFilterProperties::Settings::serialize(Serializer& s) const {
+void GaussianFilterSettings::serialize(Serializer& s) const {
     s.serialize("extentX", extentX_);
     s.serialize("extentY", extentY_);
     s.serialize("extentZ", extentZ_);
     s.serialize("samplingStrategyType", samplingStrategyType_);
     s.serialize("outsideVolumeValue", outsideVolumeValue_);
 }
-void GaussianFilterProperties::Settings::deserialize(Deserializer& s) {
-    s.deserialize("extentX", extentX_);
-    s.deserialize("extentY", extentY_);
-    s.deserialize("extentZ", extentZ_);
-    int samplingStrategyType = 0;
-    s.deserialize("samplingStrategyType", samplingStrategyType);
-    samplingStrategyType_ = static_cast<SamplingStrategyType>(samplingStrategyType);
-    s.deserialize("outsideVolumeValue", outsideVolumeValue_);
+void GaussianFilterSettings::deserialize(Deserializer& s) {
+    deserializeTemplatePropertyWithValueFallback(s, "extentX", extentX_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentY", extentY_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentZ", extentZ_);
+    try {
+        s.deserialize("samplingStrategyType", samplingStrategyType_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+        int samplingStrategyType = 0;
+        s.deserialize("samplingStrategyType", samplingStrategyType);
+        samplingStrategyType_.selectByValue(static_cast<SamplingStrategyType>(samplingStrategyType));
+    }
+    deserializeTemplatePropertyWithValueFallback(s, "outsideVolumeValue", outsideVolumeValue_);
 }
 
 }

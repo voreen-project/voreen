@@ -26,40 +26,25 @@
 #ifndef VRN_RESAMPLEFILTERPROPERTIES_H
 #define VRN_RESAMPLEFILTERPROPERTIES_H
 
-#include "filterproperties.h"
+#include "templatefilterproperties.h"
 
-#include "../volumefiltering/resamplefilter.h"
 #include "voreen/core/properties/vectorproperty.h"
 
 namespace voreen {
 
-class ResampleFilterProperties : public FilterProperties {
+class ResampleFilterSettings : public Serializable {
 public:
-    ResampleFilterProperties();
+    ResampleFilterSettings();
+    ResampleFilterSettings& operator=(const ResampleFilterSettings& other);
+    static std::string getVolumeFilterName();
+    void adjustPropertiesToInput(const SliceReaderMetaData& input);
+    VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata) const;
+    void addProperties(std::vector<Property*>& output);
 
-    virtual std::string getVolumeFilterName() const;
-
-    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input);
-
-    virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const;
-    virtual void restoreInstance(int instanceId);
-    virtual void storeInstance(int instanceId);
-    virtual void removeInstance(int instanceId);
-    virtual void addProperties();
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
-    virtual std::vector<int> getStoredInstances() const;
+    void serialize(Serializer& s) const;
+    void deserialize(Deserializer& s);
 
 private:
-
-    struct Settings : public Serializable {
-        tgt::svec3 dimensions_;
-
-        virtual void serialize(Serializer& s) const;
-        virtual void deserialize(Deserializer& s);
-    };
-    std::map<int, Settings> instanceSettings_;
-
     IntVec3Property dimensions_;
 };
 

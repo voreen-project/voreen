@@ -28,10 +28,10 @@
 
 namespace voreen {
 
-GradientFilterProperties::GradientFilterProperties()
-    : gradientType_(getId("gradientType"), "Gradient Type", Processor::INVALID_RESULT)
-    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
-    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+GradientFilterSettings::GradientFilterSettings()
+    : gradientType_(settingsId<GradientFilterSettings>("gradientType"), "Gradient Type", Processor::INVALID_RESULT)
+    , samplingStrategyType_(settingsId<GradientFilterSettings>("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
+    , outsideVolumeValue_(settingsId<GradientFilterSettings>("outsideVolumeValue"), "Outside Volume Value", 0, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
 {
     gradientType_.addOption("centralDifferences", "Central Differences", GradientType::VOG_CENTRAL_DIFFERENCE);
     gradientType_.addOption("linearRegression", "Linear Regression", GradientType::VOG_LINEAR_REGRESSION);
@@ -46,90 +46,65 @@ GradientFilterProperties::GradientFilterProperties()
 
     // Update property state.
     samplingStrategyType_.invalidate();
-
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
-
-    // Add properties to list.
-    addProperties();
 }
 
-std::string GradientFilterProperties::getVolumeFilterName() const {
+GradientFilterSettings& GradientFilterSettings::operator=(const GradientFilterSettings& other) {
+    copyPropertyValue(other.gradientType_, gradientType_);
+    copyPropertyValue(other.samplingStrategyType_, samplingStrategyType_);
+    copyPropertyValue(other.outsideVolumeValue_, outsideVolumeValue_);
+
+    return *this;
+}
+
+std::string GradientFilterSettings::getVolumeFilterName() {
     return "Gradient";
 }
 
-void GradientFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void GradientFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     const auto& mm = input.estimateMinMax();
 
     outsideVolumeValue_.setMinValue(mm.x);
     outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* GradientFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
+VolumeFilter* GradientFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     return new GradientFilter(
-            settings.gradientType_,
+            gradientType_.getValue(),
             inputmetadata.getSpacing(),
-            SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_))
+            SamplingStrategy<float>(samplingStrategyType_.getValue(), static_cast<float>(outsideVolumeValue_.get()))
     );
 }
-void GradientFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    gradientType_.selectByValue(settings.gradientType_);
-    samplingStrategyType_.selectByValue(settings.samplingStrategyType_);
-    outsideVolumeValue_.set(settings.outsideVolumeValue_);
-}
-void GradientFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.gradientType_ = gradientType_.getValue();
-    settings.samplingStrategyType_ = samplingStrategyType_.getValue();
-    settings.outsideVolumeValue_ = outsideVolumeValue_.get();
-}
-void GradientFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void GradientFilterProperties::addProperties() {
-    properties_.push_back(&gradientType_);
-    properties_.push_back(&samplingStrategyType_);
-    properties_.push_back(&outsideVolumeValue_);
-}
-void GradientFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void GradientFilterProperties::deserialize(Deserializer& s) {
-    s.deserialize(getId("instanceSettings"), instanceSettings_);
-}
-std::vector<int> GradientFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
+void GradientFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&gradientType_);
+    output.push_back(&samplingStrategyType_);
+    output.push_back(&outsideVolumeValue_);
 }
 
-void GradientFilterProperties::Settings::serialize(Serializer& s) const {
+void GradientFilterSettings::serialize(Serializer& s) const {
     s.serialize("gradientType", gradientType_);
     s.serialize("samplingStrategyType", samplingStrategyType_);
     s.serialize("outsideVolumeValue", outsideVolumeValue_);
 }
-void GradientFilterProperties::Settings::deserialize(Deserializer& s) {
-    int gradientType = 0;
-    s.deserialize("gradientType", gradientType);
-    gradientType_ = static_cast<GradientType>(gradientType);
-    int samplingStrategyType = 0;
-    s.deserialize("samplingStrategyType", samplingStrategyType);
-    samplingStrategyType_ = static_cast<SamplingStrategyType>(samplingStrategyType);
-    s.deserialize("outsideVolumeValue", outsideVolumeValue_);
+void GradientFilterSettings::deserialize(Deserializer& s) {
+    deserializeTemplatePropertyWithValueFallback(s, "outsideVolumeValue", outsideVolumeValue_);
+
+    try {
+        s.deserialize("samplingStrategyType", samplingStrategyType_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+        int samplingStrategyType = 0;
+        s.deserialize("samplingStrategyType", samplingStrategyType);
+        samplingStrategyType_.selectByValue(static_cast<SamplingStrategyType>(samplingStrategyType));
+    }
+
+    try {
+        s.deserialize("gradientType", gradientType_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+        int gradientType = 0;
+        s.deserialize("gradientType", gradientType_);
+        gradientType_.selectByValue(static_cast<GradientType>(gradientType));
+    }
 }
 
 }

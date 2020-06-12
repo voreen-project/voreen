@@ -26,45 +26,25 @@
 #ifndef VRN_MORPHOLOGYFILTERPROPERTIES_H
 #define VRN_MORPHOLOGYFILTERPROPERTIES_H
 
-#include "filterproperties.h"
+#include "templatefilterproperties.h"
 
 #include "../volumefiltering/morphologyfilter.h"
 
 namespace voreen {
 
-class MorphologyFilterProperties : public FilterProperties {
+class MorphologyFilterSettings : public Serializable {
 public:
-    MorphologyFilterProperties();
+    MorphologyFilterSettings();
+    MorphologyFilterSettings& operator=(const MorphologyFilterSettings& other);
+    static std::string getVolumeFilterName();
+    void adjustPropertiesToInput(const SliceReaderMetaData& input);
+    VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata) const;
+    void addProperties(std::vector<Property*>& output);
 
-    virtual std::string getVolumeFilterName() const;
-
-    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input);
-
-    virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const;
-    virtual void restoreInstance(int instanceId);
-    virtual void storeInstance(int instanceId);
-    virtual void removeInstance(int instanceId);
-    virtual void addProperties();
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
-    virtual std::vector<int> getStoredInstances() const;
+    void serialize(Serializer& s) const;
+    void deserialize(Deserializer& s);
 
 private:
-
-    struct Settings : public Serializable {
-        int extentX_;
-        int extentY_;
-        int extentZ_;
-        MorphologyOperatorType morphologyOperatorType_;
-        MorphologyOperatorShape morphologyOperatorShape_;
-        SamplingStrategyType samplingStrategyType_;
-        float outsideVolumeValue_;
-
-        virtual void serialize(Serializer& s) const;
-        virtual void deserialize(Deserializer& s);
-    };
-    std::map<int, Settings> instanceSettings_;
-
     IntProperty extentX_;
     IntProperty extentY_;
     IntProperty extentZ_;

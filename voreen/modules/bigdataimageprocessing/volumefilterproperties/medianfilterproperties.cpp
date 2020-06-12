@@ -26,14 +26,16 @@
 #include "medianfilterproperties.h"
 #include "../volumefiltering/slicereader.h"
 
+#include "../volumefiltering/medianfilter.h"
+
 namespace voreen {
 
-MedianFilterProperties::MedianFilterProperties()
-    : extentX_(getId("extentx"), "Extent X", 1, 0, 100)
-    , extentY_(getId("extenty"), "Extent Y", 1, 0, 100)
-    , extentZ_(getId("extentz"), "Extent Z", 1, 0, 100)
-    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
-    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+MedianFilterSettings::MedianFilterSettings()
+    : extentX_(settingsId<MedianFilterSettings>("extentx"), "Extent X", 1, 0, 100)
+    , extentY_(settingsId<MedianFilterSettings>("extenty"), "Extent Y", 1, 0, 100)
+    , extentZ_(settingsId<MedianFilterSettings>("extentz"), "Extent Z", 1, 0, 100)
+    , samplingStrategyType_(settingsId<MedianFilterSettings>("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
+    , outsideVolumeValue_(settingsId<MedianFilterSettings>("outsideVolumeValue"), "Outside Volume Value", 0, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
 {
     samplingStrategyType_.addOption("clamp", "Clamp", SamplingStrategyType::CLAMP_T);
     samplingStrategyType_.addOption("mirror", "Mirror", SamplingStrategyType::MIRROR_T);
@@ -44,124 +46,83 @@ MedianFilterProperties::MedianFilterProperties()
 
     // Update property state.
     samplingStrategyType_.invalidate();
-
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
-
-    // Add properties to list.
-    addProperties();
 }
 
-std::string MedianFilterProperties::getVolumeFilterName() const {
+MedianFilterSettings& MedianFilterSettings::operator=(const MedianFilterSettings& other) {
+    copyPropertyValue(other.extentX_, extentX_);
+    copyPropertyValue(other.extentY_, extentY_);
+    copyPropertyValue(other.extentZ_, extentZ_);
+    copyPropertyValue(other.samplingStrategyType_, samplingStrategyType_);
+    copyPropertyValue(other.outsideVolumeValue_, outsideVolumeValue_);
+
+    return *this;
+}
+
+std::string MedianFilterSettings::getVolumeFilterName() {
     return "Median Filter";
 }
 
-void MedianFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void MedianFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     const auto& mm = input.estimateMinMax();
 
     outsideVolumeValue_.setMinValue(mm.x);
     outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* MedianFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
-
+VolumeFilter* MedianFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     switch (inputmetadata.getNumChannels()) {
     case 1:
         return new MedianFilter(
-                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-                SamplingStrategy<float>(settings.samplingStrategyType_, static_cast<float>(settings.outsideVolumeValue_))
+                tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
+                SamplingStrategy<float>(samplingStrategyType_.getValue(), static_cast<float>(outsideVolumeValue_.get()))
         );
     case 2:
         return new MedianFilter2D(
-                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-                SamplingStrategy<tgt::vec2>(settings.samplingStrategyType_, tgt::vec2(settings.outsideVolumeValue_))
+                tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
+                SamplingStrategy<tgt::vec2>(samplingStrategyType_.getValue(), static_cast<tgt::vec2>(outsideVolumeValue_.get()))
         );
     case 3:
         return new MedianFilter3D(
-                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-                SamplingStrategy<tgt::vec3>(settings.samplingStrategyType_, tgt::vec3(settings.outsideVolumeValue_))
+                tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
+                SamplingStrategy<tgt::vec3>(samplingStrategyType_.getValue(), static_cast<tgt::vec3>(outsideVolumeValue_.get()))
         );
     case 4:
         return new MedianFilter4D(
-                tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-                SamplingStrategy<tgt::vec4>(settings.samplingStrategyType_, tgt::vec4(settings.outsideVolumeValue_))
+                tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
+                SamplingStrategy<tgt::vec4>(samplingStrategyType_.getValue(), static_cast<tgt::vec4>(outsideVolumeValue_.get()))
         );
     default:
         return nullptr;
     }
 }
-void MedianFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    extentX_.set(settings.extentX_);
-    extentY_.set(settings.extentY_);
-    extentZ_.set(settings.extentZ_);
-    samplingStrategyType_.selectByValue(settings.samplingStrategyType_);
-    outsideVolumeValue_.set(settings.outsideVolumeValue_);
-}
-void MedianFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.extentX_ = extentX_.get();
-    settings.extentY_ = extentY_.get();
-    settings.extentZ_ = extentZ_.get();
-    settings.samplingStrategyType_ = samplingStrategyType_.getValue();
-    settings.outsideVolumeValue_ = outsideVolumeValue_.get();
-}
-void MedianFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void MedianFilterProperties::addProperties() {
-    properties_.push_back(&extentX_);
-    properties_.push_back(&extentY_);
-    properties_.push_back(&extentZ_);
-    properties_.push_back(&samplingStrategyType_);
-    properties_.push_back(&outsideVolumeValue_);
-}
-void MedianFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void MedianFilterProperties::deserialize(Deserializer& s) {
-    try {
-        s.deserialize(getId("instanceSettings"), instanceSettings_);
-    }
-    catch (SerializationException&) {
-        s.removeLastError();
-        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
-    }
-}
-std::vector<int> MedianFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
+void MedianFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&extentX_);
+    output.push_back(&extentY_);
+    output.push_back(&extentZ_);
+    output.push_back(&samplingStrategyType_);
+    output.push_back(&outsideVolumeValue_);
 }
 
-void MedianFilterProperties::Settings::serialize(Serializer& s) const {
+void MedianFilterSettings::serialize(Serializer& s) const {
     s.serialize("extentX", extentX_);
     s.serialize("extentY", extentY_);
     s.serialize("extentZ", extentZ_);
     s.serialize("samplingStrategyType", samplingStrategyType_);
     s.serialize("outsideVolumeValue", outsideVolumeValue_);
 }
-void MedianFilterProperties::Settings::deserialize(Deserializer& s) {
-    s.deserialize("extentX", extentX_);
-    s.deserialize("extentY", extentY_);
-    s.deserialize("extentZ", extentZ_);
-    int samplingStrategyType = 0;
-    s.deserialize("samplingStrategyType", samplingStrategyType);
-    samplingStrategyType_ = static_cast<SamplingStrategyType>(samplingStrategyType);
-    s.deserialize("outsideVolumeValue", outsideVolumeValue_);
+void MedianFilterSettings::deserialize(Deserializer& s) {
+    deserializeTemplatePropertyWithValueFallback(s, "extentX", extentX_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentY", extentY_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentZ", extentZ_);
+    try {
+        s.deserialize("samplingStrategyType", samplingStrategyType_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+        int samplingStrategyType = 0;
+        s.deserialize("samplingStrategyType", samplingStrategyType);
+        samplingStrategyType_.selectByValue(static_cast<SamplingStrategyType>(samplingStrategyType));
+    }
+    deserializeTemplatePropertyWithValueFallback(s, "outsideVolumeValue", outsideVolumeValue_);
 }
 
 }

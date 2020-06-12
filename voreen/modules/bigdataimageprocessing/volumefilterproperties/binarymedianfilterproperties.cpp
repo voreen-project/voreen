@@ -26,18 +26,20 @@
 #include "binarymedianfilterproperties.h"
 #include "../volumefiltering/slicereader.h"
 
+#include "../volumefiltering/binarymedianfilter.h"
+
 namespace voreen {
 
-BinaryMedianFilterProperties::BinaryMedianFilterProperties()
-    : useUniformExtent_(getId("useUniformExtent"), "Uniform Extent", true)
-    , extentX_(getId("extentx"), "Extent X", 1, 0, 100)
-    , extentY_(getId("extenty"), "Extent Y", 1, 0, 100)
-    , extentZ_(getId("extentz"), "Extent Z", 1, 0, 100)
-    , binarizationThreshold_(getId("binarizationThreshold"), "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::DYNAMIC, Property::LOD_ADVANCED)
-    , samplingStrategyType_(getId("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
-    , outsideVolumeValue_(getId("outsideVolumeValue"), "Outside Volume Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
-    , forceMedian_(getId("forceMedian"), "Force Median", true)
-    , objectVoxelThreshold_(getId("objectVoxelThreshold"), "Object Voxel Threshold", 0, 0, std::numeric_limits<int>::max(), Processor::INVALID_RESULT, IntProperty::DYNAMIC)
+BinaryMedianFilterSettings::BinaryMedianFilterSettings()
+    : useUniformExtent_(settingsId<BinaryMedianFilterSettings>("useUniformExtent"), "Uniform Extent", true)
+    , extentX_(settingsId<BinaryMedianFilterSettings>("extentx"), "Extent X", 1, 0, 100)
+    , extentY_(settingsId<BinaryMedianFilterSettings>("extenty"), "Extent Y", 1, 0, 100)
+    , extentZ_(settingsId<BinaryMedianFilterSettings>("extentz"), "Extent Z", 1, 0, 100)
+    , binarizationThreshold_(settingsId<BinaryMedianFilterSettings>("binarizationThreshold"), "Threshold", 0.5f, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC, Property::LOD_ADVANCED)
+    , samplingStrategyType_(settingsId<BinaryMedianFilterSettings>("samplingStrategyType"), "Sampling Strategy", Processor::INVALID_RESULT)
+    , outsideVolumeValue_(settingsId<BinaryMedianFilterSettings>("outsideVolumeValue"), "Outside Volume Value", 0, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+    , forceMedian_(settingsId<BinaryMedianFilterSettings>("forceMedian"), "Force Median", true)
+    , objectVoxelThreshold_(settingsId<BinaryMedianFilterSettings>("objectVoxelThreshold"), "Object Voxel Threshold", 0, INT_MIN, INT_MAX, Processor::INVALID_RESULT, IntProperty::DYNAMIC)
 {
     samplingStrategyType_.addOption("clamp", "Clamp", SamplingStrategyType::CLAMP_T);
     samplingStrategyType_.addOption("mirror", "Mirror", SamplingStrategyType::MIRROR_T);
@@ -46,7 +48,12 @@ BinaryMedianFilterProperties::BinaryMedianFilterProperties()
         outsideVolumeValue_.setVisibleFlag(samplingStrategyType_.getValue() == SamplingStrategyType::SET_T);
     });
 
-    ON_CHANGE(forceMedian_, BinaryMedianFilterProperties, updateObjectVoxelThreshold);
+    // Update property state.
+    samplingStrategyType_.invalidate();
+    updateObjectVoxelThreshold();
+
+
+    ON_CHANGE(forceMedian_, BinaryMedianFilterSettings, updateObjectVoxelThreshold);
 
     ON_CHANGE_LAMBDA(extentX_, [this]() {
         if (useUniformExtent_.get()) {
@@ -69,23 +76,27 @@ BinaryMedianFilterProperties::BinaryMedianFilterProperties()
         }
         updateObjectVoxelThreshold();
     });
-
-    // Update property state.
-    samplingStrategyType_.invalidate();
-    updateObjectVoxelThreshold();
-
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
-
-    // Add properties to list.
-    addProperties();
 }
 
-std::string BinaryMedianFilterProperties::getVolumeFilterName() const {
+BinaryMedianFilterSettings& BinaryMedianFilterSettings::operator=(const BinaryMedianFilterSettings& other) {
+    copyPropertyValue(other.useUniformExtent_, useUniformExtent_);
+    copyPropertyValue(other.extentX_, extentX_);
+    copyPropertyValue(other.extentY_, extentY_);
+    copyPropertyValue(other.extentZ_, extentZ_);
+    copyPropertyValue(other.binarizationThreshold_, binarizationThreshold_);
+    copyPropertyValue(other.samplingStrategyType_, samplingStrategyType_);
+    copyPropertyValue(other.outsideVolumeValue_, outsideVolumeValue_);
+    copyPropertyValue(other.forceMedian_, forceMedian_);
+    copyPropertyValue(other.objectVoxelThreshold_, objectVoxelThreshold_);
+
+    return *this;
+}
+
+std::string BinaryMedianFilterSettings::getVolumeFilterName() {
     return "Binary Median Filter";
 }
 
-void BinaryMedianFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void BinaryMedianFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     auto mm = input.estimateMinMax();
 
     binarizationThreshold_.setMinValue(mm.x);
@@ -95,93 +106,26 @@ void BinaryMedianFilterProperties::adjustPropertiesToInput(const SliceReaderMeta
     outsideVolumeValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* BinaryMedianFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
+VolumeFilter* BinaryMedianFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     return new BinaryMedianFilter(
-        tgt::ivec3(settings.extentX_, settings.extentY_, settings.extentZ_),
-        inputmetadata.getRealWorldMapping().realWorldToNormalized(settings.binarizationThreshold_),
-        settings.objectVoxelThreshold_,
-        SamplingStrategy<float>(settings.samplingStrategyType_, settings.outsideVolumeValue_)
+        tgt::ivec3(extentX_.get(), extentY_.get(), extentZ_.get()),
+        inputmetadata.getRealWorldMapping().realWorldToNormalized(binarizationThreshold_.get()),
+        objectVoxelThreshold_.get(),
+        SamplingStrategy<float>(samplingStrategyType_.getValue(), outsideVolumeValue_.get())
     );
 }
-void BinaryMedianFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    useUniformExtent_.set(settings.useUniformExtent_);
-    extentX_.set(settings.extentX_);
-    extentY_.set(settings.extentY_);
-    extentZ_.set(settings.extentZ_);
-    binarizationThreshold_.set(settings.binarizationThreshold_);
-    samplingStrategyType_.selectByValue(settings.samplingStrategyType_);
-    outsideVolumeValue_.set(settings.outsideVolumeValue_);
-    forceMedian_.set(settings.forceMedian_);
-    objectVoxelThreshold_.set(settings.objectVoxelThreshold_);
+void BinaryMedianFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&useUniformExtent_);
+    output.push_back(&extentX_);
+    output.push_back(&extentY_);
+    output.push_back(&extentZ_);
+    output.push_back(&binarizationThreshold_);
+    output.push_back(&samplingStrategyType_);
+    output.push_back(&outsideVolumeValue_);
+    output.push_back(&forceMedian_);
+    output.push_back(&objectVoxelThreshold_);
 }
-void BinaryMedianFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.useUniformExtent_ = useUniformExtent_.get();
-    settings.extentX_ = extentX_.get();
-    settings.extentY_ = extentY_.get();
-    settings.extentZ_ = extentZ_.get();
-    settings.binarizationThreshold_ = binarizationThreshold_.get();
-    settings.samplingStrategyType_ = samplingStrategyType_.getValue();
-    settings.outsideVolumeValue_ = outsideVolumeValue_.get();
-    settings.forceMedian_ = forceMedian_.get();
-    settings.objectVoxelThreshold_ = objectVoxelThreshold_.get();
-}
-void BinaryMedianFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void BinaryMedianFilterProperties::addProperties() {
-    properties_.push_back(&useUniformExtent_);
-    properties_.push_back(&extentX_);
-    properties_.push_back(&extentY_);
-    properties_.push_back(&extentZ_);
-    properties_.push_back(&binarizationThreshold_);
-    properties_.push_back(&samplingStrategyType_);
-    properties_.push_back(&outsideVolumeValue_);
-    properties_.push_back(&forceMedian_);
-    properties_.push_back(&objectVoxelThreshold_);
-}
-void BinaryMedianFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void BinaryMedianFilterProperties::deserialize(Deserializer& s) {
-    try {
-        s.deserialize(getId("instanceSettings"), instanceSettings_);
-    }
-    catch (SerializationException&) {
-        s.removeLastError();
-        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
-    }
-}
-
-void BinaryMedianFilterProperties::updateObjectVoxelThreshold() {
-    bool medianForced = forceMedian_.get();
-    objectVoxelThreshold_.setReadOnlyFlag(medianForced);
-    objectVoxelThreshold_.setMaxValue((2 * extentX_.get() + 1)*(2 * extentY_.get() + 1)*(2 * extentZ_.get() + 1));
-    if (medianForced) {
-        objectVoxelThreshold_.set(objectVoxelThreshold_.getMaxValue() / 2);
-    }
-}
-std::vector<int> BinaryMedianFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
-}
-
-void BinaryMedianFilterProperties::Settings::serialize(Serializer& s) const {
+void BinaryMedianFilterSettings::serialize(Serializer& s) const {
     s.serialize("useUniformExtent_", useUniformExtent_);
     s.serialize("extentX", extentX_);
     s.serialize("extentY", extentY_);
@@ -192,18 +136,33 @@ void BinaryMedianFilterProperties::Settings::serialize(Serializer& s) const {
     s.serialize("forceMedian", forceMedian_);
     s.serialize("objectVoxelThreshold", objectVoxelThreshold_);
 }
-void BinaryMedianFilterProperties::Settings::deserialize(Deserializer& s) {
-    s.deserialize("useUniformExtent_", useUniformExtent_);
-    s.deserialize("extentX", extentX_);
-    s.deserialize("extentY", extentY_);
-    s.deserialize("extentZ", extentZ_);
-    s.deserialize("binarizationThreshold", binarizationThreshold_);
-    int samplingStrategyType = 0;
-    s.deserialize("samplingStrategyType", samplingStrategyType);
-    samplingStrategyType_ = static_cast<SamplingStrategyType>(samplingStrategyType);
-    s.deserialize("outsideVolumeValue", outsideVolumeValue_);
-    s.deserialize("forceMedian", forceMedian_);
-    s.deserialize("objectVoxelThreshold", objectVoxelThreshold_);
+void BinaryMedianFilterSettings::deserialize(Deserializer& s) {
+    deserializeTemplatePropertyWithValueFallback(s, "useUniformExtent_", useUniformExtent_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentX", extentX_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentY", extentY_);
+    deserializeTemplatePropertyWithValueFallback(s, "extentZ", extentZ_);
+    deserializeTemplatePropertyWithValueFallback(s, "binarizationThreshold", binarizationThreshold_);
+    deserializeTemplatePropertyWithValueFallback(s, "outsideVolumeValue", outsideVolumeValue_);
+    deserializeTemplatePropertyWithValueFallback(s, "forceMedian", forceMedian_);
+    deserializeTemplatePropertyWithValueFallback(s, "objectVoxelThreshold", objectVoxelThreshold_);
+
+    try {
+        s.deserialize("samplingStrategyType", samplingStrategyType_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+        int samplingStrategyType = 0;
+        s.deserialize("samplingStrategyType", samplingStrategyType);
+        samplingStrategyType_.selectByValue(static_cast<SamplingStrategyType>(samplingStrategyType));
+    }
+}
+
+void BinaryMedianFilterSettings::updateObjectVoxelThreshold() {
+    bool medianForced = forceMedian_.get();
+    objectVoxelThreshold_.setReadOnlyFlag(medianForced);
+    objectVoxelThreshold_.setMaxValue((2 * extentX_.get() + 1)*(2 * extentY_.get() + 1)*(2 * extentZ_.get() + 1));
+    if (medianForced) {
+        objectVoxelThreshold_.set(objectVoxelThreshold_.getMaxValue() / 2);
+    }
 }
 
 }

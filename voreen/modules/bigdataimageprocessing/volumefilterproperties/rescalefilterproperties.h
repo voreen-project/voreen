@@ -26,41 +26,25 @@
 #ifndef VRN_RESCALEFILTERPROPERTIES_H
 #define VRN_RESCALEFILTERPROPERTIES_H
 
-#include "filterproperties.h"
+#include "templatefilterproperties.h"
 
 #include "../volumefiltering/rescalefilter.h"
 
 namespace voreen {
 
-class RescaleFilterProperties : public FilterProperties {
+class RescaleFilterSettings : public Serializable {
 public:
-    RescaleFilterProperties();
+    RescaleFilterSettings();
+    RescaleFilterSettings& operator=(const RescaleFilterSettings& other);
+    static std::string getVolumeFilterName();
+    void adjustPropertiesToInput(const SliceReaderMetaData& input);
+    VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata) const;
+    void addProperties(std::vector<Property*>& output);
 
-    virtual std::string getVolumeFilterName() const;
-
-    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input);
-
-    virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const;
-    virtual void restoreInstance(int instanceId);
-    virtual void storeInstance(int instanceId);
-    virtual void removeInstance(int instanceId);
-    virtual void addProperties();
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
-    virtual std::vector<int> getStoredInstances() const;
+    void serialize(Serializer& s) const;
+    void deserialize(Deserializer& s);
 
 private:
-
-    struct Settings : public Serializable {
-        float thresholdValue_;
-        float replacementValue_;
-        RescaleStrategyType rescaleStrategyType_;
-
-        virtual void serialize(Serializer& s) const;
-        virtual void deserialize(Deserializer& s);
-    };
-    std::map<int, Settings> instanceSettings_;
-
     OptionProperty<RescaleStrategyType> rescaleStrategyType_;
 };
 

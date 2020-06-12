@@ -70,6 +70,7 @@ VolumeFilterList::VolumeFilterList()
     , filterList_("filterList", "Filter List", true)
     , numInstances_(0)
     , propertyDisabler_(*this)
+    , skipPropertySync_(false)
 {
     addPort(inport_);
         ON_CHANGE(inport_, VolumeFilterList, inputOutputChannelCheck);
@@ -84,16 +85,16 @@ VolumeFilterList::VolumeFilterList()
     // Add filters (this will add their properties!)
     // Note: The items will appear in the order below.
     // Reordering and removal of single items is possible.
-    addFilter(new BinarizationFilterProperties());
-    addFilter(new BinaryMedianFilterProperties());
-    addFilter(new GaussianFilterProperties());
-    addFilter(new GradientFilterProperties());
-    addFilter(new MedianFilterProperties());
-    addFilter(new MorphologyFilterProperties());
-    addFilter(new ResampleFilterProperties());
-    addFilter(new RescaleFilterProperties());
-    addFilter(new ThresholdingFilterProperties());
-    addFilter(new VorticityFilterProperties());
+    addFilter<BinarizationFilterSettings>();
+    addFilter<BinaryMedianFilterSettings>();
+    addFilter<GaussianFilterSettings>();
+    addFilter<GradientFilterSettings>();
+    addFilter<MedianFilterSettings>();
+    addFilter<MorphologyFilterSettings>();
+    addFilter<ResampleFilterSettings>();
+    addFilter<RescaleFilterSettings>();
+    addFilter<ThresholdingFilterSettings>();
+    addFilter<VorticityFilterSettings>();
 
     // Technical stuff.
     addProperty(enabled_);
@@ -164,7 +165,7 @@ void VolumeFilterList::deserialize(Deserializer& s) {
     // until another instance is selected which restores proper values.
     // Here we enforce valid values from the last instance of each item to not accidentally serialize incorrect values.
     for(auto& instance : filterList_.getInstances()) {
-        filterProperties_[instance.getItemId()]->restoreInstance(instance.getInstanceId());
+        restoreInstance(instance);
     }
 
     inputOutputChannelCheck();
@@ -270,17 +271,17 @@ void VolumeFilterList::adjustPropertiesToInput() {
         return;
     }
 
+    // As we only adjust list properties, we first must sync towards list properties...
+    if(selectedInstance_) {
+        storeInstance(*selectedInstance_);
+    }
+
     SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(*input);
 
-    // Here we only adjust the properties which match the currently selected instance.
-    // This if fine since the properties of other instances are not visible anyway.
     if(selectedInstance_) {
         for(const InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
 
-            if(selectedInstance_->getInstanceId() == instance.getInstanceId()) {
-                filterProperties_[instance.getItemId()]->adjustPropertiesToInput(metadata);
-                break;
-            }
+            filterProperties_[instance.getItemId()]->adjustPropertiesToInput(metadata, instance.getInstanceId());
 
             if(!instance.isActive()) {
                 continue;
@@ -296,6 +297,10 @@ void VolumeFilterList::adjustPropertiesToInput() {
 
             metadata = filter->getMetaData(metadata);
         }
+    }
+    // ... and later restore the current
+    if(selectedInstance_) {
+        restoreInstance(*selectedInstance_);
     }
 }
 
@@ -322,7 +327,6 @@ void VolumeFilterList::onFilterListChange() {
     if(selectedInstance_) {
         filterProperties_[selectedInstance_->getItemId()]->storeVisibility();
         // No need to store the settings here, since it is done on change anyways.
-        //filterProperties_[selectedInstance_->itemId_]->storeInstance(selectedInstance_->instanceId_);
         setPropertyGroupVisible(filterList_.getItems()[selectedInstance_->getItemId()], false);
 
         // We need to reset here, because otherwise onFilterPropertyChange
@@ -336,7 +340,8 @@ void VolumeFilterList::onFilterListChange() {
         currentInstance = filterList_.getInstances()[filterList_.getSelectedInstance()];
         setPropertyGroupVisible(filterList_.getItems()[currentInstance->getItemId()], true);
         filterProperties_[currentInstance->getItemId()]->restoreVisibility();
-        filterProperties_[currentInstance->getItemId()]->restoreInstance(currentInstance->getInstanceId());
+
+        restoreInstance(*currentInstance);
     }
 
     selectedInstance_ = currentInstance;
@@ -348,7 +353,23 @@ void VolumeFilterList::onFilterListChange() {
     adjustPropertiesToInput();
 }
 
+void VolumeFilterList::storeInstance(InteractiveListProperty::Instance& instance) {
+    filterProperties_[instance.getItemId()]->storeInstance(instance.getInstanceId());
+}
+void VolumeFilterList::restoreInstance(InteractiveListProperty::Instance& instance) {
+    // Restoring the current instance of a kind of filterproperties invalidates
+    // the associated properties.  As we _just_ restored them from a concrete
+    // instance, we don't need to sync back to the FilterProperties class (see
+    // check in onFilterPropertyChange). This avoids (among useless work)
+    // tripping the "multiple-instance-linking check".
+    skipPropertySync_ = true;
+    filterProperties_[instance.getItemId()]->restoreInstance(instance.getInstanceId());
+    skipPropertySync_ = false;
+}
 void VolumeFilterList::onFilterPropertyChange(Property* property) {
+    if(skipPropertySync_) {
+        return;
+    }
 
     if(!isInitialized()) {
         return;
@@ -401,10 +422,7 @@ void VolumeFilterList::onFilterPropertyChange(Property* property) {
                     // There is no instance. Either something has gone horribly
                     // wrong or someone has linked a property without a
                     // corresponding filter instance (probably by mistake).
-                    // FIXME: Since adjusting properties to new input might lead to their invalidation and thus
-                    //  trigger this callback, despite there is no instance for the related filter, there might
-                    //  be unnecessarily generated warnings.
-                    //LWARNING("Property without corresponding filter instance changed.");
+                    LWARNING("Property without corresponding filter instance changed.");
                     break;
                 }
                 default: {
@@ -455,19 +473,6 @@ void VolumeFilterList::inputOutputChannelCheck() {
     filterList_.updateWidgets();
 }
 
-void VolumeFilterList::addFilter(FilterProperties* filterProperties) {
-    filterList_.addItem(filterProperties->getVolumeFilterName());
-    filterProperties_.push_back(std::unique_ptr<FilterProperties>(filterProperties));
-    for(Property* property : filterProperties->getProperties()) {
-        addProperty(property);
-        disableTracking(property);
-        property->setGroupID(filterProperties->getVolumeFilterName());
-        ON_CHANGE_LAMBDA((*property), ([this,property] () { this->onFilterPropertyChange(property); }));
-    }
-    filterProperties->storeVisibility();
-    setPropertyGroupGuiName(filterProperties->getVolumeFilterName(), filterProperties->getVolumeFilterName());
-    setPropertyGroupVisible(filterProperties->getVolumeFilterName(), false);
-}
 
 void VolumeFilterList::disableTracking(Property* property) {
     // In case of numeric properties, we disable tracking to not clash with auto update.

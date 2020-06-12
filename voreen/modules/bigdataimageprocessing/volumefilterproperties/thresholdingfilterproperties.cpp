@@ -28,29 +28,27 @@
 
 namespace voreen {
 
-ThresholdingFilterProperties::ThresholdingFilterProperties()
-    : thresholdValue_(getId("thresholdValue"), "Threshold Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
-    , replacementValue_(getId("replacementValue"), "Replacement Value", 0, 0, 1, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
-    , thresholdingStrategyType_(getId("thresholdingStrategyType"), "Thresholding Strategy", Processor::INVALID_RESULT)
+ThresholdingFilterSettings::ThresholdingFilterSettings()
+    : thresholdValue_(settingsId<ThresholdingFilterSettings>("thresholdValue"), "Threshold Value", 0, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+    , replacementValue_(settingsId<ThresholdingFilterSettings>("replacementValue"), "Replacement Value", 0, -FLT_MAX, FLT_MAX, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+    , thresholdingStrategyType_(settingsId<ThresholdingFilterSettings>("thresholdingStrategyType"), "Thresholding Strategy", Processor::INVALID_RESULT)
 {
     thresholdingStrategyType_.addOption("lower", "Lower", ThresholdingStrategyType::LOWER_T);
     thresholdingStrategyType_.addOption("upper", "Upper", ThresholdingStrategyType::UPPER_T);
+}
+ThresholdingFilterSettings& ThresholdingFilterSettings::operator=(const ThresholdingFilterSettings& other) {
+    copyPropertyValue(other.thresholdValue_, thresholdValue_);
+    copyPropertyValue(other.replacementValue_, replacementValue_);
+    copyPropertyValue(other.thresholdingStrategyType_, thresholdingStrategyType_);
 
-    // Update property state.
-    thresholdingStrategyType_.invalidate();
-
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
-
-    // Add properties to list.
-    addProperties();
+    return *this;
 }
 
-std::string ThresholdingFilterProperties::getVolumeFilterName() const {
+std::string ThresholdingFilterSettings::getVolumeFilterName() {
     return "Thresholding Filter";
 }
 
-void ThresholdingFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void ThresholdingFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     const auto& mm = input.estimateMinMax();
 
     thresholdValue_.setMinValue(mm.x);
@@ -59,78 +57,38 @@ void ThresholdingFilterProperties::adjustPropertiesToInput(const SliceReaderMeta
     replacementValue_.setMaxValue(mm.y);
 }
 
-VolumeFilter* ThresholdingFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
+VolumeFilter* ThresholdingFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     RealWorldMapping rwm = inputmetadata.getRealworldMapping();
 
     // Currently, only 1D thresholding is supported.
     return new ThresholdingFilter1D(
-            rwm.realWorldToNormalized(settings.thresholdValue_),
-            rwm.realWorldToNormalized(settings.replacementValue_),
-            settings.thresholdingStrategyType_
+            rwm.realWorldToNormalized(thresholdValue_.get()),
+            rwm.realWorldToNormalized(replacementValue_.get()),
+            thresholdingStrategyType_.getValue()
     );
 }
-void ThresholdingFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    thresholdValue_.set(settings.thresholdValue_);
-    replacementValue_.set(settings.replacementValue_);
-    thresholdingStrategyType_.selectByValue(settings.thresholdingStrategyType_);
+void ThresholdingFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&thresholdValue_);
+    output.push_back(&replacementValue_);
+    output.push_back(&thresholdingStrategyType_);
 }
-void ThresholdingFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.thresholdValue_ = thresholdValue_.get();
-    settings.replacementValue_ = replacementValue_.get();
-    settings.thresholdingStrategyType_ = thresholdingStrategyType_.getValue();
-}
-void ThresholdingFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void ThresholdingFilterProperties::addProperties() {
-    properties_.push_back(&thresholdValue_);
-    properties_.push_back(&replacementValue_);
-    properties_.push_back(&thresholdingStrategyType_);
-}
-void ThresholdingFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void ThresholdingFilterProperties::deserialize(Deserializer& s) {
-    try {
-        s.deserialize(getId("instanceSettings"), instanceSettings_);
-    }
-    catch (SerializationException&) {
-        s.removeLastError();
-        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
-    }
-}
-std::vector<int> ThresholdingFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
-}
-
-void ThresholdingFilterProperties::Settings::serialize(Serializer& s) const {
+void ThresholdingFilterSettings::serialize(Serializer& s) const {
     s.serialize("thresholdValue", thresholdValue_);
     s.serialize("replacementValue", replacementValue_);
     s.serialize("thresholdingStrategyType", thresholdingStrategyType_);
 }
-void ThresholdingFilterProperties::Settings::deserialize(Deserializer& s) {
-    s.deserialize("thresholdValue", thresholdValue_);
-    s.deserialize("replacementValue", replacementValue_);
-    int thresholdingStrategyType = 0;
-    s.deserialize("thresholdingStrategyType", thresholdingStrategyType);
-    thresholdingStrategyType_ = static_cast<ThresholdingStrategyType>(thresholdingStrategyType);
+void ThresholdingFilterSettings::deserialize(Deserializer& s) {
+    deserializeTemplatePropertyWithValueFallback(s, "thresholdValue", thresholdValue_);
+    deserializeTemplatePropertyWithValueFallback(s, "replacementValue", replacementValue_);
+
+    try {
+        s.deserialize("thresholdingStrategyType", thresholdingStrategyType_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+        int thresholdingStrategyType = 0;
+        s.deserialize("thresholdingStrategyType", thresholdingStrategyType);
+        thresholdingStrategyType_.selectByValue(static_cast<ThresholdingStrategyType>(thresholdingStrategyType));
+    }
 }
 
 }

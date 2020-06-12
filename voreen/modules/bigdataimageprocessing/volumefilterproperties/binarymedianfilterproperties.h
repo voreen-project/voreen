@@ -26,48 +26,26 @@
 #ifndef VRN_BINARYMEDIANFILTERPROPERTIES_H
 #define VRN_BINARYMEDIANFILTERPROPERTIES_H
 
-#include "filterproperties.h"
+#include "templatefilterproperties.h"
 
 #include "../volumefiltering/binarymedianfilter.h"
 
 namespace voreen {
 
-class BinaryMedianFilterProperties : public FilterProperties {
+class BinaryMedianFilterSettings : public Serializable {
 public:
-    BinaryMedianFilterProperties();
+    BinaryMedianFilterSettings();
+    BinaryMedianFilterSettings& operator=(const BinaryMedianFilterSettings& other);
+    static std::string getVolumeFilterName();
+    void adjustPropertiesToInput(const SliceReaderMetaData& input);
+    VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata) const;
+    void addProperties(std::vector<Property*>& output);
 
-    virtual std::string getVolumeFilterName() const;
-
-    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input);
-
-    virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const;
-    virtual void restoreInstance(int instanceId);
-    virtual void storeInstance(int instanceId);
-    virtual void removeInstance(int instanceId);
-    virtual void addProperties();
-    virtual void serialize(Serializer& s) const;
-    virtual void deserialize(Deserializer& s);
-    virtual std::vector<int> getStoredInstances() const;
+    void serialize(Serializer& s) const;
+    void deserialize(Deserializer& s);
 
 private:
-
     void updateObjectVoxelThreshold();
-
-    struct Settings : public Serializable {
-        bool useUniformExtent_;
-        int extentX_;
-        int extentY_;
-        int extentZ_;
-        float binarizationThreshold_;
-        SamplingStrategyType samplingStrategyType_;
-        float outsideVolumeValue_;
-        bool forceMedian_;
-        int objectVoxelThreshold_;
-
-        virtual void serialize(Serializer& s) const;
-        virtual void deserialize(Deserializer& s);
-    };
-    std::map<int, Settings> instanceSettings_;
 
     BoolProperty useUniformExtent_;
     IntProperty extentX_;

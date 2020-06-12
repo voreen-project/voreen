@@ -30,6 +30,7 @@
 #include "voreen/core/properties/temppathproperty.h"
 #include "modules/base/properties/interactivelistproperty.h"
 #include "../volumefiltering/slicereader.h"
+#include "../volumefilterproperties/templatefilterproperties.h"
 
 namespace voreen {
 
@@ -109,12 +110,15 @@ protected:
     virtual void initialize();
 
 private:
+    void storeInstance(InteractiveListProperty::Instance&);
+    void restoreInstance(InteractiveListProperty::Instance&);
 
     void onFilterListChange();
     void onFilterPropertyChange(Property* property);
     void inputOutputChannelCheck();
 
-    void addFilter(FilterProperties* filterProperties);
+    template<typename Settings>
+    void addFilter();
     void disableTracking(Property* property);
 
     /// Filter list
@@ -132,11 +136,30 @@ private:
     boost::optional<InteractiveListProperty::Instance> selectedInstance_;
     size_t numInstances_;
 
+    bool skipPropertySync_;
+
     // Disable properties when processor is not enabled:
     PropertyDisabler propertyDisabler_;
 
     static const std::string loggerCat_; ///< category used in logging
 };
+
+template<typename Settings>
+void VolumeFilterList::addFilter() {
+    FilterProperties* filterProperties = new TemplateFilterProperties<Settings>();
+
+    filterList_.addItem(filterProperties->getVolumeFilterName());
+    filterProperties_.push_back(std::unique_ptr<FilterProperties>(filterProperties));
+    for(Property* property : filterProperties->getProperties()) {
+        addProperty(property);
+        disableTracking(property);
+        property->setGroupID(filterProperties->getVolumeFilterName());
+        ON_CHANGE_LAMBDA((*property), ([this,property] () { this->onFilterPropertyChange(property); }));
+    }
+    filterProperties->storeVisibility();
+    setPropertyGroupGuiName(filterProperties->getVolumeFilterName(), filterProperties->getVolumeFilterName());
+    setPropertyGroupVisible(filterProperties->getVolumeFilterName(), false);
+}
 
 }
 

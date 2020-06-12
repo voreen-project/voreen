@@ -27,92 +27,40 @@
 
 namespace voreen {
 
-RescaleFilterProperties::RescaleFilterProperties()
-    : rescaleStrategyType_(getId("rescaleStrategyType"), "Rescale Strategy", Processor::INVALID_RESULT)
+RescaleFilterSettings::RescaleFilterSettings()
+    : rescaleStrategyType_(settingsId<RescaleFilterSettings>("rescaleStrategyType"), "Rescale Strategy", Processor::INVALID_RESULT)
 {
     rescaleStrategyType_.addOption("logarithmic", "log(x)", RESCALE_LOGARITHMIC_T);
     rescaleStrategyType_.addOption("exponential", "exp(x)", RESCALE_EXPONENTIAL_T);
+}
+RescaleFilterSettings& RescaleFilterSettings::operator=(const RescaleFilterSettings& other) {
+    copyPropertyValue(other.rescaleStrategyType_, rescaleStrategyType_);
 
-    // Update property state.
-    rescaleStrategyType_.invalidate();
-
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
-
-    // Add properties to list.
-    addProperties();
+    return *this;
 }
 
-std::string RescaleFilterProperties::getVolumeFilterName() const {
+std::string RescaleFilterSettings::getVolumeFilterName() {
     return "Rescale Filter";
 }
 
-void RescaleFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void RescaleFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
 }
 
-VolumeFilter* RescaleFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
-
+VolumeFilter* RescaleFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     // Currently, only 1D rescale is supported.
     return new RescaleFilter1D(
-            settings.rescaleStrategyType_
+            rescaleStrategyType_.getValue()
     );
 }
-void RescaleFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    rescaleStrategyType_.selectByValue(settings.rescaleStrategyType_);
-}
-void RescaleFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.rescaleStrategyType_ = rescaleStrategyType_.getValue();
-}
-void RescaleFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void RescaleFilterProperties::addProperties() {
-    properties_.push_back(&rescaleStrategyType_);
-}
-void RescaleFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void RescaleFilterProperties::deserialize(Deserializer& s) {
-    try {
-        s.deserialize(getId("instanceSettings"), instanceSettings_);
-    }
-    catch (SerializationException&) {
-        s.removeLastError();
-        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
-    }
-}
-std::vector<int> RescaleFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
+void RescaleFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&rescaleStrategyType_);
 }
 
-void RescaleFilterProperties::Settings::serialize(Serializer& s) const {
-    s.serialize("thresholdValue", thresholdValue_);
-    s.serialize("replacementValue", replacementValue_);
+void RescaleFilterSettings::serialize(Serializer& s) const {
     s.serialize("rescaleStrategyType", rescaleStrategyType_);
 }
-void RescaleFilterProperties::Settings::deserialize(Deserializer& s) {
-    s.deserialize("thresholdValue", thresholdValue_);
-    s.deserialize("replacementValue", replacementValue_);
-    int rescaleStrategyType = 0;
-    s.deserialize("rescaleStrategyType", rescaleStrategyType);
-    rescaleStrategyType_ = static_cast<RescaleStrategyType>(rescaleStrategyType);
+void RescaleFilterSettings::deserialize(Deserializer& s) {
+    s.deserialize("rescaleStrategyType", rescaleStrategyType_);
 }
 
 }

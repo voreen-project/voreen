@@ -31,81 +31,39 @@ namespace voreen {
 
 #define RESAMPLE_DIM_DEFAULT_VALUE tgt::ivec3(100000)
 
-ResampleFilterProperties::ResampleFilterProperties()
-    : dimensions_(getId("dimensions"), "Target Dimensions", RESAMPLE_DIM_DEFAULT_VALUE, tgt::ivec3(2), tgt::ivec3(100000))
+ResampleFilterSettings::ResampleFilterSettings()
+    : dimensions_(settingsId<ResampleFilterSettings>("dimensions"), "Target Dimensions", RESAMPLE_DIM_DEFAULT_VALUE, tgt::ivec3(2), tgt::ivec3(100000))
 {
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
+}
+ResampleFilterSettings& ResampleFilterSettings::operator=(const ResampleFilterSettings& other) {
+    copyPropertyValue(other.dimensions_, dimensions_);
 
-    // Add properties to list.
-    addProperties();
+    return *this;
 }
 
-std::string ResampleFilterProperties::getVolumeFilterName() const {
+std::string ResampleFilterSettings::getVolumeFilterName() {
     return "Resample Filter";
 }
 
-void ResampleFilterProperties::adjustPropertiesToInput(const SliceReaderMetaData& input) {
+void ResampleFilterSettings::adjustPropertiesToInput(const SliceReaderMetaData& input) {
     if(dimensions_.get() == RESAMPLE_DIM_DEFAULT_VALUE) {
         dimensions_.set(input.getDimensions());
     }
 }
 
-VolumeFilter* ResampleFilterProperties::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
-    }
-    Settings settings = instanceSettings_.at(instanceId);
+VolumeFilter* ResampleFilterSettings::getVolumeFilter(const SliceReaderMetaData& inputmetadata) const {
     return new ResampleFilter(
-        settings.dimensions_,
+        dimensions_.get(),
         inputmetadata.getNumChannels()
     );
 }
-void ResampleFilterProperties::restoreInstance(int instanceId) {
-    auto iter = instanceSettings_.find(instanceId);
-    if (iter == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
-    }
-
-    Settings settings = instanceSettings_[instanceId];
-    dimensions_.set(settings.dimensions_);
+void ResampleFilterSettings::addProperties(std::vector<Property*>& output) {
+    output.push_back(&dimensions_);
 }
-void ResampleFilterProperties::storeInstance(int instanceId) {
-    Settings& settings = instanceSettings_[instanceId];
-    settings.dimensions_ = dimensions_.get();
-}
-void ResampleFilterProperties::removeInstance(int instanceId) {
-    instanceSettings_.erase(instanceId);
-}
-void ResampleFilterProperties::addProperties() {
-    properties_.push_back(&dimensions_);
-}
-void ResampleFilterProperties::serialize(Serializer& s) const {
-    s.serialize(getId("instanceSettings"), instanceSettings_);
-}
-void ResampleFilterProperties::deserialize(Deserializer& s) {
-    try {
-        s.deserialize(getId("instanceSettings"), instanceSettings_);
-    }
-    catch (SerializationException&) {
-        s.removeLastError();
-        LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
-    }
-}
-std::vector<int> ResampleFilterProperties::getStoredInstances() const {
-    std::vector<int> output;
-    for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
-    }
-    return output;
-}
-
-void ResampleFilterProperties::Settings::serialize(Serializer& s) const {
+void ResampleFilterSettings::serialize(Serializer& s) const {
     s.serialize("dimensions", dimensions_);
 }
-void ResampleFilterProperties::Settings::deserialize(Deserializer& s) {
-    s.deserialize("dimensions", dimensions_);
+void ResampleFilterSettings::deserialize(Deserializer& s) {
+    deserializeTemplatePropertyWithValueFallback(s, "dimensions", dimensions_);
 }
 }

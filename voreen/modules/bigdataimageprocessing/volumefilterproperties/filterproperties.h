@@ -60,7 +60,7 @@ public:
     void restoreVisibility();
 
     virtual std::string getVolumeFilterName() const = 0;
-    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input) = 0;
+    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input, int instanceId) = 0;
     virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const = 0;
     virtual void storeInstance(int instanceId) = 0;
     virtual void restoreInstance(int instanceId) = 0;
@@ -68,8 +68,6 @@ public:
     virtual std::vector<int> getStoredInstances() const = 0;
 
 protected:
-
-    virtual void addProperties() = 0;
 
     std::string getId(const std::string& id) const;
 
