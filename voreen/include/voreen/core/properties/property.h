@@ -350,7 +350,7 @@ public:
     virtual void deserialize(Deserializer& s);
 
     ///Serialize the value of the property without the meta data/LOD/guiName
-    virtual void serializeValue(Serializer& s);
+    virtual void serializeValue(Serializer& s) const;
 
     ///Deserialize the value of the property without the meta data/LOD/guiName
     virtual void deserializeValue(Deserializer& s);
@@ -422,7 +422,7 @@ private:
     bool interactionModeVisited_;
 
     /// Used for (de-)serializeValue methods
-    bool serializeValue_;
+    mutable bool serializeValue_;
 
     /// Used for cycle prevention during check whether two props are linked
     mutable bool linkCheckVisited_;

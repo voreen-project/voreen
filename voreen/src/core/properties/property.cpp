@@ -248,7 +248,7 @@ void Property::deserialize(Deserializer& s) {
     metaDataContainer_.deserialize(s);
 }
 
-void Property::serializeValue(Serializer& s) {
+void Property::serializeValue(Serializer& s) const {
     serializeValue_ = true;
     serialize(s);
     serializeValue_ = false;
