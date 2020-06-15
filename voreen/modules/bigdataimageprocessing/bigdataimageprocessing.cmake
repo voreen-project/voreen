@@ -134,6 +134,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefilterproperties/medianfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/rescalefilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/templatefilterproperties.h
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.h
     ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.h
 
