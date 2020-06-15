@@ -29,7 +29,7 @@
                                     <paths>
                                         <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/home/s_leis06/programming/voreen-playground/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -60,9 +60,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.187504858" y="0.040285513" z="-3.21926403" />
+                            <position x="-0.168385491" y="-0.633558989" z="-3.159105778" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.003251569" y="0.99988538" z="0.014793187" />
+                            <upVector x="0.125732243" y="0.971822679" z="-0.199379608" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -154,7 +154,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="30.696662903">
                             <value x="2.292187452" y="1.492187381" z="1.492187381" w="1" />
                             <Center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <LightPos x="-2.208913803" y="1.529496431" z="-1.603539824" w="1" />
+                            <LightPos x="-2.043094397" y="1.44784832" z="-1.876032591" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -488,7 +488,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="86" y="-71" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="clipRegion">
+                        <Property mapKey="clipRegion" tracking="true">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="127" y="95" z="113" />
                             <minValue x="0" y="0" z="0" />
@@ -610,9 +610,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.187504858" y="0.040285513" z="-3.21926403" />
+                            <position x="-0.168385491" y="-0.633558989" z="-3.159105778" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.003251569" y="0.99988538" z="0.014793187" />
+                            <upVector x="0.125732243" y="0.971822679" z="-0.199379608" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -673,7 +673,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref6">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="124" y="329" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="499" y="111" width="1406" height="1149" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="307" y="84" width="1406" height="1149" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
@@ -683,7 +683,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="499" y="111" />
+                            <value x="307" y="84" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1406" y="1149" />
@@ -781,24 +781,31 @@
                         <Property mapKey="Gaussian_Filter_extentz" name="Gaussian_Filter_extentz" value="7" tracking="false" />
                         <Property mapKey="Gaussian_Filter_outsideVolumeValue" name="Gaussian_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="22526" tracking="false" />
                         <Property mapKey="Gaussian_Filter_samplingStrategyType" name="Gaussian_Filter_samplingStrategyType" value="clamp" />
+                        <Property mapKey="Gradient_gradientType" name="Gradient_gradientType" value="centralDifferences" />
+                        <Property mapKey="Gradient_outsideVolumeValue" name="Gradient_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" tracking="false" />
+                        <Property mapKey="Gradient_samplingStrategyType" name="Gradient_samplingStrategyType" value="clamp" />
                         <Property mapKey="Median_Filter_extentx" name="Median_Filter_extentx" value="1" tracking="false" />
                         <Property mapKey="Median_Filter_extenty" name="Median_Filter_extenty" value="1" tracking="false" />
                         <Property mapKey="Median_Filter_extentz" name="Median_Filter_extentz" value="1" tracking="false" />
                         <Property mapKey="Median_Filter_outsideVolumeValue" name="Median_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="22526" tracking="false" />
                         <Property mapKey="Median_Filter_samplingStrategyType" name="Median_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Morphology_Filter_extentx" name="Morphology_Filter_extentx" value="1" tracking="false" />
-                        <Property mapKey="Morphology_Filter_extenty" name="Morphology_Filter_extenty" value="1" tracking="false" />
-                        <Property mapKey="Morphology_Filter_extentz" name="Morphology_Filter_extentz" value="20" tracking="false" />
+                        <Property mapKey="Morphology_Filter_extenty" name="Morphology_Filter_extenty" value="2" tracking="false" />
+                        <Property mapKey="Morphology_Filter_extentz" name="Morphology_Filter_extentz" value="2" tracking="false" />
                         <Property mapKey="Morphology_Filter_morphologyOperatorShape" name="Morphology_Filter_morphologyOperatorShape" value="cube" />
-                        <Property mapKey="Morphology_Filter_morphologyOperatorType" name="Morphology_Filter_morphologyOperatorType" value="erosion" />
-                        <Property mapKey="Morphology_Filter_outsideVolumeValue" name="Morphology_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="22526" tracking="false" />
+                        <Property mapKey="Morphology_Filter_morphologyOperatorType" name="Morphology_Filter_morphologyOperatorType" value="dilation" />
+                        <Property mapKey="Morphology_Filter_outsideVolumeValue" name="Morphology_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="65535" tracking="false" />
                         <Property mapKey="Morphology_Filter_samplingStrategyType" name="Morphology_Filter_samplingStrategyType" value="clamp" />
                         <Property mapKey="Resample_Filter_dimensions" name="Resample_Filter_dimensions" tracking="false">
                             <value x="41" y="41" z="41" />
                         </Property>
+                        <Property mapKey="Rescale_Filter_rescaleStrategyType" name="Rescale_Filter_rescaleStrategyType" value="logarithmic" />
                         <Property mapKey="Thresholding_Filter_replacementValue" name="Thresholding_Filter_replacementValue" value="0" minValue="0" maxValue="22526" tracking="false" />
                         <Property mapKey="Thresholding_Filter_thresholdValue" name="Thresholding_Filter_thresholdValue" value="0" minValue="0" maxValue="22526" tracking="false" />
                         <Property mapKey="Thresholding_Filter_thresholdingStrategyType" name="Thresholding_Filter_thresholdingStrategyType" value="lower" />
+                        <Property mapKey="Vorticity_gradientType" name="Vorticity_gradientType" value="centralDifferences" />
+                        <Property mapKey="Vorticity_outsideVolumeValue" name="Vorticity_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" tracking="false" />
+                        <Property mapKey="Vorticity_samplingStrategyType" name="Vorticity_samplingStrategyType" value="clamp" />
                         <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="enabled" name="enabled" value="true" />
                         <Property mapKey="filterList" name="filterList">
@@ -806,15 +813,18 @@
                                 <item value="Binarization" />
                                 <item value="Binary Median Filter" />
                                 <item value="Gaussian Filter" />
+                                <item value="Gradient" />
                                 <item value="Median Filter" />
                                 <item value="Morphology Filter" />
                                 <item value="Resample Filter" />
+                                <item value="Rescale Filter" />
                                 <item value="Thresholding Filter" />
+                                <item value="Vorticity" />
                             </items>
                             <instances>
                                 <item itemId="2" instanceId="1" active="true" name="Gaussian Filter (1)" />
-                                <item itemId="4" instanceId="2" active="true" name="Morphology Filter (2)" />
-                                <item itemId="4" instanceId="3" active="true" name="Morphology Filter (3)" />
+                                <item itemId="5" instanceId="2" active="true" name="Morphology Filter (2)" />
+                                <item itemId="5" instanceId="3" active="true" name="Morphology Filter (3)" />
                             </instances>
                         </Property>
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
@@ -822,14 +832,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
-                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
-                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/318cf86b-7a79-4a1c-aea4-6dea0788c7a3.h5" />
+                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e149e0b1-47fa-4b20-b36e-2d51ee1e85c3.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 9.808 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 821 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -853,31 +863,104 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <Binarization_instanceSettings>
-                        <value key="-1" threshold="0.5" />
+                        <value key="-1">
+                            <threshold name="Binarization_threshold" value="0.5" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                        </value>
                     </Binarization_instanceSettings>
                     <Binary_Median_Filter_instanceSettings>
-                        <value key="-1" useUniformExtent_="true" extentX="1" extentY="1" extentZ="1" binarizationThreshold="0.5" samplingStrategyType="1" outsideVolumeValue="0" forceMedian="true" objectVoxelThreshold="13" />
+                        <value key="-1">
+                            <useUniformExtent_ name="Binary_Median_Filter_useUniformExtent" value="true" />
+                            <extentX name="Binary_Median_Filter_extentx" value="1" />
+                            <extentY name="Binary_Median_Filter_extenty" value="1" />
+                            <extentZ name="Binary_Median_Filter_extentz" value="1" />
+                            <binarizationThreshold name="Binary_Median_Filter_binarizationThreshold" value="0.5" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                            <samplingStrategyType name="Binary_Median_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Binary_Median_Filter_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                            <forceMedian name="Binary_Median_Filter_forceMedian" value="true" />
+                            <objectVoxelThreshold name="Binary_Median_Filter_objectVoxelThreshold" value="13" minValue="-2147483648" maxValue="27" />
+                        </value>
                     </Binary_Median_Filter_instanceSettings>
                     <Gaussian_Filter_instanceSettings>
-                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
-                        <value key="1" extentX="4" extentY="3" extentZ="7" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="-1">
+                            <extentX name="Gaussian_Filter_extentx" value="1" />
+                            <extentY name="Gaussian_Filter_extenty" value="1" />
+                            <extentZ name="Gaussian_Filter_extentz" value="1" />
+                            <samplingStrategyType name="Gaussian_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Gaussian_Filter_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                        </value>
+                        <value key="1">
+                            <extentX name="Gaussian_Filter_extentx" value="4" tracking="false" />
+                            <extentY name="Gaussian_Filter_extenty" value="3" tracking="false" />
+                            <extentZ name="Gaussian_Filter_extentz" value="7" tracking="false" />
+                            <samplingStrategyType name="Gaussian_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Gaussian_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="22526" tracking="false" />
+                        </value>
                     </Gaussian_Filter_instanceSettings>
+                    <Gradient_instanceSettings>
+                        <value key="-1">
+                            <gradientType name="Gradient_gradientType" value="centralDifferences" />
+                            <samplingStrategyType name="Gradient_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Gradient_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                        </value>
+                    </Gradient_instanceSettings>
                     <Median_Filter_instanceSettings>
-                        <value key="-1" extentX="1" extentY="1" extentZ="1" samplingStrategyType="1" outsideVolumeValue="0" />
+                        <value key="-1">
+                            <extentX name="Median_Filter_extentx" value="1" />
+                            <extentY name="Median_Filter_extenty" value="1" />
+                            <extentZ name="Median_Filter_extentz" value="1" />
+                            <samplingStrategyType name="Median_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Median_Filter_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                        </value>
                     </Median_Filter_instanceSettings>
                     <Morphology_Filter_instanceSettings>
-                        <value key="-1" extentX="1" extentY="1" extentZ="1" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
-                        <value key="2" extentX="1" extentY="2" extentZ="2" morphologyOperatorType="0" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
-                        <value key="3" extentX="1" extentY="1" extentZ="20" morphologyOperatorType="1" morphologyOperatorShape="0" samplingStrategyType="1" outsideVolumeValue="0" />
-                    </Morphology_Filter_instanceSettings>
-                    <Resample_Filter_instanceSettings>
                         <value key="-1">
-                            <dimensions x="100000" y="100000" z="100000" />
+                            <extentX name="Morphology_Filter_extentx" value="1" />
+                            <extentY name="Morphology_Filter_extenty" value="1" />
+                            <extentZ name="Morphology_Filter_extentz" value="1" />
+                            <morphologyOperatorType name="Morphology_Filter_morphologyOperatorType" value="dilation" />
+                            <morphologyOperatorShape name="Morphology_Filter_morphologyOperatorShape" value="cube" />
+                            <samplingStrategyType name="Morphology_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Morphology_Filter_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
                         </value>
-                    </Resample_Filter_instanceSettings>
+                        <value key="2">
+                            <extentX name="Morphology_Filter_extentx" value="1" tracking="false" />
+                            <extentY name="Morphology_Filter_extenty" value="2" tracking="false" />
+                            <extentZ name="Morphology_Filter_extentz" value="2" tracking="false" />
+                            <morphologyOperatorType name="Morphology_Filter_morphologyOperatorType" value="dilation" />
+                            <morphologyOperatorShape name="Morphology_Filter_morphologyOperatorShape" value="cube" />
+                            <samplingStrategyType name="Morphology_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Morphology_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="65535" tracking="false" />
+                        </value>
+                        <value key="3">
+                            <extentX name="Morphology_Filter_extentx" value="1" tracking="false" />
+                            <extentY name="Morphology_Filter_extenty" value="1" tracking="false" />
+                            <extentZ name="Morphology_Filter_extentz" value="20" tracking="false" />
+                            <morphologyOperatorType name="Morphology_Filter_morphologyOperatorType" value="erosion" />
+                            <morphologyOperatorShape name="Morphology_Filter_morphologyOperatorShape" value="cube" />
+                            <samplingStrategyType name="Morphology_Filter_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Morphology_Filter_outsideVolumeValue" value="0" minValue="0" maxValue="65535" tracking="false" />
+                        </value>
+                    </Morphology_Filter_instanceSettings>
+                    <Resample_Filter_instanceSettings />
+                    <Rescale_Filter_instanceSettings>
+                        <value key="-1">
+                            <rescaleStrategyType name="Rescale_Filter_rescaleStrategyType" value="logarithmic" />
+                        </value>
+                    </Rescale_Filter_instanceSettings>
                     <Thresholding_Filter_instanceSettings>
-                        <value key="-1" thresholdValue="0" replacementValue="0" thresholdingStrategyType="0" />
+                        <value key="-1">
+                            <thresholdValue name="Thresholding_Filter_thresholdValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                            <replacementValue name="Thresholding_Filter_replacementValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                            <thresholdingStrategyType name="Thresholding_Filter_thresholdingStrategyType" value="lower" />
+                        </value>
                     </Thresholding_Filter_instanceSettings>
+                    <Vorticity_instanceSettings>
+                        <value key="-1">
+                            <gradientType name="Vorticity_gradientType" value="centralDifferences" />
+                            <samplingStrategyType name="Vorticity_samplingStrategyType" value="clamp" />
+                            <outsideVolumeValue name="Vorticity_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" />
+                        </value>
+                    </Vorticity_instanceSettings>
                 </Processor>
                 <Processor type="ConnectedComponentAnalysis" name="ConnectedComponentAnalysis" id="ref7">
                     <MetaData>
@@ -900,14 +983,15 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
-                                    <item value="data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
-                                    <item value="/home/s_leis06/programming/voreen-playground/voreen/data/tmp/aae408f5-52e6-4f1c-9894-417c59aa50cc/4c9fdea7-ba0c-45cc-8f66-240980c37d5c.h5" />
+                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 549 ms" />
+                        <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 288 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
