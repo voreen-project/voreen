@@ -6,7 +6,7 @@ Voreen Changelog
 
     * Features:
       o Add PathlineCreator which takes a vector field time series as input
-      o Add Gradient and Vorticity to VolumeFilterList
+      o Add Gradient, Vorticity and RescaleFilter to VolumeFilterList
       o Add id sorting of components created by ConnectedComponentAnalysis
 
     * Framework/API Changes:
@@ -26,9 +26,10 @@ Voreen Changelog
       o Improve OctreeCreator performance
       o Allow extent of 0 in VolumeFilterList filter properties
       o Removal of only remaining volume representation no longer possible
-      o Remove GL -> RAM volume representation converter, which caused crashes in asynchronous processing 
+      o Remove GL -> RAM volume representation converter, which caused crashes in asynchronous processing
       o Remove Disk -> GL volume representation converter, which created an intermediate RAM representation. This is now handled by the memory manager and also supports Octree -> GL representation conversion.
       o Fix separate loading of channels from a HDF5 file volume
+      o Output data ranges of filters in VolumeFilterList now influence parameters of subsequent filters
 
 2020-01-17: Voreen 5.1.1
 ------------------------
