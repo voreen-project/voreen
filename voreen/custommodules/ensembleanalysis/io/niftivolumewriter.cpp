@@ -23,37 +23,45 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VTIVOLUMEWRITER_H
-#define VRN_VTIVOLUMEWRITER_H
+#include "niftivolumewriter.h"
 
-#include "voreen/core/io/volumewriter.h"
-
-#include <vtkSmartPointer.h>
+#include <vtkAbstractArray.h>
 #include <vtkImageData.h>
+#include <vtkSmartPointer.h>
+#include <vtkNIFTIImageWriter.h>
+
+#include "tgt/exception.h"
+#include "tgt/vector.h"
+
+#include "voreen/core/datastructures/volume/volume.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume);
+const std::string NiftiVolumeWriter::loggerCat_ = "voreen.io.VolumeWriter.nii";
 
-/**
-* This reader is capable of writing vti files specified by the VTK library.
-*/
-class VRN_CORE_API VTIVolumeWriter : public VolumeWriter {
-public:
-    VTIVolumeWriter(ProgressBar* progress = 0);
+NiftiVolumeWriter::NiftiVolumeWriter(ProgressBar* progress)
+        : VolumeWriter(progress)
+{
+    extensions_.push_back("nii");
+}
 
-    virtual VolumeWriter* create(ProgressBar* progress = 0) const;
+VolumeWriter* NiftiVolumeWriter::create(ProgressBar* progress) const {
+    return new NiftiVolumeWriter(progress);
+}
 
-    virtual std::string getClassName() const { return "VTIVolumeWriter"; }
-    virtual std::string getFormatDescription() const { return "VTK ImageData format"; }
+void NiftiVolumeWriter::write(const std::string& fileName, const VolumeBase* volumeHandle) {
+    tgtAssert(volumeHandle, "No volume");
 
-    virtual void write(const std::string& fileName, const VolumeBase* volumeHandle);
+    LINFO("Writing " << fileName);
 
-private:
-
-    static const std::string loggerCat_;
-};
+    vtkSmartPointer<vtkNIFTIImageWriter> writer = vtkSmartPointer<vtkNIFTIImageWriter>::New();
+    writer->SetFileName(fileName.c_str());
+    writer->SetInputData(createVtkImageDataFromVolume(volumeHandle));
+    writer->Write();
+    if(writer->GetErrorCode() != 0) {
+        throw tgt::IOException("File could not be written");
+    }
+}
 
 } // namespace voreen
-
-#endif // VRN_VTIVOLUMEREADER_H

@@ -38,31 +38,16 @@
 
 namespace voreen {
 
-const std::string VTIVolumeWriter::loggerCat_ = "voreen.io.VolumeWriter.vti";
-
-VTIVolumeWriter::VTIVolumeWriter(ProgressBar* progress)
-        : VolumeWriter(progress)
-{
-    extensions_.push_back("vti");
-}
-
-VolumeWriter* VTIVolumeWriter::create(ProgressBar* progress) const {
-    return new VTIVolumeWriter(progress);
-}
-
-void VTIVolumeWriter::write(const std::string& fileName, const VolumeBase* volumeHandle) {
-    tgtAssert(volumeHandle, "No volume");
-
-    LINFO("Writing " << fileName);
-    VolumeRAMRepresentationLock representation(volumeHandle);
+vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume) {
+    VolumeRAMRepresentationLock representation(volume);
 
     // Setup image data object.
     vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
     tgt::ivec3 dims = representation->getDimensions();
     imageData->SetDimensions(dims.x, dims.y, dims.z);
-    tgt::dvec3 spacing = volumeHandle->getSpacing();
+    tgt::dvec3 spacing = volume->getSpacing();
     imageData->SetSpacing(spacing.x, spacing.y, spacing.z);
-    tgt::dvec3 origin = volumeHandle->getOffset();
+    tgt::dvec3 origin = volume->getOffset();
     imageData->SetOrigin(origin.x, origin.y, origin.z);
     int numComponents = static_cast<int>(representation->getNumChannels());
 
@@ -102,7 +87,7 @@ void VTIVolumeWriter::write(const std::string& fileName, const VolumeBase* volum
     }
     imageData->AllocateScalars(dataType, numComponents);
 
-    RealWorldMapping rwm = volumeHandle->getRealWorldMapping();
+    RealWorldMapping rwm = volume->getRealWorldMapping();
     for(int z=0; z<dims.z; z++) {
         for(int y=0; y<dims.y; y++) {
             for(int x=0; x<dims.x; x++) {
@@ -114,9 +99,30 @@ void VTIVolumeWriter::write(const std::string& fileName, const VolumeBase* volum
         }
     }
 
+    return imageData;
+}
+
+
+const std::string VTIVolumeWriter::loggerCat_ = "voreen.io.VolumeWriter.vti";
+
+VTIVolumeWriter::VTIVolumeWriter(ProgressBar* progress)
+        : VolumeWriter(progress)
+{
+    extensions_.push_back("vti");
+}
+
+VolumeWriter* VTIVolumeWriter::create(ProgressBar* progress) const {
+    return new VTIVolumeWriter(progress);
+}
+
+void VTIVolumeWriter::write(const std::string& fileName, const VolumeBase* volumeHandle) {
+    tgtAssert(volumeHandle, "No volume");
+
+    LINFO("Writing " << fileName);
+
     vtkSmartPointer<vtkXMLImageDataWriter> writer = vtkSmartPointer<vtkXMLImageDataWriter>::New();
     writer->SetFileName(fileName.c_str());
-    writer->SetInputData(imageData);
+    writer->SetInputData(createVtkImageDataFromVolume(volumeHandle));
     if(!writer->Write()) {
         throw tgt::IOException("File could not be written");
     }

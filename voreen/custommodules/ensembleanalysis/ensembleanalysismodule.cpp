@@ -48,6 +48,7 @@
 #include "io/similaritymatrixsource.h"
 #ifdef VRN_USE_VTK
 #include "io/netcdfvolumereader.h"
+#include "io/niftivolumewriter.h"
 #include "io/vtivolumereader.h"
 #include "io/vtivolumewriter.h"
 #include "io/vtmvolumereader.h"
@@ -99,6 +100,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerVolumeReader(new NetCDFVolumeReader());
     registerVolumeReader(new VTIVolumeReader());
     registerVolumeReader(new VTMVolumeReader());
+    registerVolumeWriter(new NiftiVolumeWriter());
     registerVolumeWriter(new VTIVolumeWriter());
 #endif
     

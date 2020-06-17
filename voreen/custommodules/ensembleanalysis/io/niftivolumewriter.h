@@ -23,29 +23,24 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VTIVOLUMEWRITER_H
-#define VRN_VTIVOLUMEWRITER_H
+#ifndef VRN_NIFTIVOLUMEWRITER_H
+#define VRN_NIFTIVOLUMEWRITER_H
 
-#include "voreen/core/io/volumewriter.h"
-
-#include <vtkSmartPointer.h>
-#include <vtkImageData.h>
+#include "vtivolumewriter.h"
 
 namespace voreen {
 
-vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume);
-
 /**
-* This reader is capable of writing vti files specified by the VTK library.
+* This reader is capable of writing NifTI-1 files.
 */
-class VRN_CORE_API VTIVolumeWriter : public VolumeWriter {
+class VRN_CORE_API NiftiVolumeWriter : public VolumeWriter {
 public:
-    VTIVolumeWriter(ProgressBar* progress = 0);
+    NiftiVolumeWriter(ProgressBar* progress = 0);
 
     virtual VolumeWriter* create(ProgressBar* progress = 0) const;
 
-    virtual std::string getClassName() const { return "VTIVolumeWriter"; }
-    virtual std::string getFormatDescription() const { return "VTK ImageData format"; }
+    virtual std::string getClassName() const { return "NiftiVolumeWriter"; }
+    virtual std::string getFormatDescription() const { return "NifTI-1 Format format"; }
 
     virtual void write(const std::string& fileName, const VolumeBase* volumeHandle);
 
@@ -56,4 +51,4 @@ private:
 
 } // namespace voreen
 
-#endif // VRN_VTIVOLUMEREADER_H
+#endif // VRN_NIFTIVOLUMEREADER_H
