@@ -30,8 +30,8 @@ IF(${VRN_USE_VTK})
 
         LIST(APPEND VTK_LIB_NAMES #add missing
             "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms"
-            "CommonExecutionModel" "CommonMath" "expat" "hdf5" "hdf5_hl" "NetCDF" "netcdfcpp"
-            "sys" "lz4" "zlib" "IOCore" "IOImage" "IONetCDF" "IOXML" "IOXMLParser"
+            "CommonExecutionModel" "CommonMath" "expat" "hdf5" "hdf5_hl" "jpeg" "metaio" "NetCDF" "netcdfcpp"
+            "png" "sys" "tiff" "lz4" "zlib" "DICOMParser" "IOCore" "IOImage" "IONetCDF" "IOXML" "IOXMLParser"
         )
 
         FOREACH(elem ${VTK_LIB_NAMES})
