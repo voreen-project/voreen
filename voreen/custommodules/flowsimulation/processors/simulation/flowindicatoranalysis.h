@@ -39,6 +39,8 @@ struct FlowIndicatorAnalysisInput {
     PortDataPointer<VolumeList> volumes;
     std::vector<FlowIndicator> indicators;
     std::unique_ptr<PlotData> output;
+    std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
+    bool transformSamples;
 };
 
 struct FlowIndicatorAnalysisOutput {
@@ -56,15 +58,37 @@ public:
 
 protected:
 
+    virtual void setDescriptions() override {
+        setDescription("This processors allows to sample and disks defined by FlowIndicatorDetection processors. "
+                       "The output can be plotted e.g. using a LinePlot processor. "
+                       "It allows to export the curves into simple CSV files which can again be used by the "
+                       "FlowIndicatorDetection processor to setup a velocity curve for a CFD simulation.");
+    }
+
+    virtual void adjustPropertiesToInput();
+
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
 private:
 
+    static bool isTimeSeries(const VolumeList* list);
+
+    void exportVelocityCurve();
+
     FlowParametrizationPort parameterPort_;
     VolumeListPort volumeListPort_;
     PlotPort outport_;
+
+    StringOptionProperty outputQuantity_;
+    StringOptionProperty indicator_;
+    BoolProperty transformSamples_;
+
+    FileDialogProperty exportCurvePath_;
+    ButtonProperty saveButton_;
+
+    static const std::string loggerCat_;
 };
 
 } //namespace

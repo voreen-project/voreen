@@ -95,6 +95,7 @@ struct VRN_CORE_API FlowIndicator : public Serializable {
 
     FlowIndicatorType   type_;      ///< Indicator type, @see FlowIndicatorType.
     int                 id_;        ///< Unique identifier. Also used by OpenLB to indicate material.
+    std::string         name_;      ///< Optional name.
 
     tgt::vec3           center_;    ///< Center position of the circle shaped area in world space.
     tgt::vec3           normal_;    ///< (Normalized) Normal vector defining the orientation.

@@ -26,28 +26,31 @@
 #ifndef VRN_FLOW_SIMULATION_UTILS_H
 #define VRN_FLOW_SIMULATION_UTILS_H
 
-#include "tgt/matrix.h"
-#include "tgt/vector.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumebase.h"
 
 namespace voreen {
 
-class VolumeBase;
-
 namespace utils {
 
+/**
+ * Creates a transformation matrix for transforming the specified position and velocity into
+ * an axis aligned coordinate system where position points in x- and velocity in z-direction.
+ */
 tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity);
 
 /**
- * Samples a disk inside a 3D-Vectorfield volume.
+ * Samples a disk randomly inside a 3D vector field volume.
  * The returned vector is the normalized average of all sampled velocities
  * in the indicator space multiplied by the maximum magnitude.
  * @param volume The vector field volume
  * @param origin The disk's origin
  * @param normal The disk's normal
  * @param radius The disk's radius
- * @param div Number of samples for each, angle and radius
+ * @param numSamples Number of samples to distribute uniformly across the disk surface.
+ *                   If set to 0, it will be estimated automatically.
  */
-tgt::vec3 sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, size_t div = 5);
+std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, bool transformSamples = false, size_t numSamples = 0);
 
 }
 

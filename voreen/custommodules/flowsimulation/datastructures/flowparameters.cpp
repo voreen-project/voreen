@@ -219,6 +219,7 @@ FlowIndicator::FlowIndicator()
 void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("type_", type_); // "type" is a reserved xml keyword.
     s.serialize("id_", id_); // "id" is a reserved xml keyword.
+    s.serialize("name", name_);
     s.serialize("center", center_);
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
@@ -231,6 +232,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
     s.deserialize("type_", type);
     type_ = static_cast<FlowIndicatorType>(type);
     s.deserialize("id_", id_);
+    s.optionalDeserialize("name", name_, "Indicator " + std::to_string(id_));
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
     s.deserialize("radius", radius_);

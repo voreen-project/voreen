@@ -106,11 +106,12 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , vesselGraphPort_(Port::INPORT, "vesselgraph.inport", "Vessel Graph")
     , volumePort_(Port::INPORT, "volume.inport", "Velocity Data Port (Optional)")
     , parameterOutport_(Port::OUTPORT, "flowParametrization.outport", "Flow Parametrization Output")
-    , flowIndicatorTable_("flowIndicatorTable", "Flow Indicators", 2, Processor::VALID)
+    , flowIndicatorTable_("flowIndicatorTable", "Flow Indicators", 3, Processor::VALID)
     , cloneFlowIndicator_("cloneFlowIndicator", "Clone Flow Indicator")
     , removeFlowIndicator_("removeFlowIndicator", "Remove Flow Indicator")
     , resetFlowIndicators_("resetFlowIndicators", "Reset Flow Indicators")
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , indicatorName_("indicatorName", "Name")
     , centerlinePosition_("position", "Position", 0, 0, 0)
     , radius_("radius", "Radius (mm)", 1.0f, 0.0f, 10.0f)
     , invertDirection_("invertDirection", "Invert Direction", false)
@@ -135,11 +136,8 @@ FlowIndicatorDetection::FlowIndicatorDetection()
 
     addProperty(flowIndicatorTable_);
         flowIndicatorTable_.setColumnLabel(0, "ID");
-        flowIndicatorTable_.setColumnLabel(1, "Type");
-        //flowIndicatorTable_.setColumnLabel(2, "Profile");
-        //flowIndicatorTable_.setColumnLabel(3, "St. Ph. Fun.");
-        //flowIndicatorTable_.setColumnLabel(4, "St. Ph. Dur.");
-        //flowIndicatorTable_.setColumnLabel(5, "Radius");
+        flowIndicatorTable_.setColumnLabel(1, "Name");
+        flowIndicatorTable_.setColumnLabel(2, "Type");
         flowIndicatorTable_.setGroupID("detection");
         ON_CHANGE(flowIndicatorTable_, FlowIndicatorDetection, updateIndicatorUI);
     addProperty(cloneFlowIndicator_);
@@ -157,6 +155,11 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         angleThreshold_.setGroupID("detection");
     setPropertyGroupGuiName("detection", "Detection");
 
+    addProperty(indicatorName_);
+        indicatorName_.setInstantUpdate(false);
+        indicatorName_.setGroupID("indicator");
+        ON_CHANGE_LAMBDA(indicatorName_, [this] { onIndicatorConfigChange(false); });
+        ON_CHANGE(indicatorName_, FlowIndicatorDetection, buildTable);
     addProperty(centerlinePosition_);
         centerlinePosition_.setGroupID("indicator");
         ON_CHANGE_LAMBDA(centerlinePosition_, [this] { onIndicatorConfigChange(true); });
@@ -300,6 +303,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
             centerlinePosition_.setMaxValue(settings.centerlinePosition_);
         }
 
+        indicatorName_.set(indicator.name_);
         centerlinePosition_.set(settings.centerlinePosition_);
         radius_.set(indicator.radius_);
         invertDirection_.set(settings.invertDirection_);
@@ -321,6 +325,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     removeFlowIndicator_.setReadOnlyFlag(!settingsEditable);
     centerlinePosition_.setReadOnlyFlag(!settingsEditable);
 
+    indicatorName_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
     invertDirection_.setReadOnlyFlag(!validSelection);
     forceAxisAlignment_.setReadOnlyFlag(!validSelection);
@@ -358,15 +363,18 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
 
         FlowIndicator& indicator = flowIndicators_[indicatorIdx];
         indicator.type_ = indicatorType_.getValue();
+        indicator.name_ = indicatorName_.get();
 
         if(needReinitialization) {
             FlowIndicatorType type = indicator.type_;
             int id = indicator.id_;
+            std::string name = indicator.name_;
             indicator = initializeIndicator(settings);
 
             // Restore config.
             indicator.type_ = type;
             indicator.id_ = id;
+            indicator.name_ = name;
         }
         else {
             indicator.radius_ = radius_.get();
@@ -531,6 +539,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     // since it might be classified as one later.
     FlowIndicator indicator;
     indicator.id_ = flowIndicators_.size() + FlowParameterSetEnsemble::getFlowIndicatorIdOffset(); // TODO: Should be determined by FlowParameterSetEnsemble.
+    indicator.name_ = "Indicator " + std::to_string(indicator.id_);
     indicator.type_ = FlowIndicatorType::FIT_CANDIDATE;
     indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;
 
@@ -571,11 +580,18 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     }
 
     // Estimate velocity(direction) and therefore type.
-    tgt::vec3 velocity = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_);
-    indicator.type_ = estimateType(indicator, velocity);
+    std::vector<tgt::vec3> samples = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_, false);
+
+    tgt::vec3 accumDirection = tgt::vec3::zero;
+    float maxMagnitudeSq = 0.0f;
+    for(const auto& sample : samples) {
+        accumDirection += sample;
+        maxMagnitudeSq = std::max(maxMagnitudeSq, tgt::lengthSq(sample));
+    }
+    indicator.type_ = estimateType(indicator, accumDirection);
 
     // Setup velocity curve.
-    settings.targetVelocity_ = tgt::length(velocity);
+    settings.targetVelocity_ = std::sqrt(maxMagnitudeSq);
     indicator.velocityCurve_ = createCurveFromSettings(settings);
 
     return indicator;
@@ -588,22 +604,10 @@ void FlowIndicatorDetection::buildTable() {
     for(const FlowIndicator& indicator : flowIndicators_) {
         std::vector<std::string> row(flowIndicatorTable_.getNumColumns());
         row[0] = std::to_string(indicator.id_);
-        row[1] = indicator.type_ == FlowIndicatorType::FIT_VELOCITY ? "Velocity" :
+        row[1] = indicator.name_;
+        row[2] = indicator.type_ == FlowIndicatorType::FIT_VELOCITY ? "Velocity" :
                  (indicator.type_ == FlowIndicatorType::FIT_PRESSURE ? "Pressure" :
                   (indicator.type_ == FlowIndicatorType::FIT_MEASURE ? "Measure" : "Candidate"));
-        /*
-        row[2] = indicator.flowProfile_ == FlowProfile ::FP_POISEUILLE ? "Poiseuille" :
-                 (indicator.flowProfile_ == FlowProfile::FP_POWERLAW ? "Powerlaw" :
-                  (indicator.flowProfile_ == FlowProfile::FP_CONSTANT ? "Constant" : "None"));
-        row[3] = indicator.startPhaseFunction_ == FlowStartPhase::FSP_CONSTANT ? "Constant" :
-                 (indicator.startPhaseFunction_ == FlowStartPhase::FSP_SINUS ? "Sinus" : "None");
-        row[4] = std::to_string(indicator.startPhaseDuration_);
-        row[5] = std::to_string(indicator.radius_);
-        row[6] = "(" + std::to_string(indicator.center_.x) + ", " + std::to_string(indicator.center_.y) + ", " +
-                 std::to_string(indicator.center_.z) + ")";
-        row[7] = "(" + std::to_string(indicator.normal_.x) + ", " + std::to_string(indicator.normal_.y) + ", " +
-                 std::to_string(indicator.normal_.z) + ")";
-        */
         flowIndicatorTable_.addRow(row);
     }
 

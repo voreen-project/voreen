@@ -153,6 +153,7 @@ private:
     ButtonProperty resetFlowIndicators_;
     IntProperty angleThreshold_;
 
+    StringProperty indicatorName_;
     IntProperty centerlinePosition_;
     FloatProperty radius_;
     BoolProperty invertDirection_;
