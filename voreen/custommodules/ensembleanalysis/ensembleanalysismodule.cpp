@@ -49,6 +49,7 @@
 #ifdef VRN_USE_VTK
 #include "io/netcdfvolumereader.h"
 #include "io/vtivolumereader.h"
+#include "io/vtivolumewriter.h"
 #include "io/vtmvolumereader.h"
 #endif
 
@@ -98,6 +99,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerVolumeReader(new NetCDFVolumeReader());
     registerVolumeReader(new VTIVolumeReader());
     registerVolumeReader(new VTMVolumeReader());
+    registerVolumeWriter(new VTIVolumeWriter());
 #endif
     
     // Properties

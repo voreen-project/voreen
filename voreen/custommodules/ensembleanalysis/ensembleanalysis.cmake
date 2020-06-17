@@ -154,11 +154,13 @@ IF(${VRN_USE_VTK})
     LIST(APPEND MOD_CORE_SOURCES
         ${MOD_DIR}/io/netcdfvolumereader.cpp
         ${MOD_DIR}/io/vtivolumereader.cpp
+        ${MOD_DIR}/io/vtivolumewriter.cpp
         ${MOD_DIR}/io/vtmvolumereader.cpp
     )
     LIST(APPEND MOD_CORE_HEADERS
         ${MOD_DIR}/io/netcdfvolumereader.h
         ${MOD_DIR}/io/vtivolumereader.h
+        ${MOD_DIR}/io/vtivolumewriter.h
         ${MOD_DIR}/io/vtmvolumereader.h
     )
 ENDIF()
