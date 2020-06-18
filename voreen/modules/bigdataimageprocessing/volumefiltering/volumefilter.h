@@ -124,6 +124,12 @@ private:
 };
 
 
+template<typename T, typename F>
+inline T mapScalars(const T& value, F f, typename std::enable_if<!std::is_same<T, float>::value>::type* = 0);
+
+template<typename T, typename F>
+inline T mapScalars(const T& value, F f, typename std::enable_if<std::is_same<T, float>::value>::type* = 0);
+
 
 // ------------------------------------------------------------------------------------------
 // Implementation ---------------------------------------------------------------------------
@@ -227,6 +233,19 @@ SamplingStrategy<N> SamplingStrategy<T>::convert(std::function<N(T)> convertOuts
             );
 }
 
+template<typename T, typename F>
+inline T mapScalars(const T& value, F f, typename std::enable_if<!std::is_same<T, float>::value>::type*) {
+    T out;
+    for(int c=0; c<T::size; ++c) {
+        out[c] = f(value[c]);
+    }
+    return out;
+}
+
+template<typename T, typename F>
+inline T mapScalars(const T& value, F f, typename std::enable_if<std::is_same<T, float>::value>::type*) {
+    return f(value);
+}
 } // namespace voreen
 
 #endif // VRN_VOLUMEFILTER_H

@@ -64,25 +64,11 @@ template<typename T>
 RescaleFilter<T>::~RescaleFilter() {
 }
 
-template<typename T, typename F>
-static inline T mapT(const T& value, F f, typename std::enable_if<!std::is_same<T, float>::value>::type* = 0) {
-    T out;
-    for(int c=0; c<T::size; ++c) {
-        out[c] = f(value[c]);
-    }
-    return out;
-}
-
-template<typename T, typename F>
-static inline T mapT(const T& value, F f, typename std::enable_if<std::is_same<T, float>::value>::type* = 0) {
-    return f(value);
-}
-
 template<typename T>
 static inline T rescaleInternal(const T& value, RescaleStrategyType strategy) {
     switch (strategy) {
         case RESCALE_LOGARITHMIC_T:
-            return mapT(value, [] (float i) -> float {
+            return mapScalars(value, [] (float i) -> float {
                         float res = std::log(i);
                         if(std::isinf(res)) {
                             return -std::numeric_limits<float>::max();
@@ -91,7 +77,7 @@ static inline T rescaleInternal(const T& value, RescaleStrategyType strategy) {
                         }
                     });
         case RESCALE_EXPONENTIAL_T:
-            return mapT(value, [] (float i) -> float {
+            return mapScalars(value, [] (float i) -> float {
                         float res = std::exp(i);
                         if(std::isinf(res)) {
                             return std::numeric_limits<float>::max();
@@ -107,9 +93,9 @@ static inline T rescaleInternal(const T& value, RescaleStrategyType strategy) {
 template<typename T>
 ParallelFilterValue<T> RescaleFilter<T>::getValue(const typename RescaleFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     T inputNorm = sample(pos);
-    T inputRW = mapT(inputNorm, [&] (float i) { return inputMetadata.getRealworldMapping().normalizedToRealWorld(i);});
+    T inputRW = mapScalars(inputNorm, [&] (float i) { return inputMetadata.getRealworldMapping().normalizedToRealWorld(i);});
     T outputRW  = rescaleInternal(inputRW, strategy_);
-    T outputNorm = mapT(outputRW, [&] (float i) { return outputMetaData.getRealworldMapping().realWorldToNormalized(i);});
+    T outputNorm = mapScalars(outputRW, [&] (float i) { return outputMetaData.getRealworldMapping().realWorldToNormalized(i);});
     return outputNorm;
 }
 
