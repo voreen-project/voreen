@@ -85,9 +85,16 @@ void FlowIndicatorAnalysis::adjustPropertiesToInput() {
         return;
     }
 
+    std::string selected = indicator_.get();
     indicator_.setOptions(std::deque<Option<std::string>>());
     for(const FlowIndicator& indicator : parameterPort_.getData()->getFlowIndicators()) {
-        indicator_.addOption(std::to_string(indicator.id_), indicator.name_);
+        std::string id = std::to_string(indicator.id_);
+        indicator_.addOption(id, indicator.name_);
+
+        // Select old selected entry, if it is still available.
+        if(id == selected) {
+            indicator_.select(selected);
+        }
     }
 }
 
@@ -140,7 +147,7 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
         }
 
         if (outputQuantity_.get() == "maxMagnitude") {
-            outputFunc = [](const std::vector<tgt::vec3> &samples) {
+            outputFunc = [](const std::vector<tgt::vec3>& samples) {
                 float maxMagnitudeSq = 0.0f;
                 for (const auto& sample : samples) {
                     maxMagnitudeSq = std::max(maxMagnitudeSq, tgt::lengthSq(sample));
@@ -150,7 +157,7 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
             };
         }
         else if (outputQuantity_.get() == "meanMagnitude") {
-            outputFunc = [](const std::vector<tgt::vec3> &samples) {
+            outputFunc = [](const std::vector<tgt::vec3>& samples) {
                 float meanMagnitude = 0.0f;
                 for (const auto& sample : samples) {
                     meanMagnitude += tgt::length(sample);
