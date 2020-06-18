@@ -42,6 +42,7 @@
 #include "../volumefiltering/resamplefilter.h"
 #include "../volumefiltering/rescalefilter.h"
 #include "../volumefiltering/thresholdingfilter.h"
+#include "../volumefiltering/valuemapfilter.h"
 #include "../volumefiltering/vorticityfilter.h"
 
 // Include their properties.
@@ -54,6 +55,7 @@
 #include "../volumefilterproperties/resamplefilterproperties.h"
 #include "../volumefilterproperties/rescalefilterproperties.h"
 #include "../volumefilterproperties/thresholdingfilterproperties.h"
+#include "../volumefilterproperties/valuemapfilterproperties.h"
 #include "../volumefilterproperties/vorticityfilterproperties.h"
 
 namespace voreen {
@@ -94,6 +96,7 @@ VolumeFilterList::VolumeFilterList()
     addFilter<ResampleFilterSettings>();
     addFilter<RescaleFilterSettings>();
     addFilter<ThresholdingFilterSettings>();
+    addFilter<ValueMapFilterSettings>();
     addFilter<VorticityFilterSettings>();
 
     // Technical stuff.
@@ -195,10 +198,6 @@ VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
         }
 
         VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
-        if(!filter) {
-            LWARNING("Filter: '" << instance.getName() << "' has not been configured yet. Taking default.");
-            filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
-        }
         tgtAssert(filter, "filter was null");
 
         metadata = filter->getMetaData(metadata);
@@ -288,10 +287,6 @@ void VolumeFilterList::adjustPropertiesToInput() {
             }
 
             VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
-
-            if(!filter) {
-                filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
-            }
 
             tgtAssert(filter, "filter was null");
 
@@ -446,7 +441,7 @@ void VolumeFilterList::inputOutputChannelCheck() {
         SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(volume);
 
         for (InteractiveListProperty::Instance& instance : filterList_.getInstances()) {
-            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, FilterProperties::DEFAULT_SETTINGS);
+            VolumeFilter* filter = filterProperties_[instance.getItemId()]->getVolumeFilter(metadata, instance.getInstanceId());
             tgtAssert(filter, "filter was null");
 
             if (numOutputChannels == filter->getNumInputChannels()) {

@@ -115,9 +115,6 @@ TemplateFilterProperties<Settings>::TemplateFilterProperties()
 {
     // Add properties to list.
     current_.addProperties(properties_);
-
-    // Store default settings.
-    storeInstance(DEFAULT_SETTINGS);
 }
 
 template<typename Settings>
@@ -128,7 +125,7 @@ std::string TemplateFilterProperties<Settings>::getVolumeFilterName() const {
 template<typename Settings>
 void TemplateFilterProperties<Settings>::adjustPropertiesToInput(const SliceReaderMetaData& input, int instanceId) {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
+        instanceSettings_[instanceId] = Settings();
     }
     instanceSettings_[instanceId].adjustPropertiesToInput(input);
 }
@@ -136,7 +133,7 @@ void TemplateFilterProperties<Settings>::adjustPropertiesToInput(const SliceRead
 template<typename Settings>
 VolumeFilter* TemplateFilterProperties<Settings>::getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        return nullptr;
+        return Settings().getVolumeFilter(inputmetadata); // Default settings if instance has not been configured, yet.
     }
     return instanceSettings_.at(instanceId).getVolumeFilter(inputmetadata);
 }
@@ -148,7 +145,7 @@ void TemplateFilterProperties<Settings>::storeInstance(int instanceId) {
 template<typename Settings>
 void TemplateFilterProperties<Settings>::restoreInstance(int instanceId) {
     if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = instanceSettings_[DEFAULT_SETTINGS];
+        instanceSettings_[instanceId] = Settings();
     }
 
     current_ = instanceSettings_[instanceId];
@@ -162,9 +159,7 @@ template<typename Settings>
 std::vector<int> TemplateFilterProperties<Settings>::getStoredInstances() const {
     std::vector<int> output;
     for(auto& kv : instanceSettings_) {
-        if(kv.first != DEFAULT_SETTINGS) {
-            output.push_back(kv.first);
-        }
+        output.push_back(kv.first);
     }
     return output;
 }

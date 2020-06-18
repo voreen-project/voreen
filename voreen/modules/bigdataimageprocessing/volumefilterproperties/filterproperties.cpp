@@ -27,7 +27,6 @@
 
 namespace voreen {
 
-const int FilterProperties::DEFAULT_SETTINGS = -1;
 const std::string FilterProperties::loggerCat_ = "voreen.base.VolumeFilterList";
 
 FilterProperties::~FilterProperties() {

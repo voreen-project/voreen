@@ -50,8 +50,6 @@ class VolumeFilter;
 class FilterProperties : public Serializable {
 public:
 
-    static const int DEFAULT_SETTINGS;
-
     virtual ~FilterProperties();
 
     const std::vector<Property*>& getProperties() const;
