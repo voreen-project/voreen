@@ -81,7 +81,6 @@ void TransFunc1DKeysProperty::initialize() {
     // create initial transfer function, if it has not been created during deserialization
     if (!transFunc1DKeys_) {
         set1DKeys(new TransFunc1DKeys());
-        LGL_ERROR;
     }
 }
 
