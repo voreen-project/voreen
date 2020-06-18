@@ -102,7 +102,7 @@ void TransFuncPropertyBase::set(TransFuncBase* tf) {
     TransFuncBase* oldValue = baseFunction_;
     baseFunction_ = tf;
 
-    if (oldValue && *tf == *oldValue) {
+    if (oldValue && tf && *tf == *oldValue) {
         // tf is equal -> only inform widgets about new object
         updateWidgets();
     }
