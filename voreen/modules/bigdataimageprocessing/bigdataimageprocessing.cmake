@@ -79,6 +79,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefiltering/rescalefilter.cpp
     ${MOD_DIR}/volumefiltering/slicereader.cpp
     ${MOD_DIR}/volumefiltering/thresholdingfilter.cpp
+    ${MOD_DIR}/volumefiltering/valuemapfilter.cpp
     ${MOD_DIR}/volumefiltering/volumefilter.cpp
     ${MOD_DIR}/volumefiltering/vorticityfilter.cpp
 
@@ -92,7 +93,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/volumefilterproperties/morphologyfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/resamplefilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/rescalefilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/templatefilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.cpp
+    ${MOD_DIR}/volumefilterproperties/valuemapfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.cpp
 
     # cell nuclei cluster splitting
@@ -122,6 +125,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefiltering/rescalefilter.h
     ${MOD_DIR}/volumefiltering/slicereader.h
     ${MOD_DIR}/volumefiltering/thresholdingfilter.h
+    ${MOD_DIR}/volumefiltering/valuemapfilter.h
     ${MOD_DIR}/volumefiltering/volumefilter.h
     ${MOD_DIR}/volumefiltering/vorticityfilter.h
 
@@ -136,6 +140,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/volumefilterproperties/rescalefilterproperties.h
     ${MOD_DIR}/volumefilterproperties/templatefilterproperties.h
     ${MOD_DIR}/volumefilterproperties/thresholdingfilterproperties.h
+    ${MOD_DIR}/volumefilterproperties/valuemapfilterproperties.cpp
     ${MOD_DIR}/volumefilterproperties/vorticityfilterproperties.h
 
     # cell nuclei cluster splitting

@@ -6,7 +6,7 @@ Voreen Changelog
 
     * Features:
       o Add PathlineCreator which takes a vector field time series as input
-      o Add Gradient, Vorticity and RescaleFilter to VolumeFilterList
+      o Add Gradient, Vorticity, ValueMap and RescaleFilter to VolumeFilterList
       o Add id sorting of components created by ConnectedComponentAnalysis
 
     * Framework/API Changes:
