@@ -32,7 +32,7 @@
 
 namespace voreen {
 
-class GradientFilterSettings : public Serializable {
+class GradientFilterSettings : public FilterSettings {
 public:
     GradientFilterSettings();
     GradientFilterSettings& operator=(const GradientFilterSettings& other);

@@ -32,7 +32,7 @@
 
 namespace voreen {
 
-class RescaleFilterSettings : public Serializable {
+class RescaleFilterSettings : public FilterSettings {
 public:
     RescaleFilterSettings();
     RescaleFilterSettings& operator=(const RescaleFilterSettings& other);

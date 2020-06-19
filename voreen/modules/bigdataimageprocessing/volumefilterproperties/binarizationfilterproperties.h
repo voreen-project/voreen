@@ -30,7 +30,7 @@
 
 namespace voreen {
 
-class BinarizationFilterSettings : public Serializable {
+class BinarizationFilterSettings : public FilterSettings {
 public:
     BinarizationFilterSettings();
     BinarizationFilterSettings& operator=(const BinarizationFilterSettings& other);

@@ -30,7 +30,7 @@
 
 namespace voreen {
 
-class GaussianFilterSettings : public Serializable {
+class GaussianFilterSettings : public FilterSettings {
 public:
     GaussianFilterSettings();
     GaussianFilterSettings& operator=(const GaussianFilterSettings& other);

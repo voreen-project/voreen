@@ -108,6 +108,7 @@ protected:
 
     virtual void adjustPropertiesToInput();
     virtual void initialize();
+    virtual void deinitialize();
 
 private:
     void storeInstance(InteractiveListProperty::Instance&);

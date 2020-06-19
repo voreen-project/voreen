@@ -138,6 +138,18 @@ bool VolumeFilterList::isReady() const {
 
 void VolumeFilterList::initialize() {
     AsyncComputeProcessor::initialize();
+
+    for(auto& prop : filterProperties_) {
+        prop->initialize();
+    }
+}
+
+void VolumeFilterList::deinitialize() {
+
+    for(auto& prop : filterProperties_) {
+        prop->deinitialize();
+    }
+    AsyncComputeProcessor::deinitialize();
 }
 
 Processor* VolumeFilterList::create() const {

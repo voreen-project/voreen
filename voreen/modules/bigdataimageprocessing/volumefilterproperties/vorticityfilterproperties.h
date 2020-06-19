@@ -32,7 +32,7 @@
 
 namespace voreen {
 
-class VorticityFilterSettings : public Serializable {
+class VorticityFilterSettings : public FilterSettings {
 public:
     VorticityFilterSettings();
     VorticityFilterSettings& operator=(const VorticityFilterSettings& other);

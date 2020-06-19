@@ -30,7 +30,7 @@
 
 namespace voreen {
 
-class MedianFilterSettings : public Serializable {
+class MedianFilterSettings : public FilterSettings {
 public:
     MedianFilterSettings();
     MedianFilterSettings& operator=(const MedianFilterSettings& other);

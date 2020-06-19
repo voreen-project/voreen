@@ -32,7 +32,7 @@
 
 namespace voreen {
 
-class MorphologyFilterSettings : public Serializable {
+class MorphologyFilterSettings : public FilterSettings {
 public:
     MorphologyFilterSettings();
     MorphologyFilterSettings& operator=(const MorphologyFilterSettings& other);

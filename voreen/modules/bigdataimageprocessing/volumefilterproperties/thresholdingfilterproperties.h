@@ -32,7 +32,7 @@
 
 namespace voreen {
 
-class ThresholdingFilterSettings : public Serializable {
+class ThresholdingFilterSettings : public FilterSettings {
 public:
     ThresholdingFilterSettings();
     ThresholdingFilterSettings& operator=(const ThresholdingFilterSettings& other);

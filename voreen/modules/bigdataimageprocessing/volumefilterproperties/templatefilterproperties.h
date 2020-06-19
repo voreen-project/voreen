@@ -40,22 +40,32 @@ namespace {
 // Helper frequently used in FilterProperties subclasses
 template<typename T>
 void copyPropertyValue(const T& src, T& dst) {
-    voreen::XmlSerializer xser("");
+    if(&src != &dst) {
+        if(dst.isInitialized()) {
+            dst.deinitialize();
+        }
 
-    voreen::Serializer ser(xser);
-    src.serializeValue(ser);
+        voreen::XmlSerializer xser("");
 
-    std::stringstream s;
-    xser.write(s);
+        voreen::Serializer ser(xser);
+        src.serializeValue(ser);
 
-    voreen::XmlDeserializer xdeser("");
+        std::stringstream s;
+        xser.write(s);
 
-    xdeser.read(s);
+        voreen::XmlDeserializer xdeser("");
 
-    voreen::Deserializer deser(xdeser);
-    dst.deserializeValue(deser);
+        xdeser.read(s);
 
-    dst.invalidate();
+        voreen::Deserializer deser(xdeser);
+        dst.deserializeValue(deser);
+
+        if(src.isInitialized()) {
+            dst.initialize();
+        }
+
+        dst.invalidate();
+    }
 }
 
 template<typename Settings>
@@ -85,12 +95,20 @@ void deserializeTemplatePropertyWithValueFallback(voreen::Deserializer& s, std::
 
 namespace voreen {
 
+class FilterSettings : public Serializable {
+public:
+    virtual ~FilterSettings() {}
+    virtual void addProperties(std::vector<Property*>& output) = 0;
+    void initialize();
+    void deinitialize();
+};
+
 template<typename Settings>
 class TemplateFilterProperties : public FilterProperties {
 
 public:
     TemplateFilterProperties();
-    virtual ~TemplateFilterProperties() {}
+    virtual ~TemplateFilterProperties();
 
     virtual std::string getVolumeFilterName() const;
     virtual void adjustPropertiesToInput(const SliceReaderMetaData& input, int instanceId);
@@ -103,18 +121,30 @@ public:
     void serialize(Serializer& s) const;
     void deserialize(Deserializer& s);
 
+    void initialize();
+    void deinitialize();
+
 private:
+    void ensureSettingsExist(int instanceId);
+
     Settings current_;
     std::map<int, Settings> instanceSettings_;
+    bool initialized_;
 };
 
 template<typename Settings>
 TemplateFilterProperties<Settings>::TemplateFilterProperties()
     : current_()
     , instanceSettings_()
+    , initialized_(false)
 {
     // Add properties to list.
     current_.addProperties(properties_);
+}
+
+template<typename Settings>
+TemplateFilterProperties<Settings>::~TemplateFilterProperties() {
+    tgtAssert(!initialized_, "TemplateFilterProperties not deinitialized before destruction");
 }
 
 template<typename Settings>
@@ -124,9 +154,7 @@ std::string TemplateFilterProperties<Settings>::getVolumeFilterName() const {
 
 template<typename Settings>
 void TemplateFilterProperties<Settings>::adjustPropertiesToInput(const SliceReaderMetaData& input, int instanceId) {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = Settings();
-    }
+    ensureSettingsExist(instanceId);
     instanceSettings_[instanceId].adjustPropertiesToInput(input);
 }
 
@@ -144,14 +172,15 @@ void TemplateFilterProperties<Settings>::storeInstance(int instanceId) {
 }
 template<typename Settings>
 void TemplateFilterProperties<Settings>::restoreInstance(int instanceId) {
-    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
-        instanceSettings_[instanceId] = Settings();
-    }
+    ensureSettingsExist(instanceId);
 
     current_ = instanceSettings_[instanceId];
 }
 template<typename Settings>
 void TemplateFilterProperties<Settings>::removeInstance(int instanceId) {
+    if(initialized_ && instanceSettings_.find(instanceId) != instanceSettings_.end()) {
+        instanceSettings_[instanceId].deinitialize();
+    }
     instanceSettings_.erase(instanceId);
 }
 
@@ -176,6 +205,33 @@ void TemplateFilterProperties<Settings>::deserialize(Deserializer& s) {
     catch (SerializationException&) {
         s.removeLastError();
         LERROR("You need to reconfigure " << getVolumeFilterName() << " instances of " << ( properties_[0]->getOwner() ? properties_[0]->getOwner()->getGuiName() : "VolumeFilterList"));
+    }
+}
+
+template<typename Settings>
+void TemplateFilterProperties<Settings>::initialize() {
+    tgtAssert(!initialized_, "TemplateFilterProperties already initialized");
+    for(auto& kv : instanceSettings_) {
+        kv.second.initialize();
+    }
+    initialized_ = true;
+}
+template<typename Settings>
+void TemplateFilterProperties<Settings>::deinitialize() {
+    tgtAssert(initialized_, "TemplateFilterProperties not deinitialized");
+    for(auto& kv : instanceSettings_) {
+        kv.second.deinitialize();
+    }
+    initialized_ = false;
+}
+
+template<typename Settings>
+void TemplateFilterProperties<Settings>::ensureSettingsExist(int instanceId) {
+    if (instanceSettings_.find(instanceId) == instanceSettings_.end()) {
+        instanceSettings_[instanceId] = Settings();
+        if(initialized_) {
+            instanceSettings_[instanceId].initialize();
+        }
     }
 }
 

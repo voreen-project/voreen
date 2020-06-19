@@ -23,60 +23,25 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FILTERPROPERTIES_H
-#define VRN_FILTERPROPERTIES_H
-
-#include "voreen/core/io/serialization/serializable.h"
-
-#include "../volumefiltering/volumefilter.h"
-
-#include "voreen/core/datastructures/callback/lambdacallback.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
-
-#include "voreen/core/properties/property.h"
-#include "voreen/core/properties/intproperty.h"
-#include "voreen/core/properties/floatproperty.h"
-#include "voreen/core/properties/boolproperty.h"
-#include "voreen/core/properties/optionproperty.h"
-
-#include <vector>
-#include <map>
+#include "templatefilterproperties.h"
 
 namespace voreen {
 
-class VolumeBase;
-class VolumeFilter;
+void FilterSettings::initialize() {
+    std::vector<Property*> props;
+    addProperties(props);
 
-class FilterProperties : public Serializable {
-public:
+    for(auto& prop : props) {
+        prop->initialize();
+    }
+}
+void FilterSettings::deinitialize() {
+    std::vector<Property*> props;
+    addProperties(props);
 
-    virtual ~FilterProperties();
-
-    const std::vector<Property*>& getProperties() const;
-
-    void storeVisibility();
-    void restoreVisibility();
-
-    virtual std::string getVolumeFilterName() const = 0;
-    virtual void adjustPropertiesToInput(const SliceReaderMetaData& input, int instanceId) = 0;
-    virtual VolumeFilter* getVolumeFilter(const SliceReaderMetaData& inputmetadata, int instanceId) const = 0;
-    virtual void storeInstance(int instanceId) = 0;
-    virtual void restoreInstance(int instanceId) = 0;
-    virtual void removeInstance(int instanceId) = 0;
-    virtual std::vector<int> getStoredInstances() const = 0;
-    virtual void initialize() = 0;
-    virtual void deinitialize() = 0;
-
-protected:
-
-    std::string getId(const std::string& id) const;
-
-    std::vector<Property*> properties_;
-    std::map<Property*, bool> visibilityMap_;
-
-    static const std::string loggerCat_;
-};
-
+    for(auto& prop : props) {
+        prop->deinitialize();
+    }
 }
 
-#endif
+}
