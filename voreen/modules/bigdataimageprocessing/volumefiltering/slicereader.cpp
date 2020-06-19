@@ -163,6 +163,9 @@ tgt::vec2 SliceReaderMetaData::estimateMinMax() const {
             max = std::max(max, minmax_->at(c).x);
         }
     } else if(minmaxBounds_) {
+        min = minmaxBounds_->at(0).x;
+        max = minmaxBounds_->at(0).y;
+
         for(int c=1; c<minmaxBounds_->size(); ++c) {
             min = std::min(min, minmaxBounds_->at(c).x);
             max = std::max(max, minmaxBounds_->at(c).x);
