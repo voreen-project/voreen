@@ -45,34 +45,33 @@ public:
     virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 
 private:
+    float mapValueToNormalized(uint8_t val) const;
+    size_t normalizedToLutIndex(float val) const;
+
     ValueMap valueMap_;
-    float minNormalized_;
-    float maxNormalized_;
     RealWorldMapping inputToLut_;
 };
 
 // Implementation
 
-static float mapValueToNormalized(uint8_t val) {
+template<typename T>
+float ValueMapFilter<T>::mapValueToNormalized(uint8_t val) const {
     return static_cast<float>(val) / std::numeric_limits<ValueMap::value_type>::max();
+}
+
+template<typename T>
+size_t ValueMapFilter<T>::normalizedToLutIndex(float val) const {
+    float lutVal = inputToLut_.normalizedToRealWorld(val);
+    size_t size = valueMap_.size();
+    return tgt::clamp(static_cast<size_t>(tgt::round(lutVal * (size-1))), 0UL, size);
 }
 
 template<typename T>
 ValueMapFilter<T>::ValueMapFilter(std::vector<uint8_t>&& valueMap, RealWorldMapping inputToLut)
     : ParallelVolumeFilter<ParallelFilterValue<T>, ParallelFilterValue<T>>(0, SamplingStrategy<ParallelFilterValue<T>>::ASSERT_FALSE)
     , valueMap_(std::move(valueMap))
-    , minNormalized_( std::numeric_limits<float>::max())
-    , maxNormalized_(-std::numeric_limits<float>::max())
     , inputToLut_(inputToLut)
 {
-    ValueMap::value_type min = std::numeric_limits<ValueMap::value_type>::max();
-    ValueMap::value_type max = std::numeric_limits<ValueMap::value_type>::min();
-    for(auto val: valueMap_) {
-        min = std::min(min, val);
-        max = std::max(max, val);
-    }
-    minNormalized_ = mapValueToNormalized(min);
-    maxNormalized_ = mapValueToNormalized(max);
 }
 
 template<typename T>
@@ -83,9 +82,7 @@ template<typename T>
 ParallelFilterValue<T> ValueMapFilter<T>::getValue(const typename ValueMapFilter<T>::Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
     T inputNorm = sample(pos);
     return mapScalars(inputNorm, [&] (float val) {
-            float lutVal = inputToLut_.normalizedToRealWorld(val);
-            size_t size = valueMap_.size();
-            size_t index = tgt::clamp(static_cast<size_t>(tgt::round(lutVal * (size-1))), 0UL, size);
+            size_t index = normalizedToLutIndex(val);
             uint8_t mapVal = valueMap_[index];
             return mapValueToNormalized(mapVal);
             });
@@ -96,8 +93,22 @@ SliceReaderMetaData ValueMapFilter<T>::getMetaData(const SliceReaderMetaData& ba
     auto md = SliceReaderMetaData::fromBase(base);
     const auto& rwm = md.getRealworldMapping();
 
-    //TODO: check min/max via buckets in (input-)min/max range
-    tgt::vec2 minmax(rwm.normalizedToRealWorld(minNormalized_), rwm.normalizedToRealWorld(maxNormalized_));
+    auto mm = base.estimateMinMax();
+
+    size_t minIndex = normalizedToLutIndex(rwm.realWorldToNormalized(mm[0]));
+    size_t maxIndex = normalizedToLutIndex(rwm.realWorldToNormalized(mm[1]));
+    tgtAssert(minIndex <= maxIndex, "Invalid indices, max < min");
+
+    ValueMap::value_type min = std::numeric_limits<ValueMap::value_type>::max();
+    ValueMap::value_type max = std::numeric_limits<ValueMap::value_type>::min();
+    for(int i=minIndex; i<=maxIndex; ++i) {
+        auto val = valueMap_[i];
+        min = std::min(min, val);
+        max = std::max(max, val);
+    }
+    float minNormalized = mapValueToNormalized(min);
+    float maxNormalized = mapValueToNormalized(max);
+    tgt::vec2 minmax(rwm.normalizedToRealWorld(minNormalized), rwm.normalizedToRealWorld(maxNormalized));
     md.setMinMaxBounds(std::vector<tgt::vec2>(base.getNumChannels(), minmax));
 
     return md;
