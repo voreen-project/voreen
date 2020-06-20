@@ -63,7 +63,7 @@ template<typename T>
 size_t ValueMapFilter<T>::normalizedToLutIndex(float val) const {
     float lutVal = inputToLut_.normalizedToRealWorld(val);
     size_t size = valueMap_.size();
-    return tgt::clamp(static_cast<size_t>(tgt::round(lutVal * (size-1))), 0UL, size);
+    return tgt::clamp<size_t>(tgt::round(lutVal * (size-1)), 0, size);
 }
 
 template<typename T>
