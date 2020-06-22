@@ -168,6 +168,18 @@ void VolumeFilterList::deserialize(Deserializer& s) {
         // In case a new filter was added, it won't be able to be deserialized.
         try {
             filterProperties_[i]->deserialize(s);
+
+            // In a previous implementation all filterproperties (at least
+            // those used by VolumeFilterList) had a default instance with id
+            // -1. The implementation has now changed so that such an instance
+            // is no longer required. Old workspaces may have serialized this
+            // instance which would now count as an additional one. That can
+            // problems, for example, when linking properties (see
+            // VolumeFilterList::onFilterPropertyChange). For backwards
+            // compatibility we therefore explicitly remove all former default
+            // instances here:
+            filterProperties_[i]->removeInstance(-1);
+
         } catch(SerializationException& e) {
             s.removeLastError();
             LWARNING("Failed to deserialize Filterproperty '" << filterProperties_[i]->getVolumeFilterName() << "': " << e.what());
