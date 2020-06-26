@@ -1361,6 +1361,20 @@ void PlotLibraryOpenGl::renderAxes() {
     glEnable(GL_DEPTH_TEST);
 }
 
+void PlotLibraryOpenGl::renderTime(float percent) {
+    tgt::dvec2 step = updateScaleSteps(Axis::X_AXIS);
+    glLineWidth(axesWidth_);
+    IMode.color(drawingColor_);
+    plot_t xl = domain_[0].getLeft();    plot_t xr = domain_[0].getRight();
+    plot_t yl = domain_[1].getLeft();    plot_t yr = domain_[1].getRight();
+    plot_t i = xl + (xr - xl) * percent;
+    IMode.color(tgt::vec3::zero);
+    IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
+    logGlVertex2d(i, yl);
+    logGlVertex2d(i, yr);
+    IMode.end();
+}
+
 void PlotLibraryOpenGl::renderAxisScales(Axis axis, bool helperLines, const std::string& label, plot_t offset) {
     tgt::dvec2 step = updateScaleSteps(axis);
     glLineWidth(axesWidth_/2.f);
