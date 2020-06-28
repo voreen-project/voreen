@@ -66,7 +66,7 @@ __kernel void sAXPYDiv(
 
     float m = nom[0];
     float d = den[0];
-    float scalar = alpha * (m == d ? 1.0 : m / d); // Special case for nom==den==0.0
+    float scalar = alpha * (m == d ? 1.0f : m / d); // Special case for nom==den==0.0
 
     size_t block = 0;
     while ((block*globalSize+gid) < n) {
@@ -249,7 +249,7 @@ __kernel void hSpMV_Ell(
     size_t gid = get_global_id(0);
     size_t globalSize = get_global_size(0);
 
-    float valueScale = 1.0 / (float)((1<<15) - 1);
+    float valueScale = 1.0f / (float)((1<<15) - 1);
 
     // each work item iterates over a range of rows and computes the dot products
     size_t block = 0;
