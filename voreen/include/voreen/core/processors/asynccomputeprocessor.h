@@ -224,6 +224,12 @@ protected:
 
 private:
 
+    enum ExecutionMode {
+        ASYNC_INVALIDATE_ABORT = 1,
+        ASYNC_INVALIDATE_ENQUEUE = 2,
+    };
+
+
     typedef std::chrono::steady_clock Clock;
     typedef std::chrono::time_point<Clock> TimePoint;
 
@@ -302,6 +308,7 @@ private:
 
     BoolProperty continuousUpdate_;
     BoolProperty synchronousComputation_;
+    OptionProperty<ExecutionMode> executionMode_;
     ButtonProperty manualUpdateButton_;
     ButtonProperty stopUpdateButton_;
     ProgressProperty progressDisplay_;
@@ -312,6 +319,7 @@ private:
 
     bool updateForced_;
     bool stopForced_;
+    bool updateEnqueued_;
 
     ComputeThread computation_;
     TimePoint computationStartTime_; //Used for final display of required time
@@ -466,12 +474,14 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     : Processor()
     , continuousUpdate_("continuousUpdate_", "Continuous Update", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , synchronousComputation_("synchronousComputation", "Wait for Result", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
+    , executionMode_("executionMode", "Execution Mode", Processor::INVALID_RESULT, false, Property::LOD_ADVANCED)
     , manualUpdateButton_("manualUpdateButton_", "Start", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , stopUpdateButton_("stopUpdateButton", "Stop", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , progressDisplay_("progressDisplay", "Progress")
     , statusDisplay_("statusDisplay", "Status", "Stopped", Processor::VALID)
     , updateForced_(false)
     , stopForced_(false)
+    , updateEnqueued_(false)
     , computation_(*this)
     , propertyDisabler_(*this)
 {
@@ -479,6 +489,10 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
         continuousUpdate_.setGroupID("ac_processing");
     addProperty(synchronousComputation_);
         synchronousComputation_.setGroupID("ac_processing");
+    addProperty(executionMode_);
+        executionMode_.setGroupID("ac_processing");
+        executionMode_.addOption("async_abort", "Abort on Input Data Change", ASYNC_INVALIDATE_ABORT);
+        executionMode_.addOption("async_enqueue", "Enqueue Update on Input Data Change", ASYNC_INVALIDATE_ENQUEUE);
 
     addProperty(manualUpdateButton_);
         manualUpdateButton_.setGroupID("ac_processing");
@@ -562,11 +576,25 @@ void AsyncComputeProcessor<I,O>::beforeConnectionRemoved(const Port*, const Port
     // so no action is required here.
 }
 
+static bool dataSafeToUseAfterInvalidation(const Port* source) {
+    // Here the assumption is: We CAN use the port data in a threaded context,
+    // BUT we are not able (and thus required) to watch for the invalidation of
+    // the data. Hence the only remaining possibility is that data is _copied_
+    // (see GenericPort, PortDataPointer, Cloneable) or static and can thus
+    // still be used even though the port data itself has changed.
+    return !source->isDataInvalidationObservable();
+}
+
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
-    interruptComputation();
-    // Clear the result, if we have one already, as it will not be valid (i.e., corresponding to the input) afterwards.
-    computation_.clearOutput();
+    if(executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
+        updateEnqueued_ = true;
+    } else {
+        interruptComputation();
+        // Clear the result, if we have one already, as it will not be valid (i.e., corresponding to the input) afterwards.
+        computation_.clearOutput();
+    }
+
     // The port will no longer store it's currently contained data.
     // The data itself might continue existing, therefore we need to remove the observer.
     if(source->isDataInvalidationObservable() && source->hasData()) {
@@ -576,7 +604,12 @@ void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataHasChanged(const Port* source) {
-    interruptComputation();
+    if(executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
+        updateEnqueued_ = true;
+    } else {
+        interruptComputation();
+    }
+
     // The port stores new data.
     // The data might change later, so we register ourselves as an observer if this is possible
     if(source->isDataInvalidationObservable() && source->hasData()) {
@@ -663,7 +696,10 @@ void AsyncComputeProcessor<I,O>::interruptComputation() throw() {
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::process() {
 
-    bool abortNecessary = (getInvalidationLevel() >= INVALID_RESULT || updateForced_ || stopForced_) && computation_.isRunning();
+    bool running = computation_.isRunning();
+    bool abortNecessary = (updateForced_ || stopForced_
+            || (getInvalidationLevel() >= INVALID_RESULT && executionMode_.getValue() == ASYNC_INVALIDATE_ABORT))
+        && running;
 
     if(abortNecessary) {
         interruptComputation();
@@ -671,13 +707,14 @@ void AsyncComputeProcessor<I,O>::process() {
 
     std::unique_ptr<O> result = computation_.retrieveOutput();
 
-    bool restartNecessary = (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get()) && !stopForced_ || updateForced_;
+    bool restartNecessary = updateForced_
+        || (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get() && executionMode_.getValue() == ASYNC_INVALIDATE_ABORT) && !stopForced_
+        || updateEnqueued_ && !running && !stopForced_;
 
     stopForced_ = false;
     updateForced_ = false;
 
-    //If we need to restart anyways, we don't care about the result
-    if(result && !restartNecessary) {
+    if(result) {
         processComputeOutput(std::move(*result));
         stopComputeThread();
 
@@ -721,6 +758,7 @@ void AsyncComputeProcessor<I,O>::process() {
                 computationStartTime_ = Clock::now();
                 computation_.run();
             }
+            updateEnqueued_ = false;
         } catch(InvalidInputException& e) {
             std::string msg = e.what();
             std::string header = "Error starting computation:";
