@@ -70,7 +70,6 @@ struct RandomWalkerInput {
     int startLevel_;
     int endLevel_;
     boost::optional<tgt::IntBounds> clipRegion_;
-    std::unique_ptr<RandomWalkerWeights> weights_;
     const VoreenBlas* blas_;
     VoreenBlas::ConjGradPreconditioner precond_;
     float lodForegroundSeedThresh_;
@@ -78,6 +77,12 @@ struct RandomWalkerInput {
     float errorThreshold_;
     int maxIterations_;
     int lodSeedErosionKernelSize_;
+    bool useAdaptiveParameterSetting_;
+    int beta_;
+    int minEdgeWeight_;
+    float tfBlendFactor_;
+    bool enableTransFunc_;
+    const TransFunc1D* edgeWeightTransFunc_;
 };
 
 struct RandomWalkerOutput {
@@ -129,8 +134,6 @@ protected:
 #endif
 
 private:
-
-    RandomWalkerWeights* getEdgeWeightsFromProperties(const VolumeBase& vol) const;
 
     const VoreenBlas* getVoreenBlasFromProperties() const;
 

@@ -49,6 +49,27 @@
 
 namespace voreen {
 
+static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const RandomWalkerInput& input) {
+    float beta = input.useAdaptiveParameterSetting_ ? 0.5 : static_cast<float>(1<<input.beta_);
+    float minWeight = 1.f / pow(10.f, static_cast<float>(input.minEdgeWeight_));
+
+    auto vmm = input.inputHandle_->getDerivedData<VolumeMinMax>();
+    tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
+    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
+    if (input.enableTransFunc_) {
+        edgeWeightFun.reset(new RandomWalkerEdgeWeightTransfunc(input.edgeWeightTransFunc_, intensityRange, beta, input.tfBlendFactor_, minWeight));
+    } else {
+        edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
+    }
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor;
+    if(input.useAdaptiveParameterSetting_) {
+        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolumeAtomic(preprocessForAdaptiveParameterSetting(*input.inputHandle_->getRepresentation<VolumeRAM>()), input.inputHandle_->getRealWorldMapping()));
+    } else {
+        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(*input.inputHandle_));
+    }
+    return tgt::make_unique<RandomWalkerWeights>(std::move(voxelAccessor), std::move(edgeWeightFun), input.inputHandle_->getDimensions());
+}
+
 const std::string RandomWalker::loggerCat_("voreen.RandomWalker.RandomWalker");
 using tgt::vec3;
 
@@ -320,9 +341,6 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         bounds = clipRegion_.get();
     }
 
-    // 2. Edge weight calculator (independent from scale level)
-    std::unique_ptr<RandomWalkerWeights> weights(getEdgeWeightsFromProperties(*vol));
-
     // select BLAS implementation and preconditioner
     const VoreenBlas* voreenBlas = getVoreenBlasFromProperties();
     VoreenBlas::ConjGradPreconditioner precond = VoreenBlas::NoPreconditioner;
@@ -353,7 +371,6 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         startLevel,
         endLevel,
         bounds,
-        std::move(weights),
         voreenBlas,
         precond,
         lodForegroundSeedThresh,
@@ -361,6 +378,12 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         errorThresh,
         maxIterations,
         lodSeedErosionKernelSize,
+        useAdaptiveParameterSetting_.get(),
+        beta_.get(),
+        minEdgeWeight_.get(),
+        edgeWeightBalance_.get(),
+        enableTransFunc_.get(),
+        edgeWeightTransFunc_.get(),
     };
 }
 
@@ -575,8 +598,8 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
          */
 
         const RandomWalkerSeeds* seedsRef = seeds.get(); // only valid until solver is deleted.
-        tgtAssert(input.weights_, "No random walker weights")
-        solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), *input.weights_));
+        auto weights = getEdgeWeightsFromProperties(input);
+        solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), *weights));
         try {
             auto start = clock::now();
             solver->setupEquationSystem();
@@ -785,29 +808,6 @@ void RandomWalker::putOutSegmentation(const RandomWalkerSolver* solver) {
         LERROR("Failed to generate segmentation volume: " << e.what());
         delete segVolume;
     }
-}
-
-
-RandomWalkerWeights* RandomWalker::getEdgeWeightsFromProperties(const VolumeBase& vol) const {
-    float beta = useAdaptiveParameterSetting_.get() ? 0.5 : static_cast<float>(1<<beta_.get());
-    float minWeight = 1.f / pow(10.f, static_cast<float>(minEdgeWeight_.get()));
-    float tfBlendFactor = edgeWeightBalance_.get();
-
-    auto vmm = vol.getDerivedData<VolumeMinMax>();
-    tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
-    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
-    if (enableTransFunc_.get()) {
-        edgeWeightFun.reset(new RandomWalkerEdgeWeightTransfunc(edgeWeightTransFunc_.get(), intensityRange, beta, tfBlendFactor, minWeight));
-    } else {
-        edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
-    }
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor;
-    if(useAdaptiveParameterSetting_.get()) {
-        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolumeAtomic(preprocessForAdaptiveParameterSetting(*vol.getRepresentation<VolumeRAM>()), vol.getRealWorldMapping()));
-    } else {
-        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(vol));
-    }
-    return new RandomWalkerWeights(std::move(voxelAccessor), std::move(edgeWeightFun), vol.getDimensions());
 }
 
 const VoreenBlas* RandomWalker::getVoreenBlasFromProperties() const {
