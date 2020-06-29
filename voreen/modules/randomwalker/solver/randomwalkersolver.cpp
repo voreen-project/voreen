@@ -68,7 +68,9 @@ RandomWalkerSolver::~RandomWalkerSolver() {
     seeds_ = 0;
 }
 
-void RandomWalkerSolver::setupEquationSystem() {
+void RandomWalkerSolver::setupEquationSystem(ProgressReporter& progress) {
+
+    progress.setProgress(0.0f);
 
     if (state_ != Initial)
         throw VoreenException("System has already been setup");
@@ -117,15 +119,29 @@ void RandomWalkerSolver::setupEquationSystem() {
     tgtAssert(volIndexToRow_, "volIndexToRowBuffer empty");
 
     // iterate over volume and compute edge weights for each voxel
+    ThreadedTaskProgressReporter parallelProgress(progress, volDim_.z);
+    bool aborted = false;
     #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
     #endif
     for (int z=0; z<volDim_.z; z++) {
+        if (aborted) {
+            continue;
+        }
         for (int y=0; y<volDim_.y; y++) {
             for (int x=0; x<volDim_.x; x++) {
                 edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, volIndexToRow_);
             }
         }
+        if(parallelProgress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+#endif
+            aborted = true;
+        }
+    }
+    if(aborted) {
+        throw boost::thread_interrupted();
     }
 
     state_ = Setup;

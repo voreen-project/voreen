@@ -94,7 +94,7 @@ public:
      *
      * @throw VoreenException if setup has failed
      */
-    void setupEquationSystem();
+    void setupEquationSystem(ProgressReporter& progress);
 
     /**
      * Computes the random walker solution using a conjugate gradient solver provided by the passed

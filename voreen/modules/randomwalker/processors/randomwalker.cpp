@@ -537,6 +537,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
     for (int level = input.startLevel_; level >= input.endLevel_; level--) {
         SubtaskProgressReporter iterationProgress(loopProgress, tgt::vec2(static_cast<float>(step)/numSteps, static_cast<float>(step+1)/numSteps));
         iterationProgress.setProgress(0.0);
+        SubtaskProgressReporterCollection<3> iterationProgressSteps(iterationProgress, {0.05, 0.05, 0.9});
         ++step;
 
 
@@ -581,6 +582,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
                 segment.push_back(backgroundSeedsPort.getSegment(s).at(i) / scaleFactor);
             backgroundSeeds.addSegment(segment);
         }
+        iterationProgressSteps.get<0>().setProgress(1.0);
 
         // adapted clipping planes
         tgt::ivec3 clipLLF(-1);
@@ -602,7 +604,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
         solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), *weights));
         try {
             auto start = clock::now();
-            solver->setupEquationSystem();
+            solver->setupEquationSystem(iterationProgressSteps.get<1>());
             auto finish = clock::now();
             //LINFO("...finished: " << std::chrono::duration<float>(finish-start).count() << " sec");
             loopRecord.timeSetup = finish - start;
@@ -639,7 +641,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
 
             auto start = clock::now();
-            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_, iterationProgress);
+            int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_, iterationProgressSteps.get<2>());
             auto finish = clock::now();
             loopRecord.timeSolving = finish - start;
             loopRecord.numIterations = iterations;
