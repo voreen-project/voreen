@@ -239,6 +239,7 @@ private:
     void savePropertyEnableStates();
     void enableRunningState();
     void disableRunningState();
+    void enqueueRestart();
 
     /**
      * Safely passes progress reports through to the processor in the main thread.
@@ -319,7 +320,8 @@ private:
 
     bool updateForced_;
     bool stopForced_;
-    bool updateEnqueued_;
+    bool restartEnqueued_;
+    bool lastInvalidationWasEnqueue_;
 
     ComputeThread computation_;
     TimePoint computationStartTime_; //Used for final display of required time
@@ -481,7 +483,7 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     , statusDisplay_("statusDisplay", "Status", "Stopped", Processor::VALID)
     , updateForced_(false)
     , stopForced_(false)
-    , updateEnqueued_(false)
+    , restartEnqueued_(false)
     , computation_(*this)
     , propertyDisabler_(*this)
 {
@@ -553,6 +555,12 @@ void AsyncComputeProcessor<I,O>::disableRunningState() {
 }
 
 template<class I, class O>
+void AsyncComputeProcessor<I,O>::enqueueRestart() {
+    restartEnqueued_ = true;
+    lastInvalidationWasEnqueue_ = true;
+}
+
+template<class I, class O>
 std::vector<std::reference_wrapper<Port>> AsyncComputeProcessor<I,O>::getCriticalPorts() {
     std::vector<std::reference_wrapper<Port>> criticalPorts;
     for(Port* port : getInports()) {
@@ -588,7 +596,7 @@ static bool dataSafeToUseAfterInvalidation(const Port* source) {
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
     if(executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
-        updateEnqueued_ = true;
+        enqueueRestart();
     } else {
         interruptComputation();
         // Clear the result, if we have one already, as it will not be valid (i.e., corresponding to the input) afterwards.
@@ -605,7 +613,7 @@ void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataHasChanged(const Port* source) {
     if(executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
-        updateEnqueued_ = true;
+        enqueueRestart();
     } else {
         interruptComputation();
     }
@@ -697,8 +705,9 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::process() {
 
     bool running = computation_.isRunning();
+    bool enqueueRelatedInvalidation = executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && lastInvalidationWasEnqueue_;
     bool abortNecessary = (updateForced_ || stopForced_
-            || (getInvalidationLevel() >= INVALID_RESULT && executionMode_.getValue() == ASYNC_INVALIDATE_ABORT))
+            || (getInvalidationLevel() >= INVALID_RESULT && !enqueueRelatedInvalidation))
         && running;
 
     if(abortNecessary) {
@@ -708,11 +717,12 @@ void AsyncComputeProcessor<I,O>::process() {
     std::unique_ptr<O> result = computation_.retrieveOutput();
 
     bool restartNecessary = updateForced_
-        || (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get() && executionMode_.getValue() == ASYNC_INVALIDATE_ABORT) && !stopForced_
-        || updateEnqueued_ && !running && !stopForced_;
+        || (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get() && !enqueueRelatedInvalidation) && !stopForced_
+        || restartEnqueued_ && !running && !stopForced_;
 
     stopForced_ = false;
     updateForced_ = false;
+    lastInvalidationWasEnqueue_ = false;
 
     if(result) {
         processComputeOutput(std::move(*result));
@@ -758,7 +768,7 @@ void AsyncComputeProcessor<I,O>::process() {
                 computationStartTime_ = Clock::now();
                 computation_.run();
             }
-            updateEnqueued_ = false;
+            restartEnqueued_ = false;
         } catch(InvalidInputException& e) {
             std::string msg = e.what();
             std::string header = "Error starting computation:";
