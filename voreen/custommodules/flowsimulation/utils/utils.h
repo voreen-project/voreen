@@ -41,12 +41,14 @@ tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3&
 
 /**
  * Samples a disk randomly inside a 3D vector field volume.
- * The returned vector is the normalized average of all sampled velocities
- * in the indicator space multiplied by the maximum magnitude.
+ * Returns all sampled values.
+ * This function can also be used for single channel volumes, however, transformSamples will have no effect.
  * @param volume The vector field volume
  * @param origin The disk's origin
  * @param normal The disk's normal
  * @param radius The disk's radius
+ * @param transformSamples determines if the samples should be transformed into a plane defined by the disk
+ *                         Note that that you can only rely on the through-plane component!
  * @param numSamples Number of samples to distribute uniformly across the disk surface.
  *                   If set to 0, it will be estimated automatically.
  */

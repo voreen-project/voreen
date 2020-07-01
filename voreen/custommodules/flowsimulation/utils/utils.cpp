@@ -72,23 +72,29 @@ std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& ori
     }
 
     VolumeRAMRepresentationLock lock(volume);
+    const size_t numChannels = std::min<size_t>(lock->getNumChannels(), T::size);
 
-    std::function<T(const tgt::vec3&)> sample = [&lock, &rwm](const tgt::vec3& pos) {
+    std::function<T(const tgt::vec3&)> sample = [&lock, &rwm, numChannels](const tgt::vec3& pos) {
         T v = T::zero;
-        for(size_t channel = 0; channel < T::size; channel++) {
+        for(size_t channel = 0; channel < numChannels; channel++) {
             v[channel] = rwm.normalizedToRealWorld(lock->getVoxelNormalizedLinear(pos, channel));
         }
         return v;
     };
 
-    // If we wish to transform the velocity values, we apply
+    // Apply basis transform of vector values into disk space (pun intended).
     if(transformSamples) {
-        tgt::mat4 sampleTransformationMatrix;// = indicatorSpaceMatrix.getRotationalPart();
-        indicatorSpaceMatrix.getRotationalPart().invert(sampleTransformationMatrix);
+        if(lock->getNumChannels() == 3) {
+            tgt::mat4 sampleTransformationMatrix;
+            indicatorSpaceMatrix.getRotationalPart().invert(sampleTransformationMatrix);
 
-        sample = [sampleTransformationMatrix, sample] (const tgt::vec3& pos) {
-            return sampleTransformationMatrix * sample(pos);
-        };
+            sample = [sampleTransformationMatrix, sample](const tgt::vec3& pos) {
+                return sampleTransformationMatrix * sample(pos);
+            };
+        }
+        else {
+            LWARNINGC("SampleDisk", "Basis transform only applicable for Vector3 volumes");
+        }
     }
 
     // Set up random generator (predictable!).
