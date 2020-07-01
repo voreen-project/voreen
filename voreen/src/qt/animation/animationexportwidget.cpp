@@ -178,12 +178,12 @@ QGroupBox* AnimationExportWidget::createAnimationRenderBox(QWidget* parent) {
     spinWidth_ = new QSpinBox(recordBox);
     spinHeight_ = new QSpinBox(recordBox);
 
-    spinWidth_->setRange(64, 2048);
+    spinWidth_->setRange(64, 8192);
     spinWidth_->setSingleStep(4);
     spinWidth_->setValue(512);
     spinWidth_->setAccelerated(true);
 
-    spinHeight_->setRange(64, 2048);
+    spinHeight_->setRange(64, 8192);
     spinHeight_->setSingleStep(4);
     spinHeight_->setValue(512);
     spinHeight_->setAccelerated(true);
