@@ -1123,31 +1123,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         freeTreeComponents(&outputRootNode.node(), nodesToSave, *brickPoolManager_);
     });
 
-    std::vector<NodeToProcess> nodesToProcess;
-    nodesToProcess.push_back(
-        NodeToProcess {
-            input.octree_.getRootNode(),
-            &outputRootNode.node_,
-            tgt::svec3::zero,
-            volumeDim,
-            false,
-        }
-    );
-
-    LocatedVolumeOctreeNodeConst inputRoot = input.octree_.getLocatedRootNode();
-
     uint16_t globalMin = 0xffff;
     uint16_t globalMax = 0;
-
-
-    auto rwm = input.volume_.getRealWorldMapping();
-
-    PointSegmentListGeometryVec3 foregroundSeeds;
-    PointSegmentListGeometryVec3 backgroundSeeds;
-    getSeedListsFromPorts(input.foregroundGeomSeeds_, foregroundSeeds);
-    getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeeds);
-
-    std::mutex clMutex;
 
     const size_t HISTOGRAM_BUCKETS = 1 << 12;
 #ifdef VRN_OCTREEWALKER_USE_OMP
@@ -1158,6 +1135,42 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     Histogram1D histogram(0.0, 1.0, HISTOGRAM_BUCKETS);
     LINFO("Using sequential octree walker variant.");
 #endif
+
+    std::vector<NodeToProcess> nodesToProcess;
+    if(input.octree_.getRootNode()->isHomogeneous()) {
+        LWARNING("Input octree consists of single, homogeneous node");
+
+        uint16_t intensity = 0xffff/2;
+        globalMin = intensity;
+        globalMax = intensity;
+
+#ifdef VRN_OCTREEWALKER_USE_OMP
+        Histogram1D& histogram = histograms.at(0);
+#endif
+        histogram.addSample(0.5);
+
+        tgtAssert(!outputRootNode.node_, "Rootnode should be null");
+        outputRootNode.node_ = new VolumeOctreeNodeGeneric<1>(OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, true, intensity);
+    } else {
+        nodesToProcess.push_back(
+                NodeToProcess {
+                input.octree_.getRootNode(),
+                &outputRootNode.node_,
+                tgt::svec3::zero,
+                volumeDim,
+                false,
+                }
+            );
+    }
+
+    LocatedVolumeOctreeNodeConst inputRoot = input.octree_.getLocatedRootNode();
+
+    PointSegmentListGeometryVec3 foregroundSeeds;
+    PointSegmentListGeometryVec3 backgroundSeeds;
+    getSeedListsFromPorts(input.foregroundGeomSeeds_, foregroundSeeds);
+    getSeedListsFromPorts(input.backgroundGeomSeeds_, backgroundSeeds);
+
+    std::mutex clMutex;
 
     // Level order iteration => Previos level is always available
     for(int level = maxLevel; level >=0; --level) {
