@@ -369,6 +369,8 @@ RegionOfInterest2D::RegionOfInterest2D()
         tgt::MouseEvent::MOUSE_BUTTON_RIGHT, tgt::MouseEvent::PRESSED, tgt::Event::CTRL)
     , mouseEventRemoveLastROIInCurSlice_("mouseEvent.removeLastROIInCurSlice", "Remove Last ROI in Cur Slice", this,
         &RegionOfInterest2D::removeROIInCurrentSlice, tgt::MouseEvent::MOUSE_BUTTON_MIDDLE, tgt::MouseEvent::PRESSED, tgt::Event::CTRL)
+    , mouseEventRemoveClosestROIInCurSlice_("mouseEvent.removeClosestROIInCurSlice_", "Remove closest ROI in Cur Slice", this,
+        &RegionOfInterest2D::removeClosestROIInCurrentSlice, tgt::MouseEvent::MOUSE_BUTTON_4, tgt::MouseEvent::PRESSED, tgt::Event::CTRL)
     , mouseEventClearROIs_("mouseEvent.clearROIs", "Clear ROIs", this, &RegionOfInterest2D::clearROIs,
         tgt::MouseEvent::MOUSE_BUTTON_LEFT, tgt::MouseEvent::DOUBLECLICK, tgt::Event::CTRL)
     , mouseEventShiftROI_("mouseEvent.shiftROI", "Shift ROI", this, &RegionOfInterest2D::shiftROI,
@@ -439,6 +441,7 @@ RegionOfInterest2D::RegionOfInterest2D()
     addEventProperty(mouseEventAddROI_);
     addEventProperty(mouseEventRemoveLastROI_);
     addEventProperty(mouseEventRemoveLastROIInCurSlice_);
+    addEventProperty(mouseEventRemoveClosestROIInCurSlice_);
     addEventProperty(mouseEventClearROIs_);
     addEventProperty(mouseEventShiftROI_);
     addEventProperty(mouseEventScaleROI_);
@@ -837,12 +840,59 @@ void RegionOfInterest2D::removeROIInCurrentSlice(tgt::MouseEvent* e) {
 
         RegionOfInterestGeometry* roi = regionsOfInterest_[i];
         if (roi->layer_ == currentLayer_.get())
-        currentLayerGeoms.push_back(regionsOfInterest_.begin() + i);
+            currentLayerGeoms.push_back(regionsOfInterest_.begin() + i);
     }
 
     if (!currentLayerGeoms.empty()) {
         delete *(currentLayerGeoms.back());
-    regionsOfInterest_.erase(currentLayerGeoms.back());
+        regionsOfInterest_.erase(currentLayerGeoms.back());
+
+        if (selectedROI_ >= static_cast<int>(regionsOfInterest_.size()))
+            selectedROI_ = -1;
+        geometryHasChanged_ = true;
+        updateGeometry();
+        invalidate();
+    }
+    numberOfROIs_.set(static_cast<int>(regionsOfInterest_.size()));
+
+    if (e)
+        e->accept();
+}
+
+void RegionOfInterest2D::removeClosestROIInCurrentSlice(tgt::MouseEvent* e) {
+    vector<RegionOfInterestGeometry*>::iterator closest = regionsOfInterest_.end();
+    float distanceSq = FLT_MAX;
+
+    tgt::vec2 volMousePos(e->x(), inport_.getSize().y - e->y());
+
+    mat4 voxelToCurrentView;
+    bool inv = roiTransformMatrix_.get().invert(voxelToCurrentView);
+    tgtAssert(inv, "Matrix inversion failed");
+
+    for (vector<RegionOfInterestGeometry*>::iterator it = regionsOfInterest_.begin(); it != regionsOfInterest_.end(); ++it) {
+
+        RegionOfInterestGeometry* roi = *it;
+
+        float localDistanceSq = FLT_MAX;
+
+        if (roi->layer_ == currentLayer_.get()) {
+            mat4 roiToCurrentView = voxelToCurrentView * roi->transformMatrix_;
+
+            for(tgt::vec2 p : roi->points_) {
+                tgt::vec2 pView = roiToCurrentView.transform(tgt::vec3(p, 0)).xy();
+                localDistanceSq = std::min(localDistanceSq, tgt::distanceSq(pView, volMousePos));
+            }
+
+            if(localDistanceSq < distanceSq) {
+                distanceSq = localDistanceSq;
+                closest = it;
+            }
+        }
+    }
+
+    if (closest != regionsOfInterest_.end()) {
+        delete *closest;
+        regionsOfInterest_.erase(closest);
 
         if (selectedROI_ >= static_cast<int>(regionsOfInterest_.size()))
             selectedROI_ = -1;

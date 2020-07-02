@@ -159,6 +159,7 @@ protected:
     void addROIEvent(tgt::MouseEvent* e);
     void removeLastROI(tgt::MouseEvent* e = 0);
     void removeROIInCurrentSlice(tgt::MouseEvent* e = 0);
+    void removeClosestROIInCurrentSlice(tgt::MouseEvent* e = 0);
     void clearROIs(tgt::MouseEvent* e = 0);
     void shiftROI(tgt::MouseEvent* e);
     void scaleROI(tgt::MouseEvent* e);
@@ -200,6 +201,7 @@ protected:
     EventProperty<RegionOfInterest2D> mouseEventAddROI_;
     EventProperty<RegionOfInterest2D> mouseEventRemoveLastROI_;
     EventProperty<RegionOfInterest2D> mouseEventRemoveLastROIInCurSlice_;
+    EventProperty<RegionOfInterest2D> mouseEventRemoveClosestROIInCurSlice_;
     EventProperty<RegionOfInterest2D> mouseEventClearROIs_;
     EventProperty<RegionOfInterest2D> mouseEventShiftROI_;
     EventProperty<RegionOfInterest2D> mouseEventScaleROI_;
