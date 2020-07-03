@@ -127,10 +127,8 @@ void MWheelNumPropInteractionHandler<T>::onEvent(tgt::Event* eve) {
                 }
                 accept = true;
             }
-        }
-
-        // mouse action with wheel button => continous increment/decrement
-        if (mouseEve->button() == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) {
+        } else {
+            // mouse action with a button => continous increment/decrement via up/down movement
             if (mouseEve->action() == tgt::MouseEvent::PRESSED) {
                 // store initial mouse position, start interaction mode
                 lastMousePos_ = mouseEve->coord();
@@ -163,7 +161,6 @@ void MWheelNumPropInteractionHandler<T>::onEvent(tgt::Event* eve) {
                 }
                accept = true;
             }
-
         }
 
         if (accept)
