@@ -35,10 +35,11 @@ namespace voreen {
 class VolumeDiskMultiChannelAdapter : public VolumeDisk {
 public:
 
-    VolumeDiskMultiChannelAdapter(const std::vector<const VolumeBase*>& channels, const std::vector<bool>& invert)
+    VolumeDiskMultiChannelAdapter(const std::vector<const VolumeBase*>& channels, tgt::bvec3 mirror, std::vector<bool> invert)
         : VolumeDisk(VolumeFactory().getFormat(channels.front()->getBaseType(), channels.size()), channels.front()->getDimensions())
         , channels_(channels)
-        , invert_(invert)
+        , mirror_(mirror)
+        , invert_(std::move(invert))
     {
         tgtAssert(channels_.size() == invert_.size(), "size mismatch");
         const VolumeBase* ref = channels_.front();
@@ -80,14 +81,19 @@ public:
         VolumeRAM* output = VolumeFactory().create(getFormat(), dimensions);
 
         for (size_t channel = 0; channel < channels_.size(); channel++) {
+
             // Check if we have a ram representation already.
             if (channels_[channel]->hasRepresentation<VolumeRAM>()) {
                 VolumeRAMRepresentationLock lock(channels_[channel]);
+
                 tgt::svec3 pos;
                 for (pos.z = 0; pos.z < dimensions.z; pos.z++) {
+                    size_t z = mirror_.z ? dimensions.z - offset.z - pos.z - 1 : pos.z;
                     for (pos.y = 0; pos.y < dimensions.y; pos.y++) {
+                        size_t y = mirror_.y ? dimensions.y - offset.y - pos.y - 1 : pos.y;
                         for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
-                            float value = lock->getVoxelNormalized(offset + pos);
+                            size_t x = mirror_.x ? dimensions.x - offset.x - pos.x - 1 : pos.x;
+                            float value = lock->getVoxelNormalized(x, y, z);
                             if(invert_[channel]) {
                                 value = -value;
                             }
@@ -97,12 +103,21 @@ public:
                 }
             }
             else if(const VolumeDisk* vd = channels_[channel]->getRepresentation<VolumeDisk>()) {
-                std::unique_ptr<VolumeRAM> brick(vd->loadBrick(offset, dimensions));
+                tgt::svec3 effOffset = offset;
+                effOffset.x = mirror_.x ? dimensions_.x - dimensions.x - offset.x : offset.x;
+                effOffset.y = mirror_.y ? dimensions_.y - dimensions.y - offset.y : offset.y;
+                effOffset.z = mirror_.z ? dimensions_.z - dimensions.z - offset.z : offset.z;
+
+
+                std::unique_ptr<VolumeRAM> brick(vd->loadBrick(effOffset, dimensions));
                 tgt::svec3 pos;
                 for (pos.z = 0; pos.z < dimensions.z; pos.z++) {
+                    size_t z = mirror_.z ? dimensions.z - pos.z - 1 : pos.z;
                     for (pos.y = 0; pos.y < dimensions.y; pos.y++) {
+                        size_t y = mirror_.y ? dimensions.y - pos.y - 1 : pos.y;
                         for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
-                            float value = brick->getVoxelNormalized(pos);
+                            size_t x = mirror_.x ? dimensions.x - pos.x - 1 : pos.x;
+                            float value = brick->getVoxelNormalized(x, y, z);
                             if(invert_[channel]) {
                                 value = -value;
                             }
@@ -122,6 +137,7 @@ public:
 private:
 
     std::vector<const VolumeBase*> channels_;
+    tgt::bvec3 mirror_;
     std::vector<bool> invert_;
 };
 
@@ -133,6 +149,9 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     , outport_(Port::OUTPORT, "volumelist.output", "Volume List Output ", false)
     , numChannels_("numChannels", "Num. Channels", 3, 1, 4)
     , layout_("layout", "Layout", Processor::INVALID_RESULT, false, Property::LOD_ADVANCED)
+    , mirrorX_("mirrorX", "Mirror X", false)
+    , mirrorY_("mirrorY", "Mirror Y", false)
+    , mirrorZ_("mirrorZ", "Mirror Z", false)
     , invertChannel1_("invertChannel1", "Invert Channel 1", false)
     , invertChannel2_("invertChannel2", "Invert Channel 2", false)
     , invertChannel3_("invertChannel3", "Invert Channel 3", false)
@@ -148,6 +167,11 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     addProperty(layout_);
     layout_.addOption("xyzxyz", "xyzxyz");
     layout_.addOption("xxyyzz", "xxyyzz");
+
+    addProperty(mirrorX_);
+    addProperty(mirrorY_);
+    addProperty(mirrorZ_);
+
     addProperty(invertChannel1_);
     addProperty(invertChannel2_);
     addProperty(invertChannel3_);
@@ -182,6 +206,11 @@ void VolumeListMultiChannelAdapter::process() {
     size_t numChannels = static_cast<size_t>(numChannels_.get());
     size_t numVolumes = input->size() / numChannels; // floor(x).
 
+    tgt::bvec3 mirror;
+    mirror.x = mirrorX_.get();
+    mirror.y = mirrorY_.get();
+    mirror.z = mirrorZ_.get();
+
     std::vector<bool> invert;
     invert.push_back(invertChannel1_.get());
     if(numChannels > 1) {
@@ -215,7 +244,7 @@ void VolumeListMultiChannelAdapter::process() {
             tgtAssert(false, "unknown layout");
         }
 
-        VolumeDisk* vd = new VolumeDiskMultiChannelAdapter(channels, invert);
+        VolumeDisk* vd = new VolumeDiskMultiChannelAdapter(channels, mirror, invert);
         VolumeBase* volume = new Volume(vd, input->first());
         output->add(volume);
 

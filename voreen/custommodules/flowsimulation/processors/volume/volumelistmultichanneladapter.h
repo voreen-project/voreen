@@ -61,6 +61,11 @@ private:
 
     IntProperty numChannels_;
     StringOptionProperty layout_;
+
+    BoolProperty mirrorX_;
+    BoolProperty mirrorY_;
+    BoolProperty mirrorZ_;
+
     BoolProperty invertChannel1_;
     BoolProperty invertChannel2_;
     BoolProperty invertChannel3_;
