@@ -74,6 +74,7 @@ private:
         VGNodeID nodeId_;
         VGEdgeID edgeId_;
         int centerlinePosition_;
+        float relativeRadiusCorrection_;
         bool invertDirection_;
         bool forceAxisAlignment_;
 
@@ -156,6 +157,7 @@ private:
     StringProperty indicatorName_;
     IntProperty centerlinePosition_;
     FloatProperty radius_;
+    FloatProperty relativeRadiusCorrection_;
     BoolProperty invertDirection_;
     BoolProperty forceAxisAlignment_;
     OptionProperty<FlowIndicatorType> indicatorType_;

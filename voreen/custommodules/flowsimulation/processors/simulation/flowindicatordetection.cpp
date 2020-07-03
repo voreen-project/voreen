@@ -57,6 +57,7 @@ FlowIndicatorDetection::FlowIndicatorSettings::FlowIndicatorSettings(VGNodeID no
     : nodeId_(nodeId)
     , edgeId_(edgeId)
     , centerlinePosition_(0)
+    , relativeRadiusCorrection_(1.0f)
     , invertDirection_(false)
     , forceAxisAlignment_(false)
     , velocityCurveType_("sinus")
@@ -71,6 +72,7 @@ void FlowIndicatorDetection::FlowIndicatorSettings::serialize(Serializer& s) con
     s.serialize("nodeId", nodeId_.raw());
     s.serialize("edgeId", edgeId_.raw());
     s.serialize("centerlinePosition", centerlinePosition_);
+    s.serialize("relativeRadiusCorrection", relativeRadiusCorrection_);
     s.serialize("invertDirection", invertDirection_);
     s.serialize("forceAxisAlignment", forceAxisAlignment_);
     s.serialize("velocityCurveType", velocityCurveType_);
@@ -88,6 +90,7 @@ void FlowIndicatorDetection::FlowIndicatorSettings::deserialize(Deserializer& s)
     s.deserialize("edgeId", edgeId);
     edgeId_ = VGEdgeID(edgeId);
     s.deserialize("centerlinePosition", centerlinePosition_);
+    s.optionalDeserialize("relativeRadiusCorrection", relativeRadiusCorrection_, 1.0f);
     s.deserialize("invertDirection", invertDirection_);
     s.deserialize("forceAxisAlignment", forceAxisAlignment_);
     s.deserialize("velocityCurveType", velocityCurveType_);
@@ -114,6 +117,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , indicatorName_("indicatorName", "Name")
     , centerlinePosition_("position", "Position", 0, 0, 0)
     , radius_("radius", "Radius (mm)", 1.0f, 0.0f, 10.0f)
+    , relativeRadiusCorrection_("relativeRadiusCorrection", "Relative Radius Correction", 1.0f, 0.1f, 2.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , invertDirection_("invertDirection", "Invert Direction", false)
     , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
     , indicatorType_("flowType", "Flow Type")
@@ -172,6 +176,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(radius_);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onIndicatorConfigChange);
+    addProperty(relativeRadiusCorrection_);
+        relativeRadiusCorrection_.setGroupID("indicator");
+        ON_CHANGE_LAMBDA(relativeRadiusCorrection_, [this] { onIndicatorConfigChange(true); });
     addProperty(indicatorType_);
         indicatorType_.addOption("candidate", "Candidate", FlowIndicatorType::FIT_CANDIDATE);
         indicatorType_.addOption("velocity", "Velocity Boundary", FlowIndicatorType::FIT_VELOCITY);
@@ -306,6 +313,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         indicatorName_.set(indicator.name_);
         centerlinePosition_.set(settings.centerlinePosition_);
         radius_.set(indicator.radius_);
+        relativeRadiusCorrection_.set(settings.relativeRadiusCorrection_);
         invertDirection_.set(settings.invertDirection_);
         forceAxisAlignment_.set(settings.forceAxisAlignment_);
         indicatorType_.selectByValue(indicator.type_);
@@ -327,6 +335,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
 
     indicatorName_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
+    relativeRadiusCorrection_.setReadOnlyFlag(!validSelection);
     invertDirection_.setReadOnlyFlag(!validSelection);
     forceAxisAlignment_.setReadOnlyFlag(!validSelection);
     indicatorType_.setReadOnlyFlag(!validSelection);
@@ -353,6 +362,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
 
         FlowIndicatorSettings& settings = flowIndicatorSettings_[indicatorIdx];
         settings.centerlinePosition_ = centerlinePosition_.get();
+        settings.relativeRadiusCorrection_ = relativeRadiusCorrection_.get();
         settings.invertDirection_ = invertDirection_.get();
         settings.forceAxisAlignment_ = forceAxisAlignment_.get();
         settings.velocityCurveType_ = velocityCurveType_.get();
@@ -531,7 +541,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     // Calculate average radius.
     float radius = 0.0f;
     for (size_t i = frontIdx; i <= backIdx; i++) {
-        radius += edge.getVoxels().at(index(i)).maxDistToSurface_; // Take max, not avg - Better safe than sorry.
+        radius += edge.getVoxels().at(index(i)).avgDistToSurface_;
     }
     radius /= (backIdx - frontIdx + 1);
 
@@ -545,7 +555,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
 
     indicator.center_ = ref->pos_;
     indicator.normal_ = tgt::normalize(back->pos_ - front->pos_);
-    indicator.radius_ = radius;
+    indicator.radius_ = settings.relativeRadiusCorrection_ * radius;
 
     if(settings.forceAxisAlignment_) {
         float angleX = std::acos(std::abs(indicator.normal_.x));
