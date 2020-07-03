@@ -65,11 +65,14 @@ const std::string SimilarityPlot::loggerCat_("voreen.ensembleanalysis.Similarity
 void SimilarityPlot::MDSData::serialize(Serializer& s) const {
     s.serialize("nVectors", nVectors_);
     s.serialize("eigenvalues", eigenvalues_);
+    if(!names_.empty())
+        s.serialize("names", names_);
 }
 
 void SimilarityPlot::MDSData::deserialize(Deserializer& s) {
     s.deserialize("nVectors", nVectors_);
     s.deserialize("eigenvalues", eigenvalues_);
+    s.optionalDeserialize("names", names_, decltype(names_)());
 }
 
 SimilarityPlot::SimilarityPlot()
@@ -928,6 +931,11 @@ void SimilarityPlot::calculate() {
         LINFO("Calculating for subset");
     }
 
+    std::vector<std::string> names;
+    for(const auto& run : ensembleInport_.getData()->getRuns()) {
+        names.push_back(run.name_);
+    }
+
     calculateButton_.setReadOnlyFlag(true);
     ensembleHash_.clear();
     mdsData_.clear();
@@ -944,6 +952,9 @@ void SimilarityPlot::calculate() {
 
         // Compute Principal components and corresponding eigenvectors.
         MDSData mdsData = computeFromDM(distanceMatrix, progressReporter);
+
+        // Add run name.
+        mdsData.names_ = names;
 
         // Add the result.
         mdsData_.push_back(std::move(mdsData));

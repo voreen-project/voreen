@@ -64,6 +64,9 @@ class VRN_CORE_API SimilarityPlot : public RenderProcessor {
         /// Corresponding eigen values.
         std::vector<float> eigenvalues_;
 
+        /// (Optional) run names.
+        std::vector<std::string> names_;
+
         /// Serialization
         virtual void serialize(Serializer& s) const;
         /// Deserialization
