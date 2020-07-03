@@ -43,12 +43,13 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     , volumeListPort_(Port::INPORT, "input.volumelist", "Volume List Port")
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
     , outputQuantity_("outputQuantity", "Output Quantity")
-    , indicator_("indicator", "Indicator")
+    , indicator_("indicator", "Indicator", Processor::INVALID_RESULT, true)
     , transformSamples_("transformSamples", "Transform Samples to Disk", false)
     , exportCurvePath_("exportCurvePath", "Export Curve Path", "Choose Path", "", ".csv", FileDialogProperty::SAVE_FILE, Processor::VALID)
     , saveButton_("saveButton", "Save", Processor::VALID)
 {
     addPort(parameterPort_);
+    ON_CHANGE(parameterPort_, FlowIndicatorAnalysis, onParametersChange);
     addPort(volumeListPort_);
     volumeListPort_.addCondition(new PortConditionVolumeListEnsemble());
     addPort(outport_);
@@ -80,7 +81,7 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     //setPropertyGroupVisible("export", false); //TODO: can essentially be replaced by PlotDataExport
 }
 
-void FlowIndicatorAnalysis::adjustPropertiesToInput() {
+void FlowIndicatorAnalysis::onParametersChange() {
     if(!parameterPort_.hasData()) {
         return;
     }
@@ -88,7 +89,7 @@ void FlowIndicatorAnalysis::adjustPropertiesToInput() {
     std::string selected = indicator_.get();
     indicator_.setOptions(std::deque<Option<std::string>>());
     for(const FlowIndicator& indicator : parameterPort_.getData()->getFlowIndicators()) {
-        std::string id = std::to_string(indicator.id_);
+        std::string id = indicator.name_;//std::to_string(indicator.id_); // Name seems more intuitive than id!
         indicator_.addOption(id, indicator.name_);
 
         // Select old selected entry, if it is still available.
@@ -101,38 +102,56 @@ void FlowIndicatorAnalysis::adjustPropertiesToInput() {
 FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
 
     auto volumes = volumeListPort_.getThreadSafeData();
+    if(!volumes || volumes->empty()) {
+        throw InvalidInputException("No volumes", InvalidInputException::S_IGNORE);
+    }
     auto parameterSetEnsemble = parameterPort_.getThreadSafeData();
+    if(!parameterSetEnsemble || parameterSetEnsemble->getFlowIndicators().empty()) {
+        throw InvalidInputException("No indicators", InvalidInputException::S_IGNORE);
+    }
+
+    const VolumeBase* reference = volumes->first();
+    const size_t numChannels = reference->getNumChannels();
+    if(numChannels != 1 && numChannels != 3) {
+        throw InvalidInputException("Only 1 and 3 channel volumes supported", InvalidInputException::S_ERROR);
+    }
 
     std::vector<FlowIndicator> indicators;
-
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
     std::unique_ptr<PlotData> output;
 
     if(outputQuantity_.get() == "meanComponents") {
-        outputFunc = [] (const std::vector<tgt::vec3>& samples) {
+        outputFunc = [numChannels] (const std::vector<tgt::vec3>& samples) {
             tgt::vec3 mean = tgt::vec3::zero;
             for(const auto& sample : samples) {
                 mean += sample;
             }
 
-            std::vector<float> output(3);
-            output[0] = mean[0] / samples.size();
-            output[1] = mean[1] / samples.size();
-            output[2] = mean[2] / samples.size();
+            std::vector<float> output(numChannels);
+            for(size_t i=0; i<numChannels; i++) {
+                output[i] = mean[i] / static_cast<float>(samples.size());
+            }
             return output;
         };
 
         for(const FlowIndicator& indicator : parameterSetEnsemble->getFlowIndicators()) {
-            if(std::to_string(indicator.id_) == indicator_.get()) {
+            if(indicator.name_ == indicator_.getValue()) {
                 indicators.push_back(indicator);
                 break;
             }
         }
 
-        output.reset(new PlotData(1, 3));
-        output->setColumnLabel(1, "x");
-        output->setColumnLabel(2, "y");
-        output->setColumnLabel(3, "z");
+        tgtAssert(indicators.empty() && parameterSetEnsemble->getFlowIndicators().empty(), "invalid state");
+
+        output.reset(new PlotData(1, numChannels));
+        if(numChannels == 1 && !indicators.empty()) {
+            output->setColumnLabel(1, indicators.front().name_);
+        }
+        else if(numChannels == 3) {
+            output->setColumnLabel(1, "x");
+            output->setColumnLabel(2, "y");
+            output->setColumnLabel(3, "z");
+        }
     }
     else {
 
@@ -168,10 +187,6 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
         else {
             tgtAssert(false, "unhandled output quantity");
         }
-    }
-
-    if(indicators.empty()) {
-        throw InvalidInputException("No indicators", InvalidInputException::S_IGNORE);
     }
 
     return FlowIndicatorAnalysisInput {

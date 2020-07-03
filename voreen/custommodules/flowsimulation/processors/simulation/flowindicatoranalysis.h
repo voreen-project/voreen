@@ -65,8 +65,6 @@ protected:
                        "FlowIndicatorDetection processor to setup a velocity curve for a CFD simulation.");
     }
 
-    virtual void adjustPropertiesToInput();
-
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
@@ -74,6 +72,8 @@ protected:
 private:
 
     static bool isTimeSeries(const VolumeList* list);
+
+    void onParametersChange();
 
     void exportVelocityCurve();
 
