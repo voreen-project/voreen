@@ -1103,7 +1103,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     }();
 
     struct NodeToProcess {
-        const VolumeOctreeNode* inputNode;
         VolumeOctreeNode** outputNodeSlot; // Never null
         tgt::svec3 llf;
         tgt::svec3 urb;
@@ -1154,7 +1153,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     } else {
         nodesToProcess.push_back(
                 NodeToProcess {
-                input.octree_.getRootNode(),
                 &outputRootNode.node_,
                 tgt::svec3::zero,
                 volumeDim,
@@ -1218,8 +1216,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             // Make sure to hit LRU cache: Go from back to front
             auto& node = nodesToProcess[numNodes-nodeId-1];
 
-            tgtAssert(node.inputNode, "No input node");
-            if(!node.inputNode->inVolume()) {
+            bool inVolume = tgt::hand(tgt::lessThan(node.llf, volumeDim));
+            if(!inVolume) {
                 node.outputNode() = new VolumeOctreeNodeGeneric<1>(OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, false);
                 continue;
             }
@@ -1230,8 +1228,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             uint64_t newBrickAddr;
             bool hasSeedsConflicts;
             {
-                tgtAssert(node.inputNode->hasBrick(), "No Brick");
-
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
                 newBrickAddr = processOctreeBrick(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
             }
@@ -1245,7 +1241,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 globalMax = std::max(globalMax, max);
             }
 
-            bool childrenToProcess = newBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS && !node.inputNode->isLeaf();
+            bool childrenToProcess = newBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS && level > 0;
             VolumeOctreeNode* newNode = nullptr;
 
             // Check if previous result is sufficiently close to current one.
@@ -1275,6 +1271,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     float reldiff = static_cast<float>(maxDiff) / 0xffff;
                     if(reldiff < input.incrementalSimilarityThreshold_) {
                         brickPoolManager.deleteBrick(newBrickAddr);
+                        tgtAssert((level == 0) == prevNode.node_->isLeaf(), "Previous node is leaf, but not at bottom");
 
                         newNode = prevNode.node_;
                         childrenToProcess = false;
@@ -1302,8 +1299,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 tgt::svec3 childBrickSize = brickDim * (size_t(1) << (level-1));
                 for(auto child : OCTREEWALKER_CHILD_POSITIONS) {
                     const size_t childId = volumeCoordsToIndex(child, tgt::svec3::two);
-                    VolumeOctreeNode* inputChildNode = node.inputNode->children_[childId];
-                    tgtAssert(inputChildNode, "No child node");
 
                     tgt::svec3 start = node.llf + childBrickSize * child;
                     tgt::svec3 end = tgt::min(start + childBrickSize, volumeDim);
@@ -1311,7 +1306,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     {
                         nextNodesToProcess.push_back(
                                 NodeToProcess {
-                                inputChildNode,
                                 &newNode->children_[childId],
                                 start,
                                 end,

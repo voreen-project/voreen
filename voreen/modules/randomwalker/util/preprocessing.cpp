@@ -161,7 +161,12 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
 
     float rawVariance = sumOfDifferences/numVoxels;
     float varianceEstimation = rawVariance * varianceFactor;
-    float stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
+    float stdEstimationInv;
+    if(varianceEstimation > 0) {
+        stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
+    } else {
+        stdEstimationInv = 0.0f;
+    }
 
     VRN_FOR_EACH_VOXEL(center, start, end) {
         output.voxel(center) *= stdEstimationInv;
