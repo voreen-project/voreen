@@ -148,9 +148,17 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
             output->setColumnLabel(1, indicators.front().name_);
         }
         else if(numChannels == 3) {
-            output->setColumnLabel(1, "x");
-            output->setColumnLabel(2, "y");
-            output->setColumnLabel(3, "z");
+            if(transformSamples_.get()) {
+                output->setColumnLabel(1, "InP 1"); // in plane
+                output->setColumnLabel(2, "InP 2"); // in plane
+                output->setColumnLabel(3, "ThP"); // through plane
+            }
+            else {
+                output->setColumnLabel(1, "x");
+                output->setColumnLabel(2, "y");
+                output->setColumnLabel(3, "z");
+            }
+
         }
     }
     else {
