@@ -224,9 +224,10 @@ protected:
 
 private:
 
-    enum ExecutionMode {
-        ASYNC_INVALIDATE_ABORT = 1,
-        ASYNC_INVALIDATE_ENQUEUE = 2,
+    enum InvalidationBehavior {
+        INVALIDATE_RESTART,
+        INVALIDATE_ABORT,
+        INVALIDATE_ENQUEUE,
     };
 
 
@@ -307,9 +308,8 @@ private:
         std::mutex mutex_;
     };
 
-    BoolProperty continuousUpdate_;
     BoolProperty synchronousComputation_;
-    OptionProperty<ExecutionMode> executionMode_;
+    OptionProperty<InvalidationBehavior> invalidationBehavior_;
     ButtonProperty manualUpdateButton_;
     ButtonProperty stopUpdateButton_;
     ProgressProperty progressDisplay_;
@@ -474,9 +474,8 @@ const std::chrono::milliseconds AsyncComputeProcessor<I,O>::MINIMUM_PROGRESS_UPD
 template<class I, class O>
 AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     : Processor()
-    , continuousUpdate_("continuousUpdate_", "Continuous Update", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , synchronousComputation_("synchronousComputation", "Wait for Result", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
-    , executionMode_("executionMode", "Execution Mode", Processor::VALID, false, Property::LOD_ADVANCED)
+    , invalidationBehavior_("executionMode", "Invalidation Behavior", Processor::VALID, false, Property::LOD_ADVANCED)
     , manualUpdateButton_("manualUpdateButton_", "Start", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , stopUpdateButton_("stopUpdateButton", "Stop", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , progressDisplay_("progressDisplay", "Progress")
@@ -487,14 +486,13 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     , computation_(*this)
     , propertyDisabler_(*this)
 {
-    addProperty(continuousUpdate_);
-        continuousUpdate_.setGroupID("ac_processing");
     addProperty(synchronousComputation_);
         synchronousComputation_.setGroupID("ac_processing");
-    addProperty(executionMode_);
-        executionMode_.setGroupID("ac_processing");
-        executionMode_.addOption("async_abort", "Abort on Input Data Change", ASYNC_INVALIDATE_ABORT);
-        executionMode_.addOption("async_enqueue", "Enqueue Update on Input Data Change", ASYNC_INVALIDATE_ENQUEUE);
+    addProperty(invalidationBehavior_);
+        invalidationBehavior_.setGroupID("ac_processing");
+        invalidationBehavior_.addOption("invalidate_abort",   "Ignore/Abort", INVALIDATE_ABORT);
+        invalidationBehavior_.addOption("invalidate_restart", "Start/Restart", INVALIDATE_RESTART);
+        invalidationBehavior_.addOption("invalidate_enqueue", "Start/Enqueue (if possible)", INVALIDATE_ENQUEUE);
 
     addProperty(manualUpdateButton_);
         manualUpdateButton_.setGroupID("ac_processing");
@@ -595,7 +593,7 @@ static bool dataSafeToUseAfterInvalidation(const Port* source) {
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
-    if(executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
+    if(invalidationBehavior_.getValue() == INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
         enqueueRestart();
     } else {
         interruptComputation();
@@ -612,7 +610,7 @@ void AsyncComputeProcessor<I, O>::dataWillChange(const Port* source) {
 
 template<class I, class O>
 void AsyncComputeProcessor<I, O>::dataHasChanged(const Port* source) {
-    if(executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
+    if(invalidationBehavior_.getValue() == INVALIDATE_ENQUEUE && dataSafeToUseAfterInvalidation(source)) {
         enqueueRestart();
     } else {
         interruptComputation();
@@ -705,7 +703,7 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::process() {
 
     bool running = computation_.isRunning();
-    bool enqueueRelatedInvalidation = executionMode_.getValue() == ASYNC_INVALIDATE_ENQUEUE && lastInvalidationWasEnqueue_;
+    bool enqueueRelatedInvalidation = invalidationBehavior_.getValue() == INVALIDATE_ENQUEUE && lastInvalidationWasEnqueue_;
     bool abortNecessary = (updateForced_ || stopForced_
             || (getInvalidationLevel() >= INVALID_RESULT && !enqueueRelatedInvalidation))
         && running;
@@ -717,7 +715,7 @@ void AsyncComputeProcessor<I,O>::process() {
     std::unique_ptr<O> result = computation_.retrieveOutput();
 
     bool restartNecessary = updateForced_
-        || (!result && getInvalidationLevel() >= INVALID_RESULT && continuousUpdate_.get() && !enqueueRelatedInvalidation) && !stopForced_
+        || (!result && getInvalidationLevel() >= INVALID_RESULT && invalidationBehavior_.getValue() != INVALIDATE_ABORT && !enqueueRelatedInvalidation) && !stopForced_
         || restartEnqueued_ && !running && !stopForced_;
 
     stopForced_ = false;
