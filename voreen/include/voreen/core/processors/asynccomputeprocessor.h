@@ -155,6 +155,8 @@ public:
     virtual void initialize();
     virtual void deinitialize();
 
+    virtual void deserialize(Deserializer& s);
+
     bool usesExpensiveComputation() const {
         return true;
     }
@@ -242,6 +244,8 @@ private:
     void disableRunningState();
     void enqueueRestart();
 
+    void trySetUpInvalidationBehavior();
+
     /**
      * Safely passes progress reports through to the processor in the main thread.
      */
@@ -310,6 +314,7 @@ private:
 
     BoolProperty synchronousComputation_;
     OptionProperty<InvalidationBehavior> invalidationBehavior_;
+    bool invalidationBehaviorPropertyIsSetUp_;
     ButtonProperty manualUpdateButton_;
     ButtonProperty stopUpdateButton_;
     ProgressProperty progressDisplay_;
@@ -476,6 +481,7 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     : Processor()
     , synchronousComputation_("synchronousComputation", "Wait for Result", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , invalidationBehavior_("invalidationMode", "Invalidation Behavior", Processor::VALID, false, Property::LOD_ADVANCED)
+    , invalidationBehaviorPropertyIsSetUp_(false)
     , manualUpdateButton_("manualUpdateButton_", "Start", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , stopUpdateButton_("stopUpdateButton", "Stop", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , progressDisplay_("progressDisplay", "Progress")
@@ -490,9 +496,7 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
         synchronousComputation_.setGroupID("ac_processing");
     addProperty(invalidationBehavior_);
         invalidationBehavior_.setGroupID("ac_processing");
-        invalidationBehavior_.addOption("invalidateAbort",   "Ignore/Abort", INVALIDATE_ABORT);
-        invalidationBehavior_.addOption("invalidateRestart", "Start/Restart", INVALIDATE_RESTART);
-        invalidationBehavior_.addOption("invalidateEnqueue", "Start/Enqueue (if possible)", INVALIDATE_ENQUEUE);
+        // Options are added at a later stage! See trySetUpInvalidationBehavior for more info.
 
     addProperty(manualUpdateButton_);
         manualUpdateButton_.setGroupID("ac_processing");
@@ -556,6 +560,38 @@ template<class I, class O>
 void AsyncComputeProcessor<I,O>::enqueueRestart() {
     restartEnqueued_ = true;
     lastInvalidationWasEnqueue_ = true;
+}
+
+template<class I, class O>
+void AsyncComputeProcessor<I,O>::trySetUpInvalidationBehavior() {
+    // In this method we dynamically add the options to the
+    // invalidationBehavior_ property. Specifically, we _only_ add the enqueue
+    // option if the processor has any ports that allow for the enqueue
+    // behavior to have any effect at all (which is often not the case!).
+    //
+    // We need to add the enqueue option before (potential) property
+    // deserialization, but can only check ports after they have been added in
+    // the child class constructor. AsyncComputeProcessor::deserialize (and
+    // specifically before calling Processor::deserialize() is the _only_ place
+    // were those two conditions hold (even though this doesn't really have
+    // anything to do with deserialization).
+    // Another complication is that if a processor is newly created, it is not
+    // deserialized, so we dynamically have to decide whether or not we still
+    // have to add the enqueue options in invalidate (hence the need for
+    // invalidationBehaviorPropertyIsSetUp_).
+
+    if(!invalidationBehaviorPropertyIsSetUp_) {
+        bool enqueueMeaningful = false;
+        for(auto port : getCriticalPorts()) {
+            enqueueMeaningful |= dataSafeToUseAfterInvalidation(&port.get());
+        }
+        invalidationBehavior_.addOption("invalidateAbort",   "Ignore/Abort", INVALIDATE_ABORT);
+        invalidationBehavior_.addOption("invalidateRestart", "Start/Restart", INVALIDATE_RESTART);
+        if(enqueueMeaningful) {
+            invalidationBehavior_.addOption("invalidateEnqueue", "Start/Enqueue (if possible)", INVALIDATE_ENQUEUE);
+        }
+        invalidationBehaviorPropertyIsSetUp_ = true;
+    }
 }
 
 template<class I, class O>
@@ -635,6 +671,11 @@ void AsyncComputeProcessor<I, O>::forceComputation() {
 
 template<class I, class O>
 void AsyncComputeProcessor<I,O>::initialize() {
+    // HACK: (See trySetUpInvalidationBehavior for details)
+    trySetUpInvalidationBehavior();
+
+    tgtAssert(invalidationBehaviorPropertyIsSetUp_, "invalidationBehavior_ not set up");
+
     Processor::initialize();
     // We cannot call getCriticalPorts in constructor, as
     //  1. it is a virtual function
@@ -679,6 +720,14 @@ void AsyncComputeProcessor<I,O>::deinitialize() {
     }
 
     Processor::deinitialize();
+}
+
+template<class I, class O>
+void AsyncComputeProcessor<I,O>::deserialize(Deserializer& s) {
+    // HACK: (See trySetUpInvalidationBehavior for details)
+    trySetUpInvalidationBehavior();
+
+    Processor::deserialize(s);
 }
 
 template<class I, class O>
