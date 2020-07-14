@@ -224,6 +224,15 @@ public:
     virtual void convert(TiXmlElement* networkElem);
 };
 
+/**
+ * Converter for Voreen 5.2
+ * - Convert continuousUpdate_ property to invalidationBehavior_ in AsyncComputeProcessor
+ */
+class NetworkConverter20to21 : public NetworkConverter {
+public:
+    virtual void convert(TiXmlElement* networkElem);
+};
+
 } // namespace
 
 #endif // VRN_NETWORKCONVERTER_H

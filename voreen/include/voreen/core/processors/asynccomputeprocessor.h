@@ -475,7 +475,7 @@ template<class I, class O>
 AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     : Processor()
     , synchronousComputation_("synchronousComputation", "Wait for Result", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
-    , invalidationBehavior_("executionMode", "Invalidation Behavior", Processor::VALID, false, Property::LOD_ADVANCED)
+    , invalidationBehavior_("invalidationMode", "Invalidation Behavior", Processor::VALID, false, Property::LOD_ADVANCED)
     , manualUpdateButton_("manualUpdateButton_", "Start", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , stopUpdateButton_("stopUpdateButton", "Stop", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , progressDisplay_("progressDisplay", "Progress")
@@ -490,9 +490,9 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
         synchronousComputation_.setGroupID("ac_processing");
     addProperty(invalidationBehavior_);
         invalidationBehavior_.setGroupID("ac_processing");
-        invalidationBehavior_.addOption("invalidate_abort",   "Ignore/Abort", INVALIDATE_ABORT);
-        invalidationBehavior_.addOption("invalidate_restart", "Start/Restart", INVALIDATE_RESTART);
-        invalidationBehavior_.addOption("invalidate_enqueue", "Start/Enqueue (if possible)", INVALIDATE_ENQUEUE);
+        invalidationBehavior_.addOption("invalidateAbort",   "Ignore/Abort", INVALIDATE_ABORT);
+        invalidationBehavior_.addOption("invalidateRestart", "Start/Restart", INVALIDATE_RESTART);
+        invalidationBehavior_.addOption("invalidateEnqueue", "Start/Enqueue (if possible)", INVALIDATE_ENQUEUE);
 
     addProperty(manualUpdateButton_);
         manualUpdateButton_.setGroupID("ac_processing");

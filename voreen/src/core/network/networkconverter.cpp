@@ -642,4 +642,34 @@ void NetworkConverter19to20::convert(TiXmlElement* networkElem) {
     }
 }
 
+void NetworkConverter20to21::convert(TiXmlElement* networkElem) {
+    TiXmlElement* processorsNode = networkElem->FirstChildElement("Processors");
+    if (!processorsNode) {
+        LWARNING("No <Processors> node found in <ProcessorNetwork>");
+        return;
+    }
+
+    for (TiXmlElement* node = processorsNode->FirstChildElement("Processor"); node; node = node->NextSiblingElement("Processor")) {
+        TiXmlElement* propertiesNode = node->FirstChildElement("Properties");
+        if (propertiesNode) {
+            for (TiXmlElement* propertyNode = propertiesNode->FirstChildElement("Property"); propertyNode; propertyNode = propertyNode->NextSiblingElement("Property")) {
+                const std::string* propName = propertyNode->Attribute(std::string("name"));
+                if (!propName)
+                    continue;
+
+                // AsyncComputProcessor brings it's own equivalents of the following properties.
+                if (*propName == "continuousUpdate_") {
+                    const std::string* propValue = propertyNode->Attribute(std::string("value"));
+                    bool continuousUpdate = propValue && *propValue == "true";
+
+                    propertyNode->SetAttribute("name", "invalidationMode");
+                    propertyNode->SetAttribute("mapKey", "invalidationMode");
+                    propertyNode->SetAttribute("value", continuousUpdate ? "invalidateRestart" : "invalidateAbort");
+                    break;
+                }
+            }
+        }
+    }
+}
+
 } // namespace
