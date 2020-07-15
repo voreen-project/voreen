@@ -47,6 +47,10 @@ SliceReaderMetaData SliceReaderMetaData::fromBaseAccurate(const SliceReaderMetaD
 
 SliceReaderMetaData SliceReaderMetaData::fromVolume(const VolumeBase& vol) {
     SliceReaderMetaData srmd(vol.getRealWorldMapping(), vol.getDimensions(), vol.getNumChannels(), vol.getBaseType(), vol.getSpacing());
+
+    if(!vol.hasDerivedData<VolumeMinMax>()) {
+        LWARNINGC("SliceReader", "Calculating Volume Min/Max. This may take a while...");
+    }
     const auto vmm = vol.getDerivedData<VolumeMinMax>();
 
     std::vector<tgt::vec2> minmax;
