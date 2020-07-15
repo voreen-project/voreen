@@ -23,40 +23,38 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_BUTTONPROPERTYWIDGET_H
-#define VRN_BUTTONPROPERTYWIDGET_H
+#ifndef CUSTOMBUTTON_H
+#define CUSTOMBUTTON_H
 
 #include "voreen/qt/widgets/property/qpropertywidget.h"
-#include "voreen/qt/widgets/custombutton.h"
+
+#include <QPushButton>
+#include <QWidget>
+
+class QLineEdit;
 
 namespace voreen {
 
-class ButtonProperty;
-
-class ButtonPropertyWidget : public QPropertyWidget {
+class CustomButton : public QPushButton {
 Q_OBJECT
 public:
-    ButtonPropertyWidget(ButtonProperty* prop, QWidget* parent = 0);
+    CustomButton(const QString& text, QPropertyWidget* propertyWidget, bool editable = false, QWidget* parent = 0);
+    ~CustomButton();
 
-    /// Returns an empty label.
-    virtual CustomLabel* getOrCreateNameLabel() const;
-    /// Avoid setting text on the empty label
-    virtual void setPropertyGuiName(std::string);
-
-public slots:
-    void clicked();
-
-protected:
-    void updateButtonText(const std::string& filename);
-
-    ButtonProperty* property_;
-    CustomButton* button_;
+    void init();
 
 protected slots:
-    virtual void updateFromPropertySlot();
+    void editingFinished();
 
+protected:
+    void initFont();
+    virtual void contextMenuEvent (QContextMenuEvent*);
+
+    QPropertyWidget* propertyWidget_;
+    QLineEdit* edit_;
+    bool editable_;
 };
 
 } // namespace
 
-#endif // VRN_BUTTONPROPERTYWIDGET_H
+#endif // CUSTOMBUTTON_H

@@ -36,7 +36,7 @@ namespace voreen {
 ButtonPropertyWidget::ButtonPropertyWidget(ButtonProperty* prop, QWidget* parent)
     : QPropertyWidget(prop, parent, false)
     , property_(prop)
-    , button_(new QPushButton(prop->getGuiName().c_str()))
+    , button_(new CustomButton(prop->getGuiName().c_str(), this, true))
 {
     connect(button_, SIGNAL(clicked()), this, SLOT(clicked()));
     connect(button_, SIGNAL(clicked(void)), this, SIGNAL(widgetChanged(void)));
@@ -60,5 +60,13 @@ CustomLabel* ButtonPropertyWidget::getOrCreateNameLabel() const {
 void ButtonPropertyWidget::updateFromPropertySlot() {
     button_->setText(property_->getGuiName().c_str());
 }
+
+void ButtonPropertyWidget::setPropertyGuiName(std::string name) {
+    if(button_ && button_->text().compare(QString(name.c_str())))
+        button_->setText(QString(name.c_str()));
+    if(prop_ && prop_->getGuiName().compare(name))
+        prop_->setGuiName(name);
+}
+
 
 } // namespace

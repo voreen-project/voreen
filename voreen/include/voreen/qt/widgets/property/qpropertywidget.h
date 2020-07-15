@@ -67,7 +67,7 @@ public:
     virtual void disconnect();
 
     std::string getPropertyGuiName();
-    void setPropertyGuiName(std::string);
+    virtual void setPropertyGuiName(std::string);
     virtual CustomLabel* getOrCreateNameLabel() const;
 
     // this is a static variable for the font size used in all propertywidgets

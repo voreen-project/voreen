@@ -23,40 +23,67 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_BUTTONPROPERTYWIDGET_H
-#define VRN_BUTTONPROPERTYWIDGET_H
-
-#include "voreen/qt/widgets/property/qpropertywidget.h"
 #include "voreen/qt/widgets/custombutton.h"
+#include "voreen/qt/widgets/property/qpropertywidget.h"
+
+//#include "voreen/core/properties/transfuncproperty.h"
+
+#include <QContextMenuEvent>
+#include <QFont>
+#include <QLineEdit>
+#include <QMenu>
+#include <QWidget>
 
 namespace voreen {
 
-class ButtonProperty;
+CustomButton::CustomButton(const QString& text, QPropertyWidget* pw, bool editable, QWidget* parent)
+    : QPushButton(text, parent)
+    , propertyWidget_(pw)
+    , editable_(editable)
+{
+    init();
+}
 
-class ButtonPropertyWidget : public QPropertyWidget {
-Q_OBJECT
-public:
-    ButtonPropertyWidget(ButtonProperty* prop, QWidget* parent = 0);
+CustomButton::~CustomButton() {
+}
 
-    /// Returns an empty label.
-    virtual CustomLabel* getOrCreateNameLabel() const;
-    /// Avoid setting text on the empty label
-    virtual void setPropertyGuiName(std::string);
+void CustomButton::init() {
+    initFont();
+    edit_ = new QLineEdit(this);
+    edit_->hide();
+    connect(edit_, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+}
 
-public slots:
-    void clicked();
+void CustomButton::editingFinished() {
+    setText(edit_->text());
 
-protected:
-    void updateButtonText(const std::string& filename);
+    if(propertyWidget_ != 0) {
+        propertyWidget_->setPropertyGuiName(edit_->text().toStdString());
+    }
+    edit_->hide();
+}
 
-    ButtonProperty* property_;
-    CustomButton* button_;
+void CustomButton::contextMenuEvent(QContextMenuEvent* e) {
+    if (editable_) {
+        QMenu* men = new QMenu(this);
+        men->addAction("Rename");
+        QAction* ac = men->exec(e->globalPos());
+        if(ac != 0){
+            if(ac->iconText().compare("Rename") == 0){
+                edit_->setText(text());
+                edit_->setFocus();
+                edit_->setCursorPosition(edit_->text().length());
+                edit_->resize(size());
+                edit_->show();
+            }
+        }
+    }
+}
 
-protected slots:
-    virtual void updateFromPropertySlot();
-
-};
+void CustomButton::initFont() {
+    QFontInfo fontInfo(font());
+    setFont(QFont(fontInfo.family(), QPropertyWidget::fontSize_));
+    setToolTip(text());
+}
 
 } // namespace
-
-#endif // VRN_BUTTONPROPERTYWIDGET_H

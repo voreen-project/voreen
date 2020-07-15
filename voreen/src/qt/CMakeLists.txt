@@ -131,6 +131,7 @@ SET(VRN_QT_SOURCES
     widgets/clickablelabel.cpp
     widgets/codeedit.cpp
     widgets/consoleplugin.cpp
+    widgets/custombutton.cpp
     widgets/customlabel.cpp
     widgets/enterexitpushbutton.cpp
     widgets/eventpropertywidget.cpp
@@ -347,6 +348,7 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/widgets/colorselectorwidget.h
     ../../include/voreen/qt/widgets/codeedit.h
     ../../include/voreen/qt/widgets/consoleplugin.h
+    ../../include/voreen/qt/widgets/custombutton.h
     ../../include/voreen/qt/widgets/customlabel.h
     ../../include/voreen/qt/widgets/enterexitpushbutton.h
     ../../include/voreen/qt/widgets/eventpropertywidget.h
