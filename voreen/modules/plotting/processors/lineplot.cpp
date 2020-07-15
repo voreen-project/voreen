@@ -42,7 +42,6 @@ LinePlot::LinePlot()
     , logXAxis_("logXAxes", "Logarithmic x Axis", false)
     , logYAxis_("logYAxes", "Logarithmic y Axis", false)
     , renderLineLabel_("renderLineLabel", "Line Labels", false)
-    , time_("time", "Time", 0.0f, 0.0f, 0.11f)
 {
     plotEntitiesProp_.setGuiName("Line Data");
     addProperty(selectionPlaneColor_);
@@ -61,7 +60,6 @@ LinePlot::LinePlot()
     addProperty(marginRight_);
     addProperty(marginBottom_);
     addProperty(marginTop_);
-    addProperty(time_);
 
     // group properties
     renderLineLabel_.setGroupID("line");
@@ -108,8 +106,6 @@ void LinePlot::render() {
             plotLib_->renderPlotLabels();
             renderPlotLabel();
             renderMousePosition();
-            renderTime();
-
         }
         plotLib_->resetRenderStatus();
 
@@ -124,12 +120,6 @@ void LinePlot::render() {
         plotLib_->resetRenderStatus();
     }
     plotPickingManager_.deactivateTarget();
-}
-
-void LinePlot::renderTime() {
-    PlotLibraryOpenGl* lib = dynamic_cast<PlotLibraryOpenGl*>(plotLib_);
-    float percent = (time_.get() - time_.getMinValue()) / (time_.getMaxValue() - time_.getMinValue());
-    lib->renderTime(percent);
 }
 
 void LinePlot::setPlotStatus() {

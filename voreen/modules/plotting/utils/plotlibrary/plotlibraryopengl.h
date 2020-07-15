@@ -293,7 +293,6 @@ public:
     /// renders the plot labels, should be called after calling plot render functions
     void renderPlotLabels();
 
-    void renderTime(float percent);
 
     /// add a label to the plotLabelGroup_
     void addPlotLabel(std::string text, tgt::vec3 position, tgt::Color color, int size, SmartLabel::Alignment align);

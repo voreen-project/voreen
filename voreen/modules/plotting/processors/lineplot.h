@@ -56,7 +56,6 @@ private:
     virtual void calcDomains();
     virtual void toggleProperties();
     virtual void createPlotLabels();
-    virtual void renderTime();
 
     /// create line labels
     void createLineLabels();
@@ -67,8 +66,6 @@ private:
     BoolProperty logXAxis_;
     BoolProperty logYAxis_;
     BoolProperty renderLineLabel_;
-
-    FloatProperty time_;
 
     static const std::string loggerCat_;
 };
