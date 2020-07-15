@@ -199,7 +199,7 @@ void VolumeFilterList::deserialize(Deserializer& s) {
 }
 
 VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
-    if(!enabled_.get()) {
+    if(!enabled_.get() || filterList_.getInstances().empty()) {
         outport_.setData(inport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
@@ -321,6 +321,11 @@ void VolumeFilterList::adjustPropertiesToInput() {
     if(selectedInstance_) {
         restoreInstance(*selectedInstance_);
     }
+}
+
+void VolumeFilterList::dataWillChange(const Port* source) {
+    outport_.clear();
+    AsyncComputeProcessor::dataWillChange(source);
 }
 
 // private methods

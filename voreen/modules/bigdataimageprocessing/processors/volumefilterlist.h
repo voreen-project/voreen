@@ -109,6 +109,7 @@ protected:
     virtual void adjustPropertiesToInput();
     virtual void initialize();
     virtual void deinitialize();
+    virtual void dataWillChange(const Port* source);
 
 private:
     void storeInstance(InteractiveListProperty::Instance&);
