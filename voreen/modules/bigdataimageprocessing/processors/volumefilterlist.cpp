@@ -199,7 +199,7 @@ void VolumeFilterList::deserialize(Deserializer& s) {
 }
 
 VolumeFilterListInput VolumeFilterList::prepareComputeInput() {
-    if(!enabled_.get() || filterList_.getInstances().empty()) {
+    if(!enabled_.get() || !hasConfiguredFilters()) {
         outport_.setData(inport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
