@@ -114,6 +114,7 @@ protected:
 private:
     void storeInstance(InteractiveListProperty::Instance&);
     void restoreInstance(InteractiveListProperty::Instance&);
+    bool hasConfiguredFilters() const;
 
     void onFilterListChange();
     void onFilterPropertyChange(Property* property);

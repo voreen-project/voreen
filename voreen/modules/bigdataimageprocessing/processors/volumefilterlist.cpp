@@ -290,7 +290,7 @@ void VolumeFilterList::processComputeOutput(VolumeFilterListOutput output) {
 void VolumeFilterList::adjustPropertiesToInput() {
 
     const VolumeBase* input = inport_.getData();
-    if(!input) {
+    if(!input || !hasConfiguredFilters()) {
         return;
     }
 
@@ -390,6 +390,9 @@ void VolumeFilterList::restoreInstance(InteractiveListProperty::Instance& instan
     filterProperties_[instance.getItemId()]->restoreInstance(instance.getInstanceId());
     skipPropertySync_ = false;
 }
+bool VolumeFilterList::hasConfiguredFilters() const {
+    return !filterList_.getInstances().empty();
+}
 void VolumeFilterList::onFilterPropertyChange(Property* property) {
     if(skipPropertySync_) {
         return;
@@ -464,7 +467,7 @@ void VolumeFilterList::onFilterPropertyChange(Property* property) {
 }
 
 void VolumeFilterList::inputOutputChannelCheck() {
-    if(inport_.hasData()) {
+    if(inport_.hasData() && hasConfiguredFilters()) {
         const VolumeBase& volume = *inport_.getData();
         size_t numOutputChannels = volume.getNumChannels();
         SliceReaderMetaData metadata = SliceReaderMetaData::fromVolume(volume);
