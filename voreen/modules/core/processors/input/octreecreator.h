@@ -130,6 +130,7 @@ protected:
     virtual void deinitialize();
 
     virtual void adjustPropertiesToInput();
+    virtual void dataWillChange(const Port* source);
 
     //void saveOctreeToVVOD();
 
@@ -168,7 +169,7 @@ private:
     VolumePort volumeInport3_;
     VolumePort volumeInport4_;
     VolumePort volumeOutport_;
-    
+
     //FileDialogProperty saveOctreeFile_;
     //ButtonProperty saveOctreeButton_;
 

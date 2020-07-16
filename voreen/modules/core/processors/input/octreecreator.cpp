@@ -225,6 +225,14 @@ void OctreeCreator::adjustPropertiesToInput() {
     updatePropertyConfiguration();
 }
 
+void OctreeCreator::dataWillChange(const Port* source) {
+    if(!volumeOutport_.ownsData()) {
+        volumeOutport_.clear();
+    }
+    AsyncComputeProcessor::dataWillChange(source);
+}
+
+
 bool OctreeCreator::isReady() const {
     return volumeInport_.isReady() && volumeOutport_.isReady();
 }
