@@ -131,6 +131,9 @@ public:
     /// Return the data stored in this port (if this is an outport) or the data of all the connected outports (if this is an inport).
     virtual std::vector<const T*> getAllData() const;
 
+    /// Return whether or not the data is owned and will thus be deleted by the port (see setData).
+    bool ownsData() const;
+
     /**
      * Get a pointer to the data of the port that is safe to use in a thread IF the thread is cancelled on invalidation of the port data.
      * For processing data independently of the evaluation of the network consider AsyncComputeProcessor or refer to it as a reference
@@ -369,6 +372,10 @@ std::vector<const T*> GenericPort<T>::getAllData() const {
     }
 
     return allData;
+}
+template <typename T>
+bool GenericPort<T>::ownsData() const {
+    return ownsData_;
 }
 
 template <typename T>
