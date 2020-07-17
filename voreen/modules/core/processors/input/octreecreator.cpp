@@ -185,7 +185,19 @@ OctreeCreator::OctreeCreator()
     setPropertyGroupGuiName("save", "Save Current Octree");*/
 
     addProperty(clearOctree_);
-    clearOctree_.onChange(MemberFunctionCallback<OctreeCreator>(this, &OctreeCreator::clearOctree));
+        ON_CHANGE_LAMBDA(clearOctree_, [this] () {
+            stopComputeThread();
+
+            VolumeBase* inputVolume = const_cast<VolumeBase*>(volumeInport_.getData());
+
+            if(inputVolume && singleInputVolumeConfiguration()) {
+                inputVolume->removeRepresentation<VolumeOctreeBase>();
+            }
+
+            volumeOutport_.clear();
+            clearOctree();
+            updateStatusMessage("Octree cleared.");
+        });
 
     addProperty(statusMessage_);
     statusMessage_.setEditable(false);
@@ -240,49 +252,53 @@ bool OctreeCreator::isReady() const {
 OctreeCreatorInput OctreeCreator::prepareComputeInput() {
     VolumeBase* inputVolume = const_cast<VolumeBase*>(volumeInport_.getData());
     if (!inputVolume) {
-        updatePropertyConfiguration();
-        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
+        throw InvalidInputException("No Input Volume 1", InvalidInputException::S_ERROR);
     }
 
-    // this is necessary for handling octree volumes which have been loaded, e.g. by a VolumeSource processor
-    if (inputVolume->hasRepresentation<VolumeOctree>() && !volumeInport2_.hasData() && !volumeInport3_.hasData() && !volumeInport3_.hasData()) {
-        // we already have a single octree input -> set it to outport
-        volumeOutport_.setData(inputVolume, false);
-        throw InvalidInputException("Input already is has an octree representation", InvalidInputException::S_WARNING);
-    }
-    else if (inputVolume->hasRepresentation<VolumeOctree>()) {
-        // input volume 1 has an octree, but other inputs are present
-        volumeOutport_.clear();
-        throw InvalidInputException("Input volume 1 is octree volume, but other input volumes are present", InvalidInputException::S_ERROR);
-    }
-    else if ((volumeInport2_.getData() && volumeInport2_.getData()->hasRepresentation<VolumeOctree>())
-        || (volumeInport3_.getData() && volumeInport3_.getData()->hasRepresentation<VolumeOctree>())
-        || (volumeInport4_.getData() && volumeInport4_.getData()->hasRepresentation<VolumeOctree>()))
-    {
-        volumeOutport_.clear();
-        throw InvalidInputException("Octree volume input is only allowed in first inport", InvalidInputException::S_ERROR);
-    }
-
-    //get current hash, if exists
-    if (!volumeOutport_.hasData())
-        currentConfigurationHash_.set("");
-    //get current input hash
     std::string configHash = getConfigurationHash();
-    //we are up to date
-    if (configHash == currentConfigurationHash_.get()) {
-        updatePropertyConfiguration();
-        throw InvalidInputException("Up to date!", InvalidInputException::S_IGNORE);
+
+    enum OctreeCreatorState {
+        UpToDate,
+        OutdatedButPresent,
+        NotPresent,
+    } state;
+    state = NotPresent;
+    if(singleInputVolumeConfiguration()) {
+        if (inputVolume->hasRepresentation<VolumeOctree>()) {
+            volumeOutport_.setData(inputVolume, false);
+            if (inputVolume->getRepresentation<VolumeOctree>()->getOctreeConfigurationHash() == configHash) {
+                state = UpToDate;
+            } else {
+                state = OutdatedButPresent;
+            }
+        }
+    } else {
+        auto* output = volumeOutport_.getData();
+        if (output) {
+            tgtAssert(output->hasRepresentation<VolumeOctree>(), "Output without octree not possible");
+            if(output->getRepresentation<VolumeOctree>()->getOctreeConfigurationHash() == configHash) {
+                state = UpToDate;
+            } else {
+                state = OutdatedButPresent;
+            }
+        }
+    }
+    switch(state) {
+        case UpToDate:
+            updateStatusMessage("Up to date!");
+            throw InvalidInputException("Up to date!", InvalidInputException::S_IGNORE);
+        case OutdatedButPresent:
+            throw InvalidInputException("Octree representation exists. Clear the output manually if you want to rebuild the Octree.", InvalidInputException::S_WARNING);
+        case NotPresent:
+            /*Need to compute a new octree, so go on!*/;
     }
 
     //remove old octree
     volumeOutport_.clear();
     if (!VoreenApplication::app()->useCaching() && currentConfigurationHash_.get() != "")
         clearOctree();
-    currentConfigurationHash_.set("");
-    // remove existing octree representation
-    inputVolume->removeRepresentation<VolumeOctreeBase>();
 
-    // retrieve input RAM volumes
+    // retrieve input volumes
     std::vector<const VolumeBase*> inputVolumes;
     if (volumeInport_.hasData())
         inputVolumes.push_back(volumeInport_.getData());
@@ -293,8 +309,7 @@ OctreeCreatorInput OctreeCreator::prepareComputeInput() {
     if (volumeInport4_.hasData())
         inputVolumes.push_back(volumeInport4_.getData());
 
-    if (inputVolumes.empty())
-        throw InvalidInputException("No input volumes", InvalidInputException::S_ERROR);
+    tgtAssert(!inputVolumes.empty(), "No input volumes");
 
     const tgt::svec3 volumeDim = inputVolumes.front()->getDimensions();
 
@@ -401,7 +416,7 @@ OctreeCreatorOutput OctreeCreator::compute(OctreeCreatorInput input, ProgressRep
     // Create Octree, also when cache was not available.
     if(!octree) {
         updateStatusMessage("Generating octree...");
-        
+
         try {
             octree.reset(new VolumeOctree(input.input, (int)input.brickDim, input.homogeneityThreshold, input.brickPoolManager, input.numThreads, &progressReporter));
             updateStatusMessage("Octree generated.");
@@ -645,6 +660,10 @@ void OctreeCreator::clearOctree() {
     updatePropertyConfiguration();
 }
 
+bool OctreeCreator::singleInputVolumeConfiguration() const {
+    return volumeInport_.hasData() && !volumeInport2_.hasData() && !volumeInport3_.hasData() && !volumeInport3_.hasData();
+}
+
 std::string OctreeCreator::getOctreeStoragePath() const {
     return VoreenApplication::app()->getCachePath(CACHE_SUBDIR + "/" + getConfigurationHash());
 }
@@ -714,7 +733,7 @@ void OctreeCreator::updatePropertyConfiguration() {
             std::string octreeFile = tgt::FileSystem::cleanupPath(getOctreeStoragePath() + "/octree.xml");
             inCache = tgt::FileSystem::fileExists(octreeFile);
         }
-        
+
         if (inCache)
             updateStatusMessage("Octree found in cache!");
         else

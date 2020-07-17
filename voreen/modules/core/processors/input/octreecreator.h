@@ -142,6 +142,7 @@ private:
     void storeOctreeToCache(const VolumeOctreeBase* octree) const;
     VolumeOctreeBase* restoreOctreeFromCache() const;
     void clearOctree();
+    bool singleInputVolumeConfiguration() const;
 
     void updatePropertyConfiguration();
 
