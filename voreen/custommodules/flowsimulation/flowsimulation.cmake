@@ -24,6 +24,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/ports/flowparametrizationport.cpp
 
     # processors
+    ${MOD_DIR}/processors/features/lambda2criterion.cpp
+    ${MOD_DIR}/processors/features/lambdacicriterion.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
@@ -57,6 +59,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/ports/flowparametrizationport.h
 
     # processors
+    ${MOD_DIR}/processors/features/lambda2criterion.h
+    ${MOD_DIR}/processors/features/lambdacicriterion.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h

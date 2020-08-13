@@ -26,6 +26,8 @@
 #include "flowsimulationmodule.h"
 
 // processors
+#include "processors/features/lambda2criterion.h"
+#include "processors/features/lambdacicriterion.h"
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometryoffsetremove.h"
 #include "processors/geometry/geometrysmoothnormals.h"
@@ -69,6 +71,8 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     setGuiName("FlowSimulation");
 
     // processors
+    registerSerializableType(new Lambda2Criterion());
+    registerSerializableType(new LambdaCiCriterion());
     registerSerializableType(new GeometryClose());
     registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new GeometrySmoothNormals());

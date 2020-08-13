@@ -223,7 +223,7 @@ WallShearStressExtractorOutput WallShearStressExtractor::compute(WallShearStress
             }
         }
 #ifndef VRN_MODULE_OPENMP
-        progressReporter.setProgress(1.0f * z / dim.z);
+        progressReporter.setProgress(1.0f * z / dimensions.z);
 #endif
     }
 
