@@ -32,7 +32,7 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/utils/hashing.h"
-#include "../../modules/vesselnetworkanalysis/algorithm/intervalwalker.h"
+#include "../../modules/bigdataimageprocessing/algorithm/intervalwalker.h"
 #include "../algorithm/boundshierarchy.h"
 #include "custommodules/bigdataimageprocessingextra/ext/ziggurat.h"
 

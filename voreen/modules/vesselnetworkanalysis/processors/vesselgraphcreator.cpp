@@ -39,7 +39,7 @@
 #include "../algorithm/volumemask.h"
 #include "../algorithm/idvolume.h"
 #include "../algorithm/vesselgraphrefinement.h"
-#include "../algorithm/intervalwalker.h"
+#include "../../bigdataimageprocessing/algorithm/intervalwalker.h"
 #include "../datastructures/kdtree.h"
 
 #include "modules/bigdataimageprocessing/datastructures/lz4slicevolume.h"
