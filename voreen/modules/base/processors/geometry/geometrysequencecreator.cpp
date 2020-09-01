@@ -36,7 +36,7 @@ GeometrySequenceCreator::GeometrySequenceCreator()
     , inport_(Port::INPORT, "inport", "Input Geometries",true)
     , outport_(Port::OUTPORT, "outport", "Created Sequence Output")
     , invalidOutput_(false)
-    , enableClippingProp_("enableClippingprop","Enable", false)
+    , enableClippingProp_("enableClippingprop","Enable Clipping", false)
     , clippingBBoxProp_("clippingBBoxprop","Clipping Planes")
 {
     addPort(inport_);
