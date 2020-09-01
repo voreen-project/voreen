@@ -29,6 +29,7 @@
 #include "../solver/randomwalkerseeds.h"
 #include "../solver/randomwalkerweights.h"
 #include "../util/preprocessing.h"
+#include "../util/seeds.h"
 
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volume.h"
@@ -419,25 +420,6 @@ namespace {
         }
     };
 } // namespace anonymous
-
-static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometry<tgt::vec3>& seeds) {
-
-    for (size_t i=0; i<geom.size(); i++) {
-        const PointSegmentListGeometry<tgt::vec3>* seedList = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(geom.at(i).get());
-        if (!seedList)
-            LWARNINGC("voreen.RandomWalker.RandomWalker", "Invalid geometry. PointSegmentListGeometry<vec3> expected.");
-        else {
-            auto transformMat = seedList->getTransformationMatrix();
-            for (int j=0; j<seedList->getNumSegments(); j++) {
-                std::vector<tgt::vec3> points;
-                for(auto& vox : seedList->getSegment(j)) {
-                    points.push_back(transformMat.transform(vox));
-                }
-                seeds.addSegment(points);
-            }
-        }
-    }
-}
 
 RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     RandomWalkerOutput invalidResult = RandomWalkerOutput {

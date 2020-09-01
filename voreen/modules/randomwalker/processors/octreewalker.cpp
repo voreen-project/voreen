@@ -27,6 +27,7 @@
 
 #include "../solver/randomwalkerweights.h"
 #include "../util/preprocessing.h"
+#include "../util/seeds.h"
 
 #include "voreen/core/datastructures/volume/volumeram.h"
 #include "voreen/core/datastructures/volume/volume.h"
@@ -38,7 +39,6 @@
 #include "voreen/core/datastructures/volume/operators/volumeoperatornumsignificant.h"
 #include "voreen/core/datastructures/octree/octreebrickpoolmanagermmap.h"
 #include "voreen/core/datastructures/octree/volumeoctreenodegeneric.h"
-#include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/utils/hashing.h"
 #include "tgt/vector.h"
 #include "tgt/memory.h"
@@ -399,26 +399,6 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         incrementalSimilarityThreshold_.get(),
     };
 }
-
-static void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometry<tgt::vec3>& seeds) {
-
-    for (size_t i=0; i<geom.size(); i++) {
-        const PointSegmentListGeometry<tgt::vec3>* seedList = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(geom.at(i).get());
-        if (!seedList)
-            LWARNINGC(OctreeWalker::loggerCat_, "Invalid geometry. PointSegmentListGeometry<vec3> expected.");
-        else {
-            auto transformMat = seedList->getTransformationMatrix();
-            for (int j=0; j<seedList->getNumSegments(); j++) {
-                std::vector<tgt::vec3> points;
-                for(auto& vox : seedList->getSegment(j)) {
-                    points.push_back(transformMat.transform(vox));
-                }
-                seeds.addSegment(points);
-            }
-        }
-    }
-}
-
 struct BrickNeighborhood {
     BrickNeighborhood() = delete;
     BrickNeighborhood(const BrickNeighborhood& other) = delete;
