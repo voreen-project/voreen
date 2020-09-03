@@ -91,7 +91,7 @@ Lambda2CriterionOutput Lambda2Criterion::compute(Lambda2CriterionInput input, Pr
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for (size_t z = 0; z < dimensions.z; z++) {
+    for (long z = 0; z < static_cast<long>(dimensions.z); z++) {
         for (size_t y = 0; y < dimensions.y; y++) {
             for (size_t x = 0; x < dimensions.x; x++) {
                 auto jacobi = Eigen::Matrix3f();

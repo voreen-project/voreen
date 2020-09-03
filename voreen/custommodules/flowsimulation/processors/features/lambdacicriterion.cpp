@@ -125,7 +125,7 @@ LambdaCiCriterionOutput LambdaCiCriterion::compute(LambdaCiCriterionInput input,
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for (size_t z = 0; z < dimensions.z; z++) {
+    for (long z = 0; z < static_cast<long>(dimensions.z); z++) {
         for (size_t y = 0; y < dimensions.y; y++) {
             for (size_t x = 0; x < dimensions.x; x++) {
                 tgt::svec3 pos(x, y, z);
