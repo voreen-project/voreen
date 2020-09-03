@@ -4,6 +4,7 @@
 #include "trimesh_types.h" // triangle_t, edge_t
 #include <vector>
 #include <map>
+#include <set>
 
 namespace trimesh
 {
@@ -97,17 +98,26 @@ public:
         */
         
         result.clear();
+
+        std::set<index_t> test;
         
         const index_t start_hei = m_vertex_halfedges[ vertex_index ];
         index_t hei = start_hei;
         while( true )
         {
             const halfedge_t& he = m_halfedges[ hei ];
-            result.push_back( he.to_vertex );
+
+            if(test.find(he.to_vertex) != test.end()) {
+                break; // .. fix: would result in infinite loop otherwise
+            }
+
+            test.insert(he.to_vertex);
             
             hei = m_halfedges[ he.opposite_he ].next_he;
             if( hei == start_hei ) break;
         }
+
+        result = std::vector<index_t>(std::make_move_iterator(test.begin()), std::make_move_iterator(test.end()));
     }
     std::vector< index_t > vertex_vertex_neighbors( const index_t vertex_index ) const
     {

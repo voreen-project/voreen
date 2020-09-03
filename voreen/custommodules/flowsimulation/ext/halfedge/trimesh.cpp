@@ -43,7 +43,7 @@ void trimesh_t::build( const unsigned long num_vertices, const unsigned long num
     assert( edges );
     
     directed_edge2index_map_t de2fi;
-    for( int fi = 0; fi < num_triangles; ++fi )
+    for( unsigned long fi = 0; fi < num_triangles; ++fi )
     {
         const triangle_t& tri = triangles[fi];
         de2fi[ std::make_pair( tri.v[0], tri.v[1] ) ] = fi;
@@ -57,7 +57,7 @@ void trimesh_t::build( const unsigned long num_vertices, const unsigned long num
     m_edge_halfedges.resize( num_edges, -1 );
     m_halfedges.reserve( num_edges*2 );
     
-    for( int ei = 0; ei < num_edges; ++ei )
+    for( unsigned long ei = 0; ei < num_edges; ++ei )
     {
         const edge_t& edge = edges[ei];
         
@@ -127,7 +127,7 @@ void trimesh_t::build( const unsigned long num_vertices, const unsigned long num
     // Now that all the half-edges are created, set the remaining next_he field.
     // We can't yet handle boundary halfedges, so store them for later.
     std::vector< index_t > boundary_heis;
-    for( int hei = 0; hei < m_halfedges.size(); ++hei )
+    for( size_t hei = 0; hei < m_halfedges.size(); ++hei )
     {
         halfedge_t& he = m_halfedges.at( hei );
         // Store boundary halfedges for later.
@@ -195,7 +195,7 @@ std::vector< trimesh_t::index_t > trimesh_t::boundary_vertices() const
     */
     
     std::set< index_t > result;
-    for( int hei = 0; hei < m_halfedges.size(); ++hei )
+    for( size_t hei = 0; hei < m_halfedges.size(); ++hei )
     {
         const halfedge_t& he = m_halfedges[ hei ];
         
@@ -219,7 +219,7 @@ std::vector< std::pair< trimesh_t::index_t, trimesh_t::index_t > > trimesh_t::bo
     */
     
     std::vector< std::pair< index_t, index_t > > result;
-    for( int hei = 0; hei < m_halfedges.size(); ++hei )
+    for( size_t hei = 0; hei < m_halfedges.size(); ++hei )
     {
         const halfedge_t& he = m_halfedges[ hei ];
         
@@ -236,7 +236,7 @@ void unordered_edges_from_triangles( const unsigned long num_triangles, const tr
 {
     typedef std::set< std::pair< index_t, index_t > > edge_set_t;
     edge_set_t edges;
-    for( int t = 0; t < num_triangles; ++t )
+    for( unsigned long t = 0; t < num_triangles; ++t )
     {
         edges.insert( std::make_pair( std::min( triangles[t].i(), triangles[t].j() ), std::max( triangles[t].i(), triangles[t].j() ) ) );
         edges.insert( std::make_pair( std::min( triangles[t].j(), triangles[t].k() ), std::max( triangles[t].j(), triangles[t].k() ) ) );
@@ -244,7 +244,7 @@ void unordered_edges_from_triangles( const unsigned long num_triangles, const tr
     }
     
     edges_out.resize( edges.size() );
-    int e = 0;
+    size_t e = 0;
     for( edge_set_t::const_iterator it = edges.begin(); it != edges.end(); ++it, ++e )
     {
         edges_out.at(e).start() = it->first;
