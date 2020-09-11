@@ -360,12 +360,11 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
             velR = sampler.sample(r);
             float magnitude = tgt::length(velR);
-            lookupPositiveDirection &= velR != tgt::vec3::zero;
-            lookupPositiveDirection &= (magnitude > input.absoluteMagnitudeThreshold.x - epsilon);
-            lookupPositiveDirection &= (magnitude < input.absoluteMagnitudeThreshold.y + epsilon);
-            lookupPositiveDirection &= std::acos(std::abs(tgt::dot(line.getLastElement().velocity_, velR)) /
-                                                 (tgt::length(line.getLastElement().velocity_) * magnitude)) <=
-                                       input.stopIntegrationAngleThreshold;
+            lookupPositiveDirection &= (velR != tgt::vec3::zero)
+                    && (magnitude > input.absoluteMagnitudeThreshold.x - epsilon)
+                    && (magnitude < input.absoluteMagnitudeThreshold.y + epsilon)
+                    && std::acos(std::abs(tgt::dot(line.getLastElement().velocity_, velR)) /
+                        (tgt::length(line.getLastElement().velocity_) * magnitude)) <= input.stopIntegrationAngleThreshold;
 
             if (lookupPositiveDirection) {
                 line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, velR));
@@ -393,12 +392,11 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
             velR_ = sampler.sample(r_);
             float magnitude = tgt::length(velR_);
-            lookupNegativeDirection &= velR_ != tgt::vec3::zero;
-            lookupNegativeDirection &= (magnitude > input.absoluteMagnitudeThreshold.x - epsilon);
-            lookupNegativeDirection &= (magnitude < input.absoluteMagnitudeThreshold.y + epsilon);
-            lookupNegativeDirection &= std::acos(std::abs(tgt::dot(line.getFirstElement().velocity_, velR_)) /
-                                                 (tgt::length(line.getFirstElement().velocity_) * magnitude)) <=
-                                       input.stopIntegrationAngleThreshold;
+            lookupNegativeDirection &= (velR_ != tgt::vec3::zero)
+                    && (magnitude > input.absoluteMagnitudeThreshold.x - epsilon)
+                    && (magnitude < input.absoluteMagnitudeThreshold.y + epsilon)
+                    && std::acos(std::abs(tgt::dot(line.getFirstElement().velocity_, velR_)) /
+                         (tgt::length(line.getFirstElement().velocity_) * magnitude)) <= input.stopIntegrationAngleThreshold;
 
             if (lookupNegativeDirection) {
                 line.addElementAtFront(Streamline::StreamlineElement(input.voxelToWorldMatrix * r_, velR_));
