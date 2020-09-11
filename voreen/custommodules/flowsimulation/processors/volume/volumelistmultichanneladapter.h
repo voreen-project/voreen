@@ -71,6 +71,11 @@ private:
     BoolProperty invertChannel3_;
     BoolProperty invertChannel4_;
 
+    OptionProperty<size_t> swizzleChannel1_;
+    OptionProperty<size_t> swizzleChannel2_;
+    OptionProperty<size_t> swizzleChannel3_;
+    OptionProperty<size_t> swizzleChannel4_;
+
     VolumeListPort inport_;
     VolumeListPort outport_;
 };
