@@ -39,6 +39,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.cpp
+    ${MOD_DIR}/processors/volume/phaseunwrapping.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistcombine.cpp
     ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.cpp
@@ -74,6 +75,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.h
+    ${MOD_DIR}/processors/volume/phaseunwrapping.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistcombine.h
     ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.h
@@ -178,4 +180,16 @@ SET(MOD_INSTALL_FILES ${MOD_INSTALL_FILES}
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/scripts
     ${MOD_DIR}/workspaces
+)
+
+################################################################################
+# External dependency: unwrap3d
+################################################################################
+
+SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+    ${MOD_DIR}/ext/unwrap3d/unwrap3d.h
+)
+
+SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+    ${MOD_DIR}/ext/unwrap3d/unwrap3d.cpp
 )
