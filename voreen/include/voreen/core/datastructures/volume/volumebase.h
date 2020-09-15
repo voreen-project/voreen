@@ -589,6 +589,12 @@ bool VolumeBase::hasRepresentation() const {
 
 template <class T>
 void VolumeBase::removeRepresentation() {
+    // volumes must lock the memory manager if they use it to prevent deadlocks in multi-threading
+    boost::recursive_mutex* vmmMutex = 0;
+    if (VolumeMemoryManager::isInited())
+        vmmMutex = VolumeMemoryManager::getRef().getMutex();
+    VolumeLockGuard vmmGuard(vmmMutex);
+
     boost::lock_guard<boost::recursive_mutex> lock(representationMutex_);
     for (size_t i = getNumRepresentations(); i > 0; i--) {
         if (dynamic_cast<const T*>(getRepresentation(i-1))) {
