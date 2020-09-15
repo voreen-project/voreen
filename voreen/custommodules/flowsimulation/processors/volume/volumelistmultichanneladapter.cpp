@@ -43,7 +43,7 @@ public:
         , swizzle_(std::move(swizzle))
     {
         tgtAssert(channels_.size() == invert_.size(), "size mismatch");
-        tgtAssert(channels_.size() == swizzle.size(), "size mismatch");
+        tgtAssert(channels_.size() == swizzle_.size(), "size mismatch");
         const VolumeBase* ref = channels_.front();
         for (const VolumeBase* channel : channels_) {
             tgtAssert(ref->getFormat() == channel->getFormat(), "Base Type mismatch");

@@ -116,6 +116,9 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                     // Map to voxel space.
                     tgt::ivec3 sampleInVoxelSpace = physicalToVoxel * sample;
 
+                    // Map sample to reference voxel space.
+                    tgt::vec3 referencePos = refPhysicalToVoxel * sample;
+
                     // Ignore, if out of bounds.
                     if (tgt::clamp(sampleInVoxelSpace, tgt::ivec3::zero, newDims - tgt::ivec3::one) != sampleInVoxelSpace) {
                         continue;
@@ -123,7 +126,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
 
                     float length = 0.0f;
                     for(size_t channel=0; channel<numChannels; channel++) {
-                        float value = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVolume->getVoxelNormalized(pos, channel);
+                        float value = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVolume->getVoxelNormalizedLinear(referencePos, channel);
                         length += value * value;
                     }
 
