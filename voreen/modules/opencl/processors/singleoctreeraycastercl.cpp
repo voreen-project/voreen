@@ -72,15 +72,15 @@ const uint64_t MASK_INBRICKPOOL = 0x4000000000000000;  //< 01000000 00000000 000
 const size_t   MASK_INBRICKPOOL_SHIFT  = 62;
 const size_t   MASK_INBRICKPOOL_NUMBITS = 1;
 
-// 61. bit reserved for now
-
 // This is space for an index of the first of the 8 (consecutively stored)
 // children of the current node in the node buffer. We can index children with
-// a maximum offset of (1 >> MASK_CHILD_NUMBITS) which results in a maximum
-// tree depth of MASK_CHILD_SHIFT/3 + 1.
-const uint64_t MASK_CHILD =       0x1FFFFF0000000000;  //< 00011111 11111111 11111111 00000000 00000000 00000000 00000000 00000000
+// a maximum offset of (1 >> MASK_CHILD_NUMBITS). For a tree depth of n we
+// require 8^(n-1) (as in "power of") nodes for the leaf layer. Another 8^(n-1)
+// nodes are sufficient for all non-leaf nodes. Thus, for 2*8^(n-1) =
+// 2*(2^(3*(n-1)) = 2^(3n-2) we need 3n+1 bits.
+const uint64_t MASK_CHILD =       0x3FFFFF0000000000;  //< 00111111 11111111 11111111 00000000 00000000 00000000 00000000 00000000
 const size_t   MASK_CHILD_SHIFT  =  40;
-const size_t   MASK_CHILD_NUMBITS = 21;
+const size_t   MASK_CHILD_NUMBITS = 22;
 const size_t   MAX_ADDRESSABLE_NUM_NODES = 1 << MASK_CHILD_NUMBITS;
 
 // This is space for an index of the brick of the current node in the brick
