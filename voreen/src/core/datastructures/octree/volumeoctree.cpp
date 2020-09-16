@@ -620,23 +620,13 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     // 1. Create nodes at level 0 (full resolution bricks) from input volumes
     //
     LDEBUG("- Creating level 0 nodes");
-    tgt::svec3 numNodesPerDim = getOctreeDim() / getBrickDim();
+    tgt::svec3 numNodesPerDim = tgt::ceil(tgt::vec3(getDimensions()) / tgt::vec3(getBrickDim()));
     NodeGrid3D* level0Grid = new NodeGrid3D(numNodesPerDim);
     for (size_t nodeIndexZ = 0; nodeIndexZ < numNodesPerDim.z; nodeIndexZ++) {
         size_t startSlice = nodeIndexZ*getBrickDim().z;
 
         // if nodes completely outside volume (first z slice index >= volumeDim.z) => create empty dummy nodes
-        if (startSlice >= getVolumeDim().z) {
-            tgt::svec3 nodeIndex(0, 0, nodeIndexZ);
-            for (nodeIndex.y = 0; nodeIndex.y < numNodesPerDim.y; nodeIndex.y++) {
-                for (nodeIndex.x = 0; nodeIndex.x < numNodesPerDim.x; nodeIndex.x++) {
-                    tgtAssert(level0Grid->getNode(nodeIndex) == 0, "node already created");
-                    level0Grid->setNode(VolumeOctreeBase::createNode(getNumChannels()), nodeIndex);
-                }
-            }
-
-            continue;
-        }
+        tgtAssert(startSlice < getVolumeDim().z, "Invalid start slice");
         size_t endSlice = std::min(startSlice + getBrickDim().z-1, getVolumeDim().z-1);
 
         // load slices for current brick plate [startSlice;endSlice]
@@ -792,23 +782,21 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     }
     else { // iterative construction of upper levels
         NodeGrid3D* currentLevelGrid = level0Grid;
-        while (currentLevelGrid->getDim() != tgt::svec3::two) {
+        while (tgt::hor(tgt::greaterThan(currentLevelGrid->getDim(), tgt::svec3::two))) {
             // check current grid
             tgtAssert(currentLevelGrid->isComplete(), "current level grid is not complete");
-            tgtAssert(isCubicAndPot(currentLevelGrid->getDim()), "grid dim is not cubic power-of-two");
 
             // log memory usage
             LDEBUG("- Creating level " << currentLevel << " nodes");
             LDEBUG("-- Before: " << MemoryInfo::getProcessMemoryUsageAsString());
             LDEBUG("-- Before: " << MemoryInfo::getAvailableMemoryAsString());
 
-            const tgt::svec3 parentLevelGridDim = currentLevelGrid->getDim() / tgt::svec3::two;
+            const tgt::svec3 parentLevelGridDim = tgt::ceil(tgt::vec3(currentLevelGrid->getDim()) / tgt::vec3::two);
             const tgt::svec3 childLevelVolumeDim = tgt::ceil(tgt::vec3(getVolumeDim()) / tgt::vec3(1 << (currentLevel-1)));
             const svec3 brickDim = getBrickDim();
 
             // create parent level grid
             NodeGrid3D* parentLevelGrid = new NodeGrid3D(parentLevelGridDim);
-            tgtAssert(isCubicAndPot(parentLevelGrid->getDim()), "next level grid dim is not cubic power-of-two");
 
             // create parent nodes
             for (size_t parentNodeZ=0; parentNodeZ<parentLevelGridDim.z; parentNodeZ++) {
@@ -823,7 +811,15 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
                             VolumeOctreeNode* childNodes[8];
                             for (size_t i=0; i<8; i++) {
                                 tgt::svec3 childNodeID = linearCoordToCubic(i, tgt::svec3::two);
-                                childNodes[i] = currentLevelGrid->getNode(parentNodeID*tgt::svec3::two + childNodeID);
+                                tgt::svec3 childPos = parentNodeID*tgt::svec3::two + childNodeID;
+                                VolumeOctreeNode* childNode;
+                                if(tgt::hand(tgt::lessThan(childPos, currentLevelGrid->getDim()))) {
+                                    childNode = currentLevelGrid->getNode(childPos);
+                                } else {
+                                    // Create dummy node.
+                                    childNode = VolumeOctreeBase::createNode(getNumChannels());
+                                }
+                                childNodes[i] = childNode;
                             }
                             tgt::svec3 childLevelVolumeLlf = tgt::min(parentNodeID * brickDim * tgt::svec3::two, childLevelVolumeDim);
                             tgt::svec3 childLevelVolumeUrb = tgt::min(childLevelVolumeLlf + (brickDim * tgt::svec3::two), childLevelVolumeDim);
@@ -852,6 +848,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
                 if (progressReporter && currentLevel == 1) {
                     float inLevelProgress = (float)(parentNodeZ+1) / (float)parentLevelGridDim.z;
                     progressReporter->setProgress(0.7f + inLevelProgress*0.2f);
+                    //TODO: What happens with allocated nodes when we abort the computation? are they leaked?!
                 }
 
             } // parentNodeIndexZ
@@ -865,14 +862,27 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
             currentLevelGrid = parentLevelGrid;
             currentLevel++;
         }
-        tgtAssert(currentLevelGrid->getDim() == tgt::svec3::two, "level grid dimensions [2 2 2] expected");
+        tgtAssert(tgt::hand(tgt::lessThanEqual(currentLevelGrid->getDim(), tgt::svec3::two)), "level grid dimensions of [2 2 2] or smaller expected");
+        tgtAssert(tgt::hand(tgt::notEqual(currentLevelGrid->getDim(), tgt::svec3::zero)), "level grid dimensions contain zero");
 
         LDEBUG("- Creating root node");
         uint16_t avgValues[MAX_CHANNELS], minValues[MAX_CHANNELS], maxValues[MAX_CHANNELS];
 
         tgt::svec3 inBrickUrb = tgt::ceil(tgt::vec3(getVolumeDim()) / tgt::vec3(1 << (currentLevel - 1)));
 
-        rootNode_ = createParentNode(currentLevelGrid->getNodes(), octreeOptimization, homogeneityThreshold,
+        VolumeOctreeNode* childNodes[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        VolumeOctreeNode** gridNodes = currentLevelGrid->getNodes();
+        VRN_FOR_EACH_VOXEL(childIndex, tgt::svec3::zero, currentLevelGrid->getDim()) {
+            size_t index = cubicCoordToLinear(childIndex, tgt::svec3::two);
+            childNodes[index] = gridNodes[index];
+        }
+        for(auto& node : childNodes) {
+            if(!node) {
+                // Create dummy node
+                node = VolumeOctreeBase::createNode(getNumChannels());
+            }
+        }
+        rootNode_ = createParentNode(childNodes, octreeOptimization, homogeneityThreshold,
             inBrickUrb, avgValues, minValues, maxValues);
         tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
 
