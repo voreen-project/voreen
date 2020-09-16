@@ -223,6 +223,9 @@ protected:
     virtual void dataAboutToInvalidate(const DataInvalidationObservable* source);
 protected:
     void forceComputation();
+    // Use this, if the subclass messes with property visibilities themselves
+    // and notify AsyncComputeProcessor when the visibility changes.
+    void savePropertyEnableStates();
 
 private:
 
@@ -239,7 +242,6 @@ private:
     const static std::chrono::milliseconds MINIMUM_PROGRESS_UPDATE_INTERVAL;
 
     /// Used to manage the visibility of properties during compute()
-    void savePropertyEnableStates();
     void enableRunningState();
     void disableRunningState();
     void enqueueRestart();

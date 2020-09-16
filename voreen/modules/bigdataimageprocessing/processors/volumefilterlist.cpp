@@ -106,10 +106,12 @@ VolumeFilterList::VolumeFilterList()
             if(enabled_.get()) {
                 this->outport_.setData(nullptr);
                 propertyDisabler_.restore();
+                savePropertyEnableStates();
             } else {
                 this->forceComputation();
                 propertyDisabler_.saveState([this] (Property* p) { return p == &enabled_; });
                 propertyDisabler_.disable();
+                savePropertyEnableStates();
             }
         });
     addProperty(outputVolumeFilePath_);
