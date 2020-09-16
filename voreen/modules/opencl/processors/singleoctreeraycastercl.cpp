@@ -74,13 +74,20 @@ const size_t   MASK_INBRICKPOOL_NUMBITS = 1;
 
 // 61. bit reserved for now
 
+// This is space for an index of the first of the 8 (consecutively stored)
+// children of the current node in the node buffer. We can store 1 >>
+// MASK_CHILD_NUMBITS nodes in total.
 const uint64_t MASK_CHILD =       0x1FFFFF0000000000;  //< 00011111 11111111 11111111 00000000 00000000 00000000 00000000 00000000
 const size_t   MASK_CHILD_SHIFT  =  40;
 const size_t   MASK_CHILD_NUMBITS = 21;
 
+// This is space for an index of the brick of the current node in the brick
+// buffer. As all nodes can (potentially) have a brick, we support brick
+// buffers with 1 >> (MASK_BRICK_NUMBITS) slots in total.
 const uint64_t MASK_BRICK =       0x000000FFFFFF0000;  //< 00000000 00000000 00000000 11111111 11111111 11111111 00000000 00000000
 const size_t   MASK_BRICK_SHIFT  =  16;
 const size_t   MASK_BRICK_NUMBITS = 24;
+const size_t   MAX_ADDRESSABLE_NUM_BRICKS = 1 >> MASK_BRICK_NUMBITS;
 
 typedef struct {
     uint64_t MASK;
@@ -91,8 +98,8 @@ typedef struct {
 // returns the node entry mask for avg values: the remaining 40 bits (lower five bytes, without brick pointer)
 // are divided among the used channels
 AVG_MASK getAvgMask(size_t channel, size_t numChannels) {
-    tgtAssert(channel >= 0 && channel < 4, "invalid channel");
     tgtAssert(numChannels > 0 && numChannels <= 4, "invalid channel count");
+    tgtAssert(channel >= 0 && channel < numChannels, "invalid channel");
 
     AVG_MASK mask;
     mask.MASK = 0;
@@ -954,9 +961,9 @@ void SingleOctreeRaycasterCL::initializeNodeBuffer() {
 
     // pair consisting of a octree node whose children still have to be added to the buffer,
     // and the node's buffer offset
-    typedef std::pair<const VolumeOctreeNode*, size_t> QuededNode;
-    std::queue<QuededNode> workQueue;
-    //std::stack<QuededNode> workQueue;
+    typedef std::pair<const VolumeOctreeNode*, size_t> QueuedNode;
+    std::queue<QueuedNode> workQueue;
+    //std::stack<QueuedNode> workQueue;
 
     uint16_t avgValues[4]; //< is passed to createNodeBufferEntry
     bool useMaxValue = false; // compositingMode_.isSelected("mip") || compositingMode_.isSelected("mop");
@@ -970,7 +977,7 @@ void SingleOctreeRaycasterCL::initializeNodeBuffer() {
     nodeInfos_[0].node_ = octree->getRootNode();
     nodeInfos_[0].level_ = treeDepth-1;
     nodeInfos_[0].nodeExists_ = true;
-    workQueue.push(QuededNode(octree->getRootNode(), 0));
+    workQueue.push(QueuedNode(octree->getRootNode(), 0));
     size_t curOffset = 1; //< next after root node
     while (!workQueue.empty()) {
         // retrieve next node to process
@@ -1019,7 +1026,7 @@ void SingleOctreeRaycasterCL::initializeNodeBuffer() {
             nodeInfos_[childOffset].parentNodeIndex_ = curNodeOffset;
             nodeInfos_[childOffset].level_ = nodeLevel-1;
 
-            workQueue.push(QuededNode(child, childOffset));
+            workQueue.push(QueuedNode(child, childOffset));
         }
         curOffset += 8;
     }
@@ -1080,6 +1087,10 @@ void SingleOctreeRaycasterCL::initializeBrickBuffer() {
     // allocate CPU buffers
     numBrickBufferSlots_ = tgt::ifloor((float)(brickBufferSizeMB_.get() << 20) / (float)octree->getBrickMemorySize());
     numBrickBufferSlots_ = std::min(numBrickBufferSlots_, nodeCount);
+    if(numBrickBufferSlots_ >= MAX_ADDRESSABLE_NUM_BRICKS) {
+        LWARNING("Restricting number of brick buffer slots to maximum addressable " << MAX_ADDRESSABLE_NUM_BRICKS);
+        numBrickBufferSlots_ = MAX_ADDRESSABLE_NUM_BRICKS;
+    }
     if (numBrickBufferSlots_ == 0) {
         LERROR("Brick buffer size (" << formatMemorySize(brickBufferSizeMB_.get() << 20) <<
             ") smaller than memory size of a single brick (" << formatMemorySize(octree->getBrickMemorySize()) << ")");
@@ -1108,7 +1119,7 @@ void SingleOctreeRaycasterCL::initializeBrickBuffer() {
         LERROR("No CL context");
         return;
     }
-    brickBufferCL_ = new cl::Buffer(context, CL_MEM_READ_WRITE, brickBufferSize_*2);
+    brickBufferCL_ = new cl::Buffer(context, CL_MEM_READ_WRITE, brickBufferSize_ * sizeof(uint16_t));
     brickFlagBufferCL_ = new cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, nodeCount, brickFlagBuffer_);
 
     LINFO("Brick buffer size: \t" << formatMemorySize(brickBufferSize_*sizeof(uint16_t)) << " / " << numBrickBufferSlots_ << " slots");
