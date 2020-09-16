@@ -81,6 +81,7 @@ const size_t   MASK_INBRICKPOOL_NUMBITS = 1;
 const uint64_t MASK_CHILD =       0x1FFFFF0000000000;  //< 00011111 11111111 11111111 00000000 00000000 00000000 00000000 00000000
 const size_t   MASK_CHILD_SHIFT  =  40;
 const size_t   MASK_CHILD_NUMBITS = 21;
+const size_t   MAX_ADDRESSABLE_NUM_NODES = 1 << MASK_CHILD_NUMBITS;
 
 // This is space for an index of the brick of the current node in the brick
 // buffer. As all nodes can (potentially) have a brick, we support brick
@@ -88,7 +89,7 @@ const size_t   MASK_CHILD_NUMBITS = 21;
 const uint64_t MASK_BRICK =       0x000000FFFFFF0000;  //< 00000000 00000000 00000000 11111111 11111111 11111111 00000000 00000000
 const size_t   MASK_BRICK_SHIFT  =  16;
 const size_t   MASK_BRICK_NUMBITS = 24;
-const size_t   MAX_ADDRESSABLE_NUM_BRICKS = 1 >> MASK_BRICK_NUMBITS;
+const size_t   MAX_ADDRESSABLE_NUM_BRICKS = 1 << MASK_BRICK_NUMBITS;
 
 typedef struct {
     uint64_t MASK;
@@ -100,7 +101,7 @@ typedef struct {
 // are divided among the used channels
 AVG_MASK getAvgMask(size_t channel, size_t numChannels) {
     tgtAssert(numChannels > 0 && numChannels <= 4, "invalid channel count");
-    tgtAssert(channel >= 0 && channel < numChannels, "invalid channel");
+    tgtAssert(channel >= 0 && channel < 4, "invalid channel");
 
     AVG_MASK mask;
     mask.MASK = 0;
@@ -945,6 +946,7 @@ void SingleOctreeRaycasterCL::initializeNodeBuffer() {
     const size_t treeDepth = octree->getActualTreeDepth();
     tgtAssert(numChannels > 0 && numChannels <= 4, "invalid channel count");
     tgtAssert(treeDepth <= 8, "octree has more than 8 levels");
+    tgtAssert(nodeCount <= MAX_ADDRESSABLE_NUM_NODES, "Too many nodes");
 
     nodeBufferSize_ = nodeCount;
 
