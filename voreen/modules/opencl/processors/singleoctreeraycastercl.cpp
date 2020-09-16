@@ -78,18 +78,18 @@ const size_t   MASK_INBRICKPOOL_NUMBITS = 1;
 // require 8^(n-1) (as in "power of") nodes for the leaf layer. Another 8^(n-1)
 // nodes are sufficient for all non-leaf nodes. Thus, for 2*8^(n-1) =
 // 2*(2^(3*(n-1)) = 2^(3n-2) we need 3n+1 bits.
-const uint64_t MASK_CHILD =       0x3FFFFF0000000000;  //< 00111111 11111111 11111111 00000000 00000000 00000000 00000000 00000000
-const size_t   MASK_CHILD_SHIFT  =  40;
-const size_t   MASK_CHILD_NUMBITS = 22;
-const size_t   MAX_ADDRESSABLE_NUM_NODES = 1 << MASK_CHILD_NUMBITS;
+const uint64_t MASK_CHILD =       0x3FFFFFE000000000;  //< 00111111 11111111 11111111 11100000 00000000 00000000 00000000 00000000
+const size_t   MASK_CHILD_SHIFT  =  37;
+const size_t   MASK_CHILD_NUMBITS = 25;
+const size_t   MAX_ADDRESSABLE_NUM_NODES = 1ul << MASK_CHILD_NUMBITS;
 
 // This is space for an index of the brick of the current node in the brick
 // buffer. As all nodes can (potentially) have a brick, we support brick
 // buffers with 1 >> (MASK_BRICK_NUMBITS) slots in total.
-const uint64_t MASK_BRICK =       0x000000FFFFFF0000;  //< 00000000 00000000 00000000 11111111 11111111 11111111 00000000 00000000
-const size_t   MASK_BRICK_SHIFT  =  16;
-const size_t   MASK_BRICK_NUMBITS = 24;
-const size_t   MAX_ADDRESSABLE_NUM_BRICKS = 1 << MASK_BRICK_NUMBITS;
+const uint64_t MASK_BRICK =       0x0000000001FFFFFF;  //< 00000000 00000000 00000000 00000000 00000001 11111111 11111111 11111111
+const size_t   MASK_BRICK_SHIFT  =  0;
+const size_t   MASK_BRICK_NUMBITS = 25;
+const size_t   MAX_ADDRESSABLE_NUM_BRICKS = 1ul << MASK_BRICK_NUMBITS;
 
 typedef struct {
     uint64_t MASK;
@@ -104,73 +104,27 @@ AVG_MASK getAvgMask(size_t channel, size_t numChannels) {
     tgtAssert(channel >= 0 && channel < 4, "invalid channel");
 
     AVG_MASK mask;
-    mask.MASK = 0;
-    mask.SHIFT = 0;
-    mask.NUMBITS = 0;
 
     if (numChannels == 1) {
         mask.NUMBITS = 16;
-        switch (channel) {
-        case 0:
-            mask.MASK   = 0x000000000000FFFF;  //< 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
-            mask.SHIFT  = 0;
-            break;
-        }
     }
     else if (numChannels == 2) {
         mask.NUMBITS = 16;
-        switch (channel) {
-        case 0:
-            mask.MASK   = 0x00000000FFFF0000;  //< 00000000 00000000 00000000 00000000 11111111 11111111 00000000 00000000
-            mask.SHIFT  = 16;
-            break;
-        case 1:
-            mask.MASK   = 0x000000000000FFFF;  //< 00000000 00000000 00000000 00000000 00000000 00000000 11111111 11111111
-            mask.SHIFT  = 0;
-            break;
-        }
     }
     else if (numChannels == 3) {
-        mask.NUMBITS = 13;
-        switch (channel) {
-        case 0:
-            mask.MASK   = 0x0000007FFC000000;  //< 00000000 00000000 00000000 01111111 11111100 00000000 00000000 00000000
-            mask.SHIFT  = 26;
-            break;
-        case 1:
-            mask.MASK   = 0x0000000003FFE000;  //< 00000000 00000000 00000000 00000000 00000011 11111111 11100000 00000000
-            mask.SHIFT  = 13;
-            break;
-        case 2:
-            mask.MASK   = 0x0000000000001FFF;  //< 00000000 00000000 00000000 00000000 00000000 00000000 00011111 11111111
-            mask.SHIFT  = 0;
-            break;
-        }
+        mask.NUMBITS = 12;
     }
     else if (numChannels == 4) {
-        mask.NUMBITS = 10;
-        switch (channel) {
-        case 0:
-            mask.MASK   = 0x000000FFC0000000;  //< 00000000 00000000 00000000 11111111 11000000 00000000 00000000 00000000
-            mask.SHIFT  = 30;
-            break;
-        case 1:
-            mask.MASK   = 0x000000003FF00000;  //< 00000000 00000000 00000000 00000000 00111111 11110000 00000000 00000000
-            mask.SHIFT  = 20;
-            break;
-        case 2:
-            mask.MASK   = 0x00000000000FFC00;  //< 00000000 00000000 00000000 00000000 00000000 00001111 11111100 00000000
-            mask.SHIFT  = 10;
-            break;
-        case 3:
-            mask.MASK   = 0x00000000000003FF;  //< 00000000 00000000 00000000 00000000 00000000 00000000 00000011 11111111
-            mask.SHIFT  = 0;
-            break;
-        }
+        mask.NUMBITS = 9;
     }
     else {
         tgtAssert(false, "should not get here (invalid channel count)");
+        mask.NUMBITS = 0;
     }
+    mask.SHIFT = (numChannels - channel - 1) * mask.NUMBITS;
+    mask.MASK = ((1ul << mask.NUMBITS) - 1) << mask.SHIFT;
+
+    tgtAssert(mask.NUMBITS * numChannels < 37, "Too many bits allocated for avg mask");
 
     return mask;
 }
@@ -725,8 +679,8 @@ void SingleOctreeRaycasterCL::process() {
         renderOutport_.clear();
         return;
     }
-    if (inputOctree->getActualTreeDepth() > 8) {
-        LERROR("Octree with more than 8 levels not supported");
+    if (inputOctree->getNumNodes() > MAX_ADDRESSABLE_NUM_NODES) {
+        LERROR("Octree with more than " << MAX_ADDRESSABLE_NUM_NODES << " nodes not supported");
         renderOutport_.clear();
         return;
     }
@@ -945,7 +899,6 @@ void SingleOctreeRaycasterCL::initializeNodeBuffer() {
     const size_t numChannels = octree->getNumChannels();
     const size_t treeDepth = octree->getActualTreeDepth();
     tgtAssert(numChannels > 0 && numChannels <= 4, "invalid channel count");
-    tgtAssert(treeDepth <= 8, "octree has more than 8 levels");
     tgtAssert(nodeCount <= MAX_ADDRESSABLE_NUM_NODES, "Too many nodes");
 
     nodeBufferSize_ = nodeCount;
