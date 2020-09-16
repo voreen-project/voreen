@@ -157,7 +157,11 @@ void VolumeURLPropertyWidget::updateFromPropertySlot() {
         else {
             VolumeSerializerPopulator populator;
             VolumeReader* reader = populator.getVolumeSerializer()->getReaderByName(preferredReader);
-            supportFileWatching = reader->canSupportFileWatching();
+            if(reader) {
+                supportFileWatching = reader->canSupportFileWatching();
+            } else {
+                supportFileWatching = false;
+            }
         }
     }
 
