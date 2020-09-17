@@ -872,9 +872,10 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
 
         VolumeOctreeNode* childNodes[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
         VolumeOctreeNode** gridNodes = currentLevelGrid->getNodes();
-        VRN_FOR_EACH_VOXEL(childIndex, tgt::svec3::zero, currentLevelGrid->getDim()) {
-            size_t index = cubicCoordToLinear(childIndex, tgt::svec3::two);
-            childNodes[index] = gridNodes[index];
+        VRN_FOR_EACH_VOXEL(childPos, tgt::svec3::zero, currentLevelGrid->getDim()) {
+            size_t gridIndex = cubicCoordToLinear(childPos, currentLevelGrid->getDim());
+            size_t childIndex = cubicCoordToLinear(childPos, tgt::svec3::two);
+            childNodes[childIndex] = gridNodes[gridIndex];
         }
         for(auto& node : childNodes) {
             if(!node) {
