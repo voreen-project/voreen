@@ -38,7 +38,7 @@ namespace voreen{
 class VRN_QT_API VoreenStartupWizard :public QDialog{
         Q_OBJECT
 public:
-    VoreenStartupWizard( QStringList recentWorkspaceNames, QStringList standardWorkspaceNames, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    VoreenStartupWizard( QStringList recentWorkspaceNames, QStringList standardWorkspaceNames, QWidget *parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
     ~VoreenStartupWizard();
     QString getSelectedWorkspace();
     virtual QLabel* getLogoLabel();

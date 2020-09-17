@@ -151,7 +151,7 @@ void AnimationExportWidget::refreshComboBoxes() {
     if (comboCanvases_ != 0) {
         comboCanvases_->clear();
         for (std::vector<CanvasRenderer*>::const_iterator it = allCanvasRenderer_.begin(); it != allCanvasRenderer_.end(); ++it)
-            comboCanvases_->addItem((*it)->getID().c_str(),qVariantFromValue(static_cast<void*>(*it)));
+            comboCanvases_->addItem((*it)->getID().c_str(),QVariant::fromValue(static_cast<void*>(*it)));
     }
 }
 
@@ -174,7 +174,7 @@ QGroupBox* AnimationExportWidget::createAnimationRenderBox(QWidget* parent) {
     rowLayout->addWidget(spinRecordingFPS_);
     rowLayout->addStretch();
 
-    rowLayout->addWidget(new QLabel(("     Video Dimensions:")), 1, 0);
+    rowLayout->addWidget(new QLabel(("     Video Dimensions:")), 1);
     spinWidth_ = new QSpinBox(recordBox);
     spinHeight_ = new QSpinBox(recordBox);
 
@@ -189,7 +189,7 @@ QGroupBox* AnimationExportWidget::createAnimationRenderBox(QWidget* parent) {
     spinHeight_->setAccelerated(true);
 
     rowLayout->addWidget(spinWidth_);
-    rowLayout->addWidget(new QLabel(" x ", 0, 0));
+    rowLayout->addWidget(new QLabel(" x ", 0));
     rowLayout->addWidget(spinHeight_);
     layout->addLayout(rowLayout);
 

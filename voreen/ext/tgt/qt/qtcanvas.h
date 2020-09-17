@@ -57,7 +57,7 @@ public:
              const ivec2& size = ivec2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT),
              const Buffers buffers = RGBADD,
              QWidget* parent = 0,
-             Qt::WindowFlags f = 0);
+             Qt::WindowFlags f = Qt::WindowFlags());
 
     /**
      * Destructor. Closes window (if canvas is a window).

@@ -56,7 +56,7 @@ class VRN_QT_API AnimationEditor : public QWidget, public WorkspaceObserver, pub
 Q_OBJECT
 
 public:
-    AnimationEditor(NetworkEvaluator* eval, Workspace*, QWidget* = 0, Qt::WindowFlags = 0);
+    AnimationEditor(NetworkEvaluator* eval, Workspace*, QWidget* = 0, Qt::WindowFlags = Qt::WindowFlags());
 
     virtual void setWorkspace(Workspace*);
 
