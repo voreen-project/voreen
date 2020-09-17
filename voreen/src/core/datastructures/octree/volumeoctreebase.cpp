@@ -322,7 +322,7 @@ const VolumeOctreeNodeLocation& LocatedVolumeOctreeNodeConst::location() const {
 
 const std::string VolumeOctreeBase::loggerCat_("voreen.VolumeOctreeBase");
 
-VolumeOctreeBase::VolumeOctreeBase(const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels)
+VolumeOctreeBase::VolumeOctreeBase(const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels) 
     : VolumeRepresentation(volumeDim)
     , numChannels_(numChannels)
     , brickDim_(brickDim)
@@ -340,12 +340,8 @@ VolumeOctreeBase::VolumeOctreeBase(const tgt::svec3& brickDim, const tgt::svec3&
         throw VoreenException("Volume dimensions must be greater than [1,1,1]: " + genericToString(brickDim_));
 
     // compute octree dimensions (cubic, power-of-two) from volume dimensions
-    octreeDim_ = tgt::svec3(
-        tgt::nextLargerPowerOfTwo(volumeDim.x),
-        tgt::nextLargerPowerOfTwo(volumeDim.y),
-        tgt::nextLargerPowerOfTwo(volumeDim.z)
-        );
-    tgtAssert(tgt::hand(tgt::greaterThanEqual(octreeDim_, getVolumeDim())), "invalid octree dimensions");
+    octreeDim_ = tgt::svec3(tgt::nextLargerPowerOfTwo((int)tgt::max(volumeDim)));
+    tgtAssert(isCubicAndPot(octreeDim_) && tgt::hand(tgt::greaterThanEqual(octreeDim_, getVolumeDim())), "invalid octree dimensions");
 
     // check brick dimensions against octree dimensions
     if (tgt::hor(tgt::greaterThan(brickDim_, octreeDim_))) {
@@ -354,7 +350,7 @@ VolumeOctreeBase::VolumeOctreeBase(const tgt::svec3& brickDim, const tgt::svec3&
     }
 
     // determine (theoretical) tree depth
-    numLevels_ = tgt::ilog2((int)(tgt::max(octreeDim_) / brickDim.x)) + 1;
+    numLevels_ = tgt::ilog2((int)(octreeDim_.x / brickDim.x)) + 1;
     tgtAssert(numLevels_ > 0, "invalid level count");
 
 }
