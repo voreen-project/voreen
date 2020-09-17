@@ -57,36 +57,73 @@ namespace {
     const size_t NUM_HISTOGRAM_BUCKETS_BITS = 12;
     const size_t NUM_HISTOGRAM_BUCKETS = 1 << NUM_HISTOGRAM_BUCKETS_BITS; //< This may buckets will be used during octree construction
 
+    static void deleteSubTree(voreen::VolumeOctreeNode* root) {
+        if (!root)
+            return;
+
+        deleteSubTree(root->children_[0]);
+        root->children_[0] = 0;
+
+        deleteSubTree(root->children_[1]);
+        root->children_[1] = 0;
+
+        deleteSubTree(root->children_[2]);
+        root->children_[2] = 0;
+
+        deleteSubTree(root->children_[3]);
+        root->children_[3] = 0;
+
+        deleteSubTree(root->children_[4]);
+        root->children_[4] = 0;
+
+        deleteSubTree(root->children_[5]);
+        root->children_[5] = 0;
+
+        deleteSubTree(root->children_[6]);
+        root->children_[6] = 0;
+
+        deleteSubTree(root->children_[7]);
+        root->children_[7] = 0;
+
+        delete root;
+    }
+
+
     /**
      * Helper class representing a 3D grid of nodes. Only used during iterative construction.
      */
     class NodeGrid3D {
     public:
-        NodeGrid3D(tgt::svec3 gridDimensions) {
-            dim_ = gridDimensions;
-            numNodes_ = tgt::hmul(gridDimensions);
+        NodeGrid3D(tgt::svec3 gridDimensions)
+            : dim_(gridDimensions)
+            , numNodes_(tgt::hmul(dim_))
+            , grid_(numNodes_)
+        {
             tgtAssert(tgt::hand(tgt::greaterThan(dim_, tgt::svec3::zero)), "invalid grid dim");
-            //tgtAssert(isCubicAndPot(dim_), "grid dim not cubic-pot");
-            grid_ = new voreen::VolumeOctreeNode*[numNodes_];
-            for (size_t i=0; i<numNodes_; i++)
-                grid_[i] = 0;
         }
         ~NodeGrid3D() {
-            delete[] grid_;
+            for(auto& node : grid_) {
+                deleteSubTree(node);
+            }
         }
 
         voreen::VolumeOctreeNode* getNode(const tgt::svec3& pos) const {
             return grid_[cubicCoordToLinear(pos, dim_)];
         }
+        voreen::VolumeOctreeNode* takeNode(const tgt::svec3& pos) {
+            auto& current = grid_[cubicCoordToLinear(pos, dim_)];
+            auto ret = current;
+            current = nullptr;
+            return ret;
+        }
         void setNode(voreen::VolumeOctreeNode* node, const tgt::svec3 pos) {
-            grid_[cubicCoordToLinear(pos, dim_)] = node;
+            auto& current = grid_[cubicCoordToLinear(pos, dim_)];
+            tgtAssert(!current, "Overwriting node in NodeGrid3D");
+            current = node;
         }
 
         tgt::svec3 getDim() const {
             return dim_;
-        }
-        voreen::VolumeOctreeNode** getNodes() const {
-            return grid_;
         }
         bool isComplete() const {
             for (size_t i=0; i<numNodes_; i++) {
@@ -95,11 +132,25 @@ namespace {
             }
             return true;
         }
+        bool isEmpty() const {
+            for (size_t i=0; i<numNodes_; i++) {
+                if (grid_[i])
+                    return false;
+            }
+            return true;
+        }
 
     private:
-        voreen::VolumeOctreeNode** grid_;
         tgt::svec3 dim_;
         size_t numNodes_;
+
+        // It does not really make sense to use unique_ptr here, since
+        // VolumeOctreeNode (in most cases?) in fact owns its children (in a
+        // way), but does not delete them on destruction...
+        //
+        // However, we own the nodes (including their children) here, so we
+        // have to clean them up in our destructor.
+        std::vector<voreen::VolumeOctreeNode*> grid_;
     };
 
     // voxel value conversion templates
@@ -142,7 +193,7 @@ const std::string VolumeOctree::loggerCat_("voreen.VolumeOctree");
 VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes, size_t brickDim, float homogeneityThreshold /*= 0.001f*/,
                            OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progessReporter) 
     : VolumeOctreeBase(tgt::svec3(brickDim), !channelVolumes.empty() ? channelVolumes.front()->getDimensions() : svec3(brickDim), channelVolumes.size())
-    , rootNode_(0)
+    , rootNode_(nullptr)
     //, tempBrickBufferUsed_(false)
 {
     if (channelVolumes.empty())
@@ -180,13 +231,17 @@ VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes,
             progessReporter->setProgressRange(tgt::vec2(progessReporter->getProgress(), 1.f));
         brickPoolManager_->flushPoolToDisk(progessReporter);
     }
-    catch (std::exception& e) {
-        //if (brickPoolManager_)
-        //    brickPoolManager_->deinitialize();
+    catch (...) {
+        if (brickPoolManager_ && brickPoolManager_->isInitialized()) {
+            brickPoolManager_->deinitialize();
+        }
         delete brickPoolManager_;
-        brickPoolManager_ = 0;
+        brickPoolManager_ = nullptr;
 
-        throw VoreenException(e.what());
+        deleteSubTree(rootNode_);
+        rootNode_ = nullptr;
+
+        throw;
     }
     tgtAssert(rootNode_, "no root node after octree construction");
 
@@ -197,47 +252,9 @@ VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes,
 }
 
 VolumeOctree::VolumeOctree(const VolumeBase* volume, size_t brickDim, float homogeneityThreshold /*= 0.001f*/,
-                           OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progessReporter) 
-    : VolumeOctreeBase(tgt::svec3(brickDim), volume ? volume->getDimensions() : svec3(brickDim), 1)
-    , rootNode_(0)
-    //, tempBrickBufferUsed_(false)
-{
-    if (!volume)
-        throw VoreenException("No volume passed");
-    if (!brickPoolManager)
-        throw VoreenException("No brick pool manager passed");
-    brickPoolManager_ = brickPoolManager;
-
-    // convert normalized homogeneity threshold to uint16_t
-    bool octreeOptimization = (homogeneityThreshold >= 0.f);
-    uint16_t homogeneityThresholdUInt16 = tgt::clamp(tgt::iround(homogeneityThreshold * 65535), 0, 65535);
-
-    // construct tree
-    std::vector<const VolumeBase*> channelVolumes;
-    channelVolumes.push_back(volume);
-    try {
-        buildOctreeIteratively(channelVolumes, octreeOptimization, homogeneityThresholdUInt16, numThreads, progessReporter);
-
-        LDEBUG("Flushing brick pool to disk");
-        if (progessReporter)
-            progessReporter->setProgressRange(tgt::vec2(progessReporter->getProgress(), 1.f));
-        brickPoolManager_->flushPoolToDisk(progessReporter);
-    }
-    catch (std::exception& e) {
-        //if (brickPoolManager_)
-        //    brickPoolManager_->deinitialize();
-        delete brickPoolManager_;
-        brickPoolManager_ = 0;
-
-        throw VoreenException(e.what());
-    }
-    tgtAssert(rootNode_, "no root node after octree construction");
-
-    if (progessReporter) {
-        progessReporter->setProgressRange(tgt::vec2(0.f, 1.f));
-        progessReporter->setProgress(1.f);
-    }
-}
+                           OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progressReporter)
+    : VolumeOctree(std::vector<const VolumeBase*> {volume}, brickDim, homogeneityThreshold, brickPoolManager, numThreads, progressReporter)
+{ }
 
 /**
  * Construct a VolumeOctree from preprocessed parts, i.e., an existing hierarchy of nodes whose bricks are stored
@@ -280,7 +297,7 @@ VolumeOctree& VolumeOctree::operator=(VolumeOctree&& other) {
 
 // default constructor for serialization (private)
 VolumeOctree::VolumeOctree()
-    : rootNode_(0)
+    : rootNode_(nullptr)
     , brickPoolManager_(0)
 {}
 
@@ -621,7 +638,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     //
     LDEBUG("- Creating level 0 nodes");
     tgt::svec3 numNodesPerDim = tgt::ceil(tgt::vec3(getDimensions()) / tgt::vec3(getBrickDim()));
-    NodeGrid3D* level0Grid = new NodeGrid3D(numNodesPerDim);
+    std::unique_ptr<NodeGrid3D> level0Grid(new NodeGrid3D(numNodesPerDim));
     for (size_t nodeIndexZ = 0; nodeIndexZ < numNodesPerDim.z; nodeIndexZ++) {
         size_t startSlice = nodeIndexZ*getBrickDim().z;
 
@@ -777,11 +794,10 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
     size_t currentLevel = 1;
     // brickDim == octreeDim => tree has only one level => already finished
     if (level0Grid->getDim() == tgt::svec3::one) {
-        rootNode_ = level0Grid->getNode(tgt::svec3(0, 0, 0));
-        delete level0Grid;
+        rootNode_ = level0Grid->takeNode(tgt::svec3(0, 0, 0));
     }
     else { // iterative construction of upper levels
-        NodeGrid3D* currentLevelGrid = level0Grid;
+        std::unique_ptr<NodeGrid3D> currentLevelGrid = std::move(level0Grid);
         while (tgt::hor(tgt::greaterThan(currentLevelGrid->getDim(), tgt::svec3::two))) {
             // check current grid
             tgtAssert(currentLevelGrid->isComplete(), "current level grid is not complete");
@@ -796,7 +812,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
             const svec3 brickDim = getBrickDim();
 
             // create parent level grid
-            NodeGrid3D* parentLevelGrid = new NodeGrid3D(parentLevelGridDim);
+            std::unique_ptr<NodeGrid3D> parentLevelGrid(new NodeGrid3D(parentLevelGridDim));
 
             // create parent nodes
             for (size_t parentNodeZ=0; parentNodeZ<parentLevelGridDim.z; parentNodeZ++) {
@@ -814,7 +830,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
                                 tgt::svec3 childPos = parentNodeID*tgt::svec3::two + childNodeID;
                                 VolumeOctreeNode* childNode;
                                 if(tgt::hand(tgt::lessThan(childPos, currentLevelGrid->getDim()))) {
-                                    childNode = currentLevelGrid->getNode(childPos);
+                                    childNode = currentLevelGrid->takeNode(childPos);
                                 } else {
                                     // Create dummy node.
                                     childNode = VolumeOctreeBase::createNode(getNumChannels());
@@ -848,7 +864,6 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
                 if (progressReporter && currentLevel == 1) {
                     float inLevelProgress = (float)(parentNodeZ+1) / (float)parentLevelGridDim.z;
                     progressReporter->setProgress(0.7f + inLevelProgress*0.2f);
-                    //TODO: What happens with allocated nodes when we abort the computation? are they leaked?!
                 }
 
             } // parentNodeIndexZ
@@ -857,9 +872,9 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
             LDEBUG("-- After: " << MemoryInfo::getProcessMemoryUsageAsString());
             LDEBUG("-- After: " << MemoryInfo::getAvailableMemoryAsString());
 
+            tgtAssert(currentLevelGrid->isEmpty(), "Grid not empty");
             // advance to parent level
-            delete currentLevelGrid;
-            currentLevelGrid = parentLevelGrid;
+            currentLevelGrid = std::move(parentLevelGrid);
             currentLevel++;
         }
         tgtAssert(tgt::hand(tgt::lessThanEqual(currentLevelGrid->getDim(), tgt::svec3::two)), "level grid dimensions of [2 2 2] or smaller expected");
@@ -871,11 +886,9 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
         tgt::svec3 inBrickUrb = tgt::ceil(tgt::vec3(getVolumeDim()) / tgt::vec3(1 << (currentLevel - 1)));
 
         VolumeOctreeNode* childNodes[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        VolumeOctreeNode** gridNodes = currentLevelGrid->getNodes();
         VRN_FOR_EACH_VOXEL(childPos, tgt::svec3::zero, currentLevelGrid->getDim()) {
-            size_t gridIndex = cubicCoordToLinear(childPos, currentLevelGrid->getDim());
             size_t childIndex = cubicCoordToLinear(childPos, tgt::svec3::two);
-            childNodes[childIndex] = gridNodes[gridIndex];
+            childNodes[childIndex] = currentLevelGrid->takeNode(childPos);
         }
         for(auto& node : childNodes) {
             if(!node) {
@@ -886,8 +899,6 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
         rootNode_ = createParentNode(childNodes, octreeOptimization, homogeneityThreshold,
             inBrickUrb, avgValues, minValues, maxValues);
         tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
-
-        delete currentLevelGrid;
     }
 
     tgtAssert(rootNode_, "no root node");
@@ -1475,37 +1486,6 @@ void VolumeOctree::copyBrickToTexture(const uint16_t* brick, const tgt::svec3& b
             std::copy(brick+brickLinearCoord, brick+brickLinearCoord+numChannels, texture+textureLinearCoord);
         }
     }
-}
-
-void VolumeOctree::deleteSubTree(VolumeOctreeNode* root) const {
-    if (!root)
-        return;
-
-    deleteSubTree(root->children_[0]);
-    root->children_[0] = 0;
-
-    deleteSubTree(root->children_[1]);
-    root->children_[1] = 0;
-
-    deleteSubTree(root->children_[2]);
-    root->children_[2] = 0;
-
-    deleteSubTree(root->children_[3]);
-    root->children_[3] = 0;
-
-    deleteSubTree(root->children_[4]);
-    root->children_[4] = 0;
-
-    deleteSubTree(root->children_[5]);
-    root->children_[5] = 0;
-
-    deleteSubTree(root->children_[6]);
-    root->children_[6] = 0;
-
-    deleteSubTree(root->children_[7]);
-    root->children_[7] = 0;
-
-    delete root;
 }
 
 void VolumeOctree::serialize(Serializer& s) const {
