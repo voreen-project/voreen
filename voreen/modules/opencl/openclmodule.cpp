@@ -42,7 +42,7 @@ const std::string OpenCLModule::loggerCat_ = "voreen.OpenCLModule";
 
 OpenCLModule::OpenCLModule(const std::string& modulePath)
     : VoreenModule(modulePath)
-    , glSharing_("sharingProp", "GL Sharing", false)
+    , glSharing_("sharingProp", "GL Sharing", true)
     , deviceProp_("deviceProp", "Device:", Processor::INVALID_RESULT, true)
     , currentDeviceIdx_(-1)
 {
