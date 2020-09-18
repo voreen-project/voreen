@@ -2001,8 +2001,8 @@ void SingleOctreeRaycasterCL::updatePropertyConfiguration() {
     // limit interaction quality to render quality
     int renderingQualityIndex = renderingQuality_.getSelectedIndex();
     int interactionQualityIndex = interactionQuality_.getSelectedIndex();
-    if (interactionQualityIndex <= renderingQualityIndex-1) //< account for "full" quality option not available in interaction quality
-        interactionQuality_.selectByIndex(renderingQualityIndex-1);
+    if (interactionQualityIndex <= renderingQualityIndex-2) //< account for "full" and "very high" quality option not available in interaction quality
+        interactionQuality_.selectByIndex(renderingQualityIndex-2);
 
     nodeLevelReduction_.setReadOnlyFlag(renderingQuality_.getValue() == "Full");
 }
