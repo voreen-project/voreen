@@ -244,6 +244,7 @@ VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes,
         throw;
     }
     tgtAssert(rootNode_, "no root node after octree construction");
+    updateTreeMetaDataCache();
 
     if (progessReporter) {
         progessReporter->setProgressRange(tgt::vec2(0.f, 1.f));
@@ -269,6 +270,7 @@ VolumeOctree::VolumeOctree(VolumeOctreeNode* root, OctreeBrickPoolManagerBase* b
     , histograms_(std::move(histograms))
 {
     tgtAssert(tgt::hmul(brickDim) * sizeof(uint16_t) == brickPoolManager_->getBrickMemorySizeInByte(), "Brick size mismatch");
+    updateTreeMetaDataCache();
 }
 
 std::pair<OctreeBrickPoolManagerBase*, VolumeOctreeNode*> VolumeOctree::decompose() && {
@@ -283,6 +285,9 @@ std::pair<OctreeBrickPoolManagerBase*, VolumeOctreeNode*> VolumeOctree::decompos
 VolumeOctree::VolumeOctree(VolumeOctree&& other)
     : rootNode_(other.rootNode_)
     , brickPoolManager_(other.brickPoolManager_)
+    , numNodes_(0)
+    , numBricks_(0)
+    , actualDepth_(0)
 {
     other.rootNode_ = nullptr;
     other.brickPoolManager_ = nullptr;
@@ -318,24 +323,30 @@ VolumeOctree::~VolumeOctree() {
     histograms_.clear();
 }
 
+void VolumeOctree::updateTreeMetaDataCache() {
+    tgtAssert(rootNode_, "no root node");
+    numNodes_ = rootNode_->getNodeCount();
+    numBricks_ = rootNode_->getNumBricks();
+    actualDepth_ = rootNode_->getDepth();
+}
+
 VolumeOctree* VolumeOctree::create() const {
     return new VolumeOctree();
 }
 
-// TODO: cache node count
 size_t VolumeOctree::getNumNodes() const {
     tgtAssert(rootNode_, "no root node");
-    return rootNode_->getNodeCount();
+    return numNodes_;
 }
 
 size_t VolumeOctree::getNumBricks() const {
     tgtAssert(rootNode_, "no root node");
-    return rootNode_->getNumBricks();
+    return numBricks_;
 }
 
 size_t VolumeOctree::getActualTreeDepth() const {
     tgtAssert(rootNode_, "no root node");
-    return rootNode_->getDepth();
+    return actualDepth_;
 }
 
 uint64_t VolumeOctree::getBrickPoolMemoryAllocated() const {
@@ -1591,6 +1602,7 @@ void VolumeOctree::deserialize(Deserializer& s) {
         throw SerializationException("Failed to deserialize binary node buffer '" + bufferFile + "': " + std::string(e.what()));
     }
     tgtAssert(rootNode_, "no root node"); //< exception expected from deserializeNodeBuffer
+    updateTreeMetaDataCache();
     delete[] nodeBuffer;
     nodeBuffer = 0;
 

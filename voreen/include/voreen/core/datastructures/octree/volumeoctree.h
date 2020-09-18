@@ -192,6 +192,11 @@ private:
     void releaseTempBrickBuffer(uint16_t* buffer);
 
     VolumeOctreeNode* rootNode_;
+    // Computed from root note and cached for quick access:
+    void updateTreeMetaDataCache();
+    size_t numNodes_;
+    size_t numBricks_;
+    size_t actualDepth_;
 
     OctreeBrickPoolManagerBase* brickPoolManager_;
 
