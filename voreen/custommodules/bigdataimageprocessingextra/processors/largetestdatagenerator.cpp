@@ -26,9 +26,6 @@
 #include "largetestdatagenerator.h"
 
 #include "voreen/core/datastructures/volume/volume.h"
-#include "voreen/core/datastructures/volume/volumeram.h"
-#include "voreen/core/datastructures/volume/volumedisk.h"
-#include "voreen/core/datastructures/octree/volumeoctree.h"
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/utils/hashing.h"
