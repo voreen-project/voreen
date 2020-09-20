@@ -178,8 +178,9 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
+    auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
     std::vector<tgt::vec3> seedPoints;
-    seedPoints.reserve(numSeedPoints_.get());
+    seedPoints.reserve(numSeedPoints);
     if (seedMask) {
         tgt::Bounds roiBounds = bounds;
         tgt::Bounds seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
@@ -196,17 +197,13 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
-        tgt::mat4 seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
-
-        tgt::svec3 llf = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getLLF());
-        tgt::svec3 urb = tgt::round(seedMaskPhysicalToVoxelMatrix * roiBounds.getURB());
-
+        tgt::svec3 dim = seedMaskLock->getDimensions();
         std::vector<tgt::vec3> maskVoxels;
-        for(size_t z=llf.z; z < urb.z; z++) {
-            for(size_t y=llf.y; y < urb.y; y++) {
-                for(size_t x=llf.x; x < urb.x; x++) {
+        for(size_t z=0; z < dim.z; z++) {
+            for(size_t y=0; y < dim.y; y++) {
+                for(size_t x=0; x < dim.x; x++) {
                     if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
-                        maskVoxels.push_back(tgt::vec3(x, y, z));
+                        maskVoxels.emplace_back(tgt::vec3(x, y, z));
                     }
                 }
             }
@@ -217,7 +214,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         }
 
         // If we have more seed mask voxel than we want to have seed points, reduce the list size.
-        float probability = static_cast<float>(numSeedPoints_.get()) / maskVoxels.size();
+        float probability = static_cast<float>(numSeedPoints) / maskVoxels.size();
         tgt::mat4 seedMaskVoxelToPhysicalMatrix = seedMask->getVoxelToPhysicalMatrix();
         for(const tgt::vec3& seedPoint : maskVoxels) {
             // Determine for each seed point, if we will keep it.
@@ -230,7 +227,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     }
     else {
         // Without a seed mask, we uniformly sample the whole space enclosed by the roi.
-        for (int k = 0; k<numSeedPoints_.get(); k++) {
+        for (size_t k = 0; k<numSeedPoints; k++) {
             tgt::vec3 seedPoint;
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
             seedPoint = bounds.getLLF() + seedPoint * bounds.diagonal();
