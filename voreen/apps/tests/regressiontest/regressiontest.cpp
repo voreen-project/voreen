@@ -103,7 +103,7 @@ void runTestSuite(RegressionTestSuite& testSuite, const std::string& testdataDir
     const std::string& reportDir, bool keepReferenceData,
     const std::string& voreentoolPath,
     const std::vector<FileComparator*>& fileComparators,
-    bool skipRenderingTests, bool redirectStdOut);
+    bool skipRenderingTests, bool redirectStdOut, bool glclsharing);
 
 /**
  * Runs a single test case.
@@ -120,7 +120,7 @@ void runTestCase(RegressionTestCase& testCase, const std::string& testdataDir,
     const std::string& reportDir, bool keepReferenceData,
     const std::string& voreentoolPath,
     const std::vector<FileComparator*>& fileComparators,
-    bool redirectStdOut);
+    bool redirectStdOut, bool glclsharing);
 
 /**
  * Determines the test coverage of the passed processors with regard to the passed TestSuite.
@@ -136,7 +136,7 @@ std::map<Processor*, std::vector<RegressionTestCase> > getCoverageMap(const Regr
  * @note the passed TestCase must contain a valid testfile_ member
  */
 void executeWorkspace(const std::string& binary, RegressionTestCase& testCase, const std::string& workDir = "",
-    bool useCaching = false, int timeout = 0, const std::string& htmlLog = "", const std::string& consoleLog = "");
+    bool useCaching = false, int timeout = 0, const std::string& htmlLog = "", const std::string& consoleLog = "", bool glclsharing=true);
 
 /**
  * Does a pair-wise comparison of the datasets found in the output and reference dirs of the passed TestCase,
@@ -282,6 +282,12 @@ int main(int argc, char* argv[]) {
     cmdParser->addOption("redirectStdOut", redirectStdOut, CommandLineParser::MainOption,
         "Redirect voreentool console output to separate log file for each test case.",
         true, "true");
+
+    bool noglclsharing = false;
+#ifdef VRN_MODULE_OPENCL
+    cmdParser->addFlagOption("noglclsharing", noglclsharing, CommandLineParser::MainOption,
+        "Disable OpenGL/OpenCL sharing for performance penalty, but improved compatibility in OpenGL tests.");
+#endif
 
     // init application
     try {
@@ -452,7 +458,7 @@ int main(int argc, char* argv[]) {
     if (!testCoverageMode) {
         // run tests
         runTestSuite(testSuite, testdataDir, reportDir, keepReferenceData,
-            voreentoolPath, fileComparators, skipRenderingTests, redirectStdOut);
+            voreentoolPath, fileComparators, skipRenderingTests, redirectStdOut, !noglclsharing);
 
         // generate file reports
         if (!htmlFile.empty()) {
@@ -767,7 +773,7 @@ void runTestSuite(RegressionTestSuite& testSuite, const std::string& testdataDir
         const std::string& reportDir, bool keepReferenceData,
         const std::string& voreentoolPath,
         const std::vector<FileComparator*>& fileComparators,
-        bool skipRenderingTests, bool redirectStdOut)
+        bool skipRenderingTests, bool redirectStdOut, bool glclsharing)
 {
 
     tgtAssert(!voreentoolPath.empty(), "voreentool path is empty");
@@ -797,7 +803,7 @@ void runTestSuite(RegressionTestSuite& testSuite, const std::string& testdataDir
             testCase.config_.enabled_ = false;
 
         runTestCase(testCase, testdataDir, reportDir, keepReferenceData,
-            voreentoolPath, fileComparators, redirectStdOut);
+            voreentoolPath, fileComparators, redirectStdOut, glclsharing);
     }
 
     // collect statistics
@@ -830,7 +836,7 @@ void runTestCase(RegressionTestCase& testCase, const std::string& testdataDir,
         const std::string& reportDir, bool keepReferenceData,
         const std::string& voreentoolPath,
         const std::vector<FileComparator*>& fileComparators,
-        bool redirectStdOut) {
+        bool redirectStdOut, bool glclsharing) {
 
     tgtAssert(VoreenApplication::app(), "VoreenApplication not instantiated");
     std::string vrnBasePath = VoreenApplication::app()->getBasePath();
@@ -906,7 +912,7 @@ void runTestCase(RegressionTestCase& testCase, const std::string& testdataDir,
     bool useCaching = VoreenApplication::app()->useCaching();
     int timeout = testCase.config_.timeout_;
     tgtAssert(timeout >= 0, "invalid timeout value");
-    executeWorkspace(voreentoolPath, testCase, testdataDir, useCaching, timeout, htmlLogAbs, consoleLogAbs);
+    executeWorkspace(voreentoolPath, testCase, testdataDir, useCaching, timeout, htmlLogAbs, consoleLogAbs, glclsharing);
     if (testCase.returnCode_ == 0) {
         LDEBUG("Test run successful (return code: 0)");
 
@@ -1077,7 +1083,7 @@ std::map<Processor*, std::vector<RegressionTestCase> > getCoverageMap(const Regr
 }
 
 void executeWorkspace(const std::string& binary, RegressionTestCase& testCase, const std::string& workDir, bool useCaching,
-        int timeout, const std::string& logFile, const std::string& stdOutFile) {
+        int timeout, const std::string& logFile, const std::string& stdOutFile, bool glclsharing) {
     tgtAssert(!binary.empty(), "binary string empty");
     tgtAssert(!testCase.testfile_.empty(), "testfile string empty");
 
@@ -1100,6 +1106,9 @@ void executeWorkspace(const std::string& binary, RegressionTestCase& testCase, c
     if (testCase.renderingTest_) {
         testCase.call_ += " --opengl";
         testCase.call_ += " --trigger-imagesaves";
+        if(!glclsharing) {
+            testCase.call_ += " --noglclsharing";
+        }
     }
     testCase.call_ += " --trigger-volumesaves";
     testCase.call_ += " --trigger-geometrysaves";

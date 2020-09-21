@@ -153,6 +153,10 @@ int main(int argc, char* argv[]) {
         "Run the workspace in OpenGL mode: initialize OpenGL context and create canvases.");
 
 #ifdef VRN_MODULE_OPENCL
+    bool noglclsharing = false;
+    cmdParser->addFlagOption("noglclsharing", noglclsharing, CommandLineParser::MainOption,
+        "Disable OpenGL/OpenCL sharing for performance penalty, but improved compatibility (requires OpenGL)");
+
     bool clMode = false;
     cmdParser->addFlagOption("opencl", clMode, CommandLineParser::MainOption,
         "Force opencl initialization (only effective when \"--opengl\" is not passed as well)");
@@ -220,6 +224,11 @@ int main(int argc, char* argv[]) {
         std::cout << "\nUsage: either specify workspace path (-w) or activate event loop (--run-event-loop)\n\n";
         return 0;
     }
+
+#ifdef VRN_MODULE_OPENCL
+    // Set sharing property _before_ initialization
+    OpenCLModule::getInstance()->setGLSharing(!noglclsharing);
+#endif
 
     // initialize OpenGL context and initializeGL VoreenApplication
     if (glMode) {
