@@ -31,6 +31,10 @@
 #include "voreen/core/network/processornetwork.h"
 #include "voreen/core/network/networkevaluator.h"
 
+#ifdef VRN_MODULE_OPENCL
+#include "modules/opencl/openclmodule.h"
+#endif
+
 #include "tgt/tgt_gl.h"
 #include <GL/freeglut.h>
 
@@ -98,6 +102,11 @@ int main(int argc, char** argv) {
     // initialize canvas
     canvas_ = new tgt::GLUTCanvas("Voreen - The Volume Rendering Engine", tgt::ivec2(512, 512), tgt::GLCanvas::RGBADD);
     canvas_->init();
+
+#ifdef VRN_MODULE_OPENCL
+    // CI does not support opengl/opencl sharing
+    OpenCLModule::getInstance()->setGLSharing(false);
+#endif
 
     // Initialize GL and set canvas as main context.
     app.initializeGL();
