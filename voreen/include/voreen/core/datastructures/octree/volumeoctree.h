@@ -50,6 +50,11 @@ namespace voreen {
 class VRN_CORE_API VolumeOctree : public VolumeOctreeBase {
 
 public:
+    enum HalfSampleAggregateFunction {
+        MAX,
+        MEAN,
+        MIN,
+    };
 
     /**
      * Standard constructor for the construction of a multi-channel octree.
@@ -69,6 +74,7 @@ public:
      * @throws std::exception If the octree construction fails.
      */
     VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes, size_t brickDim, float homogeneityThreshold = 0.01f,
+            HalfSampleAggregateFunction halfSampleFn = MEAN,
             OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerRAM(),
             size_t numThreads = 1, ProgressReporter* progessReporter = 0);
 
@@ -76,6 +82,7 @@ public:
      * Convenience constructor for a single-channel octree.
      */
     VolumeOctree(const VolumeBase* volume, size_t brickDim, float homogeneityThreshold = 0.01f,
+            HalfSampleAggregateFunction halfSampleFn = MEAN,
             OctreeBrickPoolManagerBase* brickPoolManager = new OctreeBrickPoolManagerRAM(),
             size_t numThreads = 1, ProgressReporter* progessReporter = 0);
 
@@ -145,8 +152,9 @@ protected:
     static const std::string loggerCat_;
 
 private:
-    void buildOctreeIteratively(const std::vector<const VolumeBase*>& volumes,
-        bool octreeOptimization, uint16_t homogeneityThreshold, size_t numThreads, ProgressReporter* progessReporter);
+    void buildOctreeIteratively(const std::vector<const VolumeBase*>& volumes, bool octreeOptimization,
+            uint16_t homogeneityThreshold, HalfSampleAggregateFunction halfSampleFn, size_t numThreads,
+            ProgressReporter* progessReporter);
 
     const VolumeOctreeNode* getNodeAtVoxel(const tgt::svec3& voxel, const size_t curLevel, const size_t targetLevel,
         const VolumeOctreeNode* node, const tgt::svec3& nodeLlf, const tgt::svec3& nodeUrb,
@@ -175,8 +183,12 @@ private:
         std::vector< std::vector<uint64_t> >& histograms) const;
 
     VolumeOctreeNode* createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
+        const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues, HalfSampleAggregateFunction halfSampleFn);
+
+    template<typename HalfSample>
+    VolumeOctreeNode* createParentNodeWithHalfsampling(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
         const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues);
-    template<size_t numChannels>
+    template<size_t numChannels, typename HalfSample>
     VolumeOctreeNode* createParentNodeConstChannels(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
         const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues);
 

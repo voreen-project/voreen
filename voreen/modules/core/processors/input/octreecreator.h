@@ -29,6 +29,7 @@
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/datastructures/octree/volumeoctreebase.h"
+#include "voreen/core/datastructures/octree/volumeoctree.h"
 
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/boolproperty.h"
@@ -50,6 +51,7 @@ struct OctreeCreatorInput {
     float homogeneityThreshold;
     size_t brickDim;
     int numThreads;
+    VolumeOctree::HalfSampleAggregateFunction aggregationFunction;
 
     OctreeCreatorInput(
         bool loadCached
@@ -58,6 +60,7 @@ struct OctreeCreatorInput {
         , float homogeneityThreshold
         , size_t brickDim
         , int numThreads
+        , VolumeOctree::HalfSampleAggregateFunction aggregationFunction
     )
         : loadCached(loadCached)
         , input(input)
@@ -65,6 +68,7 @@ struct OctreeCreatorInput {
         , homogeneityThreshold(homogeneityThreshold)
         , brickDim(brickDim)
         , numThreads(numThreads)
+        , aggregationFunction(aggregationFunction)
     {
     }
 
@@ -76,6 +80,7 @@ struct OctreeCreatorInput {
         , homogeneityThreshold(old.homogeneityThreshold)
         , brickDim(old.brickDim)
         , numThreads(old.numThreads)
+        , aggregationFunction(old.aggregationFunction)
     {
     }
 };
@@ -176,6 +181,7 @@ private:
 
     IntOptionProperty brickDimensions_;
     IntProperty treeDepth_;
+    OptionProperty<VolumeOctree::HalfSampleAggregateFunction> aggregationFunction_;
     FloatProperty homogeneityThreshold_;
     BoolProperty useRelativeThreshold_;
 

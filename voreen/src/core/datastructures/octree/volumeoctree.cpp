@@ -184,14 +184,55 @@ namespace {
         return static_cast<uint16_t>(value*65535.f);
     }
 
+
+    struct HalfSampleMean {
+        static inline uint16_t halfsample(const uint16_t& lll, const uint16_t& llh, const uint16_t& lhl, const uint16_t& lhh, const uint16_t& hll, const uint16_t& hlh, const uint16_t& hhl, const uint16_t& hhh) {
+            uint64_t halfValue =
+                (uint64_t) lll +
+                (uint64_t) llh +
+                (uint64_t) lhl +
+                (uint64_t) lhh +
+                (uint64_t) hll +
+                (uint64_t) hlh +
+                (uint64_t) hhl +
+                (uint64_t) hhh ;
+            halfValue /= 8;
+            return halfValue;
+        }
+    };
+
+    struct HalfSampleMin {
+        static inline uint16_t halfsample(const uint16_t& lll, const uint16_t& llh, const uint16_t& lhl, const uint16_t& lhh, const uint16_t& hll, const uint16_t& hlh, const uint16_t& hhl, const uint16_t& hhh) {
+            uint16_t llx = std::min(lll, llh);
+            uint16_t lhx = std::min(lhl, lhh);
+            uint16_t hlx = std::min(hll, hlh);
+            uint16_t hhx = std::min(hhl, hhh);
+            uint16_t lxx = std::min(lhx, llx);
+            uint16_t hxx = std::min(hhx, hlx);
+            return std::min(hxx, lxx);
+        }
+    };
+
+    struct HalfSampleMax {
+        static inline uint16_t halfsample(const uint16_t& lll, const uint16_t& llh, const uint16_t& lhl, const uint16_t& lhh, const uint16_t& hll, const uint16_t& hlh, const uint16_t& hhl, const uint16_t& hhh) {
+            uint16_t llx = std::max(lll, llh);
+            uint16_t lhx = std::max(lhl, lhh);
+            uint16_t hlx = std::max(hll, hlh);
+            uint16_t hhx = std::max(hhl, hhh);
+            uint16_t lxx = std::max(lhx, llx);
+            uint16_t hxx = std::max(hhx, hlx);
+            return std::max(hxx, lxx);
+        }
+    };
 } // namespace anonymous
 
 namespace voreen {
 
 const std::string VolumeOctree::loggerCat_("voreen.VolumeOctree");
 
-VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes, size_t brickDim, float homogeneityThreshold /*= 0.001f*/,
-                           OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progessReporter) 
+VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes, size_t brickDim, float homogeneityThreshold,
+            HalfSampleAggregateFunction halfSampleFn, OctreeBrickPoolManagerBase* brickPoolManager,
+            size_t numThreads, ProgressReporter* progressReporter)
     : VolumeOctreeBase(tgt::svec3(brickDim), !channelVolumes.empty() ? channelVolumes.front()->getDimensions() : svec3(brickDim), channelVolumes.size())
     , rootNode_(nullptr)
     //, tempBrickBufferUsed_(false)
@@ -224,12 +265,12 @@ VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes,
 
     // construct tree
     try {
-        buildOctreeIteratively(channelVolumes, octreeOptimization, homogeneityThresholdUInt16, numThreads, progessReporter);
+        buildOctreeIteratively(channelVolumes, octreeOptimization, homogeneityThresholdUInt16, halfSampleFn, numThreads, progressReporter);
 
         LDEBUG("Flushing brick pool to disk...");
-        if (progessReporter)
-            progessReporter->setProgressRange(tgt::vec2(progessReporter->getProgress(), 1.f));
-        brickPoolManager_->flushPoolToDisk(progessReporter);
+        if (progressReporter)
+            progressReporter->setProgressRange(tgt::vec2(progressReporter->getProgress(), 1.f));
+        brickPoolManager_->flushPoolToDisk(progressReporter);
     }
     catch (...) {
         if (brickPoolManager_ && brickPoolManager_->isInitialized()) {
@@ -246,15 +287,16 @@ VolumeOctree::VolumeOctree(const std::vector<const VolumeBase*>& channelVolumes,
     tgtAssert(rootNode_, "no root node after octree construction");
     updateTreeMetaDataCache();
 
-    if (progessReporter) {
-        progessReporter->setProgressRange(tgt::vec2(0.f, 1.f));
-        progessReporter->setProgress(1.f);
+    if (progressReporter) {
+        progressReporter->setProgressRange(tgt::vec2(0.f, 1.f));
+        progressReporter->setProgress(1.f);
     }
 }
 
-VolumeOctree::VolumeOctree(const VolumeBase* volume, size_t brickDim, float homogeneityThreshold /*= 0.001f*/,
-                           OctreeBrickPoolManagerBase* brickPoolManager, size_t numThreads, ProgressReporter* progressReporter)
-    : VolumeOctree(std::vector<const VolumeBase*> {volume}, brickDim, homogeneityThreshold, brickPoolManager, numThreads, progressReporter)
+VolumeOctree::VolumeOctree(const VolumeBase* volume, size_t brickDim, float homogeneityThreshold,
+            HalfSampleAggregateFunction halfSampleFn, OctreeBrickPoolManagerBase* brickPoolManager,
+            size_t numThreads, ProgressReporter* progressReporter)
+    : VolumeOctree(std::vector<const VolumeBase*> {volume}, brickDim, homogeneityThreshold, halfSampleFn, brickPoolManager, numThreads, progressReporter)
 { }
 
 /**
@@ -585,7 +627,8 @@ VolumeRAM* VolumeOctree::createSlice(SliceAlignment sliceAlignment, size_t slice
 // private functions
 
 void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& volumes, bool octreeOptimization,
-    uint16_t homogeneityThreshold, size_t numThreads, ProgressReporter* progressReporter) {
+            uint16_t homogeneityThreshold, HalfSampleAggregateFunction halfSampleFn, size_t numThreads,
+            ProgressReporter* progressReporter) {
     tgtAssert(volumes.size() > 0, "no channel volumes passed");
     tgtAssert(brickPoolManager_, "no brick pool manager");
     tgtAssert(numThreads > 0, "num threads must no be zero");
@@ -854,7 +897,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
 
                             uint16_t avgValues[MAX_CHANNELS], minValues[MAX_CHANNELS], maxValues[MAX_CHANNELS];
                             VolumeOctreeNode* parentNode = createParentNode(childNodes, octreeOptimization, homogeneityThreshold,
-                                inBrickUrb, avgValues, minValues, maxValues);
+                                inBrickUrb, avgValues, minValues, maxValues, halfSampleFn);
                             tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
                             tgtAssert(parentNode->getAvgValue() == avgValues[0] && parentNode->getMinValue() == minValues[0] && parentNode->getMaxValue() == maxValues[0],
                                 "avg/min/max values of returned node differ from returned avg/min/max values");
@@ -908,7 +951,7 @@ void VolumeOctree::buildOctreeIteratively(const std::vector<const VolumeBase*>& 
             }
         }
         rootNode_ = createParentNode(childNodes, octreeOptimization, homogeneityThreshold,
-            inBrickUrb, avgValues, minValues, maxValues);
+            inBrickUrb, avgValues, minValues, maxValues, halfSampleFn);
         tgtAssert(minValues[0] <= avgValues[0] && avgValues[0] <= maxValues[0], "invalid avg/min/max values");
     }
 
@@ -1288,17 +1331,32 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
         }
     }
 }
-
 VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
+    const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues, HalfSampleAggregateFunction halfSampleFn) {
+    switch(halfSampleFn) {
+    case MEAN: return createParentNodeConstChannels<1, HalfSampleMean>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    case MAX: return createParentNodeConstChannels<1, HalfSampleMax>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    case MIN: return createParentNodeConstChannels<1, HalfSampleMin>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    default:
+        tgtAssert(false, "Invalid half sample mode");
+        return nullptr;
+    }
+}
+
+template<typename HalfSample>
+VolumeOctreeNode* VolumeOctree::createParentNodeWithHalfsampling(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
     const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues) {
     switch(getNumChannels()) {
-    case 1: return createParentNodeConstChannels<1>(children, octreeOptimization, homogeneityThreshold,
+    case 1: return createParentNodeConstChannels<1, HalfSample>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
-    case 2: return createParentNodeConstChannels<2>(children, octreeOptimization, homogeneityThreshold,
+    case 2: return createParentNodeConstChannels<2, HalfSample>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
-    case 3: return createParentNodeConstChannels<3>(children, octreeOptimization, homogeneityThreshold,
+    case 3: return createParentNodeConstChannels<3, HalfSample>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
-    case 4: return createParentNodeConstChannels<4>(children, octreeOptimization, homogeneityThreshold,
+    case 4: return createParentNodeConstChannels<4, HalfSample>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
     default:
         tgtAssert(false, "more than 4 channels");
@@ -1307,7 +1365,7 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
 }
 
 
-template<size_t numChannels>
+template<size_t numChannels, typename HalfSample>
 VolumeOctreeNode* VolumeOctree::createParentNodeConstChannels(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
     const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues) {
     tgtAssert(brickPoolManager_, "no brick pool manager");
@@ -1420,16 +1478,16 @@ VolumeOctreeNode* VolumeOctree::createParentNodeConstChannels(VolumeOctreeNode* 
                             size_t x = 0;
 
                             auto halfSampleAt = [&] (size_t xl, size_t xh) {
-                                uint64_t halfValue =
-                                    (uint64_t) childBrick[xl+yzll] +
-                                    (uint64_t) childBrick[xh+yzll] +
-                                    (uint64_t) childBrick[xl+yzhl] +
-                                    (uint64_t) childBrick[xh+yzhl] +
-                                    (uint64_t) childBrick[xl+yzlh] +
-                                    (uint64_t) childBrick[xh+yzlh] +
-                                    (uint64_t) childBrick[xl+yzhh] +
-                                    (uint64_t) childBrick[xh+yzhh] ;
-                                halfValue /= 8;
+                                uint16_t halfValue = HalfSample::halfsample(
+                                    childBrick[xl+yzll],
+                                    childBrick[xh+yzll],
+                                    childBrick[xl+yzhl],
+                                    childBrick[xh+yzhl],
+                                    childBrick[xl+yzlh],
+                                    childBrick[xh+yzlh],
+                                    childBrick[xl+yzhh],
+                                    childBrick[xh+yzhh]
+                                );
 
                                 size_t xp = (inParentOffset.x + x/2) * numChannels;
 

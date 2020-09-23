@@ -126,6 +126,7 @@ OctreeCreator::OctreeCreator()
     //, saveOctreeButton_("saveOctreeButton","Save Octree")
     , brickDimensions_("brickDimensions", "Brick Dimensions")
     , treeDepth_("treeDepth", "Tree Depth", 6, 1, 10)
+    , aggregationFunction_("aggregationFunction", "Aggregation Function")
     , homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.00f, 0.f, 0.1f)
     , useRelativeThreshold_("useRelativeThreshold", "Relative Threshold", true)
     , brickPoolManager_("brickPoolManager", "Brick Pool Manager")
@@ -156,11 +157,17 @@ OctreeCreator::OctreeCreator()
     addProperty(treeDepth_);
     //homogeneityThreshold_.setNumDecimals(2);
     //homogeneityThreshold_.setStepping(0.01f);
+    aggregationFunction_.addOption("mean", "Mean", VolumeOctree::MEAN);
+    aggregationFunction_.addOption("min", "Min", VolumeOctree::MIN);
+    aggregationFunction_.addOption("max", "Max", VolumeOctree::MAX);
+    aggregationFunction_.selectByValue(VolumeOctree::MEAN);
+    addProperty(aggregationFunction_);
     homogeneityThreshold_.setTracking(false);
     addProperty(homogeneityThreshold_);
     addProperty(useRelativeThreshold_);
     treeDepth_.setGroupID("configuration");
     brickDimensions_.setGroupID("configuration");
+    aggregationFunction_.setGroupID("configuration");
     homogeneityThreshold_.setGroupID("configuration");
     useRelativeThreshold_.setGroupID("configuration");
 
@@ -395,7 +402,8 @@ OctreeCreatorInput OctreeCreator::prepareComputeInput() {
         brickPoolManager,
         homogeneityThreshold,
         brickDim,
-        numThreads_.get()
+        numThreads_.get(),
+        aggregationFunction_.getValue()
     );
 }
 
@@ -418,7 +426,7 @@ OctreeCreatorOutput OctreeCreator::compute(OctreeCreatorInput input, ProgressRep
         updateStatusMessage("Generating octree...");
 
         try {
-            octree.reset(new VolumeOctree(input.input, (int)input.brickDim, input.homogeneityThreshold, input.brickPoolManager, input.numThreads, &progressReporter));
+            octree.reset(new VolumeOctree(input.input, (int)input.brickDim, input.homogeneityThreshold, input.aggregationFunction, input.brickPoolManager, input.numThreads, &progressReporter));
             updateStatusMessage("Octree generated.");
         }
         catch (VoreenException& e) {
@@ -685,6 +693,7 @@ std::string OctreeCreator::getConfigurationHash() const {
     std::map<std::string, const Property*> propertyMap;
     propertyMap[brickDimensions_.getID()] = &brickDimensions_;
     propertyMap[treeDepth_.getID()] = &treeDepth_;
+    propertyMap[aggregationFunction_.getID()] = &aggregationFunction_;
     propertyMap[homogeneityThreshold_.getID()] = &homogeneityThreshold_;
     propertyMap[useRelativeThreshold_.getID()] = &useRelativeThreshold_;
     propertyMap[brickPoolManager_.getID()] = &brickPoolManager_;

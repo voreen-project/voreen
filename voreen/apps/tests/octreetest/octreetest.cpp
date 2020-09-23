@@ -1026,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_InvalidBrickSize) {
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_InvalidBufferSize) {
     // buffer size smaller than brick size
-    BOOST_CHECK_THROW(VolumeOctree octree(noiseVolume128_RAM_, 32, 0.f, new OctreeBrickPoolManagerRAM((32*32*32*2) / 2)), VoreenException);
+    BOOST_CHECK_THROW(VolumeOctree octree(noiseVolume128_RAM_, 32, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((32*32*32*2) / 2)), VoreenException);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
@@ -1040,7 +1040,7 @@ BOOST_AUTO_TEST_SUITE(OctreeConstruction_CompleteTree);
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick128) {
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip map (~4.5MB)
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getNumChannels(),     1);
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick12
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getDimensions(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getNumChannels(),     1);
@@ -1067,7 +1067,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick12
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick128_Disk) {
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip map (~4.5MB)
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getNumChannels(),     1);
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick12
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getDimensions(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getNumChannels(),     1);
@@ -1093,7 +1093,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick12
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick64) {
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(),  getNodeCount(2));
@@ -1102,7 +1102,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick64
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(),  getNodeCount(2));
@@ -1113,7 +1113,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick64
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick64_Disk) {
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(),  getNodeCount(2));
@@ -1122,7 +1122,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick64
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(),  getNodeCount(2));
@@ -1133,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick64
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick32) {
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(),  getNodeCount(3));
@@ -1141,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick32
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_64_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_64_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick32
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick32_Disk) {
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(),  getNodeCount(3));
@@ -1159,7 +1159,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick32
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_64_Disk_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_64_Disk_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -1169,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick32
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick16) {
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -1177,7 +1177,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick16
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(),  getNodeCount(4));
@@ -1187,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick16_Disk) {
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -1195,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick16
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_32_Disk_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_Disk_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(),  getNodeCount(4));
@@ -1205,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick8) {
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 8, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 8, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 5);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(5));
@@ -1213,7 +1213,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick8)
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_16_RAM_, 8, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_16_RAM_, 8, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 5);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(5));
@@ -1223,7 +1223,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick8)
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick4) {
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 4, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       6);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 6);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(6));
@@ -1231,7 +1231,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick4)
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_16_RAM_, 4, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_16_RAM_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       6);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 6);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(6));
@@ -1241,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick4)
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick2) {
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 2, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(7));
@@ -1249,7 +1249,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick2)
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_16_RAM_, 2, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_16_RAM_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(7));
@@ -1259,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick2)
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick2_Disk) {
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 2, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(7));
@@ -1267,7 +1267,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick2_
     BOOST_CHECK(checkHistogram(octreeNoise, noiseVolume128_RAM_));
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
-    VolumeOctree octreeBricked(brickVolume128_16_Disk_, 2, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_16_Disk_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(7));
@@ -1280,7 +1280,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_SingleBuffer_Dim128_Brick2_
 // complete brick buffer requires ~4.5 MB memory
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick64) {
-    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(2));
@@ -1288,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick64_Disk) {
-    VolumeOctree octree(noiseVolume128_Disk_, 64, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_Disk_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(2));
@@ -1296,7 +1296,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick32) {
-    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(3));
@@ -1304,7 +1304,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick16) {
-    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(4));
@@ -1312,7 +1312,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick16_Disk) {
-    VolumeOctree octree(noiseVolume128_Disk_, 16, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_Disk_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(4));
@@ -1320,7 +1320,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick8) {
-    VolumeOctree octree(noiseVolume128_RAM_, 8, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 8, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 5);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(5));
@@ -1328,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick4) {
-    VolumeOctree octree(noiseVolume128_RAM_, 4, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       6);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 6);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(6));
@@ -1336,7 +1336,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick2) {
-    VolumeOctree octree(noiseVolume128_RAM_, 2, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(7));
@@ -1344,7 +1344,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Brick2_Disk) {
-    VolumeOctree octree(noiseVolume128_Disk_, 2, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(noiseVolume128_Disk_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(7));
@@ -1354,7 +1354,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_MultipleBuffers_Dim128_Bric
 // in the following tests, the buffer size equals the brick (memory) size
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Brick64) {
-    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, new OctreeBrickPoolManagerRAM((64*64*64)*2), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((64*64*64)*2), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(2));
@@ -1362,7 +1362,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Br
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Brick32) {
-    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM((32*32*32)*2), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((32*32*32)*2), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(3));
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Br
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Brick16) {
-    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM((16*16*16)*2), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((16*16*16)*2), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(4));
@@ -1378,7 +1378,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Br
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Brick8) {
-    VolumeOctree octree(noiseVolume128_RAM_, 8, -1.f, new OctreeBrickPoolManagerRAM((8*8*8)*2), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 8, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((8*8*8)*2), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 5);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(5));
@@ -1386,7 +1386,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Br
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Brick4) {
-    VolumeOctree octree(noiseVolume128_RAM_, 4, -1.f, new OctreeBrickPoolManagerRAM((4*4*4)*2), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((4*4*4)*2), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       6);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 6);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(6));
@@ -1394,7 +1394,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Br
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_CompleteTree_OneBufferPerBrick_Dim128_Brick2) {
-    VolumeOctree octree(noiseVolume128_RAM_, 2, -1.f, new OctreeBrickPoolManagerRAM((2*2*2)*2), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM((2*2*2)*2), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(7));
@@ -1412,7 +1412,7 @@ BOOST_AUTO_TEST_SUITE(OctreeConstruction_OptimizedTree);
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick64) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       2);
@@ -1423,7 +1423,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick6
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // completely homogeneous volume => only root node expected
-    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getDimensions(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       2);
@@ -1436,7 +1436,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick6
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick64_Disk) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       2);
@@ -1447,7 +1447,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick6
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // completely homogeneous volume => only root node expected
-    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getDimensions(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       2);
@@ -1460,7 +1460,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick6
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick16) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -1469,7 +1469,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick1
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 4 times larger than brick size => tree depth should be reduced by 2
-    VolumeOctree octreeBricked(brickVolume128_64_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_64_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(2));
@@ -1482,7 +1482,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick1
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick16_Disk) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -1491,7 +1491,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick1
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 4 times larger than brick size => tree depth should be reduced by 2
-    VolumeOctree octreeBricked(brickVolume128_64_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_64_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(2));
@@ -1504,7 +1504,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick1
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick2) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 2, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(7));
@@ -1513,7 +1513,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick2
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 16 times larger than brick size => tree depth should be reduced by 4
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 2, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -1524,7 +1524,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_SingleBuffer_Dim128_Brick2
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Brick64) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(1<<19), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<19), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(2));
@@ -1533,7 +1533,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // completely homogeneous volume => only root node expected
-    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(1<<19), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<19), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), 1);
@@ -1544,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Brick64_Disk) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(1<<19), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<19), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(2));
@@ -1553,7 +1553,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // completely homogeneous volume => only root node expected
-    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(1<<19), 1);
+    VolumeOctree octreeBricked(brickVolume128_128_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<19), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), 1);
@@ -1564,7 +1564,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Brick16) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<18), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<18), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -1573,7 +1573,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 2 times larger than brick size => tree depth should be reduced by 1
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<18), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<18), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -1584,7 +1584,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Brick16_Disk) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<18), 1);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<18), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -1593,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 2 times larger than brick size => tree depth should be reduced by 1
-    VolumeOctree octreeBricked(brickVolume128_32_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<18), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<18), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -1604,7 +1604,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Brick2) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<6), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<6), 1);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 7);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(7));
@@ -1613,7 +1613,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_MultipleBuffers_Dim128_Bri
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 16 times larger than brick size => tree depth should be reduced by 4
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<6), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<6), 1);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       7);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(),  getNodeCount(3));
@@ -1631,7 +1631,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_NonZeroHomogeneityThreshol
     std::vector<const Volume*> mipMap = createMipMap(brickedNoiseVolume, 7);
 
     // set homogeneity threshold slightly *below* relative inhomogeneity => full tree expected
-    VolumeOctree fullOctree(brickedNoiseVolume, 32, 0.00025f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree fullOctree(brickedNoiseVolume, 32, 0.00025f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(fullOctree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(fullOctree.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(fullOctree.getNumNodes(), getNodeCount(3));
@@ -1640,7 +1640,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_NonZeroHomogeneityThreshol
     BOOST_CHECK(checkMinMaxValues(fullOctree, brickedNoiseVolume));
 
     // set homogeneity threshold slightly *above* relative inhomogeneity => incomplete tree expected (2 levels)
-    VolumeOctree optimizedOctree(brickedNoiseVolume, 32, 0.00035f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree optimizedOctree(brickedNoiseVolume, 32, 0.00035f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(optimizedOctree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(optimizedOctree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(optimizedOctree.getNumNodes(), getNodeCount(2));
@@ -1657,7 +1657,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     // NOTE: see global fixture for structure of the inhomogeneously bricked volume
 
     // octree with brick size 64^3 => 2 levels, full tree expected
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1666,7 +1666,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK(checkHistogram(octreeBrick16, brickVolume128_inhomogeneous_RAM_));
@@ -1685,7 +1685,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickSize_UInt8) {
 
     // octree with brick size 64^3 => 2 levels, full tree expected (see above)
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint8_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint8_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1694,7 +1694,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_, 0, 1.f/256.f));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete (see above)
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint8_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint8_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumNodes(), 5*getNodeCount(3) + 2*getNodeCount(2) + 2);
@@ -1705,7 +1705,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickSize_UInt32) {
 
     // octree with brick size 64^3 => 2 levels, full tree expected (see above)
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint32_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint32_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1714,7 +1714,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_, 0, 1.f/256.f));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete (see above)
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint32_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumNodes(), 5*getNodeCount(3) + 2*getNodeCount(2) + 2);
@@ -1725,7 +1725,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickSize_Float) {
 
     // octree with brick size 64^3 => 2 levels, full tree expected (see above)
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_float_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_float_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1734,7 +1734,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_, 0, 1.f/256.f));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete (see above)
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_float_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_float_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumNodes(), 5*getNodeCount(3) + 2*getNodeCount(2) + 2);
@@ -1748,7 +1748,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     // NOTE: see global fixture for structure of the inhomogeneously bricked volume
 
     // octree with brick size 64^3 => 2 levels, full tree expected
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1757,7 +1757,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK(checkHistogram(octreeBrick16, brickVolume128_inhomogeneous_RAM_));
@@ -1776,7 +1776,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickSize_Disk_UInt8) {
 
     // octree with brick size 64^3 => 2 levels, full tree expected (see above)
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint8_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint8_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1785,7 +1785,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_, 0, 1.f/256.f));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint8_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint8_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumNodes(), 5*getNodeCount(3) + 2*getNodeCount(2) + 2);
@@ -1796,7 +1796,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickSize_Disk_UInt32) {
 
     // octree with brick size 64^3 => 2 levels, full tree expected (see above)
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint32_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_uint32_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1805,7 +1805,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_, 0, 1.f/256.f));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint32_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_uint32_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumNodes(), 5*getNodeCount(3) + 2*getNodeCount(2) + 2);
@@ -1816,7 +1816,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickSize_Disk_Float) {
 
     // octree with brick size 64^3 => 2 levels, full tree expected (see above)
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_float_Disk_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_float_Disk_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -1825,7 +1825,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_, 0, 1.f/256.f));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_float_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_float_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumNodes(), 5*getNodeCount(3) + 2*getNodeCount(2) + 2);
@@ -1844,7 +1844,7 @@ BOOST_AUTO_TEST_SUITE(OctreeConstruction_NPOT);
 // complete tree
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -1855,7 +1855,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -1866,7 +1866,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -1877,7 +1877,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16)
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -1888,7 +1888,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 4, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -1899,7 +1899,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4) 
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 4, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -1910,7 +1910,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4_D
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -1921,7 +1921,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128_InhomogeneousBrickSize_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -1932,7 +1932,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick128
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -1943,7 +1943,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16_InhomogeneousBrickSize_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -1954,7 +1954,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick16_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 4, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -1965,7 +1965,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4_I
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4_InhomogeneousBrickSize_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 4, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 4, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -1978,7 +1978,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_CompleteTree_Dim125_96_115_Brick4_I
 // optimized tree
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick128) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 128, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 128, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -1990,7 +1990,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick12
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick128_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 128, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 128, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -2002,7 +2002,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick12
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -2014,7 +2014,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -2026,7 +2026,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick4) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 4, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 4, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -2038,7 +2038,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick4)
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick4_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 4, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 4, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -2050,7 +2050,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick4_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick128_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 128, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 128, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       1);
@@ -2062,7 +2062,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick12
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -2074,7 +2074,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16_InhomogeneousBrickSize_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -2086,7 +2086,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick4_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 4, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_inhomogeneous_RAM_, 4, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       6);
@@ -2098,7 +2098,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick4_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_InhomogeneousBrickSize) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(35, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -2110,7 +2110,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_InhomogeneousBrickSize_Disk) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(35, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -2140,7 +2140,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_SingleBuffer_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumes, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2172,7 +2172,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_SingleBuffer_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumesDisk, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumesDisk, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2200,7 +2200,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_SingleBuffer_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumes, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2224,7 +2224,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_SingleBuffer_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumes, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2252,7 +2252,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_SingleBuffer_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumesDisk, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumesDisk, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2276,7 +2276,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_SingleBuffer_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumes, 2, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 2, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2302,7 +2302,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_MultipleBuffe
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 16, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2333,7 +2333,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_CompleteTree_MultipleBuffe
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 16, -1.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumesDisk, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2358,7 +2358,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 64, 0.f, new OctreeBrickPoolManagerRAM(1<<21), 1);
+    VolumeOctree octree(testVolumes, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<21), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2387,7 +2387,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 64, 0.f, new OctreeBrickPoolManagerRAM(1<<21), 1);
+    VolumeOctree octree(testVolumesDisk, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<21), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2414,7 +2414,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2440,7 +2440,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[brickVolume128_inhomogeneous_uint8_RAM_]);
     testVolumeMipmaps.push_back(mipMaps_[brickVolume128_inhomogeneous_uint8_RAM_]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2471,7 +2471,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumesDisk, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2500,7 +2500,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[brickVolume128_inhomogeneous_uint8_RAM_]);
     testVolumeMipmaps.push_back(mipMaps_[brickVolume128_inhomogeneous_uint8_RAM_]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2526,7 +2526,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[brickVolume128_inhomogeneous_uint8_RAM_]);
     testVolumeMipmaps.push_back(mipMaps_[brickVolume128_inhomogeneous_uint8_RAM_]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2553,7 +2553,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2584,7 +2584,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_OptimizedTree_MultipleBuff
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumesDisk, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2609,7 +2609,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_DualChannel_OptimizedTree_MultipleBuffer
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(0))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
 
-    VolumeOctree octree(testVolumes, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     2);
@@ -2635,7 +2635,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_DualChannel_OptimizedTree_MultipleBuffer
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(0))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
 
-    VolumeOctree octree(testVolumesDisk, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumesDisk, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     2);
@@ -2662,7 +2662,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_QuadChannel_OptimizedTree_MultipleBuffer
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(3))]);
 
-    VolumeOctree octree(testVolumes, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumes, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     4);
@@ -2698,7 +2698,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_QuadChannel_OptimizedTree_MultipleBuffer
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(3))]);
 
-    VolumeOctree octree(testVolumesDisk, 2, 0.f, new OctreeBrickPoolManagerRAM(1<<20), 1);
+    VolumeOctree octree(testVolumesDisk, 2, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(1<<20), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     4);
@@ -2730,7 +2730,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_CompleteTree_Dim125_9
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumes, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2754,7 +2754,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_CompleteTree_Dim125_9
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2781,7 +2781,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_CompleteTree_Dim125_9
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumesDisk, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2806,7 +2806,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
     // note: the default buffer size of the OctreeBrickPoolManagerRAM (64 MB) is by far larger than the volume mip maps (~13.5MB)
-    VolumeOctree octree(testVolumes, 128, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 128, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2833,7 +2833,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2864,7 +2864,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumesDisk, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -2889,7 +2889,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_DualChannel_NPOT_OptimizedTree_Dim125_96
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(0))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     2);
@@ -2929,7 +2929,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16) {
     BOOST_ASSERT(channelVolumesRAM.at(1));
     BOOST_ASSERT(channelVolumesRAM.at(2));
 
-    VolumeOctree octree(channelVolumes, 16, 0.002f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(channelVolumes, 16, 0.002f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     octree.logDescription();
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), volumeDim);
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(512));
@@ -2969,7 +2969,7 @@ BOOST_AUTO_TEST_SUITE(OctreeConstruction_MultiThreaded);
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThreaded) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -2978,7 +2978,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThread
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 2 times larger than brick size => tree depth should be reduced by 1
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -2989,7 +2989,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThread
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThreaded_Disk) {
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeNoise(noiseVolume128_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -2998,7 +2998,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThread
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 2 times larger than brick size => tree depth should be reduced by 1
-    VolumeOctree octreeBricked(brickVolume128_32_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeBricked(brickVolume128_32_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -3016,7 +3016,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_NonZeroHomogeneityThreshol
     std::vector<const Volume*> mipMap = createMipMap(brickedNoiseVolume, 7);
 
     // set homogeneity threshold slightly *below* relative inhomogeneity => full tree expected
-    VolumeOctree fullOctree(brickedNoiseVolume, 32, 0.00025f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree fullOctree(brickedNoiseVolume, 32, 0.00025f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(fullOctree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(fullOctree.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(fullOctree.getNumNodes(), getNodeCount(3));
@@ -3025,7 +3025,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_NonZeroHomogeneityThreshol
     BOOST_CHECK(checkMinMaxValues(fullOctree, brickedNoiseVolume));
 
     // set homogeneity threshold slightly *above* relative inhomogeneity => incomplete tree expected (2 levels)
-    VolumeOctree optimizedOctree(brickedNoiseVolume, 32, 0.00035f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree optimizedOctree(brickedNoiseVolume, 32, 0.00035f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(optimizedOctree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(optimizedOctree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(optimizedOctree.getNumNodes(), getNodeCount(2));
@@ -3042,7 +3042,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     // NOTE: see global fixture for structure of the inhomogeneously bricked volume
 
     // octree with brick size 64^3 => 2 levels, full tree expected
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -3051,7 +3051,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK(checkHistogram(octreeBrick16, brickVolume128_inhomogeneous_RAM_));
@@ -3068,7 +3068,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16_MultiThreaded) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -3080,7 +3080,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16_MultiThreaded_Disk) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -3092,7 +3092,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_InhomogeneousBrickSize_MultiThreaded) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(35, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -3104,7 +3104,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_
 }
 
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_InhomogeneousBrickSize_MultiThreaded_Disk) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_Disk_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_Disk_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(35, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -3126,7 +3126,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -3157,7 +3157,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumesRAM.at(2))]);
 
-    VolumeOctree octree(testVolumesDisk, 16, 0.f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octree(testVolumesDisk, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -3193,7 +3193,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16_MultiTh
     BOOST_ASSERT(channelVolumesRAM.at(1));
     BOOST_ASSERT(channelVolumesRAM.at(2));
 
-    VolumeOctree octree(channelVolumes, 16, 0.002f, new OctreeBrickPoolManagerRAM(), 8);
+    VolumeOctree octree(channelVolumes, 16, 0.002f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 8);
     octree.logDescription();
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), volumeDim);
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(512));
@@ -3235,7 +3235,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThread
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
 
     // noise volume => no homogeneous regions => complete tree expected
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(octreeNoise.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeNoise.getActualTreeDepth(), 4);
     BOOST_CHECK_EQUAL(octreeNoise.getNumNodes(), getNodeCount(4));
@@ -3244,7 +3244,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_Brick16_MultiThread
     BOOST_CHECK(checkMinMaxValues(octreeNoise, noiseVolume128_RAM_));
 
     // homogeneous regions 2 times larger than brick size => tree depth should be reduced by 1
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(octreeBricked.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBricked.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(octreeBricked.getNumNodes(), getNodeCount(3));
@@ -3264,7 +3264,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_NonZeroHomogeneityThreshol
     std::vector<const Volume*> mipMap = createMipMap(brickedNoiseVolume, 7);
 
     // set homogeneity threshold slightly *below* relative inhomogeneity => full tree expected
-    VolumeOctree fullOctree(brickedNoiseVolume, 32, 0.00025f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree fullOctree(brickedNoiseVolume, 32, 0.00025f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(fullOctree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(fullOctree.getActualTreeDepth(), 3);
     BOOST_CHECK_EQUAL(fullOctree.getNumNodes(), getNodeCount(3));
@@ -3273,7 +3273,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_NonZeroHomogeneityThreshol
     BOOST_CHECK(checkMinMaxValues(fullOctree, brickedNoiseVolume));
 
     // set homogeneity threshold slightly *above* relative inhomogeneity => incomplete tree expected (2 levels)
-    VolumeOctree optimizedOctree(brickedNoiseVolume, 32, 0.00035f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree optimizedOctree(brickedNoiseVolume, 32, 0.00035f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(optimizedOctree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(optimizedOctree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(optimizedOctree.getNumNodes(), getNodeCount(2));
@@ -3291,7 +3291,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     // NOTE: see global fixture for structure of the inhomogeneously bricked volume
 
     // octree with brick size 64^3 => 2 levels, full tree expected
-    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_RAM_, 64, 0.f, new OctreeBrickPoolManagerDisk(1<<19, 1<<21, octreePath), 8);
+    VolumeOctree octreeBrick64(brickVolume128_inhomogeneous_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<19, 1<<21, octreePath), 8);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octreeBrick64.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octreeBrick64.getNumNodes(), getNodeCount(2));
@@ -3300,7 +3300,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
     BOOST_CHECK(checkMinMaxValues(octreeBrick64, brickVolume128_inhomogeneous_RAM_));
 
     // octree with brick size 16^3 => 4 levels expected, 64^3 (1x), 32^3 (2x) octants incomplete
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerDisk(1<<19, 1<<21, octreePath), 8);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<19, 1<<21, octreePath), 8);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
     BOOST_CHECK(checkHistogram(octreeBrick16, brickVolume128_inhomogeneous_RAM_));
@@ -3319,7 +3319,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OptimizedTree_Dim128_InhomogeneousBrickS
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16_MultiThreaded_DiskPool) {
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
 
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, 0.f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -3333,7 +3333,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim125_96_115_Brick16
 BOOST_AUTO_TEST_CASE(OctreeConstruction_NPOT_OptimizedTree_Dim35_96_115_Brick16_InhomogeneousBrickSize_MultiThreaded_DiskPool) {
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
 
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(octreeNpot.getDimensions(), tgt::svec3(35, 96, 115));
     BOOST_CHECK_EQUAL(octreeNpot.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octreeNpot.getNumLevels(),       4);
@@ -3357,7 +3357,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_TripleChannel_NPOT_OptimizedTree_Dim125_
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(1))]);
     testVolumeMipmaps.push_back(mipMaps_[static_cast<const Volume*>(testVolumes.at(2))]);
 
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<16, 1<<20, octreePath), 8);
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), tgt::svec3(125, 96, 115));
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(128));
     BOOST_CHECK_EQUAL(octree.getNumChannels(),     3);
@@ -3394,7 +3394,7 @@ BOOST_AUTO_TEST_CASE(OctreeConstruction_OmeTiff_Pollen_Optimized_Brick16_MultiTh
     BOOST_ASSERT(channelVolumesRAM.at(2));
 
     std::string octreePath = tgt::FileSystem::cleanupPath(VoreenApplication::app()->getTemporaryPath("octree-test"));
-    VolumeOctree octree(channelVolumes, 16, 0.002f, new OctreeBrickPoolManagerDisk(1<<20, 32<<20, octreePath), 8);
+    VolumeOctree octree(channelVolumes, 16, 0.002f, VolumeOctree::MEAN, new OctreeBrickPoolManagerDisk(1<<20, 32<<20, octreePath), 8);
     octree.logDescription();
     BOOST_CHECK_EQUAL(octree.getVolumeDim(), volumeDim);
     BOOST_CHECK_EQUAL(octree.getOctreeDim(), tgt::svec3(512));
@@ -3433,7 +3433,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(OctreeSerialization);
 
 BOOST_AUTO_TEST_CASE(OctreeSerialization_CompleteTree_Dim128_Brick16) {
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
 
@@ -3460,7 +3460,7 @@ BOOST_AUTO_TEST_CASE(OctreeSerialization_CompleteTree_Dim128_Brick16) {
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSerialization_OptimizedTree_Dim128_Brick16) {
-    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBrick16(brickVolume128_inhomogeneous_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octreeBrick16.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octreeBrick16.getActualTreeDepth(), 4);
 
@@ -3492,7 +3492,7 @@ BOOST_AUTO_TEST_CASE(OctreeSerialization_TripleChannel_OptimizedTree_Dim128_Bric
     channelVolumes.push_back(brickVolume128_16_RAM_);
     channelVolumes.push_back(brickVolume128_64_RAM_);
 
-    VolumeOctree octree(channelVolumes, 8, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(channelVolumes, 8, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 4);
 
@@ -3533,7 +3533,7 @@ BOOST_AUTO_TEST_SUITE(OctreeNodeRetrieval);
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick128) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       1);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 1);
 
@@ -3556,7 +3556,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick1
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick128) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 128, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 128, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       1);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 1);
 
@@ -3579,7 +3579,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick12
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick64) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 2);
 
@@ -3622,7 +3622,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick6
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick64) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 64, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 2);
 
@@ -3664,7 +3664,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick64
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick32) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 3);
 
@@ -3728,7 +3728,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick3
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick32) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       3);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 3);
 
@@ -3794,7 +3794,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick32
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick16) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 4);
 
@@ -3879,7 +3879,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeInterior_Dim128_Brick1
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick16) {
     // create octree
-    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 16, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       4);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 4);
 
@@ -3967,7 +3967,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_NodeBorders_Dim128_Brick16
 }
 
 BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_CompleteTree_RayTraversal_Dim128_Brick8) {
-    VolumeOctree octree(noiseVolume128_RAM_, 8, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(noiseVolume128_RAM_, 8, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 5);
 
@@ -4005,7 +4005,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_OptimizedTree_Dim128_Brick64) {
 
     // NOTE: see global fixture for structure of the inhomogeneously bricked volume
 
-    VolumeOctree octree(brickVolume128_inhomogeneous_RAM_, 64, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(brickVolume128_inhomogeneous_RAM_, 64, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       2);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 2);
     BOOST_CHECK_EQUAL(octree.getNumNodes(), getNodeCount(2)); //< full tree expected
@@ -4054,7 +4054,7 @@ BOOST_AUTO_TEST_CASE(OctreeNodeRetrieval_OptimizedTree_Dim128_Brick8) {
 
     // NOTE: see global fixture for structure of the inhomogeneously bricked volume
 
-    VolumeOctree octree(brickVolume128_inhomogeneous_RAM_, 8, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(brickVolume128_inhomogeneous_RAM_, 8, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     BOOST_CHECK_EQUAL(octree.getNumLevels(),       5);
     BOOST_CHECK_EQUAL(octree.getActualTreeDepth(), 5);
 
@@ -4286,7 +4286,7 @@ BOOST_AUTO_TEST_SUITE(OctreeSliceRetrieval);
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_XY) {
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeBricked.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume128_32_RAM_].at(level);
@@ -4302,7 +4302,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_XY) {
         }
     }
 
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNoise.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[noiseVolume128_RAM_].at(level);
@@ -4320,7 +4320,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_XY) {
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_OptimizedTree_Dim128_Brick16_XY) {
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeBricked.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume128_32_RAM_].at(level);
@@ -4339,7 +4339,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_OptimizedTree_Dim128_Brick16_XY) {
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_CompleteTree_Dim125_96_115_Brick32_XY) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNpot.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume125_96_115_brick16_RAM_].at(level);
@@ -4360,7 +4360,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_CompleteTree_Dim125_96_115_Brick3
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_OptimizedTree_Dim35_96_115_Brick8_XY) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 8, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 8, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNpot.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume35_96_115_inhomogeneous_RAM_].at(level);
@@ -4380,7 +4380,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_OptimizedTree_Dim35_96_115_Brick8
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_XZ) {
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeBricked.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume128_32_RAM_].at(level);
@@ -4396,7 +4396,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_XZ) {
         }
     }
 
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNoise.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[noiseVolume128_RAM_].at(level);
@@ -4414,7 +4414,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_XZ) {
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_OptimizedTree_Dim128_Brick16_XZ) {
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeBricked.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume128_32_RAM_].at(level);
@@ -4433,7 +4433,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_OptimizedTree_Dim128_Brick16_XZ) {
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_CompleteTree_Dim125_96_115_Brick32_XZ) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNpot.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume125_96_115_brick16_RAM_].at(level);
@@ -4450,7 +4450,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_CompleteTree_Dim125_96_115_Brick3
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_OptimizedTree_Dim35_96_115_Brick8_XZ) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 8, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 8, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNpot.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume35_96_115_inhomogeneous_RAM_].at(level);
@@ -4470,7 +4470,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_OptimizedTree_Dim35_96_115_Brick8
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_YZ) {
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeBricked.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume128_32_RAM_].at(level);
@@ -4486,7 +4486,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_YZ) {
         }
     }
 
-    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNoise(noiseVolume128_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNoise.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[noiseVolume128_RAM_].at(level);
@@ -4504,7 +4504,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_CompleteTree_Dim128_Brick32_YZ) {
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_OptimizedTree_Dim128_Brick16_YZ) {
 
-    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeBricked(brickVolume128_32_RAM_, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeBricked.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume128_32_RAM_].at(level);
@@ -4523,7 +4523,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_OptimizedTree_Dim128_Brick16_YZ) {
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_CompleteTree_Dim125_96_115_Brick32_YZ) {
-    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume125_96_115_brick16_RAM_, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNpot.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume125_96_115_brick16_RAM_].at(level);
@@ -4540,7 +4540,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_CompleteTree_Dim125_96_115_Brick3
 }
 
 BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_NPOT_OptimizedTree_Dim35_96_115_Brick8_YZ) {
-    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 8, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octreeNpot(brickVolume35_96_115_inhomogeneous_RAM_, 8, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
     for (size_t level = 0; level < octreeNpot.getNumLevels(); level++) {
         BOOST_TEST_MESSAGE("Level: " << level);
         const Volume* levelVolume = mipMaps_[brickVolume35_96_115_inhomogeneous_RAM_].at(level);
@@ -4563,7 +4563,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_CompleteTree_Dim128_Bric
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_32_RAM_);
     testVolumes.push_back(brickVolume128_inhomogeneous_RAM_);
-    VolumeOctree octree(testVolumes, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4592,7 +4592,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_OptimizedTree_Dim128_Bri
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_32_RAM_);
     testVolumes.push_back(brickVolume128_inhomogeneous_RAM_);
-    VolumeOctree octree(testVolumes, 32, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4620,7 +4620,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_DualChannel_OptimizedTree_Dim128_Brick
     std::vector<const VolumeBase*> testVolumes;
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_64_RAM_);
-    VolumeOctree octree(testVolumes, 32, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4648,7 +4648,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_CompleteTree_Dim128_Bric
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_32_RAM_);
     testVolumes.push_back(brickVolume128_inhomogeneous_RAM_);
-    VolumeOctree octree(testVolumes, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4677,7 +4677,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_OptimizedTree_Dim128_Bri
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_32_RAM_);
     testVolumes.push_back(brickVolume128_inhomogeneous_RAM_);
-    VolumeOctree octree(testVolumes, 32, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4706,7 +4706,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_CompleteTree_Dim128_Bric
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_32_RAM_);
     testVolumes.push_back(brickVolume128_inhomogeneous_RAM_);
-    VolumeOctree octree(testVolumes, 32, -1.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, -1.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4735,7 +4735,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_OptimizedTree_Dim128_Bri
     testVolumes.push_back(brickVolume128_128_RAM_);
     testVolumes.push_back(brickVolume128_32_RAM_);
     testVolumes.push_back(brickVolume128_inhomogeneous_RAM_);
-    VolumeOctree octree(testVolumes, 32, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 32, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4764,7 +4764,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_NPOT_OptimizedTree_Dim12
     testVolumes.push_back(brickVolume125_96_115_brick16_RAM_);
     testVolumes.push_back(brickVolume125_96_115_inhomogeneous_RAM_);
     testVolumes.push_back(brickVolume125_96_115_brick16_RAM_);
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4794,7 +4794,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_NPOT_OptimizedTree_Dim12
     testVolumes.push_back(brickVolume125_96_115_brick16_RAM_);
     testVolumes.push_back(brickVolume125_96_115_inhomogeneous_RAM_);
     testVolumes.push_back(brickVolume125_96_115_brick16_RAM_);
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
@@ -4824,7 +4824,7 @@ BOOST_AUTO_TEST_CASE(OctreeSliceRetrieval_TripleChannel_NPOT_OptimizedTree_Dim12
     testVolumes.push_back(brickVolume125_96_115_brick16_RAM_);
     testVolumes.push_back(brickVolume125_96_115_inhomogeneous_RAM_);
     testVolumes.push_back(brickVolume125_96_115_brick16_RAM_);
-    VolumeOctree octree(testVolumes, 16, 0.f, new OctreeBrickPoolManagerRAM(), 1);
+    VolumeOctree octree(testVolumes, 16, 0.f, VolumeOctree::MEAN, new OctreeBrickPoolManagerRAM(), 1);
 
     // iterate over all channels
     for (size_t channel = 0; channel<testVolumes.size(); channel++) {
