@@ -794,10 +794,13 @@ private:
 };
 
 template<typename Accessor>
-static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight) {
-    auto edgeWeight = [minWeight] (float voxelIntensity, float neighborIntensity) {
+static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight, tgt::vec3 spacing) {
+    float minSpacing = tgt::min(spacing);
+    tgt::vec3 spacingNorm = spacing/minSpacing;
+    auto edgeWeight = [minWeight, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
         float beta = 0.5f;
-        float intDiff = (voxelIntensity - neighborIntensity);
+        float spacingFactor = spacingNorm[dim];
+        float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
         weight = std::max(weight, minWeight);
@@ -823,7 +826,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
             size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
             float neighborIntensity = voxelFun.voxel(neighbor);
 
-            float weight = edgeWeight(curIntensity, neighborIntensity);
+            float weight = edgeWeight(curIntensity, neighborIntensity, dim);
 
             if(seeds.isSeedPoint(neighbor)) {
                 if(!currentIsSeedpoint) {
@@ -989,8 +992,9 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     auto vec = std::vector<float>(systemSize, 0.0f);
 
+    tgt::vec3 spacing = input.volume_.getSpacing();
     VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), tgt::ivec3(walkerBlockDim)) {
-        processVoxelWeights(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight);
+        processVoxelWeights(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, spacing);
     }
 
     for(int i=0; i<10; ++i) {
