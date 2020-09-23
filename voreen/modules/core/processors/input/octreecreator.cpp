@@ -46,6 +46,7 @@
 #include "voreen/core/datastructures/octree/octreebrickpoolmanagerdisk.h"
 #include "voreen/core/datastructures/octree/octreeutils.h"
 #include "voreen/core/io/serialization/serialization.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "voreen/core/utils/hashing.h"
 #include "voreen/core/utils/memoryinfo.h"
 
@@ -136,10 +137,28 @@ OctreeCreator::OctreeCreator()
     , statusMessage_("progressMessage", "Progress Message", "", Processor::VALID)
     , currentConfigurationHash_("octreeHash", "Octree Hash", "", INVALID_RESULT, Property::LOD_ADVANCED)
 {
+    // Helper function adding conditions according to VolumeOctree.
+    auto addConditions = [] (VolumePort& port) {
+        auto* volumeTypes = new PortConditionLogicalOr();
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeUInt8());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeInt8());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeUInt16());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeInt16());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeUInt32());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeInt32());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeFloat());
+        volumeTypes->addLinkedCondition(new PortConditionVolumeTypeDouble());
+        port.addCondition(volumeTypes);
+    };
+
     addPort(volumeInport_);
+    addConditions(volumeInport_);
     addPort(volumeInport2_);
+    addConditions(volumeInport2_);
     addPort(volumeInport3_);
+    addConditions(volumeInport3_);
     addPort(volumeInport4_);
+    addConditions(volumeInport4_);
     addPort(volumeOutport_);
 
     brickDimensions_.addOption("treeDepth", "Derive from Tree Depth",     0);

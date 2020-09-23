@@ -187,6 +187,7 @@ void PortConditionVolumeTypeInteger::setCheckedPort(const Port* checkedPort) {
 
 PortConditionVolumeChannelCount::PortConditionVolumeChannelCount(size_t numChannels)
     : PortCondition("")
+    , volumePort_(nullptr)
     , numChannels_(numChannels)
 {
     tgtAssert(numChannels_ > 0, "invalid number of channels");

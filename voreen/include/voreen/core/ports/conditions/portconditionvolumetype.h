@@ -188,6 +188,7 @@ protected:
 template <typename T>
 PortConditionVolumeValueRange<T>::PortConditionVolumeValueRange(const T& minValue, const T& maxValue)
     : PortCondition("Volume with values in range [" + std::to_string(minValue) + ", " + std::to_string(maxValue) + "] expected")
+    , volumePort_(nullptr)
     , minValue_(minValue)
     , maxValue_(maxValue)
 {
