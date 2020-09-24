@@ -174,12 +174,15 @@ OctreeWalker::OctreeWalker()
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
+        minEdgeWeight_.setTracking(false);
     addProperty(homogeneityThreshold_);
         homogeneityThreshold_.setGroupID("rwparam");
         homogeneityThreshold_.adaptDecimalsToRange(5);
+        minEdgeWeight_.setTracking(false);
     addProperty(incrementalSimilarityThreshold_);
         incrementalSimilarityThreshold_.setGroupID("rwparam");
         incrementalSimilarityThreshold_.adaptDecimalsToRange(5);
+        minEdgeWeight_.setTracking(false);
 
     // conjugate gradient solver
     setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
@@ -190,8 +193,10 @@ OctreeWalker::OctreeWalker()
         preconditioner_.setGroupID("conjGrad");
     addProperty(errorThreshold_);
         errorThreshold_.setGroupID("conjGrad");
+        minEdgeWeight_.setTracking(false);
     addProperty(maxIterations_);
         maxIterations_.setGroupID("conjGrad");
+        minEdgeWeight_.setTracking(false);
     addProperty(conjGradImplementation_);
         conjGradImplementation_.addOption("blasCPU", "CPU");
 #ifdef VRN_MODULE_OPENMP
