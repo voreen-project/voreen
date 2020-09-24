@@ -1334,11 +1334,11 @@ void VolumeOctree::extractBrickFromTexture(const std::vector<const void*>& textu
 VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], bool octreeOptimization, uint16_t homogeneityThreshold,
     const tgt::svec3& brickUrb, uint16_t* avgValues, uint16_t* minValues, uint16_t* maxValues, HalfSampleAggregateFunction halfSampleFn) {
     switch(halfSampleFn) {
-    case MEAN: return createParentNodeConstChannels<1, HalfSampleMean>(children, octreeOptimization, homogeneityThreshold,
+    case MEAN: return createParentNodeWithHalfsampling<HalfSampleMean>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
-    case MAX: return createParentNodeConstChannels<1, HalfSampleMax>(children, octreeOptimization, homogeneityThreshold,
+    case MAX: return createParentNodeWithHalfsampling<HalfSampleMax>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
-    case MIN: return createParentNodeConstChannels<1, HalfSampleMin>(children, octreeOptimization, homogeneityThreshold,
+    case MIN: return createParentNodeWithHalfsampling<HalfSampleMin>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
     default:
         tgtAssert(false, "Invalid half sample mode");
