@@ -60,8 +60,8 @@ public:
  *
  * @see VolumeOctreeBase
  *
- * @return the created slice texture, whose dimensions and data type matches the input volume's properties.
- *         If the slice texture could not be created, 0 is returned.
+ * @return the created slice texture, whose dimensions and data type matches the input volume's properties
+ *         (resolution adjusted by the LOD). If the slice texture could not be created, 0 is returned.
  */
 static SliceTexture* getVolumeSlice(const VolumeBase* volume, SliceAlignment alignment, size_t sliceIndex, int* shiftArray = 0,
                                      size_t levelOfDetail = 0, clock_t timeLimit = 0, bool* complete = 0);

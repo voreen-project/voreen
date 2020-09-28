@@ -89,6 +89,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                     if(!shiftArray) {
                         ramVolumeSlice = octree->createSlice(YZ_PLANE, sliceIndex, levelOfDetail, timeLimit, complete);
                         tgtAssert(ramVolumeSlice, "null pointer returned (exception expected)");
+                        sliceDim = ramVolumeSlice->getDimensions().yz();
                     } else {
                         //get all needed RAM slices
                         VolumeRAM** sliceArray = static_cast<VolumeRAM**>(malloc(sizeof(VolumeRAM*) * volume->getNumChannels()));
@@ -165,16 +166,6 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                         }
                         free(sliceArray);
                     }
-                    // resample slice of higher mipmap level to original volume resolution
-                    if (levelOfDetail > 0) {
-                        Volume* sliceHandle = new Volume(const_cast<VolumeRAM*>(ramVolumeSlice), volume);
-                        Volume* sliceResampled = VolumeOperatorResample::APPLY_OP(sliceHandle, sliceDim3D, VolumeRAM::NEAREST);
-                        tgtAssert(sliceResampled && sliceResampled->getWritableRepresentation<VolumeRAM>(), "no resampled slice");
-                        ramVolumeSlice = sliceResampled->getWritableRepresentation<VolumeRAM>();
-                        sliceResampled->releaseAllRepresentations();
-                        delete sliceResampled;
-                        delete sliceHandle;
-                    }
                 }
                 catch (tgt::Exception& e) {
                     LERROR("Failed to create YZ slice from octree: " << e.what());
@@ -236,6 +227,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                     if(!shiftArray) {
                         ramVolumeSlice = octree->createSlice(XZ_PLANE, sliceIndex, levelOfDetail, timeLimit, complete);
                         tgtAssert(ramVolumeSlice, "null pointer returned (exception expected)");
+                        sliceDim = tgt::svec2(ramVolumeSlice->getDimensions().x, ramVolumeSlice->getDimensions().z);
                     } else {
                         //get all needed RAM slices
                         VolumeRAM** sliceArray = static_cast<VolumeRAM**>(malloc(sizeof(VolumeRAM*) * volume->getNumChannels()));
@@ -312,16 +304,6 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                         }
                         free(sliceArray);
                     }
-                    // resample slice of higher mipmap level to original volume resolution
-                    if (levelOfDetail > 0) {
-                        Volume* sliceHandle = new Volume(const_cast<VolumeRAM*>(ramVolumeSlice), volume);
-                        Volume* sliceResampled = VolumeOperatorResample::APPLY_OP(sliceHandle, sliceDim3D, VolumeRAM::NEAREST);
-                        tgtAssert(sliceResampled && sliceResampled->getWritableRepresentation<VolumeRAM>(), "no resampled slice");
-                        ramVolumeSlice = sliceResampled->getWritableRepresentation<VolumeRAM>();
-                        sliceResampled->releaseAllRepresentations();
-                        delete sliceResampled;
-                        delete sliceHandle;
-                    }
                 }
                 catch (tgt::Exception& e) {
                     LERROR("Failed to create XZ slice from octree: " << e.what());
@@ -381,6 +363,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                     if(!shiftArray) {
                         ramVolumeSlice = octree->createSlice(XY_PLANE, sliceIndex, levelOfDetail, timeLimit, complete);
                         tgtAssert(ramVolumeSlice, "null pointer returned (exception expected)");
+                        sliceDim = ramVolumeSlice->getDimensions().xy();
                     } else {
                         //get all needed RAM slices
                         VolumeRAM** sliceArray = static_cast<VolumeRAM**>(malloc(sizeof(VolumeRAM*) * volume->getNumChannels()));
@@ -456,16 +439,6 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                                 delete sliceArray[c];
                         }
                         free(sliceArray);
-                    }
-                    // resample slice of higher mipmap level to original volume resolution
-                    if (levelOfDetail > 0) {
-                        Volume* sliceHandle = new Volume(const_cast<VolumeRAM*>(ramVolumeSlice), volume);
-                        Volume* sliceResampled = VolumeOperatorResample::APPLY_OP(sliceHandle, sliceDim3D, VolumeRAM::NEAREST);
-                        tgtAssert(sliceResampled && sliceResampled->getWritableRepresentation<VolumeRAM>(), "no resampled slice");
-                        ramVolumeSlice = sliceResampled->getWritableRepresentation<VolumeRAM>();
-                        sliceResampled->releaseAllRepresentations();
-                        delete sliceResampled;
-                        delete sliceHandle;
                     }
                 }
                 catch (tgt::Exception& e) {

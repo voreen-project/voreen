@@ -45,10 +45,6 @@ SliceTexture::SliceTexture(const tgt::ivec2& sliceDim, SliceAlignment alignment,
     uploadTexture();
 }
 
-tgt::ivec2 SliceTexture::getSliceDimensions() const {
-    return getDimensions().xy();
-}
-
 std::string SliceTexture::getFormat() const {
     return format_;
 }
