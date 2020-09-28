@@ -68,6 +68,8 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
     GLint textureFormat, internalFormat;
     GLenum textureDataType;
 
+    size_t samplingLOD = 0;
+
     switch(alignment) {
         case YZ_PLANE: {
             // representation preference:
@@ -88,8 +90,8 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                     tgtAssert(octree, "no octree");
                     if(!shiftArray) {
                         ramVolumeSlice = octree->createSlice(YZ_PLANE, sliceIndex, levelOfDetail, timeLimit, complete);
+                        samplingLOD = levelOfDetail;
                         tgtAssert(ramVolumeSlice, "null pointer returned (exception expected)");
-                        sliceDim = ramVolumeSlice->getDimensions().yz();
                     } else {
                         //get all needed RAM slices
                         VolumeRAM** sliceArray = static_cast<VolumeRAM**>(malloc(sizeof(VolumeRAM*) * volume->getNumChannels()));
@@ -115,6 +117,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                                 sliceArray[c] = 0;
                             else {
                                 sliceArray[c] = octree->createSlice(YZ_PLANE, tmpSlice, levelOfDetail, timeLimit/static_cast<clock_t>(volume->getNumChannels()), &chComp);
+                                samplingLOD = levelOfDetail;
                                 tmpComp &= chComp;
                                 if(firstSlice == sMinusOne /*-1*/)
                                     firstSlice = c;
@@ -226,8 +229,8 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                     tgtAssert(octree, "no octree");
                     if(!shiftArray) {
                         ramVolumeSlice = octree->createSlice(XZ_PLANE, sliceIndex, levelOfDetail, timeLimit, complete);
+                        samplingLOD = levelOfDetail;
                         tgtAssert(ramVolumeSlice, "null pointer returned (exception expected)");
-                        sliceDim = tgt::svec2(ramVolumeSlice->getDimensions().x, ramVolumeSlice->getDimensions().z);
                     } else {
                         //get all needed RAM slices
                         VolumeRAM** sliceArray = static_cast<VolumeRAM**>(malloc(sizeof(VolumeRAM*) * volume->getNumChannels()));
@@ -253,6 +256,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                                 sliceArray[c] = 0;
                             else {
                                 sliceArray[c] = octree->createSlice(XZ_PLANE, tmpSlice, levelOfDetail, timeLimit/static_cast<clock_t>(volume->getNumChannels()), &chComp);
+                                samplingLOD = levelOfDetail;
                                 tmpComp &= chComp;
                                 if(firstSlice == sMinusOne /*-1*/)
                                     firstSlice = c;
@@ -362,8 +366,8 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                     tgtAssert(octree, "no octree");
                     if(!shiftArray) {
                         ramVolumeSlice = octree->createSlice(XY_PLANE, sliceIndex, levelOfDetail, timeLimit, complete);
+                        samplingLOD = levelOfDetail;
                         tgtAssert(ramVolumeSlice, "null pointer returned (exception expected)");
-                        sliceDim = ramVolumeSlice->getDimensions().xy();
                     } else {
                         //get all needed RAM slices
                         VolumeRAM** sliceArray = static_cast<VolumeRAM**>(malloc(sizeof(VolumeRAM*) * volume->getNumChannels()));
@@ -389,6 +393,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
                                 sliceArray[c] = 0;
                             else {
                                 sliceArray[c] = octree->createSlice(XY_PLANE, tmpSlice, levelOfDetail, timeLimit/static_cast<clock_t>(volume->getNumChannels()), &chComp);
+                                samplingLOD = levelOfDetail;
                                 tmpComp &= chComp;
                                 if(firstSlice == sMinusOne /*-1*/)
                                     firstSlice = c;
@@ -504,7 +509,7 @@ SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, SliceAlignme
     yVec = yVec - origin;
 
     return new SliceTexture(sliceDim, alignment, volume->getFormat(), volume->getBaseType(), origin, xVec, yVec,
-        volume->getRealWorldMapping(), dataBuffer, textureFormat, internalFormat, textureDataType);
+        volume->getRealWorldMapping(), dataBuffer, textureFormat, internalFormat, textureDataType, samplingLOD);
 }
 
 SliceTexture* SliceHelper::getVolumeSlice(const VolumeBase* volume, tgt::plane pl, float samplingRate) {

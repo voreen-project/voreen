@@ -134,7 +134,7 @@ void GLSL::setUniform(tgt::Shader* shader, const std::string& textureUniform, co
     //shader->setIgnoreUniformLocationError(true);
     shader->setUniform(structUniform + ".dimensions_", tgt::vec2(slice->getSliceDimensions()));
     shader->setUniform(structUniform + ".dimensionsRCP_", tgt::vec2(1.0f) / tgt::vec2(slice->getSliceDimensions()));
-    shader->setUniform(structUniform + ".matrix_", tgt::mat4::identity);
+    shader->setUniform(structUniform + ".matrix_", slice->getLodSamplingCorrectionMatrix());
     shader->setUniform(structUniform + ".numChannels_", (int)slice->getNumChannels());
     shader->setUniform(structUniform + ".rwmScale_", rwm.getScale());
     shader->setUniform(structUniform + ".rwmOffset_", rwm.getOffset());

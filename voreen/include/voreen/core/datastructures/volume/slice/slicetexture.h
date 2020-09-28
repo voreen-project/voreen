@@ -53,7 +53,7 @@ public:
     /** Constructor */
     SliceTexture(const tgt::ivec2& sliceDim, SliceAlignment alignment, const std::string& format, const std::string& baseType,
                  tgt::vec3 originInWorldSpace, tgt::vec3 xDirectionInWorldSpace, tgt::vec3 yDirectionInWorldSpace, const RealWorldMapping& rwm,
-                 void* data, GLint textureFormat, GLint internalFormat, GLenum textureDataType);
+                 void* data, GLint textureFormat, GLint internalFormat, GLenum textureDataType, size_t lod=0);
     /** Destructor */
     virtual ~SliceTexture() {};
 
@@ -68,6 +68,8 @@ public:
     std::string getBaseType() const;
     /** Returns the dimensions of the slice. */
     tgt::ivec2 getSliceDimensions() const;
+    /** Return the matrix used to correct rounding errors when downscaling in sampling*/
+    tgt::mat4 getLodSamplingCorrectionMatrix() const;
     /** Returns the texture to world matrix. */
     tgt::mat4 getTextureToWorldMatrix() const;
     /** Returns the world to texture matrix. */
@@ -84,6 +86,10 @@ private:
     tgt::vec3 originInWorldSpace_;      ///< slice position (0,0) in world space
     tgt::vec3 xDirectionInWorldSpace_;  ///< slice x direction in world space. Is dependent of the alignment
     tgt::vec3 yDirectionInWorldSpace_;  ///< slice y direction in world space. Is dependent of the alignment
+
+    // For correct rendering of lower level-of-detail slices.
+    tgt::svec2 fullDetailSliceDim_;
+    size_t lod_;
 
     RealWorldMapping rwm_;  ///< the real world mapping
 };

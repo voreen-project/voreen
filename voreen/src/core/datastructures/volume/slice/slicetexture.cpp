@@ -28,10 +28,10 @@
 
 namespace voreen {
 
-SliceTexture::SliceTexture(const tgt::ivec2& sliceDim, SliceAlignment alignment, const std::string& format, const std::string& baseType,
+SliceTexture::SliceTexture(const tgt::ivec2& fullDetailSliceDim, SliceAlignment alignment, const std::string& format, const std::string& baseType,
                            tgt::vec3 originInWorldSpace, tgt::vec3 xDirectionInWorldSpace, tgt::vec3 yDirectionInWorldSpace, const RealWorldMapping& rwm,
-                           void* data, GLint textureFormat, GLint internalFormat, GLenum textureDataType)
-    : tgt::Texture(tgt::ivec3(sliceDim,1),textureFormat,internalFormat,textureDataType,tgt::Texture::LINEAR,tgt::Texture::REPEAT,reinterpret_cast<GLubyte*>(data),true)
+                           void* data, GLint textureFormat, GLint internalFormat, GLenum textureDataType, size_t lod)
+    : tgt::Texture(tgt::ivec3(tgt::ceil(tgt::vec2(fullDetailSliceDim)/(float)((1 << lod))),1),textureFormat,internalFormat,textureDataType,tgt::Texture::LINEAR,tgt::Texture::REPEAT,reinterpret_cast<GLubyte*>(data),true)
     , alignment_(alignment)
     , format_(format)
     , baseType_(baseType)
@@ -39,6 +39,8 @@ SliceTexture::SliceTexture(const tgt::ivec2& sliceDim, SliceAlignment alignment,
     , xDirectionInWorldSpace_(xDirectionInWorldSpace)
     , yDirectionInWorldSpace_(yDirectionInWorldSpace)
     , rwm_(rwm)
+    , fullDetailSliceDim_(fullDetailSliceDim)
+    , lod_(lod)
 {
     tgtAssert(data, "no data passed");
     //upload the texture
@@ -59,6 +61,11 @@ std::string SliceTexture::getBaseType() const {
 
 SliceAlignment SliceTexture::getAlignment() const {
     return alignment_;
+}
+
+tgt::mat4 SliceTexture::getLodSamplingCorrectionMatrix() const {
+    tgt::vec2 scale = tgt::vec2(fullDetailSliceDim_) / (tgt::vec2(getSliceDimensions()) * (float)(1 << lod_));
+    return tgt::mat4::createScale(tgt::vec3(scale.x, scale.y, 1.0f));
 }
 
 tgt::mat4 SliceTexture::getTextureToWorldMatrix() const {
