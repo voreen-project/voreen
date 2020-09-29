@@ -492,16 +492,22 @@ void SimilarityPlot::renderingPass(bool picking) {
             int eigenValueIdx = principleComponent_.get() - 1;
             const auto& vertices = mdsData.nVectors_.at(runIdx);
 
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
             if(numTimeSteps == 1) {
                 // In case we have a single time step, we draw it across the whole range,
                 // since it doesn't change. This could (and should!) be improved, however,
                 // such that it becomes clear at which t the time step is recorded.
+                IMode.begin(tgt::ImmediateMode::FAKE_LINES);
                 IMode.color(getColor(runIdx, 0, picking));
-                IMode.vertex(tgt::vec2(-1.0f, vertices[0][eigenValueIdx]));
-                IMode.vertex(tgt::vec2(1.0f, vertices[0][eigenValueIdx]));
+                const int segments = 20;
+                for(int i=0; i<segments; i+=2) {
+                    float x0 = mapRange(i+0, 0, segments-1, -1.0f, 1.0f);
+                    float x1 = mapRange(i+1, 0, segments-1, -1.0f, 1.0f);
+                    IMode.vertex(tgt::vec2(x0, vertices[0][eigenValueIdx]));
+                    IMode.vertex(tgt::vec2(x1, vertices[0][eigenValueIdx]));
+                }
             }
             else {
+                IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
                 for (size_t j = 0; j < numTimeSteps; j++) {
                     float colorSaturation = 1.0f;
                     if(run.timeSteps_[j].time_ < timeRange.x || run.timeSteps_[j].time_ > timeRange.y) {
@@ -547,7 +553,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
             const auto& vertices = mdsData.nVectors_.at(runIdx);
 
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
                 IMode.vertex(tgt::vec2(vertices[j][0], vertices[j][1]));
@@ -585,7 +591,7 @@ void SimilarityPlot::renderingPass(bool picking) {
             size_t numTimeSteps = dataset->getRuns()[runIdx].timeSteps_.size();
             const auto& vertices = mdsData.nVectors_.at(runIdx);
 
-            IMode.begin(tgt::ImmediateMode::LINE_STRIP);
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
             for(size_t j=0; j<numTimeSteps; j++) {
                 IMode.color(getColor(runIdx, j, picking));
                 IMode.vertex(tgt::vec3::fromPointer(&vertices[j][0]) * scale);
