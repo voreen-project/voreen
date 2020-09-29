@@ -987,10 +987,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     EllpackMatrix<float> mat(systemSize, systemSize, 7);
     mat.initializeBuffers();
 
-    float beta = 0.5f;
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
-
-    RandomWalkerEdgeWeightIntensity edgeWeightFun(tgt::vec2(0.0f, 1.0f), beta, minWeight);
 
     auto rwInput = preprocessForAdaptiveParameterSetting(inputNeighborhood.data_);
     RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
