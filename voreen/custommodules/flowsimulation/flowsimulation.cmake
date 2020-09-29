@@ -41,7 +41,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.cpp
     ${MOD_DIR}/processors/volume/phaseunwrapping.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
-    ${MOD_DIR}/processors/volume/volumelistcombine.cpp
+    ${MOD_DIR}/processors/volume/volumelistaggregate.cpp
     ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.cpp
     ${MOD_DIR}/processors/volume/volumenoise.cpp
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
@@ -77,7 +77,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.h
     ${MOD_DIR}/processors/volume/phaseunwrapping.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
-    ${MOD_DIR}/processors/volume/volumelistcombine.h
+    ${MOD_DIR}/processors/volume/volumelistaggregate.h
     ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.h
     ${MOD_DIR}/processors/volume/volumenoise.h
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.h

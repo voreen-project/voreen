@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMELISTCOMBINE_H
-#define VRN_VOLUMELISTCOMBINE_H
+#ifndef VRN_VOLUMELISTAGGREGATE_H
+#define VRN_VOLUMELISTAGGREGATE_H
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/genericport.h"
@@ -35,33 +35,35 @@ namespace voreen {
 /**
  * This processor creates a list from incoming volumes.
  */
-class VRN_CORE_API VolumeListCombine : public Processor {
+class VRN_CORE_API VolumeListAggregate : public Processor {
 public:
-    VolumeListCombine();
-    virtual ~VolumeListCombine();
+    VolumeListAggregate();
+    virtual ~VolumeListAggregate();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "VolumeListCombine";      }
-    virtual std::string getCategory() const   { return "Volume Processing";     }
+    virtual std::string getClassName() const  { return "VolumeListAggregate";      }
+    virtual std::string getCategory() const   { return "Volume List Processing";     }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor combines all incoming volumems voxel-wise into a single one.");
+        setDescription("This processor aggregates all incoming volumems voxel-wise into a single one.");
     }
 
     virtual void process();
 
 private:
 
-    enum CombineMethod {
+    enum AggregationFunction {
         MEAN,
+        MIN,
+        MAX,
     };
 
     VolumeListPort inport_;
     VolumePort outport_;
 
-    OptionProperty<CombineMethod> combineMethod_;
+    OptionProperty<AggregationFunction> aggregationFunction_;
 };
 
 }   //namespace

@@ -23,47 +23,61 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "volumelistcombine.h"
+#include "volumelistaggregate.h"
 
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 namespace voreen {
 
-VolumeListCombine::VolumeListCombine()
+VolumeListAggregate::VolumeListAggregate()
     : Processor()
     , inport_(Port::INPORT, "volumelist.input", "Volume Input", false)
     , outport_(Port::OUTPORT, "volume.output", "Volume Output", false)
-    , combineMethod_("combineMethod", "Combine Method")
+    , aggregationFunction_("aggregationFunction", "Aggregation Function")
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
     addPort(outport_);
 
-    addProperty(combineMethod_);
-    combineMethod_.addOption("mean", "Mean", MEAN);
+    addProperty(aggregationFunction_);
+    aggregationFunction_.addOption("mean", "Mean", MEAN);
+    aggregationFunction_.addOption("min", "Min", MIN);
+    aggregationFunction_.addOption("max", "Max", MAX);
 }
 
-VolumeListCombine::~VolumeListCombine() {}
+VolumeListAggregate::~VolumeListAggregate() {}
 
-Processor* VolumeListCombine::create() const {
-    return new VolumeListCombine();
+Processor* VolumeListAggregate::create() const {
+    return new VolumeListAggregate();
 }
 
-void VolumeListCombine::process() {
+void VolumeListAggregate::process() {
     const VolumeList* data = inport_.getData();
     if(!data || data->empty()) {
         outport_.setData(nullptr);
     } else if(data->size() == 1) {
         outport_.setData(data->first(), false);
-    } else if(inport_.hasChanged()) {
+    } else {
         // Take the first as a reference (we already know we got an ensemble).
         const VolumeBase* reference = data->first();
 
         Volume* combined = reference->clone();
         VolumeRAM* combinedRepresentation = combined->getWritableRepresentation<VolumeRAM>();
-        tgt::svec3 dim = combined->getDimensions();
 
-        CombineMethod combineMethod = combineMethod_.getValue();
+        AggregationFunction aggregationFunction = aggregationFunction_.getValue();
+        switch(aggregationFunction) {
+        case MEAN:
+            combinedRepresentation->clear();
+            break;
+        case MIN:
+        case MAX:
+            // Use reference values as initialization.
+            break;
+        default:
+            tgtAssert(false, "unhandled aggregation function");
+        }
+
+        tgt::svec3 dim = combined->getDimensions();
         for(size_t i=0; i<data->size(); i++) {
             VolumeRAMRepresentationLock representation(data->at(i));
             for(size_t z=0; z < dim.z; z++) {
@@ -71,20 +85,25 @@ void VolumeListCombine::process() {
                     for(size_t x=0; x < dim.x; x++) {
                         for(size_t channel=0; channel<combined->getNumChannels(); channel++) {
 
-                            float part = 0.0f;
+                            float currentValue = representation->getVoxelNormalized(x, y, z, channel);
+                            float aggregatedValue = combinedRepresentation->getVoxelNormalized(x, y, z, channel);
 
-                            switch(combineMethod) {
+                            switch(aggregationFunction) {
                             case MEAN:
-                                part = representation->getVoxelNormalized(x, y, z, channel);
-                                part /= data->size();
+                                currentValue /= data->size();
+                                aggregatedValue += currentValue;
+                                break;
+                            case MIN:
+                                aggregatedValue = std::min(aggregatedValue, currentValue);
+                                break;
+                            case MAX:
+                                aggregatedValue = std::max(aggregatedValue, currentValue);
                                 break;
                             default:
-                                tgtAssert(false, "unhandled combine method");
+                                tgtAssert(false, "unhandled aggregation function");
                             }
 
-                            float value = combinedRepresentation->getVoxelNormalized(x, y, z, channel);
-                            value += part;
-                            combinedRepresentation->setVoxelNormalized(value, x, y, z, channel);
+                            combinedRepresentation->setVoxelNormalized(aggregatedValue, x, y, z, channel);
                         }
                     }
                 }
