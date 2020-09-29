@@ -162,8 +162,10 @@ std::string OctreeBrickPoolManagerMmap::storageFileName(uint64_t fileIndex) cons
 //      BRICK INTERACTION
 //-----------------------------------------------------------------------------------------------------------------------
 bool OctreeBrickPoolManagerMmap::isBrickInRAM(uint64_t virtualMemoryAddress) const {
-    // Mmapped bricks are always in "RAM", as far as the program is concerned.
-    return true;
+    // We have not idea if a brick is in RAM or not, so we pessimistically
+    // assume "no". This is important for timeouts in octree rendering/texture
+    // compositon to work.
+    return false;
 }
 
 const uint16_t* OctreeBrickPoolManagerMmap::getBrick(uint64_t virtualMemoryAddress, bool blocking) const {
