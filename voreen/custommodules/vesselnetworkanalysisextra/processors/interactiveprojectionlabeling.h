@@ -78,7 +78,7 @@ struct ProjectionLabels {
 };
 
 struct LabelUnit : public Serializable {
-    LabelUnit() = default;
+    LabelUnit();
     LabelUnit(const LabelUnit&) = default;
     LabelUnit& operator=(const LabelUnit&) = default;
     LabelUnit(LabelUnit&&) = default;
@@ -91,12 +91,19 @@ struct LabelUnit : public Serializable {
     std::deque<tgt::vec2> displayLine_;
     ProjectionLabels projectionLabels_;
 
+
     // result:
     std::vector<std::vector<tgt::vec3>> backgroundLabels_;
     std::vector<std::vector<tgt::vec3>> foregroundLabels_;
 
+    void setZoomRegion(tgt::vec2 newRegion);
+    tgt::vec2 getZoomRegion() const;
+
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
+
+private:
+    tgt::vec2 zoomRegion_; // subset range von [0,1]
 };
 
 class InteractiveProjectionLabeling : public RenderProcessor {

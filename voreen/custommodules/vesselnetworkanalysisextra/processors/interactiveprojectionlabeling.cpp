@@ -398,6 +398,25 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
     }
 }
 
+static void zoomPoint(float& point, float center, float factor) {
+    point = center + (point - center)*factor;
+}
+
+static void zoomProjection(LabelUnit& unit, float center, float factor) {
+    tgtAssert(factor > 0.0f, "Zoom factor must be larger than 0");
+
+    tgt::vec2 range = unit.getZoomRegion();
+    float range_center = range.y * center + (1.0f - center) * range.x;
+
+    zoomPoint(range.x, range_center, factor);
+    zoomPoint(range.y, range_center, factor);
+
+    range.x = std::max(0.0f, range.x);
+    range.y = std::min(1.0f, range.y);
+
+    unit.setZoomRegion(range);
+}
+
 void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
     auto button = e->button();
 
@@ -406,6 +425,20 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
 
     coords.y = viewport.y - coords.y - 1;
     auto mouse = tgt::vec2(coords)/tgt::vec2(viewport);
+
+    if(button == tgt::MouseEvent::MOUSE_WHEEL_UP && e->modifiers() == tgt::Event::MODIFIER_NONE) {
+        // Zoom in
+        zoomProjection(currentUnit(), mouse.y, 0.9);
+        projectionRequiresUpdate_ = true;
+        invalidate();
+        return;
+    } else if(button == tgt::MouseEvent::MOUSE_WHEEL_DOWN && e->modifiers() == tgt::Event::MODIFIER_NONE) {
+        zoomProjection(currentUnit(), mouse.y, 1.0/0.9);
+        // Zoom out
+        projectionRequiresUpdate_ = true;
+        invalidate();
+        return;
+    }
 
     if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->modifiers() == tgt::Event::CTRL && e->action() == tgt::MouseEvent::RELEASED) {
         currentUnit().projectionLabels_.foreground_.push_back({mouse});
@@ -615,6 +648,7 @@ void InteractiveProjectionLabeling::finishProjection() {
 
     auto world_to_physical = vol.getWorldToPhysicalMatrix();
     auto bounds = tgt::Bounds(vol.getLLF(), vol.getURB());
+    tgt::vec2 zoomRegion = current.getZoomRegion();
 
     auto project3D = [&] (const PolyLine<tgt::vec2>& projectionLine) {
         std::vector<tgt::vec3> segment;
@@ -622,7 +656,10 @@ void InteractiveProjectionLabeling::finishProjection() {
             float projection_d = static_cast<float>(i)/(NUM_SAMPLES-1);
 
             tgt::vec2 projectionPoint = projectionLine.interpolate(projection_d);
-            float normalized_depth = projectionPoint.y;
+
+            float proj_y = projectionPoint.y;
+            // Undo zoom
+            float normalized_depth = zoomRegion.y * proj_y + (1.0 - proj_y) * zoomRegion.x;
 
             float depth = normalized_depth * (max_dist - min_dist) + min_dist;
 
@@ -1250,6 +1287,8 @@ void InteractiveProjectionLabeling::updateProjection() {
 
     int y_block_size = 32;
 
+    tgt::vec2 zoomRegion = currentUnit().getZoomRegion();
+
     std::function<float(tgt::vec3)> sample;
     if(vol.hasRepresentation<VolumeRAM>() || !vol.hasRepresentation<VolumeOctree>()) {
         const auto volram = vol.getRepresentation<VolumeRAM>();
@@ -1277,7 +1316,8 @@ void InteractiveProjectionLabeling::updateProjection() {
             tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
             for(int y = 0; y < dim.y; ++y) {
-                float alpha = ((float)y)/(dim.y-1);
+                float base_alpha = ((float)y)/(dim.y-1);
+                float alpha = zoomRegion.y * base_alpha + (1.0 - base_alpha) * zoomRegion.x;
                 float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
 
                 tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
@@ -1300,7 +1340,9 @@ void InteractiveProjectionLabeling::updateProjection() {
 
         LocatedVolumeOctreeNodeConst root = octree->getLocatedRootNode();
 
-        float dist_within_volume = max_dist - min_dist;
+        float base_dist_within_volume = max_dist - min_dist;
+        float dist_within_volume = base_dist_within_volume * (zoomRegion.y - zoomRegion.x);
+
         if(!std::isfinite(dist_within_volume)) {
             dist_within_volume = tgt::length(vol.getCubeSize());
         }
@@ -1370,7 +1412,8 @@ void InteractiveProjectionLabeling::updateProjection() {
                 tgt::vec3 view_dir = tgt::normalize(back_world.xyz() - front_world.xyz());
 
                 for(int y = y_base; y < y_max; ++y) {
-                    float alpha = ((float)y)/(dim.y-1);
+                    float base_alpha = ((float)y)/(dim.y-1);
+                    float alpha = zoomRegion.y * base_alpha + (1.0 - base_alpha) * zoomRegion.x;
                     float alpha_rw = max_dist * alpha + (1.0 - alpha) * min_dist;
 
                     tgt::vec4 query_pos_rw(view_dir * alpha_rw + camera, 1.0);
@@ -1433,7 +1476,6 @@ void InteractiveProjectionLabeling::process() {
     renderOverlay();
     renderProjection();
 
-
     if(seedsChanged_) {
 
         std::unique_ptr<PointSegmentListGeometryVec3> foregroundLabelLines(new PointSegmentListGeometryVec3());
@@ -1467,6 +1509,39 @@ VoreenSerializableObject* InteractiveProjectionLabeling::create() const {
     return new InteractiveProjectionLabeling();
 }
 
+LabelUnit::LabelUnit()
+    : camera_()
+    , clippingRegion_()
+    , displayLine_()
+    , projectionLabels_()
+    , zoomRegion_(0.0f, 1.0f)
+    , foregroundLabels_()
+    , backgroundLabels_()
+{
+}
+
+void LabelUnit::setZoomRegion(tgt::vec2 newRegion) {
+    tgtAssert(newRegion.x < newRegion.y, "Invalid zoom region");
+    auto applyZoom = [&] (float& p) {
+        float normalized = zoomRegion_.x + p * (zoomRegion_.y - zoomRegion_.x);
+        p = (normalized - newRegion.x) / (newRegion.y - newRegion.x);
+    };
+
+    for(auto& line : projectionLabels_.foreground_) {
+        for(auto& p : line) {
+            applyZoom(p.y);
+        }
+    }
+    for(auto& line : projectionLabels_.background_) {
+        for(auto& p : line) {
+            applyZoom(p.y);
+        }
+    }
+    zoomRegion_ = newRegion;
+}
+tgt::vec2 LabelUnit::getZoomRegion() const {
+    return zoomRegion_;
+}
 void LabelUnit::serialize(Serializer& s) const {
     s.serialize("camera_position", camera_.getPosition());
     s.serialize("camera_focus", camera_.getFocus());
@@ -1483,6 +1558,8 @@ void LabelUnit::serialize(Serializer& s) const {
 
     s.serialize("clippingRegion", clippingRegion_);
     s.serialize("displayLine", displayLine_);
+
+    s.serialize("zoomRegion", zoomRegion_);
 
     s.serialize("foregroundLabels2D", projectionLabels_.foreground_);
     s.serialize("backgroundLabels2D", projectionLabels_.background_);
@@ -1527,6 +1604,12 @@ void LabelUnit::deserialize(Deserializer& s) {
     s.deserialize("clippingRegion", clippingRegion_);
     s.deserialize("displayLine", displayLine_);
 
+    try {
+        s.deserialize("zoomRegion", zoomRegion_);
+    } catch(SerializationException& e) {
+        s.removeLastError();
+        zoomRegion_ = tgt::vec2(0.0f, 1.0f);
+    }
     s.deserialize("foregroundLabels2D", projectionLabels_.foreground_);
     s.deserialize("backgroundLabels2D", projectionLabels_.background_);
 
