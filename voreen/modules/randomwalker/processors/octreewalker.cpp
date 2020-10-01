@@ -153,13 +153,15 @@ OctreeWalker::OctreeWalker()
     , inportBackgroundSeeds_(Port::INPORT, "geometry.seedsBackground", "geometry.seedsBackground", true)
     , outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false)
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
+    , betaBias_("betaBias", "Beta Bias: 2^v", 0, -10, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
     , conjGradImplementation_("conjGradImplementation", "Implementation")
     , homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.01, 0.0, 1.0)
     , incrementalSimilarityThreshold_("incrementalSimilarityThreshold", "Incremental Similarity Treshold", 0.01, 0.0, 1.0)
-    , resultPath_("resultPath", "Result Cache Path", "Result Cache Path", "", "", FileDialogProperty::DIRECTORY)
+    , clearResult_("clearResult", "Clear Result", Processor::INVALID_RESULT, Property::LOD_DEBUG)
+    , resultPath_("resultPath", "Result Cache Path", "Result Cache Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , prevResultPath_("")
     , previousResult_(boost::none)
     , brickPoolManager_(nullptr)
@@ -171,21 +173,23 @@ OctreeWalker::OctreeWalker()
     addPort(outportProbabilities_);
 
     // random walker properties
-    setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
         minEdgeWeight_.setTracking(false);
+    addProperty(betaBias_);
+        betaBias_.setGroupID("rwparam");
+        betaBias_.setTracking(false);
     addProperty(homogeneityThreshold_);
         homogeneityThreshold_.setGroupID("rwparam");
         homogeneityThreshold_.adaptDecimalsToRange(5);
-        minEdgeWeight_.setTracking(false);
+        homogeneityThreshold_.setTracking(false);
     addProperty(incrementalSimilarityThreshold_);
         incrementalSimilarityThreshold_.setGroupID("rwparam");
         incrementalSimilarityThreshold_.adaptDecimalsToRange(5);
-        minEdgeWeight_.setTracking(false);
+        incrementalSimilarityThreshold_.setTracking(false);
+    setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
 
     // conjugate gradient solver
-    setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
     addProperty(preconditioner_);
         preconditioner_.addOption("none", "None");
         preconditioner_.addOption("jacobi", "Jacobi");
@@ -193,10 +197,10 @@ OctreeWalker::OctreeWalker()
         preconditioner_.setGroupID("conjGrad");
     addProperty(errorThreshold_);
         errorThreshold_.setGroupID("conjGrad");
-        minEdgeWeight_.setTracking(false);
+        errorThreshold_.setTracking(false);
     addProperty(maxIterations_);
         maxIterations_.setGroupID("conjGrad");
-        minEdgeWeight_.setTracking(false);
+        maxIterations_.setTracking(false);
     addProperty(conjGradImplementation_);
         conjGradImplementation_.addOption("blasCPU", "CPU");
 #ifdef VRN_MODULE_OPENMP
@@ -208,8 +212,15 @@ OctreeWalker::OctreeWalker()
         conjGradImplementation_.select("blasCL");
 #endif
         conjGradImplementation_.setGroupID("conjGrad");
+    setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
 
     // conjugate gradient solver
+    addProperty(clearResult_);
+        ON_CHANGE_LAMBDA(clearResult_, [this] () {
+                interruptComputation();
+                clearPreviousResults();
+                });
+        clearResult_.setGroupID("resultcache");
     addProperty(resultPath_);
         ON_CHANGE_LAMBDA(resultPath_, [this] () {
                 if(resultPath_.get() != prevResultPath_) {
@@ -217,6 +228,8 @@ OctreeWalker::OctreeWalker()
                     clearPreviousResults();
                 }
                 });
+        resultPath_.setGroupID("resultcache");
+    setPropertyGroupGuiName("resultcache", "Result Cache");
 }
 
 OctreeWalker::~OctreeWalker() {
@@ -396,6 +409,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         inportForegroundSeeds_.getThreadSafeAllData(),
         inportBackgroundSeeds_.getThreadSafeAllData(),
         minEdgeWeight_.get(),
+        betaBias_.get(),
         voreenBlas,
         precond,
         errorThresh,
@@ -799,11 +813,11 @@ private:
 };
 
 template<typename Accessor>
-static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight, tgt::vec3 spacing) {
+static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
     float minSpacing = tgt::min(spacing);
     tgt::vec3 spacingNorm = spacing/minSpacing;
-    auto edgeWeight = [minWeight, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
-        float beta = 0.5f;
+    auto edgeWeight = [minWeight, betaBias, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
+        float beta = 0.5f * betaBias;
         float spacingFactor = spacingNorm[dim];
         float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
@@ -988,6 +1002,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     mat.initializeBuffers();
 
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
+    float betaBias = pow(2.f, static_cast<float>(input.betaBias_));
 
     auto rwInput = preprocessForAdaptiveParameterSetting(inputNeighborhood.data_);
     RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
@@ -996,7 +1011,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     tgt::vec3 spacing = input.volume_.getSpacing();
     VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), tgt::ivec3(walkerBlockDim)) {
-        processVoxelWeights(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, spacing);
+        processVoxelWeights(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing);
     }
 
     for(int i=0; i<10; ++i) {

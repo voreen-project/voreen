@@ -89,6 +89,7 @@ struct OctreeWalkerInput {
     std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
     std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
     int minWeight_;
+    int betaBias_;
     const VoreenBlas* blas_;
     VoreenBlas::ConjGradPreconditioner precond_;
     float errorThreshold_;
@@ -152,6 +153,7 @@ private:
     VolumePort outportProbabilities_;
 
     IntProperty minEdgeWeight_;
+    IntProperty betaBias_;
     StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;
     IntProperty maxIterations_;
@@ -167,6 +169,7 @@ private:
     VoreenBlasCL voreenBlasCL_;
 #endif
 
+    ButtonProperty clearResult_;
     TempPathProperty resultPath_;
     std::string prevResultPath_;
 
