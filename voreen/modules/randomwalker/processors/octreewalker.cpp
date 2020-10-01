@@ -152,6 +152,7 @@ OctreeWalker::OctreeWalker()
     , inportForegroundSeeds_(Port::INPORT, "geometry.seedsForeground", "geometry.seedsForeground", true)
     , inportBackgroundSeeds_(Port::INPORT, "geometry.seedsBackground", "geometry.seedsBackground", true)
     , outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false)
+    , noiseModel_("noiseModel", "Noise Model")
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
     , betaBias_("betaBias", "Beta Bias: 2^v", 0, -10, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , preconditioner_("preconditioner", "Preconditioner")
@@ -173,6 +174,11 @@ OctreeWalker::OctreeWalker()
     addPort(outportProbabilities_);
 
     // random walker properties
+    addProperty(noiseModel_);
+        noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
+        noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
+        noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
+        noiseModel_.setGroupID("rwparam");
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
         minEdgeWeight_.setTracking(false);
@@ -416,6 +422,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         maxIterations,
         homogeneityThreshold_.get(),
         incrementalSimilarityThreshold_.get(),
+        noiseModel_.getValue(),
     };
 }
 struct BrickNeighborhood {
@@ -812,16 +819,41 @@ private:
     const VolumeAtomic<float>& brick_;
 };
 
-template<typename Accessor>
-static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, Accessor& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
-    float minSpacing = tgt::min(spacing);
-    tgt::vec3 spacingNorm = spacing/minSpacing;
-    auto edgeWeight = [minWeight, betaBias, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
+struct RWNoiseModelGaussian {
+    static VolumeAtomic<float> preprocess(VolumeAtomic<float>&& vol) {
+        return preprocessForAdaptiveParameterSetting(vol);
+    }
+    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
         float beta = 0.5f * betaBias;
-        float spacingFactor = spacingNorm[dim];
         float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
+        return weight;
+    }
+};
+struct RWNoiseModelPoisson {
+    static VolumeAtomic<float> preprocess(VolumeAtomic<float>&& vol) {
+        return std::move(vol);
+    }
+    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
+        float beta = 0.5f * betaBias;
+        float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
+        float intDiffSqr = intDiff*intDiff;
+        float weight;
+
+        float d = sqrt(voxelIntensity) - sqrt(neighborIntensity);
+        weight = exp(-beta * d * d);
+        return weight;
+    }
+};
+
+template<typename NoiseModel>
+static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RandomWalkerVoxelAccessorBrick& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing, RealWorldMapping rwm) {
+    float minSpacing = tgt::min(spacing);
+    tgt::vec3 spacingNorm = spacing/minSpacing;
+    auto edgeWeight = [minWeight, betaBias, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
+        float spacingFactor = spacingNorm[dim];
+        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, spacingFactor, betaBias);
         weight = std::max(weight, minWeight);
 
         return weight;
@@ -831,7 +863,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
 
     size_t index = volumeCoordsToIndex(voxel, volDim);
 
-    float curIntensity = voxelFun.voxel(voxel);
+    float curIntensity = rwm.normalizedToRealWorld(voxelFun.voxel(voxel));
 
     float weightSum = 0;
 
@@ -843,7 +875,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
             neighbor[dim] -= 1;
 
             size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-            float neighborIntensity = voxelFun.voxel(neighbor);
+            float neighborIntensity = rwm.normalizedToRealWorld(voxelFun.voxel(neighbor));
 
             float weight = edgeWeight(curIntensity, neighborIntensity, dim);
 
@@ -882,6 +914,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
     }
 }
 
+template<typename NoiseModel>
 static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
@@ -1004,14 +1037,14 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
     float betaBias = pow(2.f, static_cast<float>(input.betaBias_));
 
-    auto rwInput = preprocessForAdaptiveParameterSetting(inputNeighborhood.data_);
+    auto rwInput = NoiseModel::preprocess(std::move(inputNeighborhood.data_));
     RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
 
     auto vec = std::vector<float>(systemSize, 0.0f);
 
     tgt::vec3 spacing = input.volume_.getSpacing();
     VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), tgt::ivec3(walkerBlockDim)) {
-        processVoxelWeights(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing);
+        processVoxelWeights<NoiseModel>(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing, input.volume_.getRealWorldMapping());
     }
 
     for(int i=0; i<10; ++i) {
@@ -1230,7 +1263,13 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             bool hasSeedsConflicts;
             {
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
-                newBrickAddr = processOctreeBrick(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                switch (input.noiseModel_) {
+                    case RW_NOISE_GAUSSIAN:
+                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                        break;
+                    case RW_NOISE_POISSON:
+                        newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                }
             }
 
             #pragma omp critical

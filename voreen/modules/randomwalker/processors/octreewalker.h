@@ -59,6 +59,11 @@ class RandomWalkerSeeds;
 class RandomWalkerWeights;
 class OctreeBrickPoolManagerMmap;
 
+enum RWNoiseModel {
+    RW_NOISE_GAUSSIAN,
+    RW_NOISE_POISSON,
+};
+
 struct OctreeWalkerPreviousResult {
 public:
     VolumeOctree& octree();
@@ -96,6 +101,7 @@ struct OctreeWalkerInput {
     int maxIterations_;
     float homogeneityThreshold_;
     float incrementalSimilarityThreshold_;
+    RWNoiseModel noiseModel_;
 };
 
 struct OctreeWalkerOutput {
@@ -152,6 +158,7 @@ private:
     GeometryPort inportBackgroundSeeds_;
     VolumePort outportProbabilities_;
 
+    OptionProperty<RWNoiseModel> noiseModel_;
     IntProperty minEdgeWeight_;
     IntProperty betaBias_;
     StringOptionProperty preconditioner_;
