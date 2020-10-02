@@ -27,6 +27,7 @@
 #include "voreen/qt/networkeditor/graphicitems/tooltips/tooltipbasegraphicsitem.h"
 #include "voreen/qt/networkeditor/styles/nwestyle_base.h"
 
+#include <QGraphicsDropShadowEffect>
 #include <QGraphicsSceneHoverEvent>
 #include <QAction>
 #include <QMenu>
@@ -34,9 +35,10 @@
 namespace voreen {
 
 NWEBaseGraphicsItem::NWEBaseGraphicsItem(NetworkEditor* nwe)
-    : QGraphicsObject(0)
+    : QGraphicsObject(nullptr)
     , networkEditor_(nwe)
-    , toolTipItem_(0)
+    , toolTipItem_(nullptr)
+    , shadowEffect_(nullptr)
     , paintHasBeenInitialized_(false)
     , customContextMenu_(new QMenu())
 {
@@ -52,6 +54,19 @@ NWEBaseGraphicsItem::~NWEBaseGraphicsItem() {
     }
 }
 
+void NWEBaseGraphicsItem::enableShadows(bool enable) {
+    if(enable) {
+        shadowEffect_ = new QGraphicsDropShadowEffect;
+        shadowEffect_->setXOffset(0);
+        shadowEffect_->setYOffset(0);
+        shadowEffect_->setBlurRadius(15);
+        shadowEffect_->setColor(QColor(0, 0, 0, 180));
+    }
+    else {
+        shadowEffect_ = nullptr; //TODO: crashes
+    }
+    setGraphicsEffect(shadowEffect_);
+}
 //---------------------------------------------------------------------------------------------------------------
 //                  getter and setter
 //---------------------------------------------------------------------------------------------------------------
@@ -109,7 +124,7 @@ void NWEBaseGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsIte
 }
 
 NWEItemSettings NWEBaseGraphicsItem::beforePaint(QPainter* painter, const QStyleOptionGraphicsItem* option){
-    return currentStyle()->getNWEItemSettings(this,option);
+    return currentStyle()->getItemSettings(this,option);
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -134,6 +149,10 @@ void NWEBaseGraphicsItem::hoverEnterEvent (QGraphicsSceneHoverEvent* event){
         toolTipItem_->setToolTipTimerTriggertMousePosition(p);
         toolTipItem_->startTimer();
     }
+    if(shadowEffect_) {
+        shadowEffect_->setBlurRadius(30);
+        shadowEffect_->setColor(QColor(0, 0, 0, 200));
+    }
     QGraphicsItem::hoverEnterEvent(event);
 }
 
@@ -145,6 +164,9 @@ void NWEBaseGraphicsItem::mouseMoveEvent (QGraphicsSceneMouseEvent* event){
             toolTipItem_->stopTimer();
         }
     }
+    if(isSelected() && shadowEffect_) {
+        scene()->update();
+    }
     QGraphicsItem::mouseMoveEvent(event);
 }
 
@@ -152,6 +174,10 @@ void NWEBaseGraphicsItem::hoverLeaveEvent (QGraphicsSceneHoverEvent* event){
     if(toolTipItem_){
         toolTipItem_->stopTimer();
         toolTipItem_->setVisible(false);
+    }
+    if(shadowEffect_) {
+        shadowEffect_->setBlurRadius(15);
+        shadowEffect_->setColor(QColor(0, 0, 0, 150));
     }
     QGraphicsItem::hoverLeaveEvent(event);
 }

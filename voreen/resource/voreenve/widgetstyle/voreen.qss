@@ -29,8 +29,7 @@
 /*****************/
 
 QToolBar {
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                    stop:0 #777777, stop:1 black);
+    background-color: #333333;
     spacing: 3px;
     border: 4px;
     border-color: black;
@@ -49,8 +48,7 @@ QToolBar::handle {
 }
 
 QToolBar::separator {
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                    stop:1 #777777, stop:0 #aaaaaa);
+    background-color: #444444;
     width: 1px;
     height: 1px;
 }
@@ -60,15 +58,12 @@ QToolBar::separator {
 /**************/
 
 QMenuBar {
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                      stop:0 #777777, stop:1 black);
-/*  background-image: url(:/voreenve/widgetstyle/highlight-menu.png);
-    background-repeat: repeat-x; */
+    background-color: #222222;
 }
 
 QMenuBar::item {
     color: white;
-        background-color: transparent;
+    background-color: transparent;
 }
 
 QMenuBar::item:selected {
@@ -177,9 +172,8 @@ QDockWidget {
 }
 
 QDockWidget::title {
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                      stop:0 #777777, stop:1 black);
-    background-image: url(:/voreenve/widgetstyle/highlight-dockwidget.png);
+    background-color: #222222;
+//    background-image: url(:/voreenve/widgetstyle/highlight-dockwidget.png);
  }
 
  QDockWidget::close-button, QDockWidget::float-button {

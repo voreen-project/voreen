@@ -158,7 +158,8 @@ VoreenQtMainWindow::VoreenQtMainWindow(const std::string& title, const std::stri
 
     // if we have a stylesheet we want the fancy menu bar, please
     if (!qApp->styleSheet().isEmpty())
-        setMenuBar(new FancyMenuBar());
+        //setMenuBar(new FancyMenuBar());
+        setMenuBar(new QMenuBar());
 
     // clear session settings (window states, paths, ...), if specified by cmd line parameter
     if (resetSettings) {

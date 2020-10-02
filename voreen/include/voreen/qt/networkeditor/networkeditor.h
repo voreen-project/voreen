@@ -204,8 +204,8 @@ protected:
     void setLayer(NetworkEditorLayer layer);
     void setCursorMode(NetworkEditorCursorMode mode);
     void setStyle(NWEStyle_Base* style);
-        void styleOnChange();
-        void updateGraphLayout();
+    void updateStyle();
+    void updateGraphLayout();
     void processorFontOnChange();
     void setToolTipMode(bool mode);
 public slots:

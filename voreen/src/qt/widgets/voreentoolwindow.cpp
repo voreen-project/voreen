@@ -59,7 +59,6 @@ void VoreenToolWindowTitle::paintEvent(QPaintEvent* /*e*/) {
     QPainter painter(this);
 
     QColor button_color = QColor(50, 50, 50);
-    QColor m_shadow = QColor(Qt::black);
     int roundness = 0;
 
     // outline
@@ -69,15 +68,7 @@ void VoreenToolWindowTitle::paintEvent(QPaintEvent* /*e*/) {
     painter.setOpacity(1.0);
     painter.drawPath(outline);
 
-    // gradient
-    QLinearGradient gradient(0, 0, 0, button_rect.height());
-    gradient.setSpread(QGradient::ReflectSpread);
-    gradient.setColorAt(0.0, button_color);
-    gradient.setColorAt(0.4, m_shadow);
-    gradient.setColorAt(0.6, m_shadow);
-    gradient.setColorAt(1.0, button_color);
-
-    QBrush brush(gradient);
+    QBrush brush(button_color);
     painter.setBrush(brush);
     painter.setPen(QPen(QBrush(button_color), 2.0));
 
@@ -88,12 +79,6 @@ void VoreenToolWindowTitle::paintEvent(QPaintEvent* /*e*/) {
 
     painter.setOpacity(1.0);
     painter.drawRoundRect(1, 1, button_rect.width() - 2, button_rect.height() - 2, roundness, roundness);
-
-    // glass highlight
-    painter.setBrush(QBrush(Qt::white));
-    painter.setPen(QPen(QBrush(Qt::white), 0.01));
-    painter.setOpacity(0.30);
-    painter.drawRect(1, 1, button_rect.width() - 2, (button_rect.height() / 2) - 1);
 
     // text
     QDockWidget* dockWidget = qobject_cast<QDockWidget*>(parentWidget());

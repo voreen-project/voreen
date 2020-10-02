@@ -53,6 +53,7 @@
 #include "voreen/qt/networkeditor/styles/nwestyle_base.h"
 #include "voreen/qt/networkeditor/styles/nwestyle_classic.h"
 #include "voreen/qt/networkeditor/styles/nwestyle_classic_print.h"
+#include "voreen/qt/networkeditor/styles/nwestyle_material.h"
 
 //graph layouts
 #include "voreen/qt/networkeditor/graphlayouts/nwegl_base.h"
@@ -158,6 +159,8 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
     addProperty(networkEditorStyleProperty_);
         networkEditorStyleProperty_.addOption("first","Classic",NWESTYLE_CLASSIC);
         networkEditorStyleProperty_.addOption("second","Classic Print",NWESTYLE_CLASSIC_PRINT);
+        networkEditorStyleProperty_.addOption("third","Material",NWESTYLE_MATERIAL);
+        networkEditorStyleProperty_.selectByValue(NWESTYLE_MATERIAL); // Welcome new users!
         networkEditorStyleProperty_.setGroupID("style");
     addProperty(networkEditorGraphLayoutsProperty_);
         networkEditorGraphLayoutsProperty_.addOption("first","Sugiyama",NWEGL_SUGIYAMA);
@@ -180,18 +183,7 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
     if (!deserializeSettings(this, filename))
         LWARNING("Failed to deserialize networkeditor settings! Ignore on first start of voreen.");
     //set current Style
-    switch(networkEditorStyleProperty_.getValue()){
-    case NWESTYLE_CLASSIC:
-        currentStyle_ = new NWEStyle_Classic(this);
-        break;
-    case NWESTYLE_CLASSIC_PRINT:
-        currentStyle_ = new NWEStyle_Classic_Print(this);
-        break;
-    default:
-        tgtAssert(false,"Unknown NetworkEditorStyle!!! Style not changed.");
-        LERROR("Unknown NetworkEditorStyle!!! Style not changed.");
-        break;
-    }
+    updateStyle();
     //set current graph layout
     switch(networkEditorGraphLayoutsProperty_.getValue()){
     case NWEGL_SUGIYAMA: {
@@ -209,7 +201,7 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
         break;
     }
     //link properties
-    ON_PROPERTY_CHANGE(networkEditorStyleProperty_,NetworkEditor,styleOnChange);
+    ON_PROPERTY_CHANGE(networkEditorStyleProperty_,NetworkEditor,updateStyle);
     ON_PROPERTY_CHANGE(scaleProcessorFontSizeProperty_,NetworkEditor,processorFontOnChange);
     ON_PROPERTY_CHANGE(sugiShiftXProperty_,NetworkEditor,updateGraphLayout);
     ON_PROPERTY_CHANGE(sugiOverlapProperty_,NetworkEditor,updateGraphLayout);
@@ -217,7 +209,7 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
     ON_PROPERTY_CHANGE(sugiPortFlushProperty_,NetworkEditor,updateGraphLayout);
 
     //paint settings
-    setBackgroundBrush(currentStyle_->NWEStyle_NWEBackgroundBrush);
+    setBackgroundBrush(currentStyle_->getBackgroundBrush());
     setCacheMode(CacheBackground);
     setRenderHint(QPainter::Antialiasing);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
@@ -635,6 +627,9 @@ void NetworkEditor::scale(qreal sx, qreal sy) {
     }
     //QRectF sr = scene()->itemsBoundingRect();
     vr.setCoords(vr.left()-vr.width()/2.f,vr.top()-vr.height()/2.f,vr.right()-vr.width()/2.f,vr.bottom()-vr.height()/2.f);
+
+    if(sx > 1.f && sv.boundingRect().size().width() < 400)
+        return;
 
     if(sx < 1.f && sv.boundingRect().size().width() > 3*vr.size().width() && sv.boundingRect().size().height() > 3*vr.size().height())
         return;
@@ -1391,13 +1386,15 @@ void NetworkEditor::setCursorMode(NetworkEditorCursorMode mode) {
 void NetworkEditor::processorFontOnChange() {
     NWEBaseGraphicsItem* base = 0;
     foreach(QGraphicsItem* item,scene()->items()){
-        if((base = dynamic_cast<NWEBaseGraphicsItem*>(item)))
+        if((base = dynamic_cast<NWEBaseGraphicsItem*>(item))) {
             base->resetPaintInitialization();
+            base->update();
+        }
     }
     scene()->update();
 }
 
-void NetworkEditor::styleOnChange() {
+void NetworkEditor::updateStyle() {
     switch(networkEditorStyleProperty_.getValue()){
     case NWESTYLE_CLASSIC:
         setStyle(new NWEStyle_Classic(this));
@@ -1405,9 +1402,12 @@ void NetworkEditor::styleOnChange() {
     case NWESTYLE_CLASSIC_PRINT:
         setStyle(new NWEStyle_Classic_Print(this));
         break;
+    case NWESTYLE_MATERIAL:
+        setStyle(new NWEStyle_Material(this));
+        break;
     default:
-        tgtAssert(false,"Unknown NetworkEditorStyle!!! Style not changed.");
-        LERROR("Unknown NetworkEditorStyle!!! Style not changed.");
+        tgtAssert(false,"Unknown NetworkEditorStyle. Style not changed.");
+        LERROR("Unknown NetworkEditorStyle. Style not changed.");
         break;
     }
 }
@@ -1430,27 +1430,34 @@ void NetworkEditor::updateGraphLayout() {
 }
 
 void NetworkEditor::setStyle(NWEStyle_Base* style) {
+    if(!currentStyle_) {
+        currentStyle_ = style;
+        return;
+    }
+
     delete currentStyle_;
     currentStyle_ = style;
     NWEBaseGraphicsItem* base = 0;
     foreach(QGraphicsItem* item,scene()->items()){
-        if((base = dynamic_cast<NWEBaseGraphicsItem*>(item)))
+        if((base = dynamic_cast<NWEBaseGraphicsItem*>(item))) {
             base->resetPaintInitialization();
+            base->update();
+        }
     }
     //set background color
-    setBackgroundBrush(currentStyle_->NWEStyle_NWEBackgroundBrush);
+    setBackgroundBrush(currentStyle_->getBackgroundBrush());
     //set button background
     QPalette pal = generalLinkingLayerButtonContainer_->palette();
-    pal.setColor(generalLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(generalLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     generalLinkingLayerButtonContainer_->setPalette(pal);
     pal = cameraLinkingLayerButtonContainer_->palette();
-    pal.setColor(cameraLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(cameraLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     cameraLinkingLayerButtonContainer_->setPalette(pal);
     pal = portSizeLinkingLayerButtonContainer_->palette();
-    pal.setColor(portSizeLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(portSizeLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     portSizeLinkingLayerButtonContainer_->setPalette(pal);
     pal = linkingLayerButtonContainer_->palette();
-    pal.setColor(linkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(linkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     linkingLayerButtonContainer_->setPalette(pal);
 
     update();
@@ -1474,7 +1481,7 @@ void NetworkEditor::initilizeEditorButtons() {
     generalLinkingLayerButtonContainer_ = new QWidget(this);
     generalLinkingLayerButtonContainer_->setAutoFillBackground(true);
     QPalette pal = generalLinkingLayerButtonContainer_->palette();
-    pal.setColor(generalLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(generalLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     generalLinkingLayerButtonContainer_->setPalette(pal);
     QBoxLayout* generalLinkingLayerButtonLayout = new QHBoxLayout(generalLinkingLayerButtonContainer_);
     generalLinkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
@@ -1506,7 +1513,7 @@ void NetworkEditor::initilizeEditorButtons() {
     cameraLinkingLayerButtonContainer_ = new QWidget(this);
     cameraLinkingLayerButtonContainer_->setAutoFillBackground(true);
     pal = cameraLinkingLayerButtonContainer_->palette();
-    pal.setColor(cameraLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(cameraLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     cameraLinkingLayerButtonContainer_->setPalette(pal);
     QBoxLayout* cameraLinkingLayerButtonLayout = new QHBoxLayout(cameraLinkingLayerButtonContainer_);
     cameraLinkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
@@ -1536,7 +1543,7 @@ void NetworkEditor::initilizeEditorButtons() {
     portSizeLinkingLayerButtonContainer_ = new QWidget(this);
     portSizeLinkingLayerButtonContainer_->setAutoFillBackground(true);
     pal = portSizeLinkingLayerButtonContainer_->palette();
-    pal.setColor(portSizeLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(portSizeLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     portSizeLinkingLayerButtonContainer_->setPalette(pal);
     QBoxLayout* portSizeLinkingLayerButtonLayout = new QHBoxLayout(portSizeLinkingLayerButtonContainer_);
     portSizeLinkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
@@ -1566,7 +1573,7 @@ void NetworkEditor::initilizeEditorButtons() {
     linkingLayerButtonContainer_ = new QWidget(this);
     linkingLayerButtonContainer_->setAutoFillBackground(true);
     pal = linkingLayerButtonContainer_->palette();
-    pal.setColor(linkingLayerButtonContainer_->backgroundRole(), currentStyle_->NWEStyle_NWEButtonBackgroundColor);
+    pal.setColor(linkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     linkingLayerButtonContainer_->setPalette(pal);
     linkingLayerButtonContainer_->setMinimumSize(NWEButtonBackgroundMargin*2+NWEMainButtonSize.width(),1);
 

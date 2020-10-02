@@ -52,7 +52,7 @@ TextBoxBaseGraphicsItem::TextBoxBaseGraphicsItem(NetworkEditor* nwe)
     , minimalSize_(100.f,100.f)
     , resizeBorder_(3.f)
     , fontColor_(Qt::black)
-    , baseColor_(nwe->getCurrentStyle()->NWEStyle_TextBoxBaseMainColor)
+    , baseColor_(nwe->getCurrentStyle()->getTextBoxBaseMainColor())
     , captionItem_(0)
     , contentItem_(0), contentEditor_(0), decreaseContentFontSizeAction_(0), increaseContentFontSizeAction_(0)
     {

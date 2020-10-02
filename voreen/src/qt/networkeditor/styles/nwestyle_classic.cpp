@@ -65,40 +65,57 @@ namespace voreen{
 /*********************************************************************
  *                       General Color Defines
  ********************************************************************/
-//editor
-const QColor NWEStyle_Base::NWEStyle_NWEButtonBackgroundColor = QColor(50,50,50,100);
-const QBrush NWEStyle_Base::NWEStyle_NWEBackgroundBrush =  QBrush(Qt::darkGray);
 
-//general graphicsitem
-const QColor NWEStyle_Base::NWEStyle_SelectionColor = QColor(0,0,237,255);
-const QColor NWEStyle_Base::NWEStyle_HoverColor = QColor(0,0,97,255);
-
-const QColor NWEStyle_Base::NWEStyle_ConnectionYes = Qt::green;
-const QColor NWEStyle_Base::NWEStyle_ConnectionMaybe = Qt::yellow;
-const QColor NWEStyle_Base::NWEStyle_ConnectionNo = Qt::red;
+QColor NWEStyle_Classic::getButtonBackgroundColor() const {
+    return QColor(50,50,50,100);
+}
+QBrush NWEStyle_Classic::getBackgroundBrush() const {
+    return QBrush(Qt::darkGray);
+}
+QColor NWEStyle_Classic::getSelectionColor() const {
+    return QColor(0,0,237,255);
+}
+QColor NWEStyle_Classic::getHoverColor() const {
+    return QColor(0,0,97,255);
+}
+QColor NWEStyle_Classic::getConnectionYes() const {
+    return Qt::green;
+}
+QColor NWEStyle_Classic::getConnectionMaybe() const {
+    return Qt::yellow;
+}
+QColor NWEStyle_Classic::getConnectionNo() const {
+    return Qt::red;
+}
+QColor NWEStyle_Classic::getProcessorColor1() const {
+    return QColor(50,50,50,255);
+}
+QColor NWEStyle_Classic::getPortArrowColor() const {
+    return Qt::black;
+}
+QColor NWEStyle_Classic::getPortOwnerLinkArrowColor() const {
+    return Qt::lightGray;
+}
+QColor NWEStyle_Classic::getPropertyLinkArrowColor() const {
+    return Qt::lightGray;
+}
+QColor NWEStyle_Classic::getPortSizeLinkArrowColor() const {
+    return Qt::black;
+}
+QColor NWEStyle_Classic::getToolTipBackgroundColor() const {
+    return Qt::white;
+}
+QColor NWEStyle_Classic::getTextBoxBaseMainColor() const {
+    return QColor(255,234,168,255);
+}
+bool NWEStyle_Classic::getShadowsEnabled() const {
+    return false;
+}
 
 QSvgRenderer NWEStyle_Base::NWEStyle_Error1Renderer;
 QSvgRenderer NWEStyle_Base::NWEStyle_Error2Renderer;
 const QString NWEStyle_Base::NWEStyle_Error1SVGPath = QString(":/qt/icons/yellow-warning.svg");
 const QString NWEStyle_Base::NWEStyle_Error2SVGPath = QString(":/qt/icons/red-warning.svg");
-
-//aggregation
-const QColor NWEStyle_Base::NWEStyle_AggregationColor1 = QColor(50,50,50,255);
-//port
-//processor
-const QColor NWEStyle_Base::NWEStyle_ProcessorColor1 = QColor(50,50,50,255);
-//portarrow
-const QColor NWEStyle_Base::NWEStyle_PortArrowColor = Qt::black;
-//portownerlinkarrow
-const QColor NWEStyle_Base::NWEStyle_PortOwnerLinkArrowColor = Qt::lightGray;
-//propertylinkarrow
-const QColor NWEStyle_Base::NWEStyle_PropertyLinkArrowColor = Qt::lightGray;
-//portsizelinkarrow
-const QColor NWEStyle_Base::NWEStyle_PortSizeLinkArrowColor = Qt::black;
-//tool tips
-const QColor NWEStyle_Base::NWEStyle_ToolTipBackgroundColor = Qt::white;
-//text boxes
-const QColor NWEStyle_Base::NWEStyle_TextBoxBaseMainColor = QColor(255,234,168,255);
 
 /*********************************************************************
  *                       General Functions
@@ -1345,7 +1362,7 @@ void NWEStyle_Classic::ToolTipProcessorGI_initializePaintSettings(ToolTipProcess
 
 void NWEStyle_Classic::ToolTipProcessorGI_paint(ToolTipProcessorGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
     QRectF bRect = ToolTipProcessorGI_boundingRect(item);
-    painter->setBrush(NWEStyle_ToolTipBackgroundColor);
+    painter->setBrush(getTextBoxBaseMainColor());
     painter->drawRect(bRect);
 }
 
@@ -1368,8 +1385,8 @@ void NWEStyle_Classic::TextBoxGI_initializePaintSettings(TextBoxGraphicsItem* it
     QFont font(item->getContentEditor()->font());
     //set background color
     std::stringstream sstream;
-    sstream << "background-color: rgb(" << NWEStyle_TextBoxBaseMainColor.red() << "," << NWEStyle_TextBoxBaseMainColor.green() <<
-               "," << NWEStyle_TextBoxBaseMainColor.blue() << ")";
+    sstream << "background-color: rgb(" << getTextBoxBaseMainColor().red() << "," << getTextBoxBaseMainColor().green() <<
+               "," << getTextBoxBaseMainColor().blue() << ")";
     item->getContentEditor()->setStyleSheet(sstream.str().c_str());
     //restore font size
     item->getContentEditor()->setFont(font);
@@ -1383,10 +1400,10 @@ void NWEStyle_Classic::TextBoxGI_paint(TextBoxGraphicsItem* item, QPainter* pain
     QRectF br = TextBoxBaseGI_boundingRect(item);
 
     //main
-    painter->setBrush(NWEStyle_TextBoxBaseMainColor);
+    painter->setBrush(getTextBoxBaseMainColor());
     painter->drawRect(br.x(),br.y(),br.width(),br.height());
         //highlight
-    if(setting.color1_ != NWEStyle_TextBoxBaseMainColor) {
+    if(setting.color1_ != getTextBoxBaseMainColor()) {
         painter->setPen(Qt::NoPen); //remove lines
         QLinearGradient gradientTop(0, 0, 0, border);
         gradientTop.setColorAt(0.0, setting.color1_);

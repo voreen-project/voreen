@@ -33,6 +33,7 @@
 #include <QMenu>
 
 class QAction;
+class QGraphicsDropShadowEffect;
 
 namespace voreen {
 
@@ -55,12 +56,15 @@ public:
     NWEBaseGraphicsItem(NetworkEditor* nwe);
     virtual ~NWEBaseGraphicsItem();
 
+    void enableShadows(bool enable);
+
 //-- member --
 protected:
-    NetworkEditor* networkEditor_;          //< the NetworkEditor assigned in the constructor
-    bool paintHasBeenInitialized_;          //< stores, if the paint settings have been initialized
-    QMenu* customContextMenu_;              //< custom context menu of this item
-    ToolTipBaseGraphicsItem* toolTipItem_;  //< the tooltip graphicsitem if defined
+    NetworkEditor* networkEditor_;           //< the NetworkEditor assigned in the constructor
+    bool paintHasBeenInitialized_;           //< stores, if the paint settings have been initialized
+    QMenu* customContextMenu_;               //< custom context menu of this item
+    ToolTipBaseGraphicsItem* toolTipItem_;   //< the tooltip graphicsitem if defined
+    QGraphicsDropShadowEffect* shadowEffect_;//< optional shadow effect
 
 //-------------------------------------------------------------------------------------
 //                  getter and setter

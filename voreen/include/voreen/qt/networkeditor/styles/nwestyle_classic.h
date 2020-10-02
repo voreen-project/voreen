@@ -35,15 +35,29 @@ namespace voreen {
  */
 class NWEStyle_Classic : public NWEStyle_Base{
 public:
+
+    /*********************************************************************
+     *                       General Color Defines
+     ********************************************************************/
+    virtual QColor getButtonBackgroundColor() const;
+    virtual QBrush getBackgroundBrush() const;
+    virtual QColor getSelectionColor() const;
+    virtual QColor getHoverColor() const;
+    virtual QColor getConnectionYes() const;
+    virtual QColor getConnectionMaybe() const;
+    virtual QColor getConnectionNo() const;
+    virtual QColor getProcessorColor1() const;
+    virtual QColor getPortArrowColor() const;
+    virtual QColor getPortOwnerLinkArrowColor() const;
+    virtual QColor getPropertyLinkArrowColor() const;
+    virtual QColor getPortSizeLinkArrowColor() const;
+    virtual QColor getToolTipBackgroundColor() const;
+    virtual QColor getTextBoxBaseMainColor() const;
+    virtual bool getShadowsEnabled() const;
+
+
     NWEStyle_Classic(NetworkEditor* networkeditor);
     ~NWEStyle_Classic();
-
-    /**
-     * Help function to use getColorAndDepthSetting without template
-     */
-    virtual NWEItemSettings getNWEItemSettings(const NWEBaseGraphicsItem* item, const QStyleOptionGraphicsItem* option) {
-        return NWEStyle_Base::getItemSettings<NWEStyle_Classic>(item,option);
-   }
 
     /*********************************************************************
      *                       Core Elements

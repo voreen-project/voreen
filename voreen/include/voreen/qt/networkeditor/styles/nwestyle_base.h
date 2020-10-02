@@ -106,44 +106,44 @@ public:
      *                       General Color Defines
      ********************************************************************/
     //editor
-    static const QColor NWEStyle_NWEButtonBackgroundColor;  //< Color of NetworkEditor buttons
-    static const QBrush NWEStyle_NWEBackgroundBrush;        //< Color/Brush of the NetworkEditor background
+    virtual QColor getButtonBackgroundColor() const = 0;     //< Color of NetworkEditor buttons
+    virtual QBrush getBackgroundBrush() const = 0;           //< Color/Brush of the NetworkEditor background
 
     //general graphicsitems
-    static const QColor NWEStyle_SelectionColor;            //< Selection color of each graphicsitem
-    static const QColor NWEStyle_HoverColor;                //< Hover color of each graphicsitem
+    virtual QColor getSelectionColor() const = 0;            //< Selection color of each graphicsitem
+    virtual QColor getHoverColor() const = 0;                //< Hover color of each graphicsitem
 
-    static const QColor NWEStyle_ConnectionYes;             //< Color of potential connections if they are valid
-    static const QColor NWEStyle_ConnectionMaybe;           //< Color of potential connections if they are partly valid
-    static const QColor NWEStyle_ConnectionNo;              //< Color of potential connections if they are not valid
+    virtual QColor getConnectionYes() const = 0;             //< Color of potential connections if they are valid
+    virtual QColor getConnectionMaybe() const = 0;           //< Color of potential connections if they are partly valid
+    virtual QColor getConnectionNo() const = 0;              //< Color of potential connections if they are not valid
 
-    static QSvgRenderer NWEStyle_Error1Renderer;     //< Renderer for error type 1 sign
-    static QSvgRenderer NWEStyle_Error2Renderer;     //< Renderer for error type 2 sign
-    static const QString NWEStyle_Error1SVGPath;     //< Path to the error 1 svg element
-    static const QString NWEStyle_Error2SVGPath;     //< Path to the error 2 svg element
-
-    //aggregation
-    static const QColor NWEStyle_AggregationColor1;         //< Default color of the aggregation graphicsitem
     //port
     //processor
-    static const QColor NWEStyle_ProcessorColor1;           //< Default color of the processor graphicsitem
+    virtual QColor getProcessorColor1() const = 0;           //< Default color of the processor graphicsitem
     //property
     //propertylist
     //progressbar
     //propertylistbutton
     //widgettogglebutton
     //portarrow
-    static const QColor NWEStyle_PortArrowColor;            //< Default color of the portarrow graphicsitem
+    virtual QColor getPortArrowColor() const = 0;            //< Default color of the portarrow graphicsitem
     //portownerlinkarrow
-    static const QColor NWEStyle_PortOwnerLinkArrowColor;   //< Default color of the portownrlinkarrow graphicsitem
+    virtual QColor getPortOwnerLinkArrowColor() const = 0;   //< Default color of the portownrlinkarrow graphicsitem
     //propertylinkarrow
-    static const QColor NWEStyle_PropertyLinkArrowColor;    //< Default color of the propertylinkarrow graphicsitem
+    virtual QColor getPropertyLinkArrowColor() const = 0;    //< Default color of the propertylinkarrow graphicsitem
     //portsizelinkarrow
-    static const QColor NWEStyle_PortSizeLinkArrowColor;    //< Default color of the portsizelinkarrow graphicsitem
+    virtual QColor getPortSizeLinkArrowColor() const = 0;    //< Default color of the portsizelinkarrow graphicsitem
     //tool tips
-    static const QColor NWEStyle_ToolTipBackgroundColor;    //< Background color of all tooltips
+    virtual QColor getToolTipBackgroundColor() const = 0;    //< Background color of all tooltips
     //text boxes
-    static const QColor NWEStyle_TextBoxBaseMainColor;      //< Main color of text boxes
+    virtual QColor getTextBoxBaseMainColor() const = 0;      //< Main color of text boxes
+    //shadows
+    virtual bool getShadowsEnabled() const = 0;              //< Enable shadows to items that support it
+
+    static QSvgRenderer NWEStyle_Error1Renderer;     //< Renderer for error type 1 sign
+    static QSvgRenderer NWEStyle_Error2Renderer;     //< Renderer for error type 2 sign
+    static const QString NWEStyle_Error1SVGPath;     //< Path to the error 1 svg element
+    static const QString NWEStyle_Error2SVGPath;     //< Path to the error 2 svg element
 
     /**
      * Enum used in 'ItemSetting'. At the moment only supported in processor graphicsitem.
@@ -170,18 +170,12 @@ public:
 
     /**
      * Retruns the color and depth settings of the given graphicsitem. Should be called at the beginning of the paint function.
-     * Template T is the subclass calling this function.
      * @param item the nwebasegraphicsitem of which the color and depth settings are requested.
      * @param option QStyleOption used for settings calculation.
      * @return the color and depth settings of the 'item'.
      */
-    template<class T>
     NWEItemSettings getItemSettings(const NWEBaseGraphicsItem* item, const QStyleOptionGraphicsItem* option);
 
-    /**
-     * Function beeing implemented by all sub classes. Must call 'getItemSettings' with this as template.
-     */
-    virtual NWEItemSettings getNWEItemSettings(const NWEBaseGraphicsItem* item, const QStyleOptionGraphicsItem* option) = 0;
     /*********************************************************************
      *                       Core Elements
      ********************************************************************/
@@ -299,363 +293,6 @@ struct NWEItemSettings{
         , error_(error)
     {}
 };
-
-/**
- * Function to retiurn the actual color and depth settings of the given graphicsitem.
- * The template parameter T should be the class calling this function to fetch the right definition of the color members.
- * Actual color means the normal color modified by hover, selection or any other event.
- * @param item the graphicsitem the color is fetched for
- * @param option the style option belonging to 'item'. Selection and hover informations are stored in it.
- * @return the struct containing the coor and depth informations about 'item'
- */
-template<class T>
-NWEItemSettings NWEStyle_Base::getItemSettings(const NWEBaseGraphicsItem* item, const QStyleOptionGraphicsItem* option){
-    QColor color1 = Qt::black;
-    qreal opacity = 1.0;
-    qreal zValue = 0.0;
-    ErrorState error = ES_NO_ERROR;
-    //switch over all graphicsitem types
-    switch(item->type()){
-    /********************************************
-     *      Port                                *
-     ********************************************/
-    case UserTypesPortGraphicsItem:{
-        const PortGraphicsItem* portItem = dynamic_cast<const PortGraphicsItem*>(item);
-        color1 = portItem->getColor();
-        if (!portItem->getPort()->areConditionsMet())
-            error = ES_ERROR_T1;
-        switch(item->currentLayer()){
-        case NetworkEditorLayerDataFlow:
-            opacity = 1.0;
-            break;
-        case NetworkEditorLayerGeneralLinking:
-        case NetworkEditorLayerCameraLinking:
-            opacity = 0.2;
-            break;
-        case NetworkEditorLayerPortSizeLinking:
-            if(!portItem->getPort()->getPropertiesByType<RenderSizeOriginProperty>().empty() || !portItem->getPort()->getPropertiesByType<RenderSizeReceiveProperty>().empty())
-                opacity = 1.0;
-            else
-                opacity = 0.2;
-            break;
-        default:
-            tgtAssert(false,"should not get here");
-            break;
-        }
-
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      Processor                           *
-     ********************************************/
-    case UserTypesProcessorGraphicsItem: {
-        const ProcessorGraphicsItem* procItem = dynamic_cast<const ProcessorGraphicsItem*>(item);
-        //get aggregation color and depth
-        color1 = T::NWEStyle_ProcessorColor1;
-        // frame indicates selected process
-        if (option->state & QStyle::State_Selected) {
-            color1 = T::NWEStyle_SelectionColor;
-            zValue = ZValuesSelectedPortOwnerGraphicsItem;
-        }
-        // hover effect
-        else if (option->state & QStyle::State_MouseOver){
-            color1 = T::NWEStyle_HoverColor;
-            zValue = ZValuesSelectedPortOwnerGraphicsItem;
-        }
-        // no effect
-        else {
-            zValue = ZValuesPortOwnerGraphicsItem;
-        }
-        //set error
-        switch(procItem->getProcessor()->getProcessorState()) {
-        case Processor::PROCESSOR_STATE_NOT_INITIALIZED:
-            error = ES_ERROR_T2;
-            break;
-        case Processor::PROCESSOR_STATE_NOT_READY:
-            error = ES_ERROR_T1;
-            break;
-        case  Processor::PROCESSOR_STATE_READY:
-            error = ES_NO_ERROR;
-            break;
-        default:
-            tgtAssert(false, "Unknown processor state!!!");
-            break;
-        }
-        //get opacity by layer
-        bool hasSpecialProp = false;
-        switch(item->currentLayer()){
-        case NetworkEditorLayerCameraLinking:
-            foreach (Processor* processor, procItem->getProcessors()){
-                if(!processor->getPropertiesByType<CameraProperty>().empty()){
-                    hasSpecialProp = true;
-                    break;
-                }
-            }
-            if(hasSpecialProp)
-                opacity = 1.0;
-            else
-                opacity = 0.20;
-            break;
-        case NetworkEditorLayerPortSizeLinking:
-            foreach (Port* port, procItem->getPorts()){
-                if(!port->getPropertiesByType<RenderSizeOriginProperty>().empty() ||
-                   !port->getPropertiesByType<RenderSizeReceiveProperty>().empty()){
-                    hasSpecialProp = true;
-                    break;
-                }
-            }
-            if(hasSpecialProp)
-                opacity = 1.0;
-            else
-                opacity = 0.20;
-            break;
-        default:
-            opacity = 1.0;
-            break;
-        }
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      Property                            *
-     ********************************************/
-    case UserTypesPropertyGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings();
-        break;}
-    /********************************************
-     *      PropertyList                        *
-     ********************************************/
-    case UserTypesPropertyListGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings();
-        break;}
-    /********************************************
-     *      ProgressBar                         *
-     ********************************************/
-    case UserTypesProgressBarGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings();
-        break;}
-    /********************************************
-     *      PropertyListButton                  *
-     ********************************************/
-    case UserTypesPropertyListButtonGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings();
-        break;}
-    /********************************************
-     *      WidgetToggleButton                  *
-     ********************************************/
-    case UserTypesWidgetToggleButtonGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings();
-        break;}
-    /********************************************
-     *      PortArrow                           *
-     ********************************************/
-    case UserTypesPortArrowGraphicsItem:{
-        const PortArrowGraphicsItem* arrowItem = dynamic_cast<const PortArrowGraphicsItem*>(item);
-        switch (arrowItem->getColorConnectableMode()) {
-        case ConnectionBaseGraphicsItem::CCM_DEFAULT:
-            if (item->isSelected()){
-                color1 = T::NWEStyle_SelectionColor;
-                zValue = ZValuesSelectedPortArrowGraphicsItem;
-            } else {
-                color1 = T::NWEStyle_PortArrowColor;
-                zValue = ZValuesPortArrowGraphicsItem;
-            }
-
-            // In case the data condition of the dest port has failed, we mark this connection as invalid.
-            if (PortGraphicsItem* portItem = dynamic_cast<PortGraphicsItem*>(arrowItem->getDestinationItem()))
-                if(!portItem->getPort()->areConditionsMet())
-                    color1 = T::NWEStyle_ConnectionNo;
-
-            if ((option->state & QStyle::State_MouseOver) || arrowItem->getIsHovered()) {
-                if (color1 == Qt::black) {    // Qt is unable to brighten up Qt::black
-                    color1 = T::NWEStyle_HoverColor;
-                } else {
-                    color1 = color1.light();
-                }
-            }
-            break;
-        case ConnectionBaseGraphicsItem::CCM_NO:
-            color1 = T::NWEStyle_ConnectionNo;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_MAYBE:
-            color1 = T::NWEStyle_ConnectionMaybe;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_YES:
-            color1 = T::NWEStyle_ConnectionYes;
-            break;
-        }
-        //push to front
-        if (!arrowItem->getDestinationItem())
-            zValue = ZValuesGrabbedPortArrowGraphicsItem;
-        //get opacity
-        if(item->currentLayer() == NetworkEditorLayerDataFlow)
-            opacity = 1.0;
-        else
-            opacity = 0.2;
-        //get
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      PortOwnerLinkArrow                  *
-     ********************************************/
-    case UserTypesPortOwnerLinkArrowGraphicsItem:{
-        const PortOwnerLinkArrowGraphicsItem* polaItem = dynamic_cast<const PortOwnerLinkArrowGraphicsItem*>(item);
-        switch (polaItem->getColorConnectableMode()) {
-        case ConnectionBaseGraphicsItem::CCM_DEFAULT:
-            if (item->isSelected())
-                color1 = T::NWEStyle_SelectionColor;
-            else
-                color1 = T::NWEStyle_PortOwnerLinkArrowColor;
-
-            if (option->state & QStyle::State_MouseOver) {
-                if (color1 == Qt::lightGray)
-                    color1 = T::NWEStyle_HoverColor;
-                else
-                    color1 = color1.light();
-            }
-            break;
-        case ConnectionBaseGraphicsItem::CCM_NO:
-            color1 = T::NWEStyle_ConnectionNo;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_MAYBE:
-            color1 = T::NWEStyle_ConnectionMaybe;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_YES:
-            color1 = T::NWEStyle_ConnectionYes;
-            break;
-        }
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      PropertyLinkArrow                   *
-     ********************************************/
-    case UserTypesPropertyLinkArrowGraphicsItem:{
-        const PropertyLinkArrowGraphicsItem* plaItem = dynamic_cast<const PropertyLinkArrowGraphicsItem*>(item);
-        switch (plaItem->getColorConnectableMode()) {
-        case ConnectionBaseGraphicsItem::CCM_DEFAULT:
-            if (item->isSelected()){
-                color1 = T::NWEStyle_SelectionColor;
-                zValue = ZValuesSelectedPropertyLinkArrowGraphicsItem;
-            } else {
-                color1 = T::NWEStyle_PropertyLinkArrowColor;
-                zValue = ZValuesPropertyLinkArrowGraphicsItem;
-            }
-
-            if (option->state & QStyle::State_MouseOver || plaItem->getIsHovered()) {
-                if (color1 == Qt::lightGray)
-                    color1 = T::NWEStyle_HoverColor;
-                else
-                    color1 = color1.light();
-            }
-            break;
-        case ConnectionBaseGraphicsItem::CCM_NO:
-            color1 = T::NWEStyle_ConnectionNo;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_MAYBE:
-            color1 = T::NWEStyle_ConnectionMaybe;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_YES:
-            color1 = T::NWEStyle_ConnectionYes;
-            break;
-        }
-        //push to front
-        if(option->state & QStyle::State_MouseOver || plaItem->getIsHovered()){
-                zValue = ZValuesSelectedPropertyLinkArrowGraphicsItem;
-        }
-
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      PortSizeLinkArrow                   *
-     ********************************************/
-    case UserTypesPortSizeLinkArrowGraphicsItem:{
-        const PortSizeLinkArrowGraphicsItem* pslaItem = dynamic_cast<const PortSizeLinkArrowGraphicsItem*>(item);
-        switch (pslaItem->getColorConnectableMode()) {
-        case ConnectionBaseGraphicsItem::CCM_DEFAULT:
-            if (item->isSelected())
-                color1 = T::NWEStyle_SelectionColor;
-            else
-                color1 = T::NWEStyle_PortSizeLinkArrowColor;
-
-            if ((option->state & QStyle::State_MouseOver) || pslaItem->getIsHovered()) {
-                if (color1 == Qt::black)
-                    color1 = T::NWEStyle_HoverColor;
-                else
-                    color1 = color1.light();
-            }
-            break;
-        case ConnectionBaseGraphicsItem::CCM_NO:
-            color1 = T::NWEStyle_ConnectionNo;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_MAYBE:
-            color1 = T::NWEStyle_ConnectionMaybe;
-            break;
-        case ConnectionBaseGraphicsItem::CCM_YES:
-            color1 = T::NWEStyle_ConnectionYes;
-            break;
-        }
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      ToolTipPort                         *
-     ********************************************/
-    case UserTypesToolTipPortGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings(T::NWEStyle_ToolTipBackgroundColor,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      ToolTipProcessor                    *
-     ********************************************/
-    case UserTypesToolTipProcessorGraphicsItem:{
-        //nothing yet
-        return NWEItemSettings(T::NWEStyle_ToolTipBackgroundColor,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      Text Boxes                          *
-     ********************************************/
-    //case UserTypesTextBoxBaseGraphicsItem:
-    case UserTypesTextBoxGraphicsItem:
-        {
-        //const TextBoxGraphicsItem* tbItem = dynamic_cast<const TextBoxGraphicsItem*>(item);
-        //get aggregation color and depth
-        color1 = T::NWEStyle_TextBoxBaseMainColor;
-        zValue = ZValuesTextBoxGraphicsItem;
-        // frame indicates selected process
-        if (option->state & QStyle::State_Selected) {
-            color1 = T::NWEStyle_SelectionColor;
-            zValue = ZValuesSelectedPortOwnerGraphicsItem;
-        }//ignore hover
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    case UserTypesFrameBoxGraphicsItem:
-        {
-        const FrameBoxGraphicsItem* frameItem = dynamic_cast<const FrameBoxGraphicsItem*>(item);
-        //get aggregation color and depth
-        color1 = frameItem->getBaseColor();
-        zValue = ZValuesFrameBoxGraphicsItem;
-        // frame indicates selected process
-        if (option->state & QStyle::State_Selected) {
-            color1 = T::NWEStyle_SelectionColor;
-        }
-        //ignore hover
-        return NWEItemSettings(color1,opacity,zValue,error);
-        break;}
-    /********************************************
-     *      Default                             *
-     ********************************************/
-    default:
-        tgtAssert(false,"NWEBaseGraphicsItem::Type is not known!!!");
-        LERRORC("NWEStyle_Base::getActualColorAndDepthSetting","NWEBaseGraphicsItem::Type " << item->type() << "is not known!!!");
-        break;
-    }
-    //should not get here
-    return NWEItemSettings();
-}
-
 
 } //namespace voreen
 

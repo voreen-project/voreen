@@ -76,6 +76,8 @@ ProcessorGraphicsItem::ProcessorGraphicsItem(Processor* processor, NetworkEditor
 
     setToolTipGraphicsItem(new ToolTipProcessorGraphicsItem(this));
 
+    // TODO: requires restart of application
+    enableShadows(currentStyle()->getShadowsEnabled());
 }
 
 ProcessorGraphicsItem::~ProcessorGraphicsItem() {

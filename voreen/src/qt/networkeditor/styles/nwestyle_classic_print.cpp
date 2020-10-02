@@ -62,7 +62,9 @@ namespace voreen{
  *                       General Color Defines
  ********************************************************************/
 //processor
-const QColor NWEStyle_Classic_Print::NWEStyle_ProcessorColor1 = Qt::white;
+QColor NWEStyle_Classic_Print::getProcessorColor1() const {
+    return Qt::white;
+}
 
 /*********************************************************************
  *                       General Functions

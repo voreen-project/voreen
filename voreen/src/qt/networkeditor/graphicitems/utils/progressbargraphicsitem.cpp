@@ -51,7 +51,8 @@ ProgressBarGraphicsItem::ProgressBarGraphicsItem(PortOwnerGraphicsItem* parent, 
 
     upperForegroundColor1_ = QColor(176, 191, 217);
     upperForegroundColor2_ = QColor(60, 109, 194);
-    lowerForegroundColor_ = QColor(22, 87, 199);
+    //lowerForegroundColor_ = QColor(22, 87, 199);
+    lowerForegroundColor_ = QColor(0, 162, 255);
 }
 
 ProgressBarGraphicsItem::~ProgressBarGraphicsItem() {

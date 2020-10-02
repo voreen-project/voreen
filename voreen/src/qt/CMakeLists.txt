@@ -67,8 +67,10 @@ SET(VRN_QT_SOURCES
     networkeditor/dialogs/utils/splitgraphicsview.cpp
 
     #style
+    networkeditor/styles/nwestyle_base.cpp
     networkeditor/styles/nwestyle_classic.cpp
     networkeditor/styles/nwestyle_classic_print.cpp
+    networkeditor/styles/nwestyle_material.cpp
 
     #graphlayouts
     networkeditor/graphlayouts/nwegl_base.cpp
@@ -485,6 +487,7 @@ SET(VRN_QT_HEADERS_NONMOC
     ../../include/voreen/qt/networkeditor/styles/nwestyle_base.h
     ../../include/voreen/qt/networkeditor/styles/nwestyle_classic.h
     ../../include/voreen/qt/networkeditor/styles/nwestyle_classic_print.h
+    ../../include/voreen/qt/networkeditor/styles/nwestyle_material.h
 
     #graphlayouts
     ../../include/voreen/qt/networkeditor/graphlayouts/nwegl_base.h

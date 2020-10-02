@@ -45,16 +45,19 @@ TextBoxGraphicsItem::TextBoxGraphicsItem(NetworkEditor* nwe)
     setContextMenuActions();
     //update items
     layoutChildItems();
+
+    // TODO: requires restart of application
+    enableShadows(currentStyle()->getShadowsEnabled());
 }
 
 TextBoxGraphicsItem::~TextBoxGraphicsItem() {
 }
 
 void TextBoxGraphicsItem::initializePaintSettings() {
-    return currentStyle()->TextBoxGI_initializePaintSettings(this);
+    currentStyle()->TextBoxGI_initializePaintSettings(this);
 }
 void TextBoxGraphicsItem::mainPaint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
-    return currentStyle()->TextBoxGI_paint(this,painter,option,widget,setting);
+    currentStyle()->TextBoxGI_paint(this,painter,option,widget,setting);
 }
 
 void TextBoxGraphicsItem::setContextMenuActions() {
