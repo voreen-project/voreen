@@ -52,10 +52,10 @@ QBrush NWEStyle_Material::getBackgroundBrush() const {
 
 //general graphicsitem
 QColor NWEStyle_Material::getSelectionColor() const {
-    return QColor(200,200,200,255);
+    return QColor(160,160,160,255);
 }
 QColor NWEStyle_Material::getHoverColor() const {
-    return QColor(245,245,245,255);
+    return QColor(200,200,200,255);
 }
 
 //port
@@ -65,7 +65,7 @@ QColor NWEStyle_Material::getProcessorColor1() const {
 }
 //portarrow
 QColor NWEStyle_Material::getPortArrowColor() const {
-    return QColor(50, 50, 50, 255);
+    return QColor(80, 80, 80, 255);
 }
 
 // shadows
@@ -170,7 +170,6 @@ void NWEStyle_Material::ProcessorGI_paint(ProcessorGraphicsItem* item, QPainter*
 //      ProgressBarGraphicsItem
 //-------------------------------------
 QPainterPath NWEStyle_Material::ProgressBarGI_shape(const ProgressBarGraphicsItem* item) const {
-
     QRectF boundingRect = ProgressBarGI_boundingRect(item);
     QPainterPath path;
     path.addRect(boundingRect);

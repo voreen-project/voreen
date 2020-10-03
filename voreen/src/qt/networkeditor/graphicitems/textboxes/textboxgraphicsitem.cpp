@@ -44,15 +44,19 @@ TextBoxGraphicsItem::TextBoxGraphicsItem(NetworkEditor* nwe)
     //add actions after child creation
     setContextMenuActions();
     //update items
-    layoutChildItems();
+    layoutChildItems();  
 
-    // TODO: requires restart of application
-    enableShadows(currentStyle()->getShadowsEnabled());
+    // Setup shadows.
+    resetPaintInitialization();
 }
 
 TextBoxGraphicsItem::~TextBoxGraphicsItem() {
 }
 
+void TextBoxGraphicsItem::resetPaintInitialization() {
+    enableShadows(currentStyle()->getShadowsEnabled());
+    TextBoxBaseGraphicsItem::resetPaintInitialization();
+}
 void TextBoxGraphicsItem::initializePaintSettings() {
     currentStyle()->TextBoxGI_initializePaintSettings(this);
 }

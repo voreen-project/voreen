@@ -50,11 +50,16 @@ FrameBoxGraphicsItem::FrameBoxGraphicsItem(NetworkEditor* nwe)
     captionItem_->setDefaultTextColor(fontColor_);
     captionChangedSlot();
 
-    // TODO: requires restart of application
-    enableShadows(currentStyle()->getShadowsEnabled());
+    // Setup shadows.
+    resetPaintInitialization();
 }
 
 FrameBoxGraphicsItem::~FrameBoxGraphicsItem() {
+}
+
+void FrameBoxGraphicsItem::resetPaintInitialization() {
+    enableShadows(currentStyle()->getShadowsEnabled());
+    TextBoxBaseGraphicsItem::resetPaintInitialization();
 }
 
 void FrameBoxGraphicsItem::initializePaintSettings() {

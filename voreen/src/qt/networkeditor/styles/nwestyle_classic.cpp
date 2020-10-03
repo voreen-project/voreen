@@ -1362,7 +1362,7 @@ void NWEStyle_Classic::ToolTipProcessorGI_initializePaintSettings(ToolTipProcess
 
 void NWEStyle_Classic::ToolTipProcessorGI_paint(ToolTipProcessorGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
     QRectF bRect = ToolTipProcessorGI_boundingRect(item);
-    painter->setBrush(getTextBoxBaseMainColor());
+    painter->setBrush(getToolTipBackgroundColor());
     painter->drawRect(bRect);
 }
 

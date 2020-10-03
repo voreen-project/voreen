@@ -156,10 +156,11 @@ VoreenQtMainWindow::VoreenQtMainWindow(const std::string& title, const std::stri
     // initialialize the console early so it gets all the interesting messages
     consolePlugin_ = new ConsolePlugin(this, VoreenApplication::app()->getLogLevel());
 
-    // if we have a stylesheet we want the fancy menu bar, please
-    if (!qApp->styleSheet().isEmpty())
-        //setMenuBar(new FancyMenuBar());
-        setMenuBar(new QMenuBar());
+// Having introduced material design, we no longer add glossy highlights.
+//
+//    // if we have a stylesheet we want the fancy menu bar, please
+//    if (!qApp->styleSheet().isEmpty())
+//        setMenuBar(new FancyMenuBar());
 
     // clear session settings (window states, paths, ...), if specified by cmd line parameter
     if (resetSettings) {

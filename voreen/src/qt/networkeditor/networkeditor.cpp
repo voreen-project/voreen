@@ -628,9 +628,11 @@ void NetworkEditor::scale(qreal sx, qreal sy) {
     //QRectF sr = scene()->itemsBoundingRect();
     vr.setCoords(vr.left()-vr.width()/2.f,vr.top()-vr.height()/2.f,vr.right()-vr.width()/2.f,vr.bottom()-vr.height()/2.f);
 
-    if(sx > 1.f && sv.boundingRect().size().width() < 400)
+    // max. zoom
+    if((sx > 1.f && sv.boundingRect().size().width() < 400) || (sy > 1.f && sv.boundingRect().size().height() < 600))
         return;
 
+    // min. zoom
     if(sx < 1.f && sv.boundingRect().size().width() > 3*vr.size().width() && sv.boundingRect().size().height() > 3*vr.size().height())
         return;
 

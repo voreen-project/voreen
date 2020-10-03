@@ -200,7 +200,7 @@ NWEItemSettings NWEStyle_Base::getItemSettings(const NWEBaseGraphicsItem* item, 
                     if (color1 == Qt::black) {    // Qt is unable to brighten up Qt::black
                         color1 = getHoverColor();
                     } else {
-                        color1 = color1.light();
+                        color1 = color1.lighter(130);
                     }
                 }
                 break;
@@ -242,7 +242,7 @@ NWEItemSettings NWEStyle_Base::getItemSettings(const NWEBaseGraphicsItem* item, 
                     if (color1 == Qt::lightGray)
                         color1 = getHoverColor();
                     else
-                        color1 = color1.light();
+                        color1 = color1.lighter();
                 }
                 break;
             case ConnectionBaseGraphicsItem::CCM_NO:
@@ -277,7 +277,7 @@ NWEItemSettings NWEStyle_Base::getItemSettings(const NWEBaseGraphicsItem* item, 
                     if (color1 == Qt::lightGray)
                         color1 = getHoverColor();
                     else
-                        color1 = color1.light();
+                        color1 = color1.lighter();
                 }
                 break;
             case ConnectionBaseGraphicsItem::CCM_NO:
@@ -314,7 +314,7 @@ NWEItemSettings NWEStyle_Base::getItemSettings(const NWEBaseGraphicsItem* item, 
                     if (color1 == Qt::black)
                         color1 = getHoverColor();
                     else
-                        color1 = color1.light();
+                        color1 = color1.lighter();
                 }
                 break;
             case ConnectionBaseGraphicsItem::CCM_NO:

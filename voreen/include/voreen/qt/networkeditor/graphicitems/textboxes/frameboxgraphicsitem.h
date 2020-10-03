@@ -43,6 +43,7 @@ public:
 
     virtual void setContextMenuActions();
 protected:
+    virtual void resetPaintInitialization();
     virtual void initializePaintSettings();
     virtual void mainPaint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
 };

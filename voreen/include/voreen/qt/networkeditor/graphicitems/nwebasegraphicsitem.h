@@ -56,8 +56,6 @@ public:
     NWEBaseGraphicsItem(NetworkEditor* nwe);
     virtual ~NWEBaseGraphicsItem();
 
-    void enableShadows(bool enable);
-
 //-- member --
 protected:
     NetworkEditor* networkEditor_;           //< the NetworkEditor assigned in the constructor
@@ -84,7 +82,9 @@ public:
     ///returns, if the paint settings have been initialized
     bool isPaintInitialized() const;
     ///sets the paint settings to not initialized
-    void resetPaintInitialization();
+    virtual void resetPaintInitialization();
+    ///enables/disables shadows
+    virtual void enableShadows(bool enable);
 //-- tooltips --
     ///set a new tooltip graphicsitem
     void setToolTipGraphicsItem(ToolTipBaseGraphicsItem* tooltip);

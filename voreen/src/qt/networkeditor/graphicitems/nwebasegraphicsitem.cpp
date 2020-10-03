@@ -54,19 +54,6 @@ NWEBaseGraphicsItem::~NWEBaseGraphicsItem() {
     }
 }
 
-void NWEBaseGraphicsItem::enableShadows(bool enable) {
-    if(enable) {
-        shadowEffect_ = new QGraphicsDropShadowEffect;
-        shadowEffect_->setXOffset(0);
-        shadowEffect_->setYOffset(0);
-        shadowEffect_->setBlurRadius(15);
-        shadowEffect_->setColor(QColor(0, 0, 0, 180));
-    }
-    else {
-        shadowEffect_ = nullptr; //TODO: crashes
-    }
-    setGraphicsEffect(shadowEffect_);
-}
 //---------------------------------------------------------------------------------------------------------------
 //                  getter and setter
 //---------------------------------------------------------------------------------------------------------------
@@ -108,6 +95,20 @@ bool NWEBaseGraphicsItem::isPaintInitialized() const {
 
 void NWEBaseGraphicsItem::resetPaintInitialization() {
     paintHasBeenInitialized_ = false;
+}
+
+void NWEBaseGraphicsItem::enableShadows(bool enable) {
+    if (enable) {
+        shadowEffect_ = new QGraphicsDropShadowEffect;
+        shadowEffect_->setXOffset(0);
+        shadowEffect_->setYOffset(0);
+        shadowEffect_->setBlurRadius(15);
+        shadowEffect_->setColor(QColor(0, 0, 0, 180));
+    }
+    else {
+        shadowEffect_ = nullptr;
+    }
+    setGraphicsEffect(shadowEffect_);
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -165,7 +166,8 @@ void NWEBaseGraphicsItem::mouseMoveEvent (QGraphicsSceneMouseEvent* event){
         }
     }
     if(isSelected() && shadowEffect_) {
-        scene()->update();
+        //TODO: still we have heavy ghosting effects since shadows seem to be somewhat broken.
+        //scene()->update();
     }
     QGraphicsItem::mouseMoveEvent(event);
 }
