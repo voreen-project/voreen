@@ -211,6 +211,7 @@ SET(VRN_QT_SOURCES
     widgets/property/color/colorswitchpropertywidget.cpp
 
     #string
+    widgets/property/string/stringlistpropertywidget.cpp
     widgets/property/string/stringtablepropertywidget.cpp
     
     #trunsfunc
@@ -421,6 +422,7 @@ SET(VRN_QT_HEADERS
         #color
     ../../include/voreen/qt/widgets/property/color/colorswitchpropertywidget.h
         #string
+    ../../include/voreen/qt/widgets/property/string/stringlistpropertywidget.h
     ../../include/voreen/qt/widgets/property/string/stringtablepropertywidget.h
         #trunsfunc
     ../../include/voreen/qt/widgets/property/transfunc/transfuncpropertyeditorbase.h

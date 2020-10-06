@@ -557,6 +557,14 @@ public:
     virtual LinkEvaluatorBase* create() const { return new LinkEvaluatorDoubleStringId(); }
 };
 
+//-------------------------------------------------------------------------------------------------------
+//list
+
+class VRN_CORE_API LinkEvaluatorIntListId : public LinkEvaluatorIdGeneric<std::vector<int>> {
+public:
+    virtual std::string getClassName() const { return "LinkEvaluatorIntListId"; }
+    virtual LinkEvaluatorBase* create() const { return new LinkEvaluatorIntListId(); }
+};
 
 //-------------------------------------------------------------------------------------------------------
 

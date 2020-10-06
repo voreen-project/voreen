@@ -237,6 +237,7 @@ SET(VRN_CORE_SOURCES
         #color
     properties/color/colorswitchproperty.cpp
         #string
+    properties/string/stringlistproperty.cpp
     properties/string/stringtableproperty.cpp
         #transfunc
     properties/transfunc/transfunctypeproperty.cpp
@@ -597,6 +598,7 @@ SET(VRN_CORE_HEADERS
         #color
     ../../include/voreen/core/properties/color/colorswitchproperty.h
         #string
+    ../../include/voreen/core/properties/string/stringlistproperty.h
     ../../include/voreen/core/properties/string/stringtableproperty.h
         #transfunc
     ../../include/voreen/core/properties/transfunc/transfunctypeproperty.h

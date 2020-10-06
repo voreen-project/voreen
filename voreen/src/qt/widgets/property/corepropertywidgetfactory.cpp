@@ -81,6 +81,7 @@
 #include "voreen/qt/widgets/property/propertyvectorwidget.h"
 #include "voreen/qt/widgets/property/shaderpropertywidget.h"
 #include "voreen/qt/widgets/property/stringexpressionpropertywidget.h"
+#include "voreen/qt/widgets/property/string/stringlistpropertywidget.h"
 #include "voreen/qt/widgets/property/string/stringtablepropertywidget.h"
 #include "voreen/qt/widgets/property/stringpropertywidget.h"
 #include "voreen/qt/widgets/property/grouppropertywidget.h"
@@ -193,6 +194,9 @@ PropertyWidget* CorePropertyWidgetFactory::createAssociatedWidget(Property* prop
 
     if (typeid(*prop) == typeid(StringExpressionProperty))
         return new StringExpressionPropertyWidget(static_cast<StringExpressionProperty*>(prop), 0);
+
+    if (typeid(*prop) == typeid(StringListProperty))
+        return new StringListPropertyWidget(static_cast<StringListProperty*>(prop), 0);
 
     if (typeid(*prop) == typeid(StringTableProperty))
         return new StringTablePropertyWidget(static_cast<StringTableProperty*>(prop), 0);
