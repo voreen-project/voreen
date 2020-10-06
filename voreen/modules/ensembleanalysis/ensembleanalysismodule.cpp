@@ -34,11 +34,17 @@
 #include "processors/ensemblevolumeextractor.h"
 #include "processors/localsimilarityanalysis.h"
 #include "processors/referencevolumecreator.h"
+#include "processors/parallelcoordinatesaxescreator.h"
+#include "processors/parallelcoordinatessource.h"
+#include "processors/parallelcoordinatesviewer.h"
+#include "processors/parallelcoordinatesvoxelselection.h"
 #include "processors/similaritymatrixcombine.h"
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
 #include "processors/volumelistmerger.h"
 #include "processors/volumemerger.h"
+
+#include "properties/parallelcoordinatessectionsproperty.h"
 
 namespace voreen {
 
@@ -58,6 +64,10 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     // Plotting
     registerProcessor(new LocalSimilarityAnalysis());
     registerProcessor(new SimilarityMatrixCombine());
+    registerProcessor(new ParallelCoordinatesAxesCreator());
+    registerProcessor(new ParallelCoordinatesSource());
+    registerProcessor(new ParallelCoordinatesViewer());
+    registerProcessor(new ParallelCoordinatesVoxelSelection());
     registerProcessor(new SimilarityMatrixCreator());
     registerProcessor(new SimilarityPlot());
 
@@ -69,6 +79,9 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new VolumeListMerger());
     registerProcessor(new VolumeMerger());
+
+    // Link evaluators
+    registerSerializableType(new LinkEvaluatorParallelCoordinatesSectionsId());
 }
 
 } // namespace

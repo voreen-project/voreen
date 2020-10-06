@@ -1,0 +1,53 @@
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
+#ifndef VRN_PARALLELCOORDINATESSELECTIONPROPERTY_H
+#define VRN_PARALLELCOORDINATESSELECTIONPROPERTY_H
+
+#include "voreen/core/properties/templateproperty.h"
+
+namespace voreen {
+
+#ifdef DLL_TEMPLATE_INST
+    plate class VRN_CORE_API TemplateProperty<std::vector<int>>;
+#endif
+
+class ParallelCoordinatesSelectionProperty : public TemplateProperty<std::vector<int>> {
+public:
+    ParallelCoordinatesSelectionProperty( const std::string& id, const std::string& guiText, std::vector<int> value, int invalidationLevel = Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT );
+    ParallelCoordinatesSelectionProperty();
+    virtual ~ParallelCoordinatesSelectionProperty() = default;
+
+    virtual Property* create() const override;
+    virtual std::string getClassName() const override;
+    virtual std::string getTypeDescription() const override;
+
+    virtual void serialize( Serializer& s ) const override;
+    virtual void deserialize( Deserializer& s ) override;
+};
+
+}
+
+#endif // VRN_PARALLELCOORDINATESSELECTIONPROPERTY_H
