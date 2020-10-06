@@ -116,7 +116,7 @@ QScrollBar::add-line:horizontal {
     subcontrol-origin: margin;
     border-radius: 4px;
     border: 1px solid darkgray;
-    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
+//    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
 }
 
 QScrollBar::sub-line:horizontal {
@@ -125,7 +125,7 @@ QScrollBar::sub-line:horizontal {
     subcontrol-origin: margin;
     border-radius: 4px;
     border: 1px solid darkgray;
-    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
+//    background-image: url(:/voreenve/widgetstyle/scrollbar.png);
 }
 
 QScrollBar:vertical {
@@ -160,7 +160,6 @@ QScrollBar::sub-line:vertical {
     background-image: url(:/voreenve/widgetstyle/scrollbar.png);
 }
 
-
 /********************/
 /* dockwidget style */
 /********************/
@@ -171,21 +170,22 @@ QDockWidget {
     titlebar-normal-icon: url(:/voreenve/widgetstyle/undockbutton.png);
 }
 
-QDockWidget::title {
+DockWidget::title {
     background-color: #222222;
-//    background-image: url(:/voreenve/widgetstyle/highlight-dockwidget.png);
- }
+    background-image: url(:/voreenve/widgetstyle/highlight-dockwidget.png);
+}
 
- QDockWidget::close-button, QDockWidget::float-button {
+QDockWidget::close-button, QDockWidget::float-button {
     border: 1px solid transparent;
     background: transparent;
     padding: 0px;
- }
+}
 
- QDockWidget::close-button:hover, QDockWidget::float-button:hover {
+QDockWidget::close-button:hover, QDockWidget::float-button:hover {
     background: gray;
- }
+}
 
- QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
+QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
     padding: 1px -1px -1px 1px;
- }
+}
+

@@ -68,6 +68,13 @@ QColor NWEStyle_Material::getPortArrowColor() const {
     return QColor(80, 80, 80, 255);
 }
 
+QColor NWEStyle_Material::getPropertyLinkArrowColor() const {
+    return QColor(40, 40, 40, 255);
+}
+QColor NWEStyle_Material::getPortSizeLinkArrowColor() const {
+    return QColor(20, 20, 20, 255);
+}
+
 // shadows
 bool NWEStyle_Material::getShadowsEnabled() const {
     return true;
@@ -92,12 +99,14 @@ NWEStyle_Material::~NWEStyle_Material()
 //-------------------------------------
 void NWEStyle_Material::PortGI_paint(PortGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
     //get color and depth settings
-    painter->setPen(QPen(setting.color1_, 2.0));
-    painter->setBrush(setting.error_ != ES_NO_ERROR ? QBrush(Qt::red) : QBrush(Qt::white));
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(setting.error_ != ES_NO_ERROR ? QBrush(Qt::red) : QBrush(setting.color1_));
     if (option->state & QStyle::State_Sunken)
-        painter->setBrush(painter->brush().color().darker(150));
-    if (option->state & QStyle::State_MouseOver)
-        painter->setBrush(QBrush(setting.color1_));
+        painter->setBrush(painter->brush().color().darker(200));
+    if (option->state & QStyle::State_MouseOver) {
+        painter->setPen(QPen(getPortArrowColor(), 2.0f));
+        painter->setBrush(QBrush(setting.color1_.lighter()));
+    }
     painter->setOpacity(setting.opacity_);
     //draw port
     QRectF boundRect = PortGI_boundingRect(item);
@@ -130,6 +139,78 @@ void NWEStyle_Material::ProcessorGI_initializePaintSettings(ProcessorGraphicsIte
     item->getOrCreateNameLabel()->setDefaultTextColor(Qt::black);
 }
 
+/*
+// Helper function drawing more efficient & simple shadows than using QDropShadowEffect.
+void drawShadow(QPainter* &painter, float margin, float radius,
+                const QColor& start, const QColor& end, float startPosition, float endPosition0, float endPosition1, QRectF rect) {
+    painter->setPen(Qt::NoPen);
+
+    QLinearGradient gradient;
+    gradient.setColorAt(startPosition, start);
+    gradient.setColorAt(endPosition0, end);
+    // Right
+    QPointF right0(rect.width() - margin, rect.y() + rect.height() / 2);
+    QPointF right1(rect.width(), rect.y() + rect.height() / 2);
+    gradient.setStart(right0);
+    gradient.setFinalStop(right1);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(QPointF(rect.width() - margin * radius, margin), QPointF(rect.width(), rect.height() - margin)), 0, 0);
+    // Left
+    QPointF left0(margin, rect.y() + rect.height() / 2);
+    QPointF left1(0, rect.y() + rect.height() / 2);
+    gradient.setStart(left0);
+    gradient.setFinalStop(left1);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(QPointF(margin * radius, margin), QPointF(0, rect.height() - margin)), 0, 0);
+    // Top
+    QPointF top0(rect.width() / 2, rect.y() + margin);
+    QPointF top1(rect.width() / 2, rect.y());
+    gradient.setStart(top0);
+    gradient.setFinalStop(top1);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(QPointF(rect.width() - margin, 0), QPointF(margin, margin)), 0, 0);
+    // Bottom
+    QPointF bottom0(rect.x() + rect.width() / 2, rect.y() + rect.height() - margin);
+    QPointF bottom1(rect.x() + rect.width() / 2, rect.y() + rect.height());
+    gradient.setStart(bottom0);
+    gradient.setFinalStop(bottom1);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(QPointF(margin, rect.height() - margin), QPointF(rect.width() - margin, rect.height())), 0, 0);
+    // BottomRight
+    QPointF bottomright0(rect.x() + rect.width() - margin, rect.y() + rect.height() - margin);
+    QPointF bottomright1(rect.x() + rect.width(), rect.y() + rect.height());
+    gradient.setStart(bottomright0);
+    gradient.setFinalStop(bottomright1);
+    gradient.setColorAt(endPosition1, end);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(bottomright0, bottomright1), 0.0, 0.0);
+    // BottomLeft
+    QPointF bottomleft0(rect.x() + margin, rect.y() + rect.height() - margin);
+    QPointF bottomleft1(rect.x(), rect.y() + rect.height());
+    gradient.setStart(bottomleft0);
+    gradient.setFinalStop(bottomleft1);
+    gradient.setColorAt(endPosition1, end);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(bottomleft0, bottomleft1), 0.0, 0.0);
+    // TopLeft
+    QPointF topleft0(rect.x() + margin, rect.y() + margin);
+    QPointF topleft1(rect.x(), rect.y());
+    gradient.setStart(topleft0);
+    gradient.setFinalStop(topleft1);
+    gradient.setColorAt(endPosition1, end);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(topleft0, topleft1), 0.0, 0.0);
+    // TopRight
+    QPointF topright0(rect.x() + rect.width() - margin, rect.y() + margin);
+    QPointF topright1(rect.x() + rect.width(), rect.y());
+    gradient.setStart(topright0);
+    gradient.setFinalStop(topright1);
+    gradient.setColorAt(endPosition1, end);
+    painter->setBrush(QBrush(gradient));
+    painter->drawRoundRect(QRectF(topright0, topright1), 0.0, 0.0);
+}
+*/
+
 void NWEStyle_Material::ProcessorGI_paint(ProcessorGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
     QRectF boundRect = ProcessorGI_boundingRect(item);
     //should be smaller to prevent trails in movement
@@ -138,12 +219,15 @@ void NWEStyle_Material::ProcessorGI_paint(ProcessorGraphicsItem* item, QPainter*
     //set color settings
     painter->setOpacity(setting.opacity_);
     item->setZValue(setting.zValue_);
-    //painter->setBackground(QBrush(setting.color1_));
     painter->setBrush(QBrush(setting.color1_));
     painter->setPen(Qt::NoPen);
 
     //draw processor
     painter->drawRoundedRect(drawRect, 3, 3);
+
+    // TODO: shadows are currently drawn using QDropShadowEffect, which is slow. Try to mimic using gradients.
+    //draw shadow
+    //drawShadow(painter, 10, 1, QColor(120, 120, 120, 32), QColor(255, 255, 255, 0), 0.0f, 1.0f, 0.8f, boundRect);
 
     //draw error signe
     switch(setting.error_){
@@ -200,8 +284,6 @@ void NWEStyle_Material::ProgressBarGI_paint(ProgressBarGraphicsItem* item, QPain
 //      TextBoxBaseGraphicsItem
 //-------------------------------------
 void NWEStyle_Material::TextBoxGI_paint(TextBoxGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
-    qreal border = item->getResizeBorder();
-
     item->setZValue(setting.zValue_);
 
     QRectF br = TextBoxBaseGI_boundingRect(item);

@@ -82,7 +82,7 @@ public:
     ///returns, if the paint settings have been initialized
     bool isPaintInitialized() const;
     ///sets the paint settings to not initialized
-    virtual void resetPaintInitialization();
+    void resetPaintInitialization();
     ///enables/disables shadows
     virtual void enableShadows(bool enable);
 //-- tooltips --

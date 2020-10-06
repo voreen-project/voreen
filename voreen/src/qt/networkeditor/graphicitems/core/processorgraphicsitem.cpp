@@ -75,9 +75,6 @@ ProcessorGraphicsItem::ProcessorGraphicsItem(Processor* processor, NetworkEditor
         processorWidgetCreated(processor_);
 
     setToolTipGraphicsItem(new ToolTipProcessorGraphicsItem(this));
-
-    // Setup shadows.
-    resetPaintInitialization();
 }
 
 ProcessorGraphicsItem::~ProcessorGraphicsItem() {
@@ -97,13 +94,9 @@ QPainterPath ProcessorGraphicsItem::shape() const {
     return currentStyle()->ProcessorGI_shape(this);
 }
 
-void ProcessorGraphicsItem::resetPaintInitialization() {
-    enableShadows(currentStyle()->getShadowsEnabled());
-    PortOwnerGraphicsItem::resetPaintInitialization();
-}
-
 void ProcessorGraphicsItem::initializePaintSettings(){
     currentStyle()->ProcessorGI_initializePaintSettings(this);
+    enableShadows(currentStyle()->getShadowsEnabled());
 }
 
 void ProcessorGraphicsItem::mainPaint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {

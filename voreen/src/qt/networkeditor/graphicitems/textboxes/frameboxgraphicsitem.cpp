@@ -49,21 +49,14 @@ FrameBoxGraphicsItem::FrameBoxGraphicsItem(NetworkEditor* nwe)
     captionItem_->setPlainText("Right Click -> Rename");
     captionItem_->setDefaultTextColor(fontColor_);
     captionChangedSlot();
-
-    // Setup shadows.
-    resetPaintInitialization();
 }
 
 FrameBoxGraphicsItem::~FrameBoxGraphicsItem() {
 }
 
-void FrameBoxGraphicsItem::resetPaintInitialization() {
-    enableShadows(currentStyle()->getShadowsEnabled());
-    TextBoxBaseGraphicsItem::resetPaintInitialization();
-}
-
 void FrameBoxGraphicsItem::initializePaintSettings() {
     currentStyle()->FrameBoxGI_initializePaintSettings(this);
+    enableShadows(currentStyle()->getShadowsEnabled());
 }
 
 void FrameBoxGraphicsItem::mainPaint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {

@@ -38,11 +38,18 @@ NWEBaseGraphicsItem::NWEBaseGraphicsItem(NetworkEditor* nwe)
     : QGraphicsObject(nullptr)
     , networkEditor_(nwe)
     , toolTipItem_(nullptr)
-    , shadowEffect_(nullptr)
     , paintHasBeenInitialized_(false)
     , customContextMenu_(new QMenu())
 {
     tgtAssert(nwe,"NWEBaseGraphicsItem: No NetworkEditor passed!");
+
+    shadowEffect_ = new QGraphicsDropShadowEffect;
+    shadowEffect_->setXOffset(0);
+    shadowEffect_->setYOffset(0);
+    shadowEffect_->setBlurRadius(15);
+    shadowEffect_->setColor(QColor(0, 0, 0, 180));
+    shadowEffect_->setEnabled(false);
+    setGraphicsEffect(shadowEffect_);
 }
 
 NWEBaseGraphicsItem::~NWEBaseGraphicsItem() {
@@ -98,17 +105,7 @@ void NWEBaseGraphicsItem::resetPaintInitialization() {
 }
 
 void NWEBaseGraphicsItem::enableShadows(bool enable) {
-    if (enable) {
-        shadowEffect_ = new QGraphicsDropShadowEffect;
-        shadowEffect_->setXOffset(0);
-        shadowEffect_->setYOffset(0);
-        shadowEffect_->setBlurRadius(15);
-        shadowEffect_->setColor(QColor(0, 0, 0, 180));
-    }
-    else {
-        shadowEffect_ = nullptr;
-    }
-    setGraphicsEffect(shadowEffect_);
+    shadowEffect_->setEnabled(enable);
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -150,7 +147,7 @@ void NWEBaseGraphicsItem::hoverEnterEvent (QGraphicsSceneHoverEvent* event){
         toolTipItem_->setToolTipTimerTriggertMousePosition(p);
         toolTipItem_->startTimer();
     }
-    if(shadowEffect_) {
+    if(shadowEffect_->isEnabled()) {
         shadowEffect_->setBlurRadius(30);
         shadowEffect_->setColor(QColor(0, 0, 0, 200));
     }
@@ -165,10 +162,6 @@ void NWEBaseGraphicsItem::mouseMoveEvent (QGraphicsSceneMouseEvent* event){
             toolTipItem_->stopTimer();
         }
     }
-    if(isSelected() && shadowEffect_) {
-        //TODO: still we have heavy ghosting effects since shadows seem to be somewhat broken.
-        //scene()->update();
-    }
     QGraphicsItem::mouseMoveEvent(event);
 }
 
@@ -177,7 +170,7 @@ void NWEBaseGraphicsItem::hoverLeaveEvent (QGraphicsSceneHoverEvent* event){
         toolTipItem_->stopTimer();
         toolTipItem_->setVisible(false);
     }
-    if(shadowEffect_) {
+    if(shadowEffect_->isEnabled()) {
         shadowEffect_->setBlurRadius(15);
         shadowEffect_->setColor(QColor(0, 0, 0, 150));
     }

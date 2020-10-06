@@ -46,6 +46,8 @@ public:
     virtual QColor getHoverColor() const;
     virtual QColor getProcessorColor1() const;
     virtual QColor getPortArrowColor() const;
+    virtual QColor getPropertyLinkArrowColor() const;
+    virtual QColor getPortSizeLinkArrowColor() const;
     virtual bool getShadowsEnabled() const;
 
     /*********************************************************************

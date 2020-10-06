@@ -160,7 +160,6 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
         networkEditorStyleProperty_.addOption("first","Classic",NWESTYLE_CLASSIC);
         networkEditorStyleProperty_.addOption("second","Classic Print",NWESTYLE_CLASSIC_PRINT);
         networkEditorStyleProperty_.addOption("third","Material",NWESTYLE_MATERIAL);
-        networkEditorStyleProperty_.selectByValue(NWESTYLE_MATERIAL); // Welcome new users!
         networkEditorStyleProperty_.setGroupID("style");
     addProperty(networkEditorGraphLayoutsProperty_);
         networkEditorGraphLayoutsProperty_.addOption("first","Sugiyama",NWEGL_SUGIYAMA);
@@ -216,7 +215,7 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setMouseTracking(true);
     setDragMode(QGraphicsView::RubberBandDrag);
-    setMinimumSize(QSize(200, 200));
+    setMinimumSize(QSize(400, 400));
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 

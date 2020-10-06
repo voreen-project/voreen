@@ -51,7 +51,6 @@ public:
     virtual QRectF boundingRect() const;
     virtual QPainterPath shape() const;
 protected:
-    virtual void resetPaintInitialization();
     virtual void initializePaintSettings();
     virtual void mainPaint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
 public:

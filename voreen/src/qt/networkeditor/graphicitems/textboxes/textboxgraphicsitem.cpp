@@ -44,21 +44,15 @@ TextBoxGraphicsItem::TextBoxGraphicsItem(NetworkEditor* nwe)
     //add actions after child creation
     setContextMenuActions();
     //update items
-    layoutChildItems();  
-
-    // Setup shadows.
-    resetPaintInitialization();
+    layoutChildItems();
 }
 
 TextBoxGraphicsItem::~TextBoxGraphicsItem() {
 }
 
-void TextBoxGraphicsItem::resetPaintInitialization() {
-    enableShadows(currentStyle()->getShadowsEnabled());
-    TextBoxBaseGraphicsItem::resetPaintInitialization();
-}
 void TextBoxGraphicsItem::initializePaintSettings() {
     currentStyle()->TextBoxGI_initializePaintSettings(this);
+    enableShadows(currentStyle()->getShadowsEnabled());
 }
 void TextBoxGraphicsItem::mainPaint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting) {
     currentStyle()->TextBoxGI_paint(this,painter,option,widget,setting);
