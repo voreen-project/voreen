@@ -69,7 +69,11 @@ Processor* VolumeFormatConversion::create() const {
 
 void VolumeFormatConversion::process() {
     const VolumeRAM* inputVolume = inport_.getData()->getRepresentation<VolumeRAM>();
-    tgtAssert(inputVolume, "no volume");
+
+    if(!inputVolume) {
+        LERROR("Volume does not have a RAM representation");
+        return;
+    }
 
     size_t numChannels = inputVolume->getNumChannels();
     numChannels_.set((int)numChannels);
