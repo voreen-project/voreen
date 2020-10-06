@@ -90,7 +90,6 @@ private:
 
     std::string calculateHash() const;
 
-    StringOptionProperty sampleRegion_;
     OptionProperty<SingleChannelSimilarityMeasure> singleChannelSimilarityMeasure_;
     FloatProperty isoValue_;
     OptionProperty<MultiChannelSimilarityMeasure> multiChannelSimilarityMeasure_;

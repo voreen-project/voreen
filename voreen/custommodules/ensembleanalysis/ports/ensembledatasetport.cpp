@@ -53,16 +53,8 @@ std::string EnsembleDatasetPort::getContentDescription() const {
             strstr << std::endl << "Number of common Fields: " << getData()->getCommonFieldNames().size();
             strstr << std::endl << "Min Number of Time Steps: " << getData()->getMinNumTimeSteps();
             strstr << std::endl << "Max Number of Time Steps: " << getData()->getMaxNumTimeSteps();
-            //strstr << std::endl << "Min Time Step Duration: " << getData()->getMinTimeStepDuration();
-            //strstr << std::endl << "Max Time Step Duration: " << getData()->getMaxTimeStepDuration();
             strstr << std::endl << "Start Time: " << getData()->getStartTime();
             strstr << std::endl << "End Time: " << getData()->getEndTime();
-            //strstr << std::endl << "Max Total Duration: " << getData()->getMaxTotalDuration();
-
-            //tgt::vec3 llf = getData()->getRoi().getLLF();
-            //strstr << std::endl << "ROI LLF: (" << llf.x << ", " << llf.y << ", " << llf.z << ")";
-            //tgt::vec3 urb = getData()->getRoi().getURB();
-            //strstr << std::endl << "ROI URB: (" << urb.x << ", " << urb.y << ", " << urb.z << ")";
         }
         else
             strstr << std::endl << "Empty Ensemble Dataset";
@@ -80,16 +72,8 @@ std::string EnsembleDatasetPort::getContentDescriptionHTML() const {
             strstr << "<br>" << "Number of common Fields: " << getData()->getCommonFieldNames().size();
             strstr << "<br>" << "Min Number of Time Steps: " << getData()->getMinNumTimeSteps();
             strstr << "<br>" << "Max Number of Time Steps: " << getData()->getMaxNumTimeSteps();
-            //strstr << "<br>" << "Min Time Step Duration: " << getData()->getMinTimeStepDuration();
-            //strstr << "<br>" << "Max Time Step Duration: " << getData()->getMaxTimeStepDuration();
             strstr << "<br>" << "Start Time: " << getData()->getStartTime();
             strstr << "<br>" << "End Time: " << getData()->getEndTime();
-            //strstr << "<br>" << "Max Total Duration: " << getData()->getMaxTotalDuration();
-
-            //tgt::vec3 llf = getData()->getRoi().getLLF();
-            //strstr << "<br>" << "ROI LLF: (" << llf.x << ", " << llf.y << ", " << llf.z << ")";
-            //tgt::vec3 urb = getData()->getRoi().getURB();
-            //strstr << "<br>" << "ROI URB: (" << urb.x << ", " << urb.y << ", " << urb.z << ")";
         }
         else
             strstr << "<br>" << "Empty Ensemble Dataset";

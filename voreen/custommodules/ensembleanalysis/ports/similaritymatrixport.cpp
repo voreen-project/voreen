@@ -47,6 +47,7 @@ std::string SimilarityMatrixPort::getContentDescription() const {
     std::stringstream strstr;
     strstr << Port::getContentDescription();
     if(hasData()) {
+        strstr << std::endl << "Size: " << getData()->getSize();
 #ifdef VRN_DEBUG
         strstr << std::endl << "Hash: " << getData()->getHash();
 #endif
@@ -58,6 +59,7 @@ std::string SimilarityMatrixPort::getContentDescriptionHTML() const {
     std::stringstream strstr;
     strstr << Port::getContentDescriptionHTML();
     if(hasData()) {
+        strstr << "<br>" << "Size: " << getData()->getSize();
 #ifdef VRN_DEBUG
         strstr << "<br>" << "Hash: " << getData()->getHash();
 #endif

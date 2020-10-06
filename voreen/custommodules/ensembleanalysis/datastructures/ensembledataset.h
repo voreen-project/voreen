@@ -45,30 +45,80 @@ class VRN_CORE_API EnsembleDataset : public DataInvalidationObservable {
 public:
 
     /**
-     * This struct defines a single time step of a run.
-     * It also holds the actual volume data.
+     * This class defines a single time step of a run.
+     * It also stores the actual volume data.
      */
-    struct TimeStep {
-        std::string path_; ///< The time step's path containing the volume data.
+    class TimeStep {
+    public:
+
+        TimeStep();
+
+        /**
+         * TimeStep constructor.
+         * @param time Time point
+         * @param duration Time till succeeding time point
+         * @param volumes Volume data
+         */
+        TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
+                 float time, float duration = 0.0f);
+
+        float getTime() const;
+        float getDuration() const;
+        std::vector<std::string> getFieldNames() const;
+        const VolumeBase* getVolume(const std::string& fieldName) const;
+        std::string getPath(const std::string& fieldName) const;
+
+    private:
+
         float time_;       ///< The point in time of this time step.
         float duration_;   ///< the duration of the time step.
-        std::map<std::string, const VolumeBase*> fieldNames_; ///< Field names mapped to their volume data.
+        std::map<std::string, const VolumeBase*> volumeData_; ///< Field names mapped to their volume data.
     };
 
     /**
-     * This struct defines a run which is a unique member of the ensemble.
+     * This class defines a run which is a unique member of the ensemble.
      */
-    struct Run {
+    class Run {
+    public:
+
+        Run();
+
+        /**
+         * Run constructor.
+         * @param name Run name
+         * @param color Run color
+         * @param timeSteps (Sorted) list of time steps
+         */
+        Run(const std::string& name,
+            const tgt::vec3& color,
+            const std::vector<TimeStep>& timeSteps);
+
+        const std::string& getName() const;
+        const tgt::vec3& getColor() const;
+        const std::vector<TimeStep>& getTimeSteps() const;
+
+        /**
+         * This utility function returns a time step index corresponding to the specified time of the specified run.
+         * If time is behind the end of the specified run, the last time step index is returned.
+         */
+        size_t getTimeStep(float time) const;
+
+        /**
+         * Returns time duration statistics.
+         */
+        const Statistics& getTimeStepDurationStats() const;
+
+    private:
+
         std::string name_; ///< The run's name.
         tgt::vec3 color_;  ///< The run's distinct color.
         std::vector<TimeStep> timeSteps_; ///< List of time steps.
+        Statistics timeStepDurationStats_;    ///< Stats on time step duration
     };
 
     /** Constructor */
     EnsembleDataset();
     EnsembleDataset(const EnsembleDataset& origin);
-
-public:
 
     /**
      * Add a new run to the ensemble.
@@ -95,16 +145,6 @@ public:
      * Returns the total number of time steps of all runs combined.
      */
     size_t getTotalNumTimeSteps() const;
-
-    /**
-     * Returns the duration statistics for the specified run.
-     */
-    const Statistics& getTimeStepDurationStats(size_t runIdx) const;
-
-    /**
-     * Returns the color of the specified run.
-     */
-    const tgt::vec3& getColor(size_t runIdx) const;
 
     /**
      * Returns the minimum time step duration of all runs.
@@ -174,19 +214,6 @@ public:
     const tgt::Bounds& getCommonBounds() const;
 
     /**
-     * Returns the region of interest defined for the ensemble in physical coordinates.
-     * Currently, only a single region defined by a bounding box is supported.
-     */
-    const tgt::Bounds& getRoi() const;
-
-    /**
-     * Sets the region of interest for the ensemble.
-     * The region must be defined and intersect with the common bounds.
-     * Otherwise, the region will not be set.
-     */
-    void setRoi(tgt::Bounds roi);
-
-    /**
      * Returns a list of all unique field names of all runs.
      */
     const std::vector<std::string>& getUniqueFieldNames() const;
@@ -205,12 +232,6 @@ public:
     std::vector<const VolumeBase*> getVolumes() const;
 
     /**
-     * This utility function returns a time step index corresponding to the specified time of the specified run.
-     * If time is behind the end of the specified run, the last time step index is returned.
-     */
-    size_t pickTimeStep(size_t runIdx, float time) const;
-
-    /**
      * Creates a HTML string that provides a brief overview about the whole ensemble, including its parameters.
      * Parameters currently need to be stored as MetaData the key of which needs to contain the keyword 'Parameter'
      * in order to be listed inside the HTML file.
@@ -219,12 +240,6 @@ public:
     std::string toHTML() const;
 
 private:
-
-    struct RunMetaData {
-        //tgt::vec3 color_; // currently member of run but should be stored here
-        Statistics timeStepDurationStats_{false};
-        // could add simulation parameters here
-    };
 
     struct FieldMetaData {
         tgt::vec2 valueRange_;
@@ -240,7 +255,6 @@ private:
     std::vector<std::string> uniqueFieldNames_;
     std::vector<std::string> commonFieldNames_;
 
-    std::vector<RunMetaData> runMetaData_;
     std::map<std::string, FieldMetaData> fieldMetaData_;
     std::set<std::string> allParameters_;
 
@@ -256,8 +270,8 @@ private:
 
     tgt::Bounds bounds_;
     tgt::Bounds commonBounds_;
-    tgt::Bounds roi_;
 
+    static const std::string loggerCat_;
 };
 
 }   // namespace

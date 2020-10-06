@@ -204,8 +204,8 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
 
     std::vector<int> renderedRunsIndices;
     for(const EnsembleDataset::Run& run : dataset->getRuns()) {
-        renderedRuns_.addRow(run.name_, dataset->getColor(renderedRunsIndices.size()));
-        selectedRuns_.addRow(run.name_, dataset->getColor(renderedRunsIndices.size()));
+        renderedRuns_.addRow(run.getName(), run.getColor());
+        selectedRuns_.addRow(run.getName(), run.getColor());
         renderedRunsIndices.push_back(static_cast<int>(renderedRunsIndices.size()));
     }
     renderedRuns_.setSelectedRowIndices(renderedRunsIndices);

@@ -55,7 +55,6 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
     referenceMethod_.addOption("run", "Select Run");
     referenceMethod_.addOption("zero", "Zero volume");
     referenceMethod_.addOption("mean", "Global Mean");
-    //referenceMethod_.addOption("median", "Global Median");
     ON_CHANGE_LAMBDA(referenceMethod_, [this] {
         referenceRun_.setReadOnlyFlag(referenceMethod_.get() != "run");
     });
@@ -63,7 +62,6 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
     addProperty(sampleRegion_);
     sampleRegion_.addOption("bounds", "Ensemble Bounds");
     sampleRegion_.addOption("common", "Common Bounds");
-    sampleRegion_.addOption("roi", "Region of Interest");
     addProperty(outputDimensions_);
 }
 
@@ -94,9 +92,6 @@ ReferenceVolumeCreatorInput ReferenceVolumeCreator::prepareComputeInput() {
     else if (sampleRegion_.get() == "common") {
         bounds = ensemble->getCommonBounds();
     }
-    else if (sampleRegion_.get() == "roi") {
-        bounds = ensemble->getRoi();
-    }
     else {
         throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
     }
@@ -124,21 +119,21 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
 
     if(input.referenceMethod == "run") {
 
-        size_t referenceTimeStep = ensemble->pickTimeStep(input.referenceRun, input.time);
-        const VolumeBase* refVolume = ensemble->getRuns()[input.referenceRun].timeSteps_[referenceTimeStep].fieldNames_.at(input.field);
+        size_t referenceTimeStep = ensemble->getRuns()[input.referenceRun].getTimeStep(input.time);
+        const VolumeBase* refVolume = ensemble->getRuns()[input.referenceRun].getTimeSteps()[referenceTimeStep].getVolume(input.field);
         VolumeRAMRepresentationLock referenceVolume(refVolume);
-        tgt::mat4 refPhysicalToVoxel = refVolume->getPhysicalToVoxelMatrix();
+        tgt::mat4 refWorldToVoxel = refVolume->getWorldToVoxelMatrix();
 
         tgt::ivec3 pos = tgt::ivec3::zero;
         for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
             for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
                 for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
-                    // Map sample position to physical space.
+                    // Map sample position to world space.
                     tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
 
                     // Map to voxel space.
-                    tgt::svec3 sampleInRefVoxelSpace = refPhysicalToVoxel * sample;
+                    tgt::svec3 sampleInRefVoxelSpace = refWorldToVoxel * sample;
 
                     // Ignore, if out of bounds.
                     if(tgt::clamp(sampleInRefVoxelSpace, tgt::svec3::zero, referenceVolume->getDimensions() - tgt::svec3::one) != sampleInRefVoxelSpace) {
@@ -161,21 +156,21 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
     else if(input.referenceMethod == "mean") {
 
         for (size_t r = 0; r < numRuns; r++) {
-            size_t t = ensemble->pickTimeStep(r, input.time);
-            const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
+            size_t t = ensemble->getRuns()[r].getTimeStep(input.time);
+            const VolumeBase* vol = ensemble->getRuns()[r].getTimeSteps()[t].getVolume(field);
             VolumeRAMRepresentationLock lock(vol);
-            tgt::mat4 physicalToVoxel = vol->getPhysicalToVoxelMatrix();
+            tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
 
             tgt::ivec3 pos = tgt::ivec3::zero;
             for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
                 for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
                     for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
-                        // Map sample position to physical space.
+                        // Map sample position to world space.
                         tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
 
                         // Map to voxel space.
-                        tgt::svec3 sampleInVoxelSpace = physicalToVoxel * sample;
+                        tgt::svec3 sampleInVoxelSpace = worldToVoxel * sample;
 
                         // Ignore, if out of source bounds.
                         if(tgt::clamp(sampleInVoxelSpace, tgt::svec3::zero, lock->getDimensions() - tgt::svec3::one) != sampleInVoxelSpace) {
@@ -192,47 +187,6 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
             }
             progress.setProgress((r+1.0f) / numRuns);
         }
-    }
-    else if(input.referenceMethod == "median") {
-        LERROR("Not yet implemented");
-        // TODO: implement efficiently
-        /*
-        tgt::ivec3 pos = tgt::ivec3::zero;
-        for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
-            for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
-                for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
-
-                    // Map sample position to physical space.
-                    tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(),
-                                                roi.getURB());
-
-                    std::vector<tgt::vec3> samples;
-
-                    Statistics samples(false);
-                    for (size_t r = 0; r < numRuns; r++) {
-                        if (r != input.referenceRun) {
-
-                            size_t t = ensemble->pickTimeStep(r, input.time);
-                            const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
-                            VolumeRAMRepresentationLock lock(vol);
-                            tgt::vec3 sampleInVoxelSpace = vol->getPhysicalToVoxelMatrix() * sample;
-
-                            tgt::vec3 voxelDiff = tgt::vec3::zero;
-                            for (size_t channel = 0; channel < numChannels; channel++) {
-                                voxelDiff[channel] =
-                                        lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVoxel[channel];
-                            }
-
-                            samples.addSample(tgt::length(voxelDiff));
-                        }
-                    }
-
-                    output->voxel(pos) = samples.getStdDev();
-                }
-            }
-            progress.setProgress(1.0f * pos.z / newDims.z);
-        }
-         */
     }
 
     tgt::vec3 spacing = bounds.diagonal() / tgt::vec3(newDims);
@@ -260,7 +214,7 @@ void ReferenceVolumeCreator::adjustPropertiesToInput() {
     referenceRun_.reset();
     referenceRun_.setOptions(std::deque<Option<std::string>>());
     for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
-        referenceRun_.addOption(run.name_, run.name_);
+        referenceRun_.addOption(run.getName(), run.getName());
     }
 
     selectedField_.reset();

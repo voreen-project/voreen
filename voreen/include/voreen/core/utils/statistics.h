@@ -36,8 +36,11 @@ namespace voreen {
 /// Computes some statistics on a set of float values.
 class VRN_CORE_API Statistics {
 public:
-    /// Enable collectSamples to calculate median, q1, q3 later on.
-    Statistics(bool collectSamples);
+    /**
+     * Constructor.
+     * @param collectSamples if set to true, samples are collected in order to calculate median, q1, q3. Default = true.
+     */
+    Statistics(bool collectSamples = true);
     void reset();
 
     void addSample(float v);

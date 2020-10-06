@@ -31,6 +31,103 @@
 
 namespace voreen {
 
+//////////// Time Step
+
+EnsembleDataset::TimeStep::TimeStep()
+    : TimeStep(std::map<std::string, const VolumeBase*>(), 0.0f, 0.0f)
+{}
+
+EnsembleDataset::TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
+                                    float time, float duration)
+    : volumeData_(volumeData)
+    , time_(time)
+    , duration_(duration)
+{
+}
+
+float EnsembleDataset::TimeStep::getTime() const {
+    return time_;
+}
+
+float EnsembleDataset::TimeStep::getDuration() const {
+    return duration_;
+}
+
+std::vector<std::string> EnsembleDataset::TimeStep::getFieldNames() const {
+    std::vector<std::string> fieldNames;
+    for(const auto& volumeData : volumeData_) {
+        fieldNames.push_back(volumeData.first);
+    }
+    return fieldNames;
+}
+
+const VolumeBase* EnsembleDataset::TimeStep::getVolume(const std::string& fieldName) const {
+    auto iter = volumeData_.find(fieldName);
+    if(iter != volumeData_.end()) {
+        return iter->second;
+    }
+
+    return nullptr;
+}
+
+std::string EnsembleDataset::TimeStep::getPath(const std::string& fieldName) const {
+    const VolumeBase* volume = getVolume(fieldName);
+    if(volume) {
+        return getVolume(fieldName)->getOrigin().getPath();
+    }
+
+    return "";
+}
+
+
+
+//////////// Run
+
+EnsembleDataset::Run::Run()
+    : Run("", tgt::vec3::zero, std::vector<TimeStep>())
+{}
+
+EnsembleDataset::Run::Run(const std::string& name, const tgt::vec3& color, const std::vector<TimeStep>& timeSteps)
+    : name_(name)
+    , color_(color)
+    , timeSteps_(timeSteps)
+    , timeStepDurationStats_(false)
+{
+    for(const TimeStep& timeStep : timeSteps_) {
+        timeStepDurationStats_.addSample(timeStep.getDuration());
+    }
+}
+
+const std::string& EnsembleDataset::Run::getName() const {
+    return name_;
+}
+
+const tgt::vec3& EnsembleDataset::Run::getColor() const {
+    return color_;
+}
+
+const std::vector<EnsembleDataset::TimeStep>& EnsembleDataset::Run::getTimeSteps() const {
+    return timeSteps_;
+}
+
+size_t EnsembleDataset::Run::getTimeStep(float time) const {
+    if(timeSteps_.empty())
+        return -1;
+
+    size_t t = 0;
+    while (t < getTimeSteps().size()-1 && getTimeSteps()[t].getTime() < time) t++;
+    return t;
+}
+
+const Statistics& EnsembleDataset::Run::getTimeStepDurationStats() const {
+    return timeStepDurationStats_;
+}
+
+
+//////////// EnsembleDataset
+
+const std::string EnsembleDataset::loggerCat_ = "voreen.ensembleanalysis.EnsembleDataSet";
+
 EnsembleDataset::EnsembleDataset()
     : minNumTimeSteps_(std::numeric_limits<size_t>::max())
     , maxNumTimeSteps_(0)
@@ -42,7 +139,6 @@ EnsembleDataset::EnsembleDataset()
     , commonTimeInterval_(endTime_, startTime_)
     , bounds_()
     , commonBounds_()
-    , roi_()
 {
 }
 
@@ -52,37 +148,33 @@ EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
     // Adding runs sets attributes accordingly.
     for(const Run& run : origin.runs_)
         addRun(run);
-
-    // Set Roi first since it might has been modified.
-    setRoi(origin.getRoi());
 }
 
 void EnsembleDataset::addRun(const Run& run) {
 
     // Skip empty runs.
-    if (run.timeSteps_.empty())
+    if (run.getTimeSteps().empty()) {
+        LERROR("Can't add empty run");
         return;
+    }
 
     // Notify Observers
     notifyPendingDataInvalidation();
 
-    minNumTimeSteps_ = std::min(run.timeSteps_.size(), minNumTimeSteps_);
-    maxNumTimeSteps_ = std::max(run.timeSteps_.size(), maxNumTimeSteps_);
-    totalNumTimeSteps_ += run.timeSteps_.size();
-    startTime_ = std::min(startTime_, run.timeSteps_.front().time_);
-    endTime_   = std::max(endTime_,   run.timeSteps_.back().time_);
+    minNumTimeSteps_ = std::min(run.getTimeSteps().size(), minNumTimeSteps_);
+    maxNumTimeSteps_ = std::max(run.getTimeSteps().size(), maxNumTimeSteps_);
+    totalNumTimeSteps_ += run.getTimeSteps().size();
+    startTime_ = std::min(startTime_, run.getTimeSteps().front().getTime());
+    endTime_   = std::max(endTime_,   run.getTimeSteps().back().getTime());
 
-    RunMetaData metaData;
-
-    for (size_t t = 0; t < run.timeSteps_.size(); t++) {
+    for (size_t t = 0; t < run.getTimeSteps().size(); t++) {
         std::vector<std::string> fields;
-        for (const auto& field : run.timeSteps_[t].fieldNames_) {
+        for (const std::string& fieldName : run.getTimeSteps()[t].getFieldNames()) {
 
-            const std::string& fieldName = field.first;
             fields.push_back(fieldName);
 
             // Retrieve volume.
-            const VolumeBase* volume = field.second;
+            const VolumeBase* volume = run.getTimeSteps()[t].getVolume(fieldName);
 
             // Gather parameters (take first time step as representative).
             if(t==0) {
@@ -93,8 +185,10 @@ void EnsembleDataset::addRun(const Run& run) {
                 }
             }
 
-            // Bounds are stored in physical space, so don't transform to world space.
-            tgt::Bounds bounds = volume->getBoundingBox(false).getBoundingBox();
+            // In further applications it might be useful to force derived data calculations
+            // to improve responsivity after loading the data.
+            // TODO: Think about calculating on demand.
+
             VolumeMinMax* vmm = volume->getDerivedData<VolumeMinMax>();
             tgt::vec2 minMax(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
             for(size_t c = 0; c < vmm->getNumChannels(); c++) {
@@ -102,8 +196,6 @@ void EnsembleDataset::addRun(const Run& run) {
                 minMax.y = std::max(minMax.y, vmm->getMax(c));
             }
 
-            // In further applications it might be useful to force derived data calculations
-            // to improve responsivity after loading the data.
             tgt::vec2 minMaxMagnitude = minMax;
             if(volume->getNumChannels() > 1) {
                 VolumeMinMaxMagnitude* vmmm = volume->getDerivedData<VolumeMinMaxMagnitude>();
@@ -133,8 +225,7 @@ void EnsembleDataset::addRun(const Run& run) {
                 }
             }
 
-            metaData.timeStepDurationStats_.addSample(run.timeSteps_[t].duration_);
-
+            tgt::Bounds bounds = volume->getBoundingBox().getBoundingBox();
             if (!bounds_.isDefined()) {
                 if(!commonBounds_.isDefined()) {
                     commonBounds_.addVolume(bounds);
@@ -143,7 +234,7 @@ void EnsembleDataset::addRun(const Run& run) {
             else if(commonBounds_.isDefined()) {
                 commonBounds_.intersectVolume(bounds);
                 if(!commonBounds_.isDefined()) {
-                    LWARNINGC("voreen.EnsembeDataSet", "There is no overlap between the bounds of Run " << run.name_ << " and the previously defined bounds");
+                    LWARNINGC("voreen.EnsembeDataSet", "There is no overlap between the bounds of Run " << run.getName() << " and the previously defined bounds");
                 }
             }
             bounds_.addVolume(bounds);
@@ -161,7 +252,7 @@ void EnsembleDataset::addRun(const Run& run) {
             );
 
             if (commonFieldNames_.size() != intersection.size() && !runs_.empty()) {
-                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Run " << run.name_ << " has less fields than the previously added Run " << runs_.back().name_);
+                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Run " << run.getName() << " has less fields than the previously added Run " << runs_.back().getName());
             }
 
             commonFieldNames_ = intersection;
@@ -176,24 +267,20 @@ void EnsembleDataset::addRun(const Run& run) {
         uniqueFieldNames_ = fieldUnion;
 
         // Calculate times and durations.
-        if (t < run.timeSteps_.size() - 1) {
-            maxTimeStepDuration_ = std::max(maxTimeStepDuration_, run.timeSteps_[t].duration_);
-            minTimeStepDuration_ = std::min(minTimeStepDuration_, run.timeSteps_[t].duration_);
+        if (t < run.getTimeSteps().size() - 1) {
+            maxTimeStepDuration_ = std::max(maxTimeStepDuration_, run.getTimeSteps()[t].getDuration());
+            minTimeStepDuration_ = std::min(minTimeStepDuration_, run.getTimeSteps()[t].getDuration());
         }
     }
 
-    // Reset roi to current common bounds.
-    roi_ = commonBounds_;
+    commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.getTimeSteps().front().getTime());
+    commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.getTimeSteps().back().getTime()+run.getTimeSteps().back().getDuration());
 
-    commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.timeSteps_.front().time_);
-    commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.timeSteps_.back().time_+run.timeSteps_.back().duration_);
-
-    if(commonTimeInterval_.x > commonTimeInterval_.y) {
-        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.name_ << " does not overlap with the previous interval");
+    if(commonTimeInterval_ != tgt::vec2::zero && commonTimeInterval_.x > commonTimeInterval_.y) {
+        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.getName() << " does not overlap with the previous interval");
         commonTimeInterval_ = tgt::vec2::zero;
     }
 
-    runMetaData_.push_back(metaData);
     runs_.push_back(run);
 }
 
@@ -211,16 +298,6 @@ size_t EnsembleDataset::getMaxNumTimeSteps() const {
 
 size_t EnsembleDataset::getTotalNumTimeSteps() const {
     return totalNumTimeSteps_;
-}
-
-const Statistics& EnsembleDataset::getTimeStepDurationStats(size_t runIdx) const {
-    tgtAssert(runIdx < runs_.size(), "Run not available");
-    return runMetaData_[runIdx].timeStepDurationStats_;
-}
-
-const tgt::vec3& EnsembleDataset::getColor(size_t runIdx) const {
-    tgtAssert(runIdx < runs_.size(), "Run not available");
-    return runs_[runIdx].color_;
 }
 
 float EnsembleDataset::getMinTimeStepDuration() const {
@@ -255,21 +332,6 @@ const tgt::Bounds& EnsembleDataset::getCommonBounds() const {
     return commonBounds_;
 }
 
-const tgt::Bounds& EnsembleDataset::getRoi() const {
-    return roi_;
-}
-
-void EnsembleDataset::setRoi(tgt::Bounds roi) {
-    roi.intersectVolume(commonBounds_);
-    if(roi.isDefined()) {
-        notifyPendingDataInvalidation();
-        roi_ = roi;
-    }
-    else {
-        LWARNINGC("voreen.EnsembleDataSet", "Roi must overlap with common domain bounds, ignoring.");
-    }
-}
-
 const tgt::vec2& EnsembleDataset::getValueRange(const std::string& field) const {
     tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
     return fieldMetaData_.at(field).valueRange_;
@@ -301,25 +363,13 @@ const std::vector<std::string>& EnsembleDataset::getCommonFieldNames() const {
 std::vector<const VolumeBase*> EnsembleDataset::getVolumes() const {
     std::vector<const VolumeBase*> result;
     for(const Run& run : runs_) {
-        for(const TimeStep& timeStep : run.timeSteps_) {
-            for(const auto& field : timeStep.fieldNames_) {
-                result.push_back(field.second);
+        for(const TimeStep& timeStep : run.getTimeSteps()) {
+            for(const std::string& fieldName : timeStep.getFieldNames()) {
+                result.push_back(timeStep.getVolume(fieldName));
             }
         }
     }
     return result;
-}
-
-size_t EnsembleDataset::pickTimeStep(size_t runIdx, float time) const {
-    tgtAssert(runIdx < runs_.size(), "run index too big");
-
-    if (runs_[runIdx].timeSteps_.empty())
-        return -1;
-
-    size_t t = 0;
-    while (t < runs_[runIdx].timeSteps_.size()-1 && runs_[runIdx].timeSteps_[t].time_ < time) t++;
-    return t;
-
 }
 
 std::string EnsembleDataset::toHTML() const {
@@ -349,21 +399,22 @@ std::string EnsembleDataset::toHTML() const {
     stream << "  </tr></thead><tbody>\n";
 
     // Runs and their parameters.
-    for(size_t i=0; i<runs_.size(); i++) {
+    for(const Run& run : runs_) {
         stream << "  <tr>\n";
-        stream << "    <th>" << runs_[i].name_ << "</th>\n";
-        tgt::ivec3 color(runs_[i].color_ * 255.0f);
+        stream << "    <th>" << run.getName() << "</th>\n";
+        tgt::ivec3 color(run.getColor() * 255.0f);
         stream << "    <th style=\"background-color: rgb(" << color.r << ", " << color.g << ", " << color.b << ")\"></th>\n";
-        stream << "    <th>" << runs_[i].timeSteps_.size() << "</th>\n";
-        stream << "    <th>" << runs_[i].timeSteps_.front().time_ << "</th>\n";
-        stream << "    <th>" << runs_[i].timeSteps_.back().time_ << "</th>\n";
+        stream << "    <th>" << run.getTimeSteps().size() << "</th>\n";
+        stream << "    <th>" << run.getTimeSteps().front().getTime() << "</th>\n";
+        stream << "    <th>" << run.getTimeSteps().back().getTime() << "</th>\n";
 
         for(const std::string& parameter : allParameters_) {
+            const TimeStep& referenceTimeStep = run.getTimeSteps().front();
             // TODO: assumes that all fields contain the same parameters.
-            const VolumeBase* reference = runs_[i].timeSteps_.front().fieldNames_.begin()->second;
+            const VolumeBase* referenceVolume = referenceTimeStep.getVolume(referenceTimeStep.getFieldNames().front());
             stream << "    <th>";
-            if(reference->hasMetaData(parameter)) {
-                stream << reference->getMetaData(parameter)->toString();
+            if(referenceVolume->hasMetaData(parameter)) {
+                stream << referenceVolume->getMetaData(parameter)->toString();
             }
             stream << "</th>\n";
         }

@@ -70,8 +70,6 @@ public:
             dataset->addRun(run);
         }
 
-        dataset->setRoi(ensemble.getRoi());
-
         return dataset;
     }
 
@@ -84,7 +82,7 @@ public:
             // Adjust range to data.
             std::vector<int> selectedRunIndices;
             for (const EnsembleDataset::Run& run : ensemble->getRuns()) {
-                runs_.addRow(run.name_, ensemble->getColor(selectedRunIndices.size()));
+                runs_.addRow(run.getName(), run.getColor());
                 selectedRunIndices.push_back(static_cast<int>(selectedRunIndices.size()));
             }
             runs_.setSelectedRowIndices(selectedRunIndices);
@@ -115,19 +113,17 @@ public:
         EnsembleDataset* dataset = new EnsembleDataset();
 
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            if (run.timeSteps_.empty())
+            if (run.getTimeSteps().empty())
                 continue;
 
             std::vector<EnsembleDataset::TimeStep> timeSteps;
-            int max = std::min(static_cast<int>(run.timeSteps_.size()) - 1, timeSteps_.get().y);
+            int max = std::min(static_cast<int>(run.getTimeSteps().size()) - 1, timeSteps_.get().y);
             for (int i = timeSteps_.get().x; i <= max; i++) {
-                timeSteps.push_back(run.timeSteps_[i]);
+                timeSteps.push_back(run.getTimeSteps()[i]);
             }
 
-            dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
+            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
         }
-
-        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -187,18 +183,16 @@ public:
             std::vector<EnsembleDataset::TimeStep> timeSteps;
 
             // If the run only contains a single time step, we keep it
-            if(run.timeSteps_.size() == 1 && keepIfOnlyTimeStep_.get()) {
-                timeSteps.push_back(run.timeSteps_.front());
+            if(run.getTimeSteps().size() == 1 && keepIfOnlyTimeStep_.get()) {
+                timeSteps.push_back(run.getTimeSteps().front());
             }
 
-            for (size_t i = 1; i < run.timeSteps_.size(); i++) {
-                timeSteps.push_back(run.timeSteps_[i]);
+            for (size_t i = 1; i < run.getTimeSteps().size(); i++) {
+                timeSteps.push_back(run.getTimeSteps()[i]);
             }
 
-            dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
+            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
         }
-
-        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -237,16 +231,14 @@ public:
         EnsembleDataset* dataset = new EnsembleDataset();
 
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            if (run.timeSteps_.empty())
+            if (run.getTimeSteps().empty())
                 continue;
 
             std::vector<EnsembleDataset::TimeStep> timeSteps;
-            timeSteps.push_back(run.timeSteps_.back());
+            timeSteps.push_back(run.getTimeSteps().back());
 
-            dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
+            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
         }
-
-        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -281,17 +273,15 @@ public:
 
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             std::vector<EnsembleDataset::TimeStep> timeSteps;
-            for (size_t i = 0; i < run.timeSteps_.size(); i++) {
-                if (run.timeSteps_[i].time_ > timeInterval_.get().y)
+            for (size_t i = 0; i < run.getTimeSteps().size(); i++) {
+                if (run.getTimeSteps()[i].getTime() > timeInterval_.get().y)
                     break;
-                if (run.timeSteps_[i].time_ >= timeInterval_.get().x)
-                    timeSteps.push_back(run.timeSteps_[i]);
+                if (run.getTimeSteps()[i].getTime() >= timeInterval_.get().x)
+                    timeSteps.push_back(run.getTimeSteps()[i]);
             }
 
-            dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timeSteps });
+            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
         }
-
-        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -339,23 +329,20 @@ public:
         EnsembleDataset* dataset = new EnsembleDataset();
 
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            std::vector<EnsembleDataset::TimeStep> timesteps;
-            for (const EnsembleDataset::TimeStep& timestep : run.timeSteps_) {
+            std::vector<EnsembleDataset::TimeStep> timeSteps;
+            for (const EnsembleDataset::TimeStep& timeStep : run.getTimeSteps()) {
                 // Only add time step, if selected field is available.
-                if(timestep.fieldNames_.count(fields_.getValue()) > 0) {
-                    EnsembleDataset::TimeStep filteredTimeStep = timestep;
+                const auto& fieldNames = timeStep.getFieldNames();
+                if(std::find(fieldNames.begin(), fieldNames.end(), fields_.getValue()) != fieldNames.end()) {
 
-                    std::map<std::string, const VolumeBase*> filteredFields;
-                    filteredFields[fields_.getValue()] = timestep.fieldNames_.at(fields_.getValue());
-                    filteredTimeStep.fieldNames_ = filteredFields;
+                    std::map<std::string, const VolumeBase*> filteredVolumeData;
+                    filteredVolumeData[fields_.getValue()] = timeStep.getVolume(fields_.getValue());
 
-                    timesteps.push_back(filteredTimeStep);
+                    timeSteps.push_back(EnsembleDataset::TimeStep{filteredVolumeData, timeStep.getTime(), timeStep.getDuration()});
                 }
             }
-            dataset->addRun(EnsembleDataset::Run{ run.name_, run.color_, timesteps });
+            dataset->addRun(EnsembleDataset::Run{run.getName(), run.getColor(), timeSteps });
         }
-
-        dataset->setRoi(ensemble.getRoi());
 
         return dataset;
     }
@@ -379,48 +366,6 @@ private:
 };
 
 //----------------------------------------
-// Filter : ROI
-//----------------------------------------
-
-class FilterROI : public Filter {
-public:
-    FilterROI()
-        : regionOfInterest_("roi", "Region of interest")
-    {
-        regionOfInterest_.setDescription("Modifies the region of interest (ROI) of the ensemble dataset.");
-    }
-
-    std::vector<Property*> getProperties() {
-        return std::vector<Property*>(1, &regionOfInterest_);
-    }
-
-    EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
-        // Clone input data and adjust roi.
-        EnsembleDataset* dataset = new EnsembleDataset(ensemble);
-        dataset->setRoi(regionOfInterest_.get());
-        return dataset;
-    }
-
-    void adjustToEnsemble(const EnsembleDataset* ensemble) {
-        if (!ensemble) {
-            regionOfInterest_.setReadOnlyFlag(true);
-            regionOfInterest_.setMinValue(tgt::ivec3::zero);
-            regionOfInterest_.setMaxValue(tgt::ivec3::zero);
-        }
-        else {
-            regionOfInterest_.setMinValue(ensemble->getRoi().getLLF());
-            regionOfInterest_.setMaxValue(ensemble->getRoi().getURB());
-            regionOfInterest_.set(ensemble->getRoi());
-            regionOfInterest_.setReadOnlyFlag(false);
-        }
-    }
-
-private:
-
-    FloatBoundingBoxProperty regionOfInterest_;
-};
-
-//----------------------------------------
 // EnsembleFilter
 //----------------------------------------
 
@@ -440,7 +385,6 @@ EnsembleFilter::EnsembleFilter()
     addFilter(new FilterRemoveFirstTimeStep());
     addFilter(new FilterSelectLastTimeStep());
     addFilter(new FilterField());
-    addFilter(new FilterROI());
 }
 
 EnsembleFilter::~EnsembleFilter() {

@@ -63,12 +63,11 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
         throw InvalidInputException("Need at least a single run", InvalidInputException::S_ERROR);
     }
 
-    const VolumeBase* reference = referencePort_.getData();
-    if(!reference) {
+    const VolumeBase* referenceVolume = referencePort_.getData();
+    if(!referenceVolume) {
         throw InvalidInputException("No reference volume", InvalidInputException::S_ERROR);
     }
 
-    VolumeRAMRepresentationLock referenceVolume(referencePort_.getData());
     if(ensemble->getNumChannels(selectedField_.get()) != referenceVolume->getNumChannels()) {
         throw InvalidInputException("Reference Volume channel count is different from selected field", InvalidInputException::S_ERROR);
     }
@@ -78,9 +77,8 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
 
     return LocalSimilarityAnalysisInput{
             std::move(ensemble),
-            std::move(referenceVolume),
+            referenceVolume,
             std::move(outputVolume),
-            reference->getPhysicalToVoxelMatrix(),
             selectedField_.get(),
             time_.get()
     };
@@ -94,39 +92,36 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.outputVolume);
     const tgt::ivec3 newDims = output->getDimensions();
-    const tgt::Bounds& roi = ensemble->getRoi();
 
-    const VolumeRAMRepresentationLock& referenceVolume = input.referenceVolume;
-    const tgt::mat4& refPhysicalToVoxel = input.physicalToVoxel;
+    VolumeRAMRepresentationLock referenceVolume(input.referenceVolume);
+    tgt::mat4 refVoxelToWorld = input.referenceVolume->getVoxelToWorldMatrix();
 
     for (size_t r = 0; r < numRuns; r++) {
-        size_t t = ensemble->pickTimeStep(r, input.time);
-        const VolumeBase* vol = ensemble->getRuns()[r].timeSteps_[t].fieldNames_.at(field);
+        size_t t = ensemble->getRuns()[r].getTimeStep(input.time);
+        const VolumeBase* vol = ensemble->getRuns()[r].getTimeSteps()[t].getVolume(field);
         VolumeRAMRepresentationLock lock(vol);
-        tgt::mat4 physicalToVoxel = vol->getPhysicalToVoxelMatrix();
+        tgt::Bounds bounds = vol->getBoundingBox().getBoundingBox();
+        tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
 
-        tgt::ivec3 pos = tgt::ivec3::zero;
+        tgt::svec3 pos = tgt::ivec3::zero;
         for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
             for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
                 for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
 
-                    // Map sample position to physical space.
-                    tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), roi.getLLF(), roi.getURB());
-
-                    // Map to voxel space.
-                    tgt::ivec3 sampleInVoxelSpace = physicalToVoxel * sample;
-
-                    // Map sample to reference voxel space.
-                    tgt::vec3 referencePos = refPhysicalToVoxel * sample;
+                    // Transform sample into world space.
+                    tgt::vec3 sample = refVoxelToWorld * tgt::vec3(pos);
 
                     // Ignore, if out of bounds.
-                    if (tgt::clamp(sampleInVoxelSpace, tgt::ivec3::zero, newDims - tgt::ivec3::one) != sampleInVoxelSpace) {
+                    if(!bounds.containsPoint(sample)) {
                         continue;
                     }
 
+                    // Transform to local voxel space.
+                    sample = worldToVoxel * sample;
+
                     float length = 0.0f;
                     for(size_t channel=0; channel<numChannels; channel++) {
-                        float value = lock->getVoxelNormalized(sampleInVoxelSpace, channel) - referenceVolume->getVoxelNormalizedLinear(referencePos, channel);
+                        float value = lock->getVoxelNormalized(sample, channel) - referenceVolume->getVoxelNormalized(pos, channel);
                         length += value * value;
                     }
 
@@ -145,8 +140,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
         output->voxel(i) = std::sqrt(variance);
     }
 
-    tgt::vec3 spacing = roi.diagonal() / tgt::vec3(newDims);
-    std::unique_ptr<Volume> volume(new Volume(output.release(), spacing, roi.getLLF()));
+    std::unique_ptr<Volume> volume(new Volume(output.release(), input.referenceVolume->getSpacing(), input.referenceVolume->getOffset()));
     volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
     volume->getMetaDataContainer().addMetaData("field", new StringMetaData(field));
 

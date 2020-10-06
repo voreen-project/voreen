@@ -52,7 +52,6 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , inport_(Port::INPORT, "inport", "Ensemble Datastructure Input", false)
     , seedMask_(Port::INPORT, "seedmask", "Seed Mask Input (optional)")
     , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    , sampleRegion_("sampleRegion", "Sample Region")
     , singleChannelSimilarityMeasure_("singleChannelSimilarityMeasure", "Single Field Similarity Measure")
     , isoValue_("isoValue", "Iso-Value", 0.5f, 0.0f, 1.0f)
     , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Field Similarity Measure")
@@ -66,13 +65,6 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     addPort(outport_);
 
     // Calculation
-
-    addProperty(sampleRegion_);
-    //sampleRegion_.addOption("bounds", "Ensemble Bounds"); // Disabled, because seeds should be comparable.
-    sampleRegion_.addOption("common", "Common Bounds");
-    sampleRegion_.addOption("roi", "Region of Interest");
-    sampleRegion_.select("roi"); // Old behavior.
-
     addProperty(singleChannelSimilarityMeasure_);
     singleChannelSimilarityMeasure_.addOption("isovalue", "Iso-Contours", MEASURE_ISOCONTOURS);
     singleChannelSimilarityMeasure_.addOption("generalized", "Generalized", MEASURE_GENERALIZED);
@@ -152,19 +144,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     if (!ensemble)
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
 
-    tgt::Bounds bounds;
-    if (sampleRegion_.get() == "bounds") {
-        bounds = ensemble->getBounds();
-    }
-    else if (sampleRegion_.get() == "common") {
-        bounds = ensemble->getCommonBounds();
-    }
-    else if (sampleRegion_.get() == "roi") {
-        bounds = ensemble->getRoi();
-    }
-    else {
-        throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
-    }
+    tgt::Bounds bounds = ensemble->getCommonBounds();
 
     for(const std::string& fieldName : ensemble->getCommonFieldNames()) {
         size_t numChannels = ensemble->getNumChannels(fieldName);
@@ -183,7 +163,7 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     seedPoints.reserve(numSeedPoints);
     if (seedMask) {
         tgt::Bounds roiBounds = bounds;
-        tgt::Bounds seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
+        tgt::Bounds seedMaskBounds = seedMask->getBoundingBox().getBoundingBox();
 
         roiBounds.intersectVolume(seedMaskBounds);
         if(!roiBounds.isDefined()) {
@@ -215,11 +195,11 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
 
         // If we have more seed mask voxel than we want to have seed points, reduce the list size.
         float probability = static_cast<float>(numSeedPoints) / maskVoxels.size();
-        tgt::mat4 seedMaskVoxelToPhysicalMatrix = seedMask->getVoxelToPhysicalMatrix();
+        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
         for(const tgt::vec3& seedPoint : maskVoxels) {
             // Determine for each seed point, if we will keep it.
             if(probability >= 1.0f || rnd() < probability) {
-                seedPoints.push_back(seedMaskVoxelToPhysicalMatrix * seedPoint);
+                seedPoints.push_back(seedMaskVoxelToWorldMatrix * seedPoint);
             }
         }
 
@@ -321,15 +301,15 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
             float progressPerTimeStep = 1.0f / (input.ensemble->getTotalNumTimeSteps());
             size_t index = 0;
             for (const EnsembleDataset::Run& run : input.ensemble->getRuns()) {
-                for (const EnsembleDataset::TimeStep& timeStep : run.timeSteps_) {
+                for (const EnsembleDataset::TimeStep& timeStep : run.getTimeSteps()) {
 
-                    const VolumeBase* volume = timeStep.fieldNames_.at(fieldName);
-                    tgt::mat4 physicalToVoxelMatrix = volume->getPhysicalToVoxelMatrix();
+                    const VolumeBase* volume = timeStep.getVolume(fieldName);
+                    tgt::mat4 worldToVoxelMatrix = volume->getWorldToVoxelMatrix();
                     RealWorldMapping rwm = volume->getRealWorldMapping();
 
                     VolumeRAMRepresentationLock lock(volume);
                     for (const tgt::vec3& seedPoint : seedPoints) {
-                        tgt::vec3 pos = physicalToVoxelMatrix * seedPoint;
+                        tgt::vec3 pos = worldToVoxelMatrix * seedPoint;
                         for (size_t channel = 0; channel < numChannels; channel++) {
                             float value = lock->getVoxelNormalized(pos, channel);
                             value = rwm.normalizedToRealWorld(value);

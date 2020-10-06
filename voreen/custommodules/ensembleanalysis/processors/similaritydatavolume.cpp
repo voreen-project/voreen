@@ -137,11 +137,11 @@ SimilarityDataVolumeCreatorInput SimilartyDataVolume::prepareComputeInput() {
 
     std::string runGroup1;
     for(int index : group1_.getSelectedRowIndices())
-        runGroup1 += input.getRuns()[index].name_ + " ";
+        runGroup1 += input.getRuns()[index].getName() + " ";
 
     std::string runGroup2;
     for(int index : group2_.getSelectedRowIndices())
-        runGroup2 += input.getRuns()[index].name_ + " ";
+        runGroup2 += input.getRuns()[index].getName() + " ";
 
     return SimilarityDataVolumeCreatorInput{
             input,
@@ -158,7 +158,7 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
     progress.setProgress(0.0f);
 
     const std::string& field = input.field;
-    const tgt::Bounds& roi = input.dataset.getRoi();
+    const tgt::Bounds& roi = input.dataset.getCommonBounds();
 
     size_t numChannels = 1;//input.dataset.getNumChannels(field); //TODO: use multiple channels
     tgt::ivec3 newDims = input.volumeData->getDimensions();
@@ -187,10 +187,10 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
                         if(r != singleRunSelection_.getSelectedIndex()) continue;
 
                         samples.resize(2);
-                        size_t t = input.dataset.pickTimeStep(r, input.time);
+                        size_t t = input.dataset.getRuns()[r].getTimeStep(input.time);
 
-                        VolumeRAMRepresentationLock volumeT0(run.timeSteps_[0].fieldNames_.at(field));
-                        VolumeRAMRepresentationLock volumeTN(run.timeSteps_[t].fieldNames_.at(field));
+                        VolumeRAMRepresentationLock volumeT0(run.getTimeSteps()[0].getVolume(field));
+                        VolumeRAMRepresentationLock volumeTN(run.getTimeSteps()[t].getVolume(field));
 
                         for(size_t channel=0; channel<numChannels; channel++) {
                             samples[0] = volumeT0->getVoxelNormalized(sample, channel);
@@ -199,8 +199,8 @@ SimilarityDataVolumeCreatorOutput SimilartyDataVolume::compute(SimilarityDataVol
                         break;
                     }
                     else {
-                        size_t t = input.dataset.pickTimeStep(r, input.time);
-                        VolumeRAMRepresentationLock lock(run.timeSteps_[t].fieldNames_.at(field));
+                        size_t t = input.dataset.getRuns()[r].getTimeStep(input.time);
+                        VolumeRAMRepresentationLock lock(run.getTimeSteps()[t].getVolume(field));
 
                         for(size_t channel=0; channel<numChannels; channel++) {
                             samples[r] = lock->getVoxelNormalized(sample, channel);
@@ -260,10 +260,10 @@ void SimilartyDataVolume::updateProperties() {
     }
     for(int index : runIndices) {
         EnsembleDataset::Run run = inport_.getData()->getRuns().at(index);
-        EnsembleDataset::TimeStep firstTimeStep = run.timeSteps_.front();
-        EnsembleDataset::TimeStep lastTimeStep = run.timeSteps_.back();
-        timeSpan.x = std::max(timeSpan.x, firstTimeStep.time_);
-        timeSpan.y = std::min(timeSpan.y, lastTimeStep.time_);
+        EnsembleDataset::TimeStep firstTimeStep = run.getTimeSteps().front();
+        EnsembleDataset::TimeStep lastTimeStep = run.getTimeSteps().back();
+        timeSpan.x = std::max(timeSpan.x, firstTimeStep.getTime());
+        timeSpan.y = std::min(timeSpan.y, lastTimeStep.getTime());
     }
 
     time_.setMinValue(timeSpan.x);
@@ -281,10 +281,10 @@ void SimilartyDataVolume::adjustToEnsemble() {
     singleRunSelection_.setOptions(std::deque<Option<std::string>>());
     std::vector<int> selection;
     for(const EnsembleDataset::Run& run : ensemble->getRuns()) {
-        group1_.addRow(run.name_);
+        group1_.addRow(run.getName());
         selection.push_back(static_cast<int>(selection.size()));
-        group2_.addRow(run.name_);
-        singleRunSelection_.addOption(run.name_, run.name_);
+        group2_.addRow(run.getName());
+        singleRunSelection_.addOption(run.getName(), run.getName());
     }
     group1_.setSelectedRowIndices(selection);
     group2_.setSelectedRowIndices(selection);

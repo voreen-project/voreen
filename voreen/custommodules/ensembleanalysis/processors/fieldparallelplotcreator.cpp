@@ -90,18 +90,15 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
     const EnsembleDataset& input = *inputPtr;
 
-    const tgt::Bounds& roi = input.getRoi(); // ROI is defined in physical coordinates.
-    if(!roi.isDefined()) {
-        throw InvalidInputException("ROI is not defined", InvalidInputException::S_ERROR);
-    }
+    tgt::Bounds bounds = input.getCommonBounds();
 
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
     tgt::Bounds seedMaskBounds;
-    tgt::mat4 seedMaskPhysicalToVoxelMatrix;
+    tgt::mat4 seedMaskWorldToVoxelMatrix;
     std::unique_ptr<VolumeRAMRepresentationLock> seedMaskLock;
     if(seedMask) {
-        tgt::Bounds roiBounds = roi;
-        seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
+        tgt::Bounds roiBounds = bounds;
+        seedMaskBounds = seedMask->getBoundingBox().getBoundingBox();
 
         roiBounds.intersectVolume(seedMaskBounds);
         if(!roiBounds.isDefined()) {
@@ -115,7 +112,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
-        seedMaskPhysicalToVoxelMatrix = seedMask->getPhysicalToVoxelMatrix();
+        seedMaskWorldToVoxelMatrix = seedMask->getWorldToVoxelMatrix();
         LINFO("Restricting seed points to volume mask");
     }
 
@@ -136,10 +133,10 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
         size_t tries = 0;
         do {
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
-            seedPoint = tgt::vec3(roi.getLLF()) + seedPoint * tgt::vec3(roi.diagonal());
+            seedPoint = tgt::vec3(bounds.getLLF()) + seedPoint * tgt::vec3(bounds.diagonal());
             tries++;
         } while (tries < maxTries && seedMask && (!seedMaskBounds.containsPoint(seedPoint) ||
-                std::abs((*seedMaskLock)->getVoxelNormalized(seedMaskPhysicalToVoxelMatrix*seedPoint)) <
+                std::abs((*seedMaskLock)->getVoxelNormalized(seedMaskWorldToVoxelMatrix*seedPoint)) <
                     std::numeric_limits<float>::epsilon()));
 
         if(tries < maxTries) {
@@ -177,19 +174,19 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
             SubtaskProgressReporter runProgressReporter(fieldProgressReporter, tgt::vec2(j, j+1) / tgt::vec2(data.getRuns().size()));
 
             const tgt::vec2& valueRange = data.getValueRange(field);
-            float pixelOffset = pixelPerTimeUnit * (timeOffset + run.timeSteps_[0].time_);
-            float pixel = pixelPerTimeUnit * run.timeSteps_[0].duration_;
+            float pixelOffset = pixelPerTimeUnit * (timeOffset + run.getTimeSteps()[0].getTime());
+            float pixel = pixelPerTimeUnit * run.getTimeSteps()[0].getDuration();
 
-            const VolumeBase* volumePrev = run.timeSteps_[0].fieldNames_.at(field);
-            tgt::mat4 physicalToVoxelMatrixPrev = volumePrev->getPhysicalToVoxelMatrix();
+            const VolumeBase* volumePrev = run.getTimeSteps()[0].getVolume(field);
+            tgt::mat4 worldToVoxelMatrixPrev = volumePrev->getWorldToVoxelMatrix();
             RealWorldMapping rwmPrev = volumePrev->getRealWorldMapping();
             VolumeRAMRepresentationLock lockPrev(volumePrev);
 
             float progressPerTimeStep = 1.0f / (input.dataset.getTotalNumTimeSteps());
-            for (size_t t = 1; t < run.timeSteps_.size(); t++) {
+            for (size_t t = 1; t < run.getTimeSteps().size(); t++) {
 
-                const VolumeBase* volumeCurr = run.timeSteps_[t].fieldNames_.at(field);
-                tgt::mat4 physicalToVoxelMatrixCurr = volumeCurr->getPhysicalToVoxelMatrix();
+                const VolumeBase* volumeCurr = run.getTimeSteps()[t].getVolume(field);
+                tgt::mat4 worldToVoxelMatrixCurr = volumeCurr->getWorldToVoxelMatrix();
                 RealWorldMapping rwmCurr = volumeCurr->getRealWorldMapping();
                 VolumeRAMRepresentationLock lockCurr(volumeCurr);
 
@@ -199,10 +196,10 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
                 for (size_t k = 0; k<seedPoints.size(); k++) {
 
-                    float voxelPrev = lockPrev->getVoxelNormalizedLinear(physicalToVoxelMatrixPrev * seedPoints[k]);
+                    float voxelPrev = lockPrev->getVoxelNormalizedLinear(worldToVoxelMatrixPrev * seedPoints[k]);
                     voxelPrev = rwmPrev.normalizedToRealWorld(voxelPrev);
                     voxelPrev = mapRange(voxelPrev, valueRange.x, valueRange.y, 0.0f, 1.0f);
-                    float voxelCurr = lockCurr->getVoxelNormalizedLinear(physicalToVoxelMatrixCurr * seedPoints[k]);
+                    float voxelCurr = lockCurr->getVoxelNormalizedLinear(worldToVoxelMatrixCurr * seedPoints[k]);
                     voxelCurr = rwmCurr.normalizedToRealWorld(voxelCurr);
                     voxelCurr = mapRange(voxelCurr, valueRange.x, valueRange.y, 0.0f, 1.0f);
 
@@ -210,12 +207,12 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 }
 
                 volumePrev = volumeCurr;
-                physicalToVoxelMatrixPrev = physicalToVoxelMatrixCurr;
+                worldToVoxelMatrixPrev = worldToVoxelMatrixCurr;
                 rwmPrev = rwmCurr;
                 lockPrev = volumePrev;
 
                 pixelOffset = pixelOffset + pixel;
-                pixel = pixelPerTimeUnit * run.timeSteps_[t].duration_;
+                pixel = pixelPerTimeUnit * run.getTimeSteps()[t].getDuration();
 
                 // Update progress.
                 runProgressReporter.setProgress(t*progressPerTimeStep);

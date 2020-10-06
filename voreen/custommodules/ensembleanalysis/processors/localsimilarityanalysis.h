@@ -40,9 +40,8 @@ namespace voreen {
 
 struct LocalSimilarityAnalysisInput {
     PortDataPointer<EnsembleDataset> ensemble;
-    VolumeRAMRepresentationLock referenceVolume;
+    const VolumeBase* referenceVolume;
     std::unique_ptr<VolumeRAM_Float> outputVolume;
-    tgt::mat4 physicalToVoxel;
     std::string field;
     float time;
 };

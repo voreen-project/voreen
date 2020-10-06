@@ -169,10 +169,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
             VolumeReader* reader = readers.front();
             tgtAssert(reader, "Reader was null");
 
-            EnsembleDataset::TimeStep timeStep;
-            timeStep.path_ = fileName;
-            timeStep.time_ = 0.0f;
-            timeStep.duration_ = 0.0f;
+            std::map<std::string, const VolumeBase*> volumeData;
+            float time = 0.0f;
+            float duration = 0.0f;
             bool timeIsSet = false;
 
             const std::vector<VolumeURL>& subURLs = reader->listVolumes(url);
@@ -181,38 +180,39 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 if(!volumeHandle)
                     break;
 
-                float time;
+                float currentTime = 0.0f;
                 if(!overrideTimeStep_.get()) {
                     if (volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
-                        time = volumeHandle->getTimestep();
+                        currentTime = volumeHandle->getTimestep();
                     } else if (volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
-                        time = volumeHandle->getMetaDataValue<FloatMetaData>(SIMULATED_TIME_NAME, 0.0f);
+                        currentTime = volumeHandle->getMetaDataValue<FloatMetaData>(SIMULATED_TIME_NAME, 0.0f);
                     }
                     else {
-                        time = 1.0f * timeSteps.size();
+                        currentTime = 1.0f * timeSteps.size();
                         LWARNING("Actual time information not found for time step " << timeSteps.size() << " of run " << run);
                     }
                 }
                 else {
-                    time = 1.0f * timeSteps.size();
+                    currentTime = 1.0f * timeSteps.size();
                 }
 
                 if (!timeIsSet) {
-                    timeStep.time_ = time;
+                    time = currentTime;
                     timeIsSet = true;
                 }
-                else if (timeStep.time_ != time)
-                    LWARNING("Meta data '" << SIMULATED_TIME_NAME << "' not equal channel-wise in t=" << timeSteps.size() << " of run" << run);
+                else if (currentTime != time) {
+                    LWARNING("Time stamp not equal channel-wise for t=" << timeSteps.size() << " of run " << run);
+                }
 
-                std::string name;
+                std::string fieldName;
                 if(volumeHandle->hasMetaData(NAME_FIELD_NAME)) {
-                    name = volumeHandle->getMetaData(NAME_FIELD_NAME)->toString();
+                    fieldName = volumeHandle->getMetaData(NAME_FIELD_NAME)->toString();
                 }
                 else if(volumeHandle->hasMetaData(SCALAR_FIELD_NAME)) {
-                    name = volumeHandle->getMetaData(SCALAR_FIELD_NAME)->toString();
+                    fieldName = volumeHandle->getMetaData(SCALAR_FIELD_NAME)->toString();
                 }
                 else {
-                    name = FALLBACK_FIELD_NAME;
+                    fieldName = FALLBACK_FIELD_NAME;
                 }
 
                 // Add additional information gained reading the file structure.
@@ -220,7 +220,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 tgtAssert(volume, "volumeHandle must be volume");
                 volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(run));
 
-                timeStep.fieldNames_[name] = volumeHandle.get();
+                volumeData[fieldName] = volumeHandle.get();
 
                 // Ownership remains.
                 volumes_.push_back(std::move(volumeHandle));
@@ -229,9 +229,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
             // Calculate duration the current timeStep is valid.
             // Note that the last time step has a duration of 0.
             if (!timeSteps.empty())
-                timeSteps.back().duration_ = timeStep.time_ - timeSteps.back().time_;
+                duration = time - timeSteps.back().getTime();
 
-            timeSteps.push_back(timeStep);
+            timeSteps.push_back({volumeData, time, duration});
 
             // Update progress bar.
             timeStepProgress_.setProgress(std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f));
@@ -242,9 +242,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
         row[0] = run; // Name
         row[1] = std::to_string(timeSteps.size()); // Num Time Steps
         if (!timeSteps.empty()) {
-            row[2] = std::to_string(timeSteps.front().time_); // Start time
-            row[3] = std::to_string(timeSteps.back().time_); // End time
-            row[4] = std::to_string(timeSteps.back().time_ - timeSteps.front().time_); // Duration
+            row[2] = std::to_string(timeSteps.front().getTime()); // Start time
+            row[3] = std::to_string(timeSteps.back().getTime()); // End time
+            row[4] = std::to_string(timeSteps.back().getTime() - timeSteps.front().getTime()); // Duration
         }
         else {
             row[2] = row[3] = row[4] = "N/A";
@@ -253,7 +253,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
         // Update dataset.
         tgt::Color color = *colorIter;
-        dataset->addRun(EnsembleDataset::Run{ run, color.xyz(), timeSteps });
+        dataset->addRun({ run, color.xyz(), timeSteps });
         ++colorIter;
 
         // Update progress bar.
