@@ -254,6 +254,7 @@ void OctreeWalker::initialize() {
 }
 
 void OctreeWalker::deinitialize() {
+    interruptComputation();
     clearPreviousResults();
 
     AsyncComputeProcessor::deinitialize();
