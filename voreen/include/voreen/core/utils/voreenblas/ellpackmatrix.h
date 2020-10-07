@@ -57,6 +57,8 @@ public:
 
     inline void setValue(size_t row, size_t col, T value);
     inline T getValue(size_t row, size_t col) const;
+
+    // Careful: an invalid index aborts the process!
     inline T& getWritableValue(size_t row, size_t col);
 
     inline void setValueByIndex(size_t row, size_t col, size_t colIndex, T value);
@@ -145,10 +147,9 @@ void voreen::EllpackMatrix<T>::initializeBuffers() {
         throw VoreenException("Bad allocation during initialization of data buffers");
     }
 
-    for (size_t i=0; i<numRows_*numColsPerRow_; ++i) {
-        M_[i] = static_cast<T>(0);
-        indices_[i] = -1;
-    }
+    size_t numElms = numRows_*numColsPerRow_;
+    std::fill_n(M_, numElms, static_cast<T>(0));
+    std::fill_n(indices_, numElms, -1);
 }
 
 template<class T>
@@ -217,26 +218,20 @@ T& voreen::EllpackMatrix<T>::getWritableValue(size_t row, size_t col) {
     tgtAssert(row < numRows_ && col < numCols_, "Invalid indices");
 #endif
 
-    // value already set for these coordinates?
-    int index = getIndex(row, col);
-
-    // if no value for indices assigned, get next free col index
-    if (index == -1)
-        index = static_cast<int>(getNextFreeIndex(row));
-
-    if (index >= 0) {
-        // next free col index available
-        indices_[index] = col;
-        return M_[index];
+    auto range = rowIndexRange(row);
+    for (size_t index = range.first; index != range.second; ++index) {
+        auto& c = indices_[index];
+        // Cols are filled from 0 to .. and never freed. Thus, if we find -1, the entry does not exist, yet.
+        if (c == col || c == -1) {
+            c = col;
+            return M_[index];
+        }
     }
-    else {
-        // row is full
-        LWARNINGC("EllMatrix", "Too many entries for row " << row);
-        tgtAssert(false, "Too many entries for row");
-        static T dummy;
-        return dummy;
-    }
+    //LWARNINGC("EllMatrix", "Too many entries for row " << row);
+    tgtAssert(false, "Too many entries for row");
+    std::abort();
 }
+
 
 template<class T>
 size_t voreen::EllpackMatrix<T>::getColumn(size_t row, size_t colIndex) const {

@@ -539,9 +539,10 @@ struct BrickNeighborhood {
                 BrickPoolBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
 
                 tgt::mat4 bufferToSampleBrick = node.location().voxelToBrick() * bufferToVoxel;
+                tgt::svec3 maxpos = node.location().brickDimensions() - tgt::svec3(1);
                 VRN_FOR_EACH_VOXEL(point, blockBegin, blockEnd) {
                     tgt::svec3 samplePos = tgt::round(bufferToSampleBrick.transform(point));
-                    samplePos = tgt::clamp(samplePos, tgt::svec3(0), node.location().brickDimensions() - tgt::svec3(1));
+                    samplePos = tgt::clamp(samplePos, tgt::svec3(0), maxpos);
                     float val = brick.getVoxelNormalized(samplePos);
 
                     output.setVoxelNormalized(val, point);
@@ -894,8 +895,8 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
                     //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
                     tgtAssert(mat.getIndex(curRow, nRow) == -1, "foo");
                     tgtAssert(mat.getIndex(nRow, curRow) == -1, "foo");
-                    mat.setValue(curRow, nRow, -weight);
-                    mat.setValue(nRow, curRow, -weight);
+                    mat.getWritableValue(curRow, nRow) = -weight;
+                    mat.getWritableValue(nRow, curRow) = -weight;
                 } else {
                     vec[nRow] += weight * seeds.getSeedValue(voxel);
                 }
@@ -913,7 +914,7 @@ static void processVoxelWeights(const tgt::ivec3& voxel, const RandomWalkerSeeds
         // This is the first time writing to mat at this location, so overwriting is fine.
         size_t curRow = volumeIndexToRowTable[index];
         tgtAssert(mat.getIndex(curRow, curRow) == -1, "foo");
-        mat.setValue(curRow, curRow, weightSum);
+        mat.getWritableValue(curRow, curRow) = weightSum;
     }
 }
 
@@ -1046,8 +1047,9 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     auto vec = std::vector<float>(systemSize, 0.0f);
 
     tgt::vec3 spacing = input.volume_.getSpacing();
+    auto rwm = input.volume_.getRealWorldMapping();
     VRN_FOR_EACH_VOXEL(pos, tgt::ivec3(0), tgt::ivec3(walkerBlockDim)) {
-        processVoxelWeights<NoiseModel>(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing, input.volume_.getRealWorldMapping());
+        processVoxelWeights<NoiseModel>(pos, seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing, rwm);
     }
 
     for(int i=0; i<10; ++i) {
