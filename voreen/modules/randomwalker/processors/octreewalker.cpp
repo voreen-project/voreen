@@ -1242,6 +1242,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             if(parallelProgress.reportStepDone()) {
                 #pragma omp critical
                 aborted = true;
+                continue;
             }
 #else
             if(parallelProgress.reportStepDone()) {
