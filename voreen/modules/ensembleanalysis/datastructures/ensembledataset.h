@@ -63,6 +63,13 @@ public:
                  float time, float duration = 0.0f);
 
         /**
+         * Creates a new time step but only containing a subset of fields.
+         * @param fieldNames Names of fields to be included.
+         * @see EnsembleFilter
+         */
+        TimeStep createSubset(const std::vector<std::string>& fieldNames) const;
+
+        /**
          * Returns the time point of this time step.
          */
         float getTime() const;

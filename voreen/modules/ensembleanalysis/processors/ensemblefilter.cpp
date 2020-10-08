@@ -331,14 +331,14 @@ public:
         for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
             std::vector<EnsembleDataset::TimeStep> timeSteps;
             for (const EnsembleDataset::TimeStep& timeStep : run.getTimeSteps()) {
+
+                std::vector<std::string> fieldNames;
+                fieldNames.push_back(fields_.getValue());
+
                 // Only add time step, if selected field is available.
-                const auto& fieldNames = timeStep.getFieldNames();
-                if(std::find(fieldNames.begin(), fieldNames.end(), fields_.getValue()) != fieldNames.end()) {
-
-                    std::map<std::string, const VolumeBase*> filteredVolumeData;
-                    filteredVolumeData[fields_.getValue()] = timeStep.getVolume(fields_.getValue());
-
-                    timeSteps.push_back(EnsembleDataset::TimeStep{filteredVolumeData, timeStep.getTime(), timeStep.getDuration()});
+                EnsembleDataset::TimeStep filtered = timeStep.createSubset(fieldNames);
+                if(!filtered.getFieldNames().empty()) {
+                    timeSteps.push_back(filtered);
                 }
             }
             dataset->addRun(EnsembleDataset::Run{run.getName(), run.getColor(), timeSteps });

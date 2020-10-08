@@ -66,12 +66,15 @@ protected:
         setDescription("Loads an Ensemble of Volumes, organized into multiple runs.");
         ensemblePath_.setDescription("Expects a folder containing a separate folder for each ensemble member "
                                      "(aka run). Each folder must contain a single file (of any supported format) "
-                                     "for each time step of the respective run. Each of those files may contain multiple"
-                                     "volumes which will be interpreted as time steps, in lexicographic order."
+                                     "for each time step of the respective run. Each of those files may contain multiple "
+                                     "volumes which will be interpreted as time steps, in lexicographic order. "
                                      "The volume files might contain time step meta information which do not need to "
                                      "match the files' names. ");
-        forceReload_.setDescription("If enabled, this will force the ensemble to be loaded automatically "
-                                 "when the workspace is loaded the next time.");
+        loadingStrategy_.setDescription("Loading strategy has three options:\n"
+                                        "Manual: The ensemble is only loaded when pressing the load button.\n"
+                                        "Full: The entire ensemble is loaded fully from disk when the workspace is loaded\n"
+                                        "Lazy: The entire ensemble needs to be loaded once an all required meta data will be "
+                                        "safed to and loaded from disk the next time the workspace is loaded");
     }
 
     void process();
@@ -89,14 +92,14 @@ protected:
     std::unique_ptr<EnsembleDataset> output_;
 
     FileDialogProperty ensemblePath_;
-    BoolProperty forceReload_;
+    StringOptionProperty loadingStrategy_;
     ButtonProperty loadDatasetButton_;
     ProgressProperty runProgress_;
     ProgressProperty timeStepProgress_;
     StringTableProperty loadedRuns_;
     FileDialogProperty printEnsemble_;
     ColorMapProperty colorMap_;
-    BoolProperty overrideTimeStep_;
+    BoolProperty overrideTime_;
     StringProperty hash_;
 
     /// The structure of the ensemble data.

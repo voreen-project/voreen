@@ -46,19 +46,22 @@ EnsembleDataSource::EnsembleDataSource()
     : Processor()
     , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
     , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_PATH)
-    , forceReload_("forceReload", "Force Reload", false, Processor::VALID, Property::LOD_DEBUG)
+    , loadingStrategy_("loadingStrategy", "Loading Strategy", Processor::VALID)
     , loadDatasetButton_("loadDataset", "Load Dataset")
     , runProgress_("runProgress", "Runs loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
     , loadedRuns_("loadedRuns", "Loaded Runs", 5)
     , printEnsemble_("printEnsemble", "Print Ensemble", "Print Ensemble", "", "HTML (*.html)", FileDialogProperty::SAVE_FILE)
     , colorMap_("colorMap", "Color Map")
-    , overrideTimeStep_("overrideTimeStep", "Override Time Step", false, Processor::VALID, Property::LOD_ADVANCED)
+    , overrideTime_("overrideTime", "Override Time", false, Processor::VALID, Property::LOD_ADVANCED)
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
 {
     addPort(outport_);
     addProperty(ensemblePath_);
-    addProperty(forceReload_);
+    addProperty(loadingStrategy_);
+    loadingStrategy_.addOption("manual", "Manual");
+    loadingStrategy_.addOption("full", "Full");
+    loadingStrategy_.addOption("lazy", "Lazy");
     addProperty(loadDatasetButton_);
     addProperty(runProgress_);
     addProgressBar(&runProgress_);
@@ -81,7 +84,7 @@ EnsembleDataSource::EnsembleDataSource()
     colors.push_back(tgt::Color(1.0f, 1.0f, 0.0f, 1.0f));
     colorMap_.set(ColorMap::createFromVector(colors));
 
-    addProperty(overrideTimeStep_);
+    addProperty(overrideTime_);
     addProperty(hash_);
     hash_.setEditable(false);
 
@@ -95,7 +98,8 @@ Processor* EnsembleDataSource::create() const {
 void EnsembleDataSource::process() {
 
     // Reload whole ensemble, if file watching was enabled and some file changed.
-    if(invalidationLevel_ >= INVALID_PATH && ensemblePath_.isFileWatchEnabled()) {
+    if((invalidationLevel_ >= INVALID_PATH && ensemblePath_.isFileWatchEnabled()) ||
+            (loadingStrategy_.get() == "lazy" && !output_)) {
         buildEnsembleDataset();
     }
 
@@ -106,7 +110,7 @@ void EnsembleDataSource::process() {
 
 void EnsembleDataSource::initialize() {
     Processor::initialize();
-    if(forceReload_.get()) {
+    if(loadingStrategy_.get() == "full") {
         buildEnsembleDataset();
     }
 }
@@ -118,14 +122,27 @@ void EnsembleDataSource::deinitialize() {
 
 void EnsembleDataSource::serialize(Serializer& s) const {
     Processor::serialize(s);
-    s.serialize("ensemble", *output_);
+    if(loadingStrategy_.get() == "lazy" && output_) {
+        s.serialize("ensemble", *output_);
+    }
 }
 void EnsembleDataSource::deserialize(Deserializer& s) {
     Processor::deserialize(s);
 
+    if(loadingStrategy_.get() != "lazy") {
+        return;
+    }
+
+    // If path was being reset, the ensemble will no longer be accessible.
+    // So, we discard the cache.
+    if(ensemblePath_.get().empty()) {
+        return;
+    }
+
     output_.reset(new EnsembleDataset());
     try {
         s.deserialize("ensemble", *output_);
+        setProgress(1.0f);
     } catch (SerializationException&) {
         s.removeLastError();
     }
@@ -196,7 +213,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     break;
 
                 float currentTime = 0.0f;
-                if(!overrideTimeStep_.get()) {
+                if(!overrideTime_.get()) {
                     if (volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
                         currentTime = volumeHandle->getTimestep();
                     } else if (volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
@@ -285,12 +302,12 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
 void EnsembleDataSource::printEnsembleDataset() {
 
-    if(!outport_.hasData()) {
+    if(!output_) {
         return;
     }
 
     std::fstream file(printEnsemble_.get(), std::ios::out);
-    file << outport_.getData()->toHTML();
+    file << output_->toHTML();
     if (!file.good()) {
         LERROR("Could not write " << printEnsemble_.get() << " file");
     }

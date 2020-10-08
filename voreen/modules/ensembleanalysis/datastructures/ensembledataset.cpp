@@ -109,6 +109,17 @@ EnsembleDataset::TimeStep::TimeStep(const std::map<std::string, const VolumeBase
     }
 }
 
+EnsembleDataset::TimeStep EnsembleDataset::TimeStep::createSubset(const std::vector<std::string>& fieldNames) const {
+    TimeStep subset = *this;
+    for(const std::string& fieldName : fieldNames) {
+        auto iter = subset.urls_.find(fieldName);
+        if(iter != subset.urls_.end()) {
+            subset.urls_.erase(iter);
+        }
+    }
+    return subset;
+}
+
 float EnsembleDataset::TimeStep::getTime() const {
     return time_;
 }
