@@ -49,7 +49,8 @@ using tgt::vec3;
 namespace voreen {
 namespace {
 static float brickToNorm(uint16_t val) {
-    return static_cast<float>(val)/0xffff;
+    const float NORM_TO_BRICK_FACTOR = 1.0f/0xffff;
+    return static_cast<float>(val) * NORM_TO_BRICK_FACTOR;
 }
 }
 

@@ -536,19 +536,65 @@ struct BrickNeighborhood {
             tgt::svec3 samplePoint = tgt::round(bufferToVoxel.transform(blockBegin));
             auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel);
             if(node.node().hasBrick()) {
-                BrickPoolBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
-
                 tgt::mat4 bufferToSampleBrick = node.location().voxelToBrick() * bufferToVoxel;
-                tgt::svec3 maxpos = node.location().brickDimensions() - tgt::svec3(1);
-                VRN_FOR_EACH_VOXEL(point, blockBegin, blockEnd) {
-                    tgt::svec3 samplePos = tgt::round(bufferToSampleBrick.transform(point));
-                    samplePos = tgt::clamp(samplePos, tgt::svec3(0), maxpos);
-                    float val = brick.getVoxelNormalized(samplePos);
+                tgt::ivec3 maxpos = node.location().brickDimensions() - tgt::svec3(1);
 
-                    output.setVoxelNormalized(val, point);
-                    min = std::min(val, min);
-                    max = std::max(val, max);
-                    sum += val;
+
+                // The following is equivalent to this, but faster.
+                //
+                //VRN_FOR_EACH_VOXEL(point, blockBegin, blockEnd) {
+                //    tgt::svec3 samplePos = tgt::round(bufferToSampleBrick.transform(point));
+                //    samplePos = tgt::clamp(samplePos, tgt::svec3(0), maxpos);
+                //    float val = brick.getVoxelNormalized(samplePos);
+
+                //    output.setVoxelNormalized(val, point);
+                //    min = std::min(val, min);
+                //    max = std::max(val, max);
+                //    sum += val;
+                //}
+
+                BrickPoolBrickConst brick(node.node().getBrickAddress(), brickBaseSize, brickPoolManager);
+                const uint16_t* brickData = brick.data().voxel();
+                tgt::ivec3 brickDim = brick.data().getDimensions();
+
+                float* outputData = output.voxel();
+                tgt::ivec3 outputDim = output.getDimensions();
+
+                // Note: We know (and thus assume and use) that bufferToSampleBrick is only a scale with translation
+                for(int z=blockBegin.z; z!=blockEnd.z; ++z) {
+                    int sampleZ = tgt::round(bufferToSampleBrick.elemRowCol[2][2] * z + bufferToSampleBrick.elemRowCol[2][3]);
+                    sampleZ = tgt::clamp(sampleZ, 0, maxpos.z);
+                    int brickIndexBaseY = sampleZ * brickDim.y;
+
+                    int outputBaseY = z * outputDim.y;
+
+                    for(int y=blockBegin.y; y!=blockEnd.y; ++y) {
+                        int sampleY = tgt::round(bufferToSampleBrick.elemRowCol[1][1] * y + bufferToSampleBrick.elemRowCol[1][3]);
+                        sampleY = tgt::clamp(sampleY, 0, maxpos.y);
+                        int brickIndexBaseX = brickDim.x * (sampleY + brickIndexBaseY);
+
+                        int outputBaseX = outputDim.x * (y + outputBaseY);
+                        int outputIndex = outputBaseX + blockBegin.x;
+
+                        for(int x=blockBegin.x; x!=blockEnd.x; ++x) {
+                            int sampleX = tgt::round(bufferToSampleBrick.elemRowCol[0][0] * x + bufferToSampleBrick.elemRowCol[0][3]);
+                            sampleX = tgt::clamp(sampleX, 0, maxpos.x);
+                            int brickIndex = brickIndexBaseX + sampleX;
+
+
+                            uint16_t valuint = brickData[brickIndex];
+                            const float NORM_TO_BRICK_FACTOR = 1.0f/0xffff;
+                            float val = static_cast<float>(valuint) * NORM_TO_BRICK_FACTOR;
+
+                            outputData[outputIndex] = val;
+
+                            min = std::min(val, min);
+                            max = std::max(val, max);
+                            sum += val;
+
+                            ++outputIndex;
+                        }
+                    }
                 }
             } else {
                 float val = static_cast<float>(node.node().getAvgValue())/0xffff;
