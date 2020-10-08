@@ -241,7 +241,7 @@ static bool handleLineEvent(std::deque<tgt::vec2>& points, tgt::MouseEvent* e) {
     return true;
 }
 
-void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
+boost::optional<tgt::vec2> handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels, const boost::optional<tgt::vec2>& prevMousePos) {
     auto button = e->button();
 
     tgt::ivec2 coords = e->coord();
@@ -255,30 +255,34 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
     coords.y = viewport.y - coords.y - 1;
     auto mouse = tgt::vec2(coords)/tgt::vec2(viewport);
     {
-        float nearest_dist = MOUSE_INTERACTION_DIST;
-        boost::optional<NearestNode> nearest = boost::none;
-        auto findNearestNode = [&] (std::deque<tgt::vec2>& line) {
-            int i = 0;
-            for(auto& p : line) {
-                float dist = tgt::distance(p, mouse);
-                if (dist < MOUSE_INTERACTION_DIST && (!nearest || dist < nearest_dist)) {
-                    nearest = NearestNode {
-                        &line, i
-                    };
-                    nearest_dist = dist;
+        auto findNearestNodeTo = [&] (const tgt::vec2& mousePos) {
+            float nearest_dist = MOUSE_INTERACTION_DIST;
+            boost::optional<NearestNode> nearest = boost::none;
+            auto findNearestNodeInLine = [&] (std::deque<tgt::vec2>& line) {
+                int i = 0;
+                for(auto& p : line) {
+                    float dist = tgt::distance(p, mousePos);
+                    if (dist < MOUSE_INTERACTION_DIST && (!nearest || dist < nearest_dist)) {
+                        nearest = NearestNode {
+                            &line, i
+                        };
+                        nearest_dist = dist;
+                    }
+                    ++i;
                 }
-                ++i;
+            };
+            for(auto& line : labels.foreground_) {
+                findNearestNodeInLine(line);
             }
+            for(auto& line : labels.background_) {
+                findNearestNodeInLine(line);
+            }
+            return nearest;
         };
-        for(auto& line : labels.foreground_) {
-            findNearestNode(line);
-        }
-        for(auto& line : labels.background_) {
-            findNearestNode(line);
-        }
 
-        if(nearest) {
-            if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+        if(e->action() == tgt::MouseEvent::RELEASED && button == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+            auto nearest = findNearestNodeTo(mouse);
+            if(nearest) {
                 nearest->line->erase(nearest->line->begin() + nearest->index);
                 labels.foreground_.erase(std::remove_if(labels.foreground_.begin(),
                             labels.foreground_.end(),
@@ -286,11 +290,21 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
                 labels.background_.erase(std::remove_if(labels.background_.begin(),
                             labels.background_.end(),
                             [](std::deque<tgt::vec2>& q){ return q.empty(); }), labels.background_.end());
-            } else if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
-                nearest->line->at(nearest->index) = mouse;
+
+                e->accept();
+                return boost::none;
             }
-            e->accept();
-            return;
+        } else if(button == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+            auto nearest = findNearestNodeTo(prevMousePos ? *prevMousePos : mouse);
+            if(nearest) {
+                nearest->line->at(nearest->index) = mouse;
+                e->accept();
+                if(e->action() == tgt::MouseEvent::PRESSED || e->action() == tgt::MouseEvent::MOTION) {
+                    return mouse;
+                } else {
+                    return boost::none;
+                }
+            }
         }
     }
     if(e->action() == tgt::MouseEvent::PRESSED && button == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE) {
@@ -393,9 +407,10 @@ void handleProjectionEvent(tgt::MouseEvent* e, ProjectionLabels& labels) {
             nearest->line->insert(nearest->line->begin() + nearest->index, mouse);
 
             e->accept();
-            return;
+            return mouse;
         }
     }
+    return boost::none;
 }
 
 static void zoomPoint(float& point, float center, float factor) {
@@ -446,7 +461,11 @@ void InteractiveProjectionLabeling::projectionEvent(tgt::MouseEvent* e) {
         currentUnit().projectionLabels_.background_.push_back({mouse});
     } else if(e->modifiers() == tgt::Event::MODIFIER_NONE &&
             (button & (tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT | tgt::MouseEvent::MOUSE_BUTTON_MIDDLE)) != 0) {
-        handleProjectionEvent(e, currentUnit().projectionLabels_);
+        if((e->action() & tgt::MouseEvent::ENTER_EXIT) == 0) {
+            prevProjectionMousePos_ = handleProjectionEvent(e, currentUnit().projectionLabels_, prevProjectionMousePos_);
+        } else {
+            prevProjectionMousePos_ = boost::none;
+        }
     } else {
         return;
     }
@@ -721,6 +740,9 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , projection_(boost::none)
     , projectionLabelsModified_(false)
+    , projectionRequiresUpdate_(false)
+    , currentUnit_()
+    , prevProjectionMousePos_(boost::none)
     , state_(FREE)
     , seedsChanged_(true)
     , labelUnits_()

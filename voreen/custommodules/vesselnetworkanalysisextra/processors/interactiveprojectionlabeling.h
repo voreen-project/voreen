@@ -181,6 +181,7 @@ private:
     bool projectionLabelsModified_;
     bool projectionRequiresUpdate_;
     LabelUnit currentUnit_;
+    boost::optional<tgt::vec2> prevProjectionMousePos_;
 
     State state_;
 
