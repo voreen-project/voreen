@@ -41,14 +41,14 @@ namespace voreen {
 /**
  * Datastructure used to represent the structure of an ensemble dataset.
  */
-class VRN_CORE_API EnsembleDataset : public DataInvalidationObservable {
+class VRN_CORE_API EnsembleDataset : public DataInvalidationObservable, public Serializable {
 public:
 
     /**
      * This class defines a single time step of a run.
      * It also stores the actual volume data.
      */
-    class TimeStep {
+    class TimeStep : public Serializable {
     public:
 
         TimeStep();
@@ -62,23 +62,77 @@ public:
         TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
                  float time, float duration = 0.0f);
 
+        /**
+         * Returns the time point of this time step.
+         */
         float getTime() const;
+
+        /**
+         * Returns the duration, i.e. the time till the succeeding time step.
+         */
         float getDuration() const;
+
+        /**
+         * Returns the fields available for this time step.
+         */
         std::vector<std::string> getFieldNames() const;
+
+        /**
+         * Returns the volume data for the given field.
+         * @param fieldName Name of field
+         * @note If the field name is not available or the volume could not be loaded, nullptr is returned.
+         */
         const VolumeBase* getVolume(const std::string& fieldName) const;
-        std::string getPath(const std::string& fieldName) const;
+
+        /**
+         * Returns the url of the original volume for the given field.
+         * @param fieldName Name of field
+         */
+        VolumeURL getURL(const std::string& fieldName) const;
+
+        virtual void serialize(Serializer& s) const override;
+        virtual void deserialize(Deserializer& s) override;
 
     private:
 
+        class VolumeCache : public VolumeObserver {
+        public:
+
+            VolumeCache();
+            VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData);
+            ~VolumeCache();
+
+            virtual void volumeDelete(const VolumeBase* source);
+            virtual void volumeChange(const VolumeBase* source);
+
+            /**
+             * Requests a volume for a given field name.
+             * @param field field name for which the volume is requested
+             * @note if loading failed nullptr is returned
+             */
+            const VolumeBase* requestVolume(const VolumeURL& url);
+
+        private:
+
+            struct VolumeCacheEntry {
+                const VolumeBase* volume_;
+                bool owned_;
+            };
+
+            std::map<std::string, VolumeCacheEntry> cacheEntries_;
+            boost::mutex volumeDataMutex_; ///< Mutex for threaded lazy loading of volumes.
+        };
+
         float time_;       ///< The point in time of this time step.
         float duration_;   ///< the duration of the time step.
-        std::map<std::string, const VolumeBase*> volumeData_; ///< Field names mapped to their volume data.
+        std::map<std::string, VolumeURL> urls_; ///< Field names mapped to volume URL.
+        mutable std::shared_ptr<VolumeCache> volumeCache_; ///< Shared cache by all copies of a time steps.
     };
 
     /**
      * This class defines a run which is a unique member of the ensemble.
      */
-    class Run {
+    class Run : public Serializable {
     public:
 
         Run();
@@ -107,6 +161,9 @@ public:
          * Returns time duration statistics.
          */
         const Statistics& getTimeStepDurationStats() const;
+
+        void serialize(Serializer& s) const override;
+        void deserialize(Deserializer& s) override;
 
     private:
 
@@ -203,12 +260,12 @@ public:
     const std::string& getBaseType(const std::string& field) const;
 
     /**
-     * Returns the enclosing bounds of all time steps of all runs in physical coordinates.
+     * Returns the enclosing bounds of all time steps of all runs in world coordinates.
      */
     const tgt::Bounds& getBounds() const;
 
     /**
-     * Returns the bounds enclosing only the common space of all time steps of all runs in physical coordinates.
+     * Returns the bounds enclosing only the common space of all time steps of all runs in world coordinates.
      * If there is no common space, the bounds are undefined.
      */
     const tgt::Bounds& getCommonBounds() const;
@@ -239,13 +296,21 @@ public:
      */
     std::string toHTML() const;
 
+    void serialize(Serializer& s) const override;
+    void deserialize(Deserializer& s) override;
+
 private:
 
-    struct FieldMetaData {
+    struct FieldMetaData : public Serializable {
         tgt::vec2 valueRange_;
         tgt::vec2 magnitudeRange_;
         size_t numChannels_;
         std::string baseType_;
+
+        FieldMetaData();
+
+        void serialize(Serializer& s) const override;
+        void deserialize(Deserializer& s) override;
     };
 
     //----------------

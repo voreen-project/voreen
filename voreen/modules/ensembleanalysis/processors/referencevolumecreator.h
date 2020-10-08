@@ -69,14 +69,14 @@ protected:
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
-    void adjustPropertiesToInput();
-
 protected:
 
     virtual void setDescriptions() {
         setDescription("Creates a reference volume from the input ensemble for a selected time step and field.");
         referenceMethod_.setDescription("Use the reference method to determine how the reference volume is created.");
     }
+
+    void adjustToEnsemble();
 
     EnsembleDatasetPort inport_;
     VolumePort outport_;

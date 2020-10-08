@@ -91,7 +91,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     const size_t numRuns = ensemble->getRuns().size();
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.outputVolume);
-    const tgt::ivec3 newDims = output->getDimensions();
+    const tgt::svec3 dims = output->getDimensions();
 
     VolumeRAMRepresentationLock referenceVolume(input.referenceVolume);
     tgt::mat4 refVoxelToWorld = input.referenceVolume->getVoxelToWorldMatrix();
@@ -103,10 +103,10 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
         tgt::Bounds bounds = vol->getBoundingBox().getBoundingBox();
         tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
 
-        tgt::svec3 pos = tgt::ivec3::zero;
-        for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
-            for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
-                for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
+        tgt::svec3 pos = tgt::svec3::zero;
+        for (pos.z = 0; pos.z < dims.z; ++pos.z) {
+            for (pos.y = 0; pos.y < dims.y; ++pos.y) {
+                for (pos.x = 0; pos.x < dims.x; ++pos.x) {
 
                     // Transform sample into world space.
                     tgt::vec3 sample = refVoxelToWorld * tgt::vec3(pos);

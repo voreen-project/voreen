@@ -46,7 +46,7 @@ EnsembleDataSource::EnsembleDataSource()
     : Processor()
     , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
     , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_PATH)
-    , autoLoad_("autoLoad", "Auto Load", false, Processor::VALID, Property::LOD_ADVANCED)
+    , forceReload_("forceReload", "Force Reload", false, Processor::VALID, Property::LOD_DEBUG)
     , loadDatasetButton_("loadDataset", "Load Dataset")
     , runProgress_("runProgress", "Runs loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
@@ -58,7 +58,7 @@ EnsembleDataSource::EnsembleDataSource()
 {
     addPort(outport_);
     addProperty(ensemblePath_);
-    addProperty(autoLoad_);
+    addProperty(forceReload_);
     addProperty(loadDatasetButton_);
     addProperty(runProgress_);
     addProgressBar(&runProgress_);
@@ -106,7 +106,7 @@ void EnsembleDataSource::process() {
 
 void EnsembleDataSource::initialize() {
     Processor::initialize();
-    if(autoLoad_.get()) {
+    if(forceReload_.get()) {
         buildEnsembleDataset();
     }
 }
@@ -114,6 +114,21 @@ void EnsembleDataSource::initialize() {
 void EnsembleDataSource::deinitialize() {
     clearEnsembleDataset();
     Processor::deinitialize();
+}
+
+void EnsembleDataSource::serialize(Serializer& s) const {
+    Processor::serialize(s);
+    s.serialize("ensemble", *output_);
+}
+void EnsembleDataSource::deserialize(Deserializer& s) {
+    Processor::deserialize(s);
+
+    output_.reset(new EnsembleDataset());
+    try {
+        s.deserialize("ensemble", *output_);
+    } catch (SerializationException&) {
+        s.removeLastError();
+    }
 }
 
 void EnsembleDataSource::clearEnsembleDataset() {

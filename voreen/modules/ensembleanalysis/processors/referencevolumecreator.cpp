@@ -46,6 +46,7 @@ ReferenceVolumeCreator::ReferenceVolumeCreator()
 {
     // Ports
     addPort(inport_);
+    ON_CHANGE(inport_, ReferenceVolumeCreator, adjustToEnsemble);
     addPort(outport_);
 
     addProperty(selectedField_);
@@ -206,7 +207,7 @@ void ReferenceVolumeCreator::processComputeOutput(ReferenceVolumeCreatorOutput o
 }
 
 
-void ReferenceVolumeCreator::adjustPropertiesToInput() {
+void ReferenceVolumeCreator::adjustToEnsemble() {
     if(!inport_.hasData()) return;
 
     const EnsembleDataset* ensemble = inport_.getData();

@@ -30,25 +30,25 @@
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/properties/filedialogproperty.h"
 
-namespace voreen
-{
-	class VRN_CORE_API ParallelCoordinatesSource : public Processor
-	{
-	public:
-		ParallelCoordinatesSource();
-		virtual Processor* create() const;
+namespace voreen {
 
-		virtual std::string getClassName() const;
-		virtual std::string getCategory() const;
+class VRN_CORE_API ParallelCoordinatesSource : public Processor	{
+public:
+    ParallelCoordinatesSource();
+    virtual Processor* create() const;
 
-	private:
-		virtual void process();
+    virtual std::string getClassName() const;
+    virtual std::string getCategory() const;
 
-		ParallelCoordinatesAxesPort _outport;
+private:
+    virtual void process();
 
-		FileDialogProperty _propertyFileDialog;
-		ButtonProperty _propertyLoadButton;
-	};
+    ParallelCoordinatesAxesPort _outport;
+
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertyLoadButton;
+};
+
 }
 
 #endif // VRN_PARALLELCOORDINATESSOURCE_H

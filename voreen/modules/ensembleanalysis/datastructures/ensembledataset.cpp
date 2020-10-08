@@ -25,13 +25,74 @@
 
 #include "ensembledataset.h"
 
-#include "tgt/assert.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
+
+#include "voreen/core/io/volumeserializer.h"
+#include "voreen/core/io/volumeserializerpopulator.h"
 
 namespace voreen {
 
 //////////// Time Step
+
+
+EnsembleDataset::TimeStep::VolumeCache::VolumeCache()
+{
+}
+
+EnsembleDataset::TimeStep::VolumeCache::VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData) {
+    for(const auto& vol : volumeData) {
+        const VolumeBase* volume = vol.second;
+        volume->Observable<VolumeObserver>::addObserver(static_cast<const VolumeObserver*>(this));
+        cacheEntries_.insert(std::make_pair(volume->getOrigin().getURL(), VolumeCacheEntry{volume, false}));
+    }
+}
+
+EnsembleDataset::TimeStep::VolumeCache::~VolumeCache() {
+    for(const auto& entry : cacheEntries_) {
+        if(entry.second.owned_) {
+            delete entry.second.volume_;
+        }
+    }
+}
+
+void EnsembleDataset::TimeStep::VolumeCache::volumeDelete(const VolumeBase* source) {
+    // If the volume gets deleted by the owner, we remove it from the cache.
+    // Otherwise, we would have a dangling pointer.
+    for(auto iter = cacheEntries_.begin(); iter != cacheEntries_.end(); iter++) {
+        if(iter->second.volume_ == source) {
+            cacheEntries_.erase(iter);
+            return;
+        }
+    }
+}
+
+void EnsembleDataset::TimeStep::VolumeCache::volumeChange(const VolumeBase* source) {
+}
+
+const VolumeBase* EnsembleDataset::TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
+    boost::lock_guard<boost::mutex> lockGuard(volumeDataMutex_);
+
+    // First query volume data.
+    std::string urlString = url.getURL();
+    auto volIter = cacheEntries_.find(urlString);
+    if(volIter != cacheEntries_.end()) {
+        return volIter->second.volume_;
+    }
+
+    // If not available, load it using the stored url.
+    const VolumeBase* volume = VolumeSerializerPopulator().getVolumeSerializer()->read(url);
+    if(!volume) {
+        LERROR("Could not load volume: " << urlString);
+        return nullptr;
+    }
+
+    // Cache result.
+    cacheEntries_.insert(std::make_pair(urlString, VolumeCacheEntry{volume, true}));
+
+    return volume;
+}
+
 
 EnsembleDataset::TimeStep::TimeStep()
     : TimeStep(std::map<std::string, const VolumeBase*>(), 0.0f, 0.0f)
@@ -39,10 +100,13 @@ EnsembleDataset::TimeStep::TimeStep()
 
 EnsembleDataset::TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
                                     float time, float duration)
-    : volumeData_(volumeData)
-    , time_(time)
+    : time_(time)
     , duration_(duration)
+    , volumeCache_(new VolumeCache(volumeData))
 {
+    for(const auto& vol : volumeData) {
+        urls_.insert(std::make_pair(vol.first, vol.second->getOrigin()));
+    }
 }
 
 float EnsembleDataset::TimeStep::getTime() const {
@@ -55,30 +119,49 @@ float EnsembleDataset::TimeStep::getDuration() const {
 
 std::vector<std::string> EnsembleDataset::TimeStep::getFieldNames() const {
     std::vector<std::string> fieldNames;
-    for(const auto& volumeData : volumeData_) {
+    for(const auto& volumeData : urls_) {
         fieldNames.push_back(volumeData.first);
     }
     return fieldNames;
 }
 
 const VolumeBase* EnsembleDataset::TimeStep::getVolume(const std::string& fieldName) const {
-    auto iter = volumeData_.find(fieldName);
-    if(iter != volumeData_.end()) {
-        return iter->second;
+    auto urlIter = urls_.find(fieldName);
+    if(urlIter != urls_.end()) {
+        const VolumeBase* volume = volumeCache_->requestVolume(urlIter->second);
+        if(!volume) {
+            LERROR("Could not load volume" << urlIter->second.getURL());
+            return nullptr;
+        }
+
+        return volume;
     }
 
     return nullptr;
 }
 
-std::string EnsembleDataset::TimeStep::getPath(const std::string& fieldName) const {
-    const VolumeBase* volume = getVolume(fieldName);
-    if(volume) {
-        return getVolume(fieldName)->getOrigin().getPath();
+VolumeURL EnsembleDataset::TimeStep::getURL(const std::string& fieldName) const {
+    auto iter = urls_.find(fieldName);
+    if(iter != urls_.end()) {
+        return iter->first;
     }
 
-    return "";
+    return VolumeURL();
 }
 
+void EnsembleDataset::TimeStep::serialize(Serializer& s) const {
+    s.serialize("time", time_);
+    s.serialize("duration", duration_);
+    s.serialize("urls", urls_);
+}
+
+void EnsembleDataset::TimeStep::deserialize(Deserializer& s) {
+    s.deserialize("time", time_);
+    s.deserialize("duration", duration_);
+    s.deserialize("urls", urls_);
+
+    volumeCache_.reset(new VolumeCache());
+}
 
 
 //////////// Run
@@ -123,6 +206,45 @@ const Statistics& EnsembleDataset::Run::getTimeStepDurationStats() const {
     return timeStepDurationStats_;
 }
 
+void EnsembleDataset::Run::serialize(Serializer& s) const {
+    s.serialize("name", name_);
+    s.serialize("color", color_);
+    s.serialize("timeSteps", timeSteps_);
+}
+
+void EnsembleDataset::Run::deserialize(Deserializer& s) {
+    s.deserialize("name", name_);
+    s.deserialize("color", color_);
+    s.deserialize("timeSteps", timeSteps_);
+
+    timeStepDurationStats_.reset();
+    for(const TimeStep& timeStep : timeSteps_) {
+        timeStepDurationStats_.addSample(timeStep.getDuration());
+    }
+}
+
+//////////// Field
+
+EnsembleDataset::FieldMetaData::FieldMetaData()
+    : valueRange_(tgt::vec2::zero)
+    , magnitudeRange_(tgt::vec2::zero)
+    , numChannels_(0)
+    , baseType_("")
+{}
+
+void EnsembleDataset::FieldMetaData::serialize(Serializer& s) const {
+    s.serialize("valueRange", valueRange_);
+    s.serialize("magnitudeRange", magnitudeRange_);
+    s.serialize("numChannels", numChannels_);
+    s.serialize("baseType", baseType_);
+}
+
+void EnsembleDataset::FieldMetaData::deserialize(Deserializer& s) {
+    s.deserialize("valueRange", valueRange_);
+    s.deserialize("magnitudeRange", magnitudeRange_);
+    s.deserialize("numChannels", numChannels_);
+    s.deserialize("baseType", baseType_);
+}
 
 //////////// EnsembleDataset
 
@@ -143,11 +265,22 @@ EnsembleDataset::EnsembleDataset()
 }
 
 EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
-    : EnsembleDataset()
+    : runs_(origin.runs_)
+    , uniqueFieldNames_(origin.uniqueFieldNames_)
+    , commonFieldNames_(origin.commonFieldNames_)
+    , fieldMetaData_(origin.fieldMetaData_)
+    , allParameters_(origin.allParameters_)
+    , minNumTimeSteps_(origin.minNumTimeSteps_)
+    , maxNumTimeSteps_(origin.maxNumTimeSteps_)
+    , totalNumTimeSteps_(origin.totalNumTimeSteps_)
+    , maxTimeStepDuration_(origin.maxTimeStepDuration_)
+    , minTimeStepDuration_(origin.minTimeStepDuration_)
+    , startTime_(origin.startTime_)
+    , endTime_(origin.endTime_)
+    , commonTimeInterval_(origin.commonTimeInterval_)
+    , bounds_(origin.bounds_)
+    , commonBounds_(origin.commonBounds_)
 {
-    // Adding runs sets attributes accordingly.
-    for(const Run& run : origin.runs_)
-        addRun(run);
 }
 
 void EnsembleDataset::addRun(const Run& run) {
@@ -425,6 +558,50 @@ std::string EnsembleDataset::toHTML() const {
              "<script>$(document).ready( function () {$('#ensemble').DataTable({paging: false});} );</script>"
              "</body></html>";
     return stream.str();
+}
+
+void EnsembleDataset::serialize(Serializer& s) const {
+    s.serialize("runs", runs_);
+    s.serialize("uniqueFieldNames", uniqueFieldNames_);
+    s.serialize("commonFieldNames", commonFieldNames_);
+
+    s.serialize("fieldMetaData", fieldMetaData_);
+    s.serialize("allParameters", allParameters_);
+
+    s.serialize("minNumTimeSteps", minNumTimeSteps_);
+    s.serialize("maxNumTimeSteps", maxNumTimeSteps_);
+    s.serialize("totalNumTimeSteps", totalNumTimeSteps_);
+
+    s.serialize("minTimeStepDuration", minTimeStepDuration_);
+    s.serialize("maxTimeStepDuration", maxTimeStepDuration_);
+    s.serialize("startTime", startTime_);
+    s.serialize("endTime", endTime_);
+    s.serialize("commonTimeInterval",commonTimeInterval_);
+
+    s.serialize("bounds", bounds_);
+    s.serialize("commonBounds", commonBounds_);
+}
+
+void EnsembleDataset::deserialize(Deserializer& s) {
+    s.deserialize("runs", runs_);
+    s.deserialize("uniqueFieldNames", uniqueFieldNames_);
+    s.deserialize("commonFieldNames", commonFieldNames_);
+
+    s.deserialize("fieldMetaData", fieldMetaData_);
+    s.deserialize("allParameters", allParameters_);
+
+    s.deserialize("minNumTimeSteps", minNumTimeSteps_);
+    s.deserialize("maxNumTimeSteps", maxNumTimeSteps_);
+    s.deserialize("totalNumTimeSteps", totalNumTimeSteps_);
+
+    s.deserialize("minTimeStepDuration", minTimeStepDuration_);
+    s.deserialize("maxTimeStepDuration", maxTimeStepDuration_);
+    s.deserialize("startTime", startTime_);
+    s.deserialize("endTime", endTime_);
+    s.deserialize("commonTimeInterval",commonTimeInterval_);
+
+    s.deserialize("bounds", bounds_);
+    s.deserialize("commonBounds", commonBounds_);
 }
 
 }   // namespace

@@ -70,13 +70,16 @@ protected:
                                      "volumes which will be interpreted as time steps, in lexicographic order."
                                      "The volume files might contain time step meta information which do not need to "
                                      "match the files' names. ");
-        autoLoad_.setDescription("If enabled, this will force the ensemble to be loaded automatically "
+        forceReload_.setDescription("If enabled, this will force the ensemble to be loaded automatically "
                                  "when the workspace is loaded the next time.");
     }
 
     void process();
     virtual void initialize();
     virtual void deinitialize();
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 
     void clearEnsembleDataset();
     void buildEnsembleDataset();
@@ -86,7 +89,7 @@ protected:
     std::unique_ptr<EnsembleDataset> output_;
 
     FileDialogProperty ensemblePath_;
-    BoolProperty autoLoad_;
+    BoolProperty forceReload_;
     ButtonProperty loadDatasetButton_;
     ProgressProperty runProgress_;
     ProgressProperty timeStepProgress_;
