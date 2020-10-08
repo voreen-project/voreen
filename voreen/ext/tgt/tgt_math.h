@@ -24,10 +24,12 @@
 #ifndef TGT_MATH_H
 #define TGT_MATH_H
 
+#include "assert.h"
 #include "tgt/types.h"
 
 #include <cfloat> // TODO: replace by "climits" or "limits"
 #include <cmath>
+#include <fenv.h>
 #include <algorithm>
 #include <type_traits>
 
@@ -197,12 +199,16 @@ template<> inline long long     abs(long long v)    { return std::abs(v); }
 
 /// Return the integer nearest to \p f.
 inline float round(float f) {
-    return std::floor(f + 0.5f);
+    tgtAssert(std::fegetround() == FE_TONEAREST, "unexpected rounding mode");
+    // This should generate the fast roundss instruction on x86
+    return std::nearbyintf(f);
 }
 
 /// Return the integer nearest to \p d.
 inline double round(double d) {
-    return std::floor(d + 0.5);
+    tgtAssert(std::fegetround() == FE_TONEAREST, "unexpected rounding mode");
+    // This should generate the fast roundsd instruction on x86
+    return std::nearbyint(d);
 }
 
 /// Return the integer nearest to \p f.
