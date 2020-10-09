@@ -110,12 +110,19 @@ TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
 
 TimeStep TimeStep::createSubset(const std::vector<std::string>& fieldNames) const {
     TimeStep subset = *this;
+
+    // Reset URLs.
+    auto& urls = subset.urls_;
+    urls.clear();
+
+    // Add back requested URLs.
     for(const std::string& fieldName : fieldNames) {
-        auto iter = subset.urls_.find(fieldName);
-        if(iter != subset.urls_.end()) {
-            subset.urls_.erase(iter);
+        auto iter = urls_.find(fieldName);
+        if(iter != urls_.end()) {
+            urls.insert(*iter);
         }
     }
+
     return subset;
 }
 

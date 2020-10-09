@@ -362,7 +362,9 @@ public:
                     timeSteps.push_back(filtered);
                 }
             }
-            dataset->addMember(EnsembleMember{run.getName(), run.getColor(), timeSteps});
+            if(!timeSteps.empty()) {
+                dataset->addMember(EnsembleMember{run.getName(), run.getColor(), timeSteps});
+            }
         }
 
         return dataset;
