@@ -47,8 +47,8 @@ std::string EnsembleDatasetPort::getContentDescription() const {
     std::stringstream strstr;
     strstr << Port::getContentDescription();
     if(hasData()) {
-        if (!getData()->getRuns().empty()) {
-            strstr << std::endl << "Number of runs: " << getData()->getRuns().size();
+        if (!getData()->getMembers().empty()) {
+            strstr << std::endl << "Number of runs: " << getData()->getMembers().size();
             strstr << std::endl << "Number of unique Fields: " << getData()->getUniqueFieldNames().size();
             strstr << std::endl << "Number of common Fields: " << getData()->getCommonFieldNames().size();
             strstr << std::endl << "Min Number of Time Steps: " << getData()->getMinNumTimeSteps();
@@ -66,8 +66,8 @@ std::string EnsembleDatasetPort::getContentDescriptionHTML() const {
     std::stringstream strstr;
     strstr << Port::getContentDescriptionHTML();
     if(hasData()) {
-        if (!getData()->getRuns().empty()) {
-            strstr << "<br>" << "Number of runs: " << getData()->getRuns().size();
+        if (!getData()->getMembers().empty()) {
+            strstr << "<br>" << "Number of runs: " << getData()->getMembers().size();
             strstr << "<br>" << "Number of unique Fields: " << getData()->getUniqueFieldNames().size();
             strstr << "<br>" << "Number of common Fields: " << getData()->getCommonFieldNames().size();
             strstr << "<br>" << "Min Number of Time Steps: " << getData()->getMinNumTimeSteps();

@@ -300,8 +300,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
             SubtaskProgressReporter runProgressReporter(progress,tgt::vec2(fi, 0.7f * (fi + 1)) / tgt::vec2(fieldNames.size()));
             float progressPerTimeStep = 1.0f / (input.ensemble->getTotalNumTimeSteps());
             size_t index = 0;
-            for (const EnsembleDataset::Run& run : input.ensemble->getRuns()) {
-                for (const EnsembleDataset::TimeStep& timeStep : run.getTimeSteps()) {
+            for (const EnsembleMember& run : input.ensemble->getMembers()) {
+                for (const TimeStep& timeStep : run.getTimeSteps()) {
 
                     const VolumeBase* volume = timeStep.getVolume(fieldName);
                     tgt::mat4 worldToVoxelMatrix = volume->getWorldToVoxelMatrix();

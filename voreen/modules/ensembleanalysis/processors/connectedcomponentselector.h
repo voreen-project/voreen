@@ -73,7 +73,7 @@ VolumeAtomic<T>* ConnectedComponentSelector::selectComponent(const VolumeAtomic<
 
     std::unordered_set<T> selectedIds(selectedComponents.begin(), selectedComponents.end());
     const T emptyId = static_cast<T>(0);
-    const T minusOne = static_cast<T>(-1); // Run indices start counting at 0, components at 1.
+    const T minusOne = static_cast<T>(-1); // Member indices start counting at 0, components at 1.
 
     for(size_t i=0; i<output->getNumVoxels(); i++) {
         if(selectedIds.find(output->voxel(i) + minusOne) == selectedIds.end()) {

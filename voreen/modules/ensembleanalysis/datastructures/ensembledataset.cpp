@@ -36,11 +36,11 @@ namespace voreen {
 //////////// Time Step
 
 
-EnsembleDataset::TimeStep::VolumeCache::VolumeCache()
+TimeStep::VolumeCache::VolumeCache()
 {
 }
 
-EnsembleDataset::TimeStep::VolumeCache::VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData) {
+TimeStep::VolumeCache::VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData) {
     for(const auto& vol : volumeData) {
         const VolumeBase* volume = vol.second;
         volume->Observable<VolumeObserver>::addObserver(static_cast<const VolumeObserver*>(this));
@@ -48,7 +48,7 @@ EnsembleDataset::TimeStep::VolumeCache::VolumeCache(const std::map<std::string, 
     }
 }
 
-EnsembleDataset::TimeStep::VolumeCache::~VolumeCache() {
+TimeStep::VolumeCache::~VolumeCache() {
     for(const auto& entry : cacheEntries_) {
         if(entry.second.owned_) {
             delete entry.second.volume_;
@@ -56,7 +56,7 @@ EnsembleDataset::TimeStep::VolumeCache::~VolumeCache() {
     }
 }
 
-void EnsembleDataset::TimeStep::VolumeCache::volumeDelete(const VolumeBase* source) {
+void TimeStep::VolumeCache::volumeDelete(const VolumeBase* source) {
     // If the volume gets deleted by the owner, we remove it from the cache.
     // Otherwise, we would have a dangling pointer.
     for(auto iter = cacheEntries_.begin(); iter != cacheEntries_.end(); iter++) {
@@ -67,10 +67,10 @@ void EnsembleDataset::TimeStep::VolumeCache::volumeDelete(const VolumeBase* sour
     }
 }
 
-void EnsembleDataset::TimeStep::VolumeCache::volumeChange(const VolumeBase* source) {
+void TimeStep::VolumeCache::volumeChange(const VolumeBase* source) {
 }
 
-const VolumeBase* EnsembleDataset::TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
+const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
     boost::lock_guard<boost::mutex> lockGuard(volumeDataMutex_);
 
     // First query volume data.
@@ -83,7 +83,6 @@ const VolumeBase* EnsembleDataset::TimeStep::VolumeCache::requestVolume(const Vo
     // If not available, load it using the stored url.
     const VolumeBase* volume = VolumeSerializerPopulator().getVolumeSerializer()->read(url);
     if(!volume) {
-        LERROR("Could not load volume: " << urlString);
         return nullptr;
     }
 
@@ -94,11 +93,11 @@ const VolumeBase* EnsembleDataset::TimeStep::VolumeCache::requestVolume(const Vo
 }
 
 
-EnsembleDataset::TimeStep::TimeStep()
+TimeStep::TimeStep()
     : TimeStep(std::map<std::string, const VolumeBase*>(), 0.0f, 0.0f)
 {}
 
-EnsembleDataset::TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
+TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
                                     float time, float duration)
     : time_(time)
     , duration_(duration)
@@ -109,7 +108,7 @@ EnsembleDataset::TimeStep::TimeStep(const std::map<std::string, const VolumeBase
     }
 }
 
-EnsembleDataset::TimeStep EnsembleDataset::TimeStep::createSubset(const std::vector<std::string>& fieldNames) const {
+TimeStep TimeStep::createSubset(const std::vector<std::string>& fieldNames) const {
     TimeStep subset = *this;
     for(const std::string& fieldName : fieldNames) {
         auto iter = subset.urls_.find(fieldName);
@@ -120,15 +119,15 @@ EnsembleDataset::TimeStep EnsembleDataset::TimeStep::createSubset(const std::vec
     return subset;
 }
 
-float EnsembleDataset::TimeStep::getTime() const {
+float TimeStep::getTime() const {
     return time_;
 }
 
-float EnsembleDataset::TimeStep::getDuration() const {
+float TimeStep::getDuration() const {
     return duration_;
 }
 
-std::vector<std::string> EnsembleDataset::TimeStep::getFieldNames() const {
+std::vector<std::string> TimeStep::getFieldNames() const {
     std::vector<std::string> fieldNames;
     for(const auto& volumeData : urls_) {
         fieldNames.push_back(volumeData.first);
@@ -136,22 +135,16 @@ std::vector<std::string> EnsembleDataset::TimeStep::getFieldNames() const {
     return fieldNames;
 }
 
-const VolumeBase* EnsembleDataset::TimeStep::getVolume(const std::string& fieldName) const {
+const VolumeBase* TimeStep::getVolume(const std::string& fieldName) const {
     auto urlIter = urls_.find(fieldName);
     if(urlIter != urls_.end()) {
-        const VolumeBase* volume = volumeCache_->requestVolume(urlIter->second);
-        if(!volume) {
-            LERROR("Could not load volume" << urlIter->second.getURL());
-            return nullptr;
-        }
-
-        return volume;
+        return volumeCache_->requestVolume(urlIter->second);
     }
 
     return nullptr;
 }
 
-VolumeURL EnsembleDataset::TimeStep::getURL(const std::string& fieldName) const {
+VolumeURL TimeStep::getURL(const std::string& fieldName) const {
     auto iter = urls_.find(fieldName);
     if(iter != urls_.end()) {
         return iter->first;
@@ -160,13 +153,13 @@ VolumeURL EnsembleDataset::TimeStep::getURL(const std::string& fieldName) const 
     return VolumeURL();
 }
 
-void EnsembleDataset::TimeStep::serialize(Serializer& s) const {
+void TimeStep::serialize(Serializer& s) const {
     s.serialize("time", time_);
     s.serialize("duration", duration_);
     s.serialize("urls", urls_);
 }
 
-void EnsembleDataset::TimeStep::deserialize(Deserializer& s) {
+void TimeStep::deserialize(Deserializer& s) {
     s.deserialize("time", time_);
     s.deserialize("duration", duration_);
     s.deserialize("urls", urls_);
@@ -175,13 +168,13 @@ void EnsembleDataset::TimeStep::deserialize(Deserializer& s) {
 }
 
 
-//////////// Run
+//////////// Member
 
-EnsembleDataset::Run::Run()
-    : Run("", tgt::vec3::zero, std::vector<TimeStep>())
+EnsembleMember::EnsembleMember()
+    : EnsembleMember("", tgt::vec3::zero, std::vector<TimeStep>())
 {}
 
-EnsembleDataset::Run::Run(const std::string& name, const tgt::vec3& color, const std::vector<TimeStep>& timeSteps)
+EnsembleMember::EnsembleMember(const std::string& name, const tgt::vec3& color, const std::vector<TimeStep>& timeSteps)
     : name_(name)
     , color_(color)
     , timeSteps_(timeSteps)
@@ -192,19 +185,19 @@ EnsembleDataset::Run::Run(const std::string& name, const tgt::vec3& color, const
     }
 }
 
-const std::string& EnsembleDataset::Run::getName() const {
+const std::string& EnsembleMember::getName() const {
     return name_;
 }
 
-const tgt::vec3& EnsembleDataset::Run::getColor() const {
+const tgt::vec3& EnsembleMember::getColor() const {
     return color_;
 }
 
-const std::vector<EnsembleDataset::TimeStep>& EnsembleDataset::Run::getTimeSteps() const {
+const std::vector<TimeStep>& EnsembleMember::getTimeSteps() const {
     return timeSteps_;
 }
 
-size_t EnsembleDataset::Run::getTimeStep(float time) const {
+size_t EnsembleMember::getTimeStep(float time) const {
     if(timeSteps_.empty())
         return -1;
 
@@ -213,17 +206,17 @@ size_t EnsembleDataset::Run::getTimeStep(float time) const {
     return t;
 }
 
-const Statistics& EnsembleDataset::Run::getTimeStepDurationStats() const {
+const Statistics& EnsembleMember::getTimeStepDurationStats() const {
     return timeStepDurationStats_;
 }
 
-void EnsembleDataset::Run::serialize(Serializer& s) const {
+void EnsembleMember::serialize(Serializer& s) const {
     s.serialize("name", name_);
     s.serialize("color", color_);
     s.serialize("timeSteps", timeSteps_);
 }
 
-void EnsembleDataset::Run::deserialize(Deserializer& s) {
+void EnsembleMember::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("color", color_);
     s.deserialize("timeSteps", timeSteps_);
@@ -276,7 +269,7 @@ EnsembleDataset::EnsembleDataset()
 }
 
 EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
-    : runs_(origin.runs_)
+    : members_(origin.members_)
     , uniqueFieldNames_(origin.uniqueFieldNames_)
     , commonFieldNames_(origin.commonFieldNames_)
     , fieldMetaData_(origin.fieldMetaData_)
@@ -294,31 +287,31 @@ EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
 {
 }
 
-void EnsembleDataset::addRun(const Run& run) {
+void EnsembleDataset::addMember(const EnsembleMember& member) {
 
-    // Skip empty runs.
-    if (run.getTimeSteps().empty()) {
-        LERROR("Can't add empty run");
+    // Skip empty members.
+    if (member.getTimeSteps().empty()) {
+        LERROR("Can't add empty member");
         return;
     }
 
     // Notify Observers
     notifyPendingDataInvalidation();
 
-    minNumTimeSteps_ = std::min(run.getTimeSteps().size(), minNumTimeSteps_);
-    maxNumTimeSteps_ = std::max(run.getTimeSteps().size(), maxNumTimeSteps_);
-    totalNumTimeSteps_ += run.getTimeSteps().size();
-    startTime_ = std::min(startTime_, run.getTimeSteps().front().getTime());
-    endTime_   = std::max(endTime_,   run.getTimeSteps().back().getTime());
+    minNumTimeSteps_ = std::min(member.getTimeSteps().size(), minNumTimeSteps_);
+    maxNumTimeSteps_ = std::max(member.getTimeSteps().size(), maxNumTimeSteps_);
+    totalNumTimeSteps_ += member.getTimeSteps().size();
+    startTime_ = std::min(startTime_, member.getTimeSteps().front().getTime());
+    endTime_   = std::max(endTime_,   member.getTimeSteps().back().getTime());
 
-    for (size_t t = 0; t < run.getTimeSteps().size(); t++) {
+    for (size_t t = 0; t < member.getTimeSteps().size(); t++) {
         std::vector<std::string> fields;
-        for (const std::string& fieldName : run.getTimeSteps()[t].getFieldNames()) {
+        for (const std::string& fieldName : member.getTimeSteps()[t].getFieldNames()) {
 
             fields.push_back(fieldName);
 
             // Retrieve volume.
-            const VolumeBase* volume = run.getTimeSteps()[t].getVolume(fieldName);
+            const VolumeBase* volume = member.getTimeSteps()[t].getVolume(fieldName);
 
             // Gather parameters (take first time step as representative).
             if(t==0) {
@@ -378,7 +371,7 @@ void EnsembleDataset::addRun(const Run& run) {
             else if(commonBounds_.isDefined()) {
                 commonBounds_.intersectVolume(bounds);
                 if(!commonBounds_.isDefined()) {
-                    LWARNINGC("voreen.EnsembeDataSet", "There is no overlap between the bounds of Run " << run.getName() << " and the previously defined bounds");
+                    LWARNINGC("voreen.EnsembeDataSet", "There is no overlap between the bounds of Member " << member.getName() << " and the previously defined bounds");
                 }
             }
             bounds_.addVolume(bounds);
@@ -395,13 +388,13 @@ void EnsembleDataset::addRun(const Run& run) {
                 std::back_inserter(intersection)
             );
 
-            if (commonFieldNames_.size() != intersection.size() && !runs_.empty()) {
-                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Run " << run.getName() << " has less fields than the previously added Run " << runs_.back().getName());
+            if (commonFieldNames_.size() != intersection.size() && !members_.empty()) {
+                LWARNINGC("voreen.EnsembeDataSet", "Time Step " << t << " of Member " << member.getName() << " has less fields than the previously added Member " << members_.back().getName());
             }
 
             commonFieldNames_ = intersection;
         }
-        else if (runs_.empty()) {
+        else if (members_.empty()) {
             commonFieldNames_ = fields;
         }
 
@@ -411,25 +404,25 @@ void EnsembleDataset::addRun(const Run& run) {
         uniqueFieldNames_ = fieldUnion;
 
         // Calculate times and durations.
-        if (t < run.getTimeSteps().size() - 1) {
-            maxTimeStepDuration_ = std::max(maxTimeStepDuration_, run.getTimeSteps()[t].getDuration());
-            minTimeStepDuration_ = std::min(minTimeStepDuration_, run.getTimeSteps()[t].getDuration());
+        if (t < member.getTimeSteps().size() - 1) {
+            maxTimeStepDuration_ = std::max(maxTimeStepDuration_, member.getTimeSteps()[t].getDuration());
+            minTimeStepDuration_ = std::min(minTimeStepDuration_, member.getTimeSteps()[t].getDuration());
         }
     }
 
-    commonTimeInterval_.x = std::max(commonTimeInterval_.x, run.getTimeSteps().front().getTime());
-    commonTimeInterval_.y = std::min(commonTimeInterval_.y, run.getTimeSteps().back().getTime()+run.getTimeSteps().back().getDuration());
+    commonTimeInterval_.x = std::max(commonTimeInterval_.x, member.getTimeSteps().front().getTime());
+    commonTimeInterval_.y = std::min(commonTimeInterval_.y, member.getTimeSteps().back().getTime()+member.getTimeSteps().back().getDuration());
 
     if(commonTimeInterval_ != tgt::vec2::zero && commonTimeInterval_.x > commonTimeInterval_.y) {
-        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Run " << run.getName() << " does not overlap with the previous interval");
+        LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Member " << member.getName() << " does not overlap with the previous interval");
         commonTimeInterval_ = tgt::vec2::zero;
     }
 
-    runs_.push_back(run);
+    members_.push_back(member);
 }
 
-const std::vector<EnsembleDataset::Run>& EnsembleDataset::getRuns() const {
-    return runs_;
+const std::vector<EnsembleMember>& EnsembleDataset::getMembers() const {
+    return members_;
 }
 
 size_t EnsembleDataset::getMinNumTimeSteps() const {
@@ -506,8 +499,8 @@ const std::vector<std::string>& EnsembleDataset::getCommonFieldNames() const {
 
 std::vector<const VolumeBase*> EnsembleDataset::getVolumes() const {
     std::vector<const VolumeBase*> result;
-    for(const Run& run : runs_) {
-        for(const TimeStep& timeStep : run.getTimeSteps()) {
+    for(const EnsembleMember& member : members_) {
+        for(const TimeStep& timeStep : member.getTimeSteps()) {
             for(const std::string& fieldName : timeStep.getFieldNames()) {
                 result.push_back(timeStep.getVolume(fieldName));
             }
@@ -530,7 +523,7 @@ std::string EnsembleDataset::toHTML() const {
               "<body><table id=\"ensemble\"><thead>";
     // Parameter names
     stream << "  <tr>\n";
-    // Run Name and Color are mandatory.
+    // Member Name and Color are mandatory.
     stream << "    <th>Name</th>\n";
     stream << "    <th>Color</th>\n";
     stream << "    <th>Num. Time Steps</th>\n";
@@ -542,18 +535,18 @@ std::string EnsembleDataset::toHTML() const {
     }
     stream << "  </tr></thead><tbody>\n";
 
-    // Runs and their parameters.
-    for(const Run& run : runs_) {
+    // Members and their parameters.
+    for(const EnsembleMember& member : members_) {
         stream << "  <tr>\n";
-        stream << "    <th>" << run.getName() << "</th>\n";
-        tgt::ivec3 color(run.getColor() * 255.0f);
+        stream << "    <th>" << member.getName() << "</th>\n";
+        tgt::ivec3 color(member.getColor() * 255.0f);
         stream << "    <th style=\"background-color: rgb(" << color.r << ", " << color.g << ", " << color.b << ")\"></th>\n";
-        stream << "    <th>" << run.getTimeSteps().size() << "</th>\n";
-        stream << "    <th>" << run.getTimeSteps().front().getTime() << "</th>\n";
-        stream << "    <th>" << run.getTimeSteps().back().getTime() << "</th>\n";
+        stream << "    <th>" << member.getTimeSteps().size() << "</th>\n";
+        stream << "    <th>" << member.getTimeSteps().front().getTime() << "</th>\n";
+        stream << "    <th>" << member.getTimeSteps().back().getTime() << "</th>\n";
 
         for(const std::string& parameter : allParameters_) {
-            const TimeStep& referenceTimeStep = run.getTimeSteps().front();
+            const TimeStep& referenceTimeStep = member.getTimeSteps().front();
             // TODO: assumes that all fields contain the same parameters.
             const VolumeBase* referenceVolume = referenceTimeStep.getVolume(referenceTimeStep.getFieldNames().front());
             stream << "    <th>";
@@ -572,7 +565,7 @@ std::string EnsembleDataset::toHTML() const {
 }
 
 void EnsembleDataset::serialize(Serializer& s) const {
-    s.serialize("runs", runs_);
+    s.serialize("members", members_);
     s.serialize("uniqueFieldNames", uniqueFieldNames_);
     s.serialize("commonFieldNames", commonFieldNames_);
 
@@ -594,7 +587,7 @@ void EnsembleDataset::serialize(Serializer& s) const {
 }
 
 void EnsembleDataset::deserialize(Deserializer& s) {
-    s.deserialize("runs", runs_);
+    s.deserialize("members", members_);
     s.deserialize("uniqueFieldNames", uniqueFieldNames_);
     s.deserialize("commonFieldNames", commonFieldNames_);
 

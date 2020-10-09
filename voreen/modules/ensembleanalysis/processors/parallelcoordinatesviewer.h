@@ -66,7 +66,7 @@ private:
     std::unique_ptr<EventProperty<ParallelCoordinatesViewer>> _eventPropertyHover, _eventPropertyMouse;
 
     // Properties
-    IntOptionProperty _propertySelectedRun, _propertyVisualizationMode;
+    IntOptionProperty _propertySelectedMember, _propertyVisualizationMode;
 
     IntProperty _propertySelectedTimestep;
     IntOptionProperty _propertySelectedField;

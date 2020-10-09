@@ -39,164 +39,164 @@
 namespace voreen {
 
 /**
+ * This class defines a single time step of a member.
+ * It also stores the actual volume data.
+ */
+class VRN_CORE_API TimeStep : public Serializable {
+public:
+
+    TimeStep();
+
+    /**
+     * TimeStep constructor.
+     * @param time Time point
+     * @param duration Time till succeeding time point
+     * @param volumes Volume data
+     */
+    TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
+             float time, float duration = 0.0f);
+
+    /**
+     * Creates a new time step but only containing a subset of fields.
+     * @param fieldNames Names of fields to be included.
+     * @see EnsembleFilter
+     */
+    TimeStep createSubset(const std::vector<std::string>& fieldNames) const;
+
+    /**
+     * Returns the time point of this time step.
+     */
+    float getTime() const;
+
+    /**
+     * Returns the duration, i.e. the time till the succeeding time step.
+     */
+    float getDuration() const;
+
+    /**
+     * Returns the fields available for this time step.
+     */
+    std::vector<std::string> getFieldNames() const;
+
+    /**
+     * Returns the volume data for the given field.
+     * @param fieldName Name of field
+     * @note If the field name is not available or the volume could not be loaded, nullptr is returned.
+     */
+    const VolumeBase* getVolume(const std::string& fieldName) const;
+
+    /**
+     * Returns the url of the original volume for the given field.
+     * @param fieldName Name of field
+     */
+    VolumeURL getURL(const std::string& fieldName) const;
+
+    virtual void serialize(Serializer& s) const override;
+    virtual void deserialize(Deserializer& s) override;
+
+private:
+
+    class VolumeCache : public VolumeObserver {
+    public:
+
+        VolumeCache();
+        VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData);
+        ~VolumeCache();
+
+        virtual void volumeDelete(const VolumeBase* source);
+        virtual void volumeChange(const VolumeBase* source);
+
+        /**
+         * Requests a volume for a given field name.
+         * @param field field name for which the volume is requested
+         * @note if loading failed nullptr is returned
+         */
+        const VolumeBase* requestVolume(const VolumeURL& url);
+
+    private:
+
+        struct VolumeCacheEntry {
+            const VolumeBase* volume_;
+            bool owned_;
+        };
+
+        std::map<std::string, VolumeCacheEntry> cacheEntries_;
+        boost::mutex volumeDataMutex_; ///< Mutex for threaded lazy loading of volumes.
+    };
+
+    float time_;       ///< The point in time of this time step.
+    float duration_;   ///< the duration of the time step.
+    std::map<std::string, VolumeURL> urls_; ///< Field names mapped to volume URL.
+    mutable std::shared_ptr<VolumeCache> volumeCache_; ///< Shared cache by all copies of a time steps.
+};
+
+/**
+ * This class defines a unique member of an ensemble.
+ */
+class VRN_CORE_API EnsembleMember : public Serializable {
+public:
+
+    EnsembleMember();
+
+    /**
+     * Member constructor.
+     * @param name Member name
+     * @param color Member color
+     * @param timeSteps (Sorted) list of time steps
+     */
+    EnsembleMember(const std::string& name,
+                   const tgt::vec3& color,
+                   const std::vector<TimeStep>& timeSteps);
+
+    const std::string& getName() const;
+    const tgt::vec3& getColor() const;
+    const std::vector<TimeStep>& getTimeSteps() const;
+
+    /**
+     * This utility function returns a time step index corresponding to the specified time of the specified member.
+     * If time is behind the end of the specified member, the last time step index is returned.
+     */
+    size_t getTimeStep(float time) const;
+
+    /**
+     * Returns time duration statistics.
+     */
+    const Statistics& getTimeStepDurationStats() const;
+
+    void serialize(Serializer& s) const override;
+    void deserialize(Deserializer& s) override;
+
+private:
+
+    std::string name_; ///< The member's name.
+    tgt::vec3 color_;  ///< The member's distinct color.
+    std::vector<TimeStep> timeSteps_; ///< List of time steps.
+    Statistics timeStepDurationStats_;    ///< Stats on time step duration
+};
+
+/**
  * Datastructure used to represent the structure of an ensemble dataset.
  */
 class VRN_CORE_API EnsembleDataset : public DataInvalidationObservable, public Serializable {
 public:
-
-    /**
-     * This class defines a single time step of a run.
-     * It also stores the actual volume data.
-     */
-    class TimeStep : public Serializable {
-    public:
-
-        TimeStep();
-
-        /**
-         * TimeStep constructor.
-         * @param time Time point
-         * @param duration Time till succeeding time point
-         * @param volumes Volume data
-         */
-        TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
-                 float time, float duration = 0.0f);
-
-        /**
-         * Creates a new time step but only containing a subset of fields.
-         * @param fieldNames Names of fields to be included.
-         * @see EnsembleFilter
-         */
-        TimeStep createSubset(const std::vector<std::string>& fieldNames) const;
-
-        /**
-         * Returns the time point of this time step.
-         */
-        float getTime() const;
-
-        /**
-         * Returns the duration, i.e. the time till the succeeding time step.
-         */
-        float getDuration() const;
-
-        /**
-         * Returns the fields available for this time step.
-         */
-        std::vector<std::string> getFieldNames() const;
-
-        /**
-         * Returns the volume data for the given field.
-         * @param fieldName Name of field
-         * @note If the field name is not available or the volume could not be loaded, nullptr is returned.
-         */
-        const VolumeBase* getVolume(const std::string& fieldName) const;
-
-        /**
-         * Returns the url of the original volume for the given field.
-         * @param fieldName Name of field
-         */
-        VolumeURL getURL(const std::string& fieldName) const;
-
-        virtual void serialize(Serializer& s) const override;
-        virtual void deserialize(Deserializer& s) override;
-
-    private:
-
-        class VolumeCache : public VolumeObserver {
-        public:
-
-            VolumeCache();
-            VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData);
-            ~VolumeCache();
-
-            virtual void volumeDelete(const VolumeBase* source);
-            virtual void volumeChange(const VolumeBase* source);
-
-            /**
-             * Requests a volume for a given field name.
-             * @param field field name for which the volume is requested
-             * @note if loading failed nullptr is returned
-             */
-            const VolumeBase* requestVolume(const VolumeURL& url);
-
-        private:
-
-            struct VolumeCacheEntry {
-                const VolumeBase* volume_;
-                bool owned_;
-            };
-
-            std::map<std::string, VolumeCacheEntry> cacheEntries_;
-            boost::mutex volumeDataMutex_; ///< Mutex for threaded lazy loading of volumes.
-        };
-
-        float time_;       ///< The point in time of this time step.
-        float duration_;   ///< the duration of the time step.
-        std::map<std::string, VolumeURL> urls_; ///< Field names mapped to volume URL.
-        mutable std::shared_ptr<VolumeCache> volumeCache_; ///< Shared cache by all copies of a time steps.
-    };
-
-    /**
-     * This class defines a run which is a unique member of the ensemble.
-     */
-    class Run : public Serializable {
-    public:
-
-        Run();
-
-        /**
-         * Run constructor.
-         * @param name Run name
-         * @param color Run color
-         * @param timeSteps (Sorted) list of time steps
-         */
-        Run(const std::string& name,
-            const tgt::vec3& color,
-            const std::vector<TimeStep>& timeSteps);
-
-        const std::string& getName() const;
-        const tgt::vec3& getColor() const;
-        const std::vector<TimeStep>& getTimeSteps() const;
-
-        /**
-         * This utility function returns a time step index corresponding to the specified time of the specified run.
-         * If time is behind the end of the specified run, the last time step index is returned.
-         */
-        size_t getTimeStep(float time) const;
-
-        /**
-         * Returns time duration statistics.
-         */
-        const Statistics& getTimeStepDurationStats() const;
-
-        void serialize(Serializer& s) const override;
-        void deserialize(Deserializer& s) override;
-
-    private:
-
-        std::string name_; ///< The run's name.
-        tgt::vec3 color_;  ///< The run's distinct color.
-        std::vector<TimeStep> timeSteps_; ///< List of time steps.
-        Statistics timeStepDurationStats_;    ///< Stats on time step duration
-    };
 
     /** Constructor */
     EnsembleDataset();
     EnsembleDataset(const EnsembleDataset& origin);
 
     /**
-     * Add a new run to the ensemble.
+     * Add a new member to the ensemble.
      * This will update all ensemble meta data.
      */
-    void addRun(const Run& run);
+    void addMember(const EnsembleMember& member);
 
     /**
-     * Returns all runs contained by the ensemble.
+     * Returns all members contained by the ensemble.
      */
-    const std::vector<Run>& getRuns() const;
+    const std::vector<EnsembleMember>& getMembers() const;
 
     /**
-     * Returns the minimum number of time steps of all runs.
+     * Returns the minimum number of time steps of all members.
      */
     size_t getMinNumTimeSteps() const;
 
@@ -320,10 +320,8 @@ private:
         void deserialize(Deserializer& s) override;
     };
 
-    //----------------
-    //  Members
-    //----------------
-    std::vector<Run> runs_;
+
+    std::vector<EnsembleMember> members_;
     std::vector<std::string> uniqueFieldNames_;
     std::vector<std::string> commonFieldNames_;
 

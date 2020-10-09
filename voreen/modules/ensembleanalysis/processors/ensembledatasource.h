@@ -42,7 +42,7 @@
 namespace voreen {
 
 /**
- * Loads an Ensemble of Volumes, organized into multiple runs.
+ * Loads an Ensemble of Volumes, organized into multiple members.
  */
 class VRN_CORE_API EnsembleDataSource : public Processor {
 
@@ -63,17 +63,17 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Loads an Ensemble of Volumes, organized into multiple runs.");
+        setDescription("Loads an Ensemble of Volumes, organized into multiple members.");
         ensemblePath_.setDescription("Expects a folder containing a separate folder for each ensemble member "
-                                     "(aka run). Each folder must contain a single file (of any supported format) "
-                                     "for each time step of the respective run. Each of those files may contain multiple "
+                                     "(aka member). Each folder must contain a single file (of any supported format) "
+                                     "for each time step of the respective member. Each of those files may contain multiple "
                                      "volumes which will be interpreted as time steps, in lexicographic order. "
                                      "The volume files might contain time step meta information which do not need to "
                                      "match the files' names. ");
-        loadingStrategy_.setDescription("Loading strategy has three options:\n"
-                                        "Manual: The ensemble is only loaded when pressing the load button.\n"
-                                        "Full: The entire ensemble is loaded fully from disk when the workspace is loaded\n"
-                                        "Lazy: The entire ensemble needs to be loaded once an all required meta data will be "
+        loadingStrategy_.setDescription("Loading strategy has three options:<br>"
+                                        "<strong>Manual</strong>: The ensemble is only loaded when pressing the load button.<br>"
+                                        "<strong>Full</strong>: The entire ensemble is loaded fully from disk when the workspace is loaded<br>"
+                                        "<strong>Lazy</strong>: The entire ensemble needs to be loaded once an all required meta data will be "
                                         "safed to and loaded from disk the next time the workspace is loaded");
     }
 
@@ -94,9 +94,9 @@ protected:
     FileDialogProperty ensemblePath_;
     StringOptionProperty loadingStrategy_;
     ButtonProperty loadDatasetButton_;
-    ProgressProperty runProgress_;
+    ProgressProperty memberProgress_;
     ProgressProperty timeStepProgress_;
-    StringTableProperty loadedRuns_;
+    StringTableProperty loadedMembers_;
     FileDialogProperty printEnsemble_;
     ColorMapProperty colorMap_;
     BoolProperty overrideTime_;

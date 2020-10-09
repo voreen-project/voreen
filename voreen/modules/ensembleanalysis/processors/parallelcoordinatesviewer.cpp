@@ -57,7 +57,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
         "Mouse Event Property", this, &ParallelCoordinatesViewer::onMouseEvent,
         static_cast<tgt::MouseEvent::MouseButtons>( tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT ),
         tgt::MouseEvent::ACTION_ALL, tgt::Event::MODIFIER_NONE, false, true ) )
-    , _propertySelectedRun( "property_selected_run", "Run", Processor::VALID, true )
+    , _propertySelectedMember( "property_selected_member", "Member", Processor::VALID, true )
     , _propertyVisualizationMode( "property_visualization_mode", "Visualization", Processor::VALID, true )
     , _propertySelectedTimestep( "property_selected_timestep", "Timestep", 0, 0, std::numeric_limits<int>::max(), Processor::VALID )
     , _propertySelectedField( "property_selected_field", "Field", Processor::VALID, true )
@@ -82,7 +82,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     this->addEventProperty( _eventPropertyMouse.get() );
 
     // --- Add Properties --- //
-    this->addProperty( _propertySelectedRun );
+    this->addProperty( _propertySelectedMember );
     this->addProperty( _propertyVisualizationMode );
 
     this->addProperty( _propertySelectedTimestep );
@@ -117,7 +117,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
 
     // --- Initialize Callbacks --- //
     _axesport.onNewData( MemberFunctionCallback<ParallelCoordinatesViewer>( this, &ParallelCoordinatesViewer::onNewInportData ) );
-    _propertySelectedRun.onChange( LambdaFunctionCallback( [this]
+    _propertySelectedMember.onChange( LambdaFunctionCallback( [this]
     {
         if( !_axesport.hasData() ) return;
         this->updateSampleStates();
@@ -355,7 +355,7 @@ void ParallelCoordinatesViewer::process()
     glDisable( GL_DEPTH_TEST );
     glEnable( GL_BLEND );
 
-    const auto offset = _propertyVisualizationMode.getValue() ? reinterpret_cast<const void*>( _propertySelectedRun.getValue() * axes->getStrideRun() ) : reinterpret_cast<const void*>( _propertySelectedRun.getValue() * axes->getStrideRun() + _propertySelectedTimestep.get() * axes->getStrideTimestep() );
+    const auto offset = _propertyVisualizationMode.getValue() ? reinterpret_cast<const void*>( _propertySelectedMember.getValue() * axes->getStrideMember() ) : reinterpret_cast<const void*>( _propertySelectedMember.getValue() * axes->getStrideMember() + _propertySelectedTimestep.get() * axes->getStrideTimestep() );
     glBindVertexArray( _vertexArray );
     glEnableVertexAttribArray( 0 );
     glBindBuffer( GL_ARRAY_BUFFER, axes->getVertexBuffer() );
@@ -543,18 +543,18 @@ void ParallelCoordinatesViewer::onNewInportData()
     const auto axes = _axesport.getData();
     const auto axisCount = _propertyVisualizationMode.getValue() ? axes->timesteps() : axes->fields();
 
-    auto runOptions = std::deque<Option<int>>();
-    for( size_t i = 0; i < axes->runs(); ++i )
+    auto memberOptions = std::deque<Option<int>>();
+    for( size_t i = 0; i < axes->members(); ++i )
     {
-        const auto name = axes->getRunName( i );
-        runOptions.push_back( Option<int>( name, name, static_cast<int>( i ) ) );
+        const auto name = axes->getMemberName( i );
+        memberOptions.push_back( Option<int>( name, name, static_cast<int>( i ) ) );
     }
 
-    // Selected run
-    _propertySelectedRun.blockCallbacks( true );
-    _propertySelectedRun.setOptions( runOptions );
-    _propertySelectedRun.invalidate();
-    _propertySelectedRun.blockCallbacks( false );
+    // Selected member
+    _propertySelectedMember.blockCallbacks( true );
+    _propertySelectedMember.setOptions( memberOptions );
+    _propertySelectedMember.invalidate();
+    _propertySelectedMember.blockCallbacks( false );
 
     // Selected timestep
     _propertySelectedTimestep.blockCallbacks( true );
@@ -836,7 +836,7 @@ void ParallelCoordinatesViewer::updateSampleStates()
             const auto uniform = _uniformBufferVec[j];
             const auto field = _propertyVisualizationMode.getValue() ? _propertySelectedField.getValue() : j;
             const auto timestep = _propertyVisualizationMode.getValue() ? j : _propertySelectedTimestep.get();
-            const auto value = axes->getValue( field, i, timestep, _propertySelectedRun.getValue() );
+            const auto value = axes->getValue( field, i, timestep, _propertySelectedMember.getValue() );
 
             if( value < uniform.y || value > uniform.z )
             {
@@ -853,7 +853,7 @@ void ParallelCoordinatesViewer::updateSampleStates()
             {
                 const auto field = _propertyVisualizationMode.getValue() ? _propertySelectedField.getValue() : j;
                 const auto timestep = _propertyVisualizationMode.getValue() ? j : _propertySelectedTimestep.get();
-                const auto value = axes->getValue( field, i, timestep, _propertySelectedRun.getValue() );
+                const auto value = axes->getValue( field, i, timestep, _propertySelectedMember.getValue() );
 
                 bool select = false;
                 for( const auto section : _sections[j] ) if( value >= section.first && value <= section.second )
@@ -875,7 +875,7 @@ void ParallelCoordinatesViewer::updateSampleStates()
     _propertySelectedSamples.set( _samplesSelection );
     _propertySelectedSamples.blockCallbacks( false );
 
-    _propertySections.set( ParallelCoordinatesSectionsPropertyData( _propertySelectedRun.getDescription(), static_cast<size_t>( _propertySelectedTimestep.get() ), axes->getFieldNames(), _sections ) );
+    _propertySections.set( ParallelCoordinatesSectionsPropertyData( _propertySelectedMember.getDescription(), static_cast<size_t>( _propertySelectedTimestep.get() ), axes->getFieldNames(), _sections ) );
 }
 void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
 {

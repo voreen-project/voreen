@@ -38,10 +38,10 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     , ensembleport_(Port::INPORT, "port_ensemble", "Ensemble Input", false, Processor::VALID )
     , volumeport_(Port::INPORT, "port_volume", "Volume Mask Input", false, Processor::VALID )
     , axesport_(Port::OUTPORT, "port_axes", "Parallel Coordinates Axes" )
-    , propertyRuns_("property_runs", "Selected Runs", Processor::VALID )
+    , propertyMembers_("property_runs", "Selected Members", Processor::VALID )
     , propertyFields_("property_fields", "Selected Fields", Processor::VALID )
     , propertySampleCount_("property_sample_count", "Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
-    , propertyAggregateRuns_("property_aggregate_runs", "Aggregate Runs", false, Processor::VALID )
+    , propertyAggregateMembers_("property_aggregate_runs", "Aggregate Members", false, Processor::VALID )
     , propertyFileDialog_("property_file_dialog", "File Output", "Select File...", "", "Parallel Coordinates (*.pc)", FileDialogProperty::FileMode::SAVE_FILE, Processor::VALID )
     , propertySaveButton_("property_save", "Save File", Processor::VALID )
 {
@@ -51,28 +51,28 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     this->addPort(axesport_ );
 
     // --- Initialize Properties --- //
-    this->addProperty(propertyRuns_ );
+    this->addProperty(propertyMembers_ );
     this->addProperty(propertyFields_ );
     this->addProperty(propertySampleCount_ );
-    this->addProperty(propertyAggregateRuns_ );
+    this->addProperty(propertyAggregateMembers_ );
     this->addProperty(propertyFileDialog_ );
     this->addProperty(propertySaveButton_ );
 
     // --- Initialize Callbacks --- //
     ensembleport_.onNewData(LambdaFunctionCallback([this] {
-        propertyRuns_.blockCallbacks(true );
-        propertyRuns_.reset();
+        propertyMembers_.blockCallbacks(true );
+        propertyMembers_.reset();
         if( ensembleport_.hasData() )
-            for( const auto& run : ensembleport_.getData()->getRuns() )
-                propertyRuns_.addRow(run.getName(), run.getColor() );
-        propertyRuns_.blockCallbacks(false );
-        propertyRuns_.invalidate();
+            for( const auto& run : ensembleport_.getData()->getMembers() )
+                propertyMembers_.addRow(run.getName(), run.getColor() );
+        propertyMembers_.blockCallbacks(false );
+        propertyMembers_.invalidate();
     } ) );
     volumeport_.onChange(MemberFunctionCallback<ParallelCoordinatesAxesCreator>(this, &ParallelCoordinatesAxesCreator::updateValidVoxels ) );
-    propertyRuns_.onChange(LambdaFunctionCallback([this]{
+    propertyMembers_.onChange(LambdaFunctionCallback([this]{
         auto ensemble = EnsembleDataset();
-        for( const auto run : propertyRuns_.get() )
-            ensemble.addRun(ensembleport_.getData()->getRuns()[run] );
+        for( const auto run : propertyMembers_.get() )
+            ensemble.addMember(ensembleport_.getData()->getMembers()[run]);
 
         propertyFields_.blockCallbacks(true );
         propertyFields_.reset();
@@ -116,12 +116,12 @@ void ParallelCoordinatesAxesCreator::updateValidVoxels() {
         if( ensembleport_.hasData() )
         {
             auto ensemble = EnsembleDataset();
-            for( const auto run : propertyRuns_.get() )
-                ensemble.addRun(ensembleport_.getData()->getRuns()[run] );
+            for( const auto run : propertyMembers_.get() )
+                ensemble.addMember(ensembleport_.getData()->getMembers()[run]);
 
-            if(ensemble.getRuns().size() && propertyFields_.get().size() ) {
+            if(ensemble.getMembers().size() && propertyFields_.get().size() ) {
                 const auto field = ensemble.getCommonFieldNames()[propertyFields_.get().front()];
-                const auto voxelCount = ensemble.getRuns().front().getTimeSteps().front().getVolume(field)->getNumVoxels();
+                const auto voxelCount = ensemble.getMembers().front().getTimeSteps().front().getVolume(field)->getNumVoxels();
 
                 validVoxels_.resize(voxelCount );
                 std::iota(validVoxels_.begin(), validVoxels_.end(), 0 );
@@ -146,15 +146,15 @@ ParallelCoordianesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareComput
 
     // --- Gather values --- //
     auto ensemble = EnsembleDataset();
-    for( const auto run : propertyRuns_.get() )
-        ensemble.addRun(ensembleport_.getData()->getRuns()[run] );
+    for( const auto run : propertyMembers_.get() )
+        ensemble.addMember(ensembleport_.getData()->getMembers()[run]);
 
     auto fieldNames = std::vector<std::string>();
     for( const auto field : propertyFields_.get() )
         fieldNames.push_back( ensemble.getCommonFieldNames()[field] );
 
     const auto numTimesteps = ensemble.getMinNumTimeSteps();
-    const auto& runs = ensemble.getRuns();
+    const auto& runs = ensemble.getMembers();
 
     if( runs.empty() || fieldNames.empty() || numTimesteps == 0 ) {
         throw InvalidInputException("Empty input", InvalidInputException::S_ERROR);
@@ -179,14 +179,14 @@ ParallelCoordianesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareComput
 
 ParallelCoordianesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(ComputeInput input, ProgressReporter& progressReporter) const {
 
-    const auto& runs = input.ensemble.getRuns();
+    const auto& runs = input.ensemble.getMembers();
     size_t sampleCount = input.sampleCount;
     size_t numTimesteps = input.numTimeSteps;
     auto validVoxels = std::move(input.validVoxels);
     auto fieldNames = std::move(input.fieldNames);
     auto ranges = std::move(input.ranges);
 
-    if( propertyAggregateRuns_.get() ) {
+    if( propertyAggregateMembers_.get() ) {
         auto runNames = std::vector<std::string> { "Aggregated" };
         auto values = std::vector<float>( runs.size() * numTimesteps * fieldNames.size() * sampleCount );
         auto currentValue = values.data();
@@ -201,7 +201,7 @@ ParallelCoordianesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Comp
                     const auto& timestep = run.getTimeSteps()[i];
                     const auto& fieldName = fieldNames[j];
 
-                    std::cout << "[ParallelCoordinatesAxesCreator] Collecting voxels: Run=" << run.getName() << ", Timestep=" << j << ", Field=" << fieldName << std::endl;
+                    std::cout << "[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << run.getName() << ", Timestep=" << j << ", Field=" << fieldName << std::endl;
 
                     const auto volumeHandle = timestep.getVolume(fieldName);
                     const auto volume = VolumeRAMRepresentationLock( volumeHandle );
@@ -237,7 +237,7 @@ ParallelCoordianesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Comp
                 for( size_t k = 0; k < fieldNames.size(); ++k )
                 {
                     const auto& fieldName = fieldNames[k];
-                    std::cout << "[ParallelCoordinatesAxesCreator] Collecting voxels: Run=" << run.getName() << ", Timestep=" << j << ", Field=" << fieldName << std::endl;
+                    std::cout << "[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << run.getName() << ", Timestep=" << j << ", Field=" << fieldName << std::endl;
 
                     const auto volumeHandle = timestep.getVolume(fieldName);
                     const auto volume = VolumeRAMRepresentationLock( volumeHandle );

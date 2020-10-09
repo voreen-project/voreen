@@ -34,30 +34,30 @@ namespace voreen {
 
 class ParallelCoordinatesAxes {
 public:
-    ParallelCoordinatesAxes( std::vector<std::string> runs, std::vector<std::string> fields, std::vector<std::pair<float, float>> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples );
+    ParallelCoordinatesAxes( std::vector<std::string> members, std::vector<std::string> fields, std::vector<std::pair<float, float>> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples );
     ParallelCoordinatesAxes( const std::string& filepath );
     ~ParallelCoordinatesAxes();
 
     void serialize( const std::string& filepath ) const;
 
-    size_t runs() const noexcept;
+    size_t members() const noexcept;
     size_t timesteps() const noexcept;
     size_t fields() const noexcept;
     size_t samples() const noexcept;
 
-    const std::string& getRunName( size_t i ) const;
+    const std::string& getMemberName( size_t i ) const;
     const std::string& getFieldName( size_t i ) const;
 
-    const std::vector<std::string>& getRunNames() const noexcept;
+    const std::vector<std::string>& getMemberNames() const noexcept;
     const std::vector<std::string>& getFieldNames() const noexcept;
 
     std::pair<float, float> getRange( size_t field ) const;
     const std::vector<std::pair<float, float>>& getRanges() const noexcept;
 
-    float getValue( size_t field, size_t sample, size_t timestep = 0, size_t run = 0 ) const;
+    float getValue( size_t field, size_t sample, size_t timestep = 0, size_t member = 0 ) const;
     const std::vector<float>& getValues() const noexcept;
 
-    size_t getStrideRun() const noexcept;
+    size_t getStrideMember() const noexcept;
     size_t getStrideTimestep() const noexcept;
     size_t memorySize() const noexcept;
 
@@ -65,7 +65,7 @@ public:
 
 private:
     size_t timesteps_, samples_;
-    std::vector<std::string> runs_, fields_;
+    std::vector<std::string> members_, fields_;
     std::vector<std::pair<float, float>> ranges_;
     std::vector<float> values_;
     mutable GLuint vertexBuffer_;

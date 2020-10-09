@@ -59,7 +59,7 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
-    if(ensemble->getRuns().empty()) {
+    if(ensemble->getMembers().empty()) {
         throw InvalidInputException("Need at least a single run", InvalidInputException::S_ERROR);
     }
 
@@ -88,7 +88,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
 
     auto ensemble = std::move(input.ensemble);
     const std::string& field = input.field;
-    const size_t numRuns = ensemble->getRuns().size();
+    const size_t numMembers = ensemble->getMembers().size();
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.outputVolume);
     const tgt::svec3 dims = output->getDimensions();
@@ -96,9 +96,9 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     VolumeRAMRepresentationLock referenceVolume(input.referenceVolume);
     tgt::mat4 refVoxelToWorld = input.referenceVolume->getVoxelToWorldMatrix();
 
-    for (size_t r = 0; r < numRuns; r++) {
-        size_t t = ensemble->getRuns()[r].getTimeStep(input.time);
-        const VolumeBase* vol = ensemble->getRuns()[r].getTimeSteps()[t].getVolume(field);
+    for (size_t r = 0; r < numMembers; r++) {
+        size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
+        const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
         VolumeRAMRepresentationLock lock(vol);
         tgt::Bounds bounds = vol->getBoundingBox().getBoundingBox();
         tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
@@ -125,13 +125,13 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                         length += value * value;
                     }
 
-                    output->voxel(pos) += length / numRuns;
+                    output->voxel(pos) += length / numMembers;
                 }
             }
         }
 
         // Update progress.
-        progress.setProgress(1.0f * r / numRuns);
+        progress.setProgress(1.0f * r / numMembers);
     }
 
     // Convert variance to standard deviation.

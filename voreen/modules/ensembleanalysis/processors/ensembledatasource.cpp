@@ -38,7 +38,7 @@ namespace voreen {
 const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
 const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
-const std::string EnsembleDataSource::RUN_NAME = "run_name";
+const std::string EnsembleDataSource::RUN_NAME = "member_name";
 const std::string EnsembleDataSource::FALLBACK_FIELD_NAME = "unnamed";
 const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
@@ -48,9 +48,9 @@ EnsembleDataSource::EnsembleDataSource()
     , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_PATH)
     , loadingStrategy_("loadingStrategy", "Loading Strategy", Processor::VALID)
     , loadDatasetButton_("loadDataset", "Load Dataset")
-    , runProgress_("runProgress", "Runs loaded")
+    , memberProgress_("memberProgress", "Members loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
-    , loadedRuns_("loadedRuns", "Loaded Runs", 5)
+    , loadedMembers_("loadedMembers", "Loaded Members", 5)
     , printEnsemble_("printEnsemble", "Print Ensemble", "Print Ensemble", "", "HTML (*.html)", FileDialogProperty::SAVE_FILE)
     , colorMap_("colorMap", "Color Map")
     , overrideTime_("overrideTime", "Override Time", false, Processor::VALID, Property::LOD_ADVANCED)
@@ -63,16 +63,16 @@ EnsembleDataSource::EnsembleDataSource()
     loadingStrategy_.addOption("full", "Full");
     loadingStrategy_.addOption("lazy", "Lazy");
     addProperty(loadDatasetButton_);
-    addProperty(runProgress_);
-    addProgressBar(&runProgress_);
+    addProperty(memberProgress_);
+    addProgressBar(&memberProgress_);
     addProperty(timeStepProgress_);
 
-    addProperty(loadedRuns_);
-    loadedRuns_.setColumnLabel(0, "Name");
-    loadedRuns_.setColumnLabel(1, "Num Time Steps");
-    loadedRuns_.setColumnLabel(2, "Start Time");
-    loadedRuns_.setColumnLabel(3, "End Time");
-    loadedRuns_.setColumnLabel(4, "Duration");
+    addProperty(loadedMembers_);
+    loadedMembers_.setColumnLabel(0, "Name");
+    loadedMembers_.setColumnLabel(1, "Num Time Steps");
+    loadedMembers_.setColumnLabel(2, "Start Time");
+    loadedMembers_.setColumnLabel(3, "End Time");
+    loadedMembers_.setColumnLabel(4, "Duration");
 
     addProperty(printEnsemble_);
     ON_CHANGE(printEnsemble_, EnsembleDataSource, printEnsembleDataset);
@@ -154,7 +154,7 @@ void EnsembleDataSource::clearEnsembleDataset() {
     volumes_.clear();
     setProgress(0.0f);
     timeStepProgress_.setProgress(0.0f);
-    loadedRuns_.reset();
+    loadedMembers_.reset();
     hash_.reset();
 }
 
@@ -170,20 +170,20 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
     std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset());
 
-    std::vector<std::string> runs = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
-    float progressPerRun = 1.0f / runs.size();
+    std::vector<std::string> members = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
+    float progressPerMember = 1.0f / members.size();
 
     VolumeSerializerPopulator populator;
-    ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(runs.size());
+    ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(members.size());
 
-    for(const std::string& run : runs) {
-        std::string runPath = ensemblePath_.get() + "/" + run;
-        std::vector<std::string> fileNames = tgt::FileSystem::readDirectory(runPath, true, false);
+    for(const std::string& member : members) {
+        std::string memberPath = ensemblePath_.get() + "/" + member;
+        std::vector<std::string> fileNames = tgt::FileSystem::readDirectory(memberPath, true, false);
 
         timeStepProgress_.setProgress(0.0f);
         float progressPerTimeStep = 1.0f / fileNames.size();
 
-        std::vector<EnsembleDataset::TimeStep> timeSteps;
+        std::vector<TimeStep> timeSteps;
         for(const std::string& fileName : fileNames) {
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
@@ -191,7 +191,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 continue;
             }
 
-            std::string url = runPath + "/" + fileName;
+            std::string url = memberPath + "/" + fileName;
             std::vector<VolumeReader*> readers = populator.getVolumeSerializer()->getReaders(url);
             if(readers.empty()) {
                 LERROR("No valid volume reader found for " << url);
@@ -221,7 +221,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     }
                     else {
                         currentTime = 1.0f * timeSteps.size();
-                        LWARNING("Actual time information not found for time step " << timeSteps.size() << " of run " << run);
+                        LWARNING("Actual time information not found for time step " << timeSteps.size() << " of member " << member);
                     }
                 }
                 else {
@@ -233,7 +233,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     timeIsSet = true;
                 }
                 else if (currentTime != time) {
-                    LWARNING("Time stamp not equal channel-wise for t=" << timeSteps.size() << " of run " << run);
+                    LWARNING("Time stamp not equal channel-wise for t=" << timeSteps.size() << " of member " << member);
                 }
 
                 std::string fieldName;
@@ -250,7 +250,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 // Add additional information gained reading the file structure.
                 Volume* volume = dynamic_cast<Volume*>(volumeHandle.get());
                 tgtAssert(volume, "volumeHandle must be volume");
-                volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(run));
+                volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(member));
 
                 volumeData[fieldName] = volumeHandle.get();
 
@@ -271,7 +271,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
         // Update overview table.
         std::vector<std::string> row(5);
-        row[0] = run; // Name
+        row[0] = member; // Name
         row[1] = std::to_string(timeSteps.size()); // Num Time Steps
         if (!timeSteps.empty()) {
             row[2] = std::to_string(timeSteps.front().getTime()); // Start time
@@ -281,15 +281,15 @@ void EnsembleDataSource::buildEnsembleDataset() {
         else {
             row[2] = row[3] = row[4] = "N/A";
         }
-        loadedRuns_.addRow(row);//addRow(run, color);
+        loadedMembers_.addRow(row);//addRow(member, color);
 
         // Update dataset.
         tgt::Color color = *colorIter;
-        dataset->addRun({ run, color.xyz(), timeSteps });
+        dataset->addMember({member, color.xyz(), timeSteps});
         ++colorIter;
 
         // Update progress bar.
-        setProgress(getProgress() + progressPerRun);
+        setProgress(getProgress() + progressPerMember);
     }
 
     hash_.set(EnsembleHash(*dataset).getHash());

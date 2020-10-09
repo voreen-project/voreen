@@ -31,19 +31,18 @@
 
 namespace voreen {
 
-struct ParallelCoordinatesSectionsPropertyData
-{
-    std::string run;
+struct ParallelCoordinatesSectionsPropertyData {
+    std::string member;
     size_t timestep;
     std::vector<std::string> fields;
     std::vector<std::list<std::pair<float, float>>> sections;
 
     ParallelCoordinatesSectionsPropertyData() = default;
-    ParallelCoordinatesSectionsPropertyData( std::string run, size_t timestep, std::vector<std::string> fields, std::vector<std::list<std::pair<float, float>>> sections ) : run( std::move( run ) ), timestep( timestep ), fields( std::move( fields ) ), sections( std::move( sections ) )
+    ParallelCoordinatesSectionsPropertyData( std::string member, size_t timestep, std::vector<std::string> fields, std::vector<std::list<std::pair<float, float>>> sections ) : member( std::move( member ) ), timestep( timestep ), fields( std::move( fields ) ), sections( std::move( sections ) )
     {}
 
     bool operator!=( const ParallelCoordinatesSectionsPropertyData& other ) const {
-        return ( run != other.run ) || ( timestep != other.timestep ) || ( fields != other.fields ) || ( sections != other.sections );
+        return ( member != other.member ) || ( timestep != other.timestep ) || ( fields != other.fields ) || ( sections != other.sections );
     }
 };
 

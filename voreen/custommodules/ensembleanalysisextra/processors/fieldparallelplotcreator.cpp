@@ -118,7 +118,7 @@ FieldParallelPlotCreatorInput FieldParallelPlotCreator::prepareComputeInput() {
 
     size_t height = static_cast<size_t>(verticalResolution_.get());
     size_t width  = static_cast<size_t>(input.getMaxTotalDuration() * horizontalResolutionPerTimeUnit_.get()) + 1;
-    size_t depth  = static_cast<size_t>(input.getCommonFieldNames().size() * input.getRuns().size());
+    size_t depth  = static_cast<size_t>(input.getCommonFieldNames().size() * input.getMembers().size());
 
     std::unique_ptr<FieldPlotData> plotData(new FieldPlotData(width, height, depth));
 
@@ -168,10 +168,11 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
         const std::string& field = fieldNames[i];
         SubtaskProgressReporter fieldProgressReporter(progress, tgt::vec2(i, i+1) / tgt::vec2(fieldNames.size()));
 
-        for (size_t j=0; j<data.getRuns().size(); j++) {
+        for (size_t j=0; j< data.getMembers().size(); j++) {
 
-            const EnsembleDataset::Run& run = data.getRuns()[j];
-            SubtaskProgressReporter runProgressReporter(fieldProgressReporter, tgt::vec2(j, j+1) / tgt::vec2(data.getRuns().size()));
+            const EnsembleMember& run = data.getMembers()[j];
+            SubtaskProgressReporter runProgressReporter(fieldProgressReporter, tgt::vec2(j, j+1) / tgt::vec2(
+                    data.getMembers().size()));
 
             const tgt::vec2& valueRange = data.getValueRange(field);
             float pixelOffset = pixelPerTimeUnit * (timeOffset + run.getTimeSteps()[0].getTime());

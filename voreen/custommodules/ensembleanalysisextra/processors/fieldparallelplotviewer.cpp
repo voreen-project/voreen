@@ -154,7 +154,7 @@ void FieldParallelPlotViewer::deinitialize() {
 std::string FieldParallelPlotViewer::generateHeader(const tgt::GpuCapabilities::GlVersion* version) {
     std::string header = RenderProcessor::generateHeader(version);
 
-    header += "#define NUM_RUNS " + (ensembleInport_.hasData() ? std::to_string(ensembleInport_.getData()->getRuns().size()) : "0") + "\n";
+    header += "#define NUM_RUNS " + (ensembleInport_.hasData() ? std::to_string(ensembleInport_.getData()->getMembers().size()) : "0") + "\n";
     header += transferFunc_.get()->getShaderDefines();
 
     return header;
@@ -203,7 +203,7 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
     timeInterval_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
     std::vector<int> renderedRunsIndices;
-    for(const EnsembleDataset::Run& run : dataset->getRuns()) {
+    for(const EnsembleMember& run : dataset->getMembers()) {
         renderedRuns_.addRow(run.getName(), run.getColor());
         selectedRuns_.addRow(run.getName(), run.getColor());
         renderedRunsIndices.push_back(static_cast<int>(renderedRunsIndices.size()));
@@ -242,7 +242,7 @@ void FieldParallelPlotViewer::adjustPropertiesToInput() {
 
 void FieldParallelPlotViewer::switchField() {
 
-    size_t numRuns = ensembleInport_.getData()->getRuns().size();
+    size_t numRuns = ensembleInport_.getData()->getMembers().size();
     size_t firstSlice = renderedField_.getSelectedIndex() * numRuns;
     tgt::svec3 offset(0, 0, firstSlice);
     tgt::svec3 dimensions(plotDataInport_.getData()->getWidth(), plotDataInport_.getData()->getHeight(), numRuns);
@@ -394,7 +394,7 @@ void FieldParallelPlotViewer::renderPlot() {
     shader->setUniform("rangeY_", zoomY_.get());
 
     // Setup selection.
-    std::vector<GLint> runs(ensembleInport_.getData()->getRuns().size(), 0);
+    std::vector<GLint> runs(ensembleInport_.getData()->getMembers().size(), 0);
     for (int i : renderedRuns_.getSelectedRowIndices())
         runs[i] = 1;
 

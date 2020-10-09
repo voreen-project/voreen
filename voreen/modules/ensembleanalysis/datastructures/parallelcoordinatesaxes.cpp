@@ -29,8 +29,8 @@
 namespace voreen
 {
 
-ParallelCoordinatesAxes::ParallelCoordinatesAxes( std::vector<std::string> runs, std::vector<std::string> fields, std::vector<std::pair<float, float>> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples )
-    : timesteps_(numTimesteps ), samples_(numSamples ), runs_(std::move(runs ) ), fields_(std::move(fields ) ), ranges_(std::move(ranges ) ), values_(std::move(values ) ), vertexBuffer_(0 )
+ParallelCoordinatesAxes::ParallelCoordinatesAxes( std::vector<std::string> members, std::vector<std::string> fields, std::vector<std::pair<float, float>> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples )
+    : timesteps_(numTimesteps ), samples_(numSamples ), members_(std::move(members ) ), fields_(std::move(fields ) ), ranges_(std::move(ranges ) ), values_(std::move(values ) ), vertexBuffer_(0 )
 {}
 
 ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath ) : vertexBuffer_(0 )
@@ -41,19 +41,19 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath ) 
         return;
     }
 
-    size_t runs, fields;
-    stream.read( reinterpret_cast<char*>( &runs ), sizeof( size_t ) );
+    size_t members, fields;
+    stream.read( reinterpret_cast<char*>( &members ), sizeof( size_t ) );
     stream.read(reinterpret_cast<char*>( &timesteps_ ), sizeof( size_t ) );
     stream.read( reinterpret_cast<char*>( &fields ), sizeof( size_t ) );
     stream.read(reinterpret_cast<char*>( &samples_ ), sizeof( size_t ) );
 
-    runs_.resize(runs );
-    for( size_t i = 0; i < runs; ++i ) {
+    members_.resize(members );
+    for( size_t i = 0; i < members; ++i ) {
         size_t length;
         stream.read( reinterpret_cast<char*>( &length ), sizeof( size_t ) );
 
-        runs_[i].resize(length );
-        stream.read(reinterpret_cast<char*>( &runs_[i][0] ), length );
+        members_[i].resize(length );
+        stream.read(reinterpret_cast<char*>( &members_[i][0] ), length );
     }
 
     fields_.resize(fields );
@@ -68,7 +68,7 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath ) 
     ranges_.resize(fields );
     stream.read(reinterpret_cast<char*>( ranges_.data() ), ranges_.size() * sizeof( std::pair<float, float> ) );
 
-    values_.resize(runs * timesteps_ * fields * samples_ );
+    values_.resize(members * timesteps_ * fields * samples_ );
     stream.read(reinterpret_cast<char*>( values_.data() ), values_.size() * sizeof( float ) );
 
     if( !stream ) std::cout << "[ERROR]: ParallelCoordinatesAxes::ParallelCoordinatesAxes --> Failed read file " << filepath << std::endl;
@@ -85,16 +85,16 @@ void ParallelCoordinatesAxes::serialize( const std::string& filepath ) const {
         return;
     }
 
-    const auto runs = this->runs(), timesteps = this->timesteps(), fields = this->fields(), samples = this->samples();
-    stream.write( reinterpret_cast<const char*>( &runs ), sizeof( size_t ) );
+    const auto members = this->members(), timesteps = this->timesteps(), fields = this->fields(), samples = this->samples();
+    stream.write( reinterpret_cast<const char*>( &members ), sizeof( size_t ) );
     stream.write( reinterpret_cast<const char*>( &timesteps ), sizeof( size_t ) );
     stream.write( reinterpret_cast<const char*>( &fields ), sizeof( size_t ) );
     stream.write( reinterpret_cast<const char*>( &samples ), sizeof( size_t ) );
 
-    for( size_t i = 0; i < runs; ++i ) {
-        const auto length = runs_[i].size();
+    for( size_t i = 0; i < members; ++i ) {
+        const auto length = members_[i].size();
         stream.write( reinterpret_cast<const char*>( &length ), sizeof( size_t ) );
-        stream.write(reinterpret_cast<const char*>( runs_[i].data() ), length );
+        stream.write(reinterpret_cast<const char*>( members_[i].data() ), length );
     }
 
     for( size_t i = 0; i < fields; ++i ) {
@@ -109,8 +109,8 @@ void ParallelCoordinatesAxes::serialize( const std::string& filepath ) const {
     if( !stream ) std::cout << "[ERROR]: ParallelCoordinatesAxes::serialize --> Failed write file " << filepath << std::endl;
 }
 
-size_t ParallelCoordinatesAxes::runs() const noexcept {
-    return runs_.size();
+size_t ParallelCoordinatesAxes::members() const noexcept {
+    return members_.size();
 }
 size_t ParallelCoordinatesAxes::timesteps() const noexcept {
     return timesteps_;
@@ -122,15 +122,15 @@ size_t ParallelCoordinatesAxes::samples() const noexcept {
     return samples_;
 }
 
-const std::string& ParallelCoordinatesAxes::getRunName( size_t i ) const {
-    return runs_[i];
+const std::string& ParallelCoordinatesAxes::getMemberName( size_t i ) const {
+    return members_[i];
 }
 const std::string& ParallelCoordinatesAxes::getFieldName( size_t i ) const {
     return fields_[i];
 }
 
-const std::vector<std::string>& ParallelCoordinatesAxes::getRunNames() const noexcept {
-    return runs_;
+const std::vector<std::string>& ParallelCoordinatesAxes::getMemberNames() const noexcept {
+    return members_;
 }
 const std::vector<std::string>& ParallelCoordinatesAxes::getFieldNames() const noexcept {
     return fields_;
@@ -143,14 +143,14 @@ const std::vector<std::pair<float, float>>& ParallelCoordinatesAxes::getRanges()
     return ranges_;
 }
 
-float ParallelCoordinatesAxes::getValue( size_t field, size_t sample, size_t timestep, size_t run ) const {
-    return values_[(this->timesteps() * this->samples() * this->fields() * run ) + (this->samples() * this->fields() * timestep ) + (this->fields() * sample ) + field];
+float ParallelCoordinatesAxes::getValue( size_t field, size_t sample, size_t timestep, size_t member ) const {
+    return values_[(this->timesteps() * this->samples() * this->fields() * member ) + (this->samples() * this->fields() * timestep ) + (this->fields() * sample ) + field];
 }
 const std::vector<float>& ParallelCoordinatesAxes::getValues() const noexcept {
     return values_;
 }
 
-size_t ParallelCoordinatesAxes::getStrideRun() const noexcept {
+size_t ParallelCoordinatesAxes::getStrideMember() const noexcept {
     return timesteps_ * fields_.size() * samples_ * sizeof( float );
 }
 

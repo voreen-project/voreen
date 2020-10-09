@@ -45,17 +45,17 @@ void ParallelCoordinatesVoxelSelection::process()
 {
     const auto ensemble = ensembleport_.getData();
 
-    // --- Find Run --- //
-    const EnsembleDataset::Run* run = nullptr;
-    for( const auto& r : ensemble->getRuns() )
+    // --- Find Member --- //
+    const EnsembleMember* member = nullptr;
+    for( const auto& m : ensemble->getMembers() )
     {
-        if(r.getName() == propertySections_.get().run )
+        if(m.getName() == propertySections_.get().member )
         {
-            run = &r;
+            member = &m;
             break;
         }
     }
-    if( !run || run->getTimeSteps().size() <= propertySections_.get().timestep )
+    if( !member || member->getTimeSteps().size() <= propertySections_.get().timestep )
     {
         volumeport_.clear();
         return;
@@ -65,7 +65,7 @@ void ParallelCoordinatesVoxelSelection::process()
     auto volumes = std::vector<const VolumeRAM*>();
     for( const auto& field : propertySections_.get().fields )
     {
-        const VolumeBase* volume = run->getTimeSteps()[propertySections_.get().timestep].getVolume(field);
+        const VolumeBase* volume = member->getTimeSteps()[propertySections_.get().timestep].getVolume(field);
         if(volume)
             volumes.push_back( volume->getRepresentation<VolumeRAM>() );
     }

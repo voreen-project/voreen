@@ -43,7 +43,7 @@ struct ReferenceVolumeCreatorInput {
     std::string field;
     float time;
     std::string referenceMethod;
-    size_t referenceRun;
+    size_t referenceMember;
 };
 
 struct ReferenceVolumeCreatorOutput {
@@ -85,7 +85,7 @@ protected:
     FloatProperty time_;
 
     StringOptionProperty referenceMethod_;
-    StringOptionProperty referenceRun_;
+    StringOptionProperty referenceMember_;
 
     StringOptionProperty sampleRegion_;
     IntVec3Property outputDimensions_;

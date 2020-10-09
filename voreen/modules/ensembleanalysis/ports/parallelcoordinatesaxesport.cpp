@@ -47,7 +47,7 @@ std::string ParallelCoordinatesAxesPort::getContentDescription() const {
     if( this->hasData() )
     {
         const auto axes = this->getData();
-        stream << std::endl << "Runs: " << axes->runs();
+        stream << std::endl << "members: " << axes->members();
         stream << std::endl << "Timesteps: " << axes->timesteps();
         stream << std::endl << "Fields: " << axes->fields();
         stream << std::endl << "Samples: " << axes->samples();
@@ -64,7 +64,7 @@ std::string ParallelCoordinatesAxesPort::getContentDescriptionHTML() const {
     if( this->hasData() )
     {
         const auto axes = this->getData();
-        stream << "<br/>" << "Runs: " << axes->runs();
+        stream << "<br/>" << "members: " << axes->members();
         stream << "<br/>" << "Timesteps: " << axes->timesteps();
         stream << "<br/>" << "Fields: " << axes->fields();
         stream << "<br/>" << "Samples: " << axes->samples();

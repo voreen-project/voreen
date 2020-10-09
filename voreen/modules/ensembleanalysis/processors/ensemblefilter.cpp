@@ -46,28 +46,28 @@ public:
 };
 
 //----------------------------------------
-// Filter : Run
+// Filter : Member
 //----------------------------------------
 
-class FilterRun : public Filter {
+class FilterMember : public Filter {
 public:
-    FilterRun()
-        : runs_("runs", "Selected Runs")
+    FilterMember()
+        : members_("members", "Selected Members")
     {
-        runs_.setDescription("Selects multiple runs from the ensemble data.");
+        members_.setDescription("Selects multiple members from the ensemble data.");
     }
 
     std::vector<Property*> getProperties() {
-        return std::vector<Property*>(1, &runs_);
+        return std::vector<Property*>(1, &members_);
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
         
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (int row : runs_.getSelectedRowIndices()) {
-            EnsembleDataset::Run run = ensemble.getRuns()[row];
-            dataset->addRun(run);
+        for (int row : members_.getSelectedRowIndices()) {
+            EnsembleMember member = ensemble.getMembers()[row];
+            dataset->addMember(member);
         }
 
         return dataset;
@@ -76,21 +76,21 @@ public:
     void adjustToEnsemble(const EnsembleDataset* ensemble) {
         
         // Reset range.
-        runs_.reset();
+        members_.reset();
 
         if (ensemble) {
             // Adjust range to data.
-            std::vector<int> selectedRunIndices;
-            for (const EnsembleDataset::Run& run : ensemble->getRuns()) {
-                runs_.addRow(run.getName(), run.getColor());
-                selectedRunIndices.push_back(static_cast<int>(selectedRunIndices.size()));
+            std::vector<int> selectedMemberIndices;
+            for (const EnsembleMember& member : ensemble->getMembers()) {
+                members_.addRow(member.getName(), member.getColor());
+                selectedMemberIndices.push_back(static_cast<int>(selectedMemberIndices.size()));
             }
-            runs_.setSelectedRowIndices(selectedRunIndices);
+            members_.setSelectedRowIndices(selectedMemberIndices);
         }
     }
 
 private:
-    StringListProperty runs_;
+    StringListProperty members_;
 };
 
 //----------------------------------------
@@ -112,17 +112,17 @@ public:
         
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            if (run.getTimeSteps().empty())
+        for (const EnsembleMember& member : ensemble.getMembers()) {
+            if (member.getTimeSteps().empty())
                 continue;
 
-            std::vector<EnsembleDataset::TimeStep> timeSteps;
-            int max = std::min(static_cast<int>(run.getTimeSteps().size()) - 1, timeSteps_.get().y);
+            std::vector<TimeStep> timeSteps;
+            int max = std::min(static_cast<int>(member.getTimeSteps().size()) - 1, timeSteps_.get().y);
             for (int i = timeSteps_.get().x; i <= max; i++) {
-                timeSteps.push_back(run.getTimeSteps()[i]);
+                timeSteps.push_back(member.getTimeSteps()[i]);
             }
 
-            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
+            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
         }
 
         return dataset;
@@ -158,8 +158,8 @@ public:
         ON_CHANGE_LAMBDA(enableRemoveFirstTimeStep_, [this] {
             keepIfOnlyTimeStep_.setVisibleFlag(enableRemoveFirstTimeStep_.get());
         });
-        enableRemoveFirstTimeStep_.setDescription("Removes the first time step of each run.");
-        keepIfOnlyTimeStep_.setDescription("Keep Time Step, if run only has a single one.");
+        enableRemoveFirstTimeStep_.setDescription("Removes the first time step of each member.");
+        keepIfOnlyTimeStep_.setDescription("Keep Time Step, if member only has a single one.");
         enableRemoveFirstTimeStep_.invalidate();
     }
 
@@ -179,19 +179,19 @@ public:
 
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            std::vector<EnsembleDataset::TimeStep> timeSteps;
+        for (const EnsembleMember& member : ensemble.getMembers()) {
+            std::vector<TimeStep> timeSteps;
 
-            // If the run only contains a single time step, we keep it
-            if(run.getTimeSteps().size() == 1 && keepIfOnlyTimeStep_.get()) {
-                timeSteps.push_back(run.getTimeSteps().front());
+            // If the member only contains a single time step, we keep it
+            if(member.getTimeSteps().size() == 1 && keepIfOnlyTimeStep_.get()) {
+                timeSteps.push_back(member.getTimeSteps().front());
             }
 
-            for (size_t i = 1; i < run.getTimeSteps().size(); i++) {
-                timeSteps.push_back(run.getTimeSteps()[i]);
+            for (size_t i = 1; i < member.getTimeSteps().size(); i++) {
+                timeSteps.push_back(member.getTimeSteps()[i]);
             }
 
-            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
+            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
         }
 
         return dataset;
@@ -214,7 +214,7 @@ public:
     FilterSelectLastTimeStep()
         : enableSelectLastTimeStep_("enableSelectLastTimeStep", "Select last Time Step", false)
     {
-        enableSelectLastTimeStep_.setDescription("Selects only the last time step of each run.");
+        enableSelectLastTimeStep_.setDescription("Selects only the last time step of each member.");
     }
 
     std::vector<Property*> getProperties() {
@@ -230,14 +230,14 @@ public:
 
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            if (run.getTimeSteps().empty())
+        for (const EnsembleMember& member : ensemble.getMembers()) {
+            if (member.getTimeSteps().empty())
                 continue;
 
-            std::vector<EnsembleDataset::TimeStep> timeSteps;
-            timeSteps.push_back(run.getTimeSteps().back());
+            std::vector<TimeStep> timeSteps;
+            timeSteps.push_back(member.getTimeSteps().back());
 
-            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
+            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
         }
 
         return dataset;
@@ -271,16 +271,16 @@ public:
 
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            std::vector<EnsembleDataset::TimeStep> timeSteps;
-            for (size_t i = 0; i < run.getTimeSteps().size(); i++) {
-                if (run.getTimeSteps()[i].getTime() > timeInterval_.get().y)
+        for (const EnsembleMember& member : ensemble.getMembers()) {
+            std::vector<TimeStep> timeSteps;
+            for (size_t i = 0; i < member.getTimeSteps().size(); i++) {
+                if (member.getTimeSteps()[i].getTime() > timeInterval_.get().y)
                     break;
-                if (run.getTimeSteps()[i].getTime() >= timeInterval_.get().x)
-                    timeSteps.push_back(run.getTimeSteps()[i]);
+                if (member.getTimeSteps()[i].getTime() >= timeInterval_.get().x)
+                    timeSteps.push_back(member.getTimeSteps()[i]);
             }
 
-            dataset->addRun(EnsembleDataset::Run{ run.getName(), run.getColor(), timeSteps });
+            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
         }
 
         return dataset;
@@ -316,7 +316,7 @@ public:
     {
         fields_.setDescription("Selects a single field from the ensemble data."
                                  "<br>"
-                                 "(*) Marks common fields across all runs."
+                                 "(*) Marks common fields across all members."
         );
     }
 
@@ -328,20 +328,20 @@ public:
 
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (const EnsembleDataset::Run& run : ensemble.getRuns()) {
-            std::vector<EnsembleDataset::TimeStep> timeSteps;
-            for (const EnsembleDataset::TimeStep& timeStep : run.getTimeSteps()) {
+        for (const EnsembleMember& run : ensemble.getMembers()) {
+            std::vector<TimeStep> timeSteps;
+            for (const TimeStep& timeStep : run.getTimeSteps()) {
 
                 std::vector<std::string> fieldNames;
                 fieldNames.push_back(fields_.getValue());
 
                 // Only add time step, if selected field is available.
-                EnsembleDataset::TimeStep filtered = timeStep.createSubset(fieldNames);
+                TimeStep filtered = timeStep.createSubset(fieldNames);
                 if(!filtered.getFieldNames().empty()) {
                     timeSteps.push_back(filtered);
                 }
             }
-            dataset->addRun(EnsembleDataset::Run{run.getName(), run.getColor(), timeSteps });
+            dataset->addMember(EnsembleMember{run.getName(), run.getColor(), timeSteps});
         }
 
         return dataset;
@@ -379,7 +379,7 @@ EnsembleFilter::EnsembleFilter()
     ON_CHANGE(ensembleInport_, EnsembleFilter, adjustToEnsemble);
     addPort(ensembleOutport_);
 
-    addFilter(new FilterRun());
+    addFilter(new FilterMember());
     //addFilter(new FilterTimeStep()); // replaced by FilterTimeInterval
     addFilter(new FilterTimeInterval());
     addFilter(new FilterRemoveFirstTimeStep());

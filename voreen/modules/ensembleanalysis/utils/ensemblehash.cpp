@@ -31,9 +31,9 @@ EnsembleHash::EnsembleHash(const EnsembleDataset& dataset)
     : hash_("")
 {
     std::string unhashed;
-    for (const EnsembleDataset::Run& run : dataset.getRuns()) {
-        unhashed += run.getName();
-        unhashed += std::to_string(run.getTimeSteps().size());
+    for (const EnsembleMember& member : dataset.getMembers()) {
+        unhashed += member.getName();
+        unhashed += std::to_string(member.getTimeSteps().size());
     }
 
     for (const std::string& channel : dataset.getCommonFieldNames())

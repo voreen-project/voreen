@@ -72,10 +72,10 @@ private:
     VolumePort volumeport_;
     ParallelCoordinatesAxesPort axesport_;
 
-    StringListProperty propertyRuns_;
+    StringListProperty propertyMembers_;
     StringListProperty propertyFields_;
     IntProperty propertySampleCount_;
-    BoolProperty propertyAggregateRuns_;
+    BoolProperty propertyAggregateMembers_;
     FileDialogProperty propertyFileDialog_;
     ButtonProperty propertySaveButton_;
 

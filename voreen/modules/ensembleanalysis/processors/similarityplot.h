@@ -56,7 +56,7 @@ class VRN_CORE_API SimilarityPlot : public RenderProcessor {
     class MDSData : public Serializable {
     public:
         /// Actual principal components, to be drawn.
-        // * First layer encodes run.
+        // * First layer encodes member.
         // * Second layer encodes time step.
         // * Third layer encodes principle component.
         std::map<int, std::vector<std::vector<float>>> nVectors_;
@@ -64,7 +64,7 @@ class VRN_CORE_API SimilarityPlot : public RenderProcessor {
         /// Corresponding eigen values.
         std::vector<float> eigenvalues_;
 
-        /// (Optional) run names.
+        /// (Optional) member names.
         std::vector<std::string> names_;
 
         /// Serialization
@@ -93,9 +93,9 @@ protected:
 private:
 
     enum ColorCoding {
-        COLOR_RUN,
+        COLOR_MEMBER,
         COLOR_TIMESTEP,
-        COLOR_RUN_AND_TIMESTEP,
+        COLOR_MEMBER_AND_TIMESTEP,
         COLOR_DURATION,
     };
 
@@ -104,15 +104,15 @@ private:
 
     void renderingPass(bool picking);
     void renderAxes();
-    void drawTimeStepSelection(size_t runIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
+    void drawTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
     void drawTooltip() const;
-    tgt::vec3 getColor(size_t runIdx, size_t timeStepIdx, bool picking) const;
+    tgt::vec3 getColor(size_t memberIdx, size_t timeStepIdx, bool picking) const;
 
     MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
     void calculate();
 
     void outputEigenValues();
-    void renderedRunsChanged();
+    void renderedMembersChanged();
     void save();
     void load();
 
@@ -132,11 +132,11 @@ private:
     BoolProperty renderTimeSelection_;
     OptionProperty<ColorCoding> colorCoding_;
     OptionProperty<std::string> renderedField_;
-    StringListProperty renderedRuns_;
+    StringListProperty renderedMembers_;
 
-    StringListProperty selectedRun_;
+    StringListProperty selectedMember_;
     FloatIntervalProperty selectedTimeStep_;
-    StringListProperty referenceRun_;
+    StringListProperty referenceMember_;
     FloatIntervalProperty referenceTimeStep_;
 
     FileDialogProperty saveFileDialog_;
@@ -167,7 +167,7 @@ private:
     /// The hash of the ensemble the plot was generated for.
     std::string ensembleHash_;
 
-    /// Actual MDS data for each field (all runs selected).
+    /// Actual MDS data for each field (all members selected).
     std::vector<MDSData> mdsData_;
 
     /// Sphere geometry for timestep selection.
@@ -176,13 +176,13 @@ private:
     /// Rendering order.
     std::deque<int> renderingOrder_;
 
-    /// Selected runs (sorted for faster access).
+    /// Selected members (sorted for faster access).
     std::set<int> subSelection_;
 
-    /// Last picked run and time step (also when hovering).
+    /// Last picked member and time step (also when hovering).
     struct Hit {
         int x, y;
-        int runIdx;
+        int memberIdx;
         int timeStepIdx;
     };
     boost::optional<Hit> lastHit_;
