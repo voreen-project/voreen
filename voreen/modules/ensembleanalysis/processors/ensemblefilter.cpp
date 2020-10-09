@@ -43,6 +43,7 @@ public:
     virtual std::vector<Property*> getProperties() = 0;
     virtual EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) = 0;
     virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;
+    virtual bool isActive() const = 0;
 };
 
 //----------------------------------------
@@ -87,6 +88,10 @@ public:
             }
             members_.setSelectedRowIndices(selectedMemberIndices);
         }
+    }
+
+    bool isActive() const {
+        return static_cast<size_t>(members_.getNumRows()) != members_.getSelectedRowIndices().size();
     }
 
 private:
@@ -139,6 +144,10 @@ public:
             timeSteps_.setMaxValue(static_cast<int>(ensemble->getMaxNumTimeSteps()) - 1);
             timeSteps_.set(tgt::ivec2(0, static_cast<int>(ensemble->getMaxNumTimeSteps()) - 1));
         }
+    }
+
+    bool isActive() const {
+        return timeSteps_.get() != tgt::ivec2(timeSteps_.getMinValue(), timeSteps_.getMaxValue());
     }
 
 private:
@@ -200,6 +209,10 @@ public:
     void adjustToEnsemble(const EnsembleDataset* ensemble) {
     }
 
+    bool isActive() const {
+        return enableRemoveFirstTimeStep_.get();
+    }
+
 private:
 
     BoolProperty enableRemoveFirstTimeStep_;
@@ -244,6 +257,10 @@ public:
     }
 
     void adjustToEnsemble(const EnsembleDataset* ensemble) {
+    }
+
+    bool isActive() const {
+        return enableSelectLastTimeStep_.get();
     }
 
 private:
@@ -298,6 +315,10 @@ public:
             timeInterval_.setMaxValue(ensemble->getEndTime());
             timeInterval_.set(tgt::vec2(ensemble->getStartTime(), ensemble->getEndTime()));
         }
+    }
+
+    bool isActive() const {
+        return timeInterval_.get() != tgt::vec2(timeInterval_.getMinValue(), timeInterval_.getMaxValue());
     }
 
 private:
@@ -358,6 +379,10 @@ public:
                 fields_.addOption(fieldName, fieldName + (isCommon ? " (*)" : ""), fieldName);
             }
         }
+    }
+
+    bool isActive() const {
+        return fields_.getOptions().size() > 1;
     }
 
 private:
@@ -437,7 +462,9 @@ void EnsembleFilter::applyFilter() {
     if (ensembleInport_.hasData()) {
         std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset(*ensembleInport_.getData()));
         for (auto& filter : filters_) {
-            ensemble.reset(filter->applyFilter(*ensemble));
+            if(filter->isActive()) {
+                ensemble.reset(filter->applyFilter(*ensemble));
+            }
         }
 
         ensembleOutport_.setData(ensemble.release(), true);
