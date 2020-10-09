@@ -31,7 +31,7 @@
 namespace voreen {
 
 #ifdef DLL_TEMPLATE_INST
-    plate class VRN_CORE_API TemplateProperty<std::vector<int>>;
+    template class VRN_CORE_API TemplateProperty<std::vector<int>>;
 #endif
 
 class ParallelCoordinatesSelectionProperty : public TemplateProperty<std::vector<int>> {
