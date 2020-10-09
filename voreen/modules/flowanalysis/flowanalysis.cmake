@@ -1,10 +1,10 @@
 ################################################################################
 # Core module resources
 ################################################################################
-SET(MOD_CORE_MODULECLASS FlowreenModule)
+SET(MOD_CORE_MODULECLASS FlowAnalysisModule)
 
 SET(MOD_CORE_SOURCES
-    ${MOD_DIR}/flowreenmodule.cpp
+    ${MOD_DIR}/flowanalysismodule.cpp
 
     # datastructures
     ${MOD_DIR}/datastructures/streamline.cpp
@@ -45,7 +45,7 @@ SET(MOD_CORE_SOURCES
 )
     
 SET(MOD_CORE_HEADERS
-    ${MOD_DIR}/flowreenmodule.h
+    ${MOD_DIR}/flowanalysismodule.h
 
     # datastructures
     ${MOD_DIR}/datastructures/streamline.h

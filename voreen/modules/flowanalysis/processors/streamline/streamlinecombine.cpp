@@ -25,8 +25,7 @@
 
 #include "streamlinecombine.h"
 
-#include "../../datastructures/streamlinelist.h"
-#include "modules/flowreen/datastructures/streamlinelist.h"
+#include "modules/flowanalysis/datastructures/streamlinelist.h"
 
 namespace voreen {
 

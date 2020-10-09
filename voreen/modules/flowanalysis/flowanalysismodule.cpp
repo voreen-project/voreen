@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "modules/flowreen/flowreenmodule.h"
+#include "modules/flowanalysis/flowanalysismodule.h"
 
 // processors
 #include "processors/geometry/streamlinetoboundingbox.h"
@@ -43,11 +43,11 @@
 
 namespace voreen {
 
-FlowreenModule::FlowreenModule(const std::string& modulePath)
+FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("Flowreen");
-    setGuiName("Flowreen");
+    setID("FlowAnalysis");
+    setGuiName("FlowAnalysis");
 
     addShaderPath(getModulePath("glsl"));
 

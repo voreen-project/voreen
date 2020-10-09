@@ -34,7 +34,6 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
-#include "modules/flowreen/ports/streamlinelistport.h"
 #include "voreen/core/ports/renderport.h"
 
 #include "voreen/core/interaction/camerainteractionhandler.h"
@@ -47,6 +46,7 @@
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/matrixproperty.h"
 
+#include "modules/flowanalysis/ports/streamlinelistport.h"
 
 namespace voreen {
 

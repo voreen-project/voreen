@@ -23,20 +23,20 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWREENMODULE_H
-#define VRN_FLOWREENMODULE_H
+#ifndef VRN_FLOWANALYSISMODULE_H
+#define VRN_FLOWANALYSISMODULE_H
 
 #include "voreen/core/voreenmodule.h"
 
 namespace voreen {
 
-class FlowreenModule : public VoreenModule {
+class FlowAnalysisModule : public VoreenModule {
 
 public:
-    FlowreenModule(const std::string& modulePath);
+    FlowAnalysisModule(const std::string& modulePath);
 
     virtual std::string getDescription() const {
-        return "Flow visualization and input/output functionality for flow data.";
+        return "Flow visualization and analysis of flow data";
     }
 };
 
