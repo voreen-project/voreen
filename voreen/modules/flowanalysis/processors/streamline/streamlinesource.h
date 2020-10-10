@@ -59,7 +59,7 @@ public:
 protected:
     virtual void setDescriptions() override {
         setDescription("Loads streamlines previously stored with the <i>StreamlineSave</i> processor (VSD-Format). The loaded streamlines can be visualized or modified " \
-                        "by other processors of the <i>Flowreen</i> module.");
+                        "by other processors of the <i>FlowAnalysis</i> module.");
         loadOptionProp_.setDescription("Switch between loading a single StreamlineList and an entire directory.");
         //single
         singleFileProp_.setDescription("Single VSD file, which should be loaded.");

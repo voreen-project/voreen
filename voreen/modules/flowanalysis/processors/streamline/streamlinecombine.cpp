@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string StreamlineCombine::loggerCat_("voreen.flowreen.StreamlineCombine");
+const std::string StreamlineCombine::loggerCat_("flowanalysis.StreamlineCombine");
 
 StreamlineCombine::StreamlineCombine()
     : Processor()

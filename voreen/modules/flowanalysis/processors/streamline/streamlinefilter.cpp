@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string StreamlineFilter::loggerCat_("flowreen.StreamlineFilter");
+const std::string StreamlineFilter::loggerCat_("flowanalysis.StreamlineFilter");
 
 StreamlineFilter::StreamlineFilter()
     : AsyncComputeProcessor()

@@ -68,8 +68,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Used to select(clip) streamlines according to a region of interest.  Box can be defined, " \
-                   "in which streamlines must (not) begin/end/intersect.");
+        setDescription("Used to filter streamlines according to length and curvature.");
         //ports
         streamlineInport_.setDescription("Streamlines, which should be filtered.");
         streamlineOutport_.setDescription("Filtered streamlines.");

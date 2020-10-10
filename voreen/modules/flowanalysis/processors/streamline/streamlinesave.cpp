@@ -34,7 +34,7 @@
 
 namespace voreen {
 
-const std::string StreamlineSave::loggerCat_("voreen.flowreen.StreamlineSave");
+const std::string StreamlineSave::loggerCat_("flowanalysis.StreamlineSave");
 
 StreamlineSave::StreamlineSave()
     : Processor()

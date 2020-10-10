@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string StreamlineRotation::loggerCat_("voreen.flowreen.StreamlineRotation");
+const std::string StreamlineRotation::loggerCat_("flowanalysis.StreamlineRotation");
 
 StreamlineRotation::StreamlineRotation()
     : Processor()

@@ -28,8 +28,8 @@
 #include "modules/python/pythonmodule.h"
 #endif
 
-#ifdef VRN_MODULE_FLOWREEN
-#include "modules/flowreen/processors/streamline/streamlinesave.h"
+#ifdef VRN_MODULE_FLOWANALYSIS
+#include "modules/flowanalysis/processors/streamline/streamlinesave.h"
 #endif
 
 #include "voreen/core/voreenapplication.h"
@@ -509,8 +509,8 @@ void executeNetwork(ProcessorNetwork* network, NetworkEvaluator* networkEvaluato
             saveProp->clicked();
         }
 
-#ifdef VRN_MODULE_FLOWREEN
-        //TODO: give streamline save a own key word
+#ifdef VRN_MODULE_FLOWANALYSIS
+        //TODO: give streamline save an own key word
         std::vector<StreamlineSave*> streamlineSaves = network->getProcessorsByType<StreamlineSave>();
         for (size_t i=0; i<streamlineSaves.size(); i++) {
             ButtonProperty* saveProp = dynamic_cast<ButtonProperty*>(streamlineSaves.at(i)->getProperty("saveButton"));

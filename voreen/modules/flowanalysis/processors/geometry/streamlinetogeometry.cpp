@@ -30,7 +30,7 @@
 
 namespace voreen {
 
-const std::string StreamlineToGeometry::loggerCat_("voreen.flowreen.StreamlineToGeometry");
+const std::string StreamlineToGeometry::loggerCat_("flowanalysis.StreamlineToGeometry");
 
 StreamlineToGeometry::StreamlineToGeometry()
     : Processor()
@@ -71,8 +71,8 @@ void StreamlineToGeometry::process() {
                     const Streamline::StreamlineElement& element = streamline.getElementAt(i);
                     VertexColor vertex;
                     vertex.pos_ = element.position_;
-                    //TODO: convert to proper color here
-                    vertex.color_ = tgt::vec4(element.velocity_, 1.0f);
+                    //TODO: Use adjustable transfer function.
+                    vertex.color_ = tgt::vec4(tgt::vec3(tgt::length(element.velocity_) / streamlines->getMaxMagnitude()), 1.0f);
                     geometry->addIndex(static_cast<uint32_t>(geometry->getNumVertices()));
                     geometry->addVertex(vertex);
                 }

@@ -50,9 +50,9 @@
 #include "modules/hdf5/utils/hdf5utils.h"
 #endif
 
-#ifdef VRN_MODULE_FLOWREEN
+#ifdef VRN_MODULE_FLOWANALYSIS
 #include "modules/core/io/vvdformat.h"
-#include "modules/flowreen/datastructures/streamlinelist.h"
+#include "modules/flowanalysis/datastructures/streamlinelist.h"
 #endif
 
 #include <iostream>
@@ -1471,7 +1471,7 @@ void HDF5FileComparator::generateDiffFile(const RegressionTestDataset& /*refData
 
 // ----------------------------------------------------------------------------------------------
 
-#ifdef VRN_MODULE_FLOWREEN
+#ifdef VRN_MODULE_FLOWANALYSIS
 
 /*
  * Loads a VSD file.
@@ -1694,6 +1694,6 @@ void VsdFileComparator::generateDiffFile(const RegressionTestDataset& /*refDatas
     tgtAssert(false, "Generation of Vsd file diffs not supported");
     throw VoreenException("Generation of Vsd file diffs not supported");
 }
-#endif // VRN_MODULE_FLOWREEN
+#endif // VRN_MODULE_FLOWANALYIS
 
 } // namespace

@@ -81,7 +81,7 @@ protected:
 
     virtual void setDescriptions() {
         setDescription("This processor is used to create streamlines from a vec3 volume. The resulting streamlines can be visualized or modified " \
-                        "by other processors of the <i>Flowreen</i> module.");
+                        "by other processors of the <i>FlowAnalysis</i> module.");
         numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");

@@ -36,7 +36,7 @@ namespace voreen {
 // TODO: Could be adjustable via Property.
 static const uint32_t GEOMETRY_TESSELATION = 8;
 
-std::string StreamlineRenderer3D::loggerCat_("flowreen.StreamlineRenderer3D");
+std::string StreamlineRenderer3D::loggerCat_("flowanalysis.StreamlineRenderer3D");
 
 StreamlineRenderer3D::StreamlineRenderer3D()
     : RenderProcessor()

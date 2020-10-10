@@ -42,4 +42,4 @@ public:
 
 } // namespace
 
-#endif // VRN_FLOWREENMODULE_H
+#endif // VRN_FLOWANALYSISMODULE_H

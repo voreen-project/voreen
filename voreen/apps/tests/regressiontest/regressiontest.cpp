@@ -420,11 +420,11 @@ int main(int argc, char* argv[]) {
 #else
     LWARNING("HDF5 module not enabled: HDF5 files are compared binarily");
 #endif
-#ifdef VRN_MODULE_FLOWREEN
+#ifdef VRN_MODULE_FLOWANALYSIS
     fileComparators.push_back(new VsdFileComparator());
     LINFO("Using VsdFileComparator");
 #else
-    LWARNING("Flowreen module not enabled: Vsd files are compared binarily");
+    LWARNING("FlowAnalysis module not enabled: Vsd files are compared binarily");
 #endif
 
     fileComparators.push_back(new VvdFileComparator(voxelDiffTolerance, maxErrorVoxels));

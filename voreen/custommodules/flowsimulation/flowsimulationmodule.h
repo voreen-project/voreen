@@ -39,7 +39,7 @@ public:
     virtual void deinitialize();
 
     virtual std::string getDescription() const {
-        return "Flow simulation to be encoperated with Ensemble Analysis and Flowreen.";
+        return "Flow simulation to be encoperated with Ensemble Analysis and Flow Analysis.";
     }
 };
 

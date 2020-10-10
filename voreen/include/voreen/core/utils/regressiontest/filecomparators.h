@@ -237,7 +237,7 @@ private:
 
 //----------------------------------------------------------------------------------------
 
-#ifdef VRN_MODULE_FLOWREEN
+#ifdef VRN_MODULE_FLOWANALYSIS
 class VRN_CORE_API VsdFileComparator : public FileComparator {
 
 public:

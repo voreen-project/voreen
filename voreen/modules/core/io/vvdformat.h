@@ -79,8 +79,8 @@ public:
     std::string absRawPath_;
 };
 
-/** A RAW data object can serialize the volume data in the same file.
- *  This is used in the Flowreen module.
+/**
+ * A RAW data object can serialize the volume data in the same file.
  */
 class VRN_CORE_API VvdRawDataNoExternalFileObject : public VvdDataObjectBase {
 public:

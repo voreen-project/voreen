@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string StreamlineBundleDetector::loggerCat_("flowreen.StreamlineBundleDetector");
+const std::string StreamlineBundleDetector::loggerCat_("flowanalysis.StreamlineBundleDetector");
 
 StreamlineBundleDetector::StreamlineBundleDetector()
     : AsyncComputeProcessor()

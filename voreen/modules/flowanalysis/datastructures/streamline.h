@@ -41,7 +41,7 @@
 namespace voreen {
 
 /**
- * Datastructure used to represent streamlines. It is used in the flowreen module.
+ * Datastructure used to represent streamlines. It is used in the flowanalysis module.
  * A streamline consists of multiple StreamlineElements each storing a position and the velocity at this position.
  */
 class VRN_CORE_API Streamline : public Serializable {

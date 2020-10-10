@@ -29,7 +29,7 @@
 
 namespace voreen {
 
-const std::string StreamlineToBoundingBox::loggerCat_("voreen.flowreen.StreamlineToBoundingBox");
+const std::string StreamlineToBoundingBox::loggerCat_("flowanalysis.StreamlineToBoundingBox");
 
 StreamlineToBoundingBox::StreamlineToBoundingBox()
     : Processor()

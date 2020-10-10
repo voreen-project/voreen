@@ -31,7 +31,7 @@
 
 namespace voreen {
 
-const std::string StreamlineSelector::loggerCat_("flowreen.StreamlineSelector");
+const std::string StreamlineSelector::loggerCat_("flowanalysis.StreamlineSelector");
 
 StreamlineSelector::StreamlineSelector()
     : AsyncComputeProcessor()

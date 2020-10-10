@@ -36,7 +36,7 @@
 
 namespace voreen {
 
-const std::string StreamlineSource::loggerCat_("voreen.flowreen.StreamlineSource");
+const std::string StreamlineSource::loggerCat_("flowanalysis.StreamlineSource");
 
 StreamlineSource::StreamlineSource()
     : Processor()

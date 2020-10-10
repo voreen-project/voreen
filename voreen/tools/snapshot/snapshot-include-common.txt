@@ -88,7 +88,7 @@ modules/devil/*
 
 modules/ffmpeg/*
 modules/ffmpeg/videoencoder
-modules/flowreen
+modules/flowanalysis
 
 modules/gdcm/*
 modules/gdcm/dicts

@@ -23,7 +23,7 @@
 ::         "C:\Program Files (x86)\Microsoft Visual Studio 9.0"
 ::         "C:\Qt\2010.04-vc\qt\bin"
 ::         --generate-config
-::         base connectedcomponents devil dicom ffmpeg flowreen 
+::         base connectedcomponents devil dicom ffmpeg flowanalysis 
 ::         fontrendering plotting pvm python segy tiff zip
 :: ********************************************************************
 

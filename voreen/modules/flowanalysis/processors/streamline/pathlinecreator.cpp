@@ -35,7 +35,7 @@
 
 namespace voreen {
 
-const std::string PathlineCreator::loggerCat_("flowreen.PathlineCreator");
+const std::string PathlineCreator::loggerCat_("flowanalysis.PathlineCreator");
 
 PathlineCreator::PathlineCreator()
     : AsyncComputeProcessor()

@@ -28,12 +28,12 @@
 
 #include "voreen/core/processors/processor.h"
 
-#include "modules/flowreen/processors/render/streamlinerenderer3d.h"
-
 #include "voreen/core/ports/volumeport.h"
 
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/boolproperty.h"
+
+#include "modules/flowanalysis/processors/render/streamlinerenderer3d.h"
 
 namespace voreen {
 

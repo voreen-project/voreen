@@ -82,7 +82,7 @@ protected:
 
     virtual void setDescriptions() {
         setDescription("This processor is used to create pathlines from a sequence of vec3 volume. The resulting pathlines can be visualized or modified " \
-                    "by other processors of the <i>Flowreen</i> module.");
+                    "by other processors of the <i>FlowAnalysis</i> module.");
         numSeedPoints_.setDescription("Can be used to determine the number of pathlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold interval will not be used for pathline construction.");
