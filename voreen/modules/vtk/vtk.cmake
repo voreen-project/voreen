@@ -28,6 +28,10 @@ ELSE()
 
     SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/vtk/include")
 
+    SET(MOD_INSTALL_FILES
+        ${MOD_DIR}/ext/vtk/Copyright.txt
+    )
+
 ENDIF()
 
 # deployment
