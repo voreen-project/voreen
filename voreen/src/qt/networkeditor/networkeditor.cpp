@@ -2361,6 +2361,7 @@ void NetworkEditor::dropEvent(QDropEvent* event) {
             switch (lowerItem->type()) {
                 case QGraphicsTextItem::Type:
                 case UserTypesRenamableTextGraphicsItem:
+                case UserTypesProgressBarGraphicsItem:
                 case UserTypesPropertyListButtonGraphicsItem:
                     {
                         // separate handling for processors and documentation boxes
