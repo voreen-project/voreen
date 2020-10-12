@@ -109,7 +109,10 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     this->addProperty( _propertySections );
 
     // --- Initialize Properties --- //
-    _propertyVisualizationMode.setOptions( std::deque<Option<int>> { Option<int>( "fields", "Single Timestep", 0 ), Option<int>( "timesteps", "All Timesteps", 1 ) } );
+    _propertyVisualizationMode.setOptions( std::deque<Option<int>> {
+        Option<int>( "fields", "Single Time Step", 0 ),
+        Option<int>( "timesteps", "All Time Steps", 1 )
+    });
     for( size_t i = 0; i < _propertyTransFuncIntern.size(); ++i )
         _propertyTransFuncIntern[i].setVisibleFlag( false );
     _propertySelectedSamples.setVisibleFlag( false );
@@ -252,6 +255,24 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     } ) );
 }
 
+void ParallelCoordinatesViewer::setDescriptions() {
+    setDescription("Viewer for parallel coordinates created by ParallelCoordinatesCreator");
+    _propertySelectedMember.setDescription("Currently displayed member");
+    _propertyVisualizationMode.setDescription("Visualization mode for currently displayed member:<br>"
+                                              "<strong>Single Time Step</strong>: Each axis represents a field<br>"
+                                              "<strong>All Time Steps</strong>: Each axis represents a time step<br>");
+    _propertySelectedTimestep.setDescription("If single Time Step visualization mode is selected, "
+                                             "this property determines the time step to be displayed");
+    _propertySelectedTimestep.setDescription("If all Time Steps are visualized, this property determines<br>"
+                                             "the field to be displayed");
+    _propertyDensityBlending.setDescription("Enable to use a density visualization for rendered lines");
+    //_propertyDensityVisibleSamples.setDescription("Determines the mini");
+    //_propertyDensitySelectedSamples.setDescription("");
+
+    _propertyTransFuncField.front().setDescription("Assigns the respective transfer function to the selected field");
+    _propertyTransFunc.front().setDescription("Transfer function to be used for the selected field");
+}
+
 void ParallelCoordinatesViewer::initialize()
 {
     RenderProcessor::initialize();
@@ -269,7 +290,7 @@ void ParallelCoordinatesViewer::initialize()
         {
             char infoLog[512];
             glGetShaderInfoLog( shader, 512, nullptr, infoLog );
-            std::cout << "[ERROR]: Shader compilation failed\n" << infoLog << std::endl;
+            LERROR("Shader compilation failed\n" << infoLog);
             shader = 0;
         }
 
@@ -318,7 +339,7 @@ void ParallelCoordinatesViewer::initialize()
     {
         char infoLog[512];
         glGetProgramInfoLog( _shaderProgram, 512, nullptr, infoLog );
-        std::cout << "[ERROR]: Shader program linking failed\n" << infoLog << std::endl;
+        LERROR("Shader program linking failed\n" << infoLog);
     }
 
     glDeleteShader( vertexShader );

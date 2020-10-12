@@ -45,6 +45,8 @@ public:
     virtual std::string getCategory() const override { return "ParallelCoordinates"; }
 
 private:
+    virtual void setDescriptions() override;
+
     virtual void initialize() override;
     virtual void deinitialize() override;
     virtual void process() override;
@@ -66,14 +68,16 @@ private:
     std::unique_ptr<EventProperty<ParallelCoordinatesViewer>> _eventPropertyHover, _eventPropertyMouse;
 
     // Properties
-    IntOptionProperty _propertySelectedMember, _propertyVisualizationMode;
+    IntOptionProperty _propertySelectedMember;
+    IntOptionProperty _propertyVisualizationMode;
 
     IntProperty _propertySelectedTimestep;
     IntOptionProperty _propertySelectedField;
     FloatIntervalProperty _propertyFieldInterval;
 
     BoolProperty _propertyDensityBlending;
-    IntProperty _propertyDensityVisibleSamples, _propertyDensitySelectedSamples;
+    IntProperty _propertyDensityVisibleSamples;
+    IntProperty _propertyDensitySelectedSamples;
 
     std::array<IntOptionProperty, 4> _propertyTransFuncField;
     std::array<TransFunc1DKeysProperty, 4> _propertyTransFunc;

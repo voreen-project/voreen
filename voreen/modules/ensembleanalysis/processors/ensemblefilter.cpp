@@ -118,16 +118,15 @@ public:
         EnsembleDataset* dataset = new EnsembleDataset();
 
         for (const EnsembleMember& member : ensemble.getMembers()) {
-            if (member.getTimeSteps().empty())
-                continue;
-
             std::vector<TimeStep> timeSteps;
             int max = std::min(static_cast<int>(member.getTimeSteps().size()) - 1, timeSteps_.get().y);
             for (int i = timeSteps_.get().x; i <= max; i++) {
                 timeSteps.push_back(member.getTimeSteps()[i]);
             }
 
-            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
+            if(!timeSteps.empty()) {
+                dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
+            }
         }
 
         return dataset;
@@ -200,7 +199,9 @@ public:
                 timeSteps.push_back(member.getTimeSteps()[i]);
             }
 
-            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
+            if(!timeSteps.empty()) {
+                dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
+            }
         }
 
         return dataset;
@@ -297,7 +298,9 @@ public:
                     timeSteps.push_back(member.getTimeSteps()[i]);
             }
 
-            dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
+            if(!timeSteps.empty()) {
+                dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
+            }
         }
 
         return dataset;
@@ -349,9 +352,9 @@ public:
 
         EnsembleDataset* dataset = new EnsembleDataset();
 
-        for (const EnsembleMember& run : ensemble.getMembers()) {
+        for (const EnsembleMember& member : ensemble.getMembers()) {
             std::vector<TimeStep> timeSteps;
-            for (const TimeStep& timeStep : run.getTimeSteps()) {
+            for (const TimeStep& timeStep : member.getTimeSteps()) {
 
                 std::vector<std::string> fieldNames;
                 fieldNames.push_back(fields_.getValue());
@@ -363,7 +366,7 @@ public:
                 }
             }
             if(!timeSteps.empty()) {
-                dataset->addMember(EnsembleMember{run.getName(), run.getColor(), timeSteps});
+                dataset->addMember(EnsembleMember{member.getName(), member.getColor(), timeSteps});
             }
         }
 

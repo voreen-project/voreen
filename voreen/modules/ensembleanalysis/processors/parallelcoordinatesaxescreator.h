@@ -37,9 +37,9 @@
 namespace voreen {
 
 struct ParallelCoordianesAxesCreatorInput {
-    EnsembleDataset ensemble;
-    int sampleCount;
-    size_t numTimeSteps;
+    std::unique_ptr<EnsembleDataset> ensemble;
+    int spatialSampleCount;
+    int temporalSampleCount;
     std::vector<int32_t> validVoxels;
     std::vector<std::string> fieldNames;
     std::vector<std::pair<float, float>> ranges;
@@ -60,11 +60,13 @@ public:
 
 private:
 
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
+    void setDescriptions() override;
 
-    virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
+    ComputeInput prepareComputeInput() override;
+    ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const override;
+    void processComputeOutput(ComputeOutput output) override;
+
+    std::vector<std::reference_wrapper<Port>> getCriticalPorts() override;
 
     void updateValidVoxels();
 
@@ -74,7 +76,8 @@ private:
 
     StringListProperty propertyMembers_;
     StringListProperty propertyFields_;
-    IntProperty propertySampleCount_;
+    IntProperty propertySpatialSampleCount_;
+    IntProperty propertyTemporalSampleCount_;
     BoolProperty propertyAggregateMembers_;
     FileDialogProperty propertyFileDialog_;
     ButtonProperty propertySaveButton_;

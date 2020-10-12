@@ -180,9 +180,12 @@ private:
 class VRN_CORE_API EnsembleDataset : public DataInvalidationObservable, public Serializable {
 public:
 
-    /** Constructor */
     EnsembleDataset();
     EnsembleDataset(const EnsembleDataset& origin);
+    EnsembleDataset(EnsembleDataset&& origin);
+
+    EnsembleDataset& operator=(const EnsembleDataset& origin);
+    EnsembleDataset& operator=(EnsembleDataset&& origin);
 
     /**
      * Add a new member to the ensemble.

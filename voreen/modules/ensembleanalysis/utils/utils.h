@@ -41,8 +41,13 @@ namespace voreen {
 template<typename T, typename S>
 S mapRange(const T& valA, const T& minA, const T& maxA, const S& minB, const S& maxB) {
     //tgtAssert(valA >= minA && valA <= maxA, "value out of range"); // value may lay outside intentionally!
-    // Cast in receiver type.
+    // Cast into receiver type.
     return S(minB + (maxB - minB) * (valA - minA) / (maxA - minA));
+}
+
+template<typename T, typename S>
+S mapRange(const T& valA, const tgt::Vector2<T>& rangeA, const tgt::Vector2<S>& rangeB) {
+    return S(rangeB.x + (rangeB.y - rangeB.x) * (valA - rangeA.x) / (rangeA.y - rangeA.x));
 }
 
 }

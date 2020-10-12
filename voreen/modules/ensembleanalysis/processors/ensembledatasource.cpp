@@ -38,7 +38,7 @@ namespace voreen {
 const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
 const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
-const std::string EnsembleDataSource::RUN_NAME = "member_name";
+const std::string EnsembleDataSource::MEMBER_NAME = "member_name";
 const std::string EnsembleDataSource::FALLBACK_FIELD_NAME = "unnamed";
 const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
@@ -166,8 +166,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
     if(ensemblePath_.get().empty())
         return;
 
-    loadDatasetButton_.setReadOnlyFlag(true);
-
     std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset());
 
     std::vector<std::string> members = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
@@ -192,7 +190,12 @@ void EnsembleDataSource::buildEnsembleDataset() {
             }
 
             std::string url = memberPath + "/" + fileName;
-            std::vector<VolumeReader*> readers = populator.getVolumeSerializer()->getReaders(url);
+            std::vector<VolumeReader*> readers;
+            try {
+                readers = populator.getVolumeSerializer()->getReaders(url);
+            } catch(tgt::UnsupportedFormatException&) {
+            }
+
             if(readers.empty()) {
                 LERROR("No valid volume reader found for " << url);
                 continue;
@@ -250,7 +253,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 // Add additional information gained reading the file structure.
                 Volume* volume = dynamic_cast<Volume*>(volumeHandle.get());
                 tgtAssert(volume, "volumeHandle must be volume");
-                volume->getMetaDataContainer().addMetaData(RUN_NAME, new StringMetaData(member));
+                volume->getMetaDataContainer().addMetaData(MEMBER_NAME, new StringMetaData(member));
 
                 volumeData[fieldName] = volumeHandle.get();
 
@@ -263,7 +266,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
             if (!timeSteps.empty())
                 duration = time - timeSteps.back().getTime();
 
-            timeSteps.push_back({volumeData, time, duration});
+            timeSteps.emplace_back(TimeStep{volumeData, time, duration});
 
             // Update progress bar.
             timeStepProgress_.setProgress(std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f));
@@ -297,7 +300,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
     timeStepProgress_.setProgress(1.0f);
     setProgress(1.0f);
-    loadDatasetButton_.setReadOnlyFlag(false);
 }
 
 void EnsembleDataSource::printEnsembleDataset() {
