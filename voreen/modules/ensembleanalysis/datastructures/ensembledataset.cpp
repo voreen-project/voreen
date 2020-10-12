@@ -295,11 +295,11 @@ EnsembleDataset::EnsembleDataset(const EnsembleDataset& origin)
 }
 
 EnsembleDataset::EnsembleDataset(EnsembleDataset&& origin)
-    : members_(origin.members_)
-    , uniqueFieldNames_(origin.uniqueFieldNames_)
-    , commonFieldNames_(origin.commonFieldNames_)
-    , fieldMetaData_(origin.fieldMetaData_)
-    , allParameters_(origin.allParameters_)
+    : members_(std::move(origin.members_))
+    , uniqueFieldNames_(std::move(origin.uniqueFieldNames_))
+    , commonFieldNames_(std::move(origin.commonFieldNames_))
+    , fieldMetaData_(std::move(origin.fieldMetaData_))
+    , allParameters_(std::move(origin.allParameters_))
     , minNumTimeSteps_(origin.minNumTimeSteps_)
     , maxNumTimeSteps_(origin.maxNumTimeSteps_)
     , totalNumTimeSteps_(origin.totalNumTimeSteps_)
@@ -314,22 +314,7 @@ EnsembleDataset::EnsembleDataset(EnsembleDataset&& origin)
 }
 
 EnsembleDataset& EnsembleDataset::operator=(const EnsembleDataset& origin) {
-    members_                = origin.members_;
-    uniqueFieldNames_       = origin.uniqueFieldNames_;
-    commonFieldNames_       = origin.commonFieldNames_;
-    fieldMetaData_          = origin.fieldMetaData_;
-    allParameters_          = origin.allParameters_;
-    minNumTimeSteps_        = origin.minNumTimeSteps_;
-    maxNumTimeSteps_        = origin.maxNumTimeSteps_;
-    totalNumTimeSteps_      = origin.totalNumTimeSteps_;
-    maxTimeStepDuration_    = origin.maxTimeStepDuration_;
-    minTimeStepDuration_    = origin.minTimeStepDuration_;
-    startTime_              = origin.startTime_;
-    endTime_                = origin.endTime_;
-    commonTimeInterval_     = origin.commonTimeInterval_;
-    bounds_                 = origin.bounds_;
-    commonBounds_           = origin.commonBounds_;
-
+    *this = EnsembleDataset(origin);
     return *this;
 }
 
