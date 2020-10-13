@@ -173,6 +173,8 @@ private:
     FloatProperty maxLineSimplificationDistance_;
     FloatProperty backgroundLineDistanceMultiplier_;
 
+    ButtonProperty clearLabels_;
+
     static const std::string loggerCat_;
 
     ShaderProperty projectionShader_;

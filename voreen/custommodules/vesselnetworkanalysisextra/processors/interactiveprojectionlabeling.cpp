@@ -737,6 +737,7 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
     , initializationMode_("initializationMode", "Initialization Mode")
     , maxLineSimplificationDistance_("maxLineSimplificationDistance_", "Maximum Line Simplification Distance", 0.01, 0.0, 1.0)
     , backgroundLineDistanceMultiplier_("backgroundLineDistanceMultiplier", "Background Label Distance Multiplier", 1.00, 0.01, 10.0)
+    , clearLabels_("clearLabels", "Clear All Labels")
     , projectionShader_("shader", "Shader", "interactiveprojectionlabeling.frag", "oit_passthrough.vert")
     , projection_(boost::none)
     , projectionLabelsModified_(false)
@@ -780,6 +781,15 @@ InteractiveProjectionLabeling::InteractiveProjectionLabeling()
 
     addProperty(clippingRegion_);
         clippingRegion_.setReadOnlyFlag(true);
+
+    addProperty(clearLabels_);
+        ON_CHANGE_LAMBDA(clearLabels_, [this] () {
+            resetCurrentUnit();
+            currentUnitIndex_.setMaxValue(0);
+            labelUnits_.clear();
+            seedsChanged_ = true;
+        });
+
 }
 
 void InteractiveProjectionLabeling::synchronizeUnitIndex() {
