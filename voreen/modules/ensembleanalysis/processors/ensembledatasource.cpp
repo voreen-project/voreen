@@ -55,6 +55,7 @@ EnsembleDataSource::EnsembleDataSource()
     , colorMap_("colorMap", "Color Map")
     , overrideTime_("overrideTime", "Override Time", false, Processor::VALID, Property::LOD_ADVANCED)
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
+    , clearCache_("clearCache", "Clear Cache", Processor::VALID, Property::LOD_ADVANCED)
 {
     addPort(outport_);
     addProperty(ensemblePath_);
@@ -63,6 +64,7 @@ EnsembleDataSource::EnsembleDataSource()
     loadingStrategy_.addOption("full", "Full");
     loadingStrategy_.addOption("lazy", "Lazy");
     addProperty(loadDatasetButton_);
+    ON_CHANGE(loadDatasetButton_, EnsembleDataSource, buildEnsembleDataset);
     addProperty(memberProgress_);
     addProgressBar(&memberProgress_);
     addProperty(timeStepProgress_);
@@ -88,7 +90,10 @@ EnsembleDataSource::EnsembleDataSource()
     addProperty(hash_);
     hash_.setEditable(false);
 
-    ON_CHANGE(loadDatasetButton_, EnsembleDataSource, buildEnsembleDataset);
+    addProperty(clearCache_);
+    ON_CHANGE_LAMBDA(clearCache_, [this] {
+        tgt::FileSystem::deleteDirectoryRecursive(getCachePath());
+    });
 }
 
 Processor* EnsembleDataSource::create() const {
@@ -98,8 +103,7 @@ Processor* EnsembleDataSource::create() const {
 void EnsembleDataSource::process() {
 
     // Reload whole ensemble, if file watching was enabled and some file changed.
-    if((invalidationLevel_ >= INVALID_PATH && ensemblePath_.isFileWatchEnabled()) ||
-            (loadingStrategy_.get() == "lazy" && !output_)) {
+    if(invalidationLevel_ >= INVALID_PATH && ensemblePath_.isFileWatchEnabled()) {
         buildEnsembleDataset();
     }
 
@@ -120,31 +124,34 @@ void EnsembleDataSource::deinitialize() {
     Processor::deinitialize();
 }
 
-void EnsembleDataSource::serialize(Serializer& s) const {
-    Processor::serialize(s);
-    if(loadingStrategy_.get() == "lazy" && output_) {
-        s.serialize("ensemble", *output_);
-    }
-}
 void EnsembleDataSource::deserialize(Deserializer& s) {
     Processor::deserialize(s);
 
-    if(loadingStrategy_.get() != "lazy") {
-        return;
-    }
+    if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
 
-    // If path was being reset, the ensemble will no longer be accessible.
-    // So, we discard the cache.
-    if(ensemblePath_.get().empty()) {
-        return;
-    }
+        std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
 
-    output_.reset(new EnsembleDataset());
-    try {
-        s.deserialize("ensemble", *output_);
-        setProgress(1.0f);
-    } catch (SerializationException&) {
-        s.removeLastError();
+        std::ifstream inFile;
+        inFile.open(filename);
+
+        if(inFile.good()) {
+            output_.reset(new EnsembleDataset());
+            try {
+                JsonDeserializer d;
+                d.read(inFile, true);
+                Deserializer deserializer(d);
+                deserializer.deserialize("ensemble", *output_);
+            }
+            catch (tgt::Exception& e) {
+                LWARNING("Loading ensemble from cache failed: " << e.what());
+                output_.reset();
+            }
+            inFile.close();
+        }
+        else if(!ensemblePath_.get().empty()) {
+            LWARNING("Could not read cache file, rebuilding cache...");
+            buildEnsembleDataset();
+        }
     }
 }
 
@@ -181,7 +188,13 @@ void EnsembleDataSource::buildEnsembleDataset() {
         timeStepProgress_.setProgress(0.0f);
         float progressPerTimeStep = 1.0f / fileNames.size();
 
-        std::vector<TimeStep> timeSteps;
+        struct CompareTime {
+            bool operator() (const TimeStep& t1, const TimeStep& t2) {
+                return t1.getTime() < t2.getTime();
+            }
+        };
+
+        std::set<TimeStep, CompareTime> timeSteps;
         for(const std::string& fileName : fileNames) {
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
@@ -264,31 +277,33 @@ void EnsembleDataSource::buildEnsembleDataset() {
             // Calculate duration the current timeStep is valid.
             // Note that the last time step has a duration of 0.
             if (!timeSteps.empty())
-                duration = time - timeSteps.back().getTime();
+                duration = time - timeSteps.rend()->getTime();
 
-            timeSteps.emplace_back(TimeStep{volumeData, time, duration});
+            timeSteps.insert(TimeStep{volumeData, time, duration});
 
             // Update progress bar.
             timeStepProgress_.setProgress(std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f));
         }
+
+        std::vector<TimeStep> timeStepsVec(std::make_move_iterator(timeSteps.begin()), std::make_move_iterator(timeSteps.end()));
 
         // Update overview table.
         std::vector<std::string> row(5);
         row[0] = member; // Name
         row[1] = std::to_string(timeSteps.size()); // Num Time Steps
         if (!timeSteps.empty()) {
-            row[2] = std::to_string(timeSteps.front().getTime()); // Start time
-            row[3] = std::to_string(timeSteps.back().getTime()); // End time
-            row[4] = std::to_string(timeSteps.back().getTime() - timeSteps.front().getTime()); // Duration
+            row[2] = std::to_string(timeStepsVec.front().getTime()); // Start time
+            row[3] = std::to_string(timeStepsVec.back().getTime()); // End time
+            row[4] = std::to_string(timeStepsVec.back().getTime() - timeStepsVec.front().getTime()); // Duration
         }
         else {
             row[2] = row[3] = row[4] = "N/A";
         }
-        loadedMembers_.addRow(row);//addRow(member, color);
+        loadedMembers_.addRow(row);
 
         // Update dataset.
         tgt::Color color = *colorIter;
-        dataset->addMember({member, color.xyz(), timeSteps});
+        dataset->addMember({member, color.xyz(), timeStepsVec});
         ++colorIter;
 
         // Update progress bar.
@@ -298,6 +313,29 @@ void EnsembleDataSource::buildEnsembleDataset() {
     hash_.set(EnsembleHash(*dataset).getHash());
     output_ = std::move(dataset);
 
+    if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
+        tgt::FileSystem::createDirectoryRecursive(getCachePath());
+        std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
+
+        std::ofstream outFile;
+        outFile.open(filename);
+        if(outFile.good()) {
+            try {
+                JsonSerializer s;
+                Serializer serializer(s);
+                serializer.serialize("ensemble", *output_);
+                s.write(outFile, false, true);
+            }
+            catch (tgt::Exception& e) {
+                LWARNING("Storing ensemble meta data to cache failed: " << e.what());
+            }
+            outFile.close();
+        }
+        else {
+            LWARNING("Could not write cache file");
+        }
+    }
+
     timeStepProgress_.setProgress(1.0f);
     setProgress(1.0f);
 }
@@ -305,6 +343,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 void EnsembleDataSource::printEnsembleDataset() {
 
     if(!output_) {
+        LWARNING("No ensemble loaded");
         return;
     }
 

@@ -58,6 +58,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , weight_("weight", "Weight", 0.5f, 0.0f, 1.0f)
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 8192, 1, 131072)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
+    , clearCache_("clearCache", "Clear Cache", Processor::VALID, Property::LOD_ADVANCED)
 {
     // Ports
     addPort(inport_);
@@ -79,20 +80,25 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
 
     addProperty(multiChannelSimilarityMeasure_);
     multiChannelSimilarityMeasure_.addOption("magnitude", "Magnitude", MEASURE_MAGNITUDE);
-    multiChannelSimilarityMeasure_.addOption("angleDifference", "Angle Difference", MEASURE_ANGLEDIFFERENCE);
-    multiChannelSimilarityMeasure_.addOption("li_shen", "Li and Shen", MEASURE_LI_SHEN);
+    multiChannelSimilarityMeasure_.addOption("angleDifference", "Angle", MEASURE_ANGLE);
+    multiChannelSimilarityMeasure_.addOption("jiang", "Jiang", MEASURE_JIANG);
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
     multiChannelSimilarityMeasure_.addOption("split_channels", "Split Channels", MEASURE_SPLIT_CHANNELS);
     multiChannelSimilarityMeasure_.addOption("vector_difference_magnitude", "Magnitude of Vector Difference", MEASURE_VECTOR_DIFFERENCE_MAGNITUDE);
     multiChannelSimilarityMeasure_.set("vector_difference_magnitude");
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
-        weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_LI_SHEN);
+        weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_JIANG);
     });
 
     addProperty(weight_);
 
     addProperty(numSeedPoints_);
     addProperty(seedTime_);
+
+    addProperty(clearCache_);
+    ON_CHANGE_LAMBDA(clearCache_, [this] {
+        tgt::FileSystem::deleteDirectoryRecursive(getCachePath());
+    });
 }
 
 Processor* SimilarityMatrixCreator::create() const {
@@ -113,6 +119,27 @@ bool SimilarityMatrixCreator::isReady() const {
     // Note: Seed Mask is optional!
 
     return true;
+}
+
+void SimilarityMatrixCreator::setDescriptions() {
+    setDescription("Creates a Similarity matrix for each field of the ensemble, containing all pairwise "
+                   "dissimilarities of its members");
+    singleChannelSimilarityMeasure_.setDescription("Specifies how similarity is calculated for single channel fields:<br>"
+                                                   "<strong>Iso-Contours</strong>: Uses the isovalue and applies the Jaccard index<br>"
+                                                   "<strong>Generalized</strong>: Applies the generalized field similarity by Fofonov et al.<br>"
+                                                   "<strong>Avg. Difference</strong>: Calculates the normalized average difference");
+    isoValue_.setDescription("Defines the isovalue used for the Iso-Contour similarity measure");
+    multiChannelSimilarityMeasure_.setDescription("Specifies how similarity is calculated for multi-channel fields:<br>"
+                                                  "<strong>Magnitude</strong>: Uses the vector magnitude and uses the generalized field similarity by Fofonov et al.<br>"
+                                                  "<strong>Angle</strong>: Calculates the average normalized angle between vectors<br>"
+                                                  "<strong>Jiang</strong>: Uses the vector similarity introduced by Jiang et al.<br>"
+                                                  "<strong>Crossproduct Magnitude</strong>: Calculates the cross product magnitude of two vectors<br>"
+                                                  "<strong>Split Channels</strong>: Treats each channel as separate scalar field and applies the generalized field similarity by Fofonov et al.<br>"
+                                                  "<strong>Magnitude of Vector Difference</strong>: Uses the magnitude of the difference between two vectors");
+    weight_.setDescription("Defines the weights between magnitude and direction used by similarity measure of Jiang et al.");
+    numSeedPoints_.setDescription("Number of seeds to define a Monte Carlo sampling");
+    seedTime_.setDescription("Allows to use a fixed seed");
+    seedMask_.setDescription("Optional seed mask. Only voxels different from zero are seeding candidates");
 }
 
 std::vector<std::reference_wrapper<Port>> SimilarityMatrixCreator::getCriticalPorts() {
@@ -461,7 +488,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             vector_j[channel] = Flags[index(j, k, channel)];
                         }
 
-                        if(input.multiChannelSimilarityMeasure == MEASURE_ANGLEDIFFERENCE) {
+                        if(input.multiChannelSimilarityMeasure == MEASURE_ANGLE) {
                             if (vector_i != tgt::vec4::zero && vector_j != tgt::vec4::zero) {
                                 tgt::vec4 normVector_i = tgt::normalize(vector_i);
                                 tgt::vec4 normVector_j = tgt::normalize(vector_j);
@@ -483,7 +510,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 statistics.addSample(1.0f);
                             }
                         }
-                        else if(input.multiChannelSimilarityMeasure == MEASURE_LI_SHEN) {
+                        else if(input.multiChannelSimilarityMeasure == MEASURE_JIANG) {
                             float a = tgt::length(vector_i);
                             float b = tgt::length(vector_j);
 

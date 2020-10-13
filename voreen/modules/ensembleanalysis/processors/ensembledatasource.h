@@ -69,19 +69,22 @@ protected:
                                      "for each time step of the respective member. Each of those files may contain multiple "
                                      "volumes which will be interpreted as time steps, in lexicographic order. "
                                      "The volume files might contain time step meta information which do not need to "
-                                     "match the files' names. ");
+                                     "match the files' names.");
         loadingStrategy_.setDescription("Loading strategy has three options:<br>"
                                         "<strong>Manual</strong>: The ensemble is only loaded when pressing the load button.<br>"
                                         "<strong>Full</strong>: The entire ensemble is loaded fully from disk when the workspace is loaded<br>"
                                         "<strong>Lazy</strong>: The entire ensemble needs to be loaded once an all required meta data will be "
                                         "safed to and loaded from disk the next time the workspace is loaded");
+        loadDatasetButton_.setDescription("Loads the dataset from the specified path");
+        printEnsemble_.setDescription("Creates a HTML overview sheet for the currently loaded ensemble");
+        colorMap_.setDescription("Color map from which a unique color for each member is derived sequentially.");
+        overrideTime_.setDescription("This will assign sequential integer time steps to the ensemble members");
     }
 
     void process();
     virtual void initialize();
     virtual void deinitialize();
 
-    virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);
 
     void clearEnsembleDataset();
@@ -101,6 +104,7 @@ protected:
     ColorMapProperty colorMap_;
     BoolProperty overrideTime_;
     StringProperty hash_;
+    ButtonProperty clearCache_;
 
     /// The structure of the ensemble data.
     EnsembleDatasetPort outport_;

@@ -45,8 +45,8 @@ enum SingleChannelSimilarityMeasure {
 
 enum MultiChannelSimilarityMeasure {
     MEASURE_MAGNITUDE,
-    MEASURE_ANGLEDIFFERENCE,
-    MEASURE_LI_SHEN,
+    MEASURE_ANGLE,
+    MEASURE_JIANG,
     MEASURE_CROSSPRODUCT,
     MEASURE_SPLIT_CHANNELS,
     MEASURE_VECTOR_DIFFERENCE_MAGNITUDE
@@ -83,6 +83,7 @@ public:
 protected:
 
     virtual bool isReady() const;
+    virtual void setDescriptions();
     virtual void adjustPropertiesToInput();
     virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
@@ -96,6 +97,7 @@ private:
     FloatProperty weight_;
     IntProperty numSeedPoints_;
     IntProperty seedTime_;
+    ButtonProperty clearCache_;
 
     /// Inport for the ensemble data structure.
     EnsembleDatasetPort inport_;
