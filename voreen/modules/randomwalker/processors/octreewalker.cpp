@@ -875,44 +875,14 @@ private:
     const VolumeAtomic<float>& brick_;
 };
 
-struct RWNoiseModelGaussian {
-    static VolumeAtomic<float> preprocess(VolumeAtomic<float>&& vol) {
-        return preprocessForAdaptiveParameterSetting(vol);
-    }
-    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias, const RealWorldMapping& rwm) {
-        float beta = 0.5f * betaBias;
-        float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
-        float intDiffSqr = intDiff*intDiff;
-        float weight = exp(-beta * intDiffSqr);
-        return weight;
-    }
-};
-struct RWNoiseModelPoisson {
-    static VolumeAtomic<float> preprocess(VolumeAtomic<float>&& vol) {
-        return std::move(vol);
-    }
-    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias, const RealWorldMapping& rwm) {
-        float beta = 0.5f * betaBias;
-        voxelIntensity = rwm.normalizedToRealWorld(voxelIntensity);
-        neighborIntensity = rwm.normalizedToRealWorld(neighborIntensity);
-        float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
-        float intDiffSqr = intDiff*intDiff;
-        float weight;
-
-        float d = sqrt(voxelIntensity) - sqrt(neighborIntensity);
-        weight = exp(-beta * d * d);
-        return weight;
-    }
-};
-
 template<typename NoiseModel>
-static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RandomWalkerVoxelAccessorBrick& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing, RealWorldMapping rwm) {
+static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RandomWalkerVoxelAccessorBrick& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
 
     float minSpacing = tgt::min(spacing);
     tgt::vec3 spacingNorm = spacing/minSpacing;
-    auto edgeWeight = [minWeight, betaBias, spacingNorm, &rwm] (float voxelIntensity, float neighborIntensity, int dim) {
+    auto edgeWeight = [minWeight, betaBias, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
         float spacingFactor = spacingNorm[dim];
-        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, spacingFactor, betaBias, rwm);
+        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, spacingFactor, betaBias);
         weight = std::max(weight, minWeight);
 
         return weight;
@@ -1100,15 +1070,16 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
     float betaBias = pow(2.f, static_cast<float>(input.betaBias_));
 
-    auto rwInput = NoiseModel::preprocess(std::move(inputNeighborhood.data_));
+    auto rwm = input.volume_.getRealWorldMapping();
+
+    auto rwInput = NoiseModel::preprocess(inputNeighborhood.data_, rwm);
     RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
 
     auto vec = std::vector<float>(systemSize, 0.0f);
 
     tgt::vec3 spacing = input.volume_.getSpacing();
-    auto rwm = input.volume_.getRealWorldMapping();
 
-    processVoxelWeights<NoiseModel>(seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing, rwm);
+    processVoxelWeights<NoiseModel>(seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing);
 
     for(int i=0; i<10; ++i) {
         int iterations;

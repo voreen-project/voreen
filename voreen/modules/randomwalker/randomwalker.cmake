@@ -15,6 +15,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/solver/randomwalkerseeds.cpp
     ${MOD_DIR}/solver/randomwalkerweights.cpp
 
+    ${MOD_DIR}/util/noisemodel.cpp
     ${MOD_DIR}/util/preprocessing.cpp
     ${MOD_DIR}/util/seeds.cpp
 )
@@ -30,6 +31,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/solver/randomwalkerseeds.h
     ${MOD_DIR}/solver/randomwalkerweights.h
 
+    ${MOD_DIR}/util/noisemodel.h
     ${MOD_DIR}/util/preprocessing.h
     ${MOD_DIR}/util/seeds.h
 )

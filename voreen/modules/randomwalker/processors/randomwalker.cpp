@@ -50,8 +50,35 @@
 
 namespace voreen {
 
+template<typename NoiseModel>
+static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromPropertiesAdaptive(const RandomWalkerInput& input) {
+    float beta = 0.5;
+    float minWeight = 1.f / pow(10.f, static_cast<float>(input.minEdgeWeight_));
+    RWNoiseModel noiseModel = input.noiseModel_;
+
+    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<NoiseModel>(minWeight, 1.0f));
+
+    auto rwm = input.inputHandle_->getRealWorldMapping();
+    auto rwInput = NoiseModel::preprocess(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);
+    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorVolumeAtomic(std::move(rwInput), RealWorldMapping(1.0f, 0.0f, "") /* already handled in preprocessing step */));
+
+    return tgt::make_unique<RandomWalkerWeights>(std::move(voxelAccessor), std::move(edgeWeightFun), input.inputHandle_->getDimensions());
+}
+
 static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const RandomWalkerInput& input) {
-    float beta = input.useAdaptiveParameterSetting_ ? 0.5 : static_cast<float>(1<<input.beta_);
+
+    if(input.useAdaptiveParameterSetting_) {
+        switch(input.noiseModel_) {
+            case RW_NOISE_GAUSSIAN:
+                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussian>(input);
+            case RW_NOISE_POISSON:
+                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelPoisson>(input);
+            default:
+                tgtAssert(false, "Invalid noise model");
+        }
+    }
+
+    float beta = static_cast<float>(1<<input.beta_);
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minEdgeWeight_));
 
     auto vmm = input.inputHandle_->getDerivedData<VolumeMinMax>();
@@ -63,11 +90,8 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
         edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
     }
     std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor;
-    if(input.useAdaptiveParameterSetting_) {
-        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolumeAtomic(preprocessForAdaptiveParameterSetting(*input.inputHandle_->getRepresentation<VolumeRAM>()), RealWorldMapping()));
-    } else {
-        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(*input.inputHandle_));
-    }
+    voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(*input.inputHandle_));
+
     return tgt::make_unique<RandomWalkerWeights>(std::move(voxelAccessor), std::move(edgeWeightFun), input.inputHandle_->getDimensions());
 }
 
@@ -90,6 +114,7 @@ RandomWalker::RandomWalker()
     outportEdgeWeights_(Port::OUTPORT, "volume.edgeweights", "volume.edgeweights", false),
     usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED),
     useAdaptiveParameterSetting_("useAdaptiveParameterSetting", "Use Adaptive Parameter Setting", false),
+    noiseModel_("noiseModel", "Noise Model"),
     beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
     preconditioner_("preconditioner", "Preconditioner"),
@@ -130,12 +155,16 @@ RandomWalker::RandomWalker()
 
     // random walker properties
     addProperty(useAdaptiveParameterSetting_);
-    ON_CHANGE_LAMBDA(useAdaptiveParameterSetting_, [this] () {
-            beta_.setVisibleFlag(!useAdaptiveParameterSetting_.get());
-            });
+    useAdaptiveParameterSetting_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
+    addProperty(noiseModel_);
+    noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
+    noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
+    noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
     addProperty(beta_);
     addProperty(minEdgeWeight_);
+
     useAdaptiveParameterSetting_.setGroupID("rwparam");
+    noiseModel_.setGroupID("rwparam");
     beta_.setGroupID("rwparam");
     minEdgeWeight_.setGroupID("rwparam");
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
@@ -380,6 +409,7 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         maxIterations,
         lodSeedErosionKernelSize,
         useAdaptiveParameterSetting_.get(),
+        noiseModel_.getValue(),
         beta_.get(),
         minEdgeWeight_.get(),
         edgeWeightBalance_.get(),
@@ -934,6 +964,14 @@ void RandomWalker::lodMaxLevelChanged() {
 void RandomWalker::updateGuiState() {
     bool clipping = enableClipping_.get();
     clipRegion_.setVisibleFlag(clipping);
+
+    bool adaptiveEnabled = useAdaptiveParameterSetting_.get();
+    beta_.setVisibleFlag(!adaptiveEnabled);
+    noiseModel_.setVisibleFlag(adaptiveEnabled);
+    enableTransFunc_.setVisibleFlag(!adaptiveEnabled);
+    if(adaptiveEnabled) {
+        enableTransFunc_.set(false);
+    }
 
     bool useTransFunc = enableTransFunc_.get();
     edgeWeightTransFunc_.setVisibleFlag(useTransFunc);

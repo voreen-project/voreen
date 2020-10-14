@@ -51,6 +51,8 @@
 #include "modules/opencl/utils/voreenblascl.h"
 #endif
 
+#include "../util/noisemodel.h"
+
 #include <string>
 #include <chrono>
 
@@ -78,6 +80,7 @@ struct RandomWalkerInput {
     int maxIterations_;
     int lodSeedErosionKernelSize_;
     bool useAdaptiveParameterSetting_;
+    RWNoiseModel noiseModel_;
     int beta_;
     int minEdgeWeight_;
     float tfBlendFactor_;
@@ -158,6 +161,7 @@ private:
     BoolProperty usePrevProbAsInitialization_;
 
     BoolProperty useAdaptiveParameterSetting_;
+    OptionProperty<RWNoiseModel> noiseModel_;
     IntProperty beta_;
     IntProperty minEdgeWeight_;
     StringOptionProperty preconditioner_;

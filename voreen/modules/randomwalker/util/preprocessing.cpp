@@ -176,13 +176,15 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
 }
 
 VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeRAM& img) {
+    tgtAssert(img.getNumChannels() == 1, "Only volumes with one channel expected");
     if(const VolumeAtomic<float>* floatImg = dynamic_cast<const VolumeAtomic<float>*>(&img)) {
         return preprocessForAdaptiveParameterSetting(*floatImg);
     } else {
+        size_t voxels = img.getNumVoxels();
         tgt::svec3 dim = img.getDimensions();
         VolumeAtomic<float> converted(dim);
-        VRN_FOR_EACH_VOXEL(center, tgt::svec3(0), dim) {
-            converted.voxel(center) = img.getVoxelNormalized(center);
+        for(size_t i=0; i<voxels; ++i) {
+            converted.voxel(i) = img.getVoxelNormalized(i);
         }
         return preprocessForAdaptiveParameterSetting(converted);
     }

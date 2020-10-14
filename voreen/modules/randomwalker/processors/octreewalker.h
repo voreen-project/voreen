@@ -40,12 +40,15 @@
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
 #include "voreen/core/utils/voreenblas/voreenblascpu.h"
+
 #ifdef VRN_MODULE_OPENMP
 #include "modules/openmp/include/voreenblasmp.h"
 #endif
 #ifdef VRN_MODULE_OPENCL
 #include "modules/opencl/utils/voreenblascl.h"
 #endif
+
+#include "../util/noisemodel.h"
 
 #include <string>
 #include <chrono>
@@ -58,11 +61,6 @@ class RandomWalkerSolver;
 class RandomWalkerSeeds;
 class RandomWalkerWeights;
 class OctreeBrickPoolManagerMmap;
-
-enum RWNoiseModel {
-    RW_NOISE_GAUSSIAN,
-    RW_NOISE_POISSON,
-};
 
 struct OctreeWalkerPreviousResult {
 public:
