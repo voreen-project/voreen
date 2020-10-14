@@ -632,6 +632,7 @@ public:
     RandomWalkerSeedsBrick(tgt::svec3 bufferDimensions, tgt::mat4 voxelToSeeds, const PointSegmentListGeometryVec3& foregroundSeedList, const PointSegmentListGeometryVec3& backgroundSeedList, const PointSegmentListGeometryVec3* fgslOld, const PointSegmentListGeometryVec3* bgslOld)
         : seedBuffer_(bufferDimensions)
         , conflicts_(false)
+        , newConflicts_(false)
         , minSeed_(1.0)
         , maxSeed_(0.0)
     {
@@ -680,11 +681,11 @@ public:
                             seedVal = lbl;
                             ++numSeeds_;
                         } else if(seedVal == CURRENT_CONFLICT) {
-                            // ignore
+                            // ignore, already processed
                         } else if(seedVal == PREVIOUS_CONFLICT) {
                             if(new_seeds) {
                                 seedVal = CURRENT_CONFLICT;
-                                conflicts_ = true;
+                                newConflicts_ = true;
                             } else {
                                 // Ignore, still a previous conflict
                             }
@@ -700,9 +701,10 @@ public:
                                 }
                             } else {
                                 // Conflict, either previous or caused by new labels
+                                conflicts_ = true;
                                 if(new_seeds || alreadyNew) {
                                     seedVal = CURRENT_CONFLICT;
-                                    conflicts_ = true;
+                                    newConflicts_ = true;
                                 } else {
                                     seedVal = PREVIOUS_CONFLICT;
                                 }
@@ -722,6 +724,7 @@ public:
                         auto& p = (*old)[i];
                         if(brickBounds.containsPoint(voxelToSeeds*p)) {
                             conflicts_ = true;
+                            newConflicts_ = true;
                             break;
                         }
                     }
@@ -736,6 +739,7 @@ public:
                     for (auto& p : oldList->getData()[i]) {
                         if(brickBounds.containsPoint(voxelToSeeds*p)) {
                             conflicts_ = true;
+                            newConflicts_ = true;
                             break;
                         }
                     }
@@ -833,6 +837,9 @@ public:
     bool hasConflicts() const {
         return conflicts_;
     }
+    bool hasNewConflicts() const {
+        return conflicts_;
+    }
     float minSeed() {
         return minSeed_;
     }
@@ -843,6 +850,7 @@ public:
 private:
     VolumeAtomic<float> seedBuffer_;
     bool conflicts_;
+    bool newConflicts_;
     float minSeed_;
     float maxSeed_;
 };
@@ -969,7 +977,7 @@ static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatr
 }
 
 template<typename NoiseModel>
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
+static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool& hasNewSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         const float delta = 0.01;
@@ -1009,6 +1017,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
             return seeds;
         }
     }();
+    hasNewSeedConflicts = seeds.hasNewConflicts();
     hasSeedConflicts = seeds.hasConflicts();
     if(stop) {
         return OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
@@ -1315,15 +1324,16 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             uint16_t max = 0;
             uint16_t avg = 0xffff/2;
             uint64_t newBrickAddr;
+            bool hasNewSeedsConflicts;
             bool hasSeedsConflicts;
             {
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
                 switch (input.noiseModel_) {
                     case RW_NOISE_GAUSSIAN:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
                     case RW_NOISE_POISSON:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                        newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
                     default:
                         tgtAssert(false, "Invalid noise model selected");
@@ -1342,9 +1352,11 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             bool childrenToProcess = newBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS && level > 0;
             VolumeOctreeNode* newNode = nullptr;
 
-            // Check if previous result is sufficiently close to current one.
-            // If this is the case: copy branch from old octree.
-            if(childrenToProcess && prevRoot && !hasSeedsConflicts) {
+            // Check if previous result is sufficiently close to current one
+            // and if there are no (new) labels which have not been processed
+            // in this branch due to conflicts.
+            // If this is the case: Take branch from old octree.
+            if(childrenToProcess && prevRoot && !hasNewSeedsConflicts) {
                 auto prevNode = prevRoot->findChildNode(node.llf, brickDim, level);
 
                 if(prevNode.node().hasBrick()
