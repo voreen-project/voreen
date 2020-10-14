@@ -64,7 +64,7 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
     }
     std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor;
     if(input.useAdaptiveParameterSetting_) {
-        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolumeAtomic(preprocessForAdaptiveParameterSetting(*input.inputHandle_->getRepresentation<VolumeRAM>()), input.inputHandle_->getRealWorldMapping()));
+        voxelAccessor.reset(new RandomWalkerVoxelAccessorVolumeAtomic(preprocessForAdaptiveParameterSetting(*input.inputHandle_->getRepresentation<VolumeRAM>()), RealWorldMapping()));
     } else {
         voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(*input.inputHandle_));
     }
