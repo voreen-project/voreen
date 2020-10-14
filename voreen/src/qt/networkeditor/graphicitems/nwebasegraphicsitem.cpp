@@ -147,10 +147,6 @@ void NWEBaseGraphicsItem::hoverEnterEvent (QGraphicsSceneHoverEvent* event){
         toolTipItem_->setToolTipTimerTriggertMousePosition(p);
         toolTipItem_->startTimer();
     }
-    if(shadowEffect_->isEnabled()) {
-        shadowEffect_->setBlurRadius(30);
-        shadowEffect_->setColor(QColor(0, 0, 0, 200));
-    }
     QGraphicsItem::hoverEnterEvent(event);
 }
 
@@ -169,10 +165,6 @@ void NWEBaseGraphicsItem::hoverLeaveEvent (QGraphicsSceneHoverEvent* event){
     if(toolTipItem_){
         toolTipItem_->stopTimer();
         toolTipItem_->setVisible(false);
-    }
-    if(shadowEffect_->isEnabled()) {
-        shadowEffect_->setBlurRadius(15);
-        shadowEffect_->setColor(QColor(0, 0, 0, 150));
     }
     QGraphicsItem::hoverLeaveEvent(event);
 }

@@ -68,8 +68,8 @@ namespace voreen {
 FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("FlowSimulation");
-    setGuiName("FlowSimulation");
+    setID("Flow Simulation");
+    setGuiName("Flow Simulation");
 
     // processors
     registerSerializableType(new Lambda2Criterion());

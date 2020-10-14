@@ -188,13 +188,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
         timeStepProgress_.setProgress(0.0f);
         float progressPerTimeStep = 1.0f / fileNames.size();
 
-        struct CompareTime {
-            bool operator() (const TimeStep& t1, const TimeStep& t2) {
-                return t1.getTime() < t2.getTime();
-            }
-        };
-
-        std::set<TimeStep, CompareTime> timeSteps;
+        std::vector<TimeStep> timeSteps;
         for(const std::string& fileName : fileNames) {
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
@@ -279,11 +273,17 @@ void EnsembleDataSource::buildEnsembleDataset() {
             if (!timeSteps.empty())
                 duration = time - timeSteps.rend()->getTime();
 
-            timeSteps.insert(TimeStep{volumeData, time, duration});
+            timeSteps.emplace_back(TimeStep{volumeData, time, duration});
 
             // Update progress bar.
             timeStepProgress_.setProgress(std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f));
         }
+
+
+        auto timeStepCompare = [] (const TimeStep& t1, const TimeStep& t2) {
+            return t1.getTime() < t2.getTime();
+        };
+        std::stable_sort(timeSteps.begin(), timeSteps.end(), timeStepCompare);
 
         std::vector<TimeStep> timeStepsVec(std::make_move_iterator(timeSteps.begin()), std::make_move_iterator(timeSteps.end()));
 

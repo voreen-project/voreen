@@ -493,7 +493,7 @@ void SimilarityPlot::renderingPass(bool picking) {
                 // such that it becomes clear at which t the time step is recorded.
                 IMode.begin(tgt::ImmediateMode::FAKE_LINES);
                 IMode.color(getColor(memberIdx, 0, picking));
-                const int segments = 20;
+                const int segments = 40;
                 for(int i=0; i<segments; i+=2) {
                     float x0 = mapRange(i+0, 0, segments-1, -1.0f, 1.0f);
                     float x1 = mapRange(i+1, 0, segments-1, -1.0f, 1.0f);

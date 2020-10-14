@@ -38,8 +38,8 @@ namespace voreen {
 EnsembleAnalysisExtraModule::EnsembleAnalysisExtraModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("EnsembleAnalysisExtraExtra");
-    setGuiName("EnsembleAnalysisExtraExtra");
+    setID("Ensemble Analysis Extra");
+    setGuiName("Ensemble Analysis Extra");
 
     addShaderPath(getModulePath("glsl"));
 

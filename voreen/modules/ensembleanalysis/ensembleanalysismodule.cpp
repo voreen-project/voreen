@@ -52,8 +52,8 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 
 {
-    setID("EnsembleAnalysis");
-    setGuiName("EnsembleAnalysis");
+    setID("Ensemble Analysis");
+    setGuiName("Ensemble Analysis");
 
     // Processors
     registerProcessor(new ConnectedComponentSelector());
