@@ -1,4 +1,28 @@
-#pragma once
+/***********************************************************************************
+ *                                                                                 *
+ * Voreen - The Volume Rendering Engine                                            *
+ *                                                                                 *
+ * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Department of Computer Science.                                                 *
+ * For a list of authors please refer to the file "CREDITS.txt".                   *
+ *                                                                                 *
+ * This file is part of the Voreen software package. Voreen is free software:      *
+ * you can redistribute it and/or modify it under the terms of the GNU General     *
+ * Public License version 2 as published by the Free Software Foundation.          *
+ *                                                                                 *
+ * Voreen is distributed in the hope that it will be useful, but WITHOUT ANY       *
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR   *
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.      *
+ *                                                                                 *
+ * You should have received a copy of the GNU General Public License in the file   *
+ * "LICENSE.txt" along with this file. If not, see <http://www.gnu.org/licenses/>. *
+ *                                                                                 *
+ * For non-commercial academic use see the license exception specified in the file *
+ * "LICENSE-academic.txt". To get information about commercial licensing please    *
+ * contact the authors.                                                            *
+ *                                                                                 *
+ ***********************************************************************************/
+
 #ifndef VRN_APPROXIMATEPARALLELVECTORS_H
 #define VRN_APPROXIMATEPARALLELVECTORS_H
 
@@ -7,29 +31,29 @@
 #include "voreen/core/ports/geometryport.h"
 #include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 
-namespace voreen
-{
-	class ApproximateParallelVectors : public Processor
-	{
-	public:
-		ApproximateParallelVectors();
+namespace voreen {
 
-		Processor* create() const override;
-		std::string getClassName() const override;
-		std::string getCategory() const override;
+class ApproximateParallelVectors : public Processor	{
+public:
+    ApproximateParallelVectors();
 
-	private:
-		void process() override;
-		void updateButton();
+    Processor* create() const override;
+    std::string getClassName() const override;
+    std::string getCategory() const override;
 
-		EnsembleDatasetPort _inportEnsemble;
-		VolumePort _inportMask, _outportA, _outportB, _outportEps;
+private:
+    void process() override;
+    void updateButton();
 
-		IntProperty _propertyTimestep;
-		FloatProperty _propertyEpsilon;
-		BoolProperty _propertyUseAcceleration;
-		ButtonProperty _propertyUpdateButton;
-	};
+    EnsembleDatasetPort _inportEnsemble;
+    VolumePort _inportMask, _outportA, _outportB, _outportEps;
+
+    IntProperty _propertyTimestep;
+    FloatProperty _propertyEpsilon;
+    BoolProperty _propertyUseAcceleration;
+    ButtonProperty _propertyUpdateButton;
+};
+
 }
 
 #endif // VRN_APPROXIMATEPARALLELVECTORS_H

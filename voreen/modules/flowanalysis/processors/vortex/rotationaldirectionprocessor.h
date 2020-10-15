@@ -22,6 +22,7 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
+
 #ifndef VRN_ROTATIONALDIRECTIONPROCESSOR_H
 #define VRN_ROTATIONALDIRECTIONPROCESSOR_H
 
@@ -34,40 +35,38 @@
 
 namespace voreen {
 
-	class VRN_CORE_API RotationalDirectionProcessor : public Processor {
-	public:
+class VRN_CORE_API RotationalDirectionProcessor : public Processor {
+public:
 
-		RotationalDirectionProcessor();
+    RotationalDirectionProcessor();
 
-		virtual Processor* create() const;
+    virtual Processor* create() const;
 
-		virtual std::string getClassName() const { return "RotationalDirectionProcessor"; }
+    virtual std::string getClassName() const { return "RotationalDirectionProcessor"; }
 
-		virtual std::string getCategory() const { return "Volume Processing"; }
+    virtual std::string getCategory() const { return "Volume Processing"; }
 
-		virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
 
-		static void Process( const VolumeRAM_3xFloat& curl, Vortex& vortex );
+    static void Process( const VolumeRAM_3xFloat& curl, Vortex& vortex );
 
-	protected:
+protected:
 
-		virtual void setDescriptions()
-		{
-			setDescription("Calculates the direction of a Vortex, by analysing its coreline and curl");
-		}
+    virtual void setDescriptions()
+    {
+        setDescription("Calculates the direction of a Vortex, by analysing its coreline and curl");
+    }
 
-		virtual void process();
+    virtual void process();
 
-	private:
+private:
 
-		VolumePort inport_;
-		VortexPort inport2_;
-		VortexPort outport_;
+    VolumePort inport_;
+    VortexPort inport2_;
+    VortexPort outport_;
 
-	};
+};
 
 }
 
 #endif
-
-#pragma once

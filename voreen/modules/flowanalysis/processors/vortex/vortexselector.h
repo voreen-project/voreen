@@ -1,4 +1,4 @@
-#pragma once
+
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/geometryport.h"

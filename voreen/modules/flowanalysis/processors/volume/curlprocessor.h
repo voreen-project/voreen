@@ -22,6 +22,7 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
+
 #ifndef VRN_CURLPROCESSOR_H
 #define VRN_CURLPROCESSOR_H
 
@@ -34,36 +35,33 @@
 
 namespace voreen {
 
-	class VRN_CORE_API CurlProcessor : public Processor {
-	public:
+class VRN_CORE_API CurlProcessor : public Processor {
+public:
 
-		CurlProcessor();
+    CurlProcessor();
 
-		virtual Processor* create() const;
+    virtual Processor* create() const;
+    virtual std::string getClassName() const { return "CurlProcessor"; }
+    virtual std::string getCategory() const { return "Volume Processing"; }
+    virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
 
-		virtual std::string getClassName() const { return "CurlProcessor"; }
+    static void Process( const VolumeRAM_Mat3Float& jacobi, VolumeRAM_3xFloat& outCurl );
 
-		virtual std::string getCategory() const { return "Volume Processing"; }
+protected:
 
-		virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
+    virtual void setDescriptions()
+    {
+        setDescription("Calculates the Curl of a given Vectorfield");
+    }
 
-		static void Process( const VolumeRAM_Mat3Float& jacobi, VolumeRAM_3xFloat& outCurl );
+    virtual void process();
 
-	protected:
+private:
 
-		virtual void setDescriptions()
-		{
-			setDescription("Calculates the Curl of a given Vectorfield");
-		}
+    VolumePort inport_;
+    VolumePort outport_;
 
-		virtual void process();
-
-	private:
-
-		VolumePort inport_;		
-		VolumePort outport_;
-
-	};
+};
 
 }
 

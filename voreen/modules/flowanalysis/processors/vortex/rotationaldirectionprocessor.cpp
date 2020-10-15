@@ -23,58 +23,56 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include <algorithm>
-
 #include "rotationaldirectionprocessor.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
+#include <algorithm>
 
-namespace voreen
+namespace voreen {
+
+RotationalDirectionProcessor::RotationalDirectionProcessor()
+    : Processor(), inport_(Port::INPORT, "inport", "Curl"), inport2_(Port::INPORT, "inport2", "vortex"), outport_(Port::OUTPORT, "outport", "vortex")
+
 {
+    //inport_.addCondition(new PortConditionVolumeType("Matrix3(float)", "VolumeRAM_Mat3Float"));
+    addPort(inport_);
+    addPort(inport2_);
+    addPort(outport_);
+}
 
-	RotationalDirectionProcessor::RotationalDirectionProcessor()
-		: Processor(), inport_(Port::INPORT, "inport", "Curl"), inport2_(Port::INPORT, "inport2", "vortex"), outport_(Port::OUTPORT, "outport", "vortex")
+Processor *RotationalDirectionProcessor::create() const
+{
+    return new RotationalDirectionProcessor();
+}
 
-	{
-		//inport_.addCondition(new PortConditionVolumeType("Matrix3(float)", "VolumeRAM_Mat3Float"));
-		addPort(inport_);
-		addPort(inport2_);
-		addPort(outport_);
-	}
+void RotationalDirectionProcessor::Process( const VolumeRAM_3xFloat& curl, Vortex& vortex )
+{
+    int cCounter = 0;
+    int ccCounter = 0;
 
-	Processor *RotationalDirectionProcessor::create() const
-	{
-		return new RotationalDirectionProcessor();
-	}
+    for(const auto& position : vortex.coreline())
+    {
+        if (curl.voxel(position).z > 0.0) { //changex to ccounter to counter and vice versa
+            cCounter = cCounter + 1;
+        }
+        else {
+            ccCounter = ccCounter + 1;
+        }
+    }
 
-	void RotationalDirectionProcessor::Process( const VolumeRAM_3xFloat& curl, Vortex& vortex )
-	{
-		int cCounter = 0;
-		int ccCounter = 0;
+    vortex.setOrientation(ccCounter > cCounter? Vortex::Orientation::eCounterClockwise : Vortex::Orientation::eClockwise);
+}
 
-		for(const auto& position : vortex.coreline())
-		{
-			if (curl.voxel(position).z > 0.0) { //changex to ccounter to counter and vice versa
-				cCounter = cCounter + 1; 
-			}
-			else { 
-				ccCounter = ccCounter + 1; 
-			}
-		}
+void RotationalDirectionProcessor::process()
+{
+    auto input = inport_.getData();
+    auto Vort = inport2_.getData();
+    auto CurlVolume = dynamic_cast<const VolumeRAM_3xFloat *>(input->getRepresentation<VolumeRAM>());
 
-		vortex.setOrientation(ccCounter > cCounter? Vortex::Orientation::eCounterClockwise : Vortex::Orientation::eClockwise);
-	}
+    Vortex* Vort2 = new Vortex(Vortex::Orientation::eUnknown, Vort->coreline());
+    RotationalDirectionProcessor::Process( *CurlVolume, *Vort2 );
 
-	void RotationalDirectionProcessor::process()
-	{
-		auto input = inport_.getData();
-		auto Vort = inport2_.getData();	
-		auto CurlVolume = dynamic_cast<const VolumeRAM_3xFloat *>(input->getRepresentation<VolumeRAM>());		
-
-		Vortex* Vort2 = new Vortex(Vortex::Orientation::eUnknown, Vort->coreline());
-		RotationalDirectionProcessor::Process( *CurlVolume, *Vort2 );
-
-		outport_.setData(Vort2);
-	}
+    outport_.setData(Vort2);
+}
 
 } // namespace voreen
