@@ -294,7 +294,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #endif
 
         std::string tmpPath =  VoreenApplication::app()->getUniqueTmpFilePath();
-        std::string flagFile = input.hash + ".flags";
+        std::string flagFile = input.hash + "_" + fieldName  + ".flags";
 
         std::string cachePath = tgt::FileSystem::cleanupPath(getCachePath() + "/" + flagFile);
         bool cachedFileFound = VoreenApplication::app()->useCaching() && tgt::FileSystem::fileExists(cachePath);
