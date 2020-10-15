@@ -44,7 +44,7 @@ struct RWNoiseModelGaussian {
         return preprocessForAdaptiveParameterSetting(vol);
     }
     static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
-        float beta = 0.5f * betaBias;
+        float beta = 0.125f * betaBias;
         float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);

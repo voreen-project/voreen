@@ -5,7 +5,7 @@
 #include "voreen/core/utils/stringutils.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
-//#define VRN_RANDOMWALKER_MEAN_NOT_MEDIAN
+#define VRN_RANDOMWALKER_MEAN_NOT_MEDIAN
 
 namespace voreen {
 
@@ -73,7 +73,6 @@ end_full:
 }
 
 VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<float>& img) {
-    VolumeAtomic<float> output(img.getDimensions());
     const tgt::ivec3 start(0);
     const tgt::ivec3 end(img.getDimensions());
     const size_t numVoxels = tgt::hmul(img.getDimensions());
@@ -103,9 +102,10 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
         }
     };
     VolumeAtomic<float> tmp(img.getDimensions());
-    conv(img, output, 0);
-    conv(output, tmp, 1);
-    conv(tmp, output, 2);
+    VolumeAtomic<float> tmp2(img.getDimensions());
+    conv(img, tmp2, 0);
+    conv(tmp2, tmp, 1);
+    conv(tmp, tmp2, 2);
 #else
     // median
     tgt::ivec3 last = end - tgt::ivec3(1);
@@ -125,7 +125,7 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
             float val = img.voxel(p);
             heap.push(val);
         }
-        output.voxel(center) = heap.top();
+        tmp2.voxel(center) = heap.top();
     }
 #endif
 
@@ -136,7 +136,7 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
 
         const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
 
-        float estimation = output.voxel(center);
+        float estimation = tmp2.voxel(center);
         float val = img.voxel(center);
         float diff = estimation - val;
 
@@ -149,7 +149,7 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
 
         sumOfDifferences += neighborhoodFactor * diff * diff;
 
-        output.voxel(center) = estimation;
+        tmp2.voxel(center) = estimation;
     }
 
 #ifdef VRN_RANDOMWALKER_MEAN_NOT_MEDIAN
@@ -165,14 +165,14 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
     if(varianceEstimation > 0) {
         stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
     } else {
-        stdEstimationInv = 0.0f;
+        stdEstimationInv = 1.0f;
     }
 
     VRN_FOR_EACH_VOXEL(center, start, end) {
-        output.voxel(center) *= stdEstimationInv;
+        tmp2.voxel(center) = img.voxel(center) * stdEstimationInv;
     }
 
-    return output;
+    return tmp2;
 }
 
 VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeRAM& img) {
