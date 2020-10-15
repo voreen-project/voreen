@@ -45,10 +45,10 @@ struct RWNoiseModelGaussian {
     }
     static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
         float beta = 0.125f * betaBias;
-        float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
+        float intDiff = (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
-        return weight;
+        return weight/spacingFactor;
     }
 };
 struct RWNoiseModelPoisson {
@@ -72,13 +72,11 @@ struct RWNoiseModelPoisson {
     }
     static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
         float beta = 0.5f * betaBias;
-        float intDiff = spacingFactor * (voxelIntensity - neighborIntensity);
-        float intDiffSqr = intDiff*intDiff;
         float weight;
 
         float d = sqrt(voxelIntensity) - sqrt(neighborIntensity);
         weight = exp(-beta * d * d);
-        return weight;
+        return weight/spacingFactor;
     }
 };
 

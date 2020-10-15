@@ -81,17 +81,23 @@ private:
 
 template<typename NoiseModel>
 struct RandomWalkerEdgeWeightAdaptive: public RandomWalkerEdgeWeight {
-    RandomWalkerEdgeWeightAdaptive(float minWeight, float spacingFactor)
-        : spacingFactor_(spacingFactor)
+    RandomWalkerEdgeWeightAdaptive(float minWeight, tgt::vec3 spacing)
+        : spacing_(spacing)
         , minWeight_(minWeight)
     {
     }
     float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) {
-        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, spacingFactor_, 1.0f);
+        float minSpacing = tgt::min(spacing_);
+        tgt::vec3 spacingNorm = spacing_/minSpacing;
+
+        tgt::vec3 selector = tgt::abs(voxel-neighbor);
+        float spacingFactor = tgt::max(spacingNorm * selector);
+
+        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, spacingFactor, 1.0f);
         return std::max(minWeight_, weight);
     }
 private:
-    float spacingFactor_;
+    tgt::vec3 spacing_;
     float minWeight_;
 };
 
