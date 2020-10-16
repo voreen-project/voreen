@@ -533,7 +533,7 @@ struct BrickNeighborhood {
             tgt::mat4 bufferToBrick = tgt::mat4::createTranslation(-tgt::vec3(centerBegin));
 
             tgt::mat4 bufferToVoxel = brickToVoxel * bufferToBrick;
-            tgt::svec3 samplePoint = tgt::round(bufferToVoxel.transform(blockBegin));
+            tgt::svec3 samplePoint = tgt::fastround(bufferToVoxel.transform(blockBegin));
             auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel);
             if(node.node().hasBrick()) {
                 tgt::mat4 bufferToSampleBrick = node.location().voxelToBrick() * bufferToVoxel;
@@ -562,14 +562,14 @@ struct BrickNeighborhood {
 
                 // Note: We know (and thus assume and use) that bufferToSampleBrick is only a scale with translation
                 for(int z=blockBegin.z; z!=blockEnd.z; ++z) {
-                    int sampleZ = tgt::round(bufferToSampleBrick.elemRowCol[2][2] * z + bufferToSampleBrick.elemRowCol[2][3]);
+                    int sampleZ = tgt::fastround(bufferToSampleBrick.elemRowCol[2][2] * z + bufferToSampleBrick.elemRowCol[2][3]);
                     sampleZ = tgt::clamp(sampleZ, 0, maxpos.z);
                     int brickIndexBaseY = sampleZ * brickDim.y;
 
                     int outputBaseY = z * outputDim.y;
 
                     for(int y=blockBegin.y; y!=blockEnd.y; ++y) {
-                        int sampleY = tgt::round(bufferToSampleBrick.elemRowCol[1][1] * y + bufferToSampleBrick.elemRowCol[1][3]);
+                        int sampleY = tgt::fastround(bufferToSampleBrick.elemRowCol[1][1] * y + bufferToSampleBrick.elemRowCol[1][3]);
                         sampleY = tgt::clamp(sampleY, 0, maxpos.y);
                         int brickIndexBaseX = brickDim.x * (sampleY + brickIndexBaseY);
 
@@ -577,7 +577,7 @@ struct BrickNeighborhood {
                         int outputIndex = outputBaseX + blockBegin.x;
 
                         for(int x=blockBegin.x; x!=blockEnd.x; ++x) {
-                            int sampleX = tgt::round(bufferToSampleBrick.elemRowCol[0][0] * x + bufferToSampleBrick.elemRowCol[0][3]);
+                            int sampleX = tgt::fastround(bufferToSampleBrick.elemRowCol[0][0] * x + bufferToSampleBrick.elemRowCol[0][3]);
                             sampleX = tgt::clamp(sampleX, 0, maxpos.x);
                             int brickIndex = brickIndexBaseX + sampleX;
 
