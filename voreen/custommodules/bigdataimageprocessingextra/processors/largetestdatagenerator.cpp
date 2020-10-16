@@ -462,6 +462,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
         float rootRadiusLog = std::uniform_real_distribution<>(std::log(minRadius), std::log(maxRadius))(input.randomEngine);
         float rootRadius = tgt::clamp(std::exp(rootRadiusLog), float(minRadius), float(maxRadius));
         float rootBaseLen = std::uniform_real_distribution<>(0, rootRadius * radiusToBaseLenFactor)(input.randomEngine);
+        balls.add(start, rootRadius);
         queue.push_back(BranchSeed {
             start,
             dir,
