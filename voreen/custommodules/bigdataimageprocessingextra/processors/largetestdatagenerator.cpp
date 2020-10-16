@@ -60,6 +60,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , structureSizeRange_("structureSizeRange", "Structure Size", 1, 1, 10000)
     , foregroundMean_("foregroundMean", "Foreground Mean Intensity", 0xffff*7/10, 0, 0xffff)
     , backgroundMean_("backgroundMean", "Background Mean Intensity", 0xffff*3/10, 0, 0xffff)
+    , noiseType_("noiseType", "Noise Type")
     , gaussianNoiseSD_("gaussianNoiseSD", "Noise Standard Deviation", 0xffff/10, 0, 0xffff)
     , density_("density", "Object Density", 0.1, 0.0, 1.0)
     , seed_("seed", "RNG Seed", 0, 0, std::numeric_limits<int>::max())
@@ -84,6 +85,13 @@ LargeTestDataGenerator::LargeTestDataGenerator()
         foregroundMean_.setTracking(false);
     addProperty(backgroundMean_);
         backgroundMean_.setTracking(false);
+    addProperty(noiseType_);
+        noiseType_.addOption("gaussian", "Gaussian", LargeTestDataGeneratorInput::GAUSSIAN);
+        noiseType_.addOption("poisson", "Poisson", LargeTestDataGeneratorInput::POISSON);
+        ON_CHANGE_LAMBDA(noiseType_, [this] () {
+            gaussianNoiseSD_.setVisibleFlag(noiseType_.getValue() == LargeTestDataGeneratorInput::GAUSSIAN);
+        });
+        noiseType_.selectByValue(LargeTestDataGeneratorInput::GAUSSIAN);
     addProperty(gaussianNoiseSD_);
         gaussianNoiseSD_.setTracking(false);
     addProperty(density_);
@@ -157,6 +165,7 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
         randomEngine,
         foregroundMean_.get(),
         backgroundMean_.get(),
+        noiseType_.getValue(),
         gaussianNoiseSD,
         density_.get(),
         structureSizeRange_.get(),
@@ -745,34 +754,18 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     }
 }
 
-LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progressReporter) const {
-    SubtaskProgressReporterCollection<2> globalProgressSteps(progressReporter, {0.02, 0.98});
-
-    tgtAssert(input.outputVolumeNoisy, "No outputVolume");
-    tgtAssert(input.outputVolumeGT, "No outputVolume");
+template<typename NoiseTypeImpl>
+static void rasterize(
+        LargeTestDataGeneratorInput& input,
+        NoiseTypeImpl noise,
+        Balls& balls,
+        Cylinders& cylinders,
+        std::vector<std::vector<tgt::vec3>> foregroundLabels,
+        std::vector<std::vector<tgt::vec3>> backgroundLabels,
+        ProgressReporter& progress
+        ) {
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
     tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
-    Balls balls{};
-    Cylinders cylinders{};
-
-
-    std::vector<std::vector<tgt::vec3>> foregroundLabels{};
-    std::vector<std::vector<tgt::vec3>> backgroundLabels{};
-
-    auto& initProgress = globalProgressSteps.get<0>();
-    switch(input.scenario) {
-        case LargeTestDataGeneratorInput::CELLS: {
-            initCells(input, balls, cylinders, foregroundLabels, backgroundLabels, initProgress);
-            break;
-        }
-        case LargeTestDataGeneratorInput::VESSELS: {
-            initCylinders(input, balls, cylinders, foregroundLabels, backgroundLabels, initProgress);
-            break;
-        }
-        default: {
-            tgtAssert(false, "Invalid scenario");
-        }
-    }
 
     std::mutex intervalWalkerMutex;
     std::vector<Interval<int, size_t>> ballIntervals;
@@ -792,7 +785,6 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     std::uniform_int_distribution<uint64_t> sliceBaseSeedDistr(0, std::numeric_limits<uint64_t>::max());
     uint64_t baseSeed = sliceBaseSeedDistr(input.randomEngine);
 
-    auto& progress = globalProgressSteps.get<1>();
     ThreadedTaskProgressReporter parallelProgress(progress, dim.z);
 
 //#undef VRN_MODULE_OPENMP
@@ -876,12 +868,9 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
                     inside |= cylinders.insideSingle(p, i);
                 }
                 //bool inside = (balls.inside(p)) || cylinders.inside(p);
-                int val = inside ? input.foregroundMean : input.backgroundMean;
+                uint16_t val = inside ? input.foregroundMean : input.backgroundMean;
 
-                int noise = tgt::fastround(gsl_ran_gaussian_ziggurat(randomEngine, input.gaussianNoiseSD));
-                val += noise;
-                val = tgt::clamp(val, 0, 0xffff);
-                sliceNoisy.voxel(slicePos) = val;
+                sliceNoisy.voxel(slicePos) = noise.apply(val, randomEngine);
 
                 sliceGT.voxel(slicePos) = inside ? 255 : 0;
             }
@@ -919,8 +908,68 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
             }
         }
         if(tries == 0) {
-            LWARNING("Failed to retain a background label!");
+            LWARNINGC("LargeTestDataGenerator", "Failed to retain a background label!");
         }
+    }
+
+}
+
+struct GaussianNoiseGenerator {
+    float standardDeviation_;
+
+    inline uint16_t apply(uint16_t input, pcg32_state& randomEngine) const {
+        int val = input;
+        val += tgt::fastround(gsl_ran_gaussian_ziggurat(randomEngine, standardDeviation_));
+        return tgt::clamp(val, 0, 0xffff);
+    };
+};
+struct PoissonNoiseGenerator {
+    inline uint16_t apply(uint16_t input, pcg32_state& randomEngine) const {
+        int val = input;
+        float std = std::sqrt(static_cast<float>(input));
+        val += tgt::fastround(gsl_ran_gaussian_ziggurat(randomEngine, std));
+        return tgt::clamp(val, 0, 0xffff);
+    };
+};
+
+
+LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progressReporter) const {
+    SubtaskProgressReporterCollection<2> globalProgressSteps(progressReporter, {0.02, 0.98});
+
+    tgtAssert(input.outputVolumeNoisy, "No outputVolume");
+    tgtAssert(input.outputVolumeGT, "No outputVolume");
+    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
+    tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
+    Balls balls{};
+    Cylinders cylinders{};
+
+
+    std::vector<std::vector<tgt::vec3>> foregroundLabels{};
+    std::vector<std::vector<tgt::vec3>> backgroundLabels{};
+
+    auto& initProgress = globalProgressSteps.template get<0>();
+    switch(input.scenario) {
+        case LargeTestDataGeneratorInput::CELLS: {
+            initCells(input, balls, cylinders, foregroundLabels, backgroundLabels, initProgress);
+            break;
+        }
+        case LargeTestDataGeneratorInput::VESSELS: {
+            initCylinders(input, balls, cylinders, foregroundLabels, backgroundLabels, initProgress);
+            break;
+        }
+        default: {
+            tgtAssert(false, "Invalid scenario");
+        }
+    }
+
+    auto& p = globalProgressSteps.template get<1>();
+    switch(input.noiseType) {
+        case LargeTestDataGeneratorInput::GAUSSIAN:
+            rasterize(input, GaussianNoiseGenerator { input.gaussianNoiseSD }, balls, cylinders, foregroundLabels, backgroundLabels, p);
+            break;
+        case LargeTestDataGeneratorInput::POISSON:
+            rasterize(input, PoissonNoiseGenerator {}, balls, cylinders, foregroundLabels, backgroundLabels, p);
+            break;
     }
 
     std::unique_ptr<PointSegmentListGeometryVec3> fg(new PointSegmentListGeometryVec3());
@@ -935,6 +984,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     };
     //outputVolume will be destroyed and thus closed now.
 }
+
 void LargeTestDataGenerator::processComputeOutput(LargeTestDataGeneratorOutput output) {
     // outputVolume has been destroyed and thus closed by now.
     // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)

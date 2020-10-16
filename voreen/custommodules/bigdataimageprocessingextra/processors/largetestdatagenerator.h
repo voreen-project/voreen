@@ -52,6 +52,10 @@ struct LargeTestDataGeneratorInput {
         CELLS,
         VESSELS,
     };
+    enum NoiseType {
+        GAUSSIAN,
+        POISSON,
+    };
     typedef std::minstd_rand random_engine_type;
 
     Scenario scenario;
@@ -60,6 +64,7 @@ struct LargeTestDataGeneratorInput {
     random_engine_type randomEngine;
     uint16_t foregroundMean;
     uint16_t backgroundMean;
+    NoiseType noiseType;
     float gaussianNoiseSD;
     float density;
     tgt::ivec2 structureSizeRange;
@@ -72,6 +77,7 @@ struct LargeTestDataGeneratorInput {
             , random_engine_type randomEngine
             , uint16_t foregroundMean
             , uint16_t backgroundMean
+            , NoiseType noiseType
             , float gaussianNoiseSD
             , float density
             , tgt::ivec2 structureSizeRange
@@ -83,6 +89,7 @@ struct LargeTestDataGeneratorInput {
         , randomEngine(randomEngine)
         , foregroundMean(foregroundMean)
         , backgroundMean(backgroundMean)
+        , noiseType(noiseType)
         , gaussianNoiseSD(gaussianNoiseSD)
         , density(density)
         , structureSizeRange(structureSizeRange)
@@ -98,6 +105,7 @@ struct LargeTestDataGeneratorInput {
         , randomEngine(old.randomEngine)
         , foregroundMean(old.foregroundMean)
         , backgroundMean(old.backgroundMean)
+        , noiseType(old.noiseType)
         , gaussianNoiseSD(old.gaussianNoiseSD)
         , density(old.density)
         , structureSizeRange(old.structureSizeRange)
@@ -143,6 +151,7 @@ private:
     TempPathProperty outputVolumeGTFilePath_;
     IntProperty foregroundMean_;
     IntProperty backgroundMean_;
+    OptionProperty<LargeTestDataGeneratorInput::NoiseType> noiseType_;
     FloatProperty gaussianNoiseSD_;
     FloatProperty density_;
     IntProperty seed_;
