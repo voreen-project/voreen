@@ -926,10 +926,29 @@ struct GaussianNoiseGenerator {
 };
 struct PoissonNoiseGenerator {
     inline uint16_t apply(uint16_t input, pcg32_state& randomEngine) const {
-        int val = input;
-        float std = std::sqrt(static_cast<float>(input));
-        val += tgt::fastround(gsl_ran_gaussian_ziggurat(randomEngine, std));
-        return tgt::clamp(val, 0, 0xffff);
+        if(input < 50) {
+            if(input == 0) {
+                return 0;
+            }
+            int x = 0;
+            float lambda = static_cast<float>(input);
+            float p = std::exp(-lambda);
+            float s = p;
+
+            uint32_t rint = pcg32(randomEngine);
+            float u = static_cast<float>(rint);
+            while(u > s * static_cast<float>(0xffffffff)) {
+                ++x;
+                p *= lambda/x;
+                s += p;
+            }
+            return x;
+        } else {
+            int val = input;
+            float std = std::sqrt(static_cast<float>(input));
+            val += tgt::fastround(gsl_ran_gaussian_ziggurat(randomEngine, std));
+            return tgt::clamp(val, 0, 0xffff);
+        }
     };
 };
 
