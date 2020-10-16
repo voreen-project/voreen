@@ -942,6 +942,14 @@ template<typename T> inline TGT_BASE_TYPE<T> round(const TGT_BASE_TYPE<T>& v) { 
     return result; \
 }
 
+#define TGT_VEC_FASTROUND \
+template<typename T> inline TGT_BASE_TYPE<T> fastround(const TGT_BASE_TYPE<T>& v) { \
+    TGT_BASE_TYPE<T> result; \
+    for (size_t i = 0; i < v.size; ++i) \
+        result[i] = fastround(v.elem[i]); \
+    return result; \
+}
+
 #define TGT_VEC_SIGN \
 template<typename T> inline TGT_BASE_TYPE<T> sign(const TGT_BASE_TYPE<T>& v) { \
     TGT_BASE_TYPE<T> result; \
@@ -1080,6 +1088,7 @@ template<typename T> inline bool hxor(const TGT_BASE_TYPE<T>& v) { \
     TGT_VEC_CEIL \
     TGT_VEC_FIX \
     TGT_VEC_ROUND \
+    TGT_VEC_FASTROUND \
     TGT_VEC_SIGN \
     TGT_VEC_IFLOOR \
     TGT_VEC_ICEIL \

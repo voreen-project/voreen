@@ -195,22 +195,34 @@ template<> inline long long     abs(long long v)    { return std::abs(v); }
     round
 */
 
-/// Return the integer nearest to \p f.
+/// Return the integer nearest to \p f according to the default fp rounding mode.
+inline float fastround(float f) {
+    // This should generate the fast roundss instruction on x86
+    return std::nearbyintf(f);
+}
+
+/// Return the integer nearest to \p f according to the default fp rounding mode.
+inline double fastround(double d) {
+    // This should generate the fast roundsd instruction on x86
+    return std::nearbyint(d);
+}
+
+/// Return the integer nearest to \p f. Rounding occurs towards negative infinity in edge cases
 inline float round(float f) {
     return std::floor(f + 0.5f);
 }
 
-/// Return the integer nearest to \p d.
+/// Return the integer nearest to \p d. Rounding occurs towards negative infinity in edge cases
 inline double round(double d) {
     return std::floor(d + 0.5);
 }
 
-/// Return the integer nearest to \p f.
+/// Return the integer nearest to \p f. Rounding occurs towards negative infinity in edge cases
 inline int iround(float f) {
     return static_cast<int>(round(f));
 }
 
-/// Return the integer nearest to \p d.
+/// Return the integer nearest to \p d. Rounding occurs towards negative infinity in edge cases
 inline int iround(double d) {
     return static_cast<int>(round(d));
 }
