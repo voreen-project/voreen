@@ -60,7 +60,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , structureSizeRange_("structureSizeRange", "Structure Size", 1, 1, 10000)
     , foregroundMean_("foregroundMean", "Foreground Mean Intensity", 0xffff*7/10, 0, 0xffff)
     , backgroundMean_("backgroundMean", "Background Mean Intensity", 0xffff*3/10, 0, 0xffff)
-    , noiseLevel_("noiseLevel", "Noise Level", 0.01, 0.0, 1.0)
+    , gaussianNoiseSD_("gaussianNoiseSD", "Noise Standard Deviation", 0xffff/10, 0, 0xffff)
     , density_("density", "Object Density", 0.1, 0.0, 1.0)
     , seed_("seed", "RNG Seed", 0, 0, std::numeric_limits<int>::max())
     , outputVolumeNoisyFilePath_("outputVolumeFilePath", "Volume Noisy Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
@@ -84,8 +84,8 @@ LargeTestDataGenerator::LargeTestDataGenerator()
         foregroundMean_.setTracking(false);
     addProperty(backgroundMean_);
         backgroundMean_.setTracking(false);
-    addProperty(noiseLevel_);
-        noiseLevel_.setTracking(false);
+    addProperty(gaussianNoiseSD_);
+        gaussianNoiseSD_.setTracking(false);
     addProperty(density_);
         density_.setTracking(false);
     addProperty(seed_);
@@ -110,7 +110,7 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
 
     tgt::svec3 dim = volumeDimensions_.get();
 
-    float noiseRange = noiseLevel_.get();
+    float gaussianNoiseSD = gaussianNoiseSD_.get();
 
     LargeTestDataGeneratorInput::random_engine_type randomEngine {};
     randomEngine.seed(seed_.get());
@@ -147,7 +147,7 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
 
     LINFO("Using structure size range: " << structureSizeRange_.get());
     LINFO("Using voldim: " << dim);
-    LINFO("Using noise: " << noiseRange);
+    LINFO("Using noise SD: " << gaussianNoiseSD);
     LINFO("Using seed: " << seed_.get());
 
     return LargeTestDataGeneratorInput(
@@ -157,7 +157,7 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
         randomEngine,
         foregroundMean_.get(),
         backgroundMean_.get(),
-        noiseRange,
+        gaussianNoiseSD,
         density_.get(),
         structureSizeRange_.get(),
         retainLabel_.get()
@@ -878,7 +878,7 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
                 //bool inside = (balls.inside(p)) || cylinders.inside(p);
                 int val = inside ? input.foregroundMean : input.backgroundMean;
 
-                int noise = gsl_ran_gaussian_ziggurat(randomEngine, input.noiseRange) * 0xffff;
+                int noise = tgt::fastround(gsl_ran_gaussian_ziggurat(randomEngine, input.gaussianNoiseSD));
                 val += noise;
                 val = tgt::clamp(val, 0, 0xffff);
                 sliceNoisy.voxel(slicePos) = val;

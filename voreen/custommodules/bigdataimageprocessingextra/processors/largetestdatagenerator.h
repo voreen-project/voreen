@@ -60,7 +60,7 @@ struct LargeTestDataGeneratorInput {
     random_engine_type randomEngine;
     uint16_t foregroundMean;
     uint16_t backgroundMean;
-    float noiseRange;
+    float gaussianNoiseSD;
     float density;
     tgt::ivec2 structureSizeRange;
     bool retainLabel;
@@ -72,7 +72,7 @@ struct LargeTestDataGeneratorInput {
             , random_engine_type randomEngine
             , uint16_t foregroundMean
             , uint16_t backgroundMean
-            , float noiseRange
+            , float gaussianNoiseSD
             , float density
             , tgt::ivec2 structureSizeRange
             , bool retainLabel
@@ -83,7 +83,7 @@ struct LargeTestDataGeneratorInput {
         , randomEngine(randomEngine)
         , foregroundMean(foregroundMean)
         , backgroundMean(backgroundMean)
-        , noiseRange(noiseRange)
+        , gaussianNoiseSD(gaussianNoiseSD)
         , density(density)
         , structureSizeRange(structureSizeRange)
         , retainLabel(retainLabel)
@@ -98,7 +98,7 @@ struct LargeTestDataGeneratorInput {
         , randomEngine(old.randomEngine)
         , foregroundMean(old.foregroundMean)
         , backgroundMean(old.backgroundMean)
-        , noiseRange(old.noiseRange)
+        , gaussianNoiseSD(old.gaussianNoiseSD)
         , density(old.density)
         , structureSizeRange(old.structureSizeRange)
         , retainLabel(old.retainLabel)
@@ -143,7 +143,7 @@ private:
     TempPathProperty outputVolumeGTFilePath_;
     IntProperty foregroundMean_;
     IntProperty backgroundMean_;
-    FloatProperty noiseLevel_;
+    FloatProperty gaussianNoiseSD_;
     FloatProperty density_;
     IntProperty seed_;
     IntVec3Property volumeDimensions_;
