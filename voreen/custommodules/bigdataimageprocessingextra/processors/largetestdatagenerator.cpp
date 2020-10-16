@@ -58,6 +58,8 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , backgroundLabelsPort_(Port::OUTPORT, "largetestdatagenerator.backgroundLabelsPort", "Background Seeds Outport", true, Processor::VALID)
     , volumeDimensions_("volumeDimensions", "Volume Dimensions", tgt::ivec3(2), tgt::ivec3(2), tgt::ivec3(10000))
     , structureSizeRange_("structureSizeRange", "Structure Size", 1, 1, 10000)
+    , foregroundMean_("foregroundMean", "Foreground Mean Intensity", 0xffff*7/10, 0, 0xffff)
+    , backgroundMean_("backgroundMean", "Background Mean Intensity", 0xffff*3/10, 0, 0xffff)
     , noiseLevel_("noiseLevel", "Noise Level", 0.01, 0.0, 1.0)
     , density_("density", "Object Density", 0.1, 0.0, 1.0)
     , seed_("seed", "RNG Seed", 0, 0, std::numeric_limits<int>::max())
@@ -78,6 +80,10 @@ LargeTestDataGenerator::LargeTestDataGenerator()
         volumeDimensions_.setTracking(false);
     addProperty(structureSizeRange_);
         structureSizeRange_.setMaxValue(tgt::min(volumeDimensions_.get()));
+    addProperty(foregroundMean_);
+        foregroundMean_.setTracking(false);
+    addProperty(backgroundMean_);
+        backgroundMean_.setTracking(false);
     addProperty(noiseLevel_);
         noiseLevel_.setTracking(false);
     addProperty(density_);
@@ -113,7 +119,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
     const std::string baseTypeGT = "uint8";
     const tgt::vec3 spacing = tgt::vec3::one;
     const tgt::vec3 offset = tgt::vec3::zero;
-    const RealWorldMapping rwm = RealWorldMapping(1,0,"");
+    const RealWorldMapping rwmNoisy = RealWorldMapping::createDenormalizingMapping(baseTypeNoisy);
+    const RealWorldMapping rwmGT = RealWorldMapping(1,0,"");
     const int deflateLevelNoisy = 0;
     const int deflateLevelGT = 1;
 
@@ -132,11 +139,11 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
 
     outputVolumeNoisy->writeSpacing(spacing);
     outputVolumeNoisy->writeOffset(offset);
-    outputVolumeNoisy->writeRealWorldMapping(rwm);
+    outputVolumeNoisy->writeRealWorldMapping(rwmNoisy);
 
     outputVolumeGT->writeSpacing(spacing);
     outputVolumeGT->writeOffset(offset);
-    outputVolumeGT->writeRealWorldMapping(rwm);
+    outputVolumeGT->writeRealWorldMapping(rwmGT);
 
     LINFO("Using structure size range: " << structureSizeRange_.get());
     LINFO("Using voldim: " << dim);
@@ -148,6 +155,8 @@ LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
         std::move(outputVolumeNoisy),
         std::move(outputVolumeGT),
         randomEngine,
+        foregroundMean_.get(),
+        backgroundMean_.get(),
         noiseRange,
         density_.get(),
         structureSizeRange_.get(),
@@ -783,8 +792,6 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     std::uniform_int_distribution<uint64_t> sliceBaseSeedDistr(0, std::numeric_limits<uint64_t>::max());
     uint64_t baseSeed = sliceBaseSeedDistr(input.randomEngine);
 
-    const float insideBase = 0.7;
-    const float outsideBase = 0.3;
     auto& progress = globalProgressSteps.get<1>();
     ThreadedTaskProgressReporter parallelProgress(progress, dim.z);
 
@@ -869,11 +876,12 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
                     inside |= cylinders.insideSingle(p, i);
                 }
                 //bool inside = (balls.inside(p)) || cylinders.inside(p);
-                float val = inside ? insideBase : outsideBase;
+                int val = inside ? input.foregroundMean : input.backgroundMean;
 
-                val += gsl_ran_gaussian_ziggurat(randomEngine, input.noiseRange);
-                val = tgt::clamp(val, 0.0f, 1.0f);
-                sliceNoisy.voxel(slicePos) = val * 0xffff;
+                int noise = gsl_ran_gaussian_ziggurat(randomEngine, input.noiseRange) * 0xffff;
+                val += noise;
+                val = tgt::clamp(val, 0, 0xffff);
+                sliceNoisy.voxel(slicePos) = val;
 
                 sliceGT.voxel(slicePos) = inside ? 255 : 0;
             }

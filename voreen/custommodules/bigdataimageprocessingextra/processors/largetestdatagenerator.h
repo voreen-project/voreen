@@ -58,6 +58,8 @@ struct LargeTestDataGeneratorInput {
     std::unique_ptr<HDF5FileVolume> outputVolumeNoisy;
     std::unique_ptr<HDF5FileVolume> outputVolumeGT;
     random_engine_type randomEngine;
+    uint16_t foregroundMean;
+    uint16_t backgroundMean;
     float noiseRange;
     float density;
     tgt::ivec2 structureSizeRange;
@@ -68,6 +70,8 @@ struct LargeTestDataGeneratorInput {
             , std::unique_ptr<HDF5FileVolume>&& outputVolumeNoisy
             , std::unique_ptr<HDF5FileVolume>&& outputVolumeGT
             , random_engine_type randomEngine
+            , uint16_t foregroundMean
+            , uint16_t backgroundMean
             , float noiseRange
             , float density
             , tgt::ivec2 structureSizeRange
@@ -77,6 +81,8 @@ struct LargeTestDataGeneratorInput {
         , outputVolumeNoisy(std::move(outputVolumeNoisy))
         , outputVolumeGT(std::move(outputVolumeGT))
         , randomEngine(randomEngine)
+        , foregroundMean(foregroundMean)
+        , backgroundMean(backgroundMean)
         , noiseRange(noiseRange)
         , density(density)
         , structureSizeRange(structureSizeRange)
@@ -90,6 +96,8 @@ struct LargeTestDataGeneratorInput {
         , outputVolumeNoisy(std::move(old.outputVolumeNoisy))
         , outputVolumeGT(std::move(old.outputVolumeGT))
         , randomEngine(old.randomEngine)
+        , foregroundMean(old.foregroundMean)
+        , backgroundMean(old.backgroundMean)
         , noiseRange(old.noiseRange)
         , density(old.density)
         , structureSizeRange(old.structureSizeRange)
@@ -133,6 +141,8 @@ private:
     // General properties
     TempPathProperty outputVolumeNoisyFilePath_;
     TempPathProperty outputVolumeGTFilePath_;
+    IntProperty foregroundMean_;
+    IntProperty backgroundMean_;
     FloatProperty noiseLevel_;
     FloatProperty density_;
     IntProperty seed_;
