@@ -56,7 +56,7 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromPropertiesAdaptive
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minEdgeWeight_));
     RWNoiseModel noiseModel = input.noiseModel_;
 
-    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<NoiseModel>(minWeight, input.inputHandle_->getSpacing()));
+    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<NoiseModel>(minWeight));
 
     auto rwm = input.inputHandle_->getRealWorldMapping();
     auto rwInput = NoiseModel::preprocess(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);

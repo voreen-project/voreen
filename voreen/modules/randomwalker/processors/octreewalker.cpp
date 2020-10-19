@@ -879,10 +879,8 @@ template<typename NoiseModel>
 static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RandomWalkerVoxelAccessorBrick& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
 
     float minSpacing = tgt::min(spacing);
-    tgt::vec3 spacingNorm = spacing/minSpacing;
-    auto edgeWeight = [minWeight, betaBias, spacingNorm] (float voxelIntensity, float neighborIntensity, int dim) {
-        float spacingFactor = spacingNorm[dim];
-        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, spacingFactor, betaBias);
+    auto edgeWeight = [minWeight, betaBias] (float voxelIntensity, float neighborIntensity, int dim) {
+        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, betaBias);
         weight = std::max(weight, minWeight);
 
         return weight;

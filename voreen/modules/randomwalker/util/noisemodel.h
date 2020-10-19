@@ -43,12 +43,12 @@ struct RWNoiseModelGaussian {
     static VolumeAtomic<float> preprocess(const VolumeRAM& vol, RealWorldMapping rwm) {
         return preprocessForAdaptiveParameterSetting(vol);
     }
-    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
+    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float betaBias) {
         float beta = 0.125f * betaBias;
         float intDiff = (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
-        return weight/spacingFactor;
+        return weight;
     }
 };
 struct RWNoiseModelPoisson {
@@ -70,13 +70,13 @@ struct RWNoiseModelPoisson {
         }
         return converted;
     }
-    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float spacingFactor, float betaBias) {
+    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float betaBias) {
         float beta = 0.5f * betaBias;
         float weight;
 
         float d = sqrt(voxelIntensity) - sqrt(neighborIntensity);
         weight = exp(-beta * d * d);
-        return weight/spacingFactor;
+        return weight;
     }
 };
 
