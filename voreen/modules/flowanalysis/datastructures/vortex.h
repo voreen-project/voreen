@@ -30,6 +30,7 @@
 #include <vector>
 
 namespace voreen {
+
 class Vortex {
 public:
     enum class Orientation : int32_t

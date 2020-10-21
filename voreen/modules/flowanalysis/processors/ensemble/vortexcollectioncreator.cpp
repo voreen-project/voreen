@@ -120,14 +120,21 @@ void VortexCollectionCreator::updateButton()
             const auto volumeVLock = VolumeRAMRepresentationLock( timeStep.getVolume( "V" ) );
             const auto volumeWLock = VolumeRAMRepresentationLock( timeStep.getVolume( "W" ) );
 
-            const auto volumeU = dynamic_cast<const VolumeRAM_Double*>( volumeULock.operator->() );
-            const auto volumeV = dynamic_cast<const VolumeRAM_Double*>( volumeVLock.operator->() );
-            const auto volumeW = dynamic_cast<const VolumeRAM_Double*>( volumeWLock.operator->() );
+            const auto volumeU = dynamic_cast<const VolumeRAM_Double*>( *volumeULock );
+            const auto volumeV = dynamic_cast<const VolumeRAM_Double*>( *volumeVLock );
+            const auto volumeW = dynamic_cast<const VolumeRAM_Double*>( *volumeWLock );
 
             auto velocityRAM = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
 #pragma omp parallel for
-            for( long x = 0; x < dim.x; ++x ) for( long y = 0; y < dim.y; ++y ) for( long z = 0; z < dim.z; ++z )
-                velocityRAM->voxel( x, y, z ) = tgt::dvec3( volumeU->voxel( x, y, z ), volumeV->voxel( x, y, z ), volumeW->voxel( x, y, z ) );
+            for( long x = 0; x < dim.x; ++x ) {
+                for (long y = 0; y < dim.y; ++y) {
+                    for (long z = 0; z < dim.z; ++z) {
+                        velocityRAM->voxel(x, y, z) = tgt::dvec3(volumeU->voxel(x, y, z),
+                                                                 volumeV->voxel(x, y, z),
+                                                                 volumeW->voxel(x, y, z));
+                    }
+                }
+            }
 
             const auto velocityVolume = std::unique_ptr<Volume>( new Volume( velocityRAM.release(), timeStep.getVolume( "U" ) ) );
             const auto velocityLock = VolumeRAMRepresentationLock( velocityVolume.get() );

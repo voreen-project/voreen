@@ -35,24 +35,24 @@
 #include "Eigen/Eigenvalues"
 
 #include <vector>
-#include <chrono>
 
 namespace voreen {
 
-ParallelVectors::ParallelVectors() : Processor(),
-    _inV(Port::INPORT, "inport", "Vector3 Volume Inport"),
-    _inW(Port::INPORT, "inport1", "Vector3 Volume Inport "),
-    _inJacobi(Port::INPORT, "inportJacobiEigenvalues", "Jacobi Eigenvalues Matrix Volume Inport"),
-    _inMask(Port::INPORT, "inportMask", "Mask Volume Inport"),
-    _out(Port::OUTPORT, "outport", "Parallel Vector Solution Points"),
-    _sujudiHaimes("sujudiHaimes", "Use Sujudi-Haimes method for filtering", false, Processor::VALID)
+ParallelVectors::ParallelVectors()
+    : Processor()
+    , _inV(Port::INPORT, "in_v", "Vector field V")
+    , _inW(Port::INPORT, "in_w", "Vector field W")
+    , _inJacobi(Port::INPORT, "in_jacobi", "Jacobi Matrix (Optional)")
+    , _inMask(Port::INPORT, "inportMask", "Mask (Optional)")
+    , _out(Port::OUTPORT, "outport", "Parallel Vector Solution Points")
+    , _sujudiHaimes("sujudiHaimes", "Use Sujudi-Haimes method for filtering", false, Processor::VALID)
 {
-    _inV.addCondition(new PortConditionVolumeType("Vector3(double)", "Volume_3xDouble"));
     this->addPort(_inV);
-    _inW.addCondition(new PortConditionVolumeType("Vector3(double)", "Volume_3xDouble"));
+    _inV.addCondition(new PortConditionVolumeType3xFloat());
     this->addPort(_inW);
-    _inJacobi.addCondition(new PortConditionVolumeType("Matrix3(float)", "Volume_Mat3Float"));
+    _inW.addCondition(new PortConditionVolumeType3xFloat());
     this->addPort(_inJacobi);
+    _inJacobi.addCondition(new PortConditionVolumeType("Matrix3(float)", "Volume_Mat3Float"));
     this->addPort(_inMask);
     this->addPort(_out);
     this->addProperty(_sujudiHaimes);
@@ -70,12 +70,41 @@ void ParallelVectors::onChangedJacobianData()
 
 bool ParallelVectors::isReady() const
 {
-    return _inV.isReady() && _inW.isReady();
+    if(!_inV.isReady() || !_inW.isReady()) {
+        setNotReadyErrorMessage("V and W must both be defined");
+        return false;
+    }
+
+    const auto* volumeV = _inV.getData();
+    const auto* volumeW = _inW.getData();
+    const auto* volumeJacobi = _inJacobi.getData();
+
+    if (volumeV->getDimensions() != volumeW->getDimensions() || (volumeJacobi && volumeV->getDimensions() != volumeJacobi->getDimensions()))
+    {
+        setNotReadyErrorMessage("Input dimensions do not match");
+        return false;
+    }
+
+    const auto dim = volumeV->getDimensions();
+    if (std::min({dim.x, dim.y, dim.z}) < 2)
+    {
+        setNotReadyErrorMessage("Input dimensions must be greater than 1 in each dimension");
+        return false;
+    }
+
+    return true;
+}
+
+void ParallelVectors::setDescriptions() {
+    setDescription("This processor implements the parallel vectors operator by Peikert and Roth and optional sujudi-haimes filtering. "
+                   "It can be used to extract vortex corelines by using velocity, acceleration volumes, as well as the jacobi matrix as input.");
+    _inV.setDescription("First input volume (V) for the parallel vectors operator");
+    _inW.setDescription("Second input volume (W) for the parallel vectors operator");
+    _inJacobi.setDescription("(Optional) Jacobi matrix to be used for sujudi-haimes filtering");
 }
 
 void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFloat& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution )
 {
-    const auto startTime = std::chrono::high_resolution_clock::now();
     const auto dim = V.getDimensions();
     auto triangleSolutions = std::vector<tgt::vec3>();
     auto triangleSolutionIndices = std::vector<int32_t>((dim.x - 1) * (dim.y - 1) * (dim.z - 1) * TetrahedraPerCube * TrianglesPerTetrahedron, -1);
@@ -256,14 +285,9 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
     outSolution.dimensions = dim;
     outSolution.solutions.swap(triangleSolutions);
     outSolution.triangleSolutionIndices.swap(triangleSolutionIndices);
-
-    const auto endTime = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime ).count() / 1000.0f;
-    std::cout << "[ParallelVectors]: Finished in " << time << " seconds." << std::endl;
 }
 void ParallelVectors::Process( const VolumeRAM_3xDouble& V, const VolumeRAM_3xDouble& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution )
 {
-    const auto startTime = std::chrono::high_resolution_clock::now();
     const auto dim = V.getDimensions();
     auto triangleSolutions = std::vector<tgt::vec3>();
     auto triangleSolutionIndices = std::vector<int32_t>((dim.x - 1) * (dim.y - 1) * (dim.z - 1) * TetrahedraPerCube * TrianglesPerTetrahedron, -1);
@@ -444,36 +468,30 @@ void ParallelVectors::Process( const VolumeRAM_3xDouble& V, const VolumeRAM_3xDo
     outSolution.dimensions = dim;
     outSolution.solutions.swap(triangleSolutions);
     outSolution.triangleSolutionIndices.swap(triangleSolutionIndices);
-
-    const auto endTime = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime ).count() / 1000.0f;
-    std::cout << "[ParallelVectors]: Finished in " << time << " seconds." << std::endl;
 }
 
-void ParallelVectors::process()
-{
-    if (!_inV.hasData() || !_inW.hasData())
-        return;
+void ParallelVectors::process() {
 
-    const auto volume1 = dynamic_cast<const VolumeRAM_3xDouble*>(_inV.getData()->getRepresentation<VolumeRAM>());
-    const auto volume2 = dynamic_cast<const VolumeRAM_3xDouble*>(_inW.getData()->getRepresentation<VolumeRAM>());
-    const auto jacobianVolume = _sujudiHaimes.get() && _inJacobi.hasData() ? dynamic_cast<const VolumeRAM_Mat3Float *>(_inJacobi.getData()->getRepresentation<VolumeRAM>()) : nullptr;
-    const auto mask = _inMask.hasData()? _inMask.getData()->getRepresentation<VolumeRAM>() : nullptr;
+    VolumeRAMRepresentationLock volumeV(_inV.getData());
+    VolumeRAMRepresentationLock volumeW(_inW.getData());
 
-    if (volume1->getDimensions() != volume2->getDimensions() || (jacobianVolume && volume1->getDimensions() != jacobianVolume->getDimensions()))
-    {
-        throw VoreenException("The input volumes' dimensions have to match.");
+    std::unique_ptr<VolumeRAMRepresentationLock> volumeJacobi;
+    if(_sujudiHaimes.get() && _inJacobi.hasData()) {
+        volumeJacobi.reset(new VolumeRAMRepresentationLock(_inJacobi.getData()));
     }
+    const auto* jacobi = volumeJacobi ? dynamic_cast<const VolumeRAM_Mat3Float*>(**volumeJacobi) : nullptr;
 
-    const auto dim = volume1->getDimensions();
-    if (std::min({dim.x, dim.y, dim.z}) < 2)
-    {
-        throw VoreenException("Each of the input volumes' dimensions must be greater than 1.");
+    std::unique_ptr<VolumeRAMRepresentationLock> volumeMask;
+    if(_inMask.hasData()) {
+        volumeMask.reset(new VolumeRAMRepresentationLock(_inMask.getData()));
     }
+    const auto* mask = volumeMask ? **volumeMask : nullptr;
 
-    auto solution = std::unique_ptr<ParallelVectorSolutions>( new ParallelVectorSolutions() );
-    ParallelVectors::Process( *volume1, *volume2, jacobianVolume, mask, *solution );
-    _out.setData(solution.release());
+    auto solutions = std::unique_ptr<ParallelVectorSolutions>( new ParallelVectorSolutions() );
+    ParallelVectors::Process( *dynamic_cast<const VolumeRAM_3xFloat*>(*volumeV),
+                              *dynamic_cast<const VolumeRAM_3xFloat*>(*volumeV),
+                              jacobi, mask,*solutions );
+    _out.setData(solutions.release());
 }
 
 } // namespace voreen

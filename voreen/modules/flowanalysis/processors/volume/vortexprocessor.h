@@ -26,42 +26,52 @@
 #ifndef VRN_VORTEXPROCESSOR_H
 #define VRN_VORTEXPROCESSOR_H
 
-#include "voreen/core/processors/processor.h"
-#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/ports/geometryport.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-class VortexProcessor : public Processor {
+struct VortexProcessorIO {
+    PortDataPointer<VolumeBase> inputVolume;
+    std::unique_ptr<VolumeRAM_Mat3Float> outputJacobi;
+    std::unique_ptr<VolumeRAM_Float> outputDelta;
+    std::unique_ptr<VolumeRAM_Float> outputQ;
+    std::unique_ptr<VolumeRAM_Float> outputLambda2;
+};
+
+class VortexProcessor : public AsyncComputeProcessor<VortexProcessorIO, VortexProcessorIO> {
 public:
     VortexProcessor();
 
-    Processor* create() const override
-    {
-        return new VortexProcessor();
-    }
-    std::string getClassName() const override
-    {
-        return "VortexProcessor";
-    }
-    std::string getCategory() const override
-    {
-        return "Vortex Extraction";
-    }
-    bool isReady() const override
-    {
-        return _inportVelocity.isReady() && _inportMask.isReady();
-    }
+    virtual Processor* create() const;
+    virtual std::string getClassName() const      { return "VortexProcessor";       }
+    virtual std::string getCategory() const       { return "Vortex Extraction";     }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool isReady() const;
 
     static void Process( const VolumeRAM& velocity, const VolumeRAM& mask, VolumeRAM_Mat3Float& outJacobi, VolumeRAM_Float* outDelta, VolumeRAM_Float* outLambda2, VolumeRAM_Float* outQ );
 
-private:
-    void process() override;
+protected:
 
-    VolumePort _inportVelocity, _inportMask;
-    VolumePort _outportJacobi, _outportDelta, _outportLambda2, _outportQ;
+    virtual void setDescriptions();
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
+
+private:
+
+    // Ports
+    VolumePort inputVolume_;
+    VolumePort outputVolumeJacobi_;
+    VolumePort outputVolumeDelta_;
+    VolumePort outputVolumeQ_;
+    VolumePort outputVolumeLamda2_;
+
+    static const std::string loggerCat_;
 };
 
-}
+} // namespace voreen
 
-#endif // VRN_VORTEXPROCESSOR_H
+#endif

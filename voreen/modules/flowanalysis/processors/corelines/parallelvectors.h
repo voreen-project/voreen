@@ -38,10 +38,13 @@
 
 namespace voreen {
 
+/**
+ * This processor implements the parallel vectors operator by Peikert and Roth and optional sujudi-haimes filtering.
+ */
 class ParallelVectors : public Processor {
 public:
     ParallelVectors();
-    virtual Processor *create() const { return new ParallelVectors(); }
+    virtual Processor* create() const { return new ParallelVectors(); }
     virtual std::string getClassName() const { return "ParallelVectors"; }
     virtual std::string getCategory() const { return "Volume Processing"; }
     virtual bool isReady() const;
@@ -54,9 +57,11 @@ public:
 
 protected:
     virtual void process();
+    virtual void setDescriptions();
 
 private:
     void onChangedJacobianData();
+
     VolumePort _inV, _inW, _inJacobi, _inMask;
     ParallelVectorSolutionPointsPort _out;
     BoolProperty _sujudiHaimes;

@@ -37,7 +37,7 @@ namespace voreen {
 class CorelineCreator : public Processor {
 public:
     CorelineCreator();
-    virtual Processor *create() const { return new CorelineCreator(); }
+    virtual Processor* create() const { return new CorelineCreator(); }
     virtual std::string getClassName() const { return "CorelineCreator"; }
     virtual std::string getCategory() const { return "Geometry"; }
 

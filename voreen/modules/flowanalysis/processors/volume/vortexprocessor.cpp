@@ -25,99 +25,274 @@
 
 #include "vortexprocessor.h"
 
+#include "voreen/core/datastructures/volume/volume.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "Eigen/Eigenvalues"
+#include "voreen/core/datastructures/volume/operators/volumeoperatorgradient.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
-#include <chrono>
+
+#include "Eigen/Eigenvalues"
 
 namespace voreen {
 
-VortexProcessor::VortexProcessor() : Processor(),
-    _inportVelocity( Port::INPORT, "inport_velociy", "Velocity" ),
-    _inportMask( Port::INPORT, "inport_mask", "Mask" ),
-    _outportJacobi( Port::OUTPORT, "outport_jacobi", "Jacobi" ),
-    _outportDelta( Port::OUTPORT, "outport_delta", "Delta-Criterion" ),
-    _outportLambda2( Port::OUTPORT, "outport_lambda2", "Lambda2-Criterion" ),
-    _outportQ( Port::OUTPORT, "outport_q", "Q-Criterion" )
+const std::string VortexProcessor::loggerCat_("voreen.flowanalysis.VortexProcessor");
+
+VortexProcessor::VortexProcessor()
+    : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
+    , inputVolume_(Port::INPORT, "vortexprocessor.inputVolume", "Volume Input")
+    , outputVolumeJacobi_(Port::OUTPORT, "vortexprocessor.outputVolumeJacobi", "Jacobi matrix")
+    , outputVolumeDelta_(Port::OUTPORT, "vortexprocessor.outputVolumeDelta", "Delta-criterion")
+    , outputVolumeQ_(Port::OUTPORT, "vortexprocessor.outputVolumeQ", "Q-criterion")
+    , outputVolumeLamda2_(Port::OUTPORT, "vortexprocessor.outputVolumeLambda2", "Lambda2-criterion")
 {
-    this->addPort( _inportVelocity );
-    this->addPort( _inportMask );
-    this->addPort( _outportJacobi );
-    this->addPort( _outportDelta );
-    this->addPort( _outportLambda2 );
-    this->addPort( _outportQ );
+    addPort(inputVolume_);
+    inputVolume_.addCondition(new PortConditionVolumeChannelCount(3));
+
+    addPort(outputVolumeJacobi_);
+    addPort(outputVolumeDelta_);
+    addPort(outputVolumeQ_);
+    addPort(outputVolumeLamda2_);
 }
 
-void VortexProcessor::process()
-{
-    const auto velocityVolume = _inportVelocity.getData();
-    const auto maskVolume = _inportMask.getData();
+Processor* VortexProcessor::create() const {
+    return new VortexProcessor();
+}
 
-    if( !velocityVolume || !maskVolume || velocityVolume->getDimensions() != maskVolume->getDimensions() )
-    {
-        _outportJacobi.clear();
-        _outportDelta.clear();
-        _outportLambda2.clear();
-        _outportQ.clear();
-        return;
+bool VortexProcessor::isReady() const {
+    if(!inputVolume_.isReady()) {
+        setNotReadyErrorMessage("No input");
+        return false;
     }
 
-    const auto velocity = velocityVolume->getRepresentation<VolumeRAM>();
-    const auto mask = maskVolume->getRepresentation<VolumeRAM>();
-    const auto dim = velocity->getDimensions();
+    if(!outputVolumeJacobi_.isConnected() &&
+        !outputVolumeDelta_.isConnected() &&
+        !outputVolumeQ_.isConnected() &&
+        !outputVolumeLamda2_.isConnected())
+    {
+        setNotReadyErrorMessage("No output connected");
+        return false;
+    }
 
-    auto volumeJacobi = std::unique_ptr<VolumeRAM_Mat3Float>( new VolumeRAM_Mat3Float( dim ) );
-    auto volumeDelta = std::unique_ptr<VolumeRAM_Float>( new VolumeRAM_Float( dim ) );
-    auto volumeLambda2 = std::unique_ptr<VolumeRAM_Float>( new VolumeRAM_Float( dim ) );
-    auto volumeQ = std::unique_ptr<VolumeRAM_Float>( new VolumeRAM_Float( dim ) );
-
-    VortexProcessor::Process( *velocity, *mask, *volumeJacobi, volumeDelta.get(), volumeLambda2.get(), volumeQ.get() );
-
-    // --- Update Outports --- //
-    auto volume = new Volume( volumeJacobi.release(), tgt::vec3( 1.0f, 1.0f, 1.0f ), tgt::vec3::zero );
-    volume->getMetaDataContainer().addMetaData( "name", new StringMetaData( "JACOBI" ) );
-    _outportJacobi.setData( volume );
-
-    volume = new Volume( volumeDelta.release(), tgt::vec3( 1.0f, 1.0f, 1.0f ), tgt::vec3::zero );
-    volume->getMetaDataContainer().addMetaData( "name", new StringMetaData( "DELTA" ) );
-    _outportDelta.setData( volume );
-
-    volume = new Volume( volumeLambda2.release(), tgt::vec3( 1.0f, 1.0f, 1.0f ), tgt::vec3::zero );
-    volume->getMetaDataContainer().addMetaData( "name", new StringMetaData( "LAMBDA2" ) );
-    _outportLambda2.setData( volume );
-
-    volume = new Volume( volumeQ.release(), tgt::vec3( 1.0f, 1.0f, 1.0f ), tgt::vec3::zero );
-    volume->getMetaDataContainer().addMetaData( "name", new StringMetaData( "Q" ) );
-    _outportQ.setData( volume );
+    return true;
 }
+
+void VortexProcessor::setDescriptions() {
+
+}
+
+VortexProcessorIO VortexProcessor::prepareComputeInput() {
+
+    auto inputVolume = inputVolume_.getThreadSafeData();
+    if(!inputVolume) {
+        throw InvalidInputException("No input", InvalidInputException::S_ERROR);
+    }
+
+    const tgt::svec3 dim = inputVolume->getDimensions();
+
+    std::unique_ptr<VolumeRAM_Mat3Float> volumeJacobi;
+    if(outputVolumeJacobi_.isConnected()) {
+        volumeJacobi.reset(new VolumeRAM_Mat3Float( dim ));
+    }
+    std::unique_ptr<VolumeRAM_Float> volumeDelta;
+    if(outputVolumeDelta_.isConnected()) {
+        volumeDelta.reset(new VolumeRAM_Float( dim ));
+    }
+    std::unique_ptr<VolumeRAM_Float> volumeQ;
+    if(outputVolumeLamda2_.isConnected()) {
+        volumeQ.reset(new VolumeRAM_Float( dim ));
+    }
+    std::unique_ptr<VolumeRAM_Float> volumeLambda2;
+    if(outputVolumeQ_.isConnected()) {
+        volumeLambda2.reset(new VolumeRAM_Float( dim ));
+    }
+
+    return VortexProcessorIO{
+            std::move(inputVolume),
+            std::move(volumeJacobi),
+            std::move(volumeDelta),
+            std::move(volumeQ),
+            std::move(volumeLambda2)
+    };
+}
+
+VortexProcessorIO VortexProcessor::compute(VortexProcessorIO input, ProgressReporter& progressReporter) const {
+
+    auto& inputVolume = input.inputVolume;
+    VolumeRAMRepresentationLock inputVolumeData(inputVolume);
+
+    auto& volumeJacobi = input.outputJacobi;
+    auto& volumeDelta = input.outputDelta;
+    auto& volumeQ = input.outputQ;
+    auto& volumeLambda2 = input.outputLambda2;
+
+    tgt::Vector3<long> dimensions = inputVolumeData->getDimensions();
+    tgt::vec3 spacing = inputVolume->getSpacing();
+
+    const std::array<tgt::svec3, 7> offsets { tgt::svec3( 0, 0, 0 ),
+                                              tgt::svec3( -1, 0, 0 ), tgt::svec3( 1, 0, 0 ),
+                                              tgt::svec3( 0, -1, 0 ), tgt::svec3( 0, 1, 0 ),
+                                              tgt::svec3( 0, 0, -1 ), tgt::svec3( 0, 0, 1 )
+    };
+
+    ThreadedTaskProgressReporter progress(progressReporter, dimensions.z);
+
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for (long z = 3; z < dimensions.z-3; z++) {
+        for (long y = 3; y < dimensions.y-3; y++) {
+            for (long x = 3; x < dimensions.x-3; x++) {
+                tgt::svec3 pos(x, y, z);
+
+                // --- Compute Jacobian --- //
+                auto jacobi = Eigen::Matrix3f();
+                for (size_t i = 0; i < 3; i++) {
+                    for (size_t j = 0; j < 3; j++) {
+                        const auto b3 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2] * size_t(3), i);
+                        const auto b2 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2] * size_t(2), i);
+                        const auto b1 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2], i);
+                        const auto c = inputVolumeData->getVoxelNormalized(pos, i);
+                        const auto f1 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1], i);
+                        const auto f2 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1] * size_t(2), i);
+                        const auto f3 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1] * size_t(3), i);
+
+                        const auto db2 = (b1 - b3) / 2.0f;
+                        const auto db1 = (c - b2) / 2.0f;
+                        const auto dc = (f1 - b1) / 2.0f;
+                        const auto df1 = (f2 - c) / 2.0f;
+                        const auto df2 = (f3 - f1) / 2.0f;
+
+                        const auto ddb1 = (dc - db2) / 2.0f;
+                        const auto ddf1 = (df2 - dc) / 2.0f;
+
+                        const auto t = 0.5f;
+                        jacobi(i, j) = 3.0f * (2.0f * b1 - 2.0f * f1 + db1 + df1) * t * t +
+                                       2.0f * (-3.0f * b1 + 3.0f * f1 - 2.0f * db1 - df1) * t
+                                       + db1;
+                    }
+                }
+
+                if(volumeJacobi) {
+                    for (size_t i = 0; i < 3; i++) {
+                        for (size_t j = 0; j < 3; j++) {
+                            volumeJacobi->voxel(pos)[i][j] = jacobi(i, j);
+                        }
+                    }
+                }
+
+                // --- Compute Delta Criterion --- //
+                auto eigenvalues = Eigen::Vector3cf();
+                if (volumeDelta) {
+                    eigenvalues = jacobi.eigenvalues();
+                    volumeDelta->voxel(pos) = std::max({eigenvalues.x().imag(), eigenvalues.y().imag(), eigenvalues.z().imag()});
+                }
+
+                // --- Compute Strain Rate and Vorticity --- //
+                const auto jacobiT = jacobi.transpose();
+                const auto S = 0.5f * (jacobi + jacobiT);
+                const auto O = 0.5f * (jacobi - jacobiT);
+
+                // --- Compute Q Criterion --- //
+                if (volumeQ) {
+                    eigenvalues = (S.transpose() * S).eigenvalues();
+                    const auto spectralNormS = std::max({eigenvalues.x().real(), eigenvalues.y().real(), eigenvalues.z().real()});
+                    eigenvalues = (O.transpose() * O).eigenvalues();
+                    const auto spectralNormO = std::max({eigenvalues.x().real(), eigenvalues.y().real(), eigenvalues.z().real()});
+                    volumeQ->voxel(pos) = 0.5f * (spectralNormO - spectralNormS);
+                }
+
+                // --- Compute Lambda2 Criterion --- //
+                if (volumeLambda2) {
+                    eigenvalues = (S * S + O * O).eigenvalues();
+                    if (eigenvalues.x().real() < eigenvalues.y().real())
+                        if (eigenvalues.y().real() < eigenvalues.z().real()) {
+                            volumeLambda2->voxel(pos) = eigenvalues.y().real();
+                        }
+                        else if (eigenvalues.x().real() < eigenvalues.z().real()) {
+                            volumeLambda2->voxel(pos) = eigenvalues.z().real();
+                        }
+                        else {
+                            volumeLambda2->voxel(pos) = eigenvalues.x().real();
+                        }
+                    else if (eigenvalues.x().real() < eigenvalues.z().real()) {
+                        volumeLambda2->voxel(pos) = eigenvalues.x().real();
+                    }
+                    else if (eigenvalues.y().real() < eigenvalues.z().real()) {
+                        volumeLambda2->voxel(pos) = eigenvalues.z().real();
+                    }
+                    else {
+                        volumeLambda2->voxel(pos) = eigenvalues.y().real();
+                    }
+                }
+            }
+        }
+
+        progress.reportStepDone();
+    }
+
+    progressReporter.setProgress(1.0f);
+
+    return input;
+}
+
+void VortexProcessor::processComputeOutput(VortexProcessorIO output) {
+
+    tgt::vec3 spacing = output.inputVolume->getSpacing();
+    tgt::vec3 offset = output.inputVolume->getOffset();
+
+    if(output.outputJacobi) {
+        auto* volume = new Volume(output.outputJacobi.release(), spacing, offset);
+        volume->setMetaDataValue<StringMetaData>("name", "jacobi");
+        outputVolumeJacobi_.setData(volume);
+    }
+
+    if(output.outputDelta) {
+        auto* volume = new Volume(output.outputDelta.release(), spacing, offset);
+        volume->setMetaDataValue<StringMetaData>("name", "delta");
+        outputVolumeDelta_.setData(volume);
+    }
+
+    if(output.outputQ) {
+        auto* volume = new Volume(output.outputQ.release(), spacing, offset);
+        volume->setMetaDataValue<StringMetaData>("name", "Q");
+        outputVolumeQ_.setData(volume);
+    }
+
+    if(output.outputLambda2) {
+        auto* volume = new Volume(output.outputLambda2.release(), spacing, offset);
+        volume->setMetaDataValue<StringMetaData>("name", "lambda2");
+        outputVolumeLamda2_.setData(volume);
+    }
+}
+
 
 void VortexProcessor::Process( const VolumeRAM& velocity, const VolumeRAM& mask, VolumeRAM_Mat3Float& outJacobi, VolumeRAM_Float* outDelta, VolumeRAM_Float* outLambda2, VolumeRAM_Float* outQ )
 {
-    const auto timeBegin = std::chrono::high_resolution_clock::now();
-
     const std::array<tgt::svec3, 7> offsets { tgt::svec3( 0, 0, 0 ),
-        tgt::svec3( -1, 0, 0 ), tgt::svec3( 1, 0, 0 ),
-        tgt::svec3( 0, -1, 0 ), tgt::svec3( 0, 1, 0 ),
-        tgt::svec3( 0, 0, -1 ), tgt::svec3( 0, 0, 1 )
+                                              tgt::svec3( -1, 0, 0 ), tgt::svec3( 1, 0, 0 ),
+                                              tgt::svec3( 0, -1, 0 ), tgt::svec3( 0, 1, 0 ),
+                                              tgt::svec3( 0, 0, -1 ), tgt::svec3( 0, 0, 1 )
     };
 
     const auto dim = velocity.getDimensions();
 
     auto voxels = std::vector<tgt::ivec3>();
     voxels.reserve( mask.getNumVoxels() );
-    for( auto x = 3; x < dim.x - 3; ++x ) for( auto y = 3; y < dim.y - 3; ++y ) for( auto z = 3; z < dim.z - 3; ++z )
-    {
-        auto addVoxel = true;
-        for( const auto offset : offsets )
-        {
-            if( mask.getVoxelNormalized( tgt::svec3( x, y, z ) + offset ) <= 0.0f )
+    for( auto x = 3; x < dim.x - 3; ++x )
+        for( auto y = 3; y < dim.y - 3; ++y )
+            for( auto z = 3; z < dim.z - 3; ++z )
             {
-                addVoxel = false;
-                break;
+                auto addVoxel = true;
+                for( const auto offset : offsets )
+                {
+                    if( mask.getVoxelNormalized( tgt::svec3( x, y, z ) + offset ) <= 0.0f )
+                    {
+                        addVoxel = false;
+                        break;
+                    }
+                }
+                if( addVoxel ) voxels.push_back( tgt::ivec3( x, y, z ) );
             }
-        }
-        if( addVoxel ) voxels.push_back( tgt::ivec3( x, y, z ) );
-    }
     voxels.shrink_to_fit();
 
 #pragma omp parallel for
@@ -153,13 +328,13 @@ void VortexProcessor::Process( const VolumeRAM& velocity, const VolumeRAM& mask,
                 //	+ ( t * t * t - 2.0f * t * t + t ) * ddb1
                 //	+ ( t * t * t - t * t ) * ddf1;
                 jacobi( i, j ) = 3.0f * ( 2.0f * b1 - 2.0f * f1 + db1 + df1 ) * t * t +
-                    2.0f * ( -3.0f * b1 + 3.0f * f1 - 2.0f * db1 - df1 ) * t
-                    + db1;
+                                 2.0f * ( -3.0f * b1 + 3.0f * f1 - 2.0f * db1 - df1 ) * t
+                                 + db1;
                 // jacobi( i, j ) = dc;
             }
         }
         for( int i = 0; i < 3; ++i ) for( int j = 0; j < 3; ++j )
-            outJacobi.voxel( position )[i][j] = jacobi( i, j );
+                outJacobi.voxel( position )[i][j] = jacobi( i, j );
 
         // --- Compute Delta Criterion --- //
         auto eigenvalues = Eigen::Vector3cf();
@@ -183,9 +358,9 @@ void VortexProcessor::Process( const VolumeRAM& velocity, const VolumeRAM& mask,
                 else if( eigenvalues.x().real() < eigenvalues.z().real() ) outLambda2->voxel( position ) = eigenvalues.z().real();
                 else outLambda2->voxel( position ) = eigenvalues.x().real();
             else
-                if( eigenvalues.x().real() < eigenvalues.z().real() ) outLambda2->voxel( position ) = eigenvalues.x().real();
-                else if( eigenvalues.y().real() < eigenvalues.z().real() ) outLambda2->voxel( position ) = eigenvalues.z().real();
-                else outLambda2->voxel( position ) = eigenvalues.y().real();
+            if( eigenvalues.x().real() < eigenvalues.z().real() ) outLambda2->voxel( position ) = eigenvalues.x().real();
+            else if( eigenvalues.y().real() < eigenvalues.z().real() ) outLambda2->voxel( position ) = eigenvalues.z().real();
+            else outLambda2->voxel( position ) = eigenvalues.y().real();
         }
 
         // --- Compute Q Criterion --- //
@@ -198,10 +373,7 @@ void VortexProcessor::Process( const VolumeRAM& velocity, const VolumeRAM& mask,
             outQ->voxel( position ) = 0.5f * ( spectralNormO - spectralNormS );
         }
     }
-
-    const auto timeEnd = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( timeEnd - timeBegin ).count();
-    // std::cout << "[VortexProcessor]: Finished in " << time / 1000.0f << " seconds." << std::endl;
 }
 
-}
+
+} // namespace voreen

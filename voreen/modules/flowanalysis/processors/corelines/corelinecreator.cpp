@@ -299,10 +299,11 @@ size_t findNeighbourSolution(size_t triangleIndex, const std::vector<int32_t> &t
     return neighbourSolutionTriIndex;
 }
 
-CorelineCreator::CorelineCreator() : Processor(),
-                                     _in(Port::INPORT, "inport", "Parallel vectors solutions"),
-                                     _out(Port::OUTPORT, "outport", "List of corelines"),
-                                     _lengthThreshold("lengthThreshold", "Min. length of coreline", 20, 2, 1000, Processor::VALID)
+CorelineCreator::CorelineCreator()
+    : Processor()
+    , _in(Port::INPORT, "inport", "Parallel vectors solutions")
+    , _out(Port::OUTPORT, "outport", "List of corelines")
+    , _lengthThreshold("lengthThreshold", "Min. length of coreline", 20, 2, 1000, Processor::VALID)
 {
     this->addPort(_in);
     this->addPort(_out);

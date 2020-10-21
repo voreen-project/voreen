@@ -30,7 +30,11 @@
 
 namespace voreen {
 
-AccelerationProcessor::AccelerationProcessor() : Processor(), inportJacobianVolume_(Port::INPORT, "inportJacobianVolume", "3x3 Float Matrix Volume (Jacobian)"), inportVelocityVolume_(Port::INPORT, "inportVelocityVolume", "3-Double Vector Volume (Velocity)"), outport_(Port::OUTPORT, "outport", "3-Float Vector Volume (Acceleration)")
+AccelerationProcessor::AccelerationProcessor()
+    : Processor()
+    , inportJacobianVolume_(Port::INPORT, "inportJacobianVolume", "Jacobian")
+    , inportVelocityVolume_(Port::INPORT, "inportVelocityVolume", "Velocity")
+    , outport_(Port::OUTPORT, "outport", "3-Float Vector Volume (Acceleration)")
 {
     addPort(inportJacobianVolume_);
     inportJacobianVolume_.addCondition(new PortConditionVolumeType("Matrix3(float)", "Volume_Mat3Float"));
@@ -61,7 +65,12 @@ void AccelerationProcessor::setDescriptions() {
 }
 
 bool AccelerationProcessor::isReady() const {
-    if(Processor::isReady() && inportJacobianVolume_.getData()->getDimensions() != inportVelocityVolume_.getData()->getDimensions()) {
+    bool ready = Processor::isReady();
+    if(!ready) {
+        return false;
+    }
+
+    if(inportJacobianVolume_.getData()->getDimensions() != inportVelocityVolume_.getData()->getDimensions()) {
         setNotReadyErrorMessage("Input dimensions must match");
         return false;
     }
