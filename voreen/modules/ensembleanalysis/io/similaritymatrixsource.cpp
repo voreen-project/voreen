@@ -76,7 +76,6 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
     }
 
     try {
-
         std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
 
         std::ifstream stream(filenameProp_.get());
@@ -86,7 +85,7 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
         s.deserialize("similarity", *similarityMatrices);
         outport_.setData(similarityMatrices.release(), true);
         LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(tgt::FileException& e) {
+    } catch(std::exception& e) {
         LERROR(e.what());
         filenameProp_.set("");
     }
