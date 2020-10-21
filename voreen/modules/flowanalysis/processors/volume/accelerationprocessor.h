@@ -38,17 +38,17 @@
 namespace voreen
 {
 
-class VRN_CORE_API AccelerationProcessor : public Processor
-{
+class VRN_CORE_API AccelerationProcessor : public Processor {
 public:
     AccelerationProcessor();
 
-    virtual Processor *create() const;
+    virtual Processor* create() const;
     virtual std::string getClassName() const;
     virtual std::string getCategory() const;
+    virtual bool isReady() const;
 
-    static void Process( const VolumeRAM_Mat3Float& jacobi, const VolumeRAM_3xDouble& velocity, VolumeRAM_3xFloat& outAcceleration );
-    static void Process( const VolumeRAM_Mat3Float& jacobi, const VolumeRAM_3xDouble& velocity, VolumeRAM_3xDouble& outAcceleration );
+    template<typename T>
+    static void Process(const VolumeRAM_Mat3Float& jacobi, const VolumeAtomic<tgt::Vector3<T>>& velocity, VolumeAtomic<tgt::Vector3<T>>& outAcceleration);
 
 protected:
     virtual void setDescriptions();
@@ -59,6 +59,16 @@ private:
     VolumePort inportVelocityVolume_;
     VolumePort outport_;
 };
+
+template<typename T>
+void AccelerationProcessor::Process(const VolumeRAM_Mat3Float& jacobi, const VolumeAtomic<tgt::Vector3<T>>& velocity, VolumeAtomic<tgt::Vector3<T>>& outAcceleration) {
+#ifdef VRN_MODULE_OPENMP
+    #pragma omp parallel for
+#endif
+    for( long i = 0; i < static_cast<long>( jacobi.getNumVoxels() ); ++i ) {
+        outAcceleration.voxel( i ) = jacobi.voxel( i ) * velocity.voxel( i );
+    }
+}
 
 } // namespace voreen
 

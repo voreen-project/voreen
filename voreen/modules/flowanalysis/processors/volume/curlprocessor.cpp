@@ -25,10 +25,9 @@
 
 #include "curlprocessor.h"
 
-#include <algorithm>
-#include <chrono>
-
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
+
+#include <algorithm>
 
 
 namespace voreen {
@@ -43,33 +42,28 @@ CurlProcessor::CurlProcessor()
     addPort(outport_);
 }
 
-Processor *CurlProcessor::create() const
-{
+Processor* CurlProcessor::create() const {
     return new CurlProcessor();
 }
 
-void CurlProcessor::Process( const VolumeRAM_Mat3Float& jacobi, VolumeRAM_3xFloat& outCurl )
-{
-    const auto startTime = std::chrono::high_resolution_clock::now();
+void CurlProcessor::Process( const VolumeRAM_Mat3Float& jacobi, VolumeRAM_3xFloat& outCurl ) {
     const auto dim = jacobi.getDimensions();
 
 #pragma omp parallel for
-    for (long x = 0; x < static_cast<long>(dim.x); ++x) for (auto y = 0; y < dim.y; ++y) for (auto z = 0; z < dim.z; ++z)
-    {
-
-        auto a = jacobi.voxel(x, y, z)[2][1] - jacobi.voxel(x, y, z)[1][2];
-        auto b = jacobi.voxel(x, y, z)[0][2] - jacobi.voxel(x, y, z)[2][0];
-        auto c = jacobi.voxel(x, y, z)[1][0] - jacobi.voxel(x, y, z)[0][1];
-        outCurl.voxel(x, y, z) = tgt::vec3(a, b, c);
+    for (long x = 0; x < static_cast<long>(dim.x); ++x) {
+        for (auto y = 0; y < dim.y; ++y) {
+            for (auto z = 0; z < dim.z; ++z) {
+                auto a = jacobi.voxel(x, y, z)[2][1] - jacobi.voxel(x, y, z)[1][2];
+                auto b = jacobi.voxel(x, y, z)[0][2] - jacobi.voxel(x, y, z)[2][0];
+                auto c = jacobi.voxel(x, y, z)[1][0] - jacobi.voxel(x, y, z)[0][1];
+                outCurl.voxel(x, y, z) = tgt::vec3(a, b, c);
+            }
+        }
     }
-
-    const auto endTime = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime ).count() / 1000.0f;
-    std::cout << "[CurlProcessor]: Finished in " << time << " seconds." << std::endl;
 }
 
-void CurlProcessor::process()
-{
+void CurlProcessor::process() {
+
     auto input = inport_.getData();
     auto jacobian = dynamic_cast<const VolumeRAM_Mat3Float*>(input->getRepresentation<VolumeRAM>()); // VolumeRAM_Mat3Float
     auto curl = new VolumeRAM_3xFloat(jacobian->getDimensions());
