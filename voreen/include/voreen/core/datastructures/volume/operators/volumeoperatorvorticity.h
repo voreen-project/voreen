@@ -61,9 +61,6 @@ private:
 //---------------------------------------------------------------------------------------------
 template<typename U>
 Volume* VolumeOperatorVorticity::apply(const VolumeBase* srcVolume, VolumeOperatorGradient::GradientType gt) {
-
-    VolumeRAMRepresentationLock lock(srcVolume);
-
     switch(gt){
         case VolumeOperatorGradient::VOG_CENTRAL_DIFFERENCE:
             //case uint8_t
