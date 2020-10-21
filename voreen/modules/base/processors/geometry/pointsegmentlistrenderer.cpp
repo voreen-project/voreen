@@ -27,9 +27,11 @@
 
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
+#include "voreen/core/datastructures/geometry/geometrysequence.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 
 #include "tgt/immediatemode/immediatemode.h"
+#include "tgt/memory.h"
 
 namespace voreen {
 
@@ -52,7 +54,7 @@ PointSegmentListRenderer::PointSegmentListRenderer()
     , geometryInport_(Port::INPORT, "geometry.input", "Geometry Input")
     , sphereShader_(0)
     , mesh_(nullptr)
-    , segmentListGeom_(nullptr)
+    , segmentListGeom_(nullptr, false)
 {
     // Coordinate systems
     coordinateSystem_.addOption("world", "World coordinates");
@@ -304,10 +306,18 @@ void PointSegmentListRenderer::invalidateGeometry() {
     // Delete old mesh.
     mesh_.reset();
 
-    segmentListGeom_ = dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(geometryInport_.getData());
+    segmentListGeom_ = PortDataPointer<PointSegmentListGeometry<tgt::vec3>>(dynamic_cast<const PointSegmentListGeometry<tgt::vec3>* >(geometryInport_.getData()), false);
     if (!segmentListGeom_) {
-        LWARNING("Invalid geometry. PointSegmentListGeometry<vec3> expected.");
-        return;
+        if(const GeometrySequence* seq = dynamic_cast<const GeometrySequence*>(geometryInport_.getData())) {
+            auto geom = tgt::make_unique<PointSegmentListGeometryVec3>();
+            if(!geom->collectSegmentsFromGeometry(*seq)) {
+                LWARNING("Ignoring invalid geometry in GeometrySequence. PointSegmentListGeometry<vec3> expected.");
+            }
+            segmentListGeom_ = PortDataPointer<PointSegmentListGeometry<tgt::vec3>>(geom.release(), true);
+        } else {
+            LWARNING("Invalid geometry. PointSegmentListGeometry<vec3> expected.");
+            return;
+        }
     }
 
     // Update segment list.
@@ -329,7 +339,7 @@ void PointSegmentListRenderer::invalidateGeometry() {
         for (size_t i = 0; i < segmentList.size(); ++i) {
             Segment seg = segments_.at(i);
             if (!seg.enabled_) continue;
-            
+
             // Extract color.
             tgt::vec4 color = applyUniformColor_.get() ? color_.get() : seg.color_;
 
@@ -385,7 +395,7 @@ void PointSegmentListRenderer::updateSegmentList()
     colorMap.push_back(tgt::vec4(250,200,150,255) / 255.f);
     colorMap.push_back(tgt::vec4(150,200,250,255) / 255.f);
     //colorMap.push_back(tgt::vec4(30,30,30,255) / 255.f);
-    colorMap.push_back(tgt::vec4(200,200,127,255) / 255.f);    
+    colorMap.push_back(tgt::vec4(200,200,127,255) / 255.f);
 
     int oldSegmentCount = static_cast<int>(segments_.size());
     int newSegmentCount = static_cast<int>(segmentListGeom_->getNumSegments());

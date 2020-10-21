@@ -188,14 +188,16 @@ protected:
 class PointSegmentListGeometryVec3 : public PointSegmentListGeometry<tgt::vec3> {
     virtual Geometry* create() const { return new PointSegmentListGeometryVec3(); }
     virtual std::string getClassName() const { return "PointSegmentListGeometryVec3"; }
-    virtual std::unique_ptr<Geometry> clone() const {
-        PointSegmentListGeometryVec3* clone = new PointSegmentListGeometryVec3();
-        clone->segmentList_ = segmentList_;
-        clone->pointList_ = pointList_;
-        clone->numPoints_ = numPoints_;
-        clone->setTransformationMatrix(getTransformationMatrix());
-        return std::unique_ptr<Geometry>(clone);
-    }
+    virtual std::unique_ptr<Geometry> clone() const;
+
+public:
+    // Collect and copy segments from all PointSegmentListGeometryVec3s in the
+    // provided geometry. In particular, segments from all
+    // PointSegmentListGeometryVec3s stored in GeometrySequences are collected.
+    //
+    // Returns true if all (potentially recursively) provided geometry were
+    // compatible and could be processed, and false otherwise.
+    bool collectSegmentsFromGeometry(const Geometry& other);
 };
 
 } // namespace

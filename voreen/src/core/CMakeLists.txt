@@ -58,6 +58,7 @@ SET(VRN_CORE_SOURCES
     datastructures/geometry/meshgeometry.cpp
     datastructures/geometry/trianglemeshgeometry.cpp
     datastructures/geometry/meshlistgeometry.cpp
+    datastructures/geometry/pointsegmentlistgeometry.cpp
     datastructures/geometry/vertexgeometry.cpp
     datastructures/geometry/vertex.cpp
     datastructures/meta/metadatacontainer.cpp

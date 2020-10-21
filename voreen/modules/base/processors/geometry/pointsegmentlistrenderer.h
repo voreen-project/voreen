@@ -134,7 +134,7 @@ protected:
     };
 
     std::vector<Segment> segments_;
-    const PointSegmentListGeometry<tgt::vec3>* segmentListGeom_;
+    PortDataPointer<PointSegmentListGeometry<tgt::vec3>> segmentListGeom_;
 
     static const std::string loggerCat_;
 };
