@@ -97,6 +97,7 @@ ConnectedComponentAnalysis::ConnectedComponentAnalysis()
         addProperty(invertBinarization_);
             invertBinarization_.setGroupID("binarization");
         addProperty(binarizationThreshold_);
+            binarizationThreshold_.setTracking(false);
             binarizationThreshold_.setGroupID("binarization");
     setPropertyGroupGuiName("binarization", "Binarization");
 
@@ -118,10 +119,13 @@ ConnectedComponentAnalysis::ConnectedComponentAnalysis()
             sortingMethod_.addOption("decrBoundsDiagonal", "Decreasing Bounds Diagonal");
             sortingMethod_.setGroupID("componentfinding");
         addProperty(minBoundsDiagonalRelative_);
+            minBoundsDiagonalRelative_.setTracking(false);
             minBoundsDiagonalRelative_.setGroupID("componentfinding");
         addProperty(minBoundsDiagonal_);
+            minBoundsDiagonal_.setTracking(false);
             minBoundsDiagonal_.setGroupID("componentfinding");
         addProperty(minVoxelVolume_);
+            minVoxelVolume_.setTracking(false);
             minVoxelVolume_.setGroupID("componentfinding");
     setPropertyGroupGuiName("componentfinding", "Component Finding");
 }

@@ -23,72 +23,61 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_PARTICLERENDERER_H
+#define VRN_PARTICLERENDERER_H
 
-#include "voreen/core/voreenapplication.h"
+#include "voreen/core/processors/renderprocessor.h"
 
-#include "tgt/filesystem.h"
+#include "voreen/core/properties/cameraproperty.h"
+#include "voreen/core/properties/shaderproperty.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
+#include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
+
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
+
+#include "voreen/core/interaction/camerainteractionhandler.h"
+
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
+
+#include <memory>
 
 namespace voreen {
+class ParticleRenderer : public RenderProcessor {
+public:
+    ParticleRenderer();
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+    Processor* create() const override;
+    std::string getCategory() const override;
+    std::string getClassName() const override;
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+private:
+    void initialize() override;
+    void deinitialize() override;
+    void process() override;
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
+    void updateMesh();
+
+    EnsembleDatasetPort _inportEnsemble;
+    RenderPort _outportImage;
+
+    IntOptionProperty _propertySelectedMember;
+    IntOptionProperty _propertyFlowComponentX, _propertyFlowComponentY, _propertyFlowComponentZ;
+    IntOptionProperty _propertySelectedField;
+    IntProperty _propertySeedPoints;
+    ButtonProperty _propertyUpdateMesh;
+
+    TransFunc1DKeysProperty _propertyTransferFunction;
+    ButtonProperty _propertyResetDomain;
+    FloatProperty _propertyLineWidth;
+    IntIntervalProperty _propertyTimesteps;
+    ShaderProperty _propertyShader;
+    CameraProperty _propertyCamera;
+
+    std::unique_ptr<CameraInteractionHandler> _interactionHandlerCamera;
+
+    tgt::vec2 _domain;
+    std::unique_ptr<GlMeshGeometryBase> _mesh;
+};
 }
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
-
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
-
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
-
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace
+#endif // VRN_PARTICLERENDERER_H

@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,72 +23,56 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#include "rotationaldirectionprocessor.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include <algorithm>
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+RotationalDirectionProcessor::RotationalDirectionProcessor()
+    : Processor(), inport_(Port::INPORT, "inport", "Curl"), inport2_(Port::INPORT, "inport2", "vortex"), outport_(Port::OUTPORT, "outport", "vortex")
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
 {
+    //inport_.addCondition(new PortConditionVolumeType("Matrix3(float)", "VolumeRAM_Mat3Float"));
+    addPort(inport_);
+    addPort(inport2_);
     addPort(outport_);
-
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
 }
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
-
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
+Processor *RotationalDirectionProcessor::create() const
+{
+    return new RotationalDirectionProcessor();
 }
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
+void RotationalDirectionProcessor::Process( const VolumeRAM_3xFloat& curl, Vortex& vortex )
+{
+    int cCounter = 0;
+    int ccCounter = 0;
+
+    for(const auto& position : vortex.coreline())
+    {
+        if (curl.voxel(position).z > 0.0) { //changex to ccounter to counter and vice versa
+            cCounter = cCounter + 1;
+        }
+        else {
+            ccCounter = ccCounter + 1;
+        }
     }
+
+    vortex.setOrientation(ccCounter > cCounter? Vortex::Orientation::eCounterClockwise : Vortex::Orientation::eClockwise);
 }
 
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
+void RotationalDirectionProcessor::process()
+{
+    auto input = inport_.getData();
+    auto Vort = inport2_.getData();
+    auto CurlVolume = dynamic_cast<const VolumeRAM_3xFloat *>(input->getRepresentation<VolumeRAM>());
 
-    outport_.setData(nullptr);
+    Vortex* Vort2 = new Vortex(Vortex::Orientation::eUnknown, Vort->coreline());
+    RotationalDirectionProcessor::Process( *CurlVolume, *Vort2 );
 
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
+    outport_.setData(Vort2);
 }
 
-}   // namespace
+} // namespace voreen

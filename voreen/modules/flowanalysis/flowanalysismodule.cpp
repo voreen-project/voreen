@@ -26,6 +26,9 @@
 #include "modules/flowanalysis/flowanalysismodule.h"
 
 // processors
+#include "processors/corelines/corelinecreator.h"
+#include "processors/corelines/corelinedensityvolumecreator.h"
+#include "processors/corelines/parallelvectors.h"
 #include "processors/geometry/streamlinetoboundingbox.h"
 #include "processors/geometry/streamlinetogeometry.h"
 #include "processors/render/flowdirectionoverlay.h"
@@ -39,33 +42,72 @@
 #include "processors/streamline/streamlinesave.h"
 #include "processors/streamline/streamlineselector.h"
 #include "processors/streamline/streamlinesource.h"
+#include "processors/volume/accelerationprocessor.h"
+#include "processors/volume/curlprocessor.h"
+#include "processors/volume/flowmapprocessor.h"
+#include "processors/volume/ftvaprocessor.h"
 #include "processors/volume/helicitydensity.h"
+#include "processors/volume/vortexprocessor.h"
+#include "processors/vortex/rotationaldirectionprocessor.h"
+#include "processors/vortex/vortexmatchselector.h"
+#include "processors/vortex/vortexselector.h"
+#include "processors/vortex/vortextracking.h"
+
+#ifdef VRN_MODULE_ENSEMBLEANALYSIS
+#include "processors/ensemble/approximateparallelvectors.h"
+#include "processors/ensemble/particlerenderer.h"
+#include "processors/ensemble/uncertainvectorfieldprocessor.h"
+#include "processors/ensemble/vortexcollectioncreator.h"
+#include "processors/ensemble/vortexcollectionsource.h"
+#include "processors/ensemble/vortexlistselector.h"
+#endif
 
 namespace voreen {
 
 FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("FlowAnalysis");
-    setGuiName("FlowAnalysis");
+    setID("Flow Analysis");
+    setGuiName("Flow Analysis");
 
     addShaderPath(getModulePath("glsl"));
 
     // processors
-    registerSerializableType(new FlowDirectionOverlay());
-    registerSerializableType(new HelicityDensity());
-    registerSerializableType(new PathlineCreator());
-    registerSerializableType(new StreamlineBundleDetector());
-    registerSerializableType(new StreamlineCombine());
-    registerSerializableType(new StreamlineCreator());
-    registerSerializableType(new StreamlineFilter());
-    registerSerializableType(new StreamlineRenderer3D());
-    registerSerializableType(new StreamlineRotation());
-    registerSerializableType(new StreamlineSave());
-    registerSerializableType(new StreamlineSelector());
-    registerSerializableType(new StreamlineSource());
-    registerSerializableType(new StreamlineToBoundingBox());
-    registerSerializableType(new StreamlineToGeometry());
+    registerProcessor(new AccelerationProcessor());
+    registerProcessor(new CorelineCreator());
+    registerProcessor(new CorelineDensityVolumeCreator());
+    registerProcessor(new CurlProcessor());
+    registerProcessor(new FlowDirectionOverlay());
+    //registerProcessor(new FlowMapProcessor());
+    //registerProcessor(new FTVAProcessor());
+    registerProcessor(new HelicityDensity());
+    registerProcessor(new ParallelVectors());
+    registerProcessor(new PathlineCreator());
+    registerProcessor(new RotationalDirectionProcessor());
+    registerProcessor(new StreamlineBundleDetector());
+    registerProcessor(new StreamlineCombine());
+    registerProcessor(new StreamlineCreator());
+    registerProcessor(new StreamlineFilter());
+    registerProcessor(new StreamlineRenderer3D());
+    registerProcessor(new StreamlineRotation());
+    registerProcessor(new StreamlineSave());
+    registerProcessor(new StreamlineSelector());
+    registerProcessor(new StreamlineSource());
+    registerProcessor(new StreamlineToBoundingBox());
+    registerProcessor(new StreamlineToGeometry());
+    registerProcessor(new VortexProcessor());
+    //registerProcessor(new VortexMatchSelector());
+    //registerProcessor(new VortexSelector());
+    registerProcessor(new VortexTracking());
+
+#ifdef VRN_MODULE_ENSEMBLEANALYSIS
+    //registerProcessor(new ApproximateParallelVectors());
+    //registerProcessor(new ParticleRenderer());
+    //registerProcessor(new UncertainVectorFieldProcessor());
+    //registerProcessor(new VortexCollectionCreator());
+    //registerProcessor(new VortexCollectionSource());
+    //registerProcessor(new VortexListSelector());
+#endif
 }
 
 } // namespace

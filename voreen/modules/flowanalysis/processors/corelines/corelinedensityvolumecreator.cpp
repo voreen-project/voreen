@@ -23,72 +23,50 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
-
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include "corelinedensityvolumecreator.h"
+#include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
-
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
+CorelineDensityVolumeCreator::CorelineDensityVolumeCreator() : Processor(),
+    _inCorelines( Port::INPORT, "inportCorelines", "Corelines", true ),
+    _inVolume( Port::INPORT, "inportVolume", "One of the volumes used for parallel vectors and coreline creator. Only used for the output dimensions." ),
+    _out( Port::OUTPORT, "outport", "Binary volume of coreline presence in voxel" )
 {
-    addPort(outport_);
-
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
+    this->addPort( _inCorelines );
+    this->addPort( _inVolume );
+    this->addPort( _out );
 }
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
+void CorelineDensityVolumeCreator::Process( const std::vector<std::vector<tgt::vec3>>& corelines, VolumeRAM_Float& outVolume )
+{
+    outVolume.clear();
 
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
+    for( long i = 0; i < static_cast<long>( corelines.size() ); ++i ) {
+        for( const auto point : corelines[i] ) {
+            outVolume.voxel( std::lround( point.x ), std::lround( point.y ), std::lround( point.z ) ) += 1.0f;
+        }
     }
 }
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
+void CorelineDensityVolumeCreator::process() {
+
+    auto corelines = std::vector<std::vector<tgt::vec3>>();
+    for( const auto* geometry : _inCorelines.getAllData() )
+    {
+        const auto* current = dynamic_cast<const PointSegmentListGeometryVec3*>( geometry );
+        if(current) {
+            const auto& data = current->getData();
+            corelines.insert(corelines.end(), data.begin(), data.end());
+        }
     }
+
+    const auto dim = _inVolume.getData()->getDimensions();
+    auto binVol = std::unique_ptr<VolumeRAM_Float>( new VolumeRAM_Float( dim ) );
+
+    CorelineDensityVolumeCreator::Process( corelines, *binVol );
+
+    _out.setData( new Volume( binVol.release(), _inVolume.getData()->getSpacing(), _inVolume.getData()->getOffset() ) );
 }
 
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace
+} // namespace voreen

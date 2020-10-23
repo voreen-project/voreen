@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,72 +23,50 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_ROTATIONALDIRECTIONPROCESSOR_H
+#define VRN_ROTATIONALDIRECTIONPROCESSOR_H
 
-#include "voreen/core/voreenapplication.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
-#include "tgt/filesystem.h"
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
+#include "modules/flowanalysis/ports/vortexport.h"
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+class VRN_CORE_API RotationalDirectionProcessor : public Processor {
+public:
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+    RotationalDirectionProcessor();
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
-}
+    virtual Processor* create() const;
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
+    virtual std::string getClassName() const { return "RotationalDirectionProcessor"; }
 
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
+    virtual std::string getCategory() const { return "Volume Processing"; }
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
+    virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
 
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
+    static void Process( const VolumeRAM_3xFloat& curl, Vortex& vortex );
 
-    outport_.setData(nullptr);
+protected:
 
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
+    virtual void setDescriptions()
+    {
+        setDescription("Calculates the direction of a Vortex, by analysing its coreline and curl");
     }
 
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
+    virtual void process();
 
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
+private:
+
+    VolumePort inport_;
+    VortexPort inport2_;
+    VortexPort outport_;
+
+};
+
 }
 
-}   // namespace
+#endif

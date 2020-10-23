@@ -23,72 +23,34 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_CORELINEDENSITYVOLUMECREATOR_H
+#define VRN_CORELINEDENSITYVOLUMECREATOR_H
 
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/geometryport.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+class CorelineDensityVolumeCreator : public Processor {
+public:
+    CorelineDensityVolumeCreator();
+    virtual Processor *create() const { return new CorelineDensityVolumeCreator(); }
+    virtual std::string getClassName() const { return "CorelineDensityVolumeCreator"; }
+    virtual std::string getCategory() const { return "Volume Processing"; }
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+    static void Process(const std::vector<std::vector<tgt::vec3>>& corelines, VolumeRAM_Float& outBinaryVolume);
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
-}
+protected:
+    virtual void process();
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
+private:
+    GeometryPort _inCorelines;
+    VolumePort _inVolume;
+    VolumePort _out;
+};
 
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
+} // namespace voreen
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
-
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace
+#endif

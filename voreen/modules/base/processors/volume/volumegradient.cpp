@@ -64,7 +64,7 @@ void VolumeGradient::process() {
         return;
     }
 
-    const VolumeRAM* inputVolume = inputHandle->getRepresentation<VolumeRAM>();
+    VolumeRAMRepresentationLock inputVolume(inputHandle);
     Volume* outputVolume = 0;
 
     // expecting a single-channel volume

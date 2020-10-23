@@ -23,72 +23,41 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
-
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include "vortexcollectionsource.h"
 
 namespace voreen {
-
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
-
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
+VortexCollectionSource::VortexCollectionSource() : Processor(),
+    _outportVortexCollection( Port::OUTPORT, "outport", "Vortex Collection" ),
+    _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Vortex Collection (*.vc)", FileDialogProperty::OPEN_FILE, Processor::VALID ),
+    _propertyLoadButton( "property_load_button", "Load" )
 {
-    addPort(outport_);
+    this->addPort( _outportVortexCollection );
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
+    this->addProperty( _propertyFileDialog );
+    this->addProperty( _propertyLoadButton );
 }
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
+Processor* VortexCollectionSource::create() const
+{
+    return new VortexCollectionSource();
+}
 
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
+std::string VortexCollectionSource::getClassName() const
+{
+    return "VortexCollectionSource";
+}
+std::string VortexCollectionSource::getCategory() const
+{
+    return "Vortex Extraction";
+}
+
+void VortexCollectionSource::process()
+{
+    if( _propertyFileDialog.get() != "" )
+    {
+        if( auto stream = std::ifstream( _propertyFileDialog.get(), std::ios::in | std::ios::binary ) )
+            _outportVortexCollection.setData( new VortexCollection( stream ) );
     }
 }
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
 }
-
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace

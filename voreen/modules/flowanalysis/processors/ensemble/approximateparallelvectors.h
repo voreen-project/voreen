@@ -23,72 +23,34 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_APPROXIMATEPARALLELVECTORS_H
+#define VRN_APPROXIMATEPARALLELVECTORS_H
 
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/volumeport.h"
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+class ApproximateParallelVectors : public Processor	{
+public:
+    ApproximateParallelVectors();
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+    Processor* create() const override;
+    std::string getClassName() const override;
+    std::string getCategory() const override;
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
+private:
+    void process() override;
+
+    EnsembleDatasetPort _inportEnsemble;
+    VolumePort _inportMask, _outportA, _outportB, _outportEps;
+
+    FloatProperty _propertyTime;
+    FloatProperty _propertyEpsilon;
+    BoolProperty _propertyUseAcceleration;
+};
+
 }
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
-
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
-
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
-
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace
+#endif // VRN_APPROXIMATEPARALLELVECTORS_H

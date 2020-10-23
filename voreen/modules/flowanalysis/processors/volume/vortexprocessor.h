@@ -23,72 +23,55 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_VORTEXPROCESSOR_H
+#define VRN_VORTEXPROCESSOR_H
 
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/ports/geometryport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+struct VortexProcessorIO {
+    PortDataPointer<VolumeBase> inputVolume;
+    std::unique_ptr<VolumeRAM_Mat3Float> outputJacobi;
+    std::unique_ptr<VolumeRAM_Float> outputDelta;
+    std::unique_ptr<VolumeRAM_Float> outputQ;
+    std::unique_ptr<VolumeRAM_Float> outputLambda2;
+};
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+class VortexProcessor : public AsyncComputeProcessor<VortexProcessorIO, VortexProcessorIO> {
+public:
+    VortexProcessor();
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
-}
+    virtual Processor* create() const;
+    virtual std::string getClassName() const      { return "VortexProcessor";       }
+    virtual std::string getCategory() const       { return "Vortex Extraction";     }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
+    virtual bool isReady() const;
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
+    static void Process( const VolumeRAM& velocity, const VolumeRAM& mask, VolumeRAM_Mat3Float& outJacobi, VolumeRAM_Float* outDelta, VolumeRAM_Float* outLambda2, VolumeRAM_Float* outQ );
 
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
+protected:
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
+    virtual void setDescriptions();
 
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
-    outport_.setData(nullptr);
+private:
 
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
+    // Ports
+    VolumePort inputVolume_;
+    VolumePort outputVolumeJacobi_;
+    VolumePort outputVolumeDelta_;
+    VolumePort outputVolumeQ_;
+    VolumePort outputVolumeLamda2_;
 
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
+    static const std::string loggerCat_;
+};
 
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
+} // namespace voreen
 
-}   // namespace
+#endif

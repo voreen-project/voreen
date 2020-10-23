@@ -23,72 +23,52 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_PARALLELVECTORS_H
+#define VRN_PARALLELVECTORS_H
 
-#include "voreen/core/voreenapplication.h"
+#include <string>
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/processors/volumeprocessor.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/intproperty.h"
 
-#include "tgt/filesystem.h"
+#include "modules/flowanalysis/ports/parallelvectorsolutionpointsport.h"
 
 namespace voreen {
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+/**
+ * This processor implements the parallel vectors operator by Peikert and Roth and optional sujudi-haimes filtering.
+ */
+class ParallelVectors : public Processor {
+public:
+    ParallelVectors();
+    virtual Processor* create() const { return new ParallelVectors(); }
+    virtual std::string getClassName() const { return "ParallelVectors"; }
+    virtual std::string getCategory() const { return "Volume Processing"; }
+    virtual bool isReady() const;
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+    static void Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFloat& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution );
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
-}
+    static constexpr auto TetrahedraPerCube = 6;
+    static constexpr auto TrianglesPerTetrahedron = 4;
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
+protected:
+    virtual void process();
+    virtual void setDescriptions();
 
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
+private:
+    void onChangedJacobianData();
 
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
+    VolumePort _inV, _inW, _inJacobi, _inMask;
+    ParallelVectorSolutionPointsPort _out;
+    BoolProperty _sujudiHaimes;
 
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
+    using Triangle = std::array<tgt::svec3, 3>;
+    using Tet = std::array<Triangle, TrianglesPerTetrahedron>;
+};
 
-    outport_.setData(nullptr);
+} // namespace voreen
 
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace
+#endif

@@ -23,72 +23,52 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_VORTEXPORT_H
+#define VRN_VORTEXPORT_H
 
-#include "voreen/core/voreenapplication.h"
-
-#include "tgt/filesystem.h"
+#include "voreen/core/ports/genericport.h"
+#include "../datastructures/vortex.h"
 
 namespace voreen {
+#ifdef DLL_TEMPLATE_INST
+template class VRN_CORE_API GenericPort<Vortex>;
+#endif
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+class VRN_CORE_API VortexPort : public GenericPort<Vortex> {
+public:
+    VortexPort( PortDirection direction, const std::string& id, const std::string& guiName = {}, bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT );
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
+    virtual Port* create( PortDirection direction, const std::string& id, const std::string& guiName = {} ) const;
+    virtual std::string getClassName() const;
+    virtual std::string getContentDescriptionHTML() const;
+};
 
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
+#ifdef DLL_TEMPLATE_INST
+template class VRN_CORE_API GenericPort<VortexCollection>;
+#endif
+
+class VRN_CORE_API VortexCollectionPort : public GenericPort<VortexCollection> {
+public:
+    VortexCollectionPort( PortDirection direction, const std::string& id, const std::string& guiName = {}, bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT );
+
+    virtual Port* create( PortDirection direction, const std::string& id, const std::string& guiName = {} ) const;
+    virtual std::string getClassName() const;
+    virtual std::string getContentDescriptionHTML() const;
+};
+
+#ifdef DLL_TEMPLATE_INST
+template class VRN_CORE_API GenericPort<std::vector<Vortex>>;
+#endif
+
+class VRN_CORE_API VortexListPort : public GenericPort<std::vector<Vortex>> {
+public:
+    VortexListPort( PortDirection direction, const std::string& id, const std::string& guiName = {}, bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT );
+
+    virtual Port* create( PortDirection direction, const std::string& id, const std::string& guiName = {} ) const;
+    virtual std::string getClassName() const;
+    virtual std::string getContentDescriptionHTML() const;
+};
+
 }
 
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
-
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
-    }
-}
-
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
-    }
-}
-
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
-    }
-
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
-    }
-}
-
-}   // namespace
+#endif // VRN_VORTEXPORT_H

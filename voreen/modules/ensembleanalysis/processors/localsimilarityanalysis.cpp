@@ -38,7 +38,7 @@ LocalSimilarityAnalysis::LocalSimilarityAnalysis()
     , referencePort_(Port::INPORT, "referenceport", "Reference Volume Port")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
     , selectedField_("selectedField", "Selected Field")
-    , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
+    , time_("time", "Time", 0.0f, 0.0f, std::numeric_limits<float>::max())
 {
     // Ports
     addPort(ensembleInport_);
@@ -141,8 +141,8 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     }
 
     std::unique_ptr<Volume> volume(new Volume(output.release(), input.referenceVolume->getSpacing(), input.referenceVolume->getOffset()));
-    volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
-    volume->getMetaDataContainer().addMetaData("field", new StringMetaData(field));
+    volume->setMetaDataValue<FloatMetaData>("time", input.time);
+    volume->setMetaDataValue<StringMetaData>("field", field);
 
     progress.setProgress(1.0f);
 

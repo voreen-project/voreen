@@ -23,72 +23,63 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "similaritymatrixsource.h"
+#ifndef VRN_VORTEXLISTSELECTOR_H
+#define VRN_VORTEXLISTSELECTOR_H
 
-#include "voreen/core/voreenapplication.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/geometryport.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
+#include "voreen/core/properties/string/stringlistproperty.h"
 
-#include "tgt/filesystem.h"
+#include "modules/flowanalysis/ports/vortexport.h"
 
 namespace voreen {
+class VortexListSelector : public Processor {
+private:
+    enum RotationOptions {
+        OPTION_CW, //Clockwise
+        OPTION_CCW, //Counterclockwise
+        OPTION_B, //Both
+    };
 
-const std::string SimilarityMatrixSource::loggerCat_("voreen.ensembleanalysis.SimilarityMatrixSource");
+public:
+    VortexListSelector();
 
-SimilarityMatrixSource::SimilarityMatrixSource()
-    : Processor()
-    // ports
-    , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
-    // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
-    , loadButton_("loadButton", "Load", INVALID_PATH)
-    // members
-    , loadSimilarityMatrix_(true)
-{
-    addPort(outport_);
-
-    addProperty(filenameProp_);
-    addProperty(loadButton_);
-}
-
-void SimilarityMatrixSource::invalidate(int inv) {
-    Processor::invalidate(inv);
-
-    if (inv == Processor::INVALID_PATH && isInitialized()) {
-        loadSimilarityMatrix_ = true;
+    Processor* create() const override
+    {
+        return new VortexListSelector();
     }
-}
-
-void SimilarityMatrixSource::process() {
-    if (loadSimilarityMatrix_){
-        loadSimilarityMatrix();
-        loadSimilarityMatrix_ = false;
+    std::string getClassName() const override
+    {
+        return "VortexListSelector";
     }
-}
-
-void SimilarityMatrixSource::loadSimilarityMatrix() {
-    if (!isInitialized())
-        return;
-
-    outport_.setData(nullptr);
-
-    if (filenameProp_.get().empty()) {
-        LWARNING("no filename specified");
-        return;
+    std::string getCategory() const override
+    {
+        return "Vortex Processing";
     }
 
-    try {
-        std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
-
-        std::ifstream stream(filenameProp_.get());
-        JsonDeserializer json;
-        json.read(stream, false);
-        Deserializer s(json);
-        s.deserialize("similarity", *similarityMatrices);
-        outport_.setData(similarityMatrices.release(), true);
-        LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
-        LERROR(e.what());
-        filenameProp_.set("");
+    bool isReady() const override
+    {
+        return _inportVortexCollection.isReady();
     }
+
+    static void Process( const VortexCollection& vortices, const std::vector<int>& runs, int firstTimestep, int lastTimestep, int minLength,RotationOptions rot, std::vector<Vortex>& outVortexList );
+
+private:
+    void process() override;
+    void updatePropertyCorelineLength();
+
+    VortexCollectionPort _inportVortexCollection;
+    VortexListPort _outportVortexList;
+    GeometryPort _outportGeometry;
+
+    StringListProperty _propertyRuns;
+    IntIntervalProperty _propertyTimesteps;
+    IntProperty _propertyCorelineLength;
+    OptionProperty<RotationOptions> _Rotation;
+};
+
 }
 
-}   // namespace
+#endif // VRN_VORTEXLISTSELECTOR_H
