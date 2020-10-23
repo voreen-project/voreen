@@ -72,7 +72,7 @@ void CurlProcessor::process() {
     CurlProcessor::Process(*jacobian, *curl);
 
     Volume* output = new Volume(curl, input->getSpacing(), input->getOffset());
-    output->getMetaDataContainer().addMetaData("name", new StringMetaData("CURL"));
+    output->setMetaDataValue<StringMetaData>("name", "curl");
     outport_.setData(output);
 }
 

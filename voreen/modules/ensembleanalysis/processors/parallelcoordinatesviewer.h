@@ -87,7 +87,7 @@ private:
     ParallelCoordinatesSectionsProperty _propertySections;
 
     // OpenGL
-    GLuint _shaderProgram = 0, _vertexArray = 0, _indexBuffer = 0;
+    GLuint _shaderProgram, _vertexArray, _indexBuffer;
     std::vector<GLuint> _indexBufferVec;
     std::vector<tgt::vec3> _uniformBufferVec;
 
@@ -100,7 +100,7 @@ private:
     std::vector<int> _samplesSelection;
 
     // Constants
-    static const float _XLimit, _YLimit;
+    static const float X_LIMIT, Y_LIMIT;
 };
 
 }

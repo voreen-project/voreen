@@ -872,7 +872,6 @@ VolumeList* AnalyzeVolumeReader::readAnalyze(const std::string &fileName, int vo
             VolumeRepresentation* volume = new VolumeDiskRaw(getRelatedImgFileName(fileName), baseType, dimensions,
                                                              offset, bigEndian);
             Volume* vh = new Volume(volume, spacing, tgt::vec3::zero);
-            vh->setOrigin(VolumeURL(fileName));
             vh->setPhysicalToWorldMatrix(pToW);
 
             VolumeURL origin(fileName);

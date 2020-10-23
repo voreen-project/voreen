@@ -26,8 +26,6 @@
 #include "corelinedensityvolumecreator.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 
-#include <chrono>
-
 namespace voreen {
 
 CorelineDensityVolumeCreator::CorelineDensityVolumeCreator() : Processor(),
@@ -42,38 +40,25 @@ CorelineDensityVolumeCreator::CorelineDensityVolumeCreator() : Processor(),
 
 void CorelineDensityVolumeCreator::Process( const std::vector<std::vector<tgt::vec3>>& corelines, VolumeRAM_Float& outVolume )
 {
-    const auto timeBegin = std::chrono::high_resolution_clock::now();
+    outVolume.clear();
 
-#pragma omp parallel for
-    for( long i = 0; i < static_cast<long>( outVolume.getNumVoxels() ); ++i )
-    {
-        outVolume.voxel( i ) = false;
-    }
-
-
-    for( long i = 0; i < static_cast<long>( corelines.size() ); ++i )
-    {
-        for( const auto point : corelines[i] )
-        {
+    for( long i = 0; i < static_cast<long>( corelines.size() ); ++i ) {
+        for( const auto point : corelines[i] ) {
             outVolume.voxel( std::lround( point.x ), std::lround( point.y ), std::lround( point.z ) ) += 1.0f;
         }
     }
-
-    const auto timeEnd = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( timeEnd - timeBegin ).count();
-    std::cout << "[CorelineDensityVolumeCreator]: Finished in " << time << " ms." << std::endl;
 }
 
-void CorelineDensityVolumeCreator::process()
-{
-    if( !_inCorelines.hasData() || !_inVolume.hasData() )
-        return;
+void CorelineDensityVolumeCreator::process() {
 
     auto corelines = std::vector<std::vector<tgt::vec3>>();
-    for( const auto geometry : _inCorelines.getAllData() )
+    for( const auto* geometry : _inCorelines.getAllData() )
     {
-        const auto& current = dynamic_cast<const PointSegmentListGeometryVec3*>( geometry )->getData();
-        corelines.insert( corelines.end(), current.begin(), current.end() );
+        const auto* current = dynamic_cast<const PointSegmentListGeometryVec3*>( geometry );
+        if(current) {
+            const auto& data = current->getData();
+            corelines.insert(corelines.end(), data.begin(), data.end());
+        }
     }
 
     const auto dim = _inVolume.getData()->getDimensions();

@@ -50,7 +50,6 @@ public:
     virtual bool isReady() const;
 
     static void Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFloat& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution );
-    static void Process( const VolumeRAM_3xDouble& V, const VolumeRAM_3xDouble& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution );
 
     static constexpr auto TetrahedraPerCube = 6;
     static constexpr auto TrianglesPerTetrahedron = 4;

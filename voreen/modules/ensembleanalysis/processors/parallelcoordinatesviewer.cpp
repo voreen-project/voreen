@@ -43,8 +43,8 @@ tgt::ivec2 pointToScreen( tgt::vec2 point, tgt::ivec2 viewport ) {
 
 namespace voreen {
 
-const float ParallelCoordinatesViewer::_XLimit = 0.95f;
-const float ParallelCoordinatesViewer::_YLimit = 0.9f;
+const float ParallelCoordinatesViewer::X_LIMIT = 0.95f;
+const float ParallelCoordinatesViewer::Y_LIMIT = 0.9f;
 
 ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     : RenderProcessor()
@@ -71,7 +71,10 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     IntOptionProperty( "property_trans_func_field2", "Transfer Function Field", Processor::VALID, true ),
     IntOptionProperty( "property_trans_func_field3", "Transfer Function Field", Processor::VALID, true ) }
     , _propertySelectedSamples( "property_selected_samples", "Selected Samples", std::vector<int>(), Processor::VALID )
-    ,_propertySections( "property_section", "Sections", Processor::VALID )
+    , _propertySections( "property_section", "Sections", Processor::VALID )
+    , _shaderProgram(0)
+    , _vertexArray(0)
+    , _indexBuffer(0)
 {
     // --- Initialize Ports --- //
     this->addPort( _axesport );
@@ -433,11 +436,11 @@ void ParallelCoordinatesViewer::process()
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto x = _uniformBufferVec[i].x;
-        glVertex2f( x, -_YLimit );
-        glVertex2f( x, _YLimit );
+        glVertex2f( x, -Y_LIMIT );
+        glVertex2f(x, Y_LIMIT );
     }
-    glVertex2f( -1.0f, _YLimit );
-    glVertex2f( 1.0f, _YLimit );
+    glVertex2f(-1.0f, Y_LIMIT );
+    glVertex2f(1.0f, Y_LIMIT );
 
     // --- Draw sections --- //
     glColor4f( 0.988f, 0.729f, 0.012f, 1.0f );
@@ -448,17 +451,17 @@ void ParallelCoordinatesViewer::process()
 
         for( auto& section : sections )
         {
-            const auto low = _YLimit * ( ( section.first - uniform.y ) / ( uniform.z - uniform.y ) * 2.0f - 1.0f );
-            const auto high = _YLimit * ( ( section.second - uniform.y ) / ( uniform.z - uniform.y ) * 2.0f - 1.0f );
-            if( high < -_YLimit || low > _YLimit ) continue;
+            const auto low = Y_LIMIT * ((section.first - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
+            const auto high = Y_LIMIT * ((section.second - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
+            if( high < -Y_LIMIT || low > Y_LIMIT ) continue;
 
-            glVertex2f( uniform.x, std::max( -_YLimit, low ) );
-            glVertex2f( uniform.x, std::min( _YLimit, high ) );
+            glVertex2f( uniform.x, std::max(-Y_LIMIT, low ) );
+            glVertex2f( uniform.x, std::min(Y_LIMIT, high ) );
         }
     }
 
     // --- Setup font --- //
-    const auto axisNamesY = util::pointToScreen( tgt::vec2( 0.0f, _YLimit ), _renderport.getSize() ).y + 10;
+    const auto axisNamesY = util::pointToScreen(tgt::vec2(0.0f, Y_LIMIT ), _renderport.getSize() ).y + 10;
     auto font = tgt::Font( VoreenApplication::app()->getFontPath( "VeraMono.ttf" ), _renderport.getSize().y - axisNamesY - 10, 0.0f );
     font.setTextAlignment( tgt::Font::TextAlignment::TopRight );
     font.setFontColor( tgt::vec4( 0.05f, 0.05f, 0.05f, 1.0f ) );
@@ -472,9 +475,9 @@ void ParallelCoordinatesViewer::process()
 
         glColor4f( 0.741f, 0.547f, 0.009f, 1.0f );
         auto y = ( _activeSection.first - uniform.y ) / ( uniform.z - uniform.y );
-        glVertex2f( x, _YLimit * ( y * 2.0f - 1.0f ) );
+        glVertex2f(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
         y = ( _activeSection.second - uniform.y ) / ( uniform.z - uniform.y );
-        glVertex2f( x, _YLimit * ( y * 2.0f - 1.0f ) );
+        glVertex2f(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
 
         const auto minmax = std::minmax( _activeSection.first, _activeSection.second );
 
@@ -517,9 +520,9 @@ void ParallelCoordinatesViewer::process()
         font.setFontSize( 16 );
 
         const std::array<float, 3> ycoords {
-            static_cast<float>( util::pointToScreen( tgt::vec2( 0.0f, -_YLimit ), _renderport.getSize() ).y ),
+            static_cast<float>( util::pointToScreen(tgt::vec2( 0.0f, -Y_LIMIT ), _renderport.getSize() ).y ),
             static_cast<float>( util::pointToScreen( tgt::vec2( 0.0f, 0.0f ), _renderport.getSize() ).y ),
-            static_cast<float>( util::pointToScreen( tgt::vec2( 0.0f, _YLimit ), _renderport.getSize() ).y )
+            static_cast<float>( util::pointToScreen(tgt::vec2(0.0f, Y_LIMIT ), _renderport.getSize() ).y )
         };
 
         const std::array<tgt::Font::TextAlignment, 4> alignments {
@@ -556,6 +559,9 @@ void ParallelCoordinatesViewer::process()
     }
 
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glDisable( GL_BLEND );
+
     _renderport.deactivateTarget();
 }
 
@@ -676,7 +682,7 @@ void ParallelCoordinatesViewer::onHoverEvent( tgt::MouseEvent* event )
 
     const auto point = util::screenToPoint( event->coord(), event->viewport() );
 
-    struct { size_t axis; int distance; } current { ~0u, point.y > _YLimit ? 50 : 10 };
+    struct { size_t axis; int distance; } current { ~0u, point.y > Y_LIMIT ? 50 : 10 };
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto screen = util::pointToScreen( tgt::vec2( this->screenAxisToCoordinate( i ), 0.0f ), event->viewport() );
@@ -703,14 +709,14 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
 
     if( event->action() == tgt::MouseEvent::MouseAction::PRESSED )
     {
-        if( point.y > _YLimit && !_propertyVisualizationMode.getValue() ) // Axes in visualization mode 'timesteps' cant be moved
+        if(point.y > Y_LIMIT && !_propertyVisualizationMode.getValue() ) // Axes in visualization mode 'timesteps' cant be moved
         {
             _interaction = Interaction::eMoving;
         }
         else
         {
             const auto uniform = _uniformBufferVec[axisIndex];
-            const auto x = std::max( 0.0f, std::min( 1.0f, ( ( point.y / _YLimit ) + 1.0f ) / 2.0f ) );
+            const auto x = std::max( 0.0f, std::min( 1.0f, ((point.y / Y_LIMIT ) + 1.0f ) / 2.0f ) );
             _activeSection.first = _activeSection.second = uniform.y + x * ( uniform.z - uniform.y );
             _interaction = Interaction::eSelection;
             render = true;
@@ -797,7 +803,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
     {
         if( _interaction == Interaction::eMoving ) // Only occurs in visualization mode 'fields'
         {
-            const auto x = std::max( -_XLimit - 0.01f, std::min( _XLimit + 0.01f, point.x ) );
+            const auto x = std::max(-X_LIMIT - 0.01f, std::min(X_LIMIT + 0.01f, point.x ) );
             const auto prevx = this->screenAxisToCoordinate( _hoveredScreenAxis - 1 );
             const auto nextx = this->screenAxisToCoordinate( _hoveredScreenAxis + 1 );
 
@@ -824,7 +830,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         else if( _interaction == Interaction::eSelection )
         {
             const auto uniform = _uniformBufferVec[axisIndex];
-            const auto x = std::max( 0.0f, std::min( 1.0f, ( ( point.y / _YLimit ) + 1.0f ) / 2.0f ) );
+            const auto x = std::max( 0.0f, std::min( 1.0f, ((point.y / Y_LIMIT ) + 1.0f ) / 2.0f ) );
             _activeSection.second = uniform.y + x * ( uniform.z - uniform.y );
             render = true;
         }
@@ -981,7 +987,7 @@ float ParallelCoordinatesViewer::screenAxisToCoordinate( size_t axis ) const
 {
     const auto axes = _axesport.getData();
     const auto axisCount = _propertyVisualizationMode.getValue() ? axes->timesteps() : axes->fields();
-    return -_XLimit + axis * ( ( 2.0f * _XLimit ) / ( axisCount - 1 ) );
+    return -X_LIMIT + axis * ((2.0f * X_LIMIT ) / (axisCount - 1 ) );
 }
 
 }

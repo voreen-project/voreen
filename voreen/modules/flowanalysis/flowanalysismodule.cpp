@@ -78,8 +78,8 @@ FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
     registerProcessor(new CorelineDensityVolumeCreator());
     registerProcessor(new CurlProcessor());
     registerProcessor(new FlowDirectionOverlay());
-    registerProcessor(new FlowMapProcessor());
-    registerProcessor(new FTVAProcessor());
+    //registerProcessor(new FlowMapProcessor());
+    //registerProcessor(new FTVAProcessor());
     registerProcessor(new HelicityDensity());
     registerProcessor(new ParallelVectors());
     registerProcessor(new PathlineCreator());
@@ -96,17 +96,17 @@ FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
     registerProcessor(new StreamlineToBoundingBox());
     registerProcessor(new StreamlineToGeometry());
     registerProcessor(new VortexProcessor());
-    registerProcessor(new VortexMatchSelector());
-    registerProcessor(new VortexSelector());
+    //registerProcessor(new VortexMatchSelector());
+    //registerProcessor(new VortexSelector());
     registerProcessor(new VortexTracking());
 
 #ifdef VRN_MODULE_ENSEMBLEANALYSIS
-    registerProcessor(new ApproximateParallelVectors());
-    registerProcessor(new ParticleRenderer());
-    registerProcessor(new UncertainVectorFieldProcessor());
-    registerProcessor(new VortexCollectionCreator());
-    registerProcessor(new VortexCollectionSource());
-    registerProcessor(new VortexListSelector());
+    //registerProcessor(new ApproximateParallelVectors());
+    //registerProcessor(new ParticleRenderer());
+    //registerProcessor(new UncertainVectorFieldProcessor());
+    //registerProcessor(new VortexCollectionCreator());
+    //registerProcessor(new VortexCollectionSource());
+    //registerProcessor(new VortexListSelector());
 #endif
 }
 

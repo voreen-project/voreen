@@ -64,12 +64,12 @@ bool VortexProcessor::isReady() const {
         return false;
     }
 
-    if(!outputVolumeJacobi_.isConnected() &&
-        !outputVolumeDelta_.isConnected() &&
-        !outputVolumeQ_.isConnected() &&
-        !outputVolumeLamda2_.isConnected())
+    if(!outputVolumeJacobi_.isReady() &&
+        !outputVolumeDelta_.isReady() &&
+        !outputVolumeQ_.isReady() &&
+        !outputVolumeLamda2_.isReady())
     {
-        setNotReadyErrorMessage("No output connected");
+        setNotReadyErrorMessage("No outport connected");
         return false;
     }
 
@@ -98,11 +98,11 @@ VortexProcessorIO VortexProcessor::prepareComputeInput() {
         volumeDelta.reset(new VolumeRAM_Float( dim ));
     }
     std::unique_ptr<VolumeRAM_Float> volumeQ;
-    if(outputVolumeLamda2_.isConnected()) {
+    if(outputVolumeQ_.isConnected()) {
         volumeQ.reset(new VolumeRAM_Float( dim ));
     }
     std::unique_ptr<VolumeRAM_Float> volumeLambda2;
-    if(outputVolumeQ_.isConnected()) {
+    if(outputVolumeLamda2_.isConnected()) {
         volumeLambda2.reset(new VolumeRAM_Float( dim ));
     }
 
@@ -135,11 +135,15 @@ VortexProcessorIO VortexProcessor::compute(VortexProcessorIO input, ProgressRepo
     };
 
     ThreadedTaskProgressReporter progress(progressReporter, dimensions.z);
+    bool aborted = false;
 
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
     for (long z = 3; z < dimensions.z-3; z++) {
+        if (aborted) {
+            continue;
+        }
         for (long y = 3; y < dimensions.y-3; y++) {
             for (long x = 3; x < dimensions.x-3; x++) {
                 tgt::svec3 pos(x, y, z);
@@ -227,7 +231,19 @@ VortexProcessorIO VortexProcessor::compute(VortexProcessorIO input, ProgressRepo
             }
         }
 
-        progress.reportStepDone();
+        if (progress.reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+            #pragma omp critical
+            aborted = true;
+#else
+            aborted = true;
+            break;
+#endif
+        }
+    }
+
+    if (aborted) {
+        throw boost::thread_interrupted();
     }
 
     progressReporter.setProgress(1.0f);

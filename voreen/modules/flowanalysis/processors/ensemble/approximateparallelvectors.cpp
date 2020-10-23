@@ -33,20 +33,18 @@
 #include "modules/flowanalysis/processors/volume/vortexprocessor.h"
 
 #include "Eigen/Eigenvalues"
-#include <chrono>
 
 namespace voreen {
-ApproximateParallelVectors::ApproximateParallelVectors() : Processor(),
-    _inportEnsemble( Port::INPORT, "inport_ensemble", "Ensemble" ),
-    _inportMask( Port::INPORT, "inport_mask", "Mask" ),
-    _outportA( Port::OUTPORT, "outport_a", "Volume A" ),
-    _outportB( Port::OUTPORT, "outport_b", "Volume B" ),
-    _outportEps( Port::OUTPORT, "outport_eps", "Volume Epsilon" ),
-
-    _propertyTimestep( "property_timestep", "Timestep", 0, 0, std::numeric_limits<int>::max(), Processor::VALID ),
-    _propertyEpsilon( "property_epsilon", "Epsilon Threshold", -1.0f, -1.0f, 1.0f, Processor::VALID ),
-    _propertyUseAcceleration( "property_use_aceleration", "Use Acceleration", false, Processor::VALID ),
-    _propertyUpdateButton( "property_update_button", "Update", Processor::VALID )
+ApproximateParallelVectors::ApproximateParallelVectors()
+    : Processor()
+    , _inportEnsemble( Port::INPORT, "inport_ensemble", "Ensemble" )
+    , _inportMask( Port::INPORT, "inport_mask", "Mask" )
+    , _outportA( Port::OUTPORT, "outport_a", "Volume A" )
+    , _outportB( Port::OUTPORT, "outport_b", "Volume B" )
+    , _outportEps( Port::OUTPORT, "outport_eps", "Volume Epsilon" )
+    , _propertyTime( "property_time", "Time", 0, 0, std::numeric_limits<float>::max() )
+    , _propertyEpsilon( "property_epsilon", "Epsilon Threshold", -1.0f, -1.0f, 1.0f )
+    , _propertyUseAcceleration( "property_use_aceleration", "Use Acceleration", false )
 {
     this->addPort( _inportEnsemble );
     this->addPort( _inportMask );
@@ -54,51 +52,37 @@ ApproximateParallelVectors::ApproximateParallelVectors() : Processor(),
     this->addPort( _outportB );
     this->addPort( _outportEps );
 
-    this->addProperty( _propertyTimestep );
+    this->addProperty( _propertyTime );
     this->addProperty( _propertyEpsilon );
     this->addProperty( _propertyUseAcceleration );
-    this->addProperty( _propertyUpdateButton );
 
-    _inportEnsemble.onNewData( LambdaFunctionCallback( [this]
-    {
-        _propertyTimestep.setMaxValue( std::max( 0, static_cast<int>( _inportEnsemble.getData()->getMinNumTimeSteps() ) - 1 ) );
+    _inportEnsemble.onNewData( LambdaFunctionCallback( [this] {
+        const auto* ensemble = _inportEnsemble.getData();
+        _propertyTime.setMinValue(ensemble->getStartTime());
+        _propertyTime.setMaxValue(ensemble->getEndTime());
     } ) );
-    _propertyUpdateButton.onClick( MemberFunctionCallback<ApproximateParallelVectors>( this, &ApproximateParallelVectors::updateButton ) );
 }
 
-Processor* ApproximateParallelVectors::create() const
-{
+Processor* ApproximateParallelVectors::create() const {
     return new ApproximateParallelVectors();
 }
-std::string ApproximateParallelVectors::getClassName() const
-{
+std::string ApproximateParallelVectors::getClassName() const {
     return "ApproximateParallelVectors";
 }
-std::string ApproximateParallelVectors::getCategory() const
-{
+std::string ApproximateParallelVectors::getCategory() const {
     return "Vortex Processing";
 }
 
-void ApproximateParallelVectors::process()
-{}
-void ApproximateParallelVectors::updateButton()
-{
+void ApproximateParallelVectors::process() {
+
     const auto ensemble = _inportEnsemble.getData();
     const auto maskVolumeBase = _inportMask.getData();
-    const auto timestep = _propertyTimestep.get();
-
-    if( !ensemble || !maskVolumeBase )
-    {
-        _outportA.clear();
-        _outportB.clear();
-        _outportEps.clear();
-        return;
-    }
+    const auto time = _propertyTime.get();
 
     // --- Gather Voxels --- //
     const auto volumeMask = VolumeRAMRepresentationLock( maskVolumeBase );
     const auto dim = volumeMask->getDimensions();
-    const auto& runs = ensemble->getMembers();
+    const auto& members = ensemble->getMembers();
 
     auto voxels = std::vector<size_t>();
     voxels.reserve( volumeMask->getNumVoxels() );
@@ -107,11 +91,12 @@ void ApproximateParallelVectors::updateButton()
             voxels.push_back( i );
     voxels.shrink_to_fit();
 
-    const auto getVelocity = [timestep, dim, &runs, &voxels] ( size_t index )
+    const auto getVelocity = [time, dim, &members, &voxels] (size_t index)
     {
-        const auto volumeLockU = VolumeRAMRepresentationLock( runs[index].getTimeSteps()[timestep].getVolume( "U" ) );
-        const auto volumeLockV = VolumeRAMRepresentationLock( runs[index].getTimeSteps()[timestep].getVolume( "V" ) );
-        const auto volumeLockW = VolumeRAMRepresentationLock( runs[index].getTimeSteps()[timestep].getVolume( "W" ) );
+        size_t timeStep = members[index].getTimeStep(time);
+        const auto volumeLockU = VolumeRAMRepresentationLock(members[index].getTimeSteps()[timeStep].getVolume("U" ) );
+        const auto volumeLockV = VolumeRAMRepresentationLock(members[index].getTimeSteps()[timeStep].getVolume("V" ) );
+        const auto volumeLockW = VolumeRAMRepresentationLock(members[index].getTimeSteps()[timeStep].getVolume("W" ) );
 
         const auto volumeU = dynamic_cast<const VolumeRAM_Double*>( volumeLockU.operator->() );
         const auto volumeV = dynamic_cast<const VolumeRAM_Double*>( volumeLockV.operator->() );
@@ -141,7 +126,7 @@ void ApproximateParallelVectors::updateButton()
     volumeEps->fill( 0.0 );
 
     // --- Calculate A --- //
-    for( size_t i = 0; i < runs.size(); ++i )
+    for(size_t i = 0; i < members.size(); ++i )
     {
         const auto volumeBaseVelocity = getVelocity( i );
         const auto volumeBaseVelocityConv = std::unique_ptr<Volume>( VolumeOperatorConvert().apply<tgt::dvec3>( volumeBaseVelocity.get() ) );
@@ -153,7 +138,7 @@ void ApproximateParallelVectors::updateButton()
         for( long i = 0; i < static_cast<long>( voxels.size() ); ++i )
         {
             const auto voxelIndex = voxels[i];
-            volumeA->voxel( voxelIndex ) += volumeVelocityConv->voxel( voxelIndex ) / static_cast<double>( runs.size() );
+            volumeA->voxel( voxelIndex ) += volumeVelocityConv->voxel( voxelIndex ) / static_cast<double>( members.size() );
         }
 
         if( _propertyUseAcceleration.get() )
@@ -168,13 +153,13 @@ void ApproximateParallelVectors::updateButton()
             for( long i = 0; i < static_cast<long>( voxels.size() ); ++i )
             {
                 const auto voxelIndex = voxels[i];
-                volumeA->voxel( voxelIndex ) += volumeAcceleration->voxel( voxelIndex ) / static_cast<double>( runs.size() );
+                volumeA->voxel( voxelIndex ) += volumeAcceleration->voxel( voxelIndex ) / static_cast<double>( members.size() );
             }
         }
     }
 
     // --- Calculate C --- //
-    for( size_t i = 0; i < runs.size(); ++i )
+    for(size_t i = 0; i < members.size(); ++i )
     {
         const auto volumeBaseVelocity = getVelocity( i );
         const auto volumeBaseVelocityConv = std::unique_ptr<Volume>( VolumeOperatorConvert().apply<tgt::dvec3>( volumeBaseVelocity.get() ) );

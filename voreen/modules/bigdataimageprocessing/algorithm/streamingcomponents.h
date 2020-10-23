@@ -560,7 +560,7 @@ SC_NS::RootFile::RootFile(MergerFile&& in, const std::string& filename, uint64_t
     // An optional id sorting based on meta data is performed.
     // We map the run id to its final id based on a user defined sorting.
     if(componentComparator) {
-        auto compare = [&metadataMap, &componentComparator] (const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b) {
+        auto compare = [&] (const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b) {
             return componentComparator(metadataMap.at(a.first), metadataMap.at(b.first));
         };
         std::sort(finalIds.begin(), finalIds.end(), compare);

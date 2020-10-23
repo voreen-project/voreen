@@ -94,8 +94,7 @@ VortexCollectionCreator::VortexCollectionCreator() : Processor(),
 
 void VortexCollectionCreator::updateButton()
 {
-    const auto startTime = std::chrono::high_resolution_clock::now();
-    const auto ensemble = _inportEnsemble.getData();
+    const auto* ensemble = _inportEnsemble.getData();
     if( !ensemble ) return;
 
     const auto& members = _propertySelectedMembers.get();
@@ -112,7 +111,7 @@ void VortexCollectionCreator::updateButton()
             const auto& timeStep = ensemble->getMembers()[members[i]].getTimeSteps()[interval.x + j];
 
             const auto maskLock = VolumeRAMRepresentationLock( timeStep.getVolume( "SALT" ) );
-            const auto mask = dynamic_cast<const VolumeRAM_Double*>( maskLock.operator->() );
+            const auto mask = dynamic_cast<const VolumeRAM_Float*>( maskLock.operator->() );
             const auto dim = mask->getDimensions();
 
             // --- Channel Merger --- //
@@ -120,11 +119,11 @@ void VortexCollectionCreator::updateButton()
             const auto volumeVLock = VolumeRAMRepresentationLock( timeStep.getVolume( "V" ) );
             const auto volumeWLock = VolumeRAMRepresentationLock( timeStep.getVolume( "W" ) );
 
-            const auto volumeU = dynamic_cast<const VolumeRAM_Double*>( *volumeULock );
-            const auto volumeV = dynamic_cast<const VolumeRAM_Double*>( *volumeVLock );
-            const auto volumeW = dynamic_cast<const VolumeRAM_Double*>( *volumeWLock );
+            const auto volumeU = dynamic_cast<const VolumeRAM_Float*>( *volumeULock );
+            const auto volumeV = dynamic_cast<const VolumeRAM_Float*>( *volumeVLock );
+            const auto volumeW = dynamic_cast<const VolumeRAM_Float*>( *volumeWLock );
 
-            auto velocityRAM = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
+            auto velocityRAM = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
 #pragma omp parallel for
             for( long x = 0; x < dim.x; ++x ) {
                 for (long y = 0; y < dim.y; ++y) {
@@ -138,18 +137,18 @@ void VortexCollectionCreator::updateButton()
 
             const auto velocityVolume = std::unique_ptr<Volume>( new Volume( velocityRAM.release(), timeStep.getVolume( "U" ) ) );
             const auto velocityLock = VolumeRAMRepresentationLock( velocityVolume.get() );
-            const auto velocity = dynamic_cast<const VolumeRAM_3xDouble*>( velocityLock.operator->() );
+            const auto velocity = dynamic_cast<const VolumeRAM_3xFloat*>( velocityLock.operator->() );
 
             const auto velocityFloatVolume = std::unique_ptr<Volume>( VolumeOperatorConvert().apply<tgt::dvec3>( velocityVolume.get() ) );
             const auto velocityFloatLock = VolumeRAMRepresentationLock( velocityFloatVolume.get() );
-            const auto velocityFloat = dynamic_cast<const VolumeRAM_3xDouble*>( velocityFloatLock.operator->() );
+            const auto velocityFloat = dynamic_cast<const VolumeRAM_3xFloat*>( velocityFloatLock.operator->() );
 
             // --- Vortex Processor --- //
             auto jacobi = std::unique_ptr<VolumeRAM_Mat3Float>( new VolumeRAM_Mat3Float( dim ) );
             VortexProcessor::Process( *velocity, *mask, *jacobi, nullptr, nullptr, nullptr );
 
             // --- Acceleration Processor --- //
-            auto acceleration = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
+            auto acceleration = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
             AccelerationProcessor::Process( *jacobi, *velocity, *acceleration );
 
             // --- Parallel Vectors --- //
@@ -172,15 +171,6 @@ void VortexCollectionCreator::updateButton()
                 RotationalDirectionProcessor::Process( *curl, vortices[i] );
             }
             collection->setVortices( i, j, std::move( vortices ) );
-
-            const_cast<VolumeBase*>(timeStep.getVolume("SALT"))->removeRepresentation<VolumeRAM>();
-            const_cast<VolumeBase*>(timeStep.getVolume("U"))->removeRepresentation<VolumeRAM>();
-            const_cast<VolumeBase*>(timeStep.getVolume("V"))->removeRepresentation<VolumeRAM>();
-            const_cast<VolumeBase*>(timeStep.getVolume("W"))->removeRepresentation<VolumeRAM>();
-
-            const auto timeEnd = std::chrono::high_resolution_clock::now();
-            const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( timeEnd - timeStart ).count() / 1000.0;
-            std::cout << "[VortexCollectionCreator] Finished: member = " << members[i] << ", timestep = " << ( interval.x + j ) << " --> " << time << "s" << std::endl;
         }
     }
 
@@ -204,12 +194,6 @@ void VortexCollectionCreator::updateButton()
     }
 
     _outportVortexCollection.setData( collection.release() );
-
-    const auto endTime = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime ).count() / 1000.0f;
-    const auto minutes = static_cast<size_t>( time / 60.0f );
-    const auto seconds = static_cast<size_t>( time ) % 60;
-    std::cout << "[VortexCollectionCreator]: Finished in " << minutes << " min " << seconds << " s" << std::endl;
 }
 
 }

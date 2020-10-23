@@ -43,7 +43,7 @@ ParallelCoordinatesVoxelSelection::ParallelCoordinatesVoxelSelection()
 
 void ParallelCoordinatesVoxelSelection::process()
 {
-    const auto ensemble = ensembleport_.getData();
+    const auto* ensemble = ensembleport_.getData();
 
     // --- Find Member --- //
     const EnsembleMember* member = nullptr;
@@ -55,19 +55,20 @@ void ParallelCoordinatesVoxelSelection::process()
             break;
         }
     }
-    if( !member || member->getTimeSteps().size() <= propertySections_.get().timestep )
+    if( !member )
     {
         volumeport_.clear();
         return;
     }
 
     // --- Collect Volumes --- //
-    auto volumes = std::vector<const VolumeRAM*>();
+    auto volumes = std::vector<VolumeRAMRepresentationLock>();
     for( const auto& field : propertySections_.get().fields )
     {
-        const VolumeBase* volume = member->getTimeSteps()[propertySections_.get().timestep].getVolume(field);
+        size_t timeStep = member->getTimeStep(propertySections_.get().time);
+        const VolumeBase* volume = member->getTimeSteps()[timeStep].getVolume(field);
         if(volume)
-            volumes.push_back( volume->getRepresentation<VolumeRAM>() );
+            volumes.emplace_back( VolumeRAMRepresentationLock(volume) );
     }
     if(volumes.size() != propertySections_.get().fields.size() )
     {
@@ -78,7 +79,9 @@ void ParallelCoordinatesVoxelSelection::process()
     // --- Fill Output --- //
     auto volume = std::unique_ptr<VolumeRAM_UInt8>( new VolumeRAM_UInt8( volumes.front()->getDimensions() ) );
 
+#ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
+#endif
     for( long i = 0; i < static_cast<long>( volume->getNumVoxels() ); ++i )
     {
         volume->voxel( i ) = std::numeric_limits<uint8_t>::max();

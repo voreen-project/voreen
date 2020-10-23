@@ -28,7 +28,6 @@
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/volumeport.h"
-#include "voreen/core/ports/geometryport.h"
 #include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 
 namespace voreen {
@@ -43,15 +42,13 @@ public:
 
 private:
     void process() override;
-    void updateButton();
 
     EnsembleDatasetPort _inportEnsemble;
     VolumePort _inportMask, _outportA, _outportB, _outportEps;
 
-    IntProperty _propertyTimestep;
+    FloatProperty _propertyTime;
     FloatProperty _propertyEpsilon;
     BoolProperty _propertyUseAcceleration;
-    ButtonProperty _propertyUpdateButton;
 };
 
 }

@@ -49,7 +49,7 @@ VortexListSelector::VortexListSelector() : Processor(),
     this->addProperty(_Rotation);
     _Rotation.reset();
     _Rotation.addOption("B", "Both", OPTION_B);
-    _Rotation.addOption("C", "Clockwise", OPTION_CW);
+    _Rotation.addOption("CW", "Clockwise", OPTION_CW);
     _Rotation.addOption("CCW", "Counter-Clockwise", OPTION_CCW);
     _Rotation.selectByValue(OPTION_B);
 

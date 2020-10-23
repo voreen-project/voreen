@@ -313,7 +313,6 @@ CorelineCreator::CorelineCreator()
 
 void CorelineCreator::Process( const ParallelVectorSolutions& solutions, int lengthThreshold, std::vector<std::vector<tgt::vec3>>& corelines )
 {
-    const auto startTime = std::chrono::high_resolution_clock::now();
     const auto dim = solutions.dimensions;
 
     auto discardTriangle = std::vector<bool>(solutions.triangleSolutionIndices.size(), true);
@@ -369,10 +368,6 @@ void CorelineCreator::Process( const ParallelVectorSolutions& solutions, int len
             corelines.push_back(std::move(coreline));
         }
     }
-
-    const auto endTime = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startTime ).count() / 1000.0f;
-    std::cout << "[CorelineCreator]: Finished in " << time << " seconds." << std::endl;
 }
 
 void CorelineCreator::process()

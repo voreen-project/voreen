@@ -41,20 +41,10 @@ class VortexCollectionCreator : public Processor {
 public:
     VortexCollectionCreator();
 
-    Processor* create() const override
-    {
-        return new VortexCollectionCreator();
-    }
-    std::string getClassName() const override
-    {
-        return "VortexCollectionCreator";
-    }
-    std::string getCategory() const override
-    {
-        return "Vortex Processing";
-    }
-    bool isReady() const override
-    {
+    Processor* create() const override          { return new VortexCollectionCreator(); }
+    std::string getClassName() const override   { return "VortexCollectionCreator";     }
+    std::string getCategory() const override    { return "Vortex Processing";           }
+    bool isReady() const override {
         return _inportEnsemble.isReady();
     }
 
