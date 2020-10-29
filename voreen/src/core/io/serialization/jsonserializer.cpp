@@ -242,6 +242,14 @@ void JsonSerializer::write(std::ostream& stream, bool pretty, bool compressed) {
 
     resolveUnresolvedReferences();
 
+#ifdef WIN32
+    // TODO: fix compression on windows.
+    if (compressed) {
+        compressed = false;
+        LWARNINGC("voreen.jsonserializer", "Compression currently not supported on windows.");
+    }
+#endif
+
     // Prepare gzip compressing stream
     // We have to do it in the outside scope (that lives longer than the OStreamWrapper sb
     // because sb references this stream if compression is used.

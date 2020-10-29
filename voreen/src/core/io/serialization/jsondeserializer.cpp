@@ -219,6 +219,14 @@ void JsonDeserializer::read(std::istream& stream, bool compressed)
 {
     using namespace boost::iostreams;
 
+#ifdef WIN32
+    // TODO: fix compression on windows.
+    if (compressed) {
+        compressed = false;
+        LWARNINGC("voreen.jsonserializer", "Compression currently not supported on windows.");
+    }
+#endif
+
     // Prepare gzip compressing stream
 
     documentBuffer_.clear();
