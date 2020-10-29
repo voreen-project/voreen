@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="OctreeWalker" ref="ref8" />
+                        <item type="VolumeSource" ref="ref39" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -25,7 +25,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref33">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-263" y="919" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-2397" y="22" width="1723" height="1185" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-67" y="441" width="1723" height="1185" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
@@ -42,7 +42,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-2397" y="22" />
+                            <value x="-67" y="441" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1723" y="1185" />
@@ -147,7 +147,7 @@
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
+                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -268,15 +268,15 @@
                         <Property mapKey="xColor" name="xColor" id="ref102">
                             <value x="1" y="0" z="0" w="1" />
                         </Property>
-                        <Property mapKey="xSliceIndex" name="xSliceIndex" value="34" id="ref118" />
+                        <Property mapKey="xSliceIndex" name="xSliceIndex" value="64" id="ref118" />
                         <Property mapKey="yColor" name="yColor" id="ref40">
                             <value x="0" y="1" z="0" w="1" />
                         </Property>
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="54" id="ref117" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="48" id="ref117" />
                         <Property mapKey="zColor" name="zColor" id="ref42">
                             <value x="0" y="0" z="1" w="1" />
                         </Property>
-                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="50" id="ref116" />
+                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="57" id="ref116" />
                     </Properties>
                     <Inports>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -345,7 +345,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref85" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XY)" value="34" id="ref59" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XY)" value="64" id="ref59" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -508,7 +508,7 @@
                         <Property mapKey="roiColor" name="roiColor" id="ref56">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="34" id="ref61" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="64" id="ref61" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1043,7 +1043,7 @@
                         <Property mapKey="roiColor" name="roiColor" id="ref53">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="34" id="ref60" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="64" id="ref60" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1663,10 +1663,10 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref93" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="54" id="ref64" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="48" id="ref64" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="81" y="54" z="111" />
+                            <value x="-1" y="-1" z="-1" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="2d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" guiName="Transfer Function (XZ)" domainFittingStrategy="1" computeHistogram="true" id="ref78">
@@ -1826,7 +1826,7 @@ void main() {
                         <Property mapKey="roiColor" name="roiColor" id="ref54">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="54" id="ref62" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="48" id="ref62" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1932,7 +1932,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref86" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (YZ)" value="34" id="ref82" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (YZ)" value="64" id="ref82" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -2089,7 +2089,7 @@ void main() {
                         <Property mapKey="roiColor" name="roiColor" id="ref57">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="54" id="ref63" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="48" id="ref63" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -2429,7 +2429,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref94" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="54" id="ref81" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="48" id="ref81" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -2963,10 +2963,10 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref97" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (YZ)" value="50" id="ref65" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (YZ)" value="57" id="ref65" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="117" y="31" z="50" />
+                            <value x="-1" y="-1" z="-1" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="2d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" guiName="Transfer Function (YZ)" domainFittingStrategy="1" computeHistogram="true" id="ref79">
@@ -3126,7 +3126,7 @@ void main() {
                         <Property mapKey="roiColor" name="roiColor" id="ref55">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="50" id="ref66" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="57" id="ref66" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -3309,7 +3309,7 @@ void main() {
                         <Property mapKey="roiColor" name="roiColor" id="ref58">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="50" id="ref67" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="57" id="ref67" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -3823,7 +3823,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref98" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XY)" value="50" id="ref80" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XY)" value="57" id="ref80" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -4415,7 +4415,7 @@ void main() {
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
+                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -4689,7 +4689,7 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/nosnapshot/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/3559e287-424e-4397-b080-77c7ba6f395b" id="ref8">
+                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-245" y="48" />
                     </MetaData>
@@ -4710,13 +4710,13 @@ void main() {
                         <Property mapKey="resultPath" name="resultPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../nosnapshot/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/3559e287-424e-4397-b080-77c7ba6f395b" />
-                                    <item value="../../../nosnapshot/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/3559e287-424e-4397-b080-77c7ba6f395b" />
-                                    <item value="/nosnapshot/voreen_tmp/fced3dbe-eec8-4979-aefd-686432f00d6c/3559e287-424e-4397-b080-77c7ba6f395b" />
+                                    <item value="../../../../../../../nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" />
+                                    <item value="/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 549 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 627 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -4762,7 +4762,7 @@ void main() {
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
+                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -4960,7 +4960,7 @@ void main() {
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
+                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -5214,7 +5214,7 @@ void main() {
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="OctreeCreator Progress (for Rendering)" />
                         <Property mapKey="progressMessage" name="progressMessage" value="Octree loaded from cache." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 207 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 131 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="3" />
@@ -5261,7 +5261,7 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSource" name="VolumeSource 2" id="ref39">
+                <Processor type="VolumeSource" name="VolumeSource" id="ref39">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-286" y="-660" />
                     </MetaData>
@@ -6418,6 +6418,10 @@ void main() {
                     <First value="Random Walker" />
                     <Second value="14" />
                 </value>
+                <value key="OctreeWalker.noiseModel">
+                    <First value="Random Walker" />
+                    <Second value="13" />
+                </value>
                 <value key="OctreeWalker.progressDisplay">
                     <First value="Random Walker" />
                     <Second value="11" />
@@ -6477,6 +6481,14 @@ void main() {
                 <value key="Volume Renderer.transferFunction">
                     <First value="3D Rendering" />
                     <Second value="3" />
+                </value>
+                <value key="VolumeSource.volumeInfo">
+                    <First value="Input" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSource.volumeURL">
+                    <First value="Input" />
+                    <Second value="0" />
                 </value>
             </GroupMembership>
             <MenuEntityVisibility />
