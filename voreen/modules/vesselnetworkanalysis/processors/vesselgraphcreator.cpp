@@ -217,7 +217,7 @@ static LZ4SliceVolume<uint32_t> createClosestIDVolume(const std::string& tmpPath
 
     LZ4SliceVolumeBuilder<uint32_t> outputIDs(tmpPath, input.segmentation.getMetaData().withRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint32_t>()));
 
-    const size_t max_chunk_size = 32;
+    const size_t max_chunk_size = 8;
 
     auto calc_num_chunks = [] (size_t dim, size_t size) {
         if((dim % size) == 0) {

@@ -693,6 +693,8 @@ void OverlappingSlabReader<Voxel, SLAB_SIZE, OVERLAP>::advance() {
             currentSlabStart_+SLAB_SIZE+ 2*OVERLAP,
             static_cast<int>(volume_.getDimensions().z));
 
+    // First free the old slab, then allocate new one (to reduce peak memory usage)
+    currentSlab_ = VolumeAtomic<Voxel>(tgt::svec3(0), false);
     currentSlab_ = volume_.loadSlab(begin, end);
 }
 
