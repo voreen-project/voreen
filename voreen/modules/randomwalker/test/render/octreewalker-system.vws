@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="20">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -12,15 +12,15 @@
                     <transform.row2 x="7676.314453125" y="-4512.15673828125" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-692.969787598" y="1093.723388672" />
+                    <value x="-394.074371338" y="814.865661621" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.598871708" />
             </MetaData>
             <Processors>
                 <Processor type="Canvas" name="Canvas" id="ref42">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-331" y="1112" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="180" y="860" width="750" height="700" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-331" y="1110" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="409" y="200" width="750" height="700" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="105" y="226" />
@@ -30,7 +30,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="180" y="860" />
+                            <value x="409" y="200" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="750" y="700" />
@@ -167,13 +167,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.020334629" id="ref117">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022144398" id="ref117">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
                             </MetaData>
-                            <position x="2.730442047" y="-3.998971224" z="0.897310019" />
-                            <focus x="-0.151319548" y="-0.158392623" z="-0.165412083" />
-                            <upVector x="0.377637327" y="0.566435814" z="0.732489288" />
+                            <position x="2.619674683" y="-3.582394361" z="0.595071733" />
+                            <focus x="-0.158479035" y="-0.161295608" z="-0.156411156" />
+                            <upVector x="0.412871182" y="0.572859645" z="0.708074391" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -285,15 +285,15 @@
                         <Property mapKey="xColor" name="xColor" id="ref119">
                             <value x="1" y="0" z="0" w="1" />
                         </Property>
-                        <Property mapKey="xSliceIndex" name="xSliceIndex" value="64" id="ref121" />
+                        <Property mapKey="xSliceIndex" name="xSliceIndex" value="59" id="ref121" />
                         <Property mapKey="yColor" name="yColor" id="ref47">
                             <value x="0" y="1" z="0" w="1" />
                         </Property>
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="48" id="ref120" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="45" id="ref120" />
                         <Property mapKey="zColor" name="zColor" id="ref49">
                             <value x="0" y="0" z="1" w="1" />
                         </Property>
-                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="57" id="ref122" />
+                        <Property mapKey="zSliceIndex" name="zSliceIndex" value="59" id="ref122" />
                     </Properties>
                     <Inports>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -362,7 +362,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref95" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="64" id="ref69" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="59" id="ref69" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -509,6 +509,7 @@
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -518,7 +519,7 @@
                         <Property mapKey="roiColor" name="roiColor" id="ref66">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="64" id="ref71" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="59" id="ref71" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -575,51 +576,58 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="66" geometryMode="2" size="3" antialiasing="false">
+                        <Region type="RegionOfInterestGeometry" layer="69" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="343" y="140" />
-                                <item x="346" y="139" />
-                                <item x="353" y="131" />
-                                <item x="358" y="124" />
-                                <item x="368" y="113" />
-                                <item x="378" y="103" />
-                                <item x="390" y="92" />
-                                <item x="402" y="79" />
-                                <item x="413" y="70" />
-                                <item x="418" y="65" />
-                                <item x="419" y="63" />
-                                <item x="422" y="61" />
+                                <item x="379" y="459" />
+                                <item x="376" y="457" />
+                                <item x="374" y="455" />
+                                <item x="372" y="452" />
+                                <item x="369" y="448" />
+                                <item x="367" y="443" />
+                                <item x="365" y="438" />
+                                <item x="362" y="434" />
+                                <item x="360" y="427" />
+                                <item x="357" y="422" />
+                                <item x="355" y="416" />
+                                <item x="351" y="411" />
+                                <item x="349" y="408" />
+                                <item x="347" y="405" />
+                                <item x="346" y="402" />
+                                <item x="345" y="400" />
+                                <item x="345" y="398" />
+                                <item x="344" y="396" />
+                                <item x="342" y="394" />
+                                <item x="340" y="392" />
+                                <item x="339" y="390" />
+                                <item x="338" y="388" />
                             </points>
-                            <viewport x="605" y="604" />
+                            <viewport x="654" y="486" />
                             <trafoMatrix.row0 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row1 x="-0.186775669" y="0" z="0" w="103.999641418" />
-                            <trafoMatrix.row2 x="0" y="0.187086076" z="0" w="0" />
+                            <trafoMatrix.row1 x="-0.234567896" y="0" z="0" w="124.203704834" />
+                            <trafoMatrix.row2 x="0" y="0.234567896" z="0" w="-0.5" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="0" y="1" z="1" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
                         </Region>
-                        <Region type="RegionOfInterestGeometry" layer="66" geometryMode="2" size="3" antialiasing="false">
+                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="409" y="569" />
-                                <item x="407" y="568" />
-                                <item x="398" y="564" />
-                                <item x="395" y="561" />
-                                <item x="381" y="548" />
-                                <item x="371" y="539" />
-                                <item x="358" y="530" />
-                                <item x="347" y="520" />
-                                <item x="337" y="508" />
-                                <item x="328" y="497" />
-                                <item x="323" y="476" />
-                                <item x="321" y="471" />
-                                <item x="319" y="458" />
-                                <item x="318" y="456" />
-                                <item x="318" y="454" />
+                                <item x="138" y="293" />
+                                <item x="138" y="291" />
+                                <item x="138" y="288" />
+                                <item x="138" y="285" />
+                                <item x="138" y="282" />
+                                <item x="138" y="278" />
+                                <item x="139" y="273" />
+                                <item x="139" y="269" />
+                                <item x="140" y="265" />
+                                <item x="141" y="262" />
+                                <item x="141" y="260" />
+                                <item x="142" y="258" />
                             </points>
-                            <viewport x="605" y="604" />
+                            <viewport x="375" y="350" />
                             <trafoMatrix.row0 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row1 x="-0.186775669" y="0" z="0" w="103.999641418" />
-                            <trafoMatrix.row2 x="0" y="0.187086076" z="0" w="0" />
+                            <trafoMatrix.row1 x="-0.32571429" y="0" z="0" w="108.571426392" />
+                            <trafoMatrix.row2 x="0" y="0.32571429" z="0" w="-0.5" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="0" y="1" z="1" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
@@ -726,7 +734,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0.5" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -860,6 +868,7 @@
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -869,7 +878,7 @@
                         <Property mapKey="roiColor" name="roiColor" id="ref63">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="64" id="ref70" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="59" id="ref70" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -938,58 +947,25 @@
                             <roiColor x="1" y="0.196078002" z="0" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
                         </Region>
-                        <Region type="RegionOfInterestGeometry" layer="66" geometryMode="2" size="3" antialiasing="false">
+                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="150" y="167" />
-                                <item x="152" y="167" />
-                                <item x="154" y="167" />
-                                <item x="156" y="166" />
-                                <item x="158" y="165" />
-                                <item x="160" y="164" />
-                                <item x="162" y="164" />
-                                <item x="164" y="162" />
-                                <item x="166" y="162" />
-                                <item x="168" y="161" />
-                                <item x="171" y="160" />
-                                <item x="172" y="158" />
-                                <item x="174" y="158" />
-                                <item x="176" y="158" />
-                                <item x="178" y="157" />
-                                <item x="180" y="156" />
-                                <item x="182" y="156" />
-                                <item x="184" y="155" />
-                                <item x="186" y="154" />
-                                <item x="188" y="153" />
-                                <item x="190" y="152" />
-                                <item x="192" y="151" />
-                                <item x="194" y="150" />
-                                <item x="196" y="149" />
-                                <item x="198" y="149" />
-                                <item x="200" y="148" />
-                                <item x="202" y="148" />
-                                <item x="204" y="148" />
-                                <item x="206" y="148" />
-                                <item x="208" y="147" />
-                                <item x="210" y="147" />
-                                <item x="212" y="146" />
-                                <item x="214" y="146" />
-                                <item x="216" y="146" />
-                                <item x="218" y="146" />
-                                <item x="220" y="146" />
-                                <item x="222" y="146" />
-                                <item x="224" y="146" />
-                                <item x="226" y="146" />
-                                <item x="228" y="146" />
-                                <item x="230" y="146" />
-                                <item x="232" y="146" />
-                                <item x="234" y="146" />
-                                <item x="236" y="147" />
-                                <item x="238" y="147" />
+                                <item x="288" y="282" />
+                                <item x="288" y="280" />
+                                <item x="288" y="278" />
+                                <item x="288" y="276" />
+                                <item x="288" y="273" />
+                                <item x="288" y="269" />
+                                <item x="287" y="264" />
+                                <item x="286" y="260" />
+                                <item x="285" y="255" />
+                                <item x="285" y="252" />
+                                <item x="285" y="250" />
+                                <item x="285" y="248" />
                             </points>
-                            <viewport x="375" y="350" />
+                            <viewport x="654" y="486" />
                             <trafoMatrix.row0 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row1 x="-0.32571429" y="0" z="0" w="108.571426392" />
-                            <trafoMatrix.row2 x="0" y="0.32571429" z="0" w="-0.5" />
+                            <trafoMatrix.row1 x="-0.234567896" y="0" z="0" w="124.203704834" />
+                            <trafoMatrix.row2 x="0" y="0.234567896" z="0" w="-0.5" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="1" y="0.196078002" z="0" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
@@ -1408,7 +1384,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref103" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="48" id="ref74" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="45" id="ref74" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="116" y="48" z="44" />
@@ -1555,16 +1531,17 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
                         <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="0" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref64">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="48" id="ref72" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="45" id="ref72" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1620,32 +1597,7 @@ void main() {
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
-                    <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="49" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="251" y="282" />
-                                <item x="256" y="277" />
-                                <item x="266" y="268" />
-                                <item x="277" y="260" />
-                                <item x="291" y="255" />
-                                <item x="306" y="251" />
-                                <item x="313" y="251" />
-                                <item x="331" y="251" />
-                                <item x="351" y="251" />
-                                <item x="368" y="251" />
-                                <item x="386" y="252" />
-                                <item x="400" y="254" />
-                                <item x="405" y="255" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row2 x="0" y="0.209714368" z="0" w="-6.833739281" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="1" y="0.196078002" z="0" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                    </RegionsOfInterest>
+                    <RegionsOfInterest />
                 </Processor>
                 <Processor type="SliceViewer" name="ProbSlice (X)" id="ref19">
                     <MetaData>
@@ -1694,7 +1646,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref96" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="64" id="ref92" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="59" id="ref92" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -1707,7 +1659,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -1841,16 +1793,17 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
                         <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="0" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref67">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="48" id="ref73" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="45" id="ref73" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1906,51 +1859,7 @@ void main() {
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
-                    <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="49" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="63" y="404" />
-                                <item x="63" y="390" />
-                                <item x="63" y="367" />
-                                <item x="62" y="340" />
-                                <item x="56" y="293" />
-                                <item x="55" y="269" />
-                                <item x="54" y="251" />
-                                <item x="53" y="241" />
-                                <item x="53" y="234" />
-                                <item x="53" y="231" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row2 x="0" y="0.209714368" z="0" w="-6.833739281" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="0" y="1" z="1" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                        <Region type="RegionOfInterestGeometry" layer="49" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="563" y="289" />
-                                <item x="563" y="281" />
-                                <item x="563" y="259" />
-                                <item x="563" y="231" />
-                                <item x="563" y="199" />
-                                <item x="562" y="171" />
-                                <item x="561" y="141" />
-                                <item x="560" y="128" />
-                                <item x="560" y="122" />
-                                <item x="560" y="117" />
-                                <item x="560" y="115" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row2 x="0" y="0.209714368" z="0" w="-6.833739281" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="0" y="1" z="1" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                    </RegionsOfInterest>
+                    <RegionsOfInterest />
                 </Processor>
                 <Processor type="SliceViewer" name="ProbSlice (Y)" id="ref21">
                     <MetaData>
@@ -1999,7 +1908,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref104" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="48" id="ref91" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="45" id="ref91" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -2012,7 +1921,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -2586,7 +2495,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0.5" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -2741,7 +2650,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref107" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="57" id="ref75" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="59" id="ref75" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="13" y="79" z="57" />
@@ -2888,16 +2797,17 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
                         <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref65">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="57" id="ref76" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="59" id="ref76" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -2956,41 +2866,40 @@ void main() {
                     <RegionsOfInterest>
                         <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="242" y="306" />
-                                <item x="246" y="301" />
-                                <item x="256" y="291" />
-                                <item x="263" y="285" />
-                                <item x="277" y="269" />
-                                <item x="291" y="255" />
-                                <item x="303" y="244" />
-                                <item x="310" y="238" />
-                                <item x="313" y="235" />
-                                <item x="314" y="233" />
+                                <item x="378" y="294" />
+                                <item x="380" y="292" />
+                                <item x="381" y="290" />
+                                <item x="383" y="288" />
+                                <item x="385" y="286" />
+                                <item x="386" y="284" />
+                                <item x="388" y="282" />
+                                <item x="389" y="279" />
+                                <item x="391" y="277" />
+                                <item x="392" y="274" />
+                                <item x="394" y="272" />
+                                <item x="395" y="270" />
+                                <item x="397" y="268" />
+                                <item x="399" y="266" />
+                                <item x="401" y="264" />
+                                <item x="403" y="262" />
+                                <item x="405" y="260" />
+                                <item x="408" y="258" />
+                                <item x="410" y="256" />
+                                <item x="412" y="254" />
+                                <item x="414" y="252" />
+                                <item x="416" y="251" />
+                                <item x="416" y="249" />
+                                <item x="417" y="247" />
+                                <item x="419" y="245" />
+                                <item x="420" y="243" />
+                                <item x="421" y="241" />
+                                <item x="423" y="239" />
+                                <item x="425" y="237" />
+                                <item x="427" y="236" />
                             </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="-0.209366396" z="0" w="110.728652954" />
-                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="1" y="0.196078002" z="0" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="362" y="342" />
-                                <item x="364" y="341" />
-                                <item x="373" y="332" />
-                                <item x="380" y="326" />
-                                <item x="391" y="314" />
-                                <item x="403" y="302" />
-                                <item x="410" y="292" />
-                                <item x="418" y="285" />
-                                <item x="421" y="282" />
-                                <item x="423" y="279" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="-0.209366396" z="0" w="110.728652954" />
+                            <viewport x="654" y="486" />
+                            <trafoMatrix.row0 x="0.197530866" y="0" z="0" w="-1.092592597" />
+                            <trafoMatrix.row1 x="0" y="-0.197530866" z="0" w="95.5" />
                             <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="1" y="0.196078002" z="0" w="1" />
@@ -3024,16 +2933,17 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
                         <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref68">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="57" id="ref77" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="59" id="ref77" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -3092,77 +3002,57 @@ void main() {
                     <RegionsOfInterest>
                         <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="556" y="505" />
-                                <item x="554" y="505" />
-                                <item x="551" y="504" />
-                                <item x="546" y="504" />
-                                <item x="542" y="504" />
-                                <item x="537" y="502" />
-                                <item x="534" y="502" />
-                                <item x="528" y="502" />
-                                <item x="521" y="501" />
-                                <item x="513" y="501" />
-                                <item x="505" y="499" />
-                                <item x="496" y="499" />
-                                <item x="486" y="498" />
-                                <item x="478" y="498" />
-                                <item x="465" y="497" />
-                                <item x="453" y="496" />
-                                <item x="439" y="492" />
-                                <item x="425" y="491" />
-                                <item x="408" y="487" />
-                                <item x="394" y="483" />
-                                <item x="382" y="481" />
-                                <item x="371" y="478" />
-                                <item x="359" y="476" />
-                                <item x="349" y="474" />
-                                <item x="341" y="471" />
-                                <item x="333" y="466" />
-                                <item x="327" y="462" />
-                                <item x="318" y="458" />
-                                <item x="312" y="454" />
-                                <item x="305" y="448" />
-                                <item x="295" y="443" />
-                                <item x="291" y="441" />
-                                <item x="286" y="439" />
-                                <item x="280" y="437" />
-                                <item x="273" y="436" />
-                                <item x="266" y="432" />
-                                <item x="257" y="430" />
-                                <item x="248" y="428" />
-                                <item x="239" y="426" />
-                                <item x="229" y="425" />
-                                <item x="218" y="425" />
-                                <item x="204" y="425" />
-                                <item x="197" y="425" />
-                                <item x="184" y="424" />
-                                <item x="172" y="422" />
-                                <item x="159" y="421" />
-                                <item x="149" y="417" />
-                                <item x="138" y="414" />
-                                <item x="128" y="410" />
-                                <item x="121" y="405" />
-                                <item x="114" y="399" />
-                                <item x="106" y="392" />
-                                <item x="98" y="385" />
-                                <item x="89" y="375" />
-                                <item x="79" y="364" />
-                                <item x="73" y="359" />
-                                <item x="63" y="347" />
-                                <item x="54" y="335" />
-                                <item x="47" y="323" />
-                                <item x="41" y="310" />
-                                <item x="36" y="298" />
-                                <item x="34" y="291" />
-                                <item x="33" y="285" />
-                                <item x="33" y="280" />
-                                <item x="32" y="277" />
-                                <item x="31" y="274" />
-                                <item x="31" y="271" />
+                                <item x="230" y="204" />
+                                <item x="230" y="202" />
+                                <item x="230" y="200" />
+                                <item x="227" y="196" />
+                                <item x="225" y="191" />
+                                <item x="221" y="185" />
+                                <item x="214" y="174" />
+                                <item x="203" y="162" />
+                                <item x="190" y="149" />
+                                <item x="174" y="137" />
+                                <item x="161" y="126" />
+                                <item x="150" y="115" />
+                                <item x="144" y="107" />
+                                <item x="139" y="102" />
+                                <item x="136" y="97" />
+                                <item x="134" y="93" />
+                                <item x="132" y="91" />
+                                <item x="131" y="89" />
+                                <item x="129" y="88" />
                             </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="-0.209366396" z="0" w="110.728652954" />
+                            <viewport x="654" y="486" />
+                            <trafoMatrix.row0 x="0.197530866" y="0" z="0" w="-1.092592597" />
+                            <trafoMatrix.row1 x="0" y="-0.197530866" z="0" w="95.5" />
+                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
+                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
+                            <roiColor x="0" y="1" z="1" w="1" />
+                            <maskColor x="1" y="1" z="1" w="1" />
+                        </Region>
+                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
+                            <points>
+                                <item x="489" y="264" />
+                                <item x="491" y="264" />
+                                <item x="494" y="264" />
+                                <item x="499" y="264" />
+                                <item x="503" y="264" />
+                                <item x="510" y="264" />
+                                <item x="521" y="264" />
+                                <item x="531" y="264" />
+                                <item x="544" y="264" />
+                                <item x="562" y="264" />
+                                <item x="581" y="264" />
+                                <item x="598" y="264" />
+                                <item x="614" y="264" />
+                                <item x="628" y="264" />
+                                <item x="637" y="264" />
+                                <item x="644" y="264" />
+                                <item x="649" y="264" />
+                            </points>
+                            <viewport x="654" y="486" />
+                            <trafoMatrix.row0 x="0.197530866" y="0" z="0" w="-1.092592597" />
+                            <trafoMatrix.row1 x="0" y="-0.197530866" z="0" w="95.5" />
                             <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="0" y="1" z="1" w="1" />
@@ -3230,7 +3120,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0.5" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -3385,7 +3275,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref108" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="57" id="ref90" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="59" id="ref90" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -3398,7 +3288,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -4059,13 +3949,13 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-700" y="303" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.020334629" id="ref115">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022144398" id="ref115">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="631" y="308" />
                             </MetaData>
-                            <position x="2.730442047" y="-3.998971224" z="0.897310019" />
-                            <focus x="-0.151319548" y="-0.158392623" z="-0.165412083" />
-                            <upVector x="0.377637327" y="0.566435814" z="0.732489288" />
+                            <position x="2.619674683" y="-3.582394361" z="0.595071733" />
+                            <focus x="-0.158479035" y="-0.161295608" z="-0.156411156" />
+                            <upVector x="0.412871182" y="0.572859645" z="0.708074391" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -4129,14 +4019,14 @@ void main() {
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.020334629" id="ref114">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022144398" id="ref114">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="631" y="308" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="2.730442047" y="-3.998971224" z="0.897310019" />
-                            <focus x="-0.151319548" y="-0.158392623" z="-0.165412083" />
-                            <upVector x="0.377637327" y="0.566435814" z="0.732489288" />
+                            <position x="2.619674683" y="-3.582394361" z="0.595071733" />
+                            <focus x="-0.158479035" y="-0.161295608" z="-0.156411156" />
+                            <upVector x="0.412871182" y="0.572859645" z="0.708074391" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -4232,7 +4122,7 @@ void main() {
                             </MetaData>
                             <value x="4.109546661" y="2.679258823" z="2.688477516" w="1" />
                             <Center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
-                            <LightPos x="2.117279291" y="5.117721558" z="0.897463262" w="1" />
+                            <LightPos x="1.824986458" y="5.218566895" z="0.956750453" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -4353,7 +4243,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0" y="1" />
                                 <Curves>
                                     <curve type="TransFuncMappingCurve" intensity="0.5" width="0.01" baseValue="0" split="false" unicolor="true" active="true">
@@ -4415,7 +4305,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0.439658195" y="1" />
                                 <threshold x="0.5" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0.506250024" split="false">
@@ -4520,13 +4410,13 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-959" y="408" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.020334629" id="ref116">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="896.585632324" minValue="0.017931711" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.022144398" id="ref116">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="631" y="308" />
                             </MetaData>
-                            <position x="2.730442047" y="-3.998971224" z="0.897310019" />
-                            <focus x="-0.151319548" y="-0.158392623" z="-0.165412083" />
-                            <upVector x="0.377637327" y="0.566435814" z="0.732489288" />
+                            <position x="2.619674683" y="-3.582394361" z="0.595071733" />
+                            <focus x="-0.158479035" y="-0.161295608" z="-0.156411156" />
+                            <upVector x="0.412871182" y="0.572859645" z="0.708074391" />
                             <trackball moveCenter="false">
                                 <center x="-0.01474702" y="-0.01049805" z="-0.00127947" />
                             </trackball>
@@ -4536,9 +4426,9 @@ void main() {
                         <Property mapKey="renderSlice.XY" name="renderSlice.XY" value="true" />
                         <Property mapKey="renderSlice.XZ" name="renderSlice.XZ" value="true" />
                         <Property mapKey="renderSlice.YZ" name="renderSlice.YZ" value="true" />
-                        <Property mapKey="sliceNumber.XY" name="sliceNumber.XY" value="57" id="ref113" />
-                        <Property mapKey="sliceNumber.XZ" name="sliceNumber.XZ" value="48" id="ref112" />
-                        <Property mapKey="sliceNumber.YZ" name="sliceNumber.YZ" value="64" id="ref111" />
+                        <Property mapKey="sliceNumber.XY" name="sliceNumber.XY" value="59" id="ref113" />
+                        <Property mapKey="sliceNumber.XZ" name="sliceNumber.XZ" value="45" id="ref112" />
+                        <Property mapKey="sliceNumber.YZ" name="sliceNumber.YZ" value="59" id="ref111" />
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
@@ -4908,18 +4798,19 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-827" y="-344" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="aggregationFunction" name="aggregationFunction" value="mean" />
                         <Property mapKey="brickDimensions" name="brickDimensions" value="32" />
                         <Property mapKey="brickPoolManager" name="brickPoolManager" value="brickPoolManagerDisk" />
                         <Property mapKey="clearOctree" name="clearOctree" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0" tracking="false" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="octreeHash" name="octreeHash" value="bd40b26eff57525c2b55092293b0e9de-816ed05c4f13bb82a4f944c0ce08b8c9" />
+                        <Property mapKey="octreeHash" name="octreeHash" value="bd40b26eff57525c2b55092293b0e9de-5cf4b64bc823e089f054459305779a71" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="progressMessage" name="progressMessage" value="Octree generated." />
+                        <Property mapKey="progressMessage" name="progressMessage" value="Octree loaded from cache." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 232 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 234 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="3" />
@@ -4966,31 +4857,34 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/data/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" id="ref10">
+                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" id="ref10">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-139" y="179" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="betaBias" name="betaBias" value="0" tracking="false" />
+                        <Property mapKey="clearResult" name="clearResult" />
                         <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCPU" />
-                        <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
-                        <Property mapKey="errorThreshold" name="errorThreshold" value="2" />
-                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" />
-                        <Property mapKey="incrementalSimilarityThreshold" name="incrementalSimilarityThreshold" value="0" />
+                        <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
+                        <Property mapKey="errorThreshold" name="errorThreshold" value="2" tracking="false" />
+                        <Property mapKey="homogeneityThreshold" name="homogeneityThreshold" value="0.01" tracking="false" />
+                        <Property mapKey="incrementalSimilarityThreshold" name="incrementalSimilarityThreshold" value="0" tracking="false" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="5" />
+                        <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="5" tracking="false" />
+                        <Property mapKey="noiseModel" name="noiseModel" value="gaussian" />
                         <Property mapKey="preconditioner" name="preconditioner" value="jacobi" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resultPath" name="resultPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
-                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.200 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.750 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
