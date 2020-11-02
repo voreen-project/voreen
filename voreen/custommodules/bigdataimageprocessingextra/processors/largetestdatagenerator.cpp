@@ -220,9 +220,11 @@ struct Balls {
         return full_bounds;
     }
     tgt::ivec3 center(size_t i) {
+        tgtAssert(i < center_.size(), "Invalid index");
         return center_[i];
     }
     int radius(size_t i) {
+        tgtAssert(i < radius_.size(), "Invalid index");
         return radius_[i];
     }
     void clear() {
@@ -696,7 +698,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
 
     int max_tries = 10;
     int tries = max_tries;
-    std::uniform_int_distribution<> indexDistr(0, balls.size());
+    std::uniform_int_distribution<> indexDistr(0, balls.size()-1);
     int i=0;
     for(;i<numElements && tries > 0;) {
         progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
