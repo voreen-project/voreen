@@ -838,7 +838,7 @@ public:
         return conflicts_;
     }
     bool hasNewConflicts() const {
-        return conflicts_;
+        return newConflicts_;
     }
     float minSeed() {
         return minSeed_;
