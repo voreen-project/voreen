@@ -141,10 +141,10 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
             }
         }
 
-        tgtAssert(indicators.empty() && parameterSetEnsemble->getFlowIndicators().empty(), "invalid state");
+        tgtAssert(!indicators.empty(), "invalid state");
 
         output.reset(new PlotData(1, numChannels));
-        if(numChannels == 1 && !indicators.empty()) {
+        if(numChannels == 1) {
             output->setColumnLabel(1, indicators.front().name_);
         }
         else if(numChannels == 3) {
