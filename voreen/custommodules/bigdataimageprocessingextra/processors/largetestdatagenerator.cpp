@@ -761,8 +761,6 @@ static void rasterize(
         NoiseTypeImpl noise,
         Balls& balls,
         Cylinders& cylinders,
-        std::vector<std::vector<tgt::vec3>> foregroundLabels,
-        std::vector<std::vector<tgt::vec3>> backgroundLabels,
         ProgressReporter& progress
         ) {
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
@@ -892,27 +890,6 @@ static void rasterize(
     if(aborted) {
         throw boost::thread_interrupted();
     }
-
-    if(input.retainLabel) {
-        int tries = 100;
-        bool retained = false;
-        auto& labels = foregroundLabels;
-        std::uniform_int_distribution<uint64_t> indexDistr(0, labels.size()-1);
-        while(tries > 0) {
-            uint64_t index = indexDistr(input.randomEngine);
-            auto& segment = labels.at(index);
-            if(!segment.empty()) {
-                segment.pop_back();
-                break;
-            } else {
-                --tries;
-            }
-        }
-        if(tries == 0) {
-            LWARNINGC("LargeTestDataGenerator", "Failed to retain a background label!");
-        }
-    }
-
 }
 
 struct GaussianNoiseGenerator {
@@ -985,12 +962,33 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     auto& p = globalProgressSteps.template get<1>();
     switch(input.noiseType) {
         case LargeTestDataGeneratorInput::GAUSSIAN:
-            rasterize(input, GaussianNoiseGenerator { input.gaussianNoiseSD }, balls, cylinders, foregroundLabels, backgroundLabels, p);
+            rasterize(input, GaussianNoiseGenerator { input.gaussianNoiseSD }, balls, cylinders, p);
             break;
         case LargeTestDataGeneratorInput::POISSON:
-            rasterize(input, PoissonNoiseGenerator {}, balls, cylinders, foregroundLabels, backgroundLabels, p);
+            rasterize(input, PoissonNoiseGenerator {}, balls, cylinders, p);
             break;
     }
+
+    if(input.retainLabel) {
+        int tries = 100;
+        bool retained = false;
+        auto& labels = foregroundLabels;
+        std::uniform_int_distribution<uint64_t> indexDistr(0, labels.size()-1);
+        while(tries > 0) {
+            uint64_t index = indexDistr(input.randomEngine);
+            auto& segment = labels.at(index);
+            if(!segment.empty()) {
+                segment.pop_back();
+                break;
+            } else {
+                --tries;
+            }
+        }
+        if(tries == 0) {
+            LWARNINGC("LargeTestDataGenerator", "Failed to retain a background label!");
+        }
+    }
+
 
     std::unique_ptr<PointSegmentListGeometryVec3> fg(new PointSegmentListGeometryVec3());
     fg->setData(foregroundLabels);
