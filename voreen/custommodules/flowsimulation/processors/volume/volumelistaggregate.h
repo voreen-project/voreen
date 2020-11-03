@@ -47,7 +47,7 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor aggregates all incoming volumems voxel-wise into a single one.");
+        setDescription("This processor aggregates all incoming volumes voxel-wise into a single one.");
     }
 
     virtual void process();
@@ -58,6 +58,7 @@ private:
         MEAN,
         MIN,
         MAX,
+        VARIANCE,
     };
 
     VolumeListPort inport_;

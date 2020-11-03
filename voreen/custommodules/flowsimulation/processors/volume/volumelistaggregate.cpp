@@ -43,6 +43,7 @@ VolumeListAggregate::VolumeListAggregate()
     aggregationFunction_.addOption("mean", "Mean", MEAN);
     aggregationFunction_.addOption("min", "Min", MIN);
     aggregationFunction_.addOption("max", "Max", MAX);
+    aggregationFunction_.addOption("variance", "Variance", VARIANCE);
 }
 
 VolumeListAggregate::~VolumeListAggregate() {}
@@ -64,6 +65,9 @@ void VolumeListAggregate::process() {
         Volume* combined = reference->clone();
         VolumeRAM* combinedRepresentation = combined->getWritableRepresentation<VolumeRAM>();
 
+        // For calculating std. dev., we also need a running mean.
+        std::unique_ptr<VolumeRAM> tmp;
+
         AggregationFunction aggregationFunction = aggregationFunction_.getValue();
         switch(aggregationFunction) {
         case MEAN:
@@ -72,6 +76,10 @@ void VolumeListAggregate::process() {
         case MIN:
         case MAX:
             // Use reference values as initialization.
+            break;
+        case VARIANCE:
+            combinedRepresentation->clear();
+            tmp.reset(combinedRepresentation->clone());
             break;
         default:
             tgtAssert(false, "unhandled aggregation function");
@@ -90,8 +98,7 @@ void VolumeListAggregate::process() {
 
                             switch(aggregationFunction) {
                             case MEAN:
-                                currentValue /= data->size();
-                                aggregatedValue += currentValue;
+                                aggregatedValue += (currentValue - aggregatedValue) / i;
                                 break;
                             case MIN:
                                 aggregatedValue = std::min(aggregatedValue, currentValue);
@@ -99,6 +106,18 @@ void VolumeListAggregate::process() {
                             case MAX:
                                 aggregatedValue = std::max(aggregatedValue, currentValue);
                                 break;
+                            case VARIANCE: {
+                                // Running mean.
+                                float runningMean = tmp->getVoxelNormalized(x, y, z, channel);
+                                float delta = currentValue - runningMean;
+                                runningMean += delta / (i+1.0f);
+                                tmp->setVoxelNormalized(runningMean, x, y, z, channel);
+
+                                if(i > 2) {
+                                    aggregatedValue += delta * (currentValue - runningMean);
+                                }
+                                break;
+                            }
                             default:
                                 tgtAssert(false, "unhandled aggregation function");
                             }
