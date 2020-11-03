@@ -239,6 +239,29 @@ public:
      */
     const NameGenerator& getNameGenerator() const;
 
+    /**
+     * Sets the label of the instance list.
+     * @param label label to be set
+     */
+    void setInstanceLabel(const std::string& label);
+
+    /**
+     * Returns the label of the instance list.
+     */
+    const std::string& getInstanceLabel() const;
+
+    /**
+     * Sets the label of the item list.
+     * @param label label to be set
+     */
+    void setItemLabel(const std::string& label);
+
+    /**
+     * Returns the label of the item list.
+     */
+    const std::string& getItemLabel() const;
+
+
 private:
 
     int getIndexOfItem(const std::string& item) const;
@@ -255,6 +278,9 @@ private:
 
     bool allowDuplication_;
     int selectedInstance_;
+
+    std::string itemLabel_;
+    std::string instanceLabel_;
 };
 
 } // namespace voreen

@@ -136,7 +136,7 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
     }
     catch(SerializationException&) {
         s.removeLastError();
-        LERROR("You need to reconfigure InteractiveList: " << ( getOwner() ? getOwner()->getGuiName() : getGuiName()));
+        LERROR("You need to reconfigure InteractiveList: " << getFullyQualifiedGuiName());
     }
 
     // Only add instances, whose item still exists.
@@ -404,6 +404,22 @@ void InteractiveListProperty::setNameGenerator(const NameGenerator& nameGenerato
 
 const InteractiveListProperty::NameGenerator& InteractiveListProperty::getNameGenerator() const {
     return nameGenerator_;
+}
+
+void InteractiveListProperty::setInstanceLabel(const std::string& label) {
+    instanceLabel_ = label;
+}
+
+const std::string& InteractiveListProperty::getInstanceLabel() const {
+    return instanceLabel_;
+}
+
+void InteractiveListProperty::setItemLabel(const std::string& label) {
+    itemLabel_ = label;
+}
+
+const std::string& InteractiveListProperty::getItemLabel() const {
+    return itemLabel_;
 }
 
 } // namespace voreen

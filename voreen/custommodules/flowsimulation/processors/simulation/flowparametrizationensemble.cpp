@@ -60,6 +60,8 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     addFeature("Pressure", FF_PRESSURE);
     addFeature("Wall Shear Stress", FF_WALLSHEARSTRESS);
     flowFeatures_.addInstance("Velocity"); // Default selection.
+    flowFeatures_.setItemLabel("Features");
+    flowFeatures_.setInstanceLabel("In use");
     flowFeatures_.setGroupID("ensemble");
     setPropertyGroupGuiName("ensemble", "Ensemble");
 }

@@ -81,6 +81,8 @@ VolumeFilterList::VolumeFilterList()
     addProperty(filterList_);
         filterList_.setGroupID("filter");
         filterList_.setDuplicationAllowed(true);
+        filterList_.setItemLabel("Filters");
+        filterList_.setInstanceLabel("In use");
         ON_CHANGE(filterList_, VolumeFilterList, onFilterListChange);
     setPropertyGroupGuiName("filter", "Filter");
 

@@ -351,6 +351,18 @@ InteractiveListPropertyWidget::InteractiveListPropertyWidget(InteractiveListProp
 {
     tgtAssert(property_, "null pointer");
 
+    QBoxLayout* itemLayout = new QVBoxLayout();
+    if(!property_->getItemLabel().empty()) {
+        QLabel* label = new QLabel(QString::fromStdString(property_->getItemLabel()));
+        itemLayout->addWidget(label);
+    }
+
+    QBoxLayout* instanceLayout = new QVBoxLayout();
+    if(!property_->getInstanceLabel().empty()) {
+        QLabel* label = new QLabel(QString::fromStdString(property_->getInstanceLabel()));
+        instanceLayout->addWidget(label);
+    }
+
     itemTable_ = new ItemListWidget(property_, nullptr);
     instanceTable_ = new InstanceListWidget(property_, nullptr);
 
@@ -358,8 +370,11 @@ InteractiveListPropertyWidget::InteractiveListPropertyWidget(InteractiveListProp
     instanceTable_->setToolTip(tr("Use Drag and Drop or CTRL + Up/Down to move items"));
 
     // Add widgets.
-    addWidget(itemTable_);
-    addWidget(instanceTable_);
+    itemLayout->addWidget(itemTable_);
+    instanceLayout->addWidget(instanceTable_);
+
+    addLayout(itemLayout);
+    addLayout(instanceLayout);
 
     // Fill tables.
     updateTable();
