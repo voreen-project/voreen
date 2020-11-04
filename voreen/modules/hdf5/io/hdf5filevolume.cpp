@@ -117,16 +117,18 @@ std::unique_ptr<HDF5FileVolume> HDF5FileVolume::createVolume(const std::string& 
         // Setup file access property list for file creation.
         H5::FileAccPropList accList(H5::FileAccPropList::DEFAULT);
 
-        // We require at least format version 1.8 to be able to write arbitrarily large attribute data.
-        // Wrapper not available in 1.8.13, so we use the c version:
-        //accList.setLibverBounds(H5F_LIBVER_18, H5F_LIBVER_LATEST);
-        // ...
-        // Unfortunately libhdf5 v.1.10 removed H5F_LIBVER_18 (which for 1.8 was an alias for H5F_LIBVER_LATEST)
-        // so for now we set the minimum version to H5F_LIBVER_LATEST and hope that there are not incompatiblitities
-        // => TODO: Set the min version accordingly if there is (backwarts compatible) support in a future version
+        // We require at least format version 1.8 to be able to write
+        // arbitrarily large attribute data, and also restrict ourselves to 1.8
+        // in order to not create incompatiblitities with other programs that
+        // only link to hdf5v1.8.
 #if H5_VERSION_GE(1, 10, 2)
         H5Pset_libver_bounds(accList.getId(), H5F_LIBVER_V18, H5F_LIBVER_V18);
 #else
+        // Unfortunately libhdf5 v.1.10 removed H5F_LIBVER_18 (which for 1.8
+        // was an alias for H5F_LIBVER_LATEST) and H5F_LIBVER_V18 was only
+        // introduced in 1.10.2.  So for versions before 1.10.2 we just set the
+        // minimum version to H5F_LIBVER_LATEST (which should be >= 1.8) and
+        // hope that there are no incompatiblitities.
         H5Pset_libver_bounds(accList.getId(), H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 #endif
 
