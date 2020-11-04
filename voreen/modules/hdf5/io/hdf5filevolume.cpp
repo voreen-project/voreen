@@ -124,7 +124,11 @@ std::unique_ptr<HDF5FileVolume> HDF5FileVolume::createVolume(const std::string& 
         // Unfortunately libhdf5 v.1.10 removed H5F_LIBVER_18 (which for 1.8 was an alias for H5F_LIBVER_LATEST)
         // so for now we set the minimum version to H5F_LIBVER_LATEST and hope that there are not incompatiblitities
         // => TODO: Set the min version accordingly if there is (backwarts compatible) support in a future version
+#if H5_VERSION_GE(1, 10, 2)
+        H5Pset_libver_bounds(accList.getId(), H5F_LIBVER_V18, H5F_LIBVER_V18);
+#else
         H5Pset_libver_bounds(accList.getId(), H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+#endif
 
         // Create the hdf5 file using the propertylists created earlier.
         file = std::unique_ptr<H5::H5File>(new H5::H5File(fileName, flags, H5::FileCreatPropList::DEFAULT, accList));
