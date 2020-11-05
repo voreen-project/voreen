@@ -42,6 +42,7 @@
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
 #include "processors/volumelistmerger.h"
+#include "processors/metadataadder.h"
 #ifdef VRN_MODULE_HDF5
 #include "processors/volumemerger.h"
 #endif
@@ -80,6 +81,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     // Misc
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new VolumeListMerger());
+    registerProcessor(new MetaDataAdder());
 #ifdef VRN_MODULE_HDF5
     registerProcessor(new VolumeMerger());
 #endif

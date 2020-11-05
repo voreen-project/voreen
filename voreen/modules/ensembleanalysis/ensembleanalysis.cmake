@@ -50,6 +50,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/similarityplot.cpp
     ${MOD_DIR}/processors/volumelistmerger.cpp
     ${MOD_DIR}/processors/volumemerger.cpp
+    ${MOD_DIR}/processors/metadataadder.cpp
 
     #Properties
     ${MOD_DIR}/properties/parallelcoordinatessectionsproperty.cpp
@@ -96,6 +97,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/similarityplot.h
     ${MOD_DIR}/processors/volumelistmerger.h
     ${MOD_DIR}/processors/volumemerger.h
+    ${MOD_DIR}/processors/metadataadder.h
 
     #Properties
     ${MOD_DIR}/properties/parallelcoordinatessectionsproperty.h
