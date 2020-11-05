@@ -33,11 +33,12 @@
 #include "processors/ensemblefilter.h"
 #include "processors/ensemblevolumeextractor.h"
 #include "processors/localsimilarityanalysis.h"
-#include "processors/referencevolumecreator.h"
+#include "processors/metadataadder.h"
 #include "processors/parallelcoordinatesaxescreator.h"
 #include "processors/parallelcoordinatessource.h"
 #include "processors/parallelcoordinatesviewer.h"
 #include "processors/parallelcoordinatesvoxelselection.h"
+#include "processors/referencevolumecreator.h"
 #include "processors/similaritymatrixcombine.h"
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
@@ -79,6 +80,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
 
     // Misc
     registerProcessor(new EnsembleVolumeExtractor());
+    registerProcessor(new MetaDataAdder());
     registerProcessor(new VolumeListMerger());
 #ifdef VRN_MODULE_HDF5
     registerProcessor(new VolumeMerger());

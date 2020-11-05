@@ -120,6 +120,7 @@ public:
      * @param vhb The Volume to decorate
      * @param key Key of the MetaData item to replace.
      * @param value New Value. The decorator takes ownership.
+     * @param keepDerivedData Add derived data of volume to decorator
      */
     VolumeDecoratorReplace(const VolumeBase* vhb, const std::string& key, MetaDataBase* value, bool keepDerivedData);
     virtual ~VolumeDecoratorReplace() {
