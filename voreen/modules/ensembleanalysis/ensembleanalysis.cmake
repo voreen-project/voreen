@@ -40,17 +40,17 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/ensemblefilter.cpp
     ${MOD_DIR}/processors/ensemblevolumeextractor.cpp
     ${MOD_DIR}/processors/localsimilarityanalysis.cpp
-    ${MOD_DIR}/processors/referencevolumecreator.cpp
+    ${MOD_DIR}/processors/metadataadder.cpp
     ${MOD_DIR}/processors/parallelcoordinatesaxescreator.cpp
     ${MOD_DIR}/processors/parallelcoordinatessource.cpp
     ${MOD_DIR}/processors/parallelcoordinatesviewer.cpp
     ${MOD_DIR}/processors/parallelcoordinatesvoxelselection.cpp
+    ${MOD_DIR}/processors/referencevolumecreator.cpp
     ${MOD_DIR}/processors/similaritymatrixcombine.cpp
     ${MOD_DIR}/processors/similaritymatrixcreator.cpp
     ${MOD_DIR}/processors/similarityplot.cpp
     ${MOD_DIR}/processors/volumelistmerger.cpp
     ${MOD_DIR}/processors/volumemerger.cpp
-    ${MOD_DIR}/processors/metadataadder.cpp
 
     #Properties
     ${MOD_DIR}/properties/parallelcoordinatessectionsproperty.cpp
@@ -87,17 +87,17 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/ensemblefilter.h
     ${MOD_DIR}/processors/ensemblevolumeextractor.h
     ${MOD_DIR}/processors/localsimilarityanalysis.h
-    ${MOD_DIR}/processors/referencevolumecreator.h
+    ${MOD_DIR}/processors/metadataadder.h
     ${MOD_DIR}/processors/parallelcoordinatesaxescreator.h
     ${MOD_DIR}/processors/parallelcoordinatessource.h
     ${MOD_DIR}/processors/parallelcoordinatesviewer.h
     ${MOD_DIR}/processors/parallelcoordinatesvoxelselection.h
+    ${MOD_DIR}/processors/referencevolumecreator.h
     ${MOD_DIR}/processors/similaritymatrixcombine.h
     ${MOD_DIR}/processors/similaritymatrixcreator.h
     ${MOD_DIR}/processors/similarityplot.h
     ${MOD_DIR}/processors/volumelistmerger.h
     ${MOD_DIR}/processors/volumemerger.h
-    ${MOD_DIR}/processors/metadataadder.h
 
     #Properties
     ${MOD_DIR}/properties/parallelcoordinatessectionsproperty.h

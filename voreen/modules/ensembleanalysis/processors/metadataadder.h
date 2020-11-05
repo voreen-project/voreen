@@ -48,19 +48,11 @@ public:
     MetaDataAdder();
     virtual Processor* create() const;
     virtual std::string getClassName() const         { return "MetaDataAdder"; }
-    /**
-     * Function to return the catagory of the processor.
-     * It will be shown in the VoreenVE GUI.
-     * @see Processor
-     */
     virtual std::string getCategory() const          { return "Processing"; }
     virtual CodeState getCodeState() const           { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
-    virtual void initialize();
-    virtual void deinitialize();
     virtual void process();
-    virtual bool isReady() const;
     virtual void setDescriptions();
 
 private:
@@ -72,12 +64,6 @@ private:
     StringProperty nameString_;
 
     std::vector<std::unique_ptr<VolumeBase>> decorators_;
-    std::vector<float> timesteps_;
-
-    void addTimeData(VolumeDecoratorIdentity*& volumeDec, int volumeNumber);
-    void addName(VolumeDecoratorIdentity *&volumeDec, std::string name);
-    int getRunNumber(VolumeDecoratorIdentity* volumeDec);
-    float getTimestep(int runNumber);
     void clearOutput();
 };
 

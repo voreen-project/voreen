@@ -56,63 +56,43 @@ void MetaDataAdder::setDescriptions() {
                    "contains one number which is used as a timestep.");
 }
 
-void MetaDataAdder::initialize() {
-    Processor::initialize();
-}
-
-void MetaDataAdder::deinitialize() {
-    Processor::deinitialize();
-}
-
 void MetaDataAdder::process() {
     clearOutput();
 
     VolumeList* list = new VolumeList();
+    std::vector<float>  timesteps;
 
     // Read time data
-    if(addTime_.get() && timeInformationFile_.get()!= "") {
+    if(addTime_.get() && !timeInformationFile_.get().empty()) {
         std::string filepath = timeInformationFile_.get();
         std::ifstream infile(filepath);
         float time;
         while (infile >> time) {
-            timesteps_.push_back(time);
+            timesteps.push_back(time);
         }
         infile.close();
     }
 
     // Add data to volumes
     for(size_t i = 0; i<inport_.getData()->size(); i++) {
-        VolumeDecoratorIdentity* volumeDec = new VolumeDecoratorIdentity(inport_.getData()->at(i));
-        if(timesteps_.size() > i) {
-            addTimeData(volumeDec, i);
+        VolumeBase* volumeDec = new VolumeDecoratorIdentity(inport_.getData()->at(i));
+        decorators_.push_back(std::unique_ptr<VolumeBase>(volumeDec));
+        if(timesteps.size() > i) {
+            volumeDec = new VolumeDecoratorReplaceTimestep(volumeDec, timesteps[i]);
+            decorators_.push_back(std::unique_ptr<VolumeBase>(volumeDec));
         }
-        if(nameString_.get()!="") {
-            addName(volumeDec, nameString_.get());
+        if(!nameString_.get().empty()) {
+            volumeDec = new VolumeDecoratorReplace(volumeDec, "name", new StringMetaData(nameString_.get()), true);
+            decorators_.push_back(std::unique_ptr<VolumeBase>(volumeDec));
         }
         list->add(volumeDec);
-        decorators_.push_back(std::unique_ptr<VolumeBase>(volumeDec));
     }
     outport_.setData(list);
-}
-
-bool MetaDataAdder::isReady() const {
-    if(!inport_.hasData())
-        return false;
-    return true;
-}
-
-void MetaDataAdder::addTimeData(VolumeDecoratorIdentity *&volumeDec, int volumeNumber) {
-    volumeDec = new VolumeDecoratorReplaceTimestep(volumeDec, timesteps_[volumeNumber]);
-}
-
-void MetaDataAdder::addName(VolumeDecoratorIdentity *&volumeDec, std::string name) {
-    volumeDec = new VolumeDecoratorReplace(volumeDec, "name", new StringMetaData(name), true);
 }
 
 void MetaDataAdder::clearOutput() {
     outport_.clear();
     decorators_.clear();
-    timesteps_.clear();
 }
 
 } //namespace
