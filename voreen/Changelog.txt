@@ -30,6 +30,7 @@ Voreen Changelog
       o Remove Disk -> GL volume representation converter, which created an intermediate RAM representation. This is now handled by the memory manager and also supports Octree -> GL representation conversion.
       o Fix separate loading of channels from a HDF5 file volume
       o Output data ranges of filters in VolumeFilterList now influence parameters of subsequent filters
+      o GeometrySource will no longer discard uv coordinates of obj files if no material texture was found
 
 2020-01-17: Voreen 5.1.1
 ------------------------

@@ -726,9 +726,7 @@ Geometry* GeometrySource::readOBJGeometryWithColor(const std::string& filename, 
             }
         }
 
-        bool useTextures = false;
-        if(requiredTextures > 0 && !shapes[i].mesh.texcoords.empty())
-            useTextures = true;
+        bool useTextures = !shapes[i].mesh.texcoords.empty();
 
         unsigned short actualTextureFunctions = 0;
         int useCounter = 0;
