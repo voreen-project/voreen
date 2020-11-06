@@ -1924,10 +1924,22 @@ void SingleOctreeRaycasterCL::rescaleRendering(RenderPort& srcPort, RenderPort& 
     destPort.activateTarget();
     destPort.clearTarget();
 
+
     // activate shader and set uniforms
     tgtAssert(rescaleShader_, "bypass shader not loaded");
     rescaleShader_->activate();
+
     setGlobalShaderParameters(rescaleShader_, 0, destPort.getSize());
+
+    rescaleShader_->setIgnoreUniformLocationError(true);
+    // provide values needed for correct depth value calculation
+    float n = cameraProperty_.get().getNearDist();
+    float f = cameraProperty_.get().getFarDist();
+    rescaleShader_->setUniform("const_to_z_e_1", 0.5f + 0.5f*((f+n)/(f-n)));
+    rescaleShader_->setUniform("const_to_z_e_2", ((f-n)/(f*n)));
+    rescaleShader_->setUniform("const_to_z_w_1", ((f*n)/(f-n)));
+    rescaleShader_->setUniform("const_to_z_w_2", 0.5f*((f+n)/(f-n))+0.5f);
+    rescaleShader_->setIgnoreUniformLocationError(false);
 
     // bind input rendering to texture units
     tgt::TextureUnit colorUnit, depthUnit;

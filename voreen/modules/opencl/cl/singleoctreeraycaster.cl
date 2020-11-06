@@ -356,7 +356,7 @@ __kernel void render( read_only image2d_t entryTex
     RayInfo ray;
     ray.param = 0.f;             ///< ray parameter
     ray.color = (float4)(0.f);   ///< resulting color
-    ray.firsthit = 1.f;          ///< first hit point
+    ray.firsthit = 1.0f;          ///< first hit point
     ray.channelIntensities[0] = 0.f;
     ray.channelIntensities[1] = 0.f;
     ray.channelIntensities[2] = 0.f;
@@ -385,11 +385,11 @@ __kernel void render( read_only image2d_t entryTex
         ray.param = 0.f;
         #ifdef COMPOSITING_MODE_DVR
         ray.color = (float4)(0.f);
-        ray.firsthit = 0.f;
+        ray.firsthit = 1.f;
         #endif
     }
 
-    if (ray.param >= 1.8f)
+    if (ray.param >= 1.8f) // 1.8 \approx sqrt(3), which is the diagonal of the "texture space cube"
         return;
 #endif
 

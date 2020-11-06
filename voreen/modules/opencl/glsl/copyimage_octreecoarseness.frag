@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "modules/mod_sampler2d.frag"
+#include "modules/mod_depth.frag"
 
 uniform sampler2D colorTex_;
 uniform TextureParameters texParams_;
@@ -43,18 +44,18 @@ void main() {
 
 #ifndef NO_DEPTH_TEX
     // ray parameter t of first-hit-point, i.e. depthRay=0.0 => entrypoint, depthRay=1.0 => exitpoint
-    float depthRay = textureLookup2Dnormalized(depthTex_, texParams_, fragCoord).z;
+    float depthRay = textureLookup2Dnormalized(depthTex_, texParams_, fragCoord).x;
+    // Hence, we also do not have to rescale our "t", i.e., depthRay
+    float tEnd = 1.0f;
 
     // entry/exit point depth values
-    float depthEntry = textureLookup2Dnormalized(depthTexEntry_, texParamsEEP_, fragCoord).z;
-    float depthExit = textureLookup2Dnormalized(depthTexExit_, texParamsEEP_, fragCoord).z;
+    float depthEntry = textureLookup2Dnormalized(depthTexEntry_, texParamsEEP_, fragCoord).x;
+    float depthExit = textureLookup2Dnormalized(depthTexExit_, texParamsEEP_, fragCoord).x;
 
-    // scale ray depth value linearly between entry/exit depth values
-    if (depthRay < 1.0) {
-        gl_FragDepth = depthEntry + depthRay*(depthExit-depthEntry);
-    }
-    else {
-        gl_FragDepth = 1.0;
+    if (fragColor.a > 0.0f) {
+        gl_FragDepth = getDepthValue(depthRay, tEnd, depthEntry, depthExit);
+    } else {
+        gl_FragDepth = 1.0f;
     }
 #endif
 }
