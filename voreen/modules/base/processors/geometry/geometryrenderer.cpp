@@ -184,9 +184,7 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
 
     bool shaderUpdateNeeded = false;
 
-    static bool texPortConnected = texPort_.hasData();
-    if(isTriangleMeshShaderNeeded && texPortConnected != texPort_.hasData()) {
-        texPortConnected = texPort_.hasData();
+    if(isTriangleMeshShaderNeeded && texPort_.hasChanged()) {
         shaderUpdateNeeded = true;
     }
 
