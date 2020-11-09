@@ -178,6 +178,13 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         } // ray-casting loop
 
+        // Make sure firsthit is in normalized coordinates, i.e., an
+        // interpolation parameter between entry and exit points instead of a
+        // depth in texture coordinates.
+        if(tEnd > 0.0f) {
+            ray->firsthit /= tEnd;
+        }
+
         //macro define
         postRaycastingLoop
     }
