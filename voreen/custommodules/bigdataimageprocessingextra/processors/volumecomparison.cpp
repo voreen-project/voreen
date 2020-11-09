@@ -31,6 +31,8 @@
 
 #include "tgt/stopwatch.h"
 
+#include <chrono>
+
 namespace voreen {
 
 const std::string VolumeComparison::loggerCat_("voreen.VolumeComparison");
