@@ -152,15 +152,7 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
         tmp2.voxel(center) = estimation;
     }
 
-#ifdef VRN_RANDOMWALKER_MEAN_NOT_MEDIAN
-    const float varianceFactor = 2.0f/(N*N*N*N); //mean
-#else
-    tgtAssert(k==1, "Invalid k for variance factor");
-    const float varianceFactor = 0.142; //median //TODO: this is for 2D. what about 3D?
-#endif
-
-    float rawVariance = sumOfDifferences/numVoxels;
-    float varianceEstimation = rawVariance * varianceFactor;
+    float varianceEstimation = sumOfDifferences/numVoxels;
     float stdEstimationInv;
     if(varianceEstimation > 0) {
         stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
