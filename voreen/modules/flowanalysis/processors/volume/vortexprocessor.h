@@ -54,7 +54,9 @@ public:
 
 protected:
 
-    virtual void setDescriptions();
+    virtual void setDescriptions() {
+        setDescription("");
+    }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;

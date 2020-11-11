@@ -35,23 +35,25 @@
 //add used datastructure headers
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
-namespace voreen
-{
+namespace voreen {
 
 class VRN_CORE_API AccelerationProcessor : public Processor {
 public:
     AccelerationProcessor();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const;
-    virtual std::string getCategory() const;
+    virtual std::string AccelerationProcessor::getClassName() const { return "AccelerationProcessor"; }
+    virtual std::string AccelerationProcessor::getCategory() const { return "Volume Processing"; }
+    
     virtual bool isReady() const;
 
-    template<typename T>
-    static void Process(const VolumeRAM_Mat3Float& jacobi, const VolumeAtomic<tgt::Vector3<T>>& velocity, VolumeAtomic<tgt::Vector3<T>>& outAcceleration);
+    static void Process(const VolumeRAM_Mat3Float& jacobi, const VolumeRAM& velocity, VolumeRAM_3xFloat& outAcceleration, RealWorldMapping rwm = RealWorldMapping());
 
 protected:
-    virtual void setDescriptions();
+    virtual void AccelerationProcessor::setDescriptions() {
+        setDescription("Computes acceleration volume by multiplying jacobian and velocity for each voxel");
+    }
+
     virtual void process();
 
 private:
@@ -60,15 +62,6 @@ private:
     VolumePort outport_;
 };
 
-template<typename T>
-void AccelerationProcessor::Process(const VolumeRAM_Mat3Float& jacobi, const VolumeAtomic<tgt::Vector3<T>>& velocity, VolumeAtomic<tgt::Vector3<T>>& outAcceleration) {
-#ifdef VRN_MODULE_OPENMP
-    #pragma omp parallel for
-#endif
-    for( long i = 0; i < static_cast<long>( jacobi.getNumVoxels() ); ++i ) {
-        outAcceleration.voxel( i ) = jacobi.voxel( i ) * velocity.voxel( i );
-    }
-}
 
 } // namespace voreen
 

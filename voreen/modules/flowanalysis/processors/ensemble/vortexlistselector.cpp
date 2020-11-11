@@ -33,7 +33,7 @@ VortexListSelector::VortexListSelector() : Processor(),
     _inportVortexCollection( Port::INPORT, "inport_vortex_collection", "Vortex Collection" ),
     _outportVortexList( Port::OUTPORT, "outport_vortex_list", "Vortex List" ),
     _outportGeometry( Port::OUTPORT, "outport_geometry", "Coreline List" ),
-    _propertyRuns( "property_runs", "Runs", Processor::VALID ),
+    _propertyMembers( "property_members", "Members", Processor::VALID ),
     _propertyTimesteps( "property_timesteps", "Timesteps", 0, 0, std::numeric_limits<int>::max(), 0, std::numeric_limits<int>::max(), Processor::VALID ),
     _propertyCorelineLength( "property_coreline_length", "Minimal Coreline Length", 40, 2, std::numeric_limits<int>::max(), Processor::VALID ),
     _Rotation("Rotation", "Direction of Rotation:")
@@ -42,7 +42,7 @@ VortexListSelector::VortexListSelector() : Processor(),
     this->addPort( _outportVortexList );
     this->addPort( _outportGeometry );
 
-    this->addProperty( _propertyRuns );
+    this->addProperty( _propertyMembers );
     this->addProperty( _propertyTimesteps );
     this->addProperty( _propertyCorelineLength );
 
@@ -55,11 +55,11 @@ VortexListSelector::VortexListSelector() : Processor(),
 
     _inportVortexCollection.onNewData( LambdaFunctionCallback( [this]
     {
-        _propertyRuns.blockCallbacks( true );
-        _propertyRuns.reset();
-        for( size_t i = 0; i < _inportVortexCollection.getData()->runs(); ++i )
-            _propertyRuns.addRow( std::to_string( i ) );
-        _propertyRuns.blockCallbacks( false );
+        _propertyMembers.blockCallbacks( true );
+        _propertyMembers.reset();
+        for( size_t i = 0; i < _inportVortexCollection.getData()->members(); ++i )
+            _propertyMembers.addRow( std::to_string( i ) );
+        _propertyMembers.blockCallbacks( false );
 
         _propertyTimesteps.blockCallbacks( true );
         _propertyTimesteps.setMinValue( 0 );
@@ -69,7 +69,7 @@ VortexListSelector::VortexListSelector() : Processor(),
         this->updatePropertyCorelineLength();
     } ) );
 
-    _propertyRuns.onChange( LambdaFunctionCallback( [this]
+    _propertyMembers.onChange( LambdaFunctionCallback( [this]
     {
         if( !_inportVortexCollection.hasData() ) return;
 
@@ -89,12 +89,12 @@ VortexListSelector::VortexListSelector() : Processor(),
     } ) );
 }
 
-void VortexListSelector::Process( const VortexCollection& vortexCollection, const std::vector<int>& runs, int firstTimestep, int lastTimestep, int minLength, RotationOptions rot, std::vector<Vortex>& outVortexList )
+void VortexListSelector::Process( const VortexCollection& vortexCollection, const std::vector<int>& members, int firstTimestep, int lastTimestep, int minLength, RotationOptions rot, std::vector<Vortex>& outVortexList )
 {
     outVortexList.clear();
-    for( const auto run : runs )
+    for( const auto member : members )
         for( int timestep = firstTimestep; timestep <= lastTimestep; ++timestep )
-            for( const auto& vortex : vortexCollection.vortices( run, timestep ) )
+            for( const auto& vortex : vortexCollection.vortices( member, timestep ) )
                 if( vortex.coreline().size() >= minLength )
                     switch(rot){
                     case OPTION_B:
@@ -122,7 +122,7 @@ void VortexListSelector::process()
     }
 
     auto outVortexList = std::unique_ptr<std::vector<Vortex>>( new std::vector<Vortex>());
-    VortexListSelector::Process( *collection, _propertyRuns.get(), _propertyTimesteps.get().x, _propertyTimesteps.get().y, _propertyCorelineLength.get(), _Rotation.getValue(), *outVortexList );
+    VortexListSelector::Process( *collection, _propertyMembers.get(), _propertyTimesteps.get().x, _propertyTimesteps.get().y, _propertyCorelineLength.get(), _Rotation.getValue(), *outVortexList );
 
     auto corelines = std::vector<std::vector<tgt::vec3>>();
     corelines.reserve(outVortexList->size());
@@ -140,11 +140,11 @@ void VortexListSelector::updatePropertyCorelineLength()
 {
     auto minLength = std::numeric_limits<int>::max();
     auto maxLength = 0;
-    for( const auto run : _propertyRuns.get() )
+    for( const auto member : _propertyMembers.get() )
     {
         for( auto timestep = _propertyTimesteps.get().x; timestep <= _propertyTimesteps.get().y; ++timestep )
         {
-            for( const auto& vortex : _inportVortexCollection.getData()->vortices( run, timestep ) )
+            for( const auto& vortex : _inportVortexCollection.getData()->vortices( member, timestep ) )
             {
                 minLength = std::min( minLength, static_cast<int>( vortex.coreline().size() ) );
                 maxLength = std::max( maxLength, static_cast<int>( vortex.coreline().size() ) );

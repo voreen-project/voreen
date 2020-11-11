@@ -75,31 +75,31 @@ const std::vector<tgt::vec3>& Vortex::coreline() const noexcept
 // --- Vortex Collection --- //
 // ------------------------- //
 
-VortexCollection::VortexID::VortexID( size_t run, size_t timestep, size_t index ) : run( run ), timestep( timestep ), index( index )
+VortexCollection::VortexID::VortexID( size_t member, size_t timestep, size_t index ) : member( member ), timestep( timestep ), index( index )
 {}
 
 bool VortexCollection::VortexID::operator==( const VortexCollection::VortexID& other ) const noexcept
 {
-    return run == other.run && timestep == other.timestep && index == other.index;
+    return member == other.member && timestep == other.timestep && index == other.index;
 }
 bool VortexCollection::VortexID::operator!=( const VortexCollection::VortexID& other ) const noexcept
 {
-    return run != other.run || timestep != other.timestep || index != other.index;
+    return member != other.member || timestep != other.timestep || index != other.index;
 }
 
 VortexCollection::VortexID VortexCollection::VortexID::Invalid = VortexCollection::VortexID( ~0u, ~0u, ~0u );
 
 
 
-VortexCollection::VortexCollection( size_t runs, size_t timesteps ) : _runs( runs ), _timesteps( timesteps ), _vortices( runs* timesteps ), _matches( runs* timesteps )
+VortexCollection::VortexCollection( size_t members, size_t timesteps ) : _members( members ), _timesteps( timesteps ), _vortices( members* timesteps ), _matches( members* timesteps )
 {}
 VortexCollection::VortexCollection( std::istream& stream )
 {
-    stream.read( reinterpret_cast<char*>( &_runs ), sizeof( size_t ) );
+    stream.read( reinterpret_cast<char*>( &_members ), sizeof( size_t ) );
     stream.read( reinterpret_cast<char*>( &_timesteps ), sizeof( size_t ) );
 
-    _vortices.resize( _runs * _timesteps );
-    _matches.resize( _runs * _timesteps );
+    _vortices.resize( _members * _timesteps );
+    _matches.resize( _members * _timesteps );
     for( size_t i = 0; i < _vortices.size(); ++i )
     {
         size_t vortexCount;
@@ -117,7 +117,7 @@ VortexCollection::VortexCollection( std::istream& stream )
             _matches[i][j].resize( matchCount );
             for( size_t k = 0; k < matchCount; ++k )
             {
-                stream.read( reinterpret_cast<char*>( &_matches[i][j][k].run ), sizeof( size_t ) );
+                stream.read( reinterpret_cast<char*>( &_matches[i][j][k].member ), sizeof( size_t ) );
                 stream.read( reinterpret_cast<char*>( &_matches[i][j][k].timestep ), sizeof( size_t ) );
                 stream.read( reinterpret_cast<char*>( &_matches[i][j][k].index ), sizeof( size_t ) );
             }
@@ -127,7 +127,7 @@ VortexCollection::VortexCollection( std::istream& stream )
 
 void VortexCollection::serialize( std::ostream& stream ) const
 {
-    stream.write( reinterpret_cast<const char*>( &_runs ), sizeof( size_t ) );
+    stream.write( reinterpret_cast<const char*>( &_members ), sizeof( size_t ) );
     stream.write( reinterpret_cast<const char*>( &_timesteps ), sizeof( size_t ) );
 
     for( size_t i = 0; i < _vortices.size(); ++i )
@@ -143,7 +143,7 @@ void VortexCollection::serialize( std::ostream& stream ) const
             stream.write( reinterpret_cast<const char*>( &matchCount ), sizeof( size_t ) );
             for( size_t k = 0; k < matchCount; ++k )
             {
-                stream.write( reinterpret_cast<const char*>( &_matches[i][j][k].run ), sizeof( size_t ) );
+                stream.write( reinterpret_cast<const char*>( &_matches[i][j][k].member ), sizeof( size_t ) );
                 stream.write( reinterpret_cast<const char*>( &_matches[i][j][k].timestep ), sizeof( size_t ) );
                 stream.write( reinterpret_cast<const char*>( &_matches[i][j][k].index ), sizeof( size_t ) );
             }
@@ -151,9 +151,9 @@ void VortexCollection::serialize( std::ostream& stream ) const
     }
 }
 
-size_t VortexCollection::runs() const noexcept
+size_t VortexCollection::members() const noexcept
 {
-    return _runs;
+    return _members;
 }
 size_t VortexCollection::timesteps() const noexcept
 {
@@ -167,30 +167,30 @@ size_t VortexCollection::totalNumVortices() const
     return count;
 }
 
-const std::vector<Vortex>& VortexCollection::vortices( size_t run, size_t timestep ) const
+const std::vector<Vortex>& VortexCollection::vortices( size_t member, size_t timestep ) const
 {
-    return _vortices[run * _timesteps + timestep];
+    return _vortices[member * _timesteps + timestep];
 }
-void VortexCollection::setVortices( size_t run, size_t timestep, std::vector<Vortex> vortices )
+void VortexCollection::setVortices( size_t member, size_t timestep, std::vector<Vortex> vortices )
 {
-    const auto index = run * _timesteps + timestep;
+    const auto index = member * _timesteps + timestep;
     _matches[index].resize( vortices.size() );
     _vortices[index] = std::move( vortices );
 }
 
-const std::vector<VortexCollection::VortexID>& VortexCollection::matches( size_t run, size_t timestep, size_t index ) const
+const std::vector<VortexCollection::VortexID>& VortexCollection::matches( size_t member, size_t timestep, size_t index ) const
 {
-    return _matches[run * _timesteps + timestep][index];
+    return _matches[member * _timesteps + timestep][index];
 }
 const std::vector<VortexCollection::VortexID>& VortexCollection::matches( VortexID vortexID ) const
 {
-    return this->matches( vortexID.run, vortexID.timestep, vortexID.index );
+    return this->matches( vortexID.member, vortexID.timestep, vortexID.index );
 }
 
 void VortexCollection::addMatch( VortexCollection::VortexID first, VortexCollection::VortexID second )
 {
-    _matches[first.run * _timesteps + first.timestep][first.index].push_back( second );
-    _matches[second.run * _timesteps + second.timestep][second.index].push_back( first );
+    _matches[first.member * _timesteps + first.timestep][first.index].push_back( second );
+    _matches[second.member * _timesteps + second.timestep][second.index].push_back( first );
 }
 
 // -------------- //

@@ -42,7 +42,7 @@ VortexMatchSelector::VortexMatchSelector() : RenderProcessor(),
     _eventPropertyWheel( new EventProperty<VortexMatchSelector>( "event_property_wheel", "Wheel Event Property", this, &VortexMatchSelector::onWheelEvent, tgt::MouseEvent::MOUSE_BUTTON_ALL, tgt::MouseEvent::MouseAction::WHEEL, tgt::Event::MODIFIER_NONE, false, true ) ),
 
     _propertyMaximumMatchDistance( "property_maximum_match_distance", "Maximum Match Distance", 5.0f, 0.0f, 32.0f, Processor::VALID ),
-    _propertySelectedRuns( "property_selected_runs", "Runs", Processor::VALID ),
+    _propertySelectedMembers( "property_selected_member", "Members", Processor::VALID ),
     _propertyMinimumGroupSize( "property_minimum_group_size", "Minimum Group Size", 1, 1, std::numeric_limits<int>::max(), Processor::VALID ),
     _propertyOrientation( "property_orientaton", "Orientation", Processor::VALID, true ),
     _propertyTimestepInterval( "property_timestep_interval", "Timesteps", 0, 0, std::numeric_limits<int>::max(), 0, std::numeric_limits<int>::max(), Processor::VALID ),
@@ -61,7 +61,7 @@ VortexMatchSelector::VortexMatchSelector() : RenderProcessor(),
     this->addEventProperty( _eventPropertyWheel.get() );
 
     this->addProperty( _propertyMaximumMatchDistance );
-    this->addProperty( _propertySelectedRuns );
+    this->addProperty( _propertySelectedMembers );
     this->addProperty( _propertyMinimumGroupSize );
     this->addProperty( _propertyOrientation );
     this->addProperty( _propertyTimestepInterval );
@@ -83,7 +83,7 @@ VortexMatchSelector::VortexMatchSelector() : RenderProcessor(),
         this->updateProbabilities();
         this->invalidate();
     } ) );
-    _propertySelectedRuns.onChange( LambdaFunctionCallback( [this]
+    _propertySelectedMembers.onChange( LambdaFunctionCallback( [this]
     {
         this->updateVortexInfos();
         this->invalidate();
@@ -187,10 +187,10 @@ void VortexMatchSelector::render( Visualization visualization )
     // --- Draw Vortices --- //
     for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
     {
-        for( size_t run = 0; run < collection->runs(); ++run )
+        for( size_t member = 0; member < collection->members(); ++member )
         {
-            const auto& vortices = collection->vortices( run, timestep );
-            const auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            const auto& vortices = collection->vortices( member, timestep );
+            const auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
 
             for( size_t vortexIndex = 0; vortexIndex < vortices.size(); ++vortexIndex )
             {
@@ -227,12 +227,12 @@ void VortexMatchSelector::render( Visualization visualization )
     // --- Draw Lines --- //
     glBegin( GL_LINES );
     glColor4f( 0.5f, 0.5f, 0.5f, 1.0f );
-    for( size_t run = 0; run < collection->runs(); ++run )
+    for( size_t member = 0; member < collection->members(); ++member )
     {
         for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
         {
-            const auto& vortices = collection->vortices( run, timestep );
-            const auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            const auto& vortices = collection->vortices( member, timestep );
+            const auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
             for( size_t vortexIndex = 0; vortexIndex < vortices.size(); ++vortexIndex )
             {
                 const auto& vortexInfo = vortexInfos[vortexIndex];
@@ -240,10 +240,10 @@ void VortexMatchSelector::render( Visualization visualization )
 
                 const auto begin = visualization == Visualization::eTree ?
                     this->treeToClip( vortexInfo.positionTree ) : this->worldToClip( vortexInfo.positionWorld );
-                const auto& matches = collection->matches( run, timestep, vortexIndex );
+                const auto& matches = collection->matches( member, timestep, vortexIndex );
                 for( const auto& match : matches )
                 {
-                    const auto& matchInfo = _vortexInfos[match.run * collection->timesteps() + match.timestep][match.index];
+                    const auto& matchInfo = _vortexInfos[match.member * collection->timesteps() + match.timestep][match.index];
                     if( !matchInfo.visible ) continue;
 
                     const auto end = visualization == Visualization::eTree ?
@@ -277,11 +277,11 @@ void VortexMatchSelector::onNewData()
     auto positionWorldMin = tgt::vec2( std::numeric_limits<float>::max(), std::numeric_limits<float>::max() );
     auto positionWorldMax = tgt::vec2( std::numeric_limits<float>::min(), std::numeric_limits<float>::min() );
 
-    _vortexInfos = std::vector<std::vector<VortexInfo>>( collection->runs() * collection->timesteps() );
-    for( size_t run = 0; run < collection->runs(); ++run ) for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
+    _vortexInfos = std::vector<std::vector<VortexInfo>>( collection->members() * collection->timesteps() );
+    for( size_t member = 0; member < collection->members(); ++member ) for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
     {
-        const auto& vortices = collection->vortices( run, timestep );
-        auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+        const auto& vortices = collection->vortices( member, timestep );
+        auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
         vortexInfos.resize( vortices.size() );
 
         for( size_t vortexIndex = 0; vortexIndex < vortices.size(); ++vortexIndex )
@@ -310,18 +310,18 @@ void VortexMatchSelector::onNewData()
 
     // --- Find Vortex Groups --- //
     int32_t currentGroup = 0;
-    for( size_t run = 0; run < collection->runs(); ++run ) for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
-        for( size_t vortexIndex = 0; vortexIndex < collection->vortices( run, timestep ).size(); ++vortexIndex )
-            this->fillGroup( currentGroup++, VortexCollection::VortexID( run, timestep, vortexIndex ) );
+    for( size_t member = 0; member < collection->members(); ++member ) for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
+        for( size_t vortexIndex = 0; vortexIndex < collection->vortices( member, timestep ).size(); ++vortexIndex )
+            this->fillGroup( currentGroup++, VortexCollection::VortexID( member, timestep, vortexIndex ) );
     _groupInfos = std::vector<GroupInfo>( currentGroup );
 
 
     // --- Update Properties --- //
-    _propertySelectedRuns.blockCallbacks( true );
-    _propertySelectedRuns.reset();
-    for( size_t run = 0; run < collection->runs(); ++run )
-        _propertySelectedRuns.addRow( std::to_string( run ) );
-    _propertySelectedRuns.blockCallbacks( false );
+    _propertySelectedMembers.blockCallbacks( true );
+    _propertySelectedMembers.reset();
+    for( size_t member = 0; member < collection->members(); ++member )
+        _propertySelectedMembers.addRow( std::to_string( member ) );
+    _propertySelectedMembers.blockCallbacks( false );
 
     _propertyTimestepInterval.blockCallbacks( true );
     const auto timestepMax = std::max( 0, static_cast<int>( collection->timesteps() ) - 1 );
@@ -348,9 +348,9 @@ void VortexMatchSelector::onHoverEvent( tgt::MouseEvent* event )
     const auto dim = renderSize.y / 2;
 
     struct { VortexCollection::VortexID vortex; float distance; } current { VortexCollection::VortexID::Invalid, 7.5f };
-    for( size_t run = 0; run < collection->runs(); ++run ) 	for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
+    for( size_t member = 0; member < collection->members(); ++member ) 	for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
     {
-        auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+        auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
 
         for( size_t vortexIndex = 0; vortexIndex < vortexInfos.size(); ++vortexIndex )
         {
@@ -360,12 +360,12 @@ void VortexMatchSelector::onHoverEvent( tgt::MouseEvent* event )
 
             const auto pixelTree = tgt::vec2( vortexInfo.positionTree.x, vortexInfo.positionTree.y + _offsetTree.y + dim );
             auto distance = tgt::length( cursor - pixelTree );
-            if( distance < current.distance ) current = { VortexCollection::VortexID( run, timestep, vortexIndex ), distance };
+            if( distance < current.distance ) current = { VortexCollection::VortexID( member, timestep, vortexIndex ), distance };
 
             // const auto pixelWorld = tgt::vec2( ( renderSize.x - dim ) / 2.0f + vortexInfo.positionWorld.x * dim, vortexInfo.positionWorld.y * dim );
             const auto pixelWorld = tgt::vec2( ( renderSize.x - dim ) / 2.0f, 0.0f ) + ( this->worldToClip( vortexInfo.positionWorld ) + 1.0f ) / 2.0f * tgt::vec2( dim, dim );
             distance = tgt::length( cursor - pixelWorld );
-            if( distance < current.distance ) current = { VortexCollection::VortexID( run, timestep, vortexIndex ), distance };
+            if( distance < current.distance ) current = { VortexCollection::VortexID( member, timestep, vortexIndex ), distance };
         }
     }
 
@@ -374,7 +374,7 @@ void VortexMatchSelector::onHoverEvent( tgt::MouseEvent* event )
         _hoveredVortex = current.vortex;
         if( _hoveredVortex != VortexCollection::VortexID::Invalid )
         {
-            auto& vortex = _vortexInfos[_hoveredVortex.run * collection->timesteps() + _hoveredVortex.timestep][_hoveredVortex.index];
+            auto& vortex = _vortexInfos[_hoveredVortex.member * collection->timesteps() + _hoveredVortex.timestep][_hoveredVortex.index];
             vortex.highlighted = true;
             std::cout << "[VortexMatchProcessor] Probability of Hovered Vortex: " << vortex.probability << std::endl;
         }
@@ -391,7 +391,7 @@ void VortexMatchSelector::onMouseEvent( tgt::MouseEvent* event )
     {
         if( event->action() == tgt::MouseEvent::MouseAction::RELEASED )
         {
-            auto& vortexInfo = _vortexInfos[_hoveredVortex.run * collection->timesteps() + _hoveredVortex.timestep][_hoveredVortex.index];
+            auto& vortexInfo = _vortexInfos[_hoveredVortex.member * collection->timesteps() + _hoveredVortex.timestep][_hoveredVortex.index];
 
             if( event->button() == tgt::MouseEvent::MouseButtons::MOUSE_BUTTON_LEFT )
                 this->fillSelection( !vortexInfo.selected, _hoveredVortex );
@@ -453,10 +453,10 @@ void VortexMatchSelector::updateProbabilities()
 #pragma omp critical
         std::cout << "[VortexMatchSelector] Computing Probabilities: timesteps = " << ++count << std::endl;
 
-        for( size_t run = 0; run < collection->runs(); ++run )
+        for( size_t member = 0; member < collection->members(); ++member )
         {
-            const auto& vortices = collection->vortices( run, timestep );
-            auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            const auto& vortices = collection->vortices( member, timestep );
+            auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
 
             for( size_t vortexIndex = 0; vortexIndex < vortices.size(); ++vortexIndex )
             {
@@ -464,15 +464,15 @@ void VortexMatchSelector::updateProbabilities()
                 auto& vortexInfo = vortexInfos[vortexIndex];
 
                 size_t count = 0;
-                for( size_t runMatching = 0; runMatching < collectionMatch->runs(); ++runMatching )
+                for( size_t memberMatching = 0; memberMatching < collectionMatch->members(); ++memberMatching )
                 {
-                    const auto& vorticesMatching = collectionMatch->vortices( runMatching, timestep );
+                    const auto& vorticesMatching = collectionMatch->vortices( memberMatching, timestep );
                     size_t index;
                     VortexTracking::Process( vortex, vorticesMatching, _propertyMaximumMatchDistance.get(), index );
                     if( index != std::numeric_limits<size_t>::max() ) ++count;
                 }
 
-                vortexInfo.probability = static_cast<float>( count ) / collectionMatch->runs();
+                vortexInfo.probability = static_cast<float>( count ) / collectionMatch->members();
             }
         }
     }
@@ -484,34 +484,34 @@ void VortexMatchSelector::updateVortexInfos()
     if( !collection ) return;
 
     // --- Update Vortex Visibility --- //
-    const auto selectedRuns = [this, collection]
+    const auto selectedMembers = [this, collection]
     {
-        const auto& selectedRuns = _propertySelectedRuns.get();
-        auto result = std::vector<bool>( collection->runs() );
-        for( const auto run : selectedRuns ) result[run] = true;
+        const auto& selectedMembers = _propertySelectedMembers.get();
+        auto result = std::vector<bool>( collection->members() );
+        for( const auto member : selectedMembers ) result[member] = true;
         return result;
     }( );
 
-    for( size_t run = 0; run < collection->runs(); ++run )
+    for( size_t member = 0; member < collection->members(); ++member )
     {
 #pragma omp parallel for
         for( long timestep = 0; timestep < static_cast<long>( collection->timesteps() ); ++timestep )
         {
-            const auto& vortices = collection->vortices( run, timestep );
-            auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            const auto& vortices = collection->vortices( member, timestep );
+            auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
 
             for( size_t vortexIndex = 0; vortexIndex < vortices.size(); ++vortexIndex )
             {
                 const auto& vortex = vortices[vortexIndex];
                 auto& vortexInfo = vortexInfos[vortexIndex];
                 vortexInfo.visible = !orientation || orientation == static_cast<int>( vortex.getOrientation() );
-                vortexInfo.visible &= selectedRuns[run];
+                vortexInfo.visible &= selectedMembers[member];
 
                 // --- Check for Predecessor --- //
                 vortexInfo.predecessor = false;
-                for( const auto& match : collection->matches( run, timestep, vortexIndex ) ) if( match.run == run && match.timestep == timestep - 1 )
+                for( const auto& match : collection->matches( member, timestep, vortexIndex ) ) if( match.member == member && match.timestep == timestep - 1 )
                 {
-                    const auto& matchInfo = _vortexInfos[match.run * collection->timesteps() + match.timestep][match.index];
+                    const auto& matchInfo = _vortexInfos[match.member * collection->timesteps() + match.timestep][match.index];
                     vortexInfo.predecessor = true;
                 }
             }
@@ -524,9 +524,9 @@ void VortexMatchSelector::updateVortexInfos()
     for( size_t timestep = 0; timestep < collection->timesteps(); ++timestep )
     {
         auto groupWidths = std::vector<uint32_t>( _groupInfos.size() );
-        for( size_t run = 0; run < collection->runs(); ++run )
+        for( size_t member = 0; member < collection->members(); ++member )
         {
-            const auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            const auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
 
             for( size_t vortexIndex = 0; vortexIndex < vortexInfos.size(); ++vortexIndex )
             {
@@ -544,12 +544,12 @@ void VortexMatchSelector::updateVortexInfos()
     }
 
     // --- Update Vortex Visibility --- //
-    for( size_t run = 0; run < collection->runs(); ++run )
+    for( size_t member = 0; member < collection->members(); ++member )
     {
 #pragma omp parallel for
         for( long timestep = 0; timestep < static_cast<long>( collection->timesteps() ); ++timestep )
         {
-            auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
             for( size_t vortexIndex = 0; vortexIndex < vortexInfos.size(); ++vortexIndex )
             {
                 auto& vortexInfo = vortexInfos[vortexIndex];
@@ -588,9 +588,9 @@ void VortexMatchSelector::updateVortexInfos()
     for( long timestep = 0; timestep < static_cast<long>( collection->timesteps() ); ++timestep )
     {
         auto heights = groupHeights;
-        for( size_t run = 0; run < collection->runs(); ++run )
+        for( size_t member = 0; member < collection->members(); ++member )
         {
-            auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
             for( size_t vortexIndex = 0; vortexIndex < vortexInfos.size(); ++vortexIndex )
             {
                 auto& vortexInfo = vortexInfos[vortexIndex];
@@ -616,12 +616,12 @@ void VortexMatchSelector::updateGeometry()
     // --- Gather Corelines of Selected Vortices --- //
     auto segmentsClockwise = std::vector<std::vector<tgt::vec3>>();
     auto segmentsCounterClockwise = std::vector<std::vector<tgt::vec3>>();
-    for( size_t run = 0; run < collection->runs(); ++run )
+    for( size_t member = 0; member < collection->members(); ++member )
     {
         for( size_t timestep = interval.x; timestep <= interval.y; ++timestep )
         {
-            const auto& vortices = collection->vortices( run, timestep );
-            const auto& vortexInfos = _vortexInfos[run * collection->timesteps() + timestep];
+            const auto& vortices = collection->vortices( member, timestep );
+            const auto& vortexInfos = _vortexInfos[member * collection->timesteps() + timestep];
             for( size_t vortexIndex = 0; vortexIndex < vortices.size(); ++vortexIndex )
             {
                 const auto& vortex = vortices[vortexIndex];
@@ -652,7 +652,7 @@ void VortexMatchSelector::updateGeometry()
 void VortexMatchSelector::fillGroup( const int32_t group, const VortexCollection::VortexID& id )
 {
     const auto collection = _inportVortexCollection.getData();
-    auto& vortexInfo = _vortexInfos[id.run * collection->timesteps() + id.timestep][id.index];
+    auto& vortexInfo = _vortexInfos[id.member * collection->timesteps() + id.timestep][id.index];
 
     if( vortexInfo.group == -1 )
     {
@@ -664,7 +664,7 @@ void VortexMatchSelector::fillGroup( const int32_t group, const VortexCollection
 void VortexMatchSelector::fillSelection( const bool selected, const VortexCollection::VortexID& id )
 {
     const auto collection = _inportVortexCollection.getData();
-    auto& vortexInfo = _vortexInfos[id.run * collection->timesteps() + id.timestep][id.index];
+    auto& vortexInfo = _vortexInfos[id.member * collection->timesteps() + id.timestep][id.index];
 
     vortexInfo.selected = selected;
     for( const auto& match : collection->matches( id ) ) if( match.timestep == id.timestep + 1 )

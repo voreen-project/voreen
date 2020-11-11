@@ -74,7 +74,7 @@ private:
     VortexListPort _outportVortexList;
     GeometryPort _outportGeometry;
 
-    StringListProperty _propertyRuns;
+    StringListProperty _propertyMembers;
     IntIntervalProperty _propertyTimesteps;
     IntProperty _propertyCorelineLength;
     OptionProperty<RotationOptions> _Rotation;

@@ -76,10 +76,6 @@ bool VortexProcessor::isReady() const {
     return true;
 }
 
-void VortexProcessor::setDescriptions() {
-
-}
-
 VortexProcessorIO VortexProcessor::prepareComputeInput() {
 
     auto inputVolume = inputVolume_.getThreadSafeData();
@@ -92,18 +88,22 @@ VortexProcessorIO VortexProcessor::prepareComputeInput() {
     std::unique_ptr<VolumeRAM_Mat3Float> volumeJacobi;
     if(outputVolumeJacobi_.isConnected()) {
         volumeJacobi.reset(new VolumeRAM_Mat3Float( dim ));
+        volumeJacobi->fill(tgt::mat3::identity);
     }
     std::unique_ptr<VolumeRAM_Float> volumeDelta;
     if(outputVolumeDelta_.isConnected()) {
         volumeDelta.reset(new VolumeRAM_Float( dim ));
+        volumeDelta->fill(0.0f);
     }
     std::unique_ptr<VolumeRAM_Float> volumeQ;
     if(outputVolumeQ_.isConnected()) {
         volumeQ.reset(new VolumeRAM_Float( dim ));
+        volumeQ->fill(0.0f);
     }
     std::unique_ptr<VolumeRAM_Float> volumeLambda2;
     if(outputVolumeLamda2_.isConnected()) {
         volumeLambda2.reset(new VolumeRAM_Float( dim ));
+        volumeLambda2->fill(0.0f);
     }
 
     return VortexProcessorIO{
@@ -118,6 +118,7 @@ VortexProcessorIO VortexProcessor::prepareComputeInput() {
 VortexProcessorIO VortexProcessor::compute(VortexProcessorIO input, ProgressReporter& progressReporter) const {
 
     auto& inputVolume = input.inputVolume;
+    RealWorldMapping rwm = inputVolume->getRealWorldMapping();
     VolumeRAMRepresentationLock inputVolumeData(inputVolume);
 
     auto& volumeJacobi = input.outputJacobi;
@@ -152,22 +153,19 @@ VortexProcessorIO VortexProcessor::compute(VortexProcessorIO input, ProgressRepo
                 auto jacobi = Eigen::Matrix3f();
                 for (size_t i = 0; i < 3; i++) {
                     for (size_t j = 0; j < 3; j++) {
-                        const auto b3 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2] * size_t(3), i);
-                        const auto b2 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2] * size_t(2), i);
-                        const auto b1 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2], i);
-                        const auto c = inputVolumeData->getVoxelNormalized(pos, i);
-                        const auto f1 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1], i);
-                        const auto f2 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1] * size_t(2), i);
-                        const auto f3 = inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1] * size_t(3), i);
+                        const auto b3 = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2] * size_t(3), i));
+                        const auto b2 = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2] * size_t(2), i));
+                        const auto b1 = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2], i));
+                        const auto c  = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos, i));
+                        const auto f1 = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1], i));
+                        const auto f2 = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1] * size_t(2), i));
+                        const auto f3 = rwm.normalizedToRealWorld(inputVolumeData->getVoxelNormalized(pos + offsets[(j + 1) * 2 - 1] * size_t(3), i));
 
                         const auto db2 = (b1 - b3) / 2.0f;
                         const auto db1 = (c - b2) / 2.0f;
-                        const auto dc = (f1 - b1) / 2.0f;
+                        const auto dc  = (f1 - b1) / 2.0f;
                         const auto df1 = (f2 - c) / 2.0f;
                         const auto df2 = (f3 - f1) / 2.0f;
-
-                        const auto ddb1 = (dc - db2) / 2.0f;
-                        const auto ddf1 = (df2 - dc) / 2.0f;
 
                         const auto t = 0.5f;
                         jacobi(i, j) = 3.0f * (2.0f * b1 - 2.0f * f1 + db1 + df1) * t * t +
@@ -260,6 +258,7 @@ void VortexProcessor::processComputeOutput(VortexProcessorIO output) {
         auto* volume = new Volume(output.outputJacobi.release(), spacing, offset);
         volume->setMetaDataValue<StringMetaData>("name", "jacobi");
         outputVolumeJacobi_.setData(volume);
+        // No need to set real world mapping, the matrix contains real world values already.
     }
 
     if(output.outputDelta) {

@@ -60,10 +60,10 @@ private:
 class VortexCollection {
 public:
     struct VortexID {
-        size_t run, timestep, index;
+        size_t member, timestep, index;
 
         VortexID() noexcept = default;
-        VortexID( size_t run, size_t timestep, size_t index );
+        VortexID( size_t member, size_t timestep, size_t index );
 
         bool operator==( const VortexID& other ) const noexcept;
         bool operator!=( const VortexID& other ) const noexcept;
@@ -72,25 +72,25 @@ public:
     };
 
     VortexCollection() = default;
-    VortexCollection( size_t runs, size_t timesteps );
+    VortexCollection( size_t members, size_t timesteps );
     VortexCollection( std::istream& stream );
 
     void serialize( std::ostream& stream ) const;
 
-    size_t runs() const noexcept;
+    size_t members() const noexcept;
     size_t timesteps() const noexcept;
     size_t totalNumVortices() const;
 
-    const std::vector<Vortex>& vortices( size_t run, size_t timestep ) const;
-    void setVortices( size_t run, size_t timestep, std::vector<Vortex> vortices );
+    const std::vector<Vortex>& vortices( size_t members, size_t timestep ) const;
+    void setVortices( size_t members, size_t timestep, std::vector<Vortex> vortices );
 
-    const std::vector<VortexID>& matches( size_t run, size_t timestep, size_t index ) const;
+    const std::vector<VortexID>& matches( size_t members, size_t timestep, size_t index ) const;
     const std::vector<VortexID>& matches( VortexID vortexID ) const;
 
     void addMatch( VortexID first, VortexID second );
 
 private:
-    size_t _runs, _timesteps;
+    size_t _members, _timesteps;
     std::vector<std::vector<Vortex>> _vortices;
     std::vector<std::vector<std::vector<VortexID>>> _matches;
 };

@@ -115,10 +115,10 @@ void ApproximateParallelVectors::process() {
     };
 
     // --- Create Volumes --- //
-    auto volumeA = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
+    auto volumeA = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
     auto volumeC = std::unique_ptr<VolumeRAM_Mat3Float>( new VolumeRAM_Mat3Float( dim ) );
-    auto volumeB = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
-    auto volumeEps = std::unique_ptr<VolumeRAM_Double>( new VolumeRAM_Double( dim ) );
+    auto volumeB = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
+    auto volumeEps = std::unique_ptr<VolumeRAM_Float>( new VolumeRAM_Float( dim ) );
 
     volumeA->fill( tgt::dvec3::zero );
     volumeC->fill( tgt::dmat3::zero );
@@ -129,16 +129,13 @@ void ApproximateParallelVectors::process() {
     for(size_t i = 0; i < members.size(); ++i )
     {
         const auto volumeBaseVelocity = getVelocity( i );
-        const auto volumeBaseVelocityConv = std::unique_ptr<Volume>( VolumeOperatorConvert().apply<tgt::dvec3>( volumeBaseVelocity.get() ) );
-
-        const auto volumeVelocity = dynamic_cast<const VolumeRAM_3xDouble*>( volumeBaseVelocity->getRepresentation<VolumeRAM>() );
-        const auto volumeVelocityConv = dynamic_cast<const VolumeRAM_3xDouble*>( volumeBaseVelocityConv->getRepresentation<VolumeRAM>() );
+        const auto volumeVelocity = dynamic_cast<const VolumeRAM_3xFloat*>( volumeBaseVelocity->getRepresentation<VolumeRAM>() );
 
 #pragma omp parallel for
         for( long i = 0; i < static_cast<long>( voxels.size() ); ++i )
         {
             const auto voxelIndex = voxels[i];
-            volumeA->voxel( voxelIndex ) += volumeVelocityConv->voxel( voxelIndex ) / static_cast<double>( members.size() );
+            volumeA->voxel( voxelIndex ) += volumeVelocity->voxel( voxelIndex ) / static_cast<float>( members.size() );
         }
 
         if( _propertyUseAcceleration.get() )
@@ -146,14 +143,14 @@ void ApproximateParallelVectors::process() {
             auto volumeJacobi = std::unique_ptr<VolumeRAM_Mat3Float>( new VolumeRAM_Mat3Float( dim ) );
             VortexProcessor::Process( *volumeVelocity, *volumeMask.operator->(), *volumeJacobi, nullptr, nullptr, nullptr );
 
-            auto volumeAcceleration = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
+            auto volumeAcceleration = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
             AccelerationProcessor::Process( *volumeJacobi, *volumeVelocity, *volumeAcceleration );
 
 #pragma omp parallel for
             for( long i = 0; i < static_cast<long>( voxels.size() ); ++i )
             {
                 const auto voxelIndex = voxels[i];
-                volumeA->voxel( voxelIndex ) += volumeAcceleration->voxel( voxelIndex ) / static_cast<double>( members.size() );
+                volumeA->voxel( voxelIndex ) += volumeAcceleration->voxel( voxelIndex ) / static_cast<float>( members.size() );
             }
         }
     }
@@ -184,7 +181,7 @@ void ApproximateParallelVectors::process() {
             auto volumeJacobi = std::unique_ptr<VolumeRAM_Mat3Float>( new VolumeRAM_Mat3Float( dim ) );
             VortexProcessor::Process( *volumeVelocity, *volumeMask.operator->(), *volumeJacobi, nullptr, nullptr, nullptr );
 
-            auto volumeAcceleration = std::unique_ptr<VolumeRAM_3xDouble>( new VolumeRAM_3xDouble( dim ) );
+            auto volumeAcceleration = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
             AccelerationProcessor::Process( *volumeJacobi, *volumeVelocity, *volumeAcceleration );
 
 #pragma omp parallel for

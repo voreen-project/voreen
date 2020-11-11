@@ -148,8 +148,8 @@ void VortexCollectionCreator::updateButton()
             VortexProcessor::Process( *velocity, *mask, *jacobi, nullptr, nullptr, nullptr );
 
             // --- Acceleration Processor --- //
-            auto acceleration = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
-            AccelerationProcessor::Process( *jacobi, *velocity, *acceleration );
+            auto acceleration = std::unique_ptr<VolumeRAM_3xFloat>(new VolumeRAM_3xFloat( dim ) );
+            AccelerationProcessor::Process( *jacobi, *velocity, *acceleration);
 
             // --- Parallel Vectors --- //
             auto parallelVectors = std::unique_ptr<ParallelVectorSolutions>( new ParallelVectorSolutions() );
@@ -174,7 +174,7 @@ void VortexCollectionCreator::updateButton()
         }
     }
 
-    for( size_t member = 0; member < collection->runs(); ++member )
+    for( size_t member = 0; member < collection->members(); ++member )
     {
         for( size_t timestep = 0; timestep < collection->timesteps() - 1; ++timestep )
         {

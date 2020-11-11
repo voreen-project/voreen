@@ -214,9 +214,6 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     if (!streamlines)
         return;
 
-    // Update camera.
-    camera_.adaptInteractionToScene(streamlines->getOriginalWorldBounds());
-
     // Update transfer function.
     float* data = new float[2];
     data[0] = streamlines->getMinMagnitude();

@@ -85,7 +85,7 @@ private:
     std::unique_ptr<EventProperty<VortexMatchSelector>> _eventPropertyHover, _eventPropertyMouse, _eventPropertyWheel;
 
     FloatProperty _propertyMaximumMatchDistance;
-    StringListProperty _propertySelectedRuns;
+    StringListProperty _propertySelectedMembers;
     IntProperty _propertyMinimumGroupSize;
     IntOptionProperty _propertyOrientation;
     IntIntervalProperty _propertyTimestepInterval;

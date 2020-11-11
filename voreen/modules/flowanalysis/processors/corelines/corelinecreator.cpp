@@ -380,6 +380,7 @@ void CorelineCreator::process()
     CorelineCreator::Process( *_in.getData(), _lengthThreshold.get(), corelines);
 
     auto geometry = new PointSegmentListGeometryVec3();
+    geometry->setTransformationMatrix(_in.getData()->voxelToWorldMatrix);
     geometry->setData(std::move(corelines));
     _out.setData(geometry);
 }

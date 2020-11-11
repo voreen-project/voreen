@@ -45,7 +45,7 @@ ParallelVectors::ParallelVectors()
     , _inJacobi(Port::INPORT, "in_jacobi", "Jacobi Matrix (Optional)")
     , _inMask(Port::INPORT, "inportMask", "Mask (Optional)")
     , _out(Port::OUTPORT, "outport", "Parallel Vector Solution Points")
-    , _sujudiHaimes("sujudiHaimes", "Use Sujudi-Haimes method for filtering", false, Processor::VALID)
+    , _sujudiHaimes("sujudiHaimes", "Use Sujudi-Haimes method for filtering", false)
 {
     this->addPort(_inV);
     _inV.addCondition(new PortConditionVolumeType3xFloat());
@@ -75,16 +75,18 @@ bool ParallelVectors::isReady() const
     const auto* volumeV = _inV.getData();
     const auto* volumeW = _inW.getData();
     const auto* volumeJacobi = _inJacobi.getData();
+    const auto* mask = _inMask.getData();
 
-    if (volumeV->getDimensions() != volumeW->getDimensions() || (volumeJacobi && volumeV->getDimensions() != volumeJacobi->getDimensions()))
+    if (volumeV->getDimensions() != volumeW->getDimensions()
+        || (volumeJacobi && volumeV->getDimensions() != volumeJacobi->getDimensions())
+        || (mask && volumeV->getDimensions() != mask->getDimensions()))
     {
         setNotReadyErrorMessage("Input dimensions do not match");
         return false;
     }
 
     const auto dim = volumeV->getDimensions();
-    if (std::min({dim.x, dim.y, dim.z}) < 2)
-    {
+    if (std::min({dim.x, dim.y, dim.z}) < 2) {
         setNotReadyErrorMessage("Input dimensions must be greater than 1 in each dimension");
         return false;
     }
@@ -100,15 +102,14 @@ void ParallelVectors::setDescriptions() {
     _inJacobi.setDescription("(Optional) Jacobi matrix to be used for sujudi-haimes filtering");
 }
 
-void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFloat& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution )
-{
+void ParallelVectors::Process(const VolumeRAM_3xFloat& V, const VolumeRAM_3xFloat& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution) {
     const auto dim = V.getDimensions();
     auto triangleSolutions = std::vector<tgt::vec3>();
     auto triangleSolutionIndices = std::vector<int32_t>((dim.x - 1) * (dim.y - 1) * (dim.z - 1) * TetrahedraPerCube * TrianglesPerTetrahedron, -1);
 
     const auto trianglesPerXInc = 24;
-    const auto trianglesPerYInc = ( dim.x - 1 ) * TetrahedraPerCube * TrianglesPerTetrahedron;
-    const auto trianglesPerZInc = ( dim.x - 1 ) * ( dim.y - 1 ) * TetrahedraPerCube * TrianglesPerTetrahedron;
+    const auto trianglesPerYInc = (dim.x - 1) * TetrahedraPerCube * TrianglesPerTetrahedron;
+    const auto trianglesPerZInc = (dim.x - 1) * (dim.y - 1) * TetrahedraPerCube * TrianglesPerTetrahedron;
     const std::array<int32_t, 24> partnerTriangleOffsets
     {
         -trianglesPerZInc + 19, 20, 4, trianglesPerYInc + 5,
@@ -120,9 +121,9 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
     };
 
     auto voxels = std::vector<tgt::ivec3>();
-    voxels.reserve( V.getNumVoxels() );
-    for( long x = 0; x < dim.x - 1; ++x ) {
-        for( long y = 0; y < dim.y - 1; ++y ) {
+    voxels.reserve(V.getNumVoxels());
+    for (long x = 0; x < dim.x - 1; ++x) {
+        for (long y = 0; y < dim.y - 1; ++y) {
             for (long z = 0; z < dim.z - 1; ++z) {
                 if (!mask || mask->getVoxelNormalized(x, y, z) > 0.0)
                     voxels.push_back(tgt::ivec3(x, y, z));
@@ -131,45 +132,46 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
     }
     voxels.shrink_to_fit();
 
-
+#ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
-    for( long voxelIndex = 0; voxelIndex < static_cast<long>( voxels.size() ); ++voxelIndex )
+#endif
+    for (long voxelIndex = 0; voxelIndex < static_cast<long>(voxels.size()); ++voxelIndex)
     {
-        const auto x = static_cast<size_t>( voxels[voxelIndex].x );
-        const auto y = static_cast<size_t>( voxels[voxelIndex].y );
-        const auto z = static_cast<size_t>( voxels[voxelIndex].z );
+        const auto x = static_cast<size_t>(voxels[voxelIndex].x);
+        const auto y = static_cast<size_t>(voxels[voxelIndex].y);
+        const auto z = static_cast<size_t>(voxels[voxelIndex].z);
 
         const std::array<const Tet, TetrahedraPerCube> cubeTets{
-            Tet{																			  // front top left tet 0
-                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x + 1, y + 1, z}},			  // front 0
-                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x + 1, y + 1, z + 1}},		  // back 1
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}},	  // right 2
+            Tet{                                                                              // front top left tet 0
+                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x + 1, y + 1, z}},              // front 0
+                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x + 1, y + 1, z + 1}},          // back 1
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}},      // right 2
                 Triangle{tgt::svec3{x, y + 1, z}, {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}}}, // top 3
-                Tet{																			  // front bottom right tet 1
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y + 1, z}},			  // front 4
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y + 1, z + 1}},		  // back 5
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}},	  // left 6
+                Tet{                                                                              // front bottom right tet 1
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y + 1, z}},              // front 4
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y + 1, z + 1}},          // back 5
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}},      // left 6
                 Triangle{tgt::svec3{x + 1, y, z}, {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}}}, // right 7
-                Tet{																			  // middle right bottom tet 2
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y, z + 1}},			  // bottom 8
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y + 1, z + 1}},		  // front 9
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1}},	  // left 10
+                Tet{                                                                              // middle right bottom tet 2
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y, z + 1}},              // bottom 8
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z}, {x + 1, y + 1, z + 1}},          // front 9
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1}},      // left 10
                 Triangle{tgt::svec3{x + 1, y, z}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1}}}, // right 11
-                Tet{																			  // back right bottom tet 3
-                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x + 1, y, z + 1}},			  // bottom 12
-                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x + 1, y + 1, z + 1}},		  // left 13
-                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1}},	  // right 14
+                Tet{                                                                              // back right bottom tet 3
+                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x + 1, y, z + 1}},              // bottom 12
+                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x + 1, y + 1, z + 1}},          // left 13
+                Triangle{tgt::svec3{x, y, z}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1}},      // right 14
                 Triangle{tgt::svec3{x, y, z + 1}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1}}}, // back 15
-                Tet{																			  // back left bottom tet 4
-                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x, y + 1, z + 1}},			  // left 16
-                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x + 1, y + 1, z + 1}},		  // right 17
-                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1}},	  // front 18
+                Tet{                                                                              // back left bottom tet 4
+                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x, y + 1, z + 1}},              // left 16
+                Triangle{tgt::svec3{x, y, z}, {x, y, z + 1}, {x + 1, y + 1, z + 1}},          // right 17
+                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1}},      // front 18
                 Triangle{tgt::svec3{x, y, z + 1}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1}}}, // back 19
-                Tet{																			  // middle left top tet 5
-                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x, y + 1, z + 1}},			  // left 20
-                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x + 1, y + 1, z + 1}},		  // front 21
-                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1}},	  // back 22
-                Triangle{tgt::svec3{x, y + 1, z}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1} /* top 23 */}}};
+                Tet{                                                                              // middle left top tet 5
+                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x, y + 1, z + 1}},              // left 20
+                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z}, {x + 1, y + 1, z + 1}},          // front 21
+                Triangle{tgt::svec3{x, y, z}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1}},      // back 22
+                Triangle{tgt::svec3{x, y + 1, z}, {x, y + 1, z + 1}, {x + 1, y + 1, z + 1} /* top 23 */}} };
 
         for (size_t tetIndexInCube = 0; tetIndexInCube < cubeTets.size(); ++tetIndexInCube)
         {
@@ -179,8 +181,8 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
                 const auto partnerTriangleSolutionIndex = triangleSolutionIndex + partnerTriangleOffsets[tetIndexInCube * TrianglesPerTetrahedron + triIndexInTet];
 
 
-                if(triangleSolutionIndices[triangleSolutionIndex] != -1) continue;
-                if(partnerTriangleSolutionIndex >= 0 && partnerTriangleSolutionIndex < triangleSolutionIndices.size())
+                if (triangleSolutionIndices[triangleSolutionIndex] != -1) continue;
+                if (partnerTriangleSolutionIndex >= 0 && partnerTriangleSolutionIndex < triangleSolutionIndices.size())
                     triangleSolutionIndices[partnerTriangleSolutionIndex] = -2;
 
 
@@ -195,17 +197,16 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
                 const auto vol2Voxel1 = to_eigen(W.voxel(triangle[1]).elem).cast<double>();
                 const auto vol2Voxel2 = to_eigen(W.voxel(triangle[2]).elem).cast<double>();
 
-                auto doBreak = false;
-                for (auto i = 0; i < 3; ++i) // Check if vectors are too small at triangle vertices
-                {
-                    if (tgt::lengthSq(V.voxel(triangle[i])) < 0.00000000000001 || tgt::lengthSq(W.voxel(triangle[i])) < 0.00000000000001)
-                    {
-                        doBreak = true;
-                        break;
-                    }
-                }
-                if (doBreak)
-                    break;
+                //auto doBreak = false;
+                //for (auto i = 0; i < 3; ++i) { // Check if vectors are too small at triangle vertices 
+                //    if (tgt::lengthSq(V.voxel(triangle[i])) < 0.00000000000001 || tgt::lengthSq(W.voxel(triangle[i])) < 0.00000000000001) {
+                //        doBreak = true;
+                //        break;
+                //    }
+                //}
+                //if (doBreak) {
+                //    break;
+                //}
 
                 const auto V = (Eigen::Matrix3d() << vol1Voxel0, vol1Voxel1, vol1Voxel2).finished();
                 const auto W = (Eigen::Matrix3d() << vol2Voxel0, vol2Voxel1, vol2Voxel2).finished();
@@ -230,7 +231,7 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
                 // V or W is invertible => find a solution now
 
                 const auto eigensolver = Eigen::EigenSolver<Eigen::Matrix3d>(M);
-                const auto &eigenvalues = eigensolver.eigenvalues();
+                const auto& eigenvalues = eigensolver.eigenvalues();
                 auto eigenvectors = eigensolver.eigenvectors();
 
                 for (int eigenVectorIndex = 0; eigenVectorIndex < 3; ++eigenVectorIndex)
@@ -243,7 +244,7 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
 
                     eigenvectors.col(eigenVectorIndex) /= eigenvectors.col(eigenVectorIndex).sum();
 
-                    const auto pos = static_cast<float>(eigenvectors.col(eigenVectorIndex).x().real()) * static_cast<const tgt::vec3 &>(cubeTets[tetIndexInCube][triIndexInTet][0]) + static_cast<float>(eigenvectors.col(eigenVectorIndex).y().real()) * static_cast<const tgt::vec3 &>(cubeTets[tetIndexInCube][triIndexInTet][1]) + static_cast<float>(eigenvectors.col(eigenVectorIndex).z().real()) * static_cast<const tgt::vec3 &>(cubeTets[tetIndexInCube][triIndexInTet][2]);
+                    const auto pos = static_cast<float>(eigenvectors.col(eigenVectorIndex).x().real()) * static_cast<const tgt::vec3&>(cubeTets[tetIndexInCube][triIndexInTet][0]) + static_cast<float>(eigenvectors.col(eigenVectorIndex).y().real()) * static_cast<const tgt::vec3&>(cubeTets[tetIndexInCube][triIndexInTet][1]) + static_cast<float>(eigenvectors.col(eigenVectorIndex).z().real()) * static_cast<const tgt::vec3&>(cubeTets[tetIndexInCube][triIndexInTet][2]);
 
                     auto addSolution = !jacobi;
 
@@ -253,12 +254,12 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
                         const auto jacobianAtSolution = static_cast<float>(eigenvectors.col(eigenVectorIndex).x().real()) * jacobi->voxel(cubeTets[tetIndexInCube][triIndexInTet][0]) + static_cast<float>(eigenvectors.col(eigenVectorIndex).y().real()) * jacobi->voxel(cubeTets[tetIndexInCube][triIndexInTet][1]) + static_cast<float>(eigenvectors.col(eigenVectorIndex).z().real()) * jacobi->voxel(cubeTets[tetIndexInCube][triIndexInTet][2]);
 
                         using EigenMat3fRowMajor = Eigen::Matrix<float, 3, 3, Eigen::StorageOptions::RowMajor | Eigen::StorageOptions::AutoAlign>;
-                        const auto jacobianEigenvalues = Eigen::EigenSolver<EigenMat3fRowMajor>(reinterpret_cast<const EigenMat3fRowMajor &>(jacobianAtSolution), false).eigenvalues();
+                        const auto jacobianEigenvalues = Eigen::EigenSolver<EigenMat3fRowMajor>(reinterpret_cast<const EigenMat3fRowMajor&>(jacobianAtSolution), false).eigenvalues();
 
                         int numberOfComplexEigenvalues = 0;
                         for (int j = 0; j < 3; ++j) // count complex eigenvalues of jacobian
                         {
-                            if (jacobianEigenvalues(j).imag())
+                            if (jacobianEigenvalues(j).imag() != 0)
                             {
                                 ++numberOfComplexEigenvalues;
                             }
@@ -268,10 +269,12 @@ void ParallelVectors::Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFlo
 
                     if (addSolution)
                     {
-#pragma omp critical
+#ifdef VRN_MODULE_OPENMP
+                        #pragma omp critical
+#endif
                         {
                             triangleSolutionIndices[triangleSolutionIndex] = triangleSolutions.size();
-                            if(partnerTriangleSolutionIndex >= 0 && partnerTriangleSolutionIndex < triangleSolutionIndices.size())
+                            if (partnerTriangleSolutionIndex >= 0 && partnerTriangleSolutionIndex < triangleSolutionIndices.size())
                                 triangleSolutionIndices[partnerTriangleSolutionIndex] = triangleSolutions.size();
                             triangleSolutions.push_back(pos);
                         }
@@ -307,7 +310,8 @@ void ParallelVectors::process() {
     auto solutions = std::unique_ptr<ParallelVectorSolutions>( new ParallelVectorSolutions() );
     ParallelVectors::Process( *dynamic_cast<const VolumeRAM_3xFloat*>(*volumeV),
                               *dynamic_cast<const VolumeRAM_3xFloat*>(*volumeV),
-                              jacobi, mask,*solutions );
+                              jacobi, mask, *solutions );
+    solutions->voxelToWorldMatrix = _inV.getData()->getVoxelToWorldMatrix();
     _out.setData(solutions.release());
 }
 

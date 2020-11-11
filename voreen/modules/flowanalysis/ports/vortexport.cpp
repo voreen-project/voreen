@@ -81,7 +81,7 @@ std::string VortexCollectionPort::getContentDescriptionHTML() const
     if( this->hasData() )
     {
         const auto collection = this->getData();
-        stream << "<br/>Runs: " << std::to_string( collection->runs() );
+        stream << "<br/>Members: " << std::to_string( collection->members() );
         stream << "<br/>Timesteps: " << std::to_string( collection->timesteps() );
         stream << "<br/>Vortices: " << std::to_string( collection->totalNumVortices() );
     }
