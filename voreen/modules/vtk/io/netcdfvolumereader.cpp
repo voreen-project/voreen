@@ -59,15 +59,16 @@ std::vector<VolumeURL> NetCDFVolumeReader::listVolumes(const std::string& url) c
 
         int numArrays = reader->GetNumberOfVariableArrays();
         for(int i=0; i<numArrays; i++) {
-            //for(int ts=0; ts<60; ts++) {
-                const char* name = reader->GetVariableArrayName(i);
-                VolumeURL subURL("nc", urlOrigin.getPath(), "");
-                subURL.addSearchParameter("name", name);
-                //subURL.addSearchParameter("timeStep", std::to_string(t));
-                subURL.getMetaDataContainer().addMetaData("name", new StringMetaData(name));
-                result.push_back(subURL);
-            //}
+            const char* name = reader->GetVariableArrayName(i);
+            VolumeURL subURL("nc", urlOrigin.getPath(), "");
+            subURL.addSearchParameter("name", name);
+            //subURL.addSearchParameter("timeStep", std::to_string(t)); // Seems not to be possible using NetCDF CF.
+            subURL.getMetaDataContainer().addMetaData("name", new StringMetaData(name));
+            result.push_back(subURL);
         }
+    }
+    else {
+        throw tgt::IOException("File seems not to follow the CF convention");
     }
 
     return result;
@@ -88,19 +89,18 @@ VolumeBase* NetCDFVolumeReader::read(const VolumeURL& origin) {
 
     vtkStringArray* variableDimensions = reader->GetVariableDimensions();
     for(vtkIdType i=0; i<variableDimensions->GetNumberOfValues(); i++) {
-        //std::cout << "Dimensions of " << reader->GetVariableArrayName(i) << ": " << variableDimensions->GetValue(i) << std::endl;
         reader->SetVariableArrayStatus(reader->GetVariableArrayName(i), 0);
     }
 
     std::string name = origin.getSearchParameter("name");
     reader->SetVariableArrayStatus(name.c_str(), 1);
-    //double timeStep = std::stod(origin.getSearchParameter("timeStep"));
+    //double timeStep = std::stod(origin.getSearchParameter("timeStep")); // Seems not to be possible using NetCDF CF.
     //reader->UpdateTimeStep(timeStep);
     reader->SetOutputTypeToImage();
     reader->Update();
 
     vtkImageData* imageData = vtkImageData::SafeDownCast(reader->GetOutput());
-    //imageData->GetFieldData()->AddArray(); // TODO: Add meta data here.
+    //imageData->GetFieldData()->AddArray(); // Add meta data here.
     return createVolumeFromVtkImageData(origin, imageData);
 }
 
@@ -112,7 +112,7 @@ VolumeList* NetCDFVolumeReader::read(const std::string& url) {
         for(const auto& url : urls) {
             volumes.push_back(std::unique_ptr<VolumeBase>(read(url)));
         }
-    } catch(tgt::IOException& e) {
+    } catch(tgt::IOException&) {
         throw;
     }
 

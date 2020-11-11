@@ -38,7 +38,7 @@ public:
     NetCDFVolumeReader(ProgressBar* progress = 0);
 
     virtual std::string getClassName() const { return "NetCDFVolumeReader"; }
-    virtual std::string getFormatDescription() const { return "NetCDF format"; }
+    virtual std::string getFormatDescription() const { return "NetCDF format following the CF convention"; }
 
     virtual VolumeReader* create(ProgressBar* progress = 0) const;
 

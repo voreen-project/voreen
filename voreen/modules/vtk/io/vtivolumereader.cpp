@@ -61,7 +61,7 @@ namespace voreen {
 class VolumeRAMSwap : public VolumeDisk {
 public:
 
-    static bool addVolumeSwapDisk(Volume* volume) {
+    static bool trySetVolumeSwapDisk(Volume* volume) {
         if(!volume) {
             return false;
         }
@@ -69,11 +69,12 @@ public:
         std::unique_ptr<VolumeRAMSwap> swap;
         try {
             swap.reset(new VolumeRAMSwap(volume));
-        } catch(tgt::IOException& e) {
+        } catch(tgt::IOException&) {
             return false;
         }
 
         volume->addRepresentation(swap.release());
+        volume->removeRepresentation<VolumeRAM>();
 
         return true;
     }
@@ -83,8 +84,8 @@ public:
         , hash_(volume->getHash())
     {
         // Shorthands.
-        const tgt::svec3& dim = volume->getDimensions();
-        const std::string& baseType = volume->getBaseType();
+        const tgt::svec3 dim = volume->getDimensions();
+        const std::string baseType = volume->getBaseType();
         const size_t numChannels = volume->getNumChannels();
 
         // File settings.
@@ -219,7 +220,7 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
     volume->addDerivedData(new VolumeMinMax(min, max, min, max));
     volume->setOrigin(origin);
     volume->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volume->getBaseType()));
-    volume->getMetaDataContainer().addMetaData("name", new StringMetaData(name));
+    volume->setMetaDataValue<StringMetaData>("name", name);
 
     // Read meta data.
     for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {
@@ -249,9 +250,8 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
 
 #ifdef VRN_MODULE_HDF5
     // Add swap disk representation.
-    VTKModule* instance = VTKModule::getInstance();
-    if(instance && instance->getForceDiskRepresentation() && VolumeRAMSwap::addVolumeSwapDisk(volume)) {
-        volume->removeRepresentation<VolumeRAM>();
+    if(VTKModule::getInstance() && VTKModule::getInstance()->getForceDiskRepresentation()) {
+        VolumeRAMSwap::trySetVolumeSwapDisk(volume);
     }
 #endif
 
@@ -330,7 +330,7 @@ VolumeList* VTIVolumeReader::read(const std::string& url) {
         for(const auto& url : urls) {
             volumes.push_back(std::unique_ptr<VolumeBase>(read(url)));
         }
-    } catch(tgt::IOException& e) {
+    } catch(tgt::IOException&) {
         throw;
     }
 

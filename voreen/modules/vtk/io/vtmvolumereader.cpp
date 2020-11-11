@@ -129,7 +129,7 @@ VolumeList* VTMVolumeReader::read(const std::string& url) {
         for(const auto& url : urls) {
             volumes.push_back(std::unique_ptr<VolumeBase>(read(url)));
         }
-    } catch(tgt::IOException& e) {
+    } catch(tgt::IOException&) {
         throw;
     }
 
