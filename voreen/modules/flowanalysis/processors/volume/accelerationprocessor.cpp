@@ -42,11 +42,6 @@ AccelerationProcessor::AccelerationProcessor()
     addPort(outport_);
 }
 
-Processor* AccelerationProcessor::create() const {
-    return new AccelerationProcessor();
-}
-
-
 bool AccelerationProcessor::isReady() const {
     bool ready = Processor::isReady();
     if(!ready) {
@@ -60,7 +55,6 @@ bool AccelerationProcessor::isReady() const {
 
     return true;
 }
-
 
 template<typename T>
 void optimizedProcess(const VolumeRAM_Mat3Float& jacobi, const VolumeAtomic<tgt::Vector3<T>>& velocity, VolumeRAM_3xFloat& outAcceleration) {

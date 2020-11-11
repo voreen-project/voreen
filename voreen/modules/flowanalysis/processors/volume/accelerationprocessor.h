@@ -41,16 +41,16 @@ class VRN_CORE_API AccelerationProcessor : public Processor {
 public:
     AccelerationProcessor();
 
-    virtual Processor* create() const;
-    virtual std::string AccelerationProcessor::getClassName() const { return "AccelerationProcessor"; }
-    virtual std::string AccelerationProcessor::getCategory() const { return "Volume Processing"; }
+    virtual Processor* create() const { return new AccelerationProcessor(); }
+    virtual std::string getClassName() const { return "AccelerationProcessor"; }
+    virtual std::string getCategory() const { return "Volume Processing"; }
     
     virtual bool isReady() const;
 
     static void Process(const VolumeRAM_Mat3Float& jacobi, const VolumeRAM& velocity, VolumeRAM_3xFloat& outAcceleration, RealWorldMapping rwm = RealWorldMapping());
 
 protected:
-    virtual void AccelerationProcessor::setDescriptions() {
+    virtual void setDescriptions() {
         setDescription("Computes acceleration volume by multiplying jacobian and velocity for each voxel");
     }
 
