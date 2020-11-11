@@ -161,10 +161,11 @@ public:
     /**
      * Try to read VolumeMinMax information.
      * @return A VolumeMinMax for this volume or 0 if that information is not available.
+     * @note This function should be called only with either an arbitrary, single channel, or all channels at the same time.
      * @note The caller is responsible for deleting the returned object.
      * @note Locks hdf5libMutex.
      */
-    VolumeMinMax* tryReadVolumeMinMax(size_t channel = 0) const;
+    VolumeMinMax* tryReadVolumeMinMax(size_t firstChannel = 0, size_t numberOfChannels = 1) const;
 
     /**
      * Write the given VolumeMinMax to this file volume.
@@ -242,7 +243,7 @@ public:
      * @note The caller is responsible for deleting the VolumeDerivedData objects.
      * @note Locks hdf5libMutex.
      */
-    std::vector<VolumeDerivedData*> readDerivedData(size_t channel = 0) const;
+    std::vector<VolumeDerivedData*> readDerivedData(size_t firstChannel = 0, size_t numberOfChannels = 1) const;
 
     /**
      * Write each DerivedData of vol to this file volume if applicable.

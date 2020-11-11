@@ -178,7 +178,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
     std::unique_ptr<HDF5FileVolume> fileVolume = HDF5FileVolume::openVolume(fileName, inFilePath, true);
 
     // Retrieve all needed information before handing the file volume over to volume disk
-    std::vector<VolumeDerivedData*> derivedData = fileVolume->readDerivedData(firstChannel);
+    std::vector<VolumeDerivedData*> derivedData = fileVolume->readDerivedData(firstChannel, numberOfChannels);
     std::unique_ptr<tgt::vec3> spacing(fileVolume->tryReadSpacing());
     std::unique_ptr<tgt::vec3> offset(fileVolume->tryReadOffset());
     std::unique_ptr<tgt::mat4> physicalToWorldTransformation(fileVolume->tryReadPhysicalToWorldTransformation());

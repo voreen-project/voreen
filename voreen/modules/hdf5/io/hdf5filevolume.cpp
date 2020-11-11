@@ -335,7 +335,7 @@ std::string HDF5FileVolume::getBaseType() const {
     return getBaseTypeFromDataType(dataSet_->getDataType());
 }
 
-VolumeMinMax* HDF5FileVolume::tryReadVolumeMinMax(size_t channel) const {
+VolumeMinMax* HDF5FileVolume::tryReadVolumeMinMax(size_t firstChannel, size_t numberOfChannels) const {
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);
 
     // Check if min-max information is present and exit early if not.
@@ -355,13 +355,23 @@ VolumeMinMax* HDF5FileVolume::tryReadVolumeMinMax(size_t channel) const {
         LERROR("Error reading VolumeMinMax attribute: " + error.getFuncName() + ": " + error.getDetailMsg());
         return nullptr;
     }
-    // ... then find the data for the channel we are looking for.
-    float* channelData = &values.data()[perChannelDataSize * channel];
 
-    // Before reading  make sure we only read from the memory previously allocated.
-    tgtAssert(channelData + perChannelDataSize <= values.data() + values.size(), "VolumeMinMax unpack error.");
-    // We are safe: Get the values and construct the VolumeMinMax!
-    return new VolumeMinMax(channelData[0], channelData[1], channelData[2], channelData[3]);
+    std::vector<float> minValues, maxValues, minNormValues, maxNormValues;
+    for (size_t channel = 0; channel < numberOfChannels; channel++) {
+        // ... then find the data for the channel we are looking for.
+        float* channelData = &values.data()[perChannelDataSize * firstChannel * channel];
+        // Before reading  make sure we only read from the memory previously allocated.
+        tgtAssert(channelData + perChannelDataSize <= values.data() + values.size(), "VolumeMinMax unpack error.");
+
+        // We are safe, get the values..
+        minValues.push_back(channelData[0]);
+        maxValues.push_back(channelData[1]);
+        minNormValues.push_back(channelData[2]);
+        maxNormValues.push_back(channelData[3]);
+    }
+
+    // ..and construct the VolumeMinMax!
+    return new VolumeMinMax(minValues, maxValues, minNormValues, maxNormValues);
 }
 
 
@@ -685,37 +695,38 @@ void HDF5FileVolume::writeVolumePreview(const VolumePreview* preview) const {
     writeArrayAttribute(*dataSet_, REPRESENTATION_PREVIEW_ATTRIBUTE_NAME, preview->getData().data(), preview->getData().size());
 }
 
-std::vector<VolumeDerivedData*> HDF5FileVolume::readDerivedData(size_t channel) const {
+std::vector<VolumeDerivedData*> HDF5FileVolume::readDerivedData(size_t firstChannel, size_t numberOfChannels) const {
     // Just try to read all currently known DerivedData types (except VolumeHash)
     // and if found, add them to the vector which will be returned.
     std::vector<VolumeDerivedData*> data;
 
-    VolumeMinMax* volumeMinMax = tryReadVolumeMinMax(channel);
+    VolumeMinMax* volumeMinMax = tryReadVolumeMinMax(firstChannel, numberOfChannels);
     if(volumeMinMax) {
         data.push_back(volumeMinMax);
     }
 
-    // VolumeMinMaxMagnitude is calculated for all channels but stored in the first one, only.
-    if(channel == 0) {
+    // VolumeMinMaxMagnitude will only be added, if all channels are loaded at the same time.
+    // Otherwise, it would no longer be valid.
+    if(firstChannel == 0 && numberOfChannels == getNumberOfChannels()) {
         VolumeMinMaxMagnitude* volumeMinMaxMagnitude = tryReadVolumeMinMaxMagnitude();
         if (volumeMinMaxMagnitude) {
             data.push_back(volumeMinMaxMagnitude);
         }
     }
 
-    VolumeHistogramIntensity* volumeHistogramIntensity = tryReadVolumeHistogramIntensity(channel);
+    VolumeHistogramIntensity* volumeHistogramIntensity = tryReadVolumeHistogramIntensity(firstChannel);
     if(volumeHistogramIntensity) {
         data.push_back(volumeHistogramIntensity);
     }
 
-    VolumeHistogramIntensityGradient* volumeHistogramIntensityGradient = tryReadVolumeHistogramIntensityGradient(channel);
+    VolumeHistogramIntensityGradient* volumeHistogramIntensityGradient = tryReadVolumeHistogramIntensityGradient(firstChannel);
     if(volumeHistogramIntensityGradient) {
         data.push_back(volumeHistogramIntensityGradient);
     }
 
     // VolumePreview only shows a preview of the first channel.
     // Thus when we extract DerivedData for a single channel other than the first that volume preview does not make sense.
-    if(channel == 0) {
+    if(firstChannel == 0) {
         VolumePreview* volumePreview = tryReadVolumePreview();
         if(volumePreview) {
             data.push_back(volumePreview);
