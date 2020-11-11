@@ -486,7 +486,7 @@ void VolumeFilterList::inputOutputChannelCheck() {
             }
             else if(instance.isActive()) {
                 instance.setActive(false);
-                LERROR("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
+                LWARNING("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
             }
 
             metadata = filter->getMetaData(metadata);
