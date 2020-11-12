@@ -59,6 +59,7 @@ private:
         MIN,
         MAX,
         VARIANCE,
+        SUM_OF_SQUARES
     };
 
     VolumeListPort inport_;

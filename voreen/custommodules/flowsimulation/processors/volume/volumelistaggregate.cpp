@@ -44,6 +44,7 @@ VolumeListAggregate::VolumeListAggregate()
     aggregationFunction_.addOption("min", "Min", MIN);
     aggregationFunction_.addOption("max", "Max", MAX);
     aggregationFunction_.addOption("variance", "Variance", VARIANCE);
+    aggregationFunction_.addOption("sumOfSquares", "Sum of Squares", SUM_OF_SQUARES);
 }
 
 VolumeListAggregate::~VolumeListAggregate() {}
@@ -71,6 +72,7 @@ void VolumeListAggregate::process() {
         AggregationFunction aggregationFunction = aggregationFunction_.getValue();
         switch(aggregationFunction) {
         case MEAN:
+        case SUM_OF_SQUARES:
             combinedRepresentation->clear();
             break;
         case MIN:
@@ -118,6 +120,9 @@ void VolumeListAggregate::process() {
                                 }
                                 break;
                             }
+                            case SUM_OF_SQUARES:
+                                aggregatedValue += currentValue * currentValue;
+                                break;
                             default:
                                 tgtAssert(false, "unhandled aggregation function");
                             }
