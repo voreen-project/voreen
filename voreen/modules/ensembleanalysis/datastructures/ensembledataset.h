@@ -309,6 +309,15 @@ public:
     void serialize(Serializer& s) const override;
     void deserialize(Deserializer& s) override;
 
+    /**
+     * Returns a volume reader for the given url or nullptr, if no suitable reader was found.
+     * This function can be used to encorporate custom readers, if desired.
+     * E.g. multi-channel volumes stored in HDF5 files will not be split into multiple volumes using this function.
+     * @see TimeStep
+     * @see EnsembleDataSource
+     */
+    static VolumeReader* getVolumeReader(const std::string& path);
+
 private:
 
     struct FieldMetaData : public Serializable {

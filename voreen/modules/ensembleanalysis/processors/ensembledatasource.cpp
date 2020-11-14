@@ -112,13 +112,6 @@ void EnsembleDataSource::process() {
     outport_.setData(output_.get(), false);
 }
 
-void EnsembleDataSource::initialize() {
-    Processor::initialize();
-    if(loadingStrategy_.get() == "full") {
-        buildEnsembleDataset();
-    }
-}
-
 void EnsembleDataSource::deinitialize() {
     clearEnsembleDataset();
     Processor::deinitialize();
@@ -127,7 +120,10 @@ void EnsembleDataSource::deinitialize() {
 void EnsembleDataSource::deserialize(Deserializer& s) {
     Processor::deserialize(s);
 
-    if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
+    if (loadingStrategy_.get() == "full") {
+        buildEnsembleDataset();
+    }
+    else if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
 
         std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
 
@@ -189,36 +185,37 @@ void EnsembleDataSource::buildEnsembleDataset() {
         float progressPerTimeStep = 1.0f / fileNames.size();
 
         std::vector<TimeStep> timeSteps;
-        for(const std::string& fileName : fileNames) {
+        for (const std::string& fileName : fileNames) {
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
-            if(tgt::FileSystem::fileExtension(fileName, true) == "raw") {
+            std::string ext = tgt::FileSystem::fileExtension(fileName, true);
+            if (ext.empty() || ext == "raw") {
                 continue;
             }
 
             std::string url = memberPath + "/" + fileName;
-            std::vector<VolumeReader*> readers;
-            try {
-                readers = populator.getVolumeSerializer()->getReaders(url);
-            } catch(tgt::UnsupportedFormatException&) {
-            }
 
-            if(readers.empty()) {
-                LERROR("No valid volume reader found for " << url);
+            VolumeReader* reader = EnsembleDataset::getVolumeReader(url);
+            if (!reader) {
+                LERROR("No suitable reader found for " << fileName);
                 continue;
             }
-
-            VolumeReader* reader = readers.front();
-            tgtAssert(reader, "Reader was null");
 
             std::map<std::string, const VolumeBase*> volumeData;
             float time = 0.0f;
             float duration = 0.0f;
             bool timeIsSet = false;
 
-            const std::vector<VolumeURL>& subURLs = reader->listVolumes(url);
+            std::vector<VolumeURL> subURLs = reader->listVolumes(url);
             for(const VolumeURL& subURL : subURLs) {
-                std::unique_ptr<VolumeBase> volumeHandle(reader->read(subURL));
+                std::unique_ptr<VolumeBase> volumeHandle;
+                try {
+                    volumeHandle.reset(reader->read(subURL));
+                }
+                catch (tgt::IOException& e) {
+                    LERROR("Error reading " << subURL.getURL() << ": " << e.what());
+                }
+
                 if(!volumeHandle)
                     break;
 
@@ -260,7 +257,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 // Add additional information gained reading the file structure.
                 Volume* volume = dynamic_cast<Volume*>(volumeHandle.get());
                 tgtAssert(volume, "volumeHandle must be volume");
-                volume->getMetaDataContainer().addMetaData(MEMBER_NAME, new StringMetaData(member));
+                volume->setMetaDataValue<StringMetaData>(MEMBER_NAME, member);
 
                 volumeData[fieldName] = volumeHandle.get();
 
@@ -271,7 +268,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
             // Calculate duration the current timeStep is valid.
             // Note that the last time step has a duration of 0.
             if (!timeSteps.empty())
-                duration = time - timeSteps.rend()->getTime();
+                duration = time - timeSteps.back().getTime();
 
             timeSteps.emplace_back(TimeStep{volumeData, time, duration});
 

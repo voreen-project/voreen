@@ -82,7 +82,6 @@ protected:
     }
 
     void process();
-    virtual void initialize();
     virtual void deinitialize();
 
     virtual void deserialize(Deserializer& s);

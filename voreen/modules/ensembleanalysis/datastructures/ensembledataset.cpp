@@ -31,6 +31,10 @@
 #include "voreen/core/io/volumeserializer.h"
 #include "voreen/core/io/volumeserializerpopulator.h"
 
+#ifdef VRN_MODULE_HDF5
+#include "modules/hdf5/io/hdf5volumereader.h"
+#endif
+
 namespace voreen {
 
 //////////// Time Step
@@ -81,7 +85,12 @@ const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
     }
 
     // If not available, load it using the stored url.
-    const VolumeBase* volume = VolumeSerializerPopulator().getVolumeSerializer()->read(url);
+    VolumeReader* reader = EnsembleDataset::getVolumeReader(url.getPath());
+    if (!reader) {
+        return nullptr;
+    }
+
+    const VolumeBase* volume = reader->read(url);
     if(!volume) {
         return nullptr;
     }
@@ -659,6 +668,26 @@ void EnsembleDataset::deserialize(Deserializer& s) {
 
     s.deserialize("bounds", bounds_);
     s.deserialize("commonBounds", commonBounds_);
+}
+
+VolumeReader* EnsembleDataset::getVolumeReader(const std::string& path) {
+
+#ifdef VRN_MODULE_HDF5
+    // For HDF5 files we first try to use the multi-channel reader.
+    std::string ext = tgt::FileSystem::fileExtension(path);
+    if (ext == "h5" || ext == "hdf5") {
+        static HDF5VolumeReaderOriginal hdf5Reader;
+        return &hdf5Reader;
+    }
+#endif
+    
+    try {
+        return VolumeSerializerPopulator().getVolumeSerializer()->getReaders(path).front();
+    }
+    catch (tgt::UnsupportedFormatException&) {
+    }
+
+    return nullptr;
 }
 
 }   // namespace
