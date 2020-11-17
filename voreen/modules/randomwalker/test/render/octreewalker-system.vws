@@ -6,13 +6,18 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="SliceViewer" ref="ref19" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
                     <transform.row0 x="0.39685088396072388" y="0" z="0" />
                     <transform.row1 x="0" y="0.39685088396072388" z="0" />
                     <transform.row2 x="7676.314453125" y="-4512.15673828125" z="1" />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-394.074371338" y="814.865661621" />
+                    <value x="-230.433334351" y="325.612304688" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.598871708" />
             </MetaData>
@@ -20,7 +25,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref42">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-331" y="1110" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="409" y="200" width="750" height="700" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-1116" y="240" width="750" height="700" />
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
                             <value x="105" y="226" />
@@ -30,7 +35,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="409" y="200" />
+                            <value x="-1116" y="240" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="750" y="700" />
@@ -356,7 +361,7 @@
                         <Property mapKey="renderSliceBoundaries" name="renderSliceBoundaries" value="true" />
                         <Property mapKey="resetViewButton" name="resetViewButton" />
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
-                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
+                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="false" />
                         <Property mapKey="showCursorInformation" name="showCursorInformation" value="never" />
                         <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="yz-plane" id="ref95" />
@@ -1378,7 +1383,7 @@ void main() {
                         <Property mapKey="renderSliceBoundaries" name="renderSliceBoundaries" value="true" />
                         <Property mapKey="resetViewButton" name="resetViewButton" />
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
-                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
+                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="false" />
                         <Property mapKey="showCursorInformation" name="showCursorInformation" value="never" />
                         <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref103" />
@@ -2605,7 +2610,7 @@ void main() {
                 </Processor>
                 <Processor type="SliceViewer" name="Slice2D (Z)" id="ref27">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="357" y="-120" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="355" y="-120" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
@@ -2644,7 +2649,7 @@ void main() {
                         <Property mapKey="renderSliceBoundaries" name="renderSliceBoundaries" value="true" />
                         <Property mapKey="resetViewButton" name="resetViewButton" />
                         <Property mapKey="resetchannelshift" name="resetchannelshift" />
-                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
+                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="false" />
                         <Property mapKey="showCursorInformation" name="showCursorInformation" value="never" />
                         <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" id="ref107" />
@@ -4810,7 +4815,7 @@ void main() {
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="progressMessage" name="progressMessage" value="Octree loaded from cache." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 234 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 119 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="3" />
@@ -4859,10 +4864,10 @@ void main() {
                 </Processor>
                 <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" id="ref10">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-139" y="179" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-137" y="179" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="betaBias" name="betaBias" value="0" tracking="false" />
+                        <Property mapKey="betaBias" name="betaBias" value="5" tracking="false" />
                         <Property mapKey="clearResult" name="clearResult" />
                         <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCPU" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
@@ -4884,7 +4889,7 @@ void main() {
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 6.750 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.261 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
