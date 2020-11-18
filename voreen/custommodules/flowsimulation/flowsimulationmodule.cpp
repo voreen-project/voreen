@@ -42,6 +42,7 @@
 #include "processors/simulation/flowsimulationgeometry.h"
 #include "processors/volume/flowtestdatagenerator.h"
 #include "processors/volume/phaseunwrapping.h"
+#include "processors/volume/volumeapplyrealworldmapping.h"
 #include "processors/volume/volumelistadapter.h"
 #include "processors/volume/volumelistaggregate.h"
 #include "processors/volume/volumelistmultichanneladapter.h"
@@ -88,6 +89,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowSimulationGeometry());
     registerSerializableType(new FlowTestDataGenerator());
     registerSerializableType(new PhaseUnwrapping());
+    registerSerializableType(new VolumeApplyRealWorldMapping());
     registerSerializableType(new VolumeListAdapter());
     registerSerializableType(new VolumeListAggregate());
     registerSerializableType(new VolumeListMultiChannelAdapter());

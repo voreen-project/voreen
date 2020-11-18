@@ -40,6 +40,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.cpp
     ${MOD_DIR}/processors/volume/phaseunwrapping.cpp
+    ${MOD_DIR}/processors/volume/volumeapplyrealworldmapping.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistaggregate.cpp
     ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.cpp
@@ -76,6 +77,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.h
     ${MOD_DIR}/processors/volume/phaseunwrapping.h
+    ${MOD_DIR}/processors/volume/volumeapplyrealworldmapping.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistaggregate.h
     ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.h
