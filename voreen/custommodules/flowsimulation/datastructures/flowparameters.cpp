@@ -85,9 +85,7 @@ bool VelocityCurve::isPeriodic() const {
 float VelocityCurve::getMinVelocity() const {
     float min = peakVelocities_.begin()->second;
     for(auto iter = ++peakVelocities_.begin(); iter != peakVelocities_.end(); iter++) {
-        if(iter->second < min) {
-            min = iter->second;
-        }
+        min = std::min(iter->second, min);
     }
     return min;
 }
@@ -95,9 +93,7 @@ float VelocityCurve::getMinVelocity() const {
 float VelocityCurve::getMaxVelocity() const {
     float max = peakVelocities_.begin()->second;
     for(auto iter = ++peakVelocities_.begin(); iter != peakVelocities_.end(); iter++) {
-        if(iter->second > max) {
-            max = iter->second;
-        }
+        max = std::max(iter->second, max);
     }
     return max;
 }

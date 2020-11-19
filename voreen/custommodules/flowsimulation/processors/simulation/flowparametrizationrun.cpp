@@ -85,6 +85,7 @@ FlowParametrizationRun::FlowParametrizationRun()
         characteristicVelocity_.setGroupID("parameters");
     addProperty(fluid_);
         ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
+        fluid_.addOption("arbitrary", "Arbitrary", FLUID_ARBITRARY);
         fluid_.addOption("water", "Water", FLUID_WATER);
         fluid_.addOption("blood", "Blood", FLUID_BLOOD);
         fluid_.setGroupID("parameters");
@@ -127,6 +128,14 @@ FlowParametrizationRun::FlowParametrizationRun()
 
 void FlowParametrizationRun::fluidChanged() {
     switch(fluid_.getValue()) {
+    case FLUID_ARBITRARY:
+        viscosity_.setMinValue(0.1f);
+        viscosity_.setMaxValue(100.0f);
+        viscosity_.set(1.0f);
+        density_.setMinValue(0.1f);
+        density_.setMaxValue(10000.0f);
+        density_.set(1000.0f);
+        break;
     case FLUID_WATER:
         viscosity_.setMinValue(0.79722f);
         viscosity_.setMaxValue(1.35f);

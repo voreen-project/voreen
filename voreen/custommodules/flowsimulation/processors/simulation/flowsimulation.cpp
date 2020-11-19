@@ -272,6 +272,16 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     singleton::directories().setOutputDir(simulationResultPath);
 
     const int N = parameters.getSpatialResolution();
+#if 0 // Adapted from aorta3d.
+    UnitConverter<T, DESCRIPTOR> converter(
+            (T) parameters.getCharacteristicLength() / N,
+            (T) parameters.getCharacteristicLength() / (N * 20),
+            (T) parameters.getCharacteristicLength(),
+            (T) parameters.getCharacteristicVelocity(),
+            (T) parameters.getViscosity() / parameters.getDensity(),
+            (T) parameters.getDensity()
+    );
+#else // Sophisticated, the way it's taught in literature.
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
             (T) N, // Resolution that charPhysLength is resolved by.
             (T) parameters.getRelaxationTime(), // Relaxation time
@@ -280,6 +290,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             (T) parameters.getViscosity() / parameters.getDensity(),        // physViscosity: physical kinematic viscosity in __m^2 / s__
             (T) parameters.getDensity()                                             // physDensity: physical density in __kg / m^3__
     );
+#endif
     // Prints the converter log as console output
     converter.print();
 
@@ -354,7 +365,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             break;
         }
 
-        // Check for convergence.
+        // === 8th Step: Check for convergence.
         converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);
         if(converge.hasConverged()) {
             LINFO("Simulation converged!");
@@ -403,9 +414,12 @@ void FlowSimulation::prepareGeometry( UnitConverter<T,DESCRIPTOR> const& convert
         superGeometry.rename(MAT_WALL, flowIndicators[i].id_, MAT_FLUID, layerFlow);
         superGeometry.rename(MAT_FLUID, flowIndicators[i].id_,  layerFlow);
 
-        // Exclude area behind inlet - it will otherwise cause instable simulations.
-        if(flowIndicators[i].type_ == FIT_VELOCITY) {
-            center -= normal * (converter.getConversionFactorLength() * 2);
+        // Exclude area behind inlet and in front of outlet - it will otherwise cause unstable simulations.
+        bool isInlet = flowIndicators[i].type_ == FIT_VELOCITY;
+        bool isOutlet = flowIndicators[i].type_ == FIT_PRESSURE;
+        if(isInlet || isOutlet) {
+            T sign = isInlet ? T(-1) : T(1);
+            center += sign * normal * (converter.getConversionFactorLength() * 2);
             IndicatorCircle3D<T> capFlow(center[0], center[1], center[2],
                                          normal[0], normal[1], normal[2],
                                          radius);
@@ -537,9 +551,9 @@ void FlowSimulation::setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             switch(indicator.flowProfile_) {
             case FP_POISEUILLE:
             {
-//                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
-                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
+                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
+//                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+//                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
                 applyFlowProfile(profile);
                 break;
             }

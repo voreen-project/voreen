@@ -45,7 +45,7 @@ const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.Ensemb
 EnsembleDataSource::EnsembleDataSource()
     : Processor()
     , outport_(Port::OUTPORT, "ensembledataset", "EnsembleDataset Output", false)
-    , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_PATH)
+    , ensemblePath_("ensemblepath", "Ensemble Path", "Select Ensemble root folder", "", "", FileDialogProperty::DIRECTORY, Processor::VALID)
     , loadingStrategy_("loadingStrategy", "Loading Strategy", Processor::VALID)
     , loadDatasetButton_("loadDataset", "Load Dataset")
     , memberProgress_("memberProgress", "Members loaded")
@@ -59,6 +59,11 @@ EnsembleDataSource::EnsembleDataSource()
 {
     addPort(outport_);
     addProperty(ensemblePath_);
+    ON_CHANGE_LAMBDA(ensemblePath_, [this] {
+        if(ensemblePath_.isFileWatchEnabled()) {
+            buildEnsembleDataset();
+        }
+    });
     addProperty(loadingStrategy_);
     loadingStrategy_.addOption("manual", "Manual");
     loadingStrategy_.addOption("full", "Full");
@@ -101,14 +106,7 @@ Processor* EnsembleDataSource::create() const {
 }
 
 void EnsembleDataSource::process() {
-
-    // Reload whole ensemble, if file watching was enabled and some file changed.
-    if(invalidationLevel_ >= INVALID_PATH && ensemblePath_.isFileWatchEnabled()) {
-        buildEnsembleDataset();
-    }
-
     // Just set the data, because connecting another port would require to reload the data otherwise.
-    // This also enables file watching.
     outport_.setData(output_.get(), false);
 }
 
@@ -265,10 +263,12 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 volumes_.push_back(std::move(volumeHandle));
             }
 
-            // Calculate duration the current timeStep is valid.
+            // Calculate duration of the current timeStep.
             // Note that the last time step has a duration of 0.
-            if (!timeSteps.empty())
+            // TODO: duration might change after sorting step.
+            if (!timeSteps.empty()) {
                 duration = time - timeSteps.back().getTime();
+            }
 
             timeSteps.emplace_back(TimeStep{volumeData, time, duration});
 
@@ -282,16 +282,14 @@ void EnsembleDataSource::buildEnsembleDataset() {
         };
         std::stable_sort(timeSteps.begin(), timeSteps.end(), timeStepCompare);
 
-        std::vector<TimeStep> timeStepsVec(std::make_move_iterator(timeSteps.begin()), std::make_move_iterator(timeSteps.end()));
-
         // Update overview table.
         std::vector<std::string> row(5);
         row[0] = member; // Name
         row[1] = std::to_string(timeSteps.size()); // Num Time Steps
         if (!timeSteps.empty()) {
-            row[2] = std::to_string(timeStepsVec.front().getTime()); // Start time
-            row[3] = std::to_string(timeStepsVec.back().getTime()); // End time
-            row[4] = std::to_string(timeStepsVec.back().getTime() - timeStepsVec.front().getTime()); // Duration
+            row[2] = std::to_string(timeSteps.front().getTime()); // Start time
+            row[3] = std::to_string(timeSteps.back().getTime()); // End time
+            row[4] = std::to_string(timeSteps.back().getTime() - timeSteps.front().getTime()); // Duration
         }
         else {
             row[2] = row[3] = row[4] = "N/A";
@@ -300,7 +298,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
         // Update dataset.
         tgt::Color color = *colorIter;
-        dataset->addMember({member, color.xyz(), timeStepsVec});
+        dataset->addMember({member, color.xyz(), timeSteps});
         ++colorIter;
 
         // Update progress bar.

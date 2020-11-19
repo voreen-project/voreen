@@ -240,11 +240,14 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter, IndicatorF3D
 
         // Rename both, wall and fluid, since the indicator might also be inside the fluid domain.
         superGeometry.rename(MAT_WALL, id, MAT_FLUID, layerFlow);
-        superGeometry.rename(MAT_FLUID, id,  layerFlow);
+        superGeometry.rename(MAT_FLUID, id, layerFlow);
 
-        // Exclude area behind inlet - it will otherwise cause instable simulations.
-        if(flowIndicators[i].type_ == FIT_VELOCITY) {
-            center -= normal * (converter.getConversionFactorLength() * 2);
+        // Exclude area behind inlet - it will otherwise cause unstable simulations.
+        bool isInlet = flowIndicators[i].type_ == FIT_VELOCITY;
+        bool isOutlet = flowIndicators[i].type_ == FIT_PRESSURE;
+        if(isInlet || isOutlet) {
+            T sign = isInlet ? T(-1) : T(1);
+            center = sign * normal * (converter.getConversionFactorLength() * 2);
             IndicatorCircle3D<T> capFlow(center[0], center[1], center[2],
                                          normal[0], normal[1], normal[2],
                                          radius);
@@ -368,9 +371,9 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
             switch(indicator.flowProfile_) {
             case FP_POISEUILLE:
             {
-//                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
-                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
+                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
+//                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+//                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
                 applyFlowProfile(profile);
                 break;
             }
@@ -748,6 +751,16 @@ int main(int argc, char* argv[]) {
     // TODO: implement measured data support!
 
     const int N = spatialResolution;
+#if 0 // Adapted from aorta3d.
+    UnitConverter<T, DESCRIPTOR> converter(
+            (T) characteristicLength / N,
+            (T) characteristicLength / (N * 20),
+            (T) characteristicLength,
+            (T) characteristicVelocity,
+            (T) viscosity / density,
+            (T) density
+    );
+#else // Sophisticated, the way it's taught in literature.
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
             (T) N,                      // Resolution that charPhysLength is resolved by.
             (T) relaxationTime,         // Relaxation time
@@ -756,6 +769,7 @@ int main(int argc, char* argv[]) {
             (T) viscosity / density,    // physViscosity: physical kinematic viscosity in __m^2 / s__
             (T) density                 // physDensity: physical density in __kg / m^3__
     );
+#endif
     // Prints the converter log as console output
     converter.print();
     // Writes the converter log in a file

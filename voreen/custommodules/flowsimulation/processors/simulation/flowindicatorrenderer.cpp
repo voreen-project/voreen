@@ -106,7 +106,7 @@ void FlowIndicatorRenderer::render() {
         }
         else if(indicator.type_ == FIT_PRESSURE) {
             IMode.color(pressureBoundaryColor_.get());
-            diskGeometry_->render();
+            coneGeometry_->render();
         }
         else if(indicator.type_ == FIT_MEASURE) {
             IMode.color(measureFluxColor_.get());

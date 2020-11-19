@@ -42,12 +42,7 @@ Histogram1D createHistogram1DFromVolume(const VolumeBase* handle, size_t bucketC
     VolumeMinMax* volumeMinMax = 0;
     while(!volumeMinMax) {
         volumeMinMax = handle->getDerivedData<VolumeMinMax>();
-        try {
-            boost::this_thread::sleep(boost::posix_time::seconds(0));
-        }
-        catch(boost::thread_interrupted&) {
-            throw boost::thread_interrupted();
-        }
+        boost::this_thread::interruption_point();
     }
 
     tgtAssert(volumeMinMax, "null pointer in volume min max derived data");
@@ -87,13 +82,7 @@ VRN_CORE_API Histogram1D createHistogram1DFromVolume(const VolumeBase* handle, s
     tgt::svec3 dims = handle->getDimensions();
     tgt::svec3 pos;
     for (pos.z = 0; pos.z < dims.z; ++pos.z) {
-        try {
-            boost::this_thread::sleep(boost::posix_time::seconds(0));
-        }
-        catch(boost::thread_interrupted&)
-        {
-            throw boost::thread_interrupted();
-        }
+        boost::this_thread::interruption_point();
 
         if (volumeRam) {
             // access volume data in RAM directly

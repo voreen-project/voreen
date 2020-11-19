@@ -63,6 +63,7 @@ protected:
 private:
 
     enum Fluid {
+        FLUID_ARBITRARY,
         FLUID_WATER,
         FLUID_BLOOD,
     };

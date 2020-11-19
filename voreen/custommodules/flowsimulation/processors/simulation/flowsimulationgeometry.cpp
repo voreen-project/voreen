@@ -48,18 +48,19 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     addPort(geometryPort_);
 
     addProperty(geometryType_);
-    geometryType_.addOption("channel", "Channel", FSGT_CHANNEL);
-    geometryType_.addOption("cylinder", "Cylinder", FSGT_CYLINDER);
-    geometryType_.addOption("narrowing", "Narrowing", FSGT_NARROWING);
     ON_CHANGE_LAMBDA(geometryType_, [this] {
         ratio_.setReadOnlyFlag(geometryType_.getValue() != FSGT_NARROWING);
     })
+    geometryType_.addOption("channel", "Channel", FSGT_CHANNEL);
+    geometryType_.addOption("cylinder", "Cylinder", FSGT_CYLINDER);
+    geometryType_.addOption("narrowing", "Narrowing", FSGT_NARROWING);
+
     addProperty(ratio_);
     addProperty(length_);
     addProperty(transformation_);
     addProperty(flowProfile_);
-    flowProfile_.addOption("poiseuille", "POISEUILLE", FlowProfile::FP_POISEUILLE);
-    flowProfile_.addOption("powerlaw", "POWERLAW", FlowProfile::FP_POWERLAW);
+    flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
+    flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
     //flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
     addProperty(inflowVelocity_);
 }
