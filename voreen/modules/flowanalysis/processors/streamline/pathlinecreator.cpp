@@ -164,20 +164,20 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
     VolumeRAMRepresentationLock reference(referenceVolume);
 
     const tgt::mat4 worldToVoxelMatrix = referenceVolume->getPhysicalToVoxelMatrix();
-    const tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
+    tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
     RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
     rwm.setScale(rwm.getScale() * velocityUnitConversion_.getValue()); // Now we have mm/s.
     SpatialSampler sampler(*reference, rwm, filterMode_.getValue(), worldToVoxelMatrix);
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
 
-    std::list<Streamline> pathlines;
     auto seedMask = seedMask_.getData();
+    std::vector<tgt::vec3> seedPoints;
+    seedPoints.reserve(numSeedPoints_.get());
     if (seedMask) {
-        tgt::Bounds roiBounds = roi;
         tgt::Bounds seedMaskBounds = seedMask->getBoundingBox().getBoundingBox();
 
-        roiBounds.intersectVolume(seedMaskBounds);
-        if(!roiBounds.isDefined()) {
+        roi.intersectVolume(seedMaskBounds);
+        if(!roi.isDefined()) {
             throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
         }
 
@@ -188,50 +188,47 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
+        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
         tgt::svec3 dim = seedMaskLock->getDimensions();
-        std::vector<tgt::vec3> maskVoxels;
         for(size_t z=0; z < dim.z; z++) {
             for(size_t y=0; y < dim.y; y++) {
                 for(size_t x=0; x < dim.x; x++) {
                     if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
-                        maskVoxels.emplace_back(tgt::vec3(x, y, z));
+                        tgt::vec3 pos = seedMaskVoxelToWorldMatrix * tgt::vec3(x, y, z);
+                        if(roi.containsPoint(pos)) {
+                            seedPoints.emplace_back(worldToVoxelMatrix * pos);
+                        }
                     }
                 }
             }
         }
 
-        if (maskVoxels.empty()) {
+        if (seedPoints.empty()) {
             throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
         }
 
-        // If we have more seed mask voxel than we want to have seed points, reduce the list size.
-        float probability = static_cast<float>(numSeedPoints) / maskVoxels.size();
-        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
-        for (const tgt::vec3& seedPoint : maskVoxels) {
-            // Determine for each seed point, if we will keep it.
-            if (probability >= 1.0f || rnd() < probability) {
-                tgt::vec3 position = seedMaskVoxelToWorldMatrix * seedPoint;
-                tgt::vec3 velocity = sampler.sample(position);
+        std::shuffle(seedPoints.begin(), seedPoints.end(), std::mt19937(seedTime_.get()));
+        seedPoints.resize(std::min(seedPoints.size(), numSeedPoints));
 
-                Streamline pathline;
-                pathline.addElementAtEnd(Streamline::StreamlineElement(position, velocity));
-                pathlines.push_back(pathline);
-            }
-        }
-
-        LINFO("Restricting seed points to volume mask using " << pathlines.size() << " seeds");
+        LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
     }
     else  {
         // Without a seed mask, we uniformly sample the whole space enclosed by the roi.
         for (size_t k = 0; k < numSeedPoints; k++) {
-            tgt::vec3 position(rnd(), rnd(), rnd());
-            position = roi.getLLF() + position * roi.diagonal();
-            tgt::vec3 velocity = sampler.sample(position);
-
-            Streamline pathline;
-            pathline.addElementAtEnd(Streamline::StreamlineElement(position, velocity));
-            pathlines.push_back(pathline);
+            tgt::vec3 seedPoint;
+            seedPoint = tgt::vec3(rnd(), rnd(), rnd());
+            seedPoint = roi.getLLF() + seedPoint * roi.diagonal();
+            seedPoints.push_back(worldToVoxelMatrix * seedPoint);
         }
+    }
+
+    std::list<Streamline> pathlines;
+    for (const tgt::vec3& seedPoint : seedPoints) {
+        tgt::vec3 velocity = sampler.sample(seedPoint);
+
+        Streamline pathline;
+        pathline.addElementAtEnd(Streamline::StreamlineElement(seedPoint, velocity));
+        pathlines.push_back(pathline);
     }
 
     if (pathlines.empty()) {

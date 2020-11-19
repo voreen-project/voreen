@@ -171,8 +171,6 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     if (!ensemble)
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
 
-    tgt::Bounds bounds = ensemble->getCommonBounds();
-
     for(const std::string& fieldName : ensemble->getCommonFieldNames()) {
         size_t numChannels = ensemble->getNumChannels(fieldName);
         if(numChannels != 1 && numChannels != 3) {
@@ -184,16 +182,14 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
     std::function<float()> rnd(
             std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
+    tgt::Bounds bounds = ensemble->getCommonBounds();
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
     std::vector<tgt::vec3> seedPoints;
     seedPoints.reserve(numSeedPoints);
     if (seedMask) {
-        tgt::Bounds roiBounds = bounds;
-        tgt::Bounds seedMaskBounds = seedMask->getBoundingBox().getBoundingBox();
-
-        roiBounds.intersectVolume(seedMaskBounds);
-        if(!roiBounds.isDefined()) {
+        bounds.intersectVolume(seedMask->getBoundingBox().getBoundingBox());
+        if(!bounds.isDefined()) {
             throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
         }
 
@@ -204,31 +200,27 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
+        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
         tgt::svec3 dim = seedMaskLock->getDimensions();
-        std::vector<tgt::vec3> maskVoxels;
         for(size_t z=0; z < dim.z; z++) {
             for(size_t y=0; y < dim.y; y++) {
                 for(size_t x=0; x < dim.x; x++) {
                     if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
-                        maskVoxels.emplace_back(tgt::vec3(x, y, z));
+                        tgt::vec3 pos = seedMaskVoxelToWorldMatrix * tgt::vec3(x, y, z);
+                        if(bounds.containsPoint(pos)) {
+                            seedPoints.emplace_back(pos);
+                        }
                     }
                 }
             }
         }
 
-        if (maskVoxels.empty()) {
+        if (seedPoints.empty()) {
             throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
         }
 
-        // If we have more seed mask voxel than we want to have seed points, reduce the list size.
-        float probability = static_cast<float>(numSeedPoints) / maskVoxels.size();
-        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
-        for(const tgt::vec3& seedPoint : maskVoxels) {
-            // Determine for each seed point, if we will keep it.
-            if(probability >= 1.0f || rnd() < probability) {
-                seedPoints.push_back(seedMaskVoxelToWorldMatrix * seedPoint);
-            }
-        }
+        std::shuffle(seedPoints.begin(), seedPoints.end(), std::mt19937(seedTime_.get()));
+        seedPoints.resize(std::min(seedPoints.size(), numSeedPoints));
 
         LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
     }
@@ -324,11 +316,11 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
             flagStorage.reset(new DiskArrayStorage<float>(tmpPath));
 #endif
 
-            SubtaskProgressReporter runProgressReporter(progress,tgt::vec2(fi, 0.7f * (fi + 1)) / tgt::vec2(fieldNames.size()));
+            SubtaskProgressReporter memberProgressReporter(progress, tgt::vec2(fi, 0.7f * (fi + 1)) / tgt::vec2(fieldNames.size()));
             float progressPerTimeStep = 1.0f / (input.ensemble->getTotalNumTimeSteps());
             size_t index = 0;
-            for (const EnsembleMember& run : input.ensemble->getMembers()) {
-                for (const TimeStep& timeStep : run.getTimeSteps()) {
+            for (const EnsembleMember& member : input.ensemble->getMembers()) {
+                for (const TimeStep& timeStep : member.getTimeSteps()) {
 
                     const VolumeBase* volume = timeStep.getVolume(fieldName);
                     tgt::mat4 worldToVoxelMatrix = volume->getWorldToVoxelMatrix();
@@ -338,7 +330,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     for (const tgt::vec3& seedPoint : seedPoints) {
                         tgt::vec3 pos = worldToVoxelMatrix * seedPoint;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            float value = lock->getVoxelNormalized(pos, channel);
+                            float value = lock->getVoxelNormalizedLinear(pos, channel);
                             value = rwm.normalizedToRealWorld(value);
 
 #ifdef USE_MEMORY_MAPPED_FILES
@@ -350,7 +342,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     }
 
                     // Update progress.
-                    runProgressReporter.setProgress(index * progressPerTimeStep);
+                    memberProgressReporter.setProgress(index * progressPerTimeStep);
                     index++;
                 }
             }

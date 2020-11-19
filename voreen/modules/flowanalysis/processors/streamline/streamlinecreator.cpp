@@ -135,19 +135,16 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
     // Set up random generator.
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
-    const tgt::mat4 physicalToVoxelMatrix = flowVolume->getPhysicalToVoxelMatrix();
-    const tgt::Bounds roi = flowVolume->getBoundingBox(false).getBoundingBox(false);
+    tgt::mat4 worldToVoxelMatrix = flowVolume->getWorldToVoxelMatrix();
+    tgt::Bounds roi = flowVolume->getBoundingBox().getBoundingBox();
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
 
     auto seedMask = seedMask_.getData();
     std::vector<tgt::vec3> seedPoints;
     seedPoints.reserve(numSeedPoints_.get());
     if (seedMask) {
-        tgt::Bounds roiBounds = roi;
-        tgt::Bounds seedMaskBounds = seedMask->getBoundingBox(false).getBoundingBox(false);
-
-        roiBounds.intersectVolume(seedMaskBounds);
-        if(!roiBounds.isDefined()) {
+        roi.intersectVolume(seedMask->getBoundingBox().getBoundingBox());
+        if(!roi.isDefined()) {
             throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
         }
 
@@ -158,31 +155,27 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
             throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
         }
 
+        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
         tgt::svec3 dim = seedMaskLock->getDimensions();
-        std::vector<tgt::vec3> maskVoxels;
         for(size_t z=0; z < dim.z; z++) {
             for(size_t y=0; y < dim.y; y++) {
                 for(size_t x=0; x < dim.x; x++) {
                     if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
-                        maskVoxels.emplace_back(tgt::vec3(x, y, z));
+                        tgt::vec3 pos = seedMaskVoxelToWorldMatrix * tgt::vec3(x, y, z);
+                        if(roi.containsPoint(pos)) {
+                            seedPoints.emplace_back(worldToVoxelMatrix * pos);
+                        }
                     }
                 }
             }
         }
 
-        if (maskVoxels.empty()) {
+        if (seedPoints.empty()) {
             throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
         }
 
-        // If we have more seed mask voxel than we want to have seed points, reduce the list size.
-        float probability = static_cast<float>(numSeedPoints) / maskVoxels.size();
-        tgt::mat4 seedMaskVoxelToPhysicalMatrix = seedMask->getVoxelToPhysicalMatrix();
-        for(const tgt::vec3& seedPoint : maskVoxels) {
-            // Determine for each seed point, if we will keep it.
-            if(probability >= 1.0f || rnd() < probability) {
-                seedPoints.push_back(physicalToVoxelMatrix * (seedMaskVoxelToPhysicalMatrix * seedPoint));
-            }
-        }
+        std::shuffle(seedPoints.begin(), seedPoints.end(), std::mt19937(seedTime_.get()));
+        seedPoints.resize(std::min(seedPoints.size(), numSeedPoints));
 
         LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
     }
@@ -192,7 +185,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
             tgt::vec3 seedPoint;
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
             seedPoint = roi.getLLF() + seedPoint * roi.diagonal();
-            seedPoints.push_back(physicalToVoxelMatrix * seedPoint);
+            seedPoints.push_back(worldToVoxelMatrix * seedPoint);
         }
     }
 
