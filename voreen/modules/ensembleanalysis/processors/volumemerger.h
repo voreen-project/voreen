@@ -35,8 +35,8 @@
 namespace voreen {
 
 struct VolumeMergerComputeInput {
-    const VolumeList* inputVolumes;
-    size_t padding_;
+    PortDataPointer<VolumeList> inputVolumes;
+    int padding_;
     std::unique_ptr<Volume> outputVolume;
 };
 
@@ -45,7 +45,9 @@ struct VolumeMergerComputeOutput{
 };
 
 /**
- *
+ * This processor merges a list of volumes with identical spacing and number of channels into a single one.
+ * E.g. some simulations frameworks like OpenLB distribute their calculations to multiple nodes.
+ * Using this processors allows to combine the result to a single volume.
  */
 class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
 public:
@@ -59,7 +61,10 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Merges incoming volumes into a single one. No overlap allowed");
+        setDescription("This processor merges a list of volumes with identical spacing and number of channels into a single one.\n"
+                       "E.g. some simulations frameworks like OpenLB distribute their calculations to multiple nodes.\n"
+                       "Using this processors allows to combine the result to a single volume.");
+
     }
 
     virtual ComputeInput prepareComputeInput();
