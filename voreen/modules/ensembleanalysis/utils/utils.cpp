@@ -25,7 +25,33 @@
 
 #include "utils.h"
 
+#include "voreen/core/io/volumeserializer.h"
+
+#ifdef VRN_MODULE_HDF5
+#include "modules/hdf5/io/hdf5volumereader.h"
+#endif
+
 namespace voreen {
+
+VolumeReader* EnsembleVolumeReaderPopulator::getVolumeReader(const std::string& path) const {
+
+#ifdef VRN_MODULE_HDF5
+    // For HDF5 files we first try to use the multi-channel reader.
+    std::string ext = tgt::FileSystem::fileExtension(path);
+    if (ext == "h5" || ext == "hdf5") {
+        static HDF5VolumeReaderOriginal hdf5Reader;
+        return &hdf5Reader;
+    }
+#endif
+
+    try {
+        return volumeSerializerPopulator_.getVolumeSerializer()->getReaders(path).front();
+    }
+    catch (tgt::UnsupportedFormatException&) {
+    }
+
+    return nullptr;
+}
 
 }
 

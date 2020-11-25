@@ -25,13 +25,10 @@
 
 #include "ensembledatasource.h"
 
-#include "voreen/core/datastructures/volume/volumelist.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/io/volumereader.h"
-#include "voreen/core/io/volumeserializer.h"
 
-#include "../datastructures/ensembledataset.h"
 #include "../utils/ensemblehash.h"
+#include "../utils/utils.h"
 
 namespace voreen {
 
@@ -172,7 +169,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
     std::vector<std::string> members = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
     float progressPerMember = 1.0f / members.size();
 
-    VolumeSerializerPopulator populator;
+    EnsembleVolumeReaderPopulator populator;
     ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(members.size());
 
     for(const std::string& member : members) {
@@ -193,7 +190,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
             std::string url = memberPath + "/" + fileName;
 
-            VolumeReader* reader = EnsembleDataset::getVolumeReader(url);
+            VolumeReader* reader = populator.getVolumeReader(url);
             if (!reader) {
                 LERROR("No suitable reader found for " << fileName);
                 continue;

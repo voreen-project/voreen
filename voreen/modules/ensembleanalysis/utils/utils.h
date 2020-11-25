@@ -27,13 +27,35 @@
 #define VRN_ENSEMBLE_UTILS_H
 
 #include "voreen/core/voreencoreapi.h"
-
+#include "voreen/core/io/volumeserializerpopulator.h"
 #include "../datastructures/ensembledataset.h"
 
 #include <vector>
 #include <map>
 
 namespace voreen {
+
+/**
+ * Simple helper class for loading volumes as part of an ensemble.
+ * Basically wraps a VolumeSerializerPopulator and allows to incorporate custom readers.
+ */
+class EnsembleVolumeReaderPopulator {
+public:
+
+    /**
+     * Returns a volume reader for the given url or nullptr, if no suitable reader was found.
+     * This function can be used to incorporate custom readers, if desired.
+     * E.g. multi-channel volumes stored in HDF5 files will not be split into multiple volumes using this function.
+     * @note EnsembleVolumeReaderPopulator own the returned reader!
+     * @see TimeStep
+     * @see EnsembleDataSource
+     */
+    VolumeReader* getVolumeReader(const std::string& path) const;
+
+private:
+    VolumeSerializerPopulator volumeSerializerPopulator_;
+};
+
 
 /**
  * Utility function mapping a value within range A to the equivalent value in range B.
