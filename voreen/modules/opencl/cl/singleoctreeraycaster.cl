@@ -73,6 +73,7 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         // current node information
         OctreeNode currentNode[OCTREE_NUMCHANNELS_DEF];                     ///< current octree node (per channel)
+        uint currentNodeLevel[OCTREE_NUMCHANNELS_DEF];                      ///< level of the current (fetched) node (per channel)
         float3 currentNodeDimRec[OCTREE_NUMCHANNELS_DEF];                   ///< reciproke dimension of current node in texture coordinates
         bool currentNodeHasBrick[OCTREE_NUMCHANNELS_DEF];                   ///< does current node have a brick?
         __global const ushort* currentBrick[OCTREE_NUMCHANNELS_DEF];        ///< brick of current node (uint16_t)
@@ -112,7 +113,8 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
                     float tSamplingStepSizeNode;
                     currentNode[ch] = fetchNextRayNode(sample[ch], ray->param, direction, samplingStepSize,
                                         nodeLevelOfDetail, nodeBuffer, brickBuffer, brickFlagBuffer,
-                                        &tEndCurrentNode[ch], &tSamplingStepSizeNode, &currentNodeHasBrick[ch], &currentBrick[ch]);
+                                        &tEndCurrentNode[ch], &tSamplingStepSizeNode, &currentNodeHasBrick[ch],
+                                        &currentNodeLevel[ch], &currentBrick[ch]);
                     if (ch == 0) // first channel determines sampling rate
                         samplingStepSizeNode = tSamplingStepSizeNode;
 
@@ -213,6 +215,7 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         // current node information
         OctreeNode currentNode;                     ///< current octree node
+        uint currentNodeLevel;                      ///< level of the current (fetched) octree node
         float3 currentNodeDimRec;                   ///< reciproke dimension of current node in texture coordinates
         bool currentNodeHasBrick = false;           ///< does current node have a brick?
         __global const ushort* currentBrick = 0;    ///< brick of current node (uint16_t)
@@ -241,7 +244,7 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
                     currentNode = fetchNextRayNode(sample, ray->param, direction, samplingStepSize,
                                             nodeLevelOfDetail, nodeBuffer, brickBuffer, brickFlagBuffer,
-                                            &tEndCurrentNode, &samplingStepSizeNode, &currentNodeHasBrick, &currentBrick);
+                                            &tEndCurrentNode, &samplingStepSizeNode, &currentNodeHasBrick, &currentNodeLevel, &currentBrick);
 
             #ifdef DISPLAY_MODE_REFINEMENT
                     //macro define
@@ -368,6 +371,8 @@ __kernel void render( read_only image2d_t entryTex
     ray.channelIntensities[1] = 0.f;
     ray.channelIntensities[2] = 0.f;
     ray.channelIntensities[3] = 0.f;
+
+    ray.level = -1.0f;
 
 // copy channel shifts to array (channel shift is already in voxel coordinates and thus only has to be converted to POT)
 #ifdef APPLY_CHANNEL_SHIFT

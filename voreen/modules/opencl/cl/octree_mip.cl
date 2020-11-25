@@ -66,10 +66,18 @@
  * update max intensities and depth values for each channel
  */
 #define applyTFandCombineColors \
-            for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                if (channelIntensities[ch] > ray->channelIntensities[ch]) {\
+            if ((float)currentNodeLevel > ray->level) {\
+                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
                     ray->channelIntensities[ch] = channelIntensities[ch];\
-                    ray->firsthit = min(ray->firsthit, ray->param);\
+                }\
+                ray->firsthit = ray->param;\
+                ray->level = (float)currentNodeLevel;\
+            } else {\
+                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+                    if (channelIntensities[ch] > ray->channelIntensities[ch]) {\
+                        ray->channelIntensities[ch] = channelIntensities[ch];\
+                        ray->firsthit = min(ray->firsthit, ray->param);\
+                    }\
                 }\
             }
 

@@ -69,13 +69,22 @@
             float4 sampleIntensityColor[OCTREE_NUMCHANNELS_DEF];\
             applyTransFuncs(channelIntensities, transFunc, transFuncDomains, realWorldMapping, sampleIntensityColor);\
 \
-            for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                if (sampleIntensityColor[ch].w > channelColors[ch].w) {\
+            if ((float)currentNodeLevel > ray->level) {\
+                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
                     channelColors[ch] = sampleIntensityColor[ch];\
                     ray->channelIntensities[ch] = channelIntensities[ch];\
-                    ray->firsthit = min(ray->firsthit, ray->param);\
                 }\
-            }\
+                ray->firsthit = ray->param;\
+                ray->level = (float)currentNodeLevel;\
+            } else {\
+                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+                    if (channelIntensities[ch] > ray->channelIntensities[ch]) {\
+                        channelColors[ch] = sampleIntensityColor[ch];\
+                        ray->channelIntensities[ch] = channelIntensities[ch];\
+                        ray->firsthit = min(ray->firsthit, ray->param);\
+                    }\
+                }\
+            }
 
 /**
  * Set final ray color and mark ray as finished
