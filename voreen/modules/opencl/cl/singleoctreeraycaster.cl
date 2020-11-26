@@ -437,7 +437,7 @@ writeRayToBuffer(rayBuffer, fragPos, viewportSize, &ray);
     // MIP/MOP: always output ray result
     bool outputRay = true;
     #ifdef COMPOSITING_MODE_DVR
-    if (ray.param < 1.f)
+    if (ray.param < 1.8f)
         outputRay = false;
     #endif
 
