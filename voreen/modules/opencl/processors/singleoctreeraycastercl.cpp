@@ -1419,7 +1419,7 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for (size_t i=0; i<numBricksToUpload; ++i) {
+    for (long i=0; i<static_cast<long>(numBricksToUpload); ++i) {
         if(end_upload) {
             continue;
         }
