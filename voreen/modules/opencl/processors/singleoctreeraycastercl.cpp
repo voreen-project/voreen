@@ -1186,6 +1186,8 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
         }
     }
 
+    LINFO("Num requested: " << numRequested);
+
     // no bricks requested => keep brick buffer as it is
     if (numRequested == 0) {
         return;
@@ -1376,7 +1378,7 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
     // (see initializeNodeBuffer())
     //
     numBricksToUpload = std::min(numBricksToUpload, numFreeBrickSlots);
-    std::map<uint64_t, size_t> brickAddressToNodeIDMap;
+    std::vector<size_t> brickUploadNodeIds;
     size_t numInserted = 0;
     for (size_t nodeID=0; nodeID<numNodes && numInserted<numBricksToUpload; nodeID++) { //< higher levels come first
         const uint8_t brickFlag = brickFlagBuffer_[nodeID];
@@ -1385,9 +1387,9 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
             const VolumeOctreeNode* node = nodeInfos_[nodeID].node_;
             const size_t nodeLevel = nodeInfos_[nodeID].level_;
             if (node->hasBrick()) {
-                brickAddressToNodeIDMap.insert(std::make_pair(node->getBrickAddress(), nodeID));
+                brickUploadNodeIds.push_back(nodeID);
                 numInserted++;
-                tgtAssert(brickAddressToNodeIDMap.size() == numInserted, "brickAddressToNodeIDMap has invalid size");
+                tgtAssert(brickUploadNodeIds.size() == numInserted, "brickUploadNodeIds has invalid size");
             }
             else {
                 LWARNING("Non existing brick has been requested by GPU: nodeID=" << nodeID);
@@ -1395,7 +1397,7 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
             }
         }
     }
-    tgtAssert(brickAddressToNodeIDMap.size() == numBricksToUpload, "brickAddressToNodeIDMap has invalid size");
+    tgtAssert(brickUploadNodeIds.size() == numBricksToUpload, "brickUploadNodeIds has invalid size");
 
 
     //
@@ -1411,22 +1413,42 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
     size_t nextFreeSlot = 0;    //< next free slot in the main brick buffer
     const int updateTimeLimit = brickUploadTimeLimit_.get(); //< time limit for brick buffer updates
     numBricksUploaded = 0;
+
+    bool end_upload = false;
     //size_t lastRuntime = 0;
-    for (std::map<uint64_t, size_t>::iterator it = brickAddressToNodeIDMap.begin(); it != brickAddressToNodeIDMap.end(); ++it) {
-        const uint64_t brickAddress = it->first;
-        const size_t nodeID = it->second;
-        tgtAssert(brickAddress < (uint64_t)-1, "invalid brick address");
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for (size_t i=0; i<numBricksToUpload; ++i) {
+        if(end_upload) {
+            continue;
+        }
+        const size_t nodeID = brickUploadNodeIds[i];
         tgtAssert(nodeID < numNodes, "invalid node id");
         const NodeInfo nodeInfo = nodeInfos_[nodeID];
         const VolumeOctreeNode* node = nodeInfo.node_;
         tgtAssert(node, "no node");
         tgtAssert(nodeInfo.level_ < treeDepth, "invalid level");
+        size_t thisNextFreeSlot;
+        size_t thisUpdateBufferPos;
 
         // find next free slot in main buffer
-        while (brickSlotUsed[nextFreeSlot])
-            nextFreeSlot++;
-        tgtAssert(updateBufferPos < numBricksToUpload, "invalid update buffer pos");
-        tgtAssert(nextFreeSlot < numBrickBufferSlots_, "invalid next free slot");
+#ifdef VRN_MODULE_OPENMP
+#pragma omp critical
+#endif
+        {
+            while (brickSlotUsed[nextFreeSlot]) {
+                nextFreeSlot++;
+            }
+            thisNextFreeSlot = nextFreeSlot;
+            brickSlotUsed[thisNextFreeSlot] = true;
+
+            thisUpdateBufferPos = updateBufferPos;
+            updateBufferPos++;
+
+        }
+        tgtAssert(thisUpdateBufferPos < numBricksToUpload, "invalid update buffer pos");
+        tgtAssert(thisNextFreeSlot < numBrickBufferSlots_, "invalid next free slot");
 
         // retrieve brick
         const uint16_t* brick = 0;
@@ -1440,29 +1462,33 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
         tgtAssert(brick, "no brick returned (exception expected)");
 
         // copy brick to update buffer and store correspond brick address
-        memcpy(brickUpdateBuffer + updateBufferPos*(brickMemorySize/sizeof(uint16_t)), brick, brickMemorySize);
-        brickUpdateAddressBuffer[updateBufferPos] = static_cast<uint32_t>(nextFreeSlot);
-
-        // update node brick pointer
-        updateNodeBrickPointer(nodeBuffer_[nodeID], true, nextFreeSlot, 0, numChannels);
-        tgtAssert(getNodeBrickPointer(nodeBuffer_[nodeID]) == nextFreeSlot, "node brick pointer not properly stored");
-
-        // add brick to LRU list
-        leastRecentlyUsedBricks_.at(nodeInfo.level_).push_front(LRUEntry(nodeID));
-
-        updateBufferPos++;
-        brickSlotUsed[nextFreeSlot] = true;
-        numSlotsOccupied++;
-        numBricksUploaded++;
+        memcpy(brickUpdateBuffer + thisUpdateBufferPos*(brickMemorySize/sizeof(uint16_t)), brick, brickMemorySize);
 
         octree->releaseNodeBrick(node);
 
-        if (updateTimeLimit > 0 && watch.getRuntime() > updateTimeLimit) {
-            //LWARNING("Break: " << formatTime(watch.getRuntime()) << " (former: " << formatTime(lastRuntime) << ")");
-            break;
+#ifdef VRN_MODULE_OPENMP
+#pragma omp critical
+#endif
+        {
+            brickUpdateAddressBuffer[thisUpdateBufferPos] = static_cast<uint32_t>(thisNextFreeSlot);
+
+            // update node brick pointer
+            updateNodeBrickPointer(nodeBuffer_[nodeID], true, thisNextFreeSlot, 0, numChannels);
+            tgtAssert(getNodeBrickPointer(nodeBuffer_[nodeID]) == thisNextFreeSlot, "node brick pointer not properly stored");
+
+            // add brick to LRU list
+            leastRecentlyUsedBricks_.at(nodeInfo.level_).push_front(LRUEntry(nodeID));
+            numSlotsOccupied++;
+            numBricksUploaded++;
+
+            if (updateTimeLimit > 0 && watch.getRuntime() > updateTimeLimit) {
+                //LWARNING("Break: " << formatTime(watch.getRuntime()) << " (former: " << formatTime(lastRuntime) << ")");
+                end_upload = true;
+            }
         }
         //lastRuntime = watch.getRuntime();
     }
+
     tgtAssert(numBricksUploaded <= numBricksToUpload, "more bricks uploaded than expected");
     tgtAssert(numSlotsOccupied <= numBrickBufferSlots_, "more bricks occupied than slots available");
     updateBufferCreationWatch.stop();
