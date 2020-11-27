@@ -180,13 +180,6 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         } // ray-casting loop
 
-        // Make sure firsthit is in normalized coordinates, i.e., an
-        // interpolation parameter between entry and exit points instead of a
-        // depth in texture coordinates.
-        if(tEnd > 0.0f) {
-            ray->firsthit /= tEnd;
-        }
-
         //macro define
         postRaycastingLoop
     }
@@ -260,8 +253,8 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
             } // channel sampling points
 
             // retrieve sample intensity (for each channel)
-            float channelIntensities[OCTREE_NUMCHANNELS_DEF];
             if (sampleNode) { //always true in dvr
+                float channelIntensities[OCTREE_NUMCHANNELS_DEF];
                 //set intensity zero, if we are outside the volume TODO: optimize
                 if(any(clamp(sample,(float3)(0.f,0.f,0.f),(float3)(1.f,1.f,1.f)) != sample)) {
                     for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++)
@@ -279,6 +272,12 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
                 //macro define
                 applyTFandCombineColors
+
+            #ifdef DISPLAY_MODE_REFINEMENT
+                if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {
+                    ray->color = (float4)(1.0f, 0.0f, 0.0f, 1.0f);
+                }
+            #endif
             }
 
         //only needed in the adaptive sampling case
@@ -293,13 +292,6 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
             ray->param += samplingStepSizeNode;
 
         } // ray-casting loop
-
-        // Make sure firsthit is in normalized coordinates, i.e., an
-        // interpolation parameter between entry and exit points instead of a
-        // depth in texture coordinates.
-        if(tEnd > 0.0f) {
-            ray->firsthit /= tEnd;
-        }
 
         //macro define
         postRaycastingLoop
@@ -373,13 +365,15 @@ __kernel void render( read_only image2d_t entryTex
     RayInfo ray;
     ray.param = 0.f;             ///< ray parameter
     ray.color = (float4)(0.f);   ///< resulting color
-    ray.firsthit = 1.0f;          ///< first hit point
-    ray.channelIntensities[0] = 0.f;
-    ray.channelIntensities[1] = 0.f;
-    ray.channelIntensities[2] = 0.f;
-    ray.channelIntensities[3] = 0.f;
+    ray.pending.firsthit = 1.0f; ///< first hit point
+    ray.current.firsthit = 1.0f; ///< first hit point
 
-    ray.level = -1.0f;
+    for(int c=0; c<4; ++c) {
+        ray.current.intensity[c] = -1.0f;
+        ray.current.hit[c] = 1.0f;
+        ray.pending.intensity[c] = 0.0f;
+        ray.pending.hit[c] = 1.0f;
+    }
 
 // copy channel shifts to array (channel shift is already in voxel coordinates and thus only has to be converted to POT)
 #ifdef APPLY_CHANNEL_SHIFT
@@ -402,10 +396,15 @@ __kernel void render( read_only image2d_t entryTex
 
     if (firstRefinementFrame) {
         ray.param = 0.f;
+        ray.pending.firsthit = 1.f;
         #ifdef COMPOSITING_MODE_DVR
         ray.color = (float4)(0.f);
-        ray.firsthit = 1.f;
         #endif
+
+        for(int c=0; c<4; ++c) {
+            ray.pending.intensity[c] = 0.0f;
+            ray.pending.hit[c] = 0.0f;
+        }
     }
 
     if (ray.param >= 1.8f) // 1.8 \approx sqrt(3), which is the diagonal of the "texture space cube"
@@ -421,17 +420,17 @@ __kernel void render( read_only image2d_t entryTex
                     channelShifts,
                                 &ray);
     #else
-    traverseRay(entry.xyz, exit.xyz, viewportSize, nodeBuffer, brickBuffer, brickFlagBuffer,
+        traverseRay(entry.xyz, exit.xyz, viewportSize, nodeBuffer, brickBuffer, brickFlagBuffer,
                     nodeLevelOfDetail, realWorldMapping,
                     transFunc, transFuncDomains, samplingStepSize,
                                 &ray);
     #endif
     }
 
-// store ray result in ray buffer
-writeRayToBuffer(rayBuffer, fragPos, viewportSize, &ray);
+    // store ray result in ray buffer
+    writeRayToBuffer(rayBuffer, fragPos, viewportSize, &ray);
 
-// write fragment
+    // write fragment
 #ifdef DISPLAY_MODE_REFINEMENT
     // DVR:     output finished rays only
     // MIP/MOP: always output ray result
@@ -443,12 +442,12 @@ writeRayToBuffer(rayBuffer, fragPos, viewportSize, &ray);
 
     if (outputRay) {
         write_imagef(output, fragPos, ray.color);
-        write_imagef(outputDepth, fragPos, ray.firsthit);
+        write_imagef(outputDepth, fragPos, ray.current.firsthit);
     }
 
 #else // full frame mode => always output ray
     write_imagef(output, fragPos, ray.color);
-    write_imagef(outputDepth, fragPos, ray.firsthit);
+    write_imagef(outputDepth, fragPos, ray.current.firsthit);
 #endif
 
 }

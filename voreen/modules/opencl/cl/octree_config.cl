@@ -23,9 +23,9 @@
  *                                                                                 *
  ***********************************************************************************/
 
- //set guard to prevent double include
- #ifndef OCTREE_CONFIG_FILE
- #define OCTREE_CONFIG_FILE
+//set guard to prevent double include
+#ifndef OCTREE_CONFIG_FILE
+#define OCTREE_CONFIG_FILE
 
 // structs
 typedef struct {
@@ -41,13 +41,18 @@ typedef struct {
 } OctreeNode;
 
 typedef struct {
+    float intensity[4];
+    float hit[4];
+    float firsthit;
+} RayResult;
+
+typedef struct {
     float4 color;
     float param;
-    float firsthit;
-    float channelIntensities[4];
-    float level;
+    RayResult current;
+    RayResult pending;
 } RayInfo;
-__constant uint RAYINFO_NUM_ELEMENTS = 11; //< number of single floats stored in an RayInfo object
+__constant uint RAYINFO_NUM_ELEMENTS = 23; //< number of single floats stored in an RayInfo object
 
 // octree properties (set by CPU)
 __constant uint  OCTREE_DIMENSIONS  = OCTREE_DIMENSIONS_DEF;    //< voxel dimensions of the octree (cubic, power-of-two, >= volume dim)
@@ -229,40 +234,43 @@ void fetchRayFromBuffer(const global float* buffer, const int2 pos, const uint2 
     const uint bufferIndex = (pos.y*bufferDim.x + pos.x) * RAYINFO_NUM_ELEMENTS;
     uint offset = 0;
 
-    ray->param    = buffer[bufferIndex + offset++];
-    ray->firsthit = buffer[bufferIndex + offset++];
-
     ray->color.x  = buffer[bufferIndex + offset++];
     ray->color.y  = buffer[bufferIndex + offset++];
     ray->color.z  = buffer[bufferIndex + offset++];
     ray->color.w  = buffer[bufferIndex + offset++];
 
-    ray->channelIntensities[0] = buffer[bufferIndex + offset++];
-    ray->channelIntensities[1] = buffer[bufferIndex + offset++];
-    ray->channelIntensities[2] = buffer[bufferIndex + offset++];
-    ray->channelIntensities[3] = buffer[bufferIndex + offset++];
+    ray->param    = buffer[bufferIndex + offset++];
+    ray->current.firsthit = buffer[bufferIndex + offset++];
+    ray->pending.firsthit = buffer[bufferIndex + offset++];
 
-    ray->level = buffer[bufferIndex + offset++];
+    for(int c=0; c<4; ++c) {
+        ray->current.intensity[c] = buffer[bufferIndex + offset++];
+        ray->current.hit[c] = buffer[bufferIndex + offset++];
+        ray->pending.intensity[c] = buffer[bufferIndex + offset++];
+        ray->pending.hit[c] = buffer[bufferIndex + offset++];
+    }
 }
 
 void writeRayToBuffer(global float* buffer, const int2 pos, const uint2 bufferDim, const RayInfo* ray) {
     const uint bufferIndex = (pos.y*bufferDim.x + pos.x) * RAYINFO_NUM_ELEMENTS;
     uint offset = 0;
 
-    buffer[bufferIndex + offset++] = ray->param;
-    buffer[bufferIndex + offset++] = ray->firsthit;
-
     buffer[bufferIndex + offset++] = ray->color.x;
     buffer[bufferIndex + offset++] = ray->color.y;
     buffer[bufferIndex + offset++] = ray->color.z;
     buffer[bufferIndex + offset++] = ray->color.w;
 
-    buffer[bufferIndex + offset++] = ray->channelIntensities[0];
-    buffer[bufferIndex + offset++] = ray->channelIntensities[1];
-    buffer[bufferIndex + offset++] = ray->channelIntensities[2];
-    buffer[bufferIndex + offset++] = ray->channelIntensities[3];
+    buffer[bufferIndex + offset++] = ray->param;
 
-    buffer[bufferIndex + offset++] = ray->level;
+    buffer[bufferIndex + offset++] = ray->current.firsthit;
+    buffer[bufferIndex + offset++] = ray->pending.firsthit;
+
+    for(int c=0; c<4; ++c) {
+        buffer[bufferIndex + offset++] = ray->current.intensity[c];
+        buffer[bufferIndex + offset++] = ray->current.hit[c];
+        buffer[bufferIndex + offset++] = ray->pending.intensity[c];
+        buffer[bufferIndex + offset++] = ray->pending.hit[c];
+    }
 }
 
 //--------------------------------------

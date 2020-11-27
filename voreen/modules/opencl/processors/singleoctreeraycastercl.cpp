@@ -1101,15 +1101,8 @@ void SingleOctreeRaycasterCL::initializeRayBuffer() {
 
 
 
-    // Rayinfo is defined as below, so we need 11 floats per ray
-    //typedef struct {
-    //    float4 color;
-    //    float param;
-    //    float firsthit;
-    //    float channelIntensities[4];
-    //    float level;
-    //} RayInfo;
-    size_t RAYINFO_NUM_ELEMENTS = 11;
+    // Rayinfo is defined in shader (octree_config.cl)
+    size_t RAYINFO_NUM_ELEMENTS = 23;
 
     size_t bufferByteSize = tgt::hmul(rayBufferDim_) * RAYINFO_NUM_ELEMENTS * sizeof(cl_float);
     tgtAssert(bufferByteSize > 0, "invalid ray buffer size");
