@@ -39,8 +39,8 @@ const std::string FlowIndicatorAnalysis::loggerCat_("voreen.flowsimulation.FlowI
 
 FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     : AsyncComputeProcessor()
-    , parameterPort_(Port::INPORT, "input.parameter", "Parameter Port")
     , volumeListPort_(Port::INPORT, "input.volumelist", "Volume List Port")
+    , parameterPort_(Port::INPORT, "input.parameter", "Parameter Port")
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
     , outputQuantity_("outputQuantity", "Output Quantity")
     , indicator_("indicator", "Indicator", Processor::INVALID_RESULT, true)
@@ -48,9 +48,9 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     , exportCurvePath_("exportCurvePath", "Export Curve Path", "Choose Path", "", ".csv", FileDialogProperty::SAVE_FILE, Processor::VALID)
     , saveButton_("saveButton", "Save", Processor::VALID)
 {
+    addPort(volumeListPort_);
     addPort(parameterPort_);
     ON_CHANGE(parameterPort_, FlowIndicatorAnalysis, onParametersChange);
-    addPort(volumeListPort_);
     volumeListPort_.addCondition(new PortConditionVolumeListEnsemble());
     addPort(outport_);
 
@@ -187,7 +187,7 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
             outputFunc = [](const std::vector<tgt::vec3>& samples) {
                 float meanMagnitude = 0.0f;
                 for (const auto& sample : samples) {
-                    meanMagnitude += tgt::length(sample);
+                    meanMagnitude += tgt::length(sample) / static_cast<float>(samples.size());
                 }
                 return std::vector<float>(1, meanMagnitude);
             };

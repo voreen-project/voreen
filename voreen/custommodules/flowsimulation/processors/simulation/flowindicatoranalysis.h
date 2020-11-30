@@ -77,8 +77,8 @@ private:
 
     void exportVelocityCurve();
 
-    FlowParametrizationPort parameterPort_;
     VolumeListPort volumeListPort_;
+    FlowParametrizationPort parameterPort_;
     PlotPort outport_;
 
     StringOptionProperty outputQuantity_;
