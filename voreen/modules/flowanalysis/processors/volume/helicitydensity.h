@@ -58,6 +58,7 @@ private:
     VolumePort velocityInport_;
     VolumePort vorticityInport_;
     VolumePort helicityDensityOutport_;
+    BoolProperty normalize_;
 };
 
 }   //namespace

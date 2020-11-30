@@ -34,12 +34,14 @@ HelicityDensity::HelicityDensity()
     , velocityInport_(Port::INPORT, "velocity", "Velocity Input")
     , vorticityInport_(Port::INPORT, "vorticity", "Vorticity Input")
     , helicityDensityOutport_(Port::OUTPORT, "helicityDensity", "Helicity Density Output")
+    , normalize_("normalize", "Normalize", false)
 {
     addPort(velocityInport_);
     velocityInport_.addCondition(new PortConditionVolumeChannelCount(3));
     addPort(vorticityInport_);
     vorticityInport_.addCondition(new PortConditionVolumeChannelCount(3));
     addPort(helicityDensityOutport_);
+    addProperty(normalize_);
 }
 
 HelicityDensity::~HelicityDensity() {}
@@ -86,6 +88,7 @@ void HelicityDensity::process() {
     RealWorldMapping vorticityRwm = vorticityInport_.getData()->getRealWorldMapping();
 
     auto volume = new VolumeRAM_Float(velocity->getDimensions());
+    float min = 0.0f, max = 0.0f;
     for(size_t i=0; i<volume->getNumVoxels(); i++) {
         // Calculate the dot product.
         float helicityDensity = 0.0f;
@@ -94,10 +97,29 @@ void HelicityDensity::process() {
                                vorticityRwm.normalizedToRealWorld(vorticity->getVoxelNormalized(i, channel));
         }
 
+        min = std::min(min, helicityDensity);
+        max = std::max(max, helicityDensity);
+
         volume->voxel(i) = helicityDensity;
     }
 
     Volume* output = new Volume(volume, velocityInport_.getData());
+    output->setRealWorldMapping(RealWorldMapping()); // Reset real world mapping.
+    if(normalize_.get()) {
+        for(size_t i=0; i<volume->getNumVoxels(); i++) {
+            if(volume->voxel(i) < 0.0f) {
+                volume->voxel(i) /= min;
+            }
+            else {
+                volume->voxel(i) /= max;
+            }
+        }
+        output->addDerivedData(new VolumeMinMax(-1.0f, 1.0f, -1.0f, 1.0f));
+    }
+    else {
+        output->addDerivedData(new VolumeMinMax(min, max, min, max));
+    }
+
     helicityDensityOutport_.setData(output);
 }
 
