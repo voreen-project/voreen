@@ -97,6 +97,9 @@ ReferenceVolumeCreatorInput ReferenceVolumeCreator::prepareComputeInput() {
         throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
     }
 
+    // Clear old data.
+    outport_.clear();
+
     return ReferenceVolumeCreatorInput{
             std::move(ensemble),
             std::move(outputVolume),
@@ -123,7 +126,7 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
         size_t referenceTimeStep = ensemble->getMembers()[input.referenceMember].getTimeStep(input.time);
         const VolumeBase* refVolume = ensemble->getMembers()[input.referenceMember].getTimeSteps()[referenceTimeStep].getVolume(input.field);
         VolumeRAMRepresentationLock referenceVolume(refVolume);
-        tgt::mat4 refWorldToVoxel = refVolume->getWorldToVoxelMatrix();
+        tgt::mat4 worldToVoxel = refVolume->getWorldToVoxelMatrix();
 
         tgt::ivec3 pos = tgt::ivec3::zero;
         for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
@@ -134,7 +137,7 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
                     tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
 
                     // Map to voxel space.
-                    tgt::svec3 sampleInRefVoxelSpace = refWorldToVoxel * sample;
+                    tgt::svec3 sampleInRefVoxelSpace = worldToVoxel * sample;
 
                     // Ignore, if out of bounds.
                     if(tgt::clamp(sampleInRefVoxelSpace, tgt::svec3::zero, referenceVolume->getDimensions() - tgt::svec3::one) != sampleInRefVoxelSpace) {
