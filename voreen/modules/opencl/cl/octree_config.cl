@@ -510,7 +510,7 @@ OctreeNode getNodeAtSamplePos(const float3 samplePos, const uint requestedLevel,
 
 OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const float3 rayDir, const float samplingStepSize,
     const uint nodeLevel, __global const ulong* const nodeBuffer, __global const ushort* const brickBuffer, __global uchar* const brickFlagBuffer,
-    float* exitParam, float* samplingStepSizeNode, bool* nodeHasBrick, uint* resultNodeLevel, __global const ushort** brick)
+    float* exitParam, float* samplingStepSizeNode, bool* nodeHasBrick, __global const ushort** brick)
 {
 
     // retrieve node
@@ -531,7 +531,7 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
     }
 
     OctreeNode resultNode = origNode;
-    *resultNodeLevel = 0;
+    uint resultNodeLevel = 0;
     *nodeHasBrick = false;
     *brick = 0;
 
@@ -540,7 +540,7 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
         *nodeHasBrick = hasBrick(origNode.value_);
         if (*nodeHasBrick) { //< brick is in GPU buffer => use it
             *brick = getNodeBrick(origNode.value_, brickBuffer);
-            *resultNodeLevel = origNodeLevel;
+            resultNodeLevel = origNodeLevel;
         }
         else { //< brick is not in GPU buffer => try ancestor nodes
             setBrickRequested(brickFlagBuffer + origNode.offset_, true);
@@ -549,7 +549,7 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
             #if defined(USE_ANCESTOR_NODES) && !defined(DISPLAY_MODE_REFINEMENT)
             if (hasBrick(parentNode.value_)) {
                 resultNode = parentNode;
-                *resultNodeLevel = origNodeLevel-1;
+                resultNodeLevel = origNodeLevel-1;
                 *brick = getNodeBrick(parentNode.value_, brickBuffer);
                 *nodeHasBrick = true;
             }
@@ -557,7 +557,7 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
                 if (!isHomogeneous(parentNode.value_))
                     setBrickRequested(brickFlagBuffer + parentNode.offset_, true);
                 resultNode = grandParentNode;
-                *resultNodeLevel = origNodeLevel-2;
+                resultNodeLevel = origNodeLevel-2;
                 *brick = getNodeBrick(grandParentNode.value_, brickBuffer);
                 *nodeHasBrick = true;
             }
@@ -567,7 +567,7 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
                 if (!isHomogeneous(grandParentNode.value_))
                     setBrickRequested(brickFlagBuffer + grandParentNode.offset_, true);
             }
-            *resultNodeLevel = max(*resultNodeLevel, (uint)0);
+            resultNodeLevel = max(resultNodeLevel, (uint)0);
             #endif
         }
     }
@@ -575,7 +575,7 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
 
 #ifdef ADAPTIVE_SAMPLING
     // adapt sampling step size to current node level/resolution
-    *samplingStepSizeNode = samplingStepSize * (float)(1<<(OCTREE_DEPTH-1-min(*resultNodeLevel, OCTREE_DEPTH-1)));
+    *samplingStepSizeNode = samplingStepSize * (float)(1<<(OCTREE_DEPTH-1-min(resultNodeLevel, OCTREE_DEPTH-1)));
 #else
     *samplingStepSizeNode = samplingStepSize;
 #endif

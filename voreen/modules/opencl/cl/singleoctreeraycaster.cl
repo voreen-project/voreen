@@ -73,7 +73,6 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         // current node information
         OctreeNode currentNode[OCTREE_NUMCHANNELS_DEF];                     ///< current octree node (per channel)
-        uint currentNodeLevel[OCTREE_NUMCHANNELS_DEF];                      ///< level of the current (fetched) node (per channel)
         float3 currentNodeDimRec[OCTREE_NUMCHANNELS_DEF];                   ///< reciproke dimension of current node in texture coordinates
         bool currentNodeHasBrick[OCTREE_NUMCHANNELS_DEF];                   ///< does current node have a brick?
         __global const ushort* currentBrick[OCTREE_NUMCHANNELS_DEF];        ///< brick of current node (uint16_t)
@@ -116,7 +115,7 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
                     currentNode[ch] = fetchNextRayNode(sample[ch], ray->param, direction, samplingStepSize,
                                         nodeLevelOfDetail, nodeBuffer, brickBuffer, brickFlagBuffer,
                                         &tEndCurrentNode[ch], &tSamplingStepSizeNode, &currentNodeHasBrick[ch],
-                                        &currentNodeLevel[ch], &currentBrick[ch]);
+                                        &currentBrick[ch]);
                     if (ch == 0) // first channel determines sampling rate
                         samplingStepSizeNode = tSamplingStepSizeNode;
 
@@ -210,7 +209,6 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         // current node information
         OctreeNode currentNode;                     ///< current octree node
-        uint currentNodeLevel;                      ///< level of the current (fetched) octree node
         float3 currentNodeDimRec;                   ///< reciproke dimension of current node in texture coordinates
         bool currentNodeHasBrick = false;           ///< does current node have a brick?
         __global const ushort* currentBrick = 0;    ///< brick of current node (uint16_t)
@@ -241,7 +239,7 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
                     currentNode = fetchNextRayNode(sample, ray->param, direction, samplingStepSize,
                                             nodeLevelOfDetail, nodeBuffer, brickBuffer, brickFlagBuffer,
-                                            &tEndCurrentNode, &samplingStepSizeNode, &currentNodeHasBrick, &currentNodeLevel, &currentBrick);
+                                            &tEndCurrentNode, &samplingStepSizeNode, &currentNodeHasBrick, &currentBrick);
 
             #ifdef DISPLAY_MODE_REFINEMENT
                     //macro define
