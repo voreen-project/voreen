@@ -370,9 +370,7 @@ __kernel void render( read_only image2d_t entryTex
 
     for(int c=0; c<4; ++c) {
         ray.current.intensity[c] = -1.0f;
-        ray.current.hit[c] = 1.0f;
         ray.pending.intensity[c] = 0.0f;
-        ray.pending.hit[c] = 1.0f;
     }
 
 // copy channel shifts to array (channel shift is already in voxel coordinates and thus only has to be converted to POT)
@@ -396,14 +394,13 @@ __kernel void render( read_only image2d_t entryTex
 
     if (firstRefinementFrame) {
         ray.param = 0.f;
-        ray.pending.firsthit = 1.f;
         #ifdef COMPOSITING_MODE_DVR
         ray.color = (float4)(0.f);
         #endif
 
+        ray.pending.firsthit = 1.0f;
         for(int c=0; c<4; ++c) {
             ray.pending.intensity[c] = 0.0f;
-            ray.pending.hit[c] = 0.0f;
         }
     }
 

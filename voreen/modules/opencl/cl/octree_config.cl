@@ -42,7 +42,6 @@ typedef struct {
 
 typedef struct {
     float intensity[4];
-    float hit[4];
     float firsthit;
 } RayResult;
 
@@ -52,7 +51,7 @@ typedef struct {
     RayResult current;
     RayResult pending;
 } RayInfo;
-__constant uint RAYINFO_NUM_ELEMENTS = 23; //< number of single floats stored in an RayInfo object
+__constant uint RAYINFO_NUM_ELEMENTS = 15; //< number of single floats stored in an RayInfo object
 
 // octree properties (set by CPU)
 __constant uint  OCTREE_DIMENSIONS  = OCTREE_DIMENSIONS_DEF;    //< voxel dimensions of the octree (cubic, power-of-two, >= volume dim)
@@ -245,9 +244,7 @@ void fetchRayFromBuffer(const global float* buffer, const int2 pos, const uint2 
 
     for(int c=0; c<4; ++c) {
         ray->current.intensity[c] = buffer[bufferIndex + offset++];
-        ray->current.hit[c] = buffer[bufferIndex + offset++];
         ray->pending.intensity[c] = buffer[bufferIndex + offset++];
-        ray->pending.hit[c] = buffer[bufferIndex + offset++];
     }
 }
 
@@ -267,9 +264,7 @@ void writeRayToBuffer(global float* buffer, const int2 pos, const uint2 bufferDi
 
     for(int c=0; c<4; ++c) {
         buffer[bufferIndex + offset++] = ray->current.intensity[c];
-        buffer[bufferIndex + offset++] = ray->current.hit[c];
         buffer[bufferIndex + offset++] = ray->pending.intensity[c];
-        buffer[bufferIndex + offset++] = ray->pending.hit[c];
     }
 }
 

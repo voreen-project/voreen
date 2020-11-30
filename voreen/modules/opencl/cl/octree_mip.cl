@@ -32,7 +32,15 @@
  */
 #define getBrickInRefinement \
             if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-                return;\
+                sampleNode = false;\
+                if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
+                        setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+                else\
+                    rayFinished = false;\
+            }\
+            else {\
+                sampleNode = true;\
+                setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
             }
 
 /**
@@ -43,50 +51,44 @@
  */
 #define getBrickInRefinementCS \
             if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-                return;\
+                sampleNode = false;\
+                if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
+                        setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+                else\
+                    rayFinished = false;\
+            }\
+            else {\
+                sampleNode = true;\
+                setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
             }
 
 /**
  * update max intensities and depth values for each channel
  */
 #define applyTFandCombineColors \
-            bool currentUpdated = false;\
             for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
                 if (channelIntensities[ch] > ray->pending.intensity[ch]) {\
                     ray->pending.intensity[ch] = channelIntensities[ch];\
-                    ray->pending.hit[ch] = ray->param/tEnd;\
-                    ray->pending.firsthit = min(ray->pending.hit[ch], ray->pending.firsthit);\
-                }\
-                if(ray->current.hit[ch] < ray->pending.hit[ch]) {\
-                    ray->current.hit[ch] = ray->pending.hit[ch];\
-                    ray->current.intensity[ch] = ray->pending.intensity[ch];\
-                    ray->current.firsthit = ray->pending.firsthit;\
-                    currentUpdated = true;\
-                }\
-            }\
-            if(currentUpdated) {\
-                float4 maxIntensityColor[OCTREE_NUMCHANNELS_DEF];\
-                applyTransFuncs(ray->current.intensity, transFunc, transFuncDomains, realWorldMapping, maxIntensityColor);\
-                ray->color = (float4)(0.f);\
-                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                    float4 channelColor = maxIntensityColor[ch];\
-                    if (channelColor.w > 0.f) {\
-                        ray->color += channelColor;\
+                    ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
+                    if(ray->current.intensity[ch] < ray->pending.intensity[ch]) {\
+                        ray->current.intensity[ch] = ray->pending.intensity[ch];\
+                        ray->current.firsthit = ray->pending.firsthit;\
                     }\
                 }\
-                ray->color = min(ray->color, (float4)(1.f));\
             }\
-
- //TODO postpone color update?
 
 /**
  * Uses the 4 intensity values stored in the ray to apply the tf.
  */
 #define postRaycastingLoop\
-    for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-        ray->current.hit[ch] = ray->pending.hit[ch];\
-        ray->current.intensity[ch] = ray->pending.intensity[ch];\
-        ray->current.firsthit = ray->pending.firsthit;\
+    if(rayFinished) {\
+        for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+            ray->current.intensity[ch] = ray->pending.intensity[ch];\
+            ray->current.firsthit = ray->pending.firsthit;\
+        }\
+        ray->param = 2.f;\
+    } else {\
+        ray->param = 0.f;\
     }\
     float4 maxIntensityColor[OCTREE_NUMCHANNELS_DEF];\
     applyTransFuncs(ray->current.intensity, transFunc, transFuncDomains, realWorldMapping, maxIntensityColor);\
@@ -98,7 +100,6 @@
         }\
     }\
     ray->color = min(ray->color, (float4)(1.f));\
-    ray->param = 2.f;
 
 
 

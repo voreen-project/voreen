@@ -1102,7 +1102,7 @@ void SingleOctreeRaycasterCL::initializeRayBuffer() {
 
 
     // Rayinfo is defined in shader (octree_config.cl)
-    size_t RAYINFO_NUM_ELEMENTS = 23;
+    size_t RAYINFO_NUM_ELEMENTS = 15;
 
     size_t bufferByteSize = tgt::hmul(rayBufferDim_) * RAYINFO_NUM_ELEMENTS * sizeof(cl_float);
     tgtAssert(bufferByteSize > 0, "invalid ray buffer size");
