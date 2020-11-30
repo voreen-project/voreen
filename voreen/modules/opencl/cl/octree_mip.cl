@@ -67,7 +67,7 @@
  */
 #define applyTFandCombineColors \
             for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                if (channelIntensities[ch] > ray->pending.intensity[ch]) {\
+                if (ray->pending.intensity[ch] < channelIntensities[ch]) {\
                     ray->pending.intensity[ch] = channelIntensities[ch];\
                     ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
                     if(ray->current.intensity[ch] < ray->pending.intensity[ch]) {\
@@ -100,6 +100,4 @@
         }\
     }\
     ray->color = min(ray->color, (float4)(1.f));\
-
-
 

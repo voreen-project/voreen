@@ -93,8 +93,10 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         // initialize intensity values
 #ifdef COMPOSITING_MODE_MOP
-        float4 channelColors[OCTREE_NUMCHANNELS_DEF];
-        applyTransFuncs(ray->channelIntensities, transFunc, transFuncDomains, realWorldMapping, channelColors);
+        float4 currentChannelColors[OCTREE_NUMCHANNELS_DEF];
+        float4 pendingChannelColors[OCTREE_NUMCHANNELS_DEF];
+        applyTransFuncs(ray->current.intensity, transFunc, transFuncDomains, realWorldMapping, currentChannelColors);
+        applyTransFuncs(ray->pending.intensity, transFunc, transFuncDomains, realWorldMapping, pendingChannelColors);
 #endif
         // main ray-casting loop
         while (ray->param <= tEnd) {
@@ -220,8 +222,10 @@ __constant float SAMPLING_BASE_INTERVAL_RCP = 200.f;
 
         // initialize intensity values
 #ifdef COMPOSITING_MODE_MOP
-        float4 channelColors[OCTREE_NUMCHANNELS_DEF];
-        applyTransFuncs(ray->channelIntensities, transFunc, transFuncDomains, realWorldMapping, channelColors);
+        float4 currentChannelColors[OCTREE_NUMCHANNELS_DEF];
+        float4 pendingChannelColors[OCTREE_NUMCHANNELS_DEF];
+        applyTransFuncs(ray->current.intensity, transFunc, transFuncDomains, realWorldMapping, currentChannelColors);
+        applyTransFuncs(ray->pending.intensity, transFunc, transFuncDomains, realWorldMapping, pendingChannelColors);
 #endif
 
         // main ray-casting loop

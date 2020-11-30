@@ -69,34 +69,41 @@
             float4 sampleIntensityColor[OCTREE_NUMCHANNELS_DEF];\
             applyTransFuncs(channelIntensities, transFunc, transFuncDomains, realWorldMapping, sampleIntensityColor);\
 \
-            if ((float)currentNodeLevel > ray->level) {\
-                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                    channelColors[ch] = sampleIntensityColor[ch];\
-                    ray->channelIntensities[ch] = channelIntensities[ch];\
-                }\
-                ray->firsthit = ray->param;\
-                ray->level = (float)currentNodeLevel;\
-            } else {\
-                for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                    if (channelIntensities[ch] > ray->channelIntensities[ch]) {\
-                        channelColors[ch] = sampleIntensityColor[ch];\
-                        ray->channelIntensities[ch] = channelIntensities[ch];\
-                        ray->firsthit = min(ray->firsthit, ray->param);\
+            for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+                if (pendingChannelColors[ch].w < sampleIntensityColor[ch].w) {\
+                    pendingChannelColors[ch] = sampleIntensityColor[ch];\
+                    ray->pending.intensity[ch] = channelIntensities[ch];\
+                    ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
+                    if(currentChannelColors[ch].w < pendingChannelColors[ch].w) {\
+                        currentChannelColors[ch] = pendingChannelColors[ch];\
+                        ray->current.intensity[ch] = ray->pending.intensity[ch];\
+                        ray->current.firsthit = ray->pending.firsthit;\
                     }\
                 }\
-            }
+            }\
 
 /**
  * Set final ray color and mark ray as finished
  */
-#define postRaycastingLoop \
-            ray->color = (float4)(0.f);\
-            for (int i=0; i<OCTREE_NUMCHANNELS; i++) {\
-                float4 channelColor = channelColors[i];\
-                if (channelColor.w > 0.f) {\
-                    ray->color += channelColor;\
-                }\
-            }\
-            ray->color = min(ray->color, (float4)(1.f));\
-\
-            ray->param = rayFinished ? 2.f : 0.f;
+#define postRaycastingLoop\
+    if(rayFinished) {\
+        for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+            currentChannelColors[ch] = pendingChannelColors[ch];\
+            ray->current.intensity[ch] = ray->pending.intensity[ch];\
+            ray->current.firsthit = ray->pending.firsthit;\
+        }\
+        ray->param = 2.f;\
+    } else {\
+        ray->param = 0.f;\
+    }\
+    float4 maxIntensityColor[OCTREE_NUMCHANNELS_DEF];\
+    applyTransFuncs(ray->current.intensity, transFunc, transFuncDomains, realWorldMapping, maxIntensityColor);\
+    ray->color = (float4)(0.f);\
+    for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+        float4 channelColor = currentChannelColors[ch];\
+        if (channelColor.w > 0.f) {\
+            ray->color += channelColor;\
+        }\
+    }\
+    ray->color = min(ray->color, (float4)(1.f));\
+
