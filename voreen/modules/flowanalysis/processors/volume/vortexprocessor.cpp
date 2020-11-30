@@ -225,6 +225,13 @@ VortexProcessorIO VortexProcessor::compute(VortexProcessorIO input, ProgressRepo
                     else {
                         volumeLambda2->voxel(pos) = eigenvalues.y().real();
                     }
+
+                    if(volumeLambda2->voxel(pos) > 0.0f) {
+                        volumeLambda2->voxel(pos) = 0.0f;
+                    }
+                    else {
+                        volumeLambda2->voxel(pos) = -volumeLambda2->voxel(pos);
+                    }
                 }
             }
         }

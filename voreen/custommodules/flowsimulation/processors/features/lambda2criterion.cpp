@@ -133,6 +133,9 @@ Lambda2CriterionOutput Lambda2Criterion::compute(Lambda2CriterionInput input, Pr
                 if(outputVolume->voxel(pos) > 0.0f) {
                     outputVolume->voxel(pos) = 0.0f;
                 }
+                else { // And invert sign for the use of MIP compositing.
+                    outputVolume->voxel(pos) = std::abs(outputVolume->voxel(pos));
+                }
             }
         }
 
