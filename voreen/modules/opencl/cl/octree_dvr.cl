@@ -30,18 +30,18 @@
  * traversal flag not used in DVR
  */
 #define getBrickInRefinement \
-            if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-                return;\
-            }
+    if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
+        return;\
+    }
 
 /**
  * break ray traversal on missing brick
  * traversal flag not used in DVR
  */
 #define getBrickInRefinementCS \
-            if (!currentNodeHasBrick[ch] && !isHomogeneous(currentNode[ch].value_)) {\
-                return;\
-            }
+    if (!currentNodeHasBrick[ch] && !isHomogeneous(currentNode[ch].value_)) {\
+        return;\
+    }
 
 /**
  * apply channel transfer functions
@@ -50,31 +50,31 @@
  * early ray termination
  */
 #define applyTFandCombineColors \
-        float4 channelColors[OCTREE_NUMCHANNELS_DEF];\
-        applyTransFuncs(channelIntensities, transFunc, transFuncDomains, realWorldMapping, channelColors);\
+    float4 channelColors[OCTREE_NUMCHANNELS_DEF];\
+    applyTransFuncs(channelIntensities, transFunc, transFuncDomains, realWorldMapping, channelColors);\
 \
-        float4 sampleColor = (float4)(0.f);\
-        for (int i=0; i<OCTREE_NUMCHANNELS; i++) {\
-            if (channelColors[i].w > 0.f) {\
-                sampleColor.xyz += channelColors[i].xyz;\
-                sampleColor.w = max(channelColors[i].w, sampleColor.w);\
-            }\
+    float4 sampleColor = (float4)(0.f);\
+    for (int i=0; i<OCTREE_NUMCHANNELS; i++) {\
+        if (channelColors[i].w > 0.f) {\
+            sampleColor.xyz += channelColors[i].xyz;\
+            sampleColor.w = max(channelColors[i].w, sampleColor.w);\
         }\
-        sampleColor.xyz = min(sampleColor.xyz, (float3)(1.f));\
+    }\
+    sampleColor.xyz = min(sampleColor.xyz, (float3)(1.f));\
 \
-        if (sampleColor.w > 0.f) {\
-            sampleColor.w = 1.f - pow(1.f - sampleColor.w, previousStepSize * SAMPLING_BASE_INTERVAL_RCP);\
+    if (sampleColor.w > 0.f) {\
+        sampleColor.w = 1.f - pow(1.f - sampleColor.w, previousStepSize * SAMPLING_BASE_INTERVAL_RCP);\
 \
-            ray->color.xyz = ray->color.xyz + (1.f - ray->color.w) * sampleColor.w * sampleColor.xyz;\
-            ray->color.w   = ray->color.w +   (1.f - ray->color.w) * sampleColor.w;\
+        ray->color.xyz = ray->color.xyz + (1.f - ray->color.w) * sampleColor.w * sampleColor.xyz;\
+        ray->color.w   = ray->color.w +   (1.f - ray->color.w) * sampleColor.w;\
 \
-            ray->current.firsthit = min(ray->param, ray->current.firsthit);\
-        }\
+        ray->current.firsthit = min(ray->param, ray->current.firsthit);\
+    }\
 \
-        if (ray->color.w >= 0.95f) {\
-            ray->color.w = 1.f;\
-            ray->param = tEnd + samplingStepSize;\
-        }
+    if (ray->color.w >= 0.95f) {\
+        ray->color.w = 1.f;\
+        ray->param = tEnd + samplingStepSize;\
+    }
 
 /**
  * Sets the ray param to 2.f = finished

@@ -29,17 +29,17 @@
  * mark available brick (or homogeneous node) as traversed
  */
 #define getBrickInRefinement \
-                if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-                    sampleNode = false;\
-                    if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
-                            setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
-                    else\
-                        rayFinished = false;\
-                }\
-                else {\
-                    sampleNode = true;\
-                    setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
-                }
+    if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
+        sampleNode = false;\
+        if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
+                setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+        else\
+            rayFinished = false;\
+    }\
+    else {\
+        sampleNode = true;\
+        setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
+    }
 
 /**
  * skip node, if brick is missing (inhomogeneous node)
@@ -48,42 +48,41 @@
  * skipNode = false; is missing in this case
  */
 #define getBrickInRefinementCS \
-                if (!currentNodeHasBrick[ch] && !isHomogeneous(currentNode[ch].value_)) {\
-                    sampleNode[ch] = false;\
-                    if (hasNodeBeenUsedInMIP(brickFlagBuffer[currentNode[ch].offset_],ch)) \
-                        setBrickRequested(brickFlagBuffer + currentNode[ch].offset_, false);\
-                    else\
-                        rayFinished = false;\
-                }\
-                else {\
-                    sampleNode[ch] = true;\
-                    setNodeUsedInMIP(brickFlagBuffer + currentNode[ch].offset_, true, ch);\
-                }
+    if (!currentNodeHasBrick[ch] && !isHomogeneous(currentNode[ch].value_)) {\
+        sampleNode[ch] = false;\
+        if (hasNodeBeenUsedInMIP(brickFlagBuffer[currentNode[ch].offset_],ch)) \
+            setBrickRequested(brickFlagBuffer + currentNode[ch].offset_, false);\
+        else\
+            rayFinished = false;\
+    }\
+    else {\
+        sampleNode[ch] = true;\
+        setNodeUsedInMIP(brickFlagBuffer + currentNode[ch].offset_, true, ch);\
+    }
 
 /**
- * retrieve channel color values
- * update channel color and depth values
- * close bracket opend in main loop
+ * Update pending color and depth value
+ * Apply pending results if new pending opacity is already higher than the previous.
  */
 #define applyTFandCombineColors \
-            float4 sampleIntensityColor[OCTREE_NUMCHANNELS_DEF];\
-            applyTransFuncs(channelIntensities, transFunc, transFuncDomains, realWorldMapping, sampleIntensityColor);\
-\
-            for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                if (pendingChannelColors[ch].w < sampleIntensityColor[ch].w) {\
-                    pendingChannelColors[ch] = sampleIntensityColor[ch];\
-                    ray->pending.intensity[ch] = channelIntensities[ch];\
-                    ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
-                    if(currentChannelColors[ch].w < pendingChannelColors[ch].w) {\
-                        currentChannelColors[ch] = pendingChannelColors[ch];\
-                        ray->current.intensity[ch] = ray->pending.intensity[ch];\
-                        ray->current.firsthit = ray->pending.firsthit;\
-                    }\
-                }\
+    float4 sampleIntensityColor[OCTREE_NUMCHANNELS_DEF];\
+    applyTransFuncs(channelIntensities, transFunc, transFuncDomains, realWorldMapping, sampleIntensityColor);\
+    for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+        if (pendingChannelColors[ch].w < sampleIntensityColor[ch].w) {\
+            pendingChannelColors[ch] = sampleIntensityColor[ch];\
+            ray->pending.intensity[ch] = channelIntensities[ch];\
+            ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
+            if(currentChannelColors[ch].w < pendingChannelColors[ch].w) {\
+                currentChannelColors[ch] = pendingChannelColors[ch];\
+                ray->current.intensity[ch] = ray->pending.intensity[ch];\
+                ray->current.firsthit = ray->pending.firsthit;\
             }\
+        }\
+    }\
 
 /**
- * Set final ray color and mark ray as finished
+ * Retrieve and composit results based on current colors.
+ * If the ray is finished, use the previously pending, now current results.
  */
 #define postRaycastingLoop\
     if(rayFinished) {\

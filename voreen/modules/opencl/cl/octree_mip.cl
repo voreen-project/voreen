@@ -31,17 +31,17 @@
  * mark available brick (or homogeneous node) as traversed
  */
 #define getBrickInRefinement \
-            if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-                sampleNode = false;\
-                if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
-                        setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
-                else\
-                    rayFinished = false;\
-            }\
-            else {\
-                sampleNode = true;\
-                setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
-            }
+    if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
+        sampleNode = false;\
+        if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
+                setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+        else\
+            rayFinished = false;\
+    }\
+    else {\
+        sampleNode = true;\
+        setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
+    }
 
 /**
  * skip node, if brick is missing (inhomogeneous node)
@@ -50,35 +50,37 @@
  * sampleNode = false; is missing in this case
  */
 #define getBrickInRefinementCS \
-            if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-                sampleNode = false;\
-                if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
-                        setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
-                else\
-                    rayFinished = false;\
-            }\
-            else {\
-                sampleNode = true;\
-                setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
-            }
+    if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
+        sampleNode = false;\
+        if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
+                setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+        else\
+            rayFinished = false;\
+    }\
+    else {\
+        sampleNode = true;\
+        setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
+    }
 
 /**
- * update max intensities and depth values for each channel
+ * Update pending intensity and depth value
+ * Apply pending results if new pending intensity is already higher than the previous.
  */
 #define applyTFandCombineColors \
-            for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
-                if (ray->pending.intensity[ch] < channelIntensities[ch]) {\
-                    ray->pending.intensity[ch] = channelIntensities[ch];\
-                    ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
-                    if(ray->current.intensity[ch] < ray->pending.intensity[ch]) {\
-                        ray->current.intensity[ch] = ray->pending.intensity[ch];\
-                        ray->current.firsthit = ray->pending.firsthit;\
-                    }\
-                }\
+    for (int ch=0; ch<OCTREE_NUMCHANNELS; ch++) {\
+        if (ray->pending.intensity[ch] < channelIntensities[ch]) {\
+            ray->pending.intensity[ch] = channelIntensities[ch];\
+            ray->pending.firsthit = min(ray->pending.firsthit, ray->param/tEnd);\
+            if(ray->current.intensity[ch] < ray->pending.intensity[ch]) {\
+                ray->current.intensity[ch] = ray->pending.intensity[ch];\
+                ray->current.firsthit = ray->pending.firsthit;\
             }\
+        }\
+    }\
 
 /**
- * Uses the 4 intensity values stored in the ray to apply the tf.
+ * Retrieve and composit results based on current intensities.
+ * If the ray is finished, use the previously pending, now current results.
  */
 #define postRaycastingLoop\
     if(rayFinished) {\
