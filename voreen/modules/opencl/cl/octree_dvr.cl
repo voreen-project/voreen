@@ -68,7 +68,7 @@
             ray->color.xyz = ray->color.xyz + (1.f - ray->color.w) * sampleColor.w * sampleColor.xyz;\
             ray->color.w   = ray->color.w +   (1.f - ray->color.w) * sampleColor.w;\
 \
-            ray->firsthit = min(ray->param, ray->firsthit);\
+            ray->current.firsthit = min(ray->param, ray->current.firsthit);\
         }\
 \
         if (ray->color.w >= 0.95f) {\
