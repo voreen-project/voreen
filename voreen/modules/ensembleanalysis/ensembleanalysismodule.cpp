@@ -43,9 +43,7 @@
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
 #include "processors/volumelistmerger.h"
-#ifdef VRN_MODULE_HDF5
 #include "processors/volumemerger.h"
-#endif
 
 #include "properties/parallelcoordinatessectionsproperty.h"
 
@@ -82,9 +80,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new MetaDataAdder());
     registerProcessor(new VolumeListMerger());
-#ifdef VRN_MODULE_HDF5
     registerProcessor(new VolumeMerger());
-#endif
 
     // Link evaluators
     registerSerializableType(new LinkEvaluatorParallelCoordinatesSectionsId());

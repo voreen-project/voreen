@@ -27,9 +27,7 @@
 
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 
-#include "voreen/core/properties/boundingboxproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/properties/string/stringlistproperty.h"

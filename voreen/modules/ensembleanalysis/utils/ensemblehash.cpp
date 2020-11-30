@@ -36,8 +36,8 @@ EnsembleHash::EnsembleHash(const EnsembleDataset& dataset)
         unhashed += std::to_string(member.getTimeSteps().size());
     }
 
-    for (const std::string& channel : dataset.getCommonFieldNames())
-        unhashed += channel;
+    for (const std::string& fieldName : dataset.getCommonFieldNames())
+        unhashed += fieldName;
 
     hash_ = VoreenHash::getHash(unhashed);
 }

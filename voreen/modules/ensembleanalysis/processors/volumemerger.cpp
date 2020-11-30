@@ -28,10 +28,6 @@
 
 #include "voreen/core/datastructures/volume/volumefactory.h"
 
-#include "modules/hdf5/io/hdf5volumereader.h"
-#include "modules/hdf5/io/hdf5volumewriter.h"
-#include "modules/hdf5/io/hdf5filevolume.h"
-
 namespace voreen {
 
 const std::string VolumeMerger::loggerCat_ = "voreen.ensembleanalysis.VolumeMerger";

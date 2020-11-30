@@ -117,12 +117,3 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/utils/ensemblehash.h
     ${MOD_DIR}/utils/utils.h
 )
-
-IF(VRN_MODULE_HDF5)
-    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/volumemerger.cpp
-    )
-    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/volumemerger.h
-    )
-ENDIF()

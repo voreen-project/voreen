@@ -84,11 +84,13 @@ const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
     EnsembleVolumeReaderPopulator populator;
     VolumeReader* reader = populator.getVolumeReader(url.getPath());
     if (!reader) {
+        LERRORC("voreen.ensembleanalysis.VolumeCache", "No reader found for " << url.getURL());
         return nullptr;
     }
 
     const VolumeBase* volume = reader->read(url);
     if(!volume) {
+        LERRORC("voreen.ensembleanalysis.VolumeCache", "Could not read volume " << url.getURL());
         return nullptr;
     }
 

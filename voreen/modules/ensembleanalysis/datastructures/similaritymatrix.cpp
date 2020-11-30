@@ -132,7 +132,7 @@ const std::vector<std::string> SimilarityMatrixList::getFieldNames() const {
     std::vector<std::string> fieldNames;
     fieldNames.reserve(matrices_.size());
 
-    for(auto matrix : matrices_) {
+    for(const auto& matrix : matrices_) {
         fieldNames.push_back(matrix.first);
     }
 
