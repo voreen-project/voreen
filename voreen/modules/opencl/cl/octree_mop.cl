@@ -32,7 +32,7 @@
     if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
         sampleNode = false;\
         if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
-                setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+            setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
         else\
             rayFinished = false;\
     }\

@@ -34,7 +34,7 @@
     if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
         sampleNode = false;\
         if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
-                setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+            setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
         else\
             rayFinished = false;\
     }\
@@ -50,17 +50,18 @@
  * sampleNode = false; is missing in this case
  */
 #define getBrickInRefinementCS \
-    if (!currentNodeHasBrick && !isHomogeneous(currentNode.value_)) {\
-        sampleNode = false;\
-        if (hasNodeBeenUsedInMIPAll(brickFlagBuffer[currentNode.offset_])) \
-                setBrickRequested(brickFlagBuffer + currentNode.offset_, false);\
+    if (!currentNodeHasBrick[ch] && !isHomogeneous(currentNode[ch].value_)) {\
+        sampleNode[ch] = false;\
+        if (hasNodeBeenUsedInMIP(brickFlagBuffer[currentNode[ch].offset_],ch)) \
+            setBrickRequested(brickFlagBuffer + currentNode[ch].offset_, false);\
         else\
             rayFinished = false;\
     }\
     else {\
-        sampleNode = true;\
-        setNodeUsedInMIPAll(brickFlagBuffer + currentNode.offset_, true);\
+        sampleNode[ch] = true;\
+        setNodeUsedInMIP(brickFlagBuffer + currentNode[ch].offset_, true, ch);\
     }
+
 
 /**
  * Update pending intensity and depth value
