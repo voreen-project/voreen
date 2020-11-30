@@ -35,7 +35,6 @@ namespace voreen {
 const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
 const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
 const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
-const std::string EnsembleDataSource::MEMBER_NAME = "member_name";
 const std::string EnsembleDataSource::FALLBACK_FIELD_NAME = "unnamed";
 const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
@@ -248,11 +247,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 else {
                     fieldName = FALLBACK_FIELD_NAME;
                 }
-
-                // Add additional information gained reading the file structure.
-                Volume* volume = dynamic_cast<Volume*>(volumeHandle.get());
-                tgtAssert(volume, "volumeHandle must be volume");
-                volume->setMetaDataValue<StringMetaData>(MEMBER_NAME, member);
 
                 volumeData[fieldName] = volumeHandle.get();
 
