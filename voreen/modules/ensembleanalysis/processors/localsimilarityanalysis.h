@@ -43,6 +43,8 @@ struct LocalSimilarityAnalysisInput {
     const VolumeBase* referenceVolume;
     std::unique_ptr<VolumeRAM_Float> outputVolume;
     std::string field;
+    float vectorMagnitudeThreshold;
+    int vectorComponent;
     float time;
 };
 
@@ -77,11 +79,19 @@ protected:
         setDescription("");
     }
 
+    enum VectorComponent {
+        BOTH = 0,
+        MAGNITUDE = 1,
+        DIRECTION = 2
+    };
+
     EnsembleDatasetPort ensembleInport_;
     VolumePort referencePort_;
     VolumePort outport_;
 
     StringOptionProperty selectedField_;
+    FloatProperty vectorMagnitudeThreshold_;
+    IntOptionProperty vectorComponent_;
     FloatProperty time_;
 
     static const std::string loggerCat_;

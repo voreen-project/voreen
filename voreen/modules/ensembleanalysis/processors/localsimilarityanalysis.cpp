@@ -38,6 +38,8 @@ LocalSimilarityAnalysis::LocalSimilarityAnalysis()
     , referencePort_(Port::INPORT, "referenceport", "Reference Volume Port")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
     , selectedField_("selectedField", "Selected Field")
+    , vectorMagnitudeThreshold_("vectorMagnitudeThreshold", "Vector Magnitude Threshold", 0.0f, 0.0f, 10000.0f)
+    , vectorComponent_("vectorStrategy", "Strategy")
     , time_("time", "Time", 0.0f, 0.0f, std::numeric_limits<float>::max())
 {
     // Ports
@@ -46,6 +48,26 @@ LocalSimilarityAnalysis::LocalSimilarityAnalysis()
     addPort(outport_);
 
     addProperty(selectedField_);
+    ON_CHANGE_LAMBDA(selectedField_, [this] {
+        const EnsembleDataset* ensemble = ensembleInport_.getData();
+        if(!ensemble) {
+            return;
+        }
+        bool scalarField = ensemble->getNumChannels(selectedField_.get()) == 1;
+        vectorMagnitudeThreshold_.setReadOnlyFlag(scalarField);
+        vectorComponent_.setReadOnlyFlag(scalarField);
+        if(scalarField) {
+            tgt::vec2 range = ensemble->getMagnitudeRange(selectedField_.get());
+            vectorMagnitudeThreshold_.setMinValue(range.x);
+            vectorMagnitudeThreshold_.setMaxValue(range.y);
+            vectorMagnitudeThreshold_.set(range.x);
+        }
+    });
+    addProperty(vectorMagnitudeThreshold_);
+    addProperty(vectorComponent_);
+    vectorComponent_.addOption("both", "Both", BOTH);
+    vectorComponent_.addOption("magnitude", "Magnitude", MAGNITUDE);
+    vectorComponent_.addOption("direction", "Direction", DIRECTION);
     addProperty(time_);
     time_.setTracking(false);
 }
@@ -72,6 +94,10 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
         throw InvalidInputException("Reference Volume channel count is different from selected field", InvalidInputException::S_ERROR);
     }
 
+    if(ensemble->getNumChannels(selectedField_.get()) > 4) {
+        throw InvalidInputException("Only up to 4 channels supported", InvalidInputException::S_ERROR);
+    }
+
     std::unique_ptr<VolumeRAM_Float> outputVolume(new VolumeRAM_Float(referenceVolume->getDimensions()));
     outputVolume->clear();
 
@@ -80,6 +106,8 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
             referenceVolume,
             std::move(outputVolume),
             selectedField_.get(),
+            vectorMagnitudeThreshold_.get(),
+            vectorComponent_.getValue(),
             time_.get()
     };
 }
@@ -119,13 +147,48 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                     // Transform to local voxel space.
                     sample = worldToVoxel * sample;
 
-                    float length = 0.0f;
-                    for(size_t channel=0; channel<numChannels; channel++) {
-                        float value = lock->getVoxelNormalized(sample, channel) - referenceVolume->getVoxelNormalized(pos, channel);
-                        length += value * value;
-                    }
+                    if(numChannels == 1 || input.vectorComponent == BOTH) {
+                        float length = 0.0f;
+                        for (size_t channel = 0; channel < numChannels; channel++) {
+                            float value = lock->getVoxelNormalized(sample, channel) - referenceVolume->getVoxelNormalized(pos, channel);
+                            length += value * value;
+                        }
 
-                    output->voxel(pos) += length / numMembers;
+                        output->voxel(pos) += length / numMembers;
+                    }
+                    else if(input.vectorComponent == MAGNITUDE) {
+                        float lengthSqCurrent = 0.0f;
+                        float lengthSqReference = 0.0f;
+                        for (size_t channel = 0; channel < numChannels; channel++) {
+                            float value = lock->getVoxelNormalized(sample, channel);
+                            lengthSqCurrent += value * value;
+
+                            value = referenceVolume->getVoxelNormalized(sample, channel);
+                            lengthSqReference += value * value;
+                        }
+                        float magnitude = std::abs(std::sqrt(lengthSqCurrent) - std::sqrt(lengthSqReference));
+                        output->voxel(pos) += magnitude;
+                    }
+                    else if(input.vectorComponent == DIRECTION) {
+                        tgt::vec4 v1 = tgt::vec4::zero;
+                        tgt::vec4 v2 = tgt::vec4::zero;
+                        for (size_t channel = 0; channel < numChannels; channel++) {
+                            v1[channel] = lock->getVoxelNormalized(sample, channel);
+                            v2[channel] = referenceVolume->getVoxelNormalized(sample, channel);
+                        }
+
+                        // Test if any magnitude of both vectors is too small to be considered for direction calculation.
+                        if(tgt::lengthSq(v1) >= input.vectorMagnitudeThreshold * input.vectorMagnitudeThreshold &&
+                            tgt::lengthSq(v2) >= input.vectorMagnitudeThreshold * input.vectorMagnitudeThreshold) {
+
+                            v1 = tgt::normalize(v1);
+                            v2 = tgt::normalize(v2);
+
+                            float dot = tgt::dot(v1, v2);
+                            float angle = std::acos(tgt::clamp(dot, -1.0f, 1.0f)) / tgt::PIf;
+                            output->voxel(pos) += angle / numMembers;
+                        }
+                    }
                 }
             }
         }
