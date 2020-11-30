@@ -55,6 +55,7 @@
 #endif
 
 #ifdef VRN_MODULE_PLOTTING
+#include "processors/plotting/roianalysis.h"
 #include "processors/simulation/flowindicatoranalysis.h"
 #endif
 
@@ -101,6 +102,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerSerializableType(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_MODULE_PLOTTING
+    registerSerializableType(new RoiAnalysis());
     registerSerializableType(new FlowIndicatorAnalysis());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
