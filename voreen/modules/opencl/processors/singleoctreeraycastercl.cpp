@@ -1179,8 +1179,6 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
         }
     }
 
-    LINFO("Num requested: " << numRequested);
-
     // no bricks requested => keep brick buffer as it is
     if (numRequested == 0) {
         return;
@@ -1219,6 +1217,7 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
     // list of <nodeID, brickSlotID> pairs to be removed, separated by level
     std::vector< std::list<std::pair<size_t, size_t> > > brickKickoutList(octree->getNumLevels());
     size_t numToKickout = 0;
+
     if (numBricksToUpload > numFreeBrickSlots) {
         std::vector<std::list<LRUEntry> > tempLRUList(leastRecentlyUsedBricks_);
 
