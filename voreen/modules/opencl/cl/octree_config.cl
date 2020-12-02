@@ -456,8 +456,10 @@ float3 computeNodeExitPoint(const float3 nodeLLF, const float3 nodeURB, const fl
 
 //-------------------------------------
 
+// Get the node at the provided position and requestlevel (or first available
+// parent node, if no node at the requested level exists)
 OctreeNode getNodeAtSamplePos(const float3 samplePos, const uint requestedLevel, __global const ulong* const nodeBuffer,
-    uint* returnedLevel, OctreeNode* parentNode, OctreeNode* grandParentNode)
+    uint* returnedLevel)
 {
 
     OctreeNode currentNode;
@@ -468,9 +470,6 @@ OctreeNode getNodeAtSamplePos(const float3 samplePos, const uint requestedLevel,
 
     uint currentLevel = 0;
 
-    *parentNode = currentNode;
-    *grandParentNode = currentNode;
-
     // iteratively descent to children
     while (true) {
         const ulong childGroupOffset = getNodeChildGroupOffset(currentNode.value_);
@@ -479,9 +478,91 @@ OctreeNode getNodeAtSamplePos(const float3 samplePos, const uint requestedLevel,
             return currentNode;
         }
         else { // descent to next level
-            *grandParentNode = *parentNode;
-            *parentNode = currentNode;
 
+            float3 nodeDim = currentNode.urb_ - currentNode.llf_;
+            float3 nodeHalfDim = nodeDim * (float3)(0.5f);
+            float3 nodeCenter = currentNode.llf_ + nodeHalfDim;
+
+            // select child node
+            uint3 childNodeGroupCoord; //< "coordinates" of the child node within its child group
+            childNodeGroupCoord.x = (samplePos.x >= nodeCenter.x) ? 1 : 0;
+            childNodeGroupCoord.y = (samplePos.y >= nodeCenter.y) ? 1 : 0;
+            childNodeGroupCoord.z = (samplePos.z >= nodeCenter.z) ? 1 : 0;
+            currentNode.offset_ = childGroupOffset + cubicCoordToLinear(childNodeGroupCoord, (uint3)(2));
+            currentNode.value_ = nodeBuffer[currentNode.offset_];
+            currentLevel++;
+
+            // update LLF, URB
+            currentNode.llf_.x += nodeHalfDim.x*(float)childNodeGroupCoord.x;
+            currentNode.llf_.y += nodeHalfDim.y*(float)childNodeGroupCoord.y;
+            currentNode.llf_.z += nodeHalfDim.z*(float)childNodeGroupCoord.z;
+            currentNode.urb_ = currentNode.llf_ + nodeHalfDim;
+        }
+    }
+
+    // should not get here
+    OctreeNode dummy;
+    return dummy;
+}
+
+// Get the best (i.e., highest resolution) node (up to requestedLevel) with a
+// brick on the GPU at the provided sample position. Also request child nodes
+// at the position if their bricks are not on the GPU currently.
+OctreeNode getBestAvailableNodeAndRequest(const float3 samplePos, const uint requestedLevel, __global const ulong* const nodeBuffer,
+        __global uchar* const brickFlagBuffer, uint* returnedLevel)
+{
+
+    // Storage for (up to MAX_REQUEST_LEVEL) offsets of nodes that have a
+    // higher resolution brick than the highest resolution currently available
+#define MAX_REQUEST_LEVEL 8 // log2(256) => then it is definitely better to use node averages
+    ulong usefulNodeOffsets[MAX_REQUEST_LEVEL];
+    uint nextUsefulNodeOffsetsEntry = 0;
+
+    OctreeNode currentNode;
+    currentNode.value_ = nodeBuffer[0];
+    currentNode.offset_ = 0;
+    currentNode.llf_ = (float3)(0.f, 0.f, 0.f);
+    currentNode.urb_ = (float3)(1.f, 1.f, 1.f);
+
+    uint currentLevel = 0;
+
+    OctreeNode bestAvailableNode = currentNode;
+    uint bestAvailableLevel = 0;
+
+    // iteratively descent to children
+    while (true) {
+        const ulong childGroupOffset = getNodeChildGroupOffset(currentNode.value_);
+
+        if(!isHomogeneous(currentNode.value_) && !hasBrick(currentNode.value_)) {
+            // Node has an associated brick, but brick is not on GPU
+
+            // It is always true that currentLevel <= requestedLevel, so the
+            // following ensure that we store the lowest (highest resolution)
+            // MAX_REQUEST_LEVEL levels at most
+            if(currentLevel+MAX_REQUEST_LEVEL > requestedLevel) {
+                usefulNodeOffsets[nextUsefulNodeOffsetsEntry] = currentNode.offset_;
+                nextUsefulNodeOffsetsEntry += 1;
+            }
+        } else {
+            bestAvailableNode = currentNode;
+            bestAvailableLevel = currentLevel;
+
+            // All nodes above this level are not useful anymore
+            nextUsefulNodeOffsetsEntry = 0;
+        }
+
+        if (currentLevel == requestedLevel || childGroupOffset == 0) {
+            // current node level requested, or current node is leaf => stop descent
+
+            // Request bricks of all useful nodes (i.e., those that have a
+            // higher than currently available resolution brick)
+            for(uint i=0; i<nextUsefulNodeOffsetsEntry; ++i) {
+                setBrickRequested(brickFlagBuffer + usefulNodeOffsets[i], true);
+            }
+            *returnedLevel = bestAvailableLevel;
+            return bestAvailableNode;
+        }
+        else { // descent to next level
             float3 nodeDim = currentNode.urb_ - currentNode.llf_;
             float3 nodeHalfDim = nodeDim * (float3)(0.5f);
             float3 nodeCenter = currentNode.llf_ + nodeHalfDim;
@@ -513,14 +594,39 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
     float* exitParam, float* samplingStepSizeNode, bool* nodeHasBrick, __global const ushort** brick)
 {
 
-    // retrieve node
-    uint origNodeLevel;
-    OctreeNode parentNode, grandParentNode;
-    OctreeNode origNode = getNodeAtSamplePos(samplePos, nodeLevel, nodeBuffer, &origNodeLevel, &parentNode, &grandParentNode);
+    uint resultNodeLevel = 0;
+    *nodeHasBrick = false;
+    *brick = 0;
 
-    // compute node exit point and ray end parameter for original node
+#if defined(USE_BRICKS) && defined(USE_ANCESTOR_NODES) && !defined(DISPLAY_MODE_REFINEMENT)
+    uint bestNodeLevel;
+    OctreeNode resultNode = getBestAvailableNodeAndRequest(samplePos, nodeLevel, nodeBuffer, brickFlagBuffer, &resultNodeLevel);
+    if (!isHomogeneous(resultNode.value_)) { // node not homogeneous => fetch brick
+        if(hasBrick(resultNode.value_)) {
+            *brick = getNodeBrick(resultNode.value_, brickBuffer);
+            *nodeHasBrick = true;
+        }
+    }
+#else
+    // retrieve node
+    OctreeNode resultNode = getNodeAtSamplePos(samplePos, nodeLevel, nodeBuffer, &resultNodeLevel);
+
+    #ifdef USE_BRICKS
+    if (!isHomogeneous(resultNode.value_)) { // node not homogeneous => fetch brick
+        *nodeHasBrick = hasBrick(resultNode.value_);
+        if (*nodeHasBrick) { //< brick is in GPU buffer => use it
+            *brick = getNodeBrick(resultNode.value_, brickBuffer);
+        } else { // brick is not in GPU buffer
+            setBrickRequested(brickFlagBuffer + resultNode.offset_, true);
+        }
+    }
+    #endif
+
+#endif
+
+    // compute node exit point and ray end parameter for the node
     if (length(rayDir) > 0.f) {
-        float3 nodeExit = computeNodeExitPoint(origNode.llf_, origNode.urb_, samplePos, rayDir);
+        float3 nodeExit = computeNodeExitPoint(resultNode.llf_, resultNode.urb_, samplePos, rayDir);
         // determine ray parameter of last sample before node exit point
         float tOffset = minFloat3((nodeExit - samplePos) / rayDir);
         tOffset = floor(tOffset / samplingStepSize) * samplingStepSize;
@@ -529,49 +635,6 @@ OctreeNode fetchNextRayNode(const float3 samplePos, const float rayParam, const 
     else {
         *exitParam = rayParam;
     }
-
-    OctreeNode resultNode = origNode;
-    uint resultNodeLevel = 0;
-    *nodeHasBrick = false;
-    *brick = 0;
-
-#ifdef USE_BRICKS
-    if (!isHomogeneous(origNode.value_)) { // node not homogeneous => fetch brick
-        *nodeHasBrick = hasBrick(origNode.value_);
-        if (*nodeHasBrick) { //< brick is in GPU buffer => use it
-            *brick = getNodeBrick(origNode.value_, brickBuffer);
-            resultNodeLevel = origNodeLevel;
-        }
-        else { //< brick is not in GPU buffer => try ancestor nodes
-            setBrickRequested(brickFlagBuffer + origNode.offset_, true);
-
-            // use parent or grandparent node, if they have a brick, but not in refinement mode
-            #if defined(USE_ANCESTOR_NODES) && !defined(DISPLAY_MODE_REFINEMENT)
-            if (hasBrick(parentNode.value_)) {
-                resultNode = parentNode;
-                resultNodeLevel = origNodeLevel-1;
-                *brick = getNodeBrick(parentNode.value_, brickBuffer);
-                *nodeHasBrick = true;
-            }
-            else if (hasBrick(grandParentNode.value_)) {
-                if (!isHomogeneous(parentNode.value_))
-                    setBrickRequested(brickFlagBuffer + parentNode.offset_, true);
-                resultNode = grandParentNode;
-                resultNodeLevel = origNodeLevel-2;
-                *brick = getNodeBrick(grandParentNode.value_, brickBuffer);
-                *nodeHasBrick = true;
-            }
-            else {
-                if (!isHomogeneous(parentNode.value_))
-                    setBrickRequested(brickFlagBuffer + parentNode.offset_, true);
-                if (!isHomogeneous(grandParentNode.value_))
-                    setBrickRequested(brickFlagBuffer + grandParentNode.offset_, true);
-            }
-            resultNodeLevel = max(resultNodeLevel, (uint)0);
-            #endif
-        }
-    }
-#endif
 
 #ifdef ADAPTIVE_SAMPLING
     // adapt sampling step size to current node level/resolution
