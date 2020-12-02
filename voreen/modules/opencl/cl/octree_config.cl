@@ -514,7 +514,7 @@ OctreeNode getBestAvailableNodeAndRequest(const float3 samplePos, const uint req
 
     // Storage for (up to MAX_REQUEST_LEVEL) offsets of nodes that have a
     // higher resolution brick than the highest resolution currently available
-#define MAX_REQUEST_LEVEL 8 // log2(256) => then it is definitely better to use node averages
+#define MAX_REQUEST_LEVEL 7 // log2(128) => then it is definitely better to use node averages
     ulong usefulNodeOffsets[MAX_REQUEST_LEVEL];
     uint nextUsefulNodeOffsetsEntry = 0;
 
