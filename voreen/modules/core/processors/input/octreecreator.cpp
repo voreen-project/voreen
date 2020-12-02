@@ -138,7 +138,7 @@ OctreeCreator::OctreeCreator()
     , currentConfigurationHash_("octreeHash", "Octree Hash", "", INVALID_RESULT, Property::LOD_ADVANCED)
 {
     // Helper function adding conditions according to VolumeOctree.
-    auto addConditions = [] (VolumePort& port) {
+    auto addConditions = [] (VolumePort& port, bool allowOctree) {
         auto* volumeTypes = new PortConditionLogicalOr();
         volumeTypes->addLinkedCondition(new PortConditionVolumeTypeUInt8());
         volumeTypes->addLinkedCondition(new PortConditionVolumeTypeInt8());
@@ -148,17 +148,20 @@ OctreeCreator::OctreeCreator()
         volumeTypes->addLinkedCondition(new PortConditionVolumeTypeInt32());
         volumeTypes->addLinkedCondition(new PortConditionVolumeTypeFloat());
         volumeTypes->addLinkedCondition(new PortConditionVolumeTypeDouble());
+        if(allowOctree) {
+            volumeTypes->addLinkedCondition(new PortConditionVolumeRepresentation<VolumeOctree>("VolumeOctree"));
+        }
         port.addCondition(volumeTypes);
     };
 
     addPort(volumeInport_);
-    addConditions(volumeInport_);
+    addConditions(volumeInport_, true);
     addPort(volumeInport2_);
-    addConditions(volumeInport2_);
+    addConditions(volumeInport2_, false);
     addPort(volumeInport3_);
-    addConditions(volumeInport3_);
+    addConditions(volumeInport3_, false);
     addPort(volumeInport4_);
-    addConditions(volumeInport4_);
+    addConditions(volumeInport4_, false);
     addPort(volumeOutport_);
 
     brickDimensions_.addOption("treeDepth", "Derive from Tree Depth",     0);
