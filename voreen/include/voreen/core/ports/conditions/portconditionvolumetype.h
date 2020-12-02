@@ -182,6 +182,22 @@ protected:
     T minValue_, maxValue_;
 };
 
+/**
+ * Port condition that allows volumes that have a specific representation
+ */
+template<typename T>
+class VRN_CORE_API PortConditionVolumeRepresentation : public PortCondition {
+public:
+    PortConditionVolumeRepresentation(std::string className);
+
+    virtual bool acceptsPortData() const;
+
+protected:
+    virtual void setCheckedPort(const Port* checkedPort);
+
+    const VolumePort* volumePort_;
+};
+
 // ------------------------------------------------------------------------------------------------
 // implementation of PortConditionVolumeValueRange
 
@@ -212,6 +228,35 @@ void PortConditionVolumeValueRange<T>::setCheckedPort(const Port* checkedPort)
 {
     if (!dynamic_cast<const VolumePort*>(checkedPort)) {
         LERRORC("voreen.PortConditionVolumeValueRange", "Assigned port is not a volume port");
+    }
+    else {
+        volumePort_ = static_cast<const VolumePort*>(checkedPort);
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+// implementation of PortConditionVolumeRepresentation
+template <typename T>
+PortConditionVolumeRepresentation<T>::PortConditionVolumeRepresentation(std::string className)
+    : PortCondition("Volume does not have a " + className + " representation.")
+    , volumePort_(nullptr)
+{
+}
+
+template <typename T>
+bool PortConditionVolumeRepresentation<T>::acceptsPortData() const
+{
+    if (!volumePort_ || !volumePort_->hasData())
+        return false;
+
+    return volumePort_->getData()->hasRepresentation<T>();
+}
+
+template <typename T>
+void PortConditionVolumeRepresentation<T>::setCheckedPort(const Port* checkedPort)
+{
+    if (!dynamic_cast<const VolumePort*>(checkedPort)) {
+        LERRORC("voreen.PortConditionVolumeRepresentation", "Assigned port is not a volume port");
     }
     else {
         volumePort_ = static_cast<const VolumePort*>(checkedPort);
