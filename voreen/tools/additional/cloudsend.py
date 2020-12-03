@@ -6,6 +6,7 @@ from xml.etree import ElementTree
 import threading
 from collections import namedtuple
 import sys
+import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--server', help='Server URL', type=str, default='https://uni-muenster.sciebo.de')
@@ -26,6 +27,8 @@ reports_web_server_root = "https://sso.uni-muenster.de/IVV5WS/vrreports"
 overview_file_name = "overview.html"
 overview_css_name = "overview.css"
 regressiontest_report_file = "regressiontest-report.html"
+datetime_format = '%Y-%m-%d-%H:%M:%S' #See .gitlab-ci.yaml
+report_deletion_period = datetime.timedelta(days=90) #Delete all reports older than this period
 
 url_base = args.server + '/' + pubsuffix
 
@@ -43,7 +46,6 @@ def save_request(request):
     return None
 
 def retry_request(request):
-    code = 500
     num_tries = 0
     rep = save_request(request)
     while (rep is None or rep.status_code == 500) and num_tries < max_server_error_retries:
@@ -144,7 +146,7 @@ class Run(object):
         run = Run()
         run.build = components[-1]
         run.commit = components[-2]
-        run.date = components[-3]
+        run.date = datetime.datetime.strptime(components[-3], datetime_format)
         run.branch = "--".join(components[:-3])
         return run
     def __repr__(self):
@@ -174,15 +176,19 @@ if args.add_ci_report:
     listing = list_dir("/" + report_base_dir)
     runs = []
     matching_runs = []
+    outdated = []
+    deletion_date = datetime.datetime.now() - report_deletion_period
     for s in listing:
         r = Run.parse(os.path.normpath(s))
         if r:
             runs.append(r)
             if r.branch == run.branch and r.build == run.build:
                 matching_runs.append(r)
+            if r.date < deletion_date:
+                outdated.append(r)
 
     matching_runs.sort(key=lambda r: r.date, reverse=True)
-    to_delete = matching_runs[args.max_old_runs:]
+    to_delete = set(matching_runs[args.max_old_runs:] + outdated)
     for d in to_delete:
         print("Deleting old run: {}".format(d.path()))
         delete(report_base_dir + "/" + d.path())
