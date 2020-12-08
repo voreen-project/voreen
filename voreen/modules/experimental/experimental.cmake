@@ -36,7 +36,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/geometryeventblocker.cpp
     ${MOD_DIR}/processors/illuminationlineraycaster.cpp
     ${MOD_DIR}/processors/imageabstraction.cpp
-    ${MOD_DIR}/processors/jacobian.cpp
     ${MOD_DIR}/processors/manualsegmentation.cpp
     ${MOD_DIR}/processors/manualsegmentationstorage.cpp
     ${MOD_DIR}/processors/markstats.cpp
@@ -92,7 +91,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/geometrydelay.h
     ${MOD_DIR}/processors/geometryeventblocker.h
     ${MOD_DIR}/processors/imageabstraction.h
-    ${MOD_DIR}/processors/jacobian.h
     ${MOD_DIR}/processors/manualsegmentation.h
     ${MOD_DIR}/processors/manualsegmentationstorage.h
     ${MOD_DIR}/processors/markstats.h

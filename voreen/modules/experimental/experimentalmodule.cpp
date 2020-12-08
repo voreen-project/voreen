@@ -35,7 +35,6 @@
 #include "processors/geometryboundingbox.h"
 #include "processors/illuminationlineraycaster.h"
 #include "processors/imageabstraction.h"
-#include "processors/jacobian.h"
 #include "processors/manualsegmentation.h"
 #include "processors/manualsegmentationstorage.h"
 #include "processors/markstats.h"
@@ -87,7 +86,6 @@ ExperimentalModule::ExperimentalModule(const std::string& modulePath)
     registerSerializableType(new GeometryEventBlocker());
     registerSerializableType(new GeometryBoundingBox());
     registerSerializableType(new ImageAbstraction());
-    registerSerializableType(new Jacobian());
     registerSerializableType(new ManualSegmentation());
     registerSerializableType(new ManualSegmentationStorage());
     registerSerializableType(new MarkStats());
