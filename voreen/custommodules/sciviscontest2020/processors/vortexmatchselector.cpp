@@ -26,7 +26,7 @@
 #include "vortexmatchselector.h"
 
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
-#include "modules/flowanalysis/processors/vortex/vortextracking.h"
+#include "custommodules/sciviscontest2020/processors/vortextracking.h"
 
 namespace voreen {
 

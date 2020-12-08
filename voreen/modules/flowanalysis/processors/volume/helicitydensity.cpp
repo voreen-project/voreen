@@ -105,6 +105,8 @@ void HelicityDensity::process() {
 
     Volume* output = new Volume(volume, velocityInport_.getData());
     output->setRealWorldMapping(RealWorldMapping()); // Reset real world mapping.
+    output->setModality(Modality("helicity density"));
+
     if(normalize_.get()) {
         for(size_t i=0; i<volume->getNumVoxels(); i++) {
             if(volume->voxel(i) < 0.0f) {

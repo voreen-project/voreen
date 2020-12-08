@@ -30,6 +30,7 @@
 #include "voreen/core/datastructures/volume/operators/volumeoperatorresample.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
@@ -55,6 +56,7 @@ VolumeResampleTransformation::VolumeResampleTransformation()
     , outputSizeMB_("outputSizeMB", "Output size (MB)")
 {
     addPort(inport_);
+    inport_.addCondition(new PortConditionVolumeChannelCount(1));
     addPort(outport_);
 
         addProperty(spacingHandling_);

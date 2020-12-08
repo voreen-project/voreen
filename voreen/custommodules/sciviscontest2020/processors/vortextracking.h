@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,43 +23,35 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "geometryoffsetremove.h"
+#ifndef VRN_VORTEXTRACKING_H
+#define VRN_VORTEXTRACKING_H
 
-#include "voreen/core/datastructures/geometry/geometry.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/ports/geometryport.h"
+
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
 namespace voreen {
 
-const std::string GeometryOffsetRemove::loggerCat_("voreen.flowsimulation.GeometryOffsetRemove");
+class VortexTracking : public Processor {
+public:
+    VortexTracking();
+    virtual Processor *create() const { return new VortexTracking(); }
+    virtual std::string getClassName() const { return "VortexTracking"; }
+    virtual std::string getCategory() const { return "Vortex Processing"; }
 
-GeometryOffsetRemove::GeometryOffsetRemove()
-    : Processor()
-    , inport_(Port::INPORT, "geometry.input", "Geometry Input")
-    , outport_(Port::OUTPORT, "geometry.output", "Geometry Output", false)
-    , enableProcessing_("enableProcessing", "Enable", true)
-{
-    addPort(inport_);
-    addPort(outport_);
+    static void Process(const Vortex &vortex, const std::vector<Vortex> &vortices, float maxDistanceSameCoreline, size_t& outTrackedVortexIndex);
 
-    addProperty(enableProcessing_);
-}
+protected:
+    virtual void process();
 
-Processor* GeometryOffsetRemove::create() const {
-    return new GeometryOffsetRemove();
-}
+private:
+    VortexPort _inVortex;
+    VortexListPort _inVortices;
+    GeometryPort _outTrackedCoreline;
+    FloatProperty _maxDistanceSameCoreline;
+};
 
-void GeometryOffsetRemove::process() {
-    const Geometry* inputGeometry = inport_.getData();
-    tgtAssert(inputGeometry, "no input geometry");
-    if (!enableProcessing_.get()) {
-        outport_.setData(inputGeometry, false);
-        return;
-    }
+} // namespace voreen
 
-    // clone and transform input geometry
-    std::unique_ptr<Geometry> outputGeometry = inputGeometry->clone();
-    tgt::vec3 offset = outputGeometry->getBoundingBox(true).getLLF();
-    outputGeometry->transform(tgt::mat4::createTranslation(-offset));
-    outport_.setData(outputGeometry.release());
-}
-
-}   // namespace
+#endif

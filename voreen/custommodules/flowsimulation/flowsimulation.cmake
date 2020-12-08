@@ -24,16 +24,12 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/ports/flowparametrizationport.cpp
 
     # processors
-    ${MOD_DIR}/processors/features/lambda2criterion.cpp
-    ${MOD_DIR}/processors/features/lambdacicriterion.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
-    ${MOD_DIR}/processors/geometry/geometryoffsetremove.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
     ${MOD_DIR}/processors/plotting/roianalysis.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
     ${MOD_DIR}/processors/simulation/flowensemblecreator.cpp
-    #${MOD_DIR}/processors/simulation/flowindicatorselection.cpp
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
     ${MOD_DIR}/processors/simulation/flowparametrizationensemble.cpp
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.cpp
@@ -63,16 +59,12 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/ports/flowparametrizationport.h
 
     # processors
-    ${MOD_DIR}/processors/features/lambda2criterion.h
-    ${MOD_DIR}/processors/features/lambdacicriterion.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
-    ${MOD_DIR}/processors/geometry/geometryoffsetremove.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
     ${MOD_DIR}/processors/plotting/roianalysis.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h
     ${MOD_DIR}/processors/simulation/flowensemblecreator.h
-    #${MOD_DIR}/processors/simulation/flowindicatorselection.h
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
     ${MOD_DIR}/processors/simulation/flowparametrizationensemble.h
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.h

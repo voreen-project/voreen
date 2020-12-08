@@ -61,7 +61,7 @@ private:
 
     BoolProperty addTime_;
     FileDialogProperty timeInformationFile_;
-    StringProperty nameString_;
+    StringProperty modalityString_;
 
     std::vector<std::unique_ptr<VolumeBase>> decorators_;
     void clearOutput();

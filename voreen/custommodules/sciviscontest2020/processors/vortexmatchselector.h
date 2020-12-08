@@ -32,7 +32,7 @@
 #include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/properties/string/stringlistproperty.h"
 
-#include "modules/flowanalysis/ports/vortexport.h"
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
 namespace voreen {
 class VortexMatchSelector : public RenderProcessor 	{

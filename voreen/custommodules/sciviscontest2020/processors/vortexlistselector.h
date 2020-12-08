@@ -23,46 +23,63 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_LAMBDACICRITERION_H
-#define VRN_LAMBDACICRITERION_H
+#ifndef VRN_VORTEXLISTSELECTOR_H
+#define VRN_VORTEXLISTSELECTOR_H
 
-#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/geometryport.h"
-#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
+#include "voreen/core/properties/string/stringlistproperty.h"
+
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
 namespace voreen {
+class VortexListSelector : public Processor {
+private:
+    enum RotationOptions {
+        OPTION_CW, //Clockwise
+        OPTION_CCW, //Counterclockwise
+        OPTION_B, //Both
+    };
 
-struct LambdaCiCriterionInput {
-    PortDataPointer<VolumeBase> inputVolume;
-    std::unique_ptr<VolumeRAM_Float> outputVolume;
-};
-
-struct LambdaCiCriterionOutput {
-    std::unique_ptr<VolumeBase> volume;
-};
-
-class LambdaCiCriterion : public AsyncComputeProcessor<LambdaCiCriterionInput, LambdaCiCriterionOutput> {
 public:
-    LambdaCiCriterion();
+    VortexListSelector();
 
-    virtual Processor* create() const;
-    virtual std::string getClassName() const      { return "LambdaCiCriterion";     }
-    virtual std::string getCategory() const       { return "Feature Extraction";    }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
+    Processor* create() const override
+    {
+        return new VortexListSelector();
+    }
+    std::string getClassName() const override
+    {
+        return "VortexListSelector";
+    }
+    std::string getCategory() const override
+    {
+        return "Vortex Processing";
+    }
 
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
+    bool isReady() const override
+    {
+        return _inportVortexCollection.isReady();
+    }
+
+    static void Process( const VortexCollection& vortices, const std::vector<int>& runs, int firstTimestep, int lastTimestep, int minLength,RotationOptions rot, std::vector<Vortex>& outVortexList );
 
 private:
+    void process() override;
+    void updatePropertyCorelineLength();
 
-    // Ports
-    VolumePort inputVolume_;
-    VolumePort outputVolume_;
+    VortexCollectionPort _inportVortexCollection;
+    VortexListPort _outportVortexList;
+    GeometryPort _outportGeometry;
 
-    static const std::string loggerCat_;
+    StringListProperty _propertyMembers;
+    IntIntervalProperty _propertyTimesteps;
+    IntProperty _propertyCorelineLength;
+    OptionProperty<RotationOptions> _Rotation;
 };
 
-} // namespace voreen
+}
 
-#endif
+#endif // VRN_VORTEXLISTSELECTOR_H

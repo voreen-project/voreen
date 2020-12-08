@@ -217,6 +217,7 @@ void GeometryClose::process() {
 
     if(numHoles > 0) {
         LINFO("Automatically closed " << numHoles << ((numHoles > 1) ? " holes." : " hole."));
+        outputGeometry->setTransformationMatrix(inputGeometry->getTransformationMatrix());
         outport_.setData(outputGeometry.release());
     }
     else {

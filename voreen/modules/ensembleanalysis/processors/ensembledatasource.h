@@ -45,12 +45,6 @@ namespace voreen {
  * Loads an Ensemble of Volumes, organized into multiple members.
  */
 class VRN_CORE_API EnsembleDataSource : public Processor {
-
-    static const std::string SCALAR_FIELD_NAME; // Deprecated!
-    static const std::string NAME_FIELD_NAME;
-    static const std::string SIMULATED_TIME_NAME;
-    static const std::string FALLBACK_FIELD_NAME;
-
 public:
     EnsembleDataSource();
     virtual Processor* create() const;

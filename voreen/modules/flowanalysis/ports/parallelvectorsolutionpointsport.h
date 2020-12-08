@@ -48,10 +48,12 @@ struct ParallelVectorSolutions {
 
 class VRN_CORE_API ParallelVectorSolutionPointsPort : public GenericPort<ParallelVectorSolutions> {
 public:
-    ParallelVectorSolutionPointsPort(PortDirection direction, const std::string &id, const std::string &guiName = {}, bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
+    ParallelVectorSolutionPointsPort(PortDirection direction, const std::string& id, const std::string& guiName = "", bool allowMultipleConnections = false, Processor::InvalidationLevel invalidationLevel = Processor::INVALID_RESULT);
 
-    virtual Port* create(PortDirection direction, const std::string& id, const std::string& guiName = {}) const;
+    virtual Port* create(PortDirection direction, const std::string& id, const std::string& guiName = "") const;
     virtual std::string getClassName() const;
+    virtual tgt::col3 getColorHint() const;
+    virtual std::string getContentDescription() const;
     virtual std::string getContentDescriptionHTML() const;
 };
 

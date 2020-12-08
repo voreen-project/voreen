@@ -55,7 +55,7 @@ class SpatioTemporalSampler {
 public:
 
     /**
-     * Initializes a spatio-temporal sampler that samples between two volumes.
+     * Initializes a spatio-temporal sampler that samples linearly between two volumes.
      * @param volume0 first volume
      * @param volume1 second volume
      * @param alpha value in range [0,1]. alpha = 0 will return sample in volume0, alpha = 1 in volume1, respectively

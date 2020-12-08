@@ -29,8 +29,8 @@
 #include "voreen/core/datastructures/volume/operators/volumeoperatorconvert.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 
-#include "modules/flowanalysis/processors/volume/accelerationprocessor.h"
-#include "modules/flowanalysis/processors/volume/vortexprocessor.h"
+#include "modules/flowanalysis/processors/volume/acceleration.h"
+#include "custommodules/sciviscontest2020/processors/vortexprocessor.h"
 
 #include "Eigen/Eigenvalues"
 
@@ -144,7 +144,7 @@ void ApproximateParallelVectors::process() {
             VortexProcessor::Process( *volumeVelocity, *volumeMask.operator->(), *volumeJacobi, nullptr, nullptr, nullptr );
 
             auto volumeAcceleration = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
-            AccelerationProcessor::Process( *volumeJacobi, *volumeVelocity, *volumeAcceleration );
+            Acceleration::Process(*volumeJacobi, *volumeVelocity, *volumeAcceleration );
 
 #pragma omp parallel for
             for( long i = 0; i < static_cast<long>( voxels.size() ); ++i )
@@ -182,7 +182,7 @@ void ApproximateParallelVectors::process() {
             VortexProcessor::Process( *volumeVelocity, *volumeMask.operator->(), *volumeJacobi, nullptr, nullptr, nullptr );
 
             auto volumeAcceleration = std::unique_ptr<VolumeRAM_3xFloat>( new VolumeRAM_3xFloat( dim ) );
-            AccelerationProcessor::Process( *volumeJacobi, *volumeVelocity, *volumeAcceleration );
+            Acceleration::Process(*volumeJacobi, *volumeVelocity, *volumeAcceleration );
 
 #pragma omp parallel for
             for( long i = 0; i < static_cast<long>( voxels.size() ); ++i )

@@ -23,46 +23,33 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_LAMBDA2CRITERION_H
-#define VRN_LAMBDA2CRITERION_H
+#ifndef VRN_VORTEXCOLLECTIONSOURCE_H
+#define VRN_VORTEXCOLLECTIONSOURCE_H
 
-#include "voreen/core/processors/asynccomputeprocessor.h"
-#include "voreen/core/ports/geometryport.h"
-#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/properties/filedialogproperty.h"
+
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
 namespace voreen {
 
-struct Lambda2CriterionInput {
-    PortDataPointer<VolumeBase> inputVolume;
-    std::unique_ptr<VolumeRAM_Float> outputVolume;
-};
-
-struct Lambda2CriterionOutput {
-    std::unique_ptr<VolumeBase> volume;
-};
-
-class Lambda2Criterion : public AsyncComputeProcessor<Lambda2CriterionInput, Lambda2CriterionOutput> {
+class VortexCollectionSource : public Processor {
 public:
-    Lambda2Criterion();
-
+    VortexCollectionSource();
     virtual Processor* create() const;
-    virtual std::string getClassName() const      { return "Lambda2Criterion";     }
-    virtual std::string getCategory() const       { return "Feature Extraction";    }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
 
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
+    virtual std::string getClassName() const;
+    virtual std::string getCategory() const;
 
 private:
+    virtual void process();
 
-    // Ports
-    VolumePort inputVolume_;
-    VolumePort outputVolume_;
+    VortexCollectionPort _outportVortexCollection;
 
-    static const std::string loggerCat_;
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertyLoadButton;
 };
 
-} // namespace voreen
+}
 
-#endif
+#endif // VRN_VORTEXCOLLECTIONSOURCE_H

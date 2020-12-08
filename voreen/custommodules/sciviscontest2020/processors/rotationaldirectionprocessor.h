@@ -23,35 +23,38 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_CURLPROCESSOR_H
-#define VRN_CURLPROCESSOR_H
+#ifndef VRN_ROTATIONALDIRECTIONPROCESSOR_H
+#define VRN_ROTATIONALDIRECTIONPROCESSOR_H
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
 #include "modules/ensembleanalysis/ports/ensembledatasetport.h"
-#include "modules/flowanalysis/ports/vortexport.h"
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
 namespace voreen {
 
-class VRN_CORE_API CurlProcessor : public Processor {
+class VRN_CORE_API RotationalDirectionProcessor : public Processor {
 public:
 
-    CurlProcessor();
+    RotationalDirectionProcessor();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const { return "CurlProcessor"; }
+
+    virtual std::string getClassName() const { return "RotationalDirectionProcessor"; }
+
     virtual std::string getCategory() const { return "Volume Processing"; }
+
     virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
 
-    static void Process( const VolumeRAM_Mat3Float& jacobi, VolumeRAM_3xFloat& outCurl );
+    static void Process( const VolumeRAM_3xFloat& curl, Vortex& vortex );
 
 protected:
 
     virtual void setDescriptions()
     {
-        setDescription("Calculates the Curl of a given Vectorfield");
+        setDescription("Calculates the direction of a Vortex, by analysing its coreline and curl");
     }
 
     virtual void process();
@@ -59,7 +62,8 @@ protected:
 private:
 
     VolumePort inport_;
-    VolumePort outport_;
+    VortexPort inport2_;
+    VortexPort outport_;
 
 };
 

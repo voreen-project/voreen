@@ -52,8 +52,9 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor converts a StreamlineList into a geometry that can be rendered by the GeometryRenderer. " \
-                       "Alternatively, the output can be used as foreground seeds for the random walker.");
+        setDescription("This processor converts a StreamlineList into a geometry that can be rendered by the GeometryRenderer. "
+                       "Alternatively, the output can be used as foreground seeds for the random walker. "
+                       "In order to do so, choose PointSegmentListGeometry and Voxel Coordinates.");
     }
 
     virtual void process();
@@ -69,13 +70,13 @@ private:
     };
 
     enum TargetCoordinateSystem {
-        VOXEL_SPACE,
-        WORLD_SPACE,
+        VOXEL_COORDINATES,
+        WORLD_COORDINATES,
     };
 
-    StreamlineListPort inport_;         ///< inport containing the streamlines to get the bounding box
-    GeometryPort outport_;              ///< port containing the 2 points of the bounding box
-    OptionProperty<GeometryType> geometryType_; ///< geometry type to be used as output
+    StreamlineListPort inport_;
+    GeometryPort outport_;
+    OptionProperty<GeometryType> geometryType_;
     OptionProperty<TargetCoordinateSystem> targetCoordinateSystem_;
 
     static const std::string loggerCat_;

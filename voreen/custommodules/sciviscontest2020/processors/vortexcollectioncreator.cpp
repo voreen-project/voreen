@@ -25,13 +25,14 @@
 
 #include "vortexcollectioncreator.h"
 
-#include "modules/flowanalysis/processors/corelines/parallelvectors.h"
-#include "modules/flowanalysis/processors/corelines/corelinecreator.h"
-#include "modules/flowanalysis/processors/volume/accelerationprocessor.h"
-#include "modules/flowanalysis/processors/volume/curlprocessor.h"
-#include "modules/flowanalysis/processors/volume/vortexprocessor.h"
-#include "modules/flowanalysis/processors/vortex/rotationaldirectionprocessor.h"
-#include "modules/flowanalysis/processors/vortex/vortextracking.h"
+#include "modules/flowanalysis/processors/geometry/parallelvectors.h"
+#include "modules/flowanalysis/processors/geometry/corelinecreator.h"
+#include "modules/flowanalysis/processors/volume/acceleration.h"
+
+#include "custommodules/sciviscontest2020/processors/curlprocessor.h"
+#include "custommodules/sciviscontest2020/processors/vortexprocessor.h"
+#include "custommodules/sciviscontest2020/processors/rotationaldirectionprocessor.h"
+#include "custommodules/sciviscontest2020/processors/vortextracking.h"
 
 #include "voreen/core/memorymanager/volumememorymanager.h"
 
@@ -149,7 +150,7 @@ void VortexCollectionCreator::updateButton()
 
             // --- Acceleration Processor --- //
             auto acceleration = std::unique_ptr<VolumeRAM_3xFloat>(new VolumeRAM_3xFloat( dim ) );
-            AccelerationProcessor::Process( *jacobi, *velocity, *acceleration);
+            Acceleration::Process(*jacobi, *velocity, *acceleration);
 
             // --- Parallel Vectors --- //
             auto parallelVectors = std::unique_ptr<ParallelVectorSolutions>( new ParallelVectorSolutions() );

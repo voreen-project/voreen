@@ -23,59 +23,51 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "modules/flowanalysis/flowanalysismodule.h"
+#include "sciviscontest2020module.h"
 
-// processors
-#include "processors/geometry/corelinecreator.h"
-#include "processors/geometry/parallelvectors.h"
-#include "processors/geometry/streamlinetoboundingbox.h"
-#include "processors/geometry/streamlinetogeometry.h"
-#include "processors/render/flowdirectionoverlay.h"
-#include "processors/render/streamlinerenderer3d.h"
-#include "processors/streamline/pathlinecreator.h"
-#include "processors/streamline/streamlinebundledetector.h"
-#include "processors/streamline/streamlinecombine.h"
-#include "processors/streamline/streamlinecreator.h"
-#include "processors/streamline/streamlinefilter.h"
-#include "processors/streamline/streamlinerotation.h"
-#include "processors/streamline/streamlinesave.h"
-#include "processors/streamline/streamlineselector.h"
-#include "processors/streamline/streamlinesource.h"
-#include "processors/volume/acceleration.h"
-#include "processors/volume/helicitydensity.h"
-#include "processors/volume/jacobian.h"
-#include "processors/volume/vortexcriterion.h"
+#include "processors/approximateparallelvectors.h"
+#include "processors/curlprocessor.h"
+#include "processors/corelinedensityvolumecreator.h"
+#include "processors/flowmapprocessor.h"
+#include "processors/ftvaprocessor.h"
+#include "processors/vortexprocessor.h"
+#include "processors/particlerenderer.h"
+#include "processors/rotationaldirectionprocessor.h"
+#include "processors/uncertainvectorfieldprocessor.h"
+#include "processors/vortexcollectioncreator.h"
+#include "processors/vortexcollectionsource.h"
+#include "processors/vortexlistselector.h"
+#include "processors/vortexmatchselector.h"
+#include "processors/vortexprocessor.h"
+#include "processors/vortexselector.h"
+#include "processors/vortextracking.h"
 
 namespace voreen {
 
-FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
+SciVisContest2020Module::SciVisContest2020Module(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("Flow Analysis");
-    setGuiName("Flow Analysis");
+    setID("SciVis Contest 2020");
+    setGuiName("SciVis Contest 2020");
 
     addShaderPath(getModulePath("glsl"));
 
     // processors
-    registerProcessor(new Acceleration());
-    registerProcessor(new CorelineCreator());
-    registerProcessor(new FlowDirectionOverlay());
-    registerProcessor(new HelicityDensity());
-    registerProcessor(new Jacobian());
-    registerProcessor(new ParallelVectors());
-    registerProcessor(new PathlineCreator());
-    registerProcessor(new StreamlineBundleDetector());
-    registerProcessor(new StreamlineCombine());
-    registerProcessor(new StreamlineCreator());
-    registerProcessor(new StreamlineFilter());
-    registerProcessor(new StreamlineRenderer3D());
-    registerProcessor(new StreamlineRotation());
-    registerProcessor(new StreamlineSave());
-    registerProcessor(new StreamlineSelector());
-    registerProcessor(new StreamlineSource());
-    registerProcessor(new StreamlineToBoundingBox());
-    registerProcessor(new StreamlineToGeometry());
-    registerProcessor(new VortexCriterion());
+    registerProcessor(new ApproximateParallelVectors());
+    registerProcessor(new CorelineDensityVolumeCreator());
+    registerProcessor(new CurlProcessor());
+    registerProcessor(new FlowMapProcessor());
+    registerProcessor(new FTVAProcessor());
+    registerProcessor(new ParticleRenderer());
+    registerProcessor(new RotationalDirectionProcessor());
+    registerProcessor(new UncertainVectorFieldProcessor());
+    registerProcessor(new VortexCollectionCreator());
+    registerProcessor(new VortexCollectionSource());
+    registerProcessor(new VortexListSelector());
+    registerProcessor(new VortexMatchSelector());
+    registerProcessor(new VortexProcessor());
+    registerProcessor(new VortexSelector());
+    registerProcessor(new VortexTracking());
 }
 
 } // namespace

@@ -54,6 +54,8 @@ protected:
 
 private:
 
+    std::vector<std::unique_ptr<VolumeBase>> decorators_;
+
     VolumePort inport_;
     VolumeListPort outport_;
 };

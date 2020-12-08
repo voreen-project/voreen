@@ -23,69 +23,53 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_FLOWINDICATORSELECTION_H
-#define VRN_FLOWINDICATORSELECTION_H
+#ifndef VRN_VORTEXCRITERION_H
+#define VRN_VORTEXCRITERION_H
 
-#include "voreen/core/processors/renderprocessor.h"
-
-#include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/matrixproperty.h"
-
-#include "../../datastructures/flowparameters.h"
-#include "../../ports/flowparametrizationport.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/ports/geometryport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-/**
- * This processor is being used to select in and out flow.
- */
-class VRN_CORE_API FlowIndicatorSelection : public RenderProcessor {
+struct VortexCriterionIO {
+    PortDataPointer<VolumeBase> inputJacobian;
+    std::unique_ptr<VolumeRAM_Float> outputCriterion;
+    std::function<float(const tgt::mat3&)> criterion;
+};
+
+class VortexCriterion : public AsyncComputeProcessor<VortexCriterionIO, VortexCriterionIO> {
 public:
-    FlowIndicatorSelection();
-    virtual Processor* create() const         { return new FlowIndicatorSelection();    }
+    VortexCriterion();
 
-    virtual std::string getClassName() const  { return "FlowIndicatorSelection";        }
-    virtual std::string getCategory() const   { return "Simulation";                    }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
-
-    virtual bool isReady() const;
-    virtual void process();
+    virtual Processor* create() const;
+    virtual std::string getClassName() const      { return "VortexCriterion";       }
+    virtual std::string getCategory() const       { return "Volume Processing";     }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
+
     virtual void setDescriptions() {
-        setDescription("This processor is being used to select in and out flow.");
+        setDescription("Calculates a voxel-wise vortex criterion");
+        inputJacobian_.setDescription("Jacobi matrix of a 3D vector-valued volume");
+        criterion_.setDescription("Choose between on of the currently implemented vortex criteria.");
     }
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 private:
 
-    void selectRegion(tgt::MouseEvent* e);
+    // Ports
+    VolumePort inputJacobian_;
+    VolumePort outputCriterion_;
 
-    RenderPort renderInport_;
-    RenderPort renderOutport_;
-
-    FlowParametrizationPort flowParametrizationPort_;
-
-    StringProperty ensembleName_;
-    FloatProperty simulationTime_;
-    FloatProperty temporalResolution_;
-    IntProperty numTimeSteps_;
-
-    FloatMat4Property pickingMatrix_;       ///< Picking matrix from SliceViewer
-
-    tgt::plane plane_;
-    tgt::vec3 xVec_;
-    tgt::vec3 yVec_;
-    tgt::vec3 origin_;
-    float samplingRate_;
-    tgt::ivec2 resolution_;
-
-    std::vector<FlowIndicator> flowIndicators_;
-
-    bool rebuildOutput_;
+    StringOptionProperty criterion_;
 
     static const std::string loggerCat_;
 };
 
-}   //namespace
+} // namespace voreen
 
 #endif

@@ -1,0 +1,491 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="0" y="0" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
+            </MetaData>
+            <Processors>
+                <Processor type="EnsembleDataSource" name="EnsembleDataSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-262" y="-276" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="colorMap" name="colorMap">
+                            <colors name="">
+                                <colors>
+                                    <item x="0" y="0" z="1" w="1" />
+                                    <item x="1" y="0" z="0" w="1" />
+                                    <item x="1" y="1" z="0" w="1" />
+                                </colors>
+                            </colors>
+                        </Property>
+                        <Property mapKey="ensemblepath" name="ensemblepath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="hash" name="hash" value="" />
+                        <Property mapKey="loadDataset" name="loadDataset" />
+                        <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Name" />
+                                <item value="Num Time Steps" />
+                                <item value="Start Time" />
+                                <item value="End Time" />
+                                <item value="Duration" />
+                            </columnLabels>
+                            <values />
+                        </Property>
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="manual" />
+                        <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideTime" name="overrideTime" value="false" />
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="timeStepProgress" name="timeStepProgress" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="ensembledataset" direction="0" portID="ensembledataset" guiName="EnsembleDataset Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ParallelCoordinatesAxesCreator" name="ParallelCoordinatesAxesCreator" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-188" y="-96" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateAbort" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="property_aggregate_runs" name="property_aggregate_runs" value="false" />
+                        <Property mapKey="property_fields" name="property_fields">
+                            <selectedRow />
+                            <values />
+                        </Property>
+                        <Property mapKey="property_file_dialog" name="property_file_dialog" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="property_runs" name="property_runs">
+                            <selectedRow />
+                            <values />
+                        </Property>
+                        <Property mapKey="property_save" name="property_save" />
+                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="1" />
+                        <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Stopped" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="port_ensemble" direction="1" portID="port_ensemble" guiName="Ensemble Input" allowMultipleConnections="false" invalidationLevel="0">
+                            <Properties />
+                        </Port>
+                        <Port name="port_volume" direction="1" portID="port_volume" guiName="Volume Mask Input" allowMultipleConnections="false" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="port_axes" direction="0" portID="port_axes" guiName="Parallel Coordinates Axes" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="Mask" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="81" y="-276" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="" absolute="false">
+                                <path noPathSet="true" />
+                                <searchParameters />
+                            </urls>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ParallelCoordinatesViewer" name="ParallelCoordinatesViewer" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-165" y="52" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="event_property_hover" name="event_property_hover" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="event_property_mouse" name="event_property_mouse" enabled="true" mouseAction="127" mouseButtons="5" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="property_density_blending" name="property_density_blending" value="false" />
+                        <Property mapKey="property_density_selected_samples" name="property_density_selected_samples" value="1" />
+                        <Property mapKey="property_density_visible_samples" name="property_density_visible_samples" value="1" />
+                        <Property mapKey="property_field_interval" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="property_section" name="property_section" />
+                        <Property mapKey="property_selected_field" name="property_selected_field" value="">
+                            <Options />
+                        </Property>
+                        <Property mapKey="property_selected_member" name="property_selected_member" value="">
+                            <Options />
+                        </Property>
+                        <Property mapKey="property_selected_samples" name="property_selected_samples" />
+                        <Property mapKey="property_selected_timestep" name="property_selected_timestep" value="0" />
+                        <Property mapKey="property_trans_func0" name="property_trans_func0" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func1" name="property_trans_func1" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func2" name="property_trans_func2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func3" name="property_trans_func3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func_field0" name="property_trans_func_field0" value="">
+                            <Options />
+                        </Property>
+                        <Property mapKey="property_trans_func_field1" name="property_trans_func_field1" value="">
+                            <Options />
+                        </Property>
+                        <Property mapKey="property_trans_func_field2" name="property_trans_func_field2" value="">
+                            <Options />
+                        </Property>
+                        <Property mapKey="property_trans_func_field3" name="property_trans_func_field3" value="">
+                            <Options />
+                        </Property>
+                        <Property mapKey="property_trans_func_intern0" name="property_trans_func_intern0" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func_intern1" name="property_trans_func_intern1" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func_intern2" name="property_trans_func_intern2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_trans_func_intern3" name="property_trans_func_intern3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="property_visualization_mode" name="property_visualization_mode" value="">
+                            <Options>
+                                <Option Key="fields" Description="Single Time Step" Value="0">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="timesteps" Description="All Time Steps" Value="1">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                            </Options>
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="port_axes" direction="1" portID="port_axes" guiName="Parallel Coordinates Axes" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="port_render" direction="0" portID="port_render" guiName="RenderPort" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="port_render.renderSizeReceive" name="port_render.renderSizeReceive" id="ref7">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-99" y="169" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="angle" name="angle" value="60" />
+                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="monochrome" />
+                        <Property mapKey="blendMode" name="blendMode" value="alpha-blending" />
+                        <Property mapKey="color1" name="color1">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="color2" name="color2">
+                            <value x="0.39199999" y="0.39199999" z="0.39199999" w="1" />
+                        </Property>
+                        <Property mapKey="enable" name="enable" value="true" />
+                        <Property mapKey="randomClouds" name="randomClouds" value="true" />
+                        <Property mapKey="repeat" name="repeat" value="1" />
+                        <Property mapKey="shader.program" name="shader.program">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="-25" width="700" height="700" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
+                                <item shaderType="1" originalFilename="image/background.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-85" y="278" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1574" y="773" width="256" height="256" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="1574" y="773" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="256" y="256" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="256" y="256" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref6">
+                                    <value x="256" y="256" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="port_ensemble">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="port_axes">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref1" />
+                    </Outport>
+                    <Inport name="port_axes">
+                        <Processor type="ParallelCoordinatesViewer" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="port_volume">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="port_render">
+                        <Processor type="ParallelCoordinatesViewer" ref="ref2" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref4" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref5" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref6" />
+                    <DestinationProperty ref="ref7" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

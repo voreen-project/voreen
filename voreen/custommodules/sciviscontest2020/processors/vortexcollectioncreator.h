@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,46 +23,47 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_ACCELERATIONPROCESSOR_H
-#define VRN_ACCELERATIONPROCESSOR_H
+#ifndef VRN_VORTEXCOLLECTIONCREATOR_H
+#define VRN_VORTEXCOLLECTIONCREATOR_H
 
-//add base class header
 #include "voreen/core/processors/processor.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
+#include "voreen/core/properties/string/stringlistproperty.h"
 
-//add used port headers
-#include "voreen/core/ports/volumeport.h"
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
-//add used datastructure headers
-#include "voreen/core/datastructures/volume/volumeatomic.h"
+#include <chrono>
 
 namespace voreen {
 
-class VRN_CORE_API AccelerationProcessor : public Processor {
+class VortexCollectionCreator : public Processor {
 public:
-    AccelerationProcessor();
+    VortexCollectionCreator();
 
-    virtual Processor* create() const { return new AccelerationProcessor(); }
-    virtual std::string getClassName() const { return "AccelerationProcessor"; }
-    virtual std::string getCategory() const { return "Volume Processing"; }
-    
-    virtual bool isReady() const;
-
-    static void Process(const VolumeRAM_Mat3Float& jacobi, const VolumeRAM& velocity, VolumeRAM_3xFloat& outAcceleration, RealWorldMapping rwm = RealWorldMapping());
-
-protected:
-    virtual void setDescriptions() {
-        setDescription("Computes acceleration volume by multiplying jacobian and velocity for each voxel");
+    Processor* create() const override          { return new VortexCollectionCreator(); }
+    std::string getClassName() const override   { return "VortexCollectionCreator";     }
+    std::string getCategory() const override    { return "Vortex Processing";           }
+    bool isReady() const override {
+        return _inportEnsemble.isReady();
     }
 
-    virtual void process();
-
 private:
-    VolumePort inportJacobianVolume_;
-    VolumePort inportVelocityVolume_;
-    VolumePort outport_;
+    void process() override {}
+    void updateButton();
+
+    EnsembleDatasetPort _inportEnsemble;
+    VortexCollectionPort _outportVortexCollection;
+
+    StringListProperty _propertySelectedMembers;
+    IntIntervalProperty _propertyTimestepInterval;
+    IntProperty _propertyCorelineLength;
+    ButtonProperty _propertyUpdateButton;
+
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertySaveButton;
 };
 
+}
 
-} // namespace voreen
-
-#endif // VRN_ACCELERATIONPROCESSOR_H
+#endif // VRN_VORTEXCOLLECTIONCREATOR_H

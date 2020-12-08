@@ -27,7 +27,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/fieldparallelplotcreator.cpp
     ${MOD_DIR}/processors/fieldparallelplothistogram.cpp
     ${MOD_DIR}/processors/fieldparallelplotviewer.cpp
-    ${MOD_DIR}/processors/physicalclippinglinker.cpp
 
     #Ports
     ${MOD_DIR}/ports/fieldplotdataport.cpp
@@ -45,8 +44,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/fieldparallelplotcreator.h
     ${MOD_DIR}/processors/fieldparallelplothistogram.h
     ${MOD_DIR}/processors/fieldparallelplotviewer.h
-    ${MOD_DIR}/processors/physicalclippinglinker.h
-
 
     #Ports
     ${MOD_DIR}/ports/fieldplotdataport.h

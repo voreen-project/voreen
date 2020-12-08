@@ -25,6 +25,8 @@
 
 #include "volumelistadapter.h"
 
+#include "voreen/core/datastructures/volume/volumedecorator.h"
+
 namespace voreen {
 
 VolumeListAdapter::VolumeListAdapter()
@@ -43,13 +45,20 @@ Processor* VolumeListAdapter::create() const {
 }
 
 void VolumeListAdapter::process() {
+
+    // Delete old data.
+    decorators_.clear();
+
     if(!inport_.hasData()) {
         outport_.setData(nullptr);
-    } else if(inport_.hasChanged()) {
+    }
+    else if(inport_.hasChanged()) {
         VolumeList* output = new VolumeList();
 
         for(const VolumeBase* volume : inport_.getAllData()) {
-            output->add(const_cast<VolumeBase*>(volume));
+            VolumeBase* identity = new VolumeDecoratorIdentity(volume);
+            output->add(identity);
+            decorators_.push_back(std::unique_ptr<VolumeBase>(identity));
         }
 
         outport_.setData(output, true);

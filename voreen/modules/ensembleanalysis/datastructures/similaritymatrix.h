@@ -77,7 +77,7 @@ public:
 
     size_t getSize() const;
     const std::string& getHash() const;
-    const std::vector<std::string> getFieldNames() const;
+    std::vector<std::string> getFieldNames() const;
     SimilarityMatrix& getSimilarityMatrix(const std::string& fieldName);
     const SimilarityMatrix& getSimilarityMatrix(const std::string& fieldName) const;
 

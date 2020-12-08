@@ -47,8 +47,8 @@ StreamlineToGeometry::StreamlineToGeometry()
     geometryType_.addOption("glmesh", "GLMeshGeometry", GEOMETRY_GLMESH);
     geometryType_.addOption("pointsegmentlist", "PointSegmentListGeometry", GEOMETRY_POINTSEGMENTLIST);
     addProperty(targetCoordinateSystem_);
-    targetCoordinateSystem_.addOption("worldspace", "World Space", WORLD_SPACE);
-    targetCoordinateSystem_.addOption("voxelspace", "Voxel Space", VOXEL_SPACE);
+    targetCoordinateSystem_.addOption("world", "World Coordinates", WORLD_COORDINATES);
+    targetCoordinateSystem_.addOption("voxel", "Voxel Coordinates", VOXEL_COORDINATES);
 }
 
 StreamlineToGeometry::~StreamlineToGeometry() {
@@ -60,7 +60,7 @@ void StreamlineToGeometry::process() {
     if(streamlines) {
         if(geometryType_.getValue() == GEOMETRY_GLMESH) {
             GlMeshGeometryUInt32Color* geometry = new GlMeshGeometryUInt32Color();
-            if(targetCoordinateSystem_.getValue() == VOXEL_SPACE) {
+            if(targetCoordinateSystem_.getValue() == VOXEL_COORDINATES) {
                 geometry->setTransformationMatrix(streamlines->getOriginalWorldToVoxelMatrix());
             } // else: streamline data is in world space by default.
             geometry->setPrimitiveType(GL_LINE_STRIP);
@@ -83,7 +83,7 @@ void StreamlineToGeometry::process() {
         }
         else if(geometryType_.getValue() == GEOMETRY_POINTSEGMENTLIST) {
             PointSegmentListGeometryVec3* geometry = new PointSegmentListGeometryVec3();
-            if(targetCoordinateSystem_.getValue() == VOXEL_SPACE) {
+            if(targetCoordinateSystem_.getValue() == VOXEL_COORDINATES) {
                 geometry->setTransformationMatrix(streamlines->getOriginalWorldToVoxelMatrix());
             } // else: streamline data is in world space by default.
 

@@ -48,6 +48,8 @@ protected:
     virtual void setDescriptions() {
         setDescription("Calculates the helicity density for a velocity vector field and its vorticity. "
                        "Helicity density is defined by the voxel-wise dot-product of velocity and vorticity.");
+        velocityInport_.setDescription("Velocity input volume (3D vector field)");
+        vorticityInport_.setDescription("Vorticity input volume (3D vector field)");
     }
 
     virtual bool isReady() const;

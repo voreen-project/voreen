@@ -28,10 +28,8 @@
 
 #include "voreen/core/voreencoreapi.h"
 #include "voreen/core/io/volumeserializerpopulator.h"
-#include "../datastructures/ensembledataset.h"
 
-#include <vector>
-#include <map>
+#include "tgt/vector.h"
 
 namespace voreen {
 

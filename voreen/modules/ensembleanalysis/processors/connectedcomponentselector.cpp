@@ -28,6 +28,27 @@
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 
+namespace {
+
+template<typename T>
+voreen::VolumeAtomic<T>* selectComponent(const voreen::VolumeAtomic<T>* components, const std::vector<int>& selectedComponents) {
+    voreen::VolumeAtomic<T>* output = components->clone();
+
+    std::unordered_set<T> selectedIds(selectedComponents.begin(), selectedComponents.end());
+    const T emptyId = static_cast<T>(0);
+    const T minusOne = static_cast<T>(-1); // Member indices start counting at 0, components at 1.
+
+    for(size_t i=0; i<output->getNumVoxels(); i++) {
+        if(selectedIds.find(output->voxel(i) + minusOne) == selectedIds.end()) {
+            output->voxel(i) = emptyId;
+        }
+    }
+
+    return output;
+}
+
+}
+
 namespace voreen {
 
 const std::string ConnectedComponentSelector::loggerCat_("voreen.ensembleanalysis.ConnectedComponentSelector");
@@ -58,13 +79,13 @@ void ConnectedComponentSelector::process() {
     VolumeRAMRepresentationLock componentsVolume(inport_.getData());
 
     VolumeRAM* output = nullptr;
-    if(const VolumeRAM_UInt8* components = dynamic_cast<const VolumeRAM_UInt8*>(*componentsVolume)) {
+    if(const auto* components = dynamic_cast<const VolumeRAM_UInt8*>(*componentsVolume)) {
         output = selectComponent(components, components_.get());
     }
-    else if(const VolumeRAM_UInt16* components = dynamic_cast<const VolumeRAM_UInt16*>(*componentsVolume)) {
+    else if(const auto* components = dynamic_cast<const VolumeRAM_UInt16*>(*componentsVolume)) {
         output = selectComponent(components, components_.get());
     }
-    else if(const VolumeRAM_UInt32* components = dynamic_cast<const VolumeRAM_UInt32*>(*componentsVolume)) {
+    else if(const auto* components = dynamic_cast<const VolumeRAM_UInt32*>(*componentsVolume)) {
         output = selectComponent(components, components_.get());
     }
     else {

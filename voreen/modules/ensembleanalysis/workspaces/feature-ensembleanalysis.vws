@@ -1132,9 +1132,10 @@
                 </Processor>
                 <Processor type="SimilarityMatrixCreator" name="SimilarityMatrixCreator" id="ref19">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="782" y="-658" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="762" y="-656" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="isoValue" name="isoValue" value="0.5" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
@@ -1143,7 +1144,7 @@
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1602147277" />
                         <Property mapKey="singleChannelSimilarityMeasure" name="singleChannelSimilarityMeasure" value="generalized" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="3:38.559 min remaining" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="weight" name="weight" value="0.5" />
@@ -1548,7 +1549,7 @@
                         </Property>
                         <Property mapKey="property_save" name="property_save" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="50000" />
-                        <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
+                        <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="0" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1701,6 +1702,7 @@
                         </Property>
                         <Property mapKey="showTooltip" name="showTooltip" value="true" />
                         <Property mapKey="sphereRadius" name="sphereRadius" value="0.035470001" />
+                        <Property mapKey="statsReferenceMember" name="statsReferenceMember" value="" />
                         <Property mapKey="toggleAxes" name="toggleAxes" value="true" />
                     </Properties>
                     <Inports>
@@ -2958,6 +2960,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-178" y="-1054" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
                         <Property mapKey="colorMap" name="colorMap">
                             <colors name="">
                                 <colors>
@@ -2968,9 +2971,15 @@
                             </colors>
                         </Property>
                         <Property mapKey="ensemblepath" name="ensemblepath" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../../../../data/data/SciVis2020" />
+                                    <item value="../../../../../data/data/SciVis2020" />
+                                    <item value="/data/data/SciVis2020" />
+                                </paths>
+                            </paths>
                         </Property>
-                        <Property mapKey="hash" name="hash" value="" />
+                        <Property mapKey="hash" name="hash" value="e571962edb70d7582ba5d485ed2ea143" />
                         <Property mapKey="loadDataset" name="loadDataset" />
                         <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
                             <columnLabels>
@@ -2980,9 +2989,360 @@
                                 <item value="End Time" />
                                 <item value="Duration" />
                             </columnLabels>
-                            <values />
+                            <values>
+                                <item>
+                                    <item value="0001" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0002" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0003" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0004" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0005" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0006" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0007" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0008" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0009" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0010" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0011" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0012" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0013" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0014" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0015" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0016" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0017" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0018" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0019" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0020" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0021" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0022" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0023" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0024" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0025" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0026" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0027" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0028" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0029" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0030" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0031" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0032" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0033" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0034" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0035" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0036" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0037" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0038" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0039" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0040" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0041" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0042" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0043" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0044" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0045" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0046" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0047" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0048" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0049" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                                <item>
+                                    <item value="0050" />
+                                    <item value="60" />
+                                    <item value="0.000000" />
+                                    <item value="59.000000" />
+                                    <item value="59.000000" />
+                                </item>
+                            </values>
                         </Property>
-                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="lazy" />
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="manual" />
                         <Property mapKey="memberProgress" name="memberProgress" />
                         <Property mapKey="overrideTime" name="overrideTime" value="false" />
                         <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
@@ -3322,6 +3682,14 @@
                     </Outport>
                     <Inport name="inport">
                         <Processor type="SimilarityMatrixCreator" ref="ref19" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref26" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="SimilarityPlot" ref="ref20" />
                     </Inport>
                 </Connection>
             </Connections>

@@ -32,10 +32,11 @@
 
 namespace voreen {
 
-const std::string EnsembleDataSource::SCALAR_FIELD_NAME = "Scalar";
-const std::string EnsembleDataSource::NAME_FIELD_NAME = "name";
-const std::string EnsembleDataSource::SIMULATED_TIME_NAME = "simulated_time";
-const std::string EnsembleDataSource::FALLBACK_FIELD_NAME = "unnamed";
+// Deprecated names:
+static const char* SCALAR_FIELD_NAME = "Scalar";
+static const char* NAME_FIELD_NAME = "name";
+static const char* SIMULATED_TIME_NAME = "simulated_time";
+
 const std::string EnsembleDataSource::loggerCat_("voreen.ensembleanalysis.EnsembleDataSource");
 
 EnsembleDataSource::EnsembleDataSource()
@@ -215,10 +216,11 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
                 float currentTime = 0.0f;
                 if(!overrideTime_.get()) {
-                    if (volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
-                        currentTime = volumeHandle->getTimestep();
-                    } else if (volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) {
+                    if (volumeHandle->hasMetaData(SIMULATED_TIME_NAME)) { // deprecated
                         currentTime = volumeHandle->getMetaDataValue<FloatMetaData>(SIMULATED_TIME_NAME, 0.0f);
+                    }
+                    else if (volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
+                        currentTime = volumeHandle->getTimestep();
                     }
                     else {
                         currentTime = 1.0f * timeSteps.size();
@@ -238,14 +240,14 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 }
 
                 std::string fieldName;
-                if(volumeHandle->hasMetaData(NAME_FIELD_NAME)) {
+                if(volumeHandle->hasMetaData(NAME_FIELD_NAME)) { // deprecated
                     fieldName = volumeHandle->getMetaData(NAME_FIELD_NAME)->toString();
                 }
-                else if(volumeHandle->hasMetaData(SCALAR_FIELD_NAME)) {
+                else if(volumeHandle->hasMetaData(SCALAR_FIELD_NAME)) { // deprecated
                     fieldName = volumeHandle->getMetaData(SCALAR_FIELD_NAME)->toString();
                 }
                 else {
-                    fieldName = FALLBACK_FIELD_NAME;
+                    fieldName = volumeHandle->getModality().getName();
                 }
 
                 volumeData[fieldName] = volumeHandle.get();

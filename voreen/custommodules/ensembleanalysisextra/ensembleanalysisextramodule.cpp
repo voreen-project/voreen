@@ -28,7 +28,6 @@
 #include "processors/fieldparallelplotcreator.h"
 #include "processors/fieldparallelplotviewer.h"
 #include "processors/fieldparallelplothistogram.h"
-#include "processors/physicalclippinglinker.h"
 
 #include "io/fieldplotsave.h"
 #include "io/fieldplotsource.h"
@@ -42,9 +41,6 @@ EnsembleAnalysisExtraModule::EnsembleAnalysisExtraModule(const std::string& modu
     setGuiName("Ensemble Analysis Extra");
 
     addShaderPath(getModulePath("glsl"));
-
-    // Processors
-    registerProcessor(new PhysicalClippingLinker());
 
     // Plotting
     registerProcessor(new FieldParallelPlotCreator());

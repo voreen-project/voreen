@@ -23,14 +23,14 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "accelerationprocessor.h"
+#include "acceleration.h"
 
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
 namespace voreen {
 
-AccelerationProcessor::AccelerationProcessor()
+Acceleration::Acceleration()
     : Processor()
     , inportJacobianVolume_(Port::INPORT, "inportJacobianVolume", "Jacobian")
     , inportVelocityVolume_(Port::INPORT, "inportVelocityVolume", "Velocity")
@@ -42,7 +42,7 @@ AccelerationProcessor::AccelerationProcessor()
     addPort(outport_);
 }
 
-bool AccelerationProcessor::isReady() const {
+bool Acceleration::isReady() const {
     bool ready = Processor::isReady();
     if(!ready) {
         return false;
@@ -66,16 +66,16 @@ void optimizedProcess(const VolumeRAM_Mat3Float& jacobi, const VolumeAtomic<tgt:
     }
 }
 
-void AccelerationProcessor::Process(const VolumeRAM_Mat3Float& jacobi, const VolumeRAM& velocity, VolumeRAM_3xFloat& outAcceleration, RealWorldMapping rwm) {
+void Acceleration::Process(const VolumeRAM_Mat3Float& jacobian, const VolumeRAM& velocity, VolumeRAM_3xFloat& outAcceleration, RealWorldMapping rwm) {
 
-    // If volume contains no real world mapping, we can use optimized code.
+    // If volume contains default real world mapping, we can use optimized code.
     if (rwm == RealWorldMapping()) {
         if (velocity.getFormat() == VolumeGenerator3xFloat().getFormat()) {
-            optimizedProcess(jacobi, dynamic_cast<const VolumeRAM_3xFloat&>(velocity), outAcceleration);
+            optimizedProcess(jacobian, dynamic_cast<const VolumeRAM_3xFloat&>(velocity), outAcceleration);
             return;
         }
         else if (velocity.getFormat() == VolumeGenerator3xDouble().getFormat()) {
-            optimizedProcess(jacobi, dynamic_cast<const VolumeRAM_3xDouble&>(velocity), outAcceleration);
+            optimizedProcess(jacobian, dynamic_cast<const VolumeRAM_3xDouble&>(velocity), outAcceleration);
             return;
         }
     }
@@ -83,22 +83,25 @@ void AccelerationProcessor::Process(const VolumeRAM_Mat3Float& jacobi, const Vol
 #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
 #endif
-    for (long i = 0; i < static_cast<long>(jacobi.getNumVoxels()); ++i) {
+    for (long i = 0; i < static_cast<long>(jacobian.getNumVoxels()); ++i) {
         tgt::vec3 voxel;
-        for (size_t channel = 0; channel < 3; channel++) {
+
+        // Retrieve real world values before multiplication.
+        for (size_t channel = 0; channel < tgt::vec3::size; channel++) {
             voxel[channel] = rwm.normalizedToRealWorld(velocity.getVoxelNormalized(i, channel));
         }
 
         // Perform the multiplication.
-        voxel = jacobi.voxel(i) * voxel;
+        voxel = jacobian.voxel(i) * voxel;
 
-        for (size_t channel = 0; channel < 3; channel++) {
-            outAcceleration.setVoxelNormalized(rwm.realWorldToNormalized(voxel[channel]), i, channel);
+        // Since we output a float volume anyways, we discard the real world mapping.
+        for (size_t channel = 0; channel < tgt::vec3::size; channel++) {
+            outAcceleration.setVoxelNormalized(voxel[channel], i, channel);
         }
     }
 }
 
-void AccelerationProcessor::process() {
+void Acceleration::process() {
 
     VolumeRAMRepresentationLock jacobianVolume(inportJacobianVolume_.getData());
     const auto* jacobianVolumeData = dynamic_cast<const VolumeRAM_Mat3Float*>(*jacobianVolume);
@@ -106,14 +109,12 @@ void AccelerationProcessor::process() {
     const VolumeBase* velocity = inportVelocityVolume_.getData();
     VolumeRAMRepresentationLock velocityVolume(velocity);
 
-    RealWorldMapping rwm = velocity->getRealWorldMapping();
-    
     std::unique_ptr<VolumeRAM_3xFloat> accelerationVolume(new VolumeRAM_3xFloat(velocity->getDimensions()));
-    Process(*jacobianVolumeData, **velocityVolume, *accelerationVolume, rwm);
+    Process(*jacobianVolumeData, **velocityVolume, *accelerationVolume, velocity->getRealWorldMapping());
 
     Volume* output = new Volume(accelerationVolume.release(), velocity->getSpacing(), velocity->getOffset());
-    output->setRealWorldMapping(velocity->getRealWorldMapping());
-    output->setMetaDataValue<StringMetaData>("name", "acceleration");
+    output->setRealWorldMapping(RealWorldMapping()); // Set default real world mapping.
+    output->setModality(Modality("acceleration"));
     outport_.setData(output);
 }
 

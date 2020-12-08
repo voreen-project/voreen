@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,33 +23,44 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VORTEXCOLLECTIONSOURCE_H
-#define VRN_VORTEXCOLLECTIONSOURCE_H
+#ifndef VRN_CURLPROCESSOR_H
+#define VRN_CURLPROCESSOR_H
 
 #include "voreen/core/processors/processor.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
-#include "modules/flowanalysis/ports/vortexport.h"
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 
 namespace voreen {
 
-class VortexCollectionSource : public Processor {
+class VRN_CORE_API CurlProcessor : public Processor {
 public:
-    VortexCollectionSource();
+
+    CurlProcessor();
+
     virtual Processor* create() const;
+    virtual std::string getClassName() const { return "CurlProcessor"; }
+    virtual std::string getCategory() const { return "Volume Processing"; }
+    virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
 
-    virtual std::string getClassName() const;
-    virtual std::string getCategory() const;
+    static void Process( const VolumeRAM_Mat3Float& jacobi, VolumeRAM_3xFloat& outCurl );
 
-private:
+protected:
+
+    virtual void setDescriptions() {
+        setDescription("Calculates the Curl of a given Vectorfield");
+    }
+
     virtual void process();
 
-    VortexCollectionPort _outportVortexCollection;
+private:
 
-    FileDialogProperty _propertyFileDialog;
-    ButtonProperty _propertyLoadButton;
+    VolumePort inport_;
+    VolumePort outport_;
+
 };
 
 }
 
-#endif // VRN_VORTEXCOLLECTIONSOURCE_H
+#endif

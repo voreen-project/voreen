@@ -128,7 +128,7 @@ const std::string& SimilarityMatrixList::getHash() const {
     return ensembleHash_;
 }
 
-const std::vector<std::string> SimilarityMatrixList::getFieldNames() const {
+std::vector<std::string> SimilarityMatrixList::getFieldNames() const {
     std::vector<std::string> fieldNames;
     fieldNames.reserve(matrices_.size());
 

@@ -26,15 +26,11 @@
 #include "flowsimulationmodule.h"
 
 // processors
-#include "processors/features/lambda2criterion.h"
-#include "processors/features/lambdacicriterion.h"
 #include "processors/geometry/geometryclose.h"
-#include "processors/geometry/geometryoffsetremove.h"
 #include "processors/geometry/geometrysmoothnormals.h"
 #include "processors/render/unalignedsliceviewer.h"
 #include "processors/simulation/flowcharacteristics.h"
 #include "processors/simulation/flowensemblecreator.h"
-//#include "processors/simulation/flowindicatorselection.h"
 #include "processors/simulation/flowindicatorrenderer.h"
 #include "processors/simulation/flowparametrizationensemble.h"
 #include "processors/simulation/flowparametrizationrun.h"
@@ -75,15 +71,11 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     setGuiName("Flow Simulation");
 
     // processors
-    registerSerializableType(new Lambda2Criterion());
-    registerSerializableType(new LambdaCiCriterion());
     registerSerializableType(new GeometryClose());
-    registerSerializableType(new GeometryOffsetRemove());
     registerSerializableType(new GeometrySmoothNormals());
     registerSerializableType(new UnalignedSliceViewer());
     registerSerializableType(new FlowCharacteristics());
     registerSerializableType(new FlowEnsembleCreator());
-    //registerSerializableType(new FlowIndicatorSelection());
     registerSerializableType(new FlowIndicatorRenderer());
     registerSerializableType(new FlowParametrizationEnsemble());
     registerSerializableType(new FlowParametrizationRun());

@@ -23,41 +23,45 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_GEOMETRYOFFSETREMOVE_H
-#define VRN_GEOMETRYOFFSETREMOVE_H
+#ifndef VRN_JACOBIAN_H
+#define VRN_JACOBIAN_H
 
-#include "voreen/core/processors/processor.h"
-
+#include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/geometryport.h"
-#include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 
 namespace voreen {
 
-class VRN_CORE_API GeometryOffsetRemove : public Processor {
+/**
+ * This processor calculates the jacbian matrix for each voxel of a 3D vector-valued volume.
+ */
+class Jacobian : public Processor {
 public:
-    GeometryOffsetRemove();
-    virtual Processor* create() const;
+    Jacobian();
 
-    virtual std::string getCategory() const   { return "Geometry";               }
-    virtual std::string getClassName() const  { return "GeometryOffsetRemove";   }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+    virtual Processor* create() const;
+    virtual std::string getClassName() const      { return "Jacobian";              }
+    virtual std::string getCategory() const       { return "Volume Processing";     }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
+
     virtual void setDescriptions() {
-        setDescription("Removes any offset relative to the origin.");
+        setDescription("Calculates the voxel-wise Jacobi matrix for a 3D vector-valued volume. "
+                       "The matrix will contain real world values.");
     }
 
     virtual void process();
 
 private:
-    GeometryPort inport_;
-    GeometryPort outport_;
 
-    BoolProperty enableProcessing_;
+    // Ports
+    VolumePort inputVolume_;
+    VolumePort outputJacobi_;
 
-    static const std::string loggerCat_; ///< category used in logging
+    static const std::string loggerCat_;
 };
 
-}   //namespace
+} // namespace voreen
 
-#endif // VRN_GEOMETRYOFFSETREMOVE_H
+#endif

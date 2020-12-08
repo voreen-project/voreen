@@ -33,7 +33,7 @@ MetaDataAdder::MetaDataAdder()
     , outport_(Port::OUTPORT, "outport", "Volume List Outport")
     , addTime_("addTime", "Add Time?")
     , timeInformationFile_("timeInformationFile", "Time Information: ", "Select file with timestep information", "")
-    , nameString_("nameString", "Name: ")
+    , modalityString_("nameString", "Modality")
 {
     addPort(inport_);
     addPort(outport_);
@@ -43,7 +43,7 @@ MetaDataAdder::MetaDataAdder()
     });
     addProperty(timeInformationFile_);
     timeInformationFile_.setVisibleFlag(false);
-    addProperty(nameString_);
+    addProperty(modalityString_);
 }
 
 Processor* MetaDataAdder::create() const {
@@ -81,8 +81,8 @@ void MetaDataAdder::process() {
             volumeDec = new VolumeDecoratorReplaceTimestep(volumeDec, timesteps[i]);
             decorators_.push_back(std::unique_ptr<VolumeBase>(volumeDec));
         }
-        if(!nameString_.get().empty()) {
-            volumeDec = new VolumeDecoratorReplace(volumeDec, "name", new StringMetaData(nameString_.get()), true);
+        if(!modalityString_.get().empty()) {
+            volumeDec = new VolumeDecoratorReplace(volumeDec, VolumeBase::META_DATA_NAME_MODALITY, new StringMetaData(modalityString_.get()), true);
             decorators_.push_back(std::unique_ptr<VolumeBase>(volumeDec));
         }
         list->add(volumeDec);

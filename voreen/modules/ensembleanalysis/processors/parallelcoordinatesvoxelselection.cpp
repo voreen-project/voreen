@@ -47,31 +47,27 @@ void ParallelCoordinatesVoxelSelection::process()
 
     // --- Find Member --- //
     const EnsembleMember* member = nullptr;
-    for( const auto& m : ensemble->getMembers() )
-    {
-        if(m.getName() == propertySections_.get().member )
-        {
+    for( const auto& m : ensemble->getMembers() ) {
+        if(m.getName() == propertySections_.get().member ) {
             member = &m;
             break;
         }
     }
-    if( !member )
-    {
+    if( !member ) {
         volumeport_.clear();
         return;
     }
 
     // --- Collect Volumes --- //
-    auto volumes = std::vector<VolumeRAMRepresentationLock>();
-    for( const auto& field : propertySections_.get().fields )
-    {
+    auto volumes = std::vector<const VolumeBase*>();
+    for( const auto& field : propertySections_.get().fields ) {
         size_t timeStep = member->getTimeStep(propertySections_.get().time);
         const VolumeBase* volume = member->getTimeSteps()[timeStep].getVolume(field);
-        if(volume)
-            volumes.emplace_back( VolumeRAMRepresentationLock(volume) );
+        if(volume) {
+            volumes.emplace_back(volume);
+        }
     }
-    if(volumes.size() != propertySections_.get().fields.size() )
-    {
+    if(volumes.size() != propertySections_.get().fields.size() ) {
         volumeport_.clear();
         return;
     }
@@ -88,8 +84,9 @@ void ParallelCoordinatesVoxelSelection::process()
 
         for( size_t j = 0; j < volumes.size(); ++j )
         {
+            VolumeRAMRepresentationLock lock(volumes[j]);
             const auto& sections = propertySections_.get().sections[j];
-            const auto value = volumes[j]->getVoxelNormalized( i );
+            const auto value = lock->getVoxelNormalized( i );
 
             auto selected = sections.empty();
             for( const auto& section : sections )

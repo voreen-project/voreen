@@ -27,11 +27,11 @@
 #include "parallelvectors.h"
 
 #include "tgt/vector.h"
+#include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 
-#include <chrono>
-
 namespace voreen {
+
 size_t findNeighbourSolution(size_t triangleIndex, const std::vector<int32_t> &triangleSolutionIndices, const std::vector<tgt::vec3> &solutions, std::vector<bool> &discardTriangle, tgt::svec3 dim) // returns the index of the neighbouring tet's triangle containing a solution or the maximum size_t value
 {
     discardTriangle[triangleIndex] = true;
@@ -303,12 +303,11 @@ CorelineCreator::CorelineCreator()
     : Processor()
     , _in(Port::INPORT, "inport", "Parallel vectors solutions")
     , _out(Port::OUTPORT, "outport", "List of corelines")
-    , _lengthThreshold("lengthThreshold", "Min. length of coreline", 20, 2, 1000, Processor::VALID)
+    , _lengthThreshold("lengthThreshold", "Min. length of coreline", 20, 2, 1000)
 {
     this->addPort(_in);
     this->addPort(_out);
     this->addProperty(_lengthThreshold);
-    _lengthThreshold.onChange(MemberFunctionCallback<CorelineCreator>(this, &CorelineCreator::process));
 }
 
 void CorelineCreator::Process( const ParallelVectorSolutions& solutions, int lengthThreshold, std::vector<std::vector<tgt::vec3>>& corelines )
@@ -370,12 +369,7 @@ void CorelineCreator::Process( const ParallelVectorSolutions& solutions, int len
     }
 }
 
-void CorelineCreator::process()
-{
-    if (!_in.hasData())
-        return;
-
-
+void CorelineCreator::process() {
     auto corelines = std::vector<std::vector<tgt::vec3>>();
     CorelineCreator::Process( *_in.getData(), _lengthThreshold.get(), corelines);
 

@@ -46,10 +46,10 @@ PathlineCreator::PathlineCreator()
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
-    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 3.1f, 0.1f, 1000.0f)
+    , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 10.0f, 0.1f, 1000.0f)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
     , velocityUnitConversion_("velocityUnitConversion", "Input Velocity Unit")
-    , temporalIntegrationSteps_("temporalIntegrationSteps", "Temporal Integration Steps",5, 1, 20, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , temporalIntegrationSteps_("temporalIntegrationSteps", "Temporal Integration Steps", 5, 1, 40, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
     volumeListInport_.addCondition(new PortConditionVolumeListEnsemble());
     volumeListInport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
@@ -82,7 +82,7 @@ PathlineCreator::PathlineCreator()
         // which (for some reason) is the default voreen length unit.
         velocityUnitConversion_.addOption("km/s", "km/s", 1000000.0f);
         velocityUnitConversion_.addOption("m/s", "m/s", 1000.0f);
-        //velocityUnitConversion_.addOption("dm/s", "dm/s", 100.0f); // Really unusual.
+        //velocityUnitConversion_.addOption("dm/s", "dm/s", 100.0f); // Quite unusual.
         velocityUnitConversion_.addOption("cm/s", "cm/s", 10.0f);
         velocityUnitConversion_.addOption("mm/s", "mm/s", 1.0f);
         velocityUnitConversion_.set("m/s");
@@ -328,10 +328,10 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     tgt::vec3 r = pathline.getLastElement().position_;
 
     // Velocity.
-    tgt::vec3 velR = pathline.getLastElement().velocity_;
+    tgt::vec3 v = pathline.getLastElement().velocity_;
 
     // Execute 4th order Runge-Kutta step.
-    tgt::vec3 k1 = velR * input.stepSize;
+    tgt::vec3 k1 = v * input.stepSize;
     tgt::vec3 k2 = sampler.sample(r + (k1 / 2.0f)) * input.stepSize;
     tgt::vec3 k3 = sampler.sample(r + (k2 / 2.0f)) * input.stepSize;
     tgt::vec3 k4 = sampler.sample(r + k3) * input.stepSize;
@@ -348,8 +348,8 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     }
 
     // Sample local velocity.
-    velR = sampler.sample(r);
-    float magnitude = tgt::length(velR);
+    v = sampler.sample(r);
+    float magnitude = tgt::length(v);
 
     // Magnitude within range?
     if(magnitude < input.absoluteMagnitudeThreshold.x - epsilon ||
@@ -358,7 +358,7 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     }
 
     // Add element to pathline.
-    pathline.addElementAtEnd(Streamline::StreamlineElement(r, velR, 0.0f, pathline.getNumElements() * input.stepSize));
+    pathline.addElementAtEnd(Streamline::StreamlineElement(r, v, 0.0f, pathline.getNumElements() * input.stepSize));
 
     return true;
 }

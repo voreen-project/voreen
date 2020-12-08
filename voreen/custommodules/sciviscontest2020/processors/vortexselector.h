@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -23,52 +23,37 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PARALLELVECTORS_H
-#define VRN_PARALLELVECTORS_H
+#ifndef VRN_VORTEXSELECTOR_H
+#define VRN_VORTEXSELECTOR_H
 
-#include <string>
 #include "voreen/core/processors/processor.h"
-#include "voreen/core/ports/volumeport.h"
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/processors/volumeprocessor.h"
-#include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/ports/geometryport.h"
 
-#include "modules/flowanalysis/ports/parallelvectorsolutionpointsport.h"
+#include "custommodules/sciviscontest2020/ports/vortexport.h"
 
-namespace voreen {
+namespace voreen
+{
+	class VortexSelector : public Processor
+	{
+	public:
+		VortexSelector();
+		virtual Processor *create() const { return new VortexSelector(); }
+		virtual std::string getClassName() const { return "VortexSelector"; }
+		virtual std::string getCategory() const { return "Vortex Processing"; }
+		bool isReady() const override
+		{
+			return _inVortexList.isReady();
+		}
 
-/**
- * This processor implements the parallel vectors operator by Peikert and Roth and optional sujudi-haimes filtering.
- */
-class ParallelVectors : public Processor {
-public:
-    ParallelVectors();
-    virtual Processor* create() const { return new ParallelVectors(); }
-    virtual std::string getClassName() const { return "ParallelVectors"; }
-    virtual std::string getCategory() const { return "Volume Processing"; }
-    virtual bool isReady() const;
+	protected:
+		virtual void process();
 
-    static void Process( const VolumeRAM_3xFloat& V, const VolumeRAM_3xFloat& W, const VolumeRAM_Mat3Float* jacobi, const VolumeRAM* mask, ParallelVectorSolutions& outSolution );
-
-    static constexpr auto TetrahedraPerCube = 6;
-    static constexpr auto TrianglesPerTetrahedron = 4;
-
-protected:
-    virtual void process();
-    virtual void setDescriptions();
-
-private:
-    void onChangedJacobianData();
-
-    VolumePort _inV, _inW, _inJacobi, _inMask;
-    ParallelVectorSolutionPointsPort _out;
-    BoolProperty _sujudiHaimes;
-
-    using Triangle = std::array<tgt::svec3, 3>;
-    using Tet = std::array<Triangle, TrianglesPerTetrahedron>;
-};
-
+	private:
+		VortexListPort _inVortexList;
+		VortexPort _outVortex;
+		GeometryPort _outCoreline;
+		IntProperty _selectedIndex;
+	};
 } // namespace voreen
 
 #endif

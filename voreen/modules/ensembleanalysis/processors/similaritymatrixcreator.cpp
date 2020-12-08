@@ -574,6 +574,9 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     //DistanceMatrix(i, j) = statistics.getMedian(); // Needs collecting samples enabled
                     //DistanceMatrix(i, j) = statistics.getRelStdDev();
                 }
+
+                // Copy to other side of diagonal.
+                distanceMatrix(j, i) = distanceMatrix(i, j);
             }
 
 
