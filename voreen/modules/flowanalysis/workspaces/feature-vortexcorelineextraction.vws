@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="false" GlobalDescription="">
+    <Workspace version="2" readonly="false">
         <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSource" ref="ref14" />
+                    </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-90.714309692" y="287.261993408" />
@@ -22,9 +27,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../Desktop/aneurysm_velocity.vvd" />
-                                        <item value="../../../Desktop/aneurysm_velocity.vvd" />
-                                        <item value="/home/spider/Desktop/aneurysm_velocity.vvd" />
+                                        <item value="../../../resource/voreenve/volumes/aneurysm.vvd" />
+                                        <item value="resource/voreenve/volumes/aneurysm.vvd" />
+                                        <item value="/home/spider/programming/voreen-flow/voreen/resource/voreenve/volumes/aneurysm.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -104,7 +109,7 @@
                 </Processor>
                 <Processor type="ParallelVectors" name="ParallelVectors" id="ref2">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-490" y="156" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-490" y="154" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="sujudiHaimes" name="sujudiHaimes" value="true" />
@@ -223,13 +228,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000974096" id="ref18">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001060804" id="ref18">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="21.121715546" y="-71.976867676" z="-9.737285614" />
+                            <position x="24.869159698" y="-67.422561646" z="9.36250782" />
                             <focus x="24.600002289" y="24.600002289" z="24.900001526" />
-                            <upVector x="0.015190589" y="0.364379674" z="-0.931126654" />
+                            <upVector x="-0.001123519" y="0.195145875" z="-0.980773628" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
@@ -273,7 +278,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref20">
-                                    <value x="1967" y="1338" />
+                                    <value x="1024" y="1024" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -283,7 +288,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref17">
-                                    <value x="1967" y="1338" />
+                                    <value x="1024" y="1024" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -362,8 +367,8 @@
                 </Processor>
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-146" y="648" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="192" y="108" width="1967" height="1338" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="649" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="953" y="178" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -373,15 +378,15 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="192" y="108" />
+                            <value x="953" y="178" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1967" y="1338" />
+                            <value x="1024" y="1024" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="1967" y="1338" />
+                            <value x="1024" y="1024" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" guiName="Screenshot" watchMode="1" fileWatchEnabled="false">
@@ -395,7 +400,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref16">
-                                    <value x="1967" y="1338" />
+                                    <value x="1024" y="1024" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -589,9 +594,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../Desktop/aneurysm_velocity_mask.vvd" />
-                                        <item value="../../../Desktop/aneurysm_velocity_mask.vvd" />
-                                        <item value="/home/spider/Desktop/aneurysm_velocity_mask.vvd" />
+                                        <item value="../../../resource/voreenve/volumes/aneurysm_mask.vvd" />
+                                        <item value="resource/voreenve/volumes/aneurysm_mask.vvd" />
+                                        <item value="/home/spider/programming/voreen-flow/voreen/resource/voreenve/volumes/aneurysm_mask.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -617,13 +622,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-214" y="268" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000974096" id="ref19">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001060804" id="ref19">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="21.121715546" y="-71.976867676" z="-9.737285614" />
+                            <position x="24.869159698" y="-67.422561646" z="9.36250782" />
                             <focus x="24.600002289" y="24.600002289" z="24.900001526" />
-                            <upVector x="0.015190589" y="0.364379674" z="-0.931126654" />
+                            <upVector x="-0.001123519" y="0.195145875" z="-0.980773628" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
@@ -682,7 +687,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.streamlines.renderSizeReceive" name="image.streamlines.renderSizeReceive" id="ref21">
-                                    <value x="1967" y="1338" />
+                                    <value x="1024" y="1024" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -724,7 +729,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="200" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607445778" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 178 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 353 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
@@ -1099,5 +1104,9 @@
             </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
+        <GlobalDescription>
+            <![CDATA[This workspace demonstrates how to use the parallel vectors operator by Peikert and Roth using sujudi-haimes filtering for a vortex coreline extraction.
+The demo data was provided by and belongs to the research group lead by Verena Hoerr, Jena.]]>
+        </GlobalDescription>
     </Workspace>
 </VoreenData>
