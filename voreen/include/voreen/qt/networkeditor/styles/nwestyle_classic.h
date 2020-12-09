@@ -57,7 +57,7 @@ public:
 
 
     NWEStyle_Classic(NetworkEditor* networkeditor);
-    ~NWEStyle_Classic();
+    virtual ~NWEStyle_Classic();
 
     /*********************************************************************
      *                       Core Elements

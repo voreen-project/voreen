@@ -14,11 +14,11 @@ ENDIF()
 MESSAGE(STATUS "Configuring voreen_qt Library")
 
 # please insert new files in alphabetical order!
-SET(VRN_QT_SOURCES 
-    aboutboxbase.cpp 
-    helpbrowser.cpp 
+SET(VRN_QT_SOURCES
+    aboutboxbase.cpp
+    helpbrowser.cpp
     progressdialog.cpp
-    versionqt.cpp 
+    versionqt.cpp
     voreenapplicationqt.cpp
     voreenmoduleqt.cpp
 
@@ -26,7 +26,7 @@ SET(VRN_QT_SOURCES
     mainwindow/voreenqtmainwindow.cpp
     mainwindow/voreenqtsplashscreen.cpp
     mainwindow/voreenqtstartupwizard.cpp
-    
+
     #menuentity
     mainwindow/menuentities/voreenqtmenuentity.cpp
     mainwindow/menuentities/animationmenuentity.cpp
@@ -51,18 +51,18 @@ SET(VRN_QT_SOURCES
     mainwindow/menuentities/screenshotmenuentity/screenshotpluginbase.cpp
     mainwindow/menuentities/volumeviewermenuentity.cpp
     mainwindow/menuentities/workspacedescriptionmenuentity.cpp
-    
+
     ## utils ##
     utils/voreenqtworkspacehandler.cpp
-    
+
     ## network editor ##
 
     #editor
     networkeditor/networkeditor.cpp
-    
+
     #dialogs
     networkeditor/dialogs/propertylinkdialog.cpp
-    
+
     #utils
     networkeditor/dialogs/utils/splitgraphicsview.cpp
 
@@ -71,11 +71,12 @@ SET(VRN_QT_SOURCES
     networkeditor/styles/nwestyle_classic.cpp
     networkeditor/styles/nwestyle_classic_print.cpp
     networkeditor/styles/nwestyle_material.cpp
+    networkeditor/styles/nwestyle_material_dark.cpp
 
     #graphlayouts
     networkeditor/graphlayouts/nwegl_base.cpp
     networkeditor/graphlayouts/nwegl_sugiyama.cpp
-    
+
     #gi
     networkeditor/graphicitems/nwebasegraphicsitem.cpp
 
@@ -84,7 +85,7 @@ SET(VRN_QT_SOURCES
     networkeditor/graphicitems/core/portownergraphicsitem.cpp
     networkeditor/graphicitems/core/processorgraphicsitem.cpp
     networkeditor/graphicitems/core/propertygraphicsitem.cpp
-    networkeditor/graphicitems/core/propertylistgraphicsitem.cpp    
+    networkeditor/graphicitems/core/propertylistgraphicsitem.cpp
     networkeditor/graphicitems/core/propertyownergraphicsitem.cpp
 
     #connections
@@ -109,12 +110,12 @@ SET(VRN_QT_SOURCES
     networkeditor/graphicitems/utils/progressbargraphicsitem.cpp
     networkeditor/graphicitems/utils/widgettogglebuttongraphicsitem.cpp
     networkeditor/graphicitems/utils/propertylistbuttongraphicsitem.cpp
-    
+
     #meta
     networkeditor/meta/textboxmetadata.cpp
     networkeditor/meta/zoommetadata.cpp
-    
-    #animation        
+
+    #animation
     animation/animationexportwidget.cpp
     animation/keyframegraphicsitem.cpp
     animation/animationeditor.cpp
@@ -125,7 +126,7 @@ SET(VRN_QT_SOURCES
     animation/animationpropertylistwidget.cpp
     animation/animationoverviewwidget.cpp
     animation/animationtimelinewidget.cpp
-    
+
     ## widgets ##
     widgets/applicationmodeconfigdialog.cpp
     widgets/choicelistcombobox.cpp
@@ -159,7 +160,7 @@ SET(VRN_QT_SOURCES
     widgets/volumeviewhelper.cpp
     widgets/voreensettingsdialog.cpp
     widgets/voreentoolwindow.cpp
-    
+
     widgets/processor/qprocessorwidget.cpp
 
     widgets/property/appmodepropertygroupwidget.cpp
@@ -213,7 +214,7 @@ SET(VRN_QT_SOURCES
     #string
     widgets/property/string/stringlistpropertywidget.cpp
     widgets/property/string/stringtablepropertywidget.cpp
-    
+
     #trunsfunc
     widgets/property/transfunc/transfuncpropertyeditorbase.cpp
     widgets/property/transfunc/transfuncpropertywidgetbase.cpp
@@ -258,7 +259,7 @@ SET(VRN_QT_SOURCES
 SET(VRN_QT_HEADERS
     ../../include/voreen/qt/aboutboxbase.h
     ../../include/voreen/qt/helpbrowser.h
-    
+
     ## main window ##
     ../../include/voreen/qt/mainwindow/voreenqtmainwindow.h
     ../../include/voreen/qt/mainwindow/voreenqtsplashscreen.h
@@ -291,15 +292,15 @@ SET(VRN_QT_HEADERS
 
     ## utils ##
     ../../include/voreen/qt/utils/voreenqtworkspacehandler.h
-    
+
     ## network editor ##
 
     #networkeditor
     ../../include/voreen/qt/networkeditor/networkeditor.h
-    
+
     #dialogs
     ../../include/voreen/qt/networkeditor/dialogs/propertylinkdialog.h
-    
+
     #utils
     ../../include/voreen/qt/networkeditor/dialogs/utils/splitgraphicsview.h
 
@@ -316,12 +317,12 @@ SET(VRN_QT_HEADERS
 
     #connections
     ../../include/voreen/qt/networkeditor/graphicitems/connections/propertylinkarrowgraphicsitem.h
-    
+
     #textboxes
     ../../include/voreen/qt/networkeditor/graphicitems/textboxes/frameboxgraphicsitem.h
     ../../include/voreen/qt/networkeditor/graphicitems/textboxes/textboxbasegraphicsitem.h
     ../../include/voreen/qt/networkeditor/graphicitems/textboxes/textboxgraphicsitem.h
- 
+
     #tooltips
     ../../include/voreen/qt/networkeditor/graphicitems/tooltips/tooltipbasegraphicsitem.h
 
@@ -329,12 +330,12 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/networkeditor/graphicitems/utils/renamabletextgraphicsitem.h
     ../../include/voreen/qt/networkeditor/graphicitems/utils/propertylistbuttongraphicsitem.h
     ../../include/voreen/qt/networkeditor/graphicitems/utils/widgettogglebuttongraphicsitem.h
-    
+
     #meta
     ../../include/voreen/qt/networkeditor/meta/textboxmetadata.h
     ../../include/voreen/qt/networkeditor/meta/zoommetadata.h
-    
-    #animation       
+
+    #animation
     ../../include/voreen/qt/animation/animationexportwidget.h
     ../../include/voreen/qt/animation/keyframegraphicsitem.h
     ../../include/voreen/qt/animation/animationeditor.h
@@ -374,7 +375,7 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/widgets/volumeviewer.h
     ../../include/voreen/qt/widgets/voreensettingsdialog.h
     ../../include/voreen/qt/widgets/voreentoolwindow.h
-    
+
     ../../include/voreen/qt/widgets/processor/qprocessorwidget.h
 
     ../../include/voreen/qt/widgets/property/appmodepropertygroupwidget.h
@@ -448,7 +449,7 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/widgets/property/transfunc/2d/2dprimitives/transfunc2dprimitivespropertyeditorcanvas.h
     ../../include/voreen/qt/widgets/property/transfunc/2d/2dprimitives/transfunc2dprimitivespropertywidget.h
     ../../include/voreen/qt/widgets/property/transfunc/2d/2dprimitives/transfunc2dprimitivespropertywidgetpainter.h
-    
+
     ../../include/voreen/qt/widgets/property/transfunc/utils/alphapicker.h
     ../../include/voreen/qt/widgets/property/transfunc/utils/colorluminancepicker.h
     ../../include/voreen/qt/widgets/property/transfunc/utils/colorpicker.h
@@ -456,7 +457,7 @@ SET(VRN_QT_HEADERS
     ../../include/voreen/qt/widgets/property/transfunc/utils/histogrampainter.h
     ../../include/voreen/qt/widgets/property/transfunc/utils/quadrupleslider.h
     ../../include/voreen/qt/widgets/property/transfunc/utils/transfunciohelperqt.h
-    ../../include/voreen/qt/widgets/property/transfunc/utils/transfuncpropertywidgetpainterslider.h    
+    ../../include/voreen/qt/widgets/property/transfunc/utils/transfuncpropertywidgetpainterslider.h
 )
 
 # headers that do not need to run through moc
@@ -466,45 +467,46 @@ SET(VRN_QT_HEADERS_NONMOC
     ../../include/voreen/qt/voreenapplicationqt.h
     ../../include/voreen/qt/progressdialog.h
     ../../include/voreen/qt/versionqt.h
-    
+
     ## network editor ##
 
     #connections
     ../../include/voreen/qt/networkeditor/graphicitems/connections/connectionbasegraphicsitem.h
     ../../include/voreen/qt/networkeditor/graphicitems/connections/portownerlinkarrowgraphicsitem.h
     ../../include/voreen/qt/networkeditor/graphicitems/connections/portarrowgraphicsitem.h
-    ../../include/voreen/qt/networkeditor/graphicitems/connections/portsizelinkarrowgraphicsitem.h 
-    
+    ../../include/voreen/qt/networkeditor/graphicitems/connections/portsizelinkarrowgraphicsitem.h
+
     #tooltips
     ../../include/voreen/qt/networkeditor/graphicitems/tooltips/tooltipportgraphicsitem.h
-    ../../include/voreen/qt/networkeditor/graphicitems/tooltips/tooltipprocessorgraphicsitem.h    
-    
+    ../../include/voreen/qt/networkeditor/graphicitems/tooltips/tooltipprocessorgraphicsitem.h
+
     #settings
     ../../include/voreen/qt/networkeditor/editor_settings.h
 
     #utils
     ../../include/voreen/qt/networkeditor/graphicitems/utils/progressbargraphicsitem.h
-    
+
     #style
     ../../include/voreen/qt/networkeditor/styles/nwestyle_base.h
     ../../include/voreen/qt/networkeditor/styles/nwestyle_classic.h
     ../../include/voreen/qt/networkeditor/styles/nwestyle_classic_print.h
     ../../include/voreen/qt/networkeditor/styles/nwestyle_material.h
+    ../../include/voreen/qt/networkeditor/styles/nwestyle_material_dark.h
 
     #graphlayouts
     ../../include/voreen/qt/networkeditor/graphlayouts/nwegl_base.h
     ../../include/voreen/qt/networkeditor/graphlayouts/nwegl_sugiyama.h
-    
-    #animation    
+
+    #animation
     ../../include/voreen/qt/animation/currentframegraphicsitem.h
 
     ## widgets ##
-    
+
     ../../include/voreen/qt/widgets/choicelistcombobox.h
     ../../include/voreen/qt/widgets/glslhighlighter.h
     ../../include/voreen/qt/widgets/syntaxhighlighter.h
-    ../../include/voreen/qt/widgets/volumeviewhelper.h    
-    
+    ../../include/voreen/qt/widgets/volumeviewhelper.h
+
     ../../include/voreen/qt/widgets/property/corepropertywidgetfactory.h
     ../../include/voreen/qt/widgets/property/qpropertywidgetwithtoolwindow.h
     ../../include/voreen/qt/widgets/property/vecpropertywidget.h
@@ -595,10 +597,10 @@ IF (VRN_PRECOMPILED_HEADER AND MSVC)
 ENDIF()
 
 # define target
-ADD_LIBRARY(voreen_qt 
-    ${VRN_QT_SOURCES} ${VRN_QT_HEADERS} ${VRN_QT_HEADERS_NONMOC} 
-    ${VRN_QT_RESOURCES_RCC} 
-    ${VRN_QT_FORMS_HEADERS}) 
+ADD_LIBRARY(voreen_qt
+    ${VRN_QT_SOURCES} ${VRN_QT_HEADERS} ${VRN_QT_HEADERS_NONMOC}
+    ${VRN_QT_RESOURCES_RCC}
+    ${VRN_QT_FORMS_HEADERS})
 ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
 IF(MSVC)
     ADD_DEFINITIONS("-DVRN_QT_BUILD_DLL")
@@ -626,7 +628,7 @@ IF (VRN_PRECOMPILED_HEADER AND CMAKE_COMPILER_IS_GNUCXX)
 ENDIF()
 
 # Copy Qt5 DLLs using windeployqt.exe tool.
-# The tool will be executed right after voreen_qt has been build, since 
+# The tool will be executed right after voreen_qt has been build, since
 # the binary will be scanned for Qt dependencies by the tool.
 IF(WIN32)
     UNSET(WINDEPLOYQT_EXE CACHE) #Old path might not longer exist.
@@ -647,7 +649,7 @@ IF(WIN32)
 
     # Execute windeployqt tool right after the library has been build.
     ADD_CUSTOM_COMMAND(TARGET voreen_qt POST_BUILD COMMAND ${WINDEPLOYQT_EXE} --dir $<TARGET_FILE_DIR:voreen_qt> ${WINDEPLOYQT_ARGS} $<TARGET_FILE:voreen_qt>)
-    
+
 ENDIF()
 
 ################################################################################
@@ -659,7 +661,7 @@ IF(VRN_ADD_INSTALL_TARGET)
         RUNTIME DESTINATION .
         LIBRARY DESTINATION .
     )
-    
+
     # Execute the windeployqt tool again for the actual deployment, in particular building the INSTALL target.
     # Since CMake's generator expressions can not be used here, we need to specify our paths directly.
     # This approach should suffice because we already know we are in a win32 environment.

@@ -23,20 +23,20 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_NWESTYLE_MATERIAL_H
-#define VRN_NWESTYLE_MATERIAL_H
+#ifndef VRN_NWESTYLE_MATERIAL_DARK_H
+#define VRN_NWESTYLE_MATERIAL_DARK_H
 
-#include "nwestyle_classic.h"
+#include "nwestyle_material.h"
 
 namespace voreen {
 
 /**
  * Material-like design for Voreen.
  */
-class NWEStyle_Material : public NWEStyle_Classic {
+class NWEStyle_Material_Dark : public NWEStyle_Material {
 public:
-    NWEStyle_Material(NetworkEditor* networkeditor);
-    virtual ~NWEStyle_Material();
+    NWEStyle_Material_Dark(NetworkEditor* networkeditor);
+    ~NWEStyle_Material_Dark();
 
     /*********************************************************************
      *                       General Color Defines
@@ -48,29 +48,8 @@ public:
     virtual QColor getPortArrowColor() const;
     virtual QColor getPropertyLinkArrowColor() const;
     virtual QColor getPortSizeLinkArrowColor() const;
-    virtual bool getShadowsEnabled() const;
 
-    /*********************************************************************
-     *                       Core Elements
-     ********************************************************************/
-    //port
-    virtual void PortGI_paint(PortGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
-
-    //processor
     virtual void ProcessorGI_initializePaintSettings(ProcessorGraphicsItem* item);
-    virtual void ProcessorGI_paint(ProcessorGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
-
-    /*********************************************************************
-     *                       Util Elements
-     ********************************************************************/
-
-    //progressbar
-    virtual QPainterPath ProgressBarGI_shape(const ProgressBarGraphicsItem* item) const;
-    virtual void ProgressBarGI_paint(ProgressBarGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
-
-    //textboxbase
-    virtual void TextBoxGI_paint(TextBoxGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
-    virtual void FrameBoxGI_paint(FrameBoxGraphicsItem* item, QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget, NWEItemSettings& setting);
 };
 
 } //namespace voreen

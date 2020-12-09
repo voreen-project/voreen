@@ -89,7 +89,8 @@ enum NWEBaseGraphicsItemZValues {
 enum NetworkEditorStyles {
     NWESTYLE_CLASSIC = 0,
     NWESTYLE_CLASSIC_PRINT = 1,
-    NWESTYLE_MATERIAL = 2
+    NWESTYLE_MATERIAL = 2,
+    NWESTYLE_MATERIAL_DARK = 3
 };
 
 enum NetworkEditorGraphLayouts {

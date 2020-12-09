@@ -54,6 +54,7 @@
 #include "voreen/qt/networkeditor/styles/nwestyle_classic.h"
 #include "voreen/qt/networkeditor/styles/nwestyle_classic_print.h"
 #include "voreen/qt/networkeditor/styles/nwestyle_material.h"
+#include "voreen/qt/networkeditor/styles/nwestyle_material_dark.h"
 
 //graph layouts
 #include "voreen/qt/networkeditor/graphlayouts/nwegl_base.h"
@@ -160,6 +161,7 @@ NetworkEditor::NetworkEditor(QWidget* parent, NetworkEvaluator* evaluator)
         networkEditorStyleProperty_.addOption("first","Classic",NWESTYLE_CLASSIC);
         networkEditorStyleProperty_.addOption("second","Classic Print",NWESTYLE_CLASSIC_PRINT);
         networkEditorStyleProperty_.addOption("third","Material",NWESTYLE_MATERIAL);
+        networkEditorStyleProperty_.addOption("fourth","Material Dark",NWESTYLE_MATERIAL_DARK);
         networkEditorStyleProperty_.setGroupID("style");
     addProperty(networkEditorGraphLayoutsProperty_);
         networkEditorGraphLayoutsProperty_.addOption("first","Sugiyama",NWEGL_SUGIYAMA);
@@ -1405,6 +1407,9 @@ void NetworkEditor::updateStyle() {
         break;
     case NWESTYLE_MATERIAL:
         setStyle(new NWEStyle_Material(this));
+        break;
+    case NWESTYLE_MATERIAL_DARK:
+        setStyle(new NWEStyle_Material_Dark(this));
         break;
     default:
         tgtAssert(false,"Unknown NetworkEditorStyle. Style not changed.");
