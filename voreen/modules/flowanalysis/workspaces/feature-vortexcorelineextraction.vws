@@ -60,7 +60,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="Jacobian.outputJacobi" direction="0" portID="Jacobian.outputJacobi" guiName="Jacobi matrix" allowMultipleConnections="true" invalidationLevel="0">
+                        <Port name="Jacobian.outputJacobian" direction="0" portID="Jacobian.outputJacobian" guiName="Jacobian matrix" allowMultipleConnections="true" invalidationLevel="0">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -223,18 +223,18 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000975247" id="ref18">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000974096" id="ref18">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="21.271715164" y="-71.826873779" z="-9.587285995" />
-                            <focus x="22.179582596" y="23.160123825" z="29.021844864" />
+                            <position x="21.121715546" y="-71.976867676" z="-9.737285614" />
+                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
                             <upVector x="0.015190589" y="0.364379674" z="-0.931126654" />
                             <trackball moveCenter="false">
-                                <center x="24.750001907" y="24.750001907" z="25.050001144" />
+                                <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
-                            <sceneLLF x="-0.150000006" y="-0.150000006" z="-0.150000006" />
-                            <sceneURB x="49.650001526" y="49.650001526" z="50.25" />
+                            <sceneLLF x="-0.300000012" y="-0.300000012" z="-0.300000012" />
+                            <sceneURB x="49.500003815" y="49.500003815" z="50.100002289" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -363,7 +363,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-146" y="648" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="-25" width="1967" height="1338" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="192" y="108" width="1967" height="1338" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -373,10 +373,10 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="465" y="166" />
+                            <value x="192" y="108" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1024" y="1024" />
+                            <value x="1967" y="1338" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
@@ -538,7 +538,7 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="623.712341309">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="622.704040527">
                             <value x="2.299999952" y="1.5" z="1.5" w="1" />
                             <Center x="0" y="0" z="0" />
                             <LightPos x="0" y="0" z="1" w="1" />
@@ -617,15 +617,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-214" y="268" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000975247" id="ref19">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000974096" id="ref19">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="21.271715164" y="-71.826873779" z="-9.587285995" />
-                            <focus x="22.179582596" y="23.160123825" z="29.021844864" />
+                            <position x="21.121715546" y="-71.976867676" z="-9.737285614" />
+                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
                             <upVector x="0.015190589" y="0.364379674" z="-0.931126654" />
                             <trackball moveCenter="false">
-                                <center x="24.750001907" y="24.750001907" z="25.050001144" />
+                                <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -714,8 +714,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-192" y="165" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="166.305099487" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
-                            <value x="0" y="166.305099487" />
+                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="150.411895752" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="150.411895752" />
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />
@@ -724,7 +724,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="200" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607445778" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 205 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 178 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
@@ -823,7 +823,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="Jacobian.outputJacobi">
+                    <Outport name="Jacobian.outputJacobian">
                         <Processor type="Jacobian" ref="ref1" />
                     </Outport>
                     <Inport name="inportJacobianVolume">
@@ -831,7 +831,7 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="Jacobian.outputJacobi">
+                    <Outport name="Jacobian.outputJacobian">
                         <Processor type="Jacobian" ref="ref1" />
                     </Outport>
                     <Inport name="in_jacobi">

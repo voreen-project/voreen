@@ -57,7 +57,7 @@ private:
 
     // Ports
     VolumePort inputVolume_;
-    VolumePort outputJacobi_;
+    VolumePort outputJacobian_;
 
     static const std::string loggerCat_;
 };

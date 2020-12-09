@@ -37,11 +37,11 @@ const std::string Jacobian::loggerCat_("voreen.flowanalysis.Jacobian");
 Jacobian::Jacobian()
     : Processor()
     , inputVolume_(Port::INPORT, "Jacobian.inputVolume", "3D Vector Volume Input")
-    , outputJacobi_(Port::OUTPORT, "Jacobian.outputJacobi", "Jacobi matrix")
+    , outputJacobian_(Port::OUTPORT, "Jacobian.outputJacobian", "Jacobian matrix")
 {
     addPort(inputVolume_);
     inputVolume_.addCondition(new PortConditionVolumeChannelCount(3));
-    addPort(outputJacobi_);
+    addPort(outputJacobian_);
 }
 
 Processor* Jacobian::create() const {
@@ -85,7 +85,7 @@ void Jacobian::process() {
     auto* volume = new Volume(jacobianVolume, inputVolume);
     volume->setRealWorldMapping(RealWorldMapping()); // Override to default rwm.
     volume->setModality(Modality("jacobian"));
-    outputJacobi_.setData(volume);
+    outputJacobian_.setData(volume);
 }
 
 } // namespace voreen
