@@ -21,8 +21,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
             libavcodec-dev \
             libavformat-dev \
             freeglut3-dev \
-            libhdf5-dev \
-            libhdf5-cpp-11 \
             liblz4-dev \
             libvtkgdcm2-dev \
             opencl-headers \
@@ -66,7 +64,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
 
 # install meson from pip (at least version 0.45 is required)
 RUN pip3 install --upgrade pip setuptools
-RUN pip3 install meson
+RUN pip3 install meson==0.45
 
 # install dependencies for building mesa
 RUN apt-get build-dep mesa qt5-default -y
@@ -128,6 +126,43 @@ RUN mkdir -p /build/ \
     && make \
     && make install \
     && rm -rf /build/
+
+RUN mkdir -p /build/ \
+    && cd /build \
+    && curl -L "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-1.12.0/src/hdf5-1.12.0.tar.bz2" -o hdf5.tar.gz \
+    && tar -xjf hdf5.tar.gz \
+    && cd hdf5-1.12.0 \
+    && ./configure \
+        --prefix=/usr \
+        --docdir=/usr/share/doc/hdf5/ \
+        --enable-static \
+        --disable-sharedlib-rpath \
+        --enable-build-mode=production \
+        --enable-hl \
+        --enable-cxx \
+        --disable-fortran \
+        --with-pic \
+        --with-zlib \
+        --with-szlib \
+    && make \
+    && make install \
+    && rm -rf /build/
+
+#    && cmake \
+#        -DBUILD_SHARED_LIBS=ON \
+#        -DCMAKE_BUILD_TYPE=Release \
+#        -DHDF5_BUILD_HL_LIB=ON \
+#        -DHDF5_BUILD_CPP_LIB=ON \
+#        -DHDF5_BUILD_FORTRAN=OFF \
+#        -DHDF5_ENABLE_Z_LIB_SUPPORT=ON \
+#        -DHDF5_ENABLE_SZIP_SUPPORT=ON \
+#        -DHDF5_ENABLE_SZIP_ENCODING=ON \
+#        -DCMAKE_INSTALL_PREFIX=/usr \
+#        -DCMAKE_INSTALL_LIBDIR=lib \
+#        -DCMAKE_CXX_FLAGS="-march=core2" \
+#        -DCMAKE_C_FLAGS="-march=core2" \
+#        -DLLC_HOST_CPU="core2" \
+#        ../hdf5-1.12.0 \
 
 # Clean up to reduce image size
 RUN pip3 uninstall --yes meson pip setuptools

@@ -4,7 +4,7 @@ stages:
   - test
   - deploy
 
-image: voreen/ci-ubuntu-16.04:v2
+image: voreen/ci-ubuntu-16.04:v3
 
 variables:
   GIT_DEPTH: 1 # Make cloning faster
