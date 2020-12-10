@@ -137,7 +137,7 @@ def list_dir(destination):
 
 class Run(object):
     def path(self):
-        return "{}--{}--{}--{}".format(self.branch, self.date, self.commit, self.build)
+        return "{}--{}--{}--{}".format(self.branch, self.date.strftime(datetime_format), self.commit, self.build)
     def parse(line):
         components = line.split("--")
         if len(components) < 4:
