@@ -39,6 +39,7 @@ GeometryRenderer::GeometryRenderer()
     , inport_(Port::INPORT, "inport.geometry", "Geometry Input", false)
     , texPort_(Port::INPORT, "inport.texture", "Texture Input")
     , polygonMode_("polygonMode", "Polygon Mode")
+    , cullFace_("cullFace", "Cull Face")
     , lineWidth_("lineWidth", "Line Width", 1.f, 1.f, 20.f)
     , pointSize_("pointSize", "Point Size", 1.f, 1.f, 20.f)
     , solidColor_("solidColor", "Color", tgt::Color(1.f, 1.f, 1.f, 1.f))
@@ -70,6 +71,12 @@ GeometryRenderer::GeometryRenderer()
     polygonMode_.select("fill");
     polygonMode_.onChange(MemberFunctionCallback<GeometryRenderer>(this, &GeometryRenderer::updatePropertyVisibilities));
     addProperty(polygonMode_);
+
+    cullFace_.addOption("none", "None", GL_NONE);
+    cullFace_.addOption("front", "Front", GL_FRONT);
+    cullFace_.addOption("back", "Back", GL_BACK);
+    cullFace_.addOption("both", "Both", GL_FRONT_AND_BACK);
+    addProperty(cullFace_);
 
     addProperty(pointSize_);
     addProperty(lineWidth_);
@@ -176,7 +183,12 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
         isTriangleMeshShaderNeeded = true;
     }
     else if (glmgb = dynamic_cast<const GlMeshGeometryBase*>(inport_.getData())) {
-        isTriangleMeshShaderNeeded = true;
+        isTriangleMeshShaderNeeded =
+                (glmgb->getPrimitiveType() == GL_TRIANGLE_STRIP) ||
+                (glmgb->getPrimitiveType() == GL_TRIANGLE_FAN) ||
+                (glmgb->getPrimitiveType() == GL_TRIANGLES) ||
+                (glmgb->getPrimitiveType() == GL_TRIANGLE_STRIP_ADJACENCY) ||
+                (glmgb->getPrimitiveType() == GL_TRIANGLES_ADJACENCY );
     }
     else {
         lastShaderConfiguration_ = -1;
@@ -211,6 +223,11 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
     }
 
     glPolygonMode(GL_FRONT_AND_BACK, polygonMode_.getValue());
+    GLenum cullFace = cullFace_.getValue();
+    if(cullFace != GL_NONE) {
+        glEnable(GL_CULL_FACE);
+        glCullFace(cullFace);
+    }
 #ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
     glShadeModel(GL_SMOOTH);
 #endif
@@ -327,6 +344,8 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
     glLineWidth(1.f);
     glColor4f(1.f, 1.f, 1.f, 1.f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     tgt::TextureUnit::setZeroUnit();
 }
 

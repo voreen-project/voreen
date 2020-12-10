@@ -86,10 +86,10 @@ protected:
     GeometryPort inport_;
     RenderPort texPort_;
     GLEnumOptionProperty polygonMode_;
+    GLEnumOptionProperty cullFace_;
 
     FloatProperty pointSize_;
     FloatProperty lineWidth_;
-
     ColorProperty solidColor_;          ///< color for rendering meshes without color information in the vertices
 
     BoolProperty mapTexture_;
@@ -112,7 +112,6 @@ protected:
     bool shaderNeedsRebuild_;
 
     tgt::FramebufferObject* fbo_;
-    tgt::Texture* arrayTex_;
 };
 
 }
