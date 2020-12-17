@@ -92,7 +92,6 @@ GeometryProcessor::GeometryProcessor()
     addProperty(oirBlendShader_);
 
     cameraHandler_ = new CameraInteractionHandler("cameraHandler", "Camera", &camera_);
-    cameraHandler_->setEnabled(false); // not needed most of the time
     addInteractionHandler(cameraHandler_);
 
     addPort(inport_);
