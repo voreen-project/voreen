@@ -68,7 +68,7 @@ public:
 
     virtual std::string getCategory() const { return "Pathline Processing"; }
     virtual std::string getClassName() const { return "PathlineCreator"; }
-    virtual Processor::CodeState getCodeState() const { return CODE_STATE_STABLE; }
+    virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
@@ -86,6 +86,9 @@ protected:
         numSeedPoints_.setDescription("Can be used to determine the number of pathlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold interval will not be used for pathline construction.");
+        temporalResolution_.setDescription("Defines the (constant!) time between two consecutive time steps of the input volume list.");
+        velocityUnitConversion_.setDescription("Defines the unit of the input velocity volumes");
+        temporalIntegrationSteps_.setDescription("Defines the number of integration steps that are executed between two consecutive time steps.");
     }
 
 private:

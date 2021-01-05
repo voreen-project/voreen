@@ -33,8 +33,9 @@
 
 namespace voreen {
 
-// TODO: Could be adjustable via Property.
+// TODO: Should use Shaders!
 static const uint32_t GEOMETRY_TESSELATION = 8;
+static const float MIN_RADIUS = 0.0001f;
 
 std::string StreamlineRenderer3D::loggerCat_("flowanalysis.StreamlineRenderer3D");
 
@@ -60,7 +61,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
         //must haves
     , streamlineShader_("streamlineShaderProp", "Shader:", "streamlinerenderer3d.frag", "streamlinerenderer3d.vert", ""/*"streamlinerenderer3d.geom"*/, Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , requiresRecompileShader_(true)
-    , camera_("camera", "Camera: ", tgt::Camera(), true, true, 500.f, Processor::INVALID_RESULT, Property::LOD_DEBUG)
+    , camera_("camera", "Camera", tgt::Camera(tgt::vec3(0.f, 0.f, 3.5f), tgt::vec3(0.f, 0.f, 0.f), tgt::vec3(0.f, 1.f, 0.f)))
     , cameraHandler_(nullptr)
     , requiresRebuild_(false)
 {
@@ -73,7 +74,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addProperty(streamlineStyle_);
         streamlineStyle_.addOption("lines", "Lines", STYLE_LINES);
         streamlineStyle_.addOption("tubes", "Tubes", STYLE_TUBES);
-        streamlineStyle_.addOption("arrows", "Arrows", STYLE_ARROWS);
+        //streamlineStyle_.addOption("arrows", "Arrows", STYLE_ARROWS); // TODO: should use shaders!
         streamlineStyle_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
         // color
     addProperty(color_);
@@ -107,8 +108,10 @@ StreamlineRenderer3D::StreamlineRenderer3D()
         colorRotationMatrix_.setReadOnlyFlag(true);
     addProperty(enableMaximumIntensityProjection_);
     addProperty(timeWindowStart_);
+        timeWindowStart_.setNumDecimals(4);
         timeWindowStart_.setReadOnlyFlag(true);
     addProperty(timeWindowSize_);
+        timeWindowSize_.setNumDecimals(4);
         timeWindowSize_.setReadOnlyFlag(true);
 
         //must have
@@ -214,6 +217,9 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     if (!streamlines)
         return;
 
+    // Fit camera.
+    camera_.adaptInteractionToScene(streamlines->getOriginalWorldBounds(), 0.0f, true);
+
     // Update transfer function.
     float* data = new float[2];
     data[0] = streamlines->getMinMagnitude();
@@ -224,17 +230,20 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     transferFunction_.setVolume(tfVolume_.get());
 
     // Update time window.
-    timeWindowStart_.setReadOnlyFlag(streamlines->getTemporalRange().x == streamlines->getTemporalRange().y);
-    timeWindowStart_.setMinValue(streamlines->getTemporalRange().x);
-    timeWindowStart_.setMaxValue(streamlines->getTemporalRange().y);
-    timeWindowStart_.set(streamlines->getTemporalRange().x); // default: Start at front.
-    timeWindowStart_.adaptDecimalsToRange(4);
+    bool timeWindowEmpty = streamlines->getTemporalRange().x == streamlines->getTemporalRange().y;
+    timeWindowStart_.setReadOnlyFlag(timeWindowEmpty);
+    timeWindowSize_.setReadOnlyFlag(timeWindowEmpty);
 
-    timeWindowSize_.setReadOnlyFlag(streamlines->getTemporalRange().x == streamlines->getTemporalRange().y);
-    timeWindowSize_.setMinValue(streamlines->getTemporalRange().x);
-    timeWindowSize_.setMaxValue(streamlines->getTemporalRange().y);
-    timeWindowSize_.set(streamlines->getTemporalRange().y); // default: End at back.
-    timeWindowSize_.adaptDecimalsToRange(4);
+    bool timeWindowChanged = streamlines->getTemporalRange().x != timeWindowStart_.getMinValue() || (streamlines->getTemporalRange().y - streamlines->getTemporalRange().x) != timeWindowSize_.getMaxValue();
+    if(!timeWindowEmpty && timeWindowChanged) {
+        timeWindowStart_.setMinValue(streamlines->getTemporalRange().x);
+        timeWindowStart_.setMaxValue(streamlines->getTemporalRange().y);
+        timeWindowStart_.set(timeWindowStart_.getMinValue()); // default: Start at front.
+
+        timeWindowSize_.setMinValue(0);
+        timeWindowSize_.setMaxValue(streamlines->getTemporalRange().y - streamlines->getTemporalRange().x);
+        timeWindowSize_.set(timeWindowSize_.getMaxValue()); // default: End at back.
+    }
 
     // Force rebuild
     requiresRebuild_ = true;
@@ -391,15 +400,16 @@ GlMeshGeometryBase* StreamlineRenderer3D::createTubeGeometry(const Streamline& s
 
         uint32_t offset = static_cast<uint32_t>(k) * tesselation;
 
+        float radius = std::max(element.radius_, MIN_RADIUS);
         tgt::vec3 color = element.velocity_;
         tgt::vec4 v(0.0f, 0.0f, 0.0f, 1.0f);
         for (uint32_t i = 0; i < tesselation; i++) {
 
             // Calculate Vertex and add it to the mesh.
             float angle = angleStep * i;
-            v.x = element.radius_ * cosf(angle);
-            v.y = element.radius_ * sinf(angle);
-            mesh->addVertex(VertexColor((transformation * v).xyz(), tgt::vec4(color, 1.0f)));
+            v.x = radius * cosf(angle);
+            v.y = radius * sinf(angle);
+            mesh->addVertex(VertexColor((transformation * v).xyz(), tgt::vec4(color, element.time_)));
 
             // Calculate indices and add them to the mesh.
             if (k < streamline.getNumElements() - 1) {
@@ -428,7 +438,7 @@ GlMeshGeometryBase* StreamlineRenderer3D::createArrowGeometry(const Streamline& 
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
 
-    float radius = streamline.getFirstElement().radius_; // FIXME: radius is only a rough approximation.
+    float radius = std::max(streamline.getFirstElement().radius_, MIN_RADIUS); // FIXME: radius is only a rough approximation.
     float length = streamline.getPhysicalLength();
 
     // Calculate the number of arrows the bundle will be split into.

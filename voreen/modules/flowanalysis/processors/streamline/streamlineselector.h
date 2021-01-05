@@ -63,11 +63,12 @@ public:
 
     virtual std::string getCategory() const { return "Streamline Processing"; }
     virtual std::string getClassName() const { return "StreamlineSelector"; }
-    virtual Processor::CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
+    virtual Processor::CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
+    virtual bool isReady() const;
 
 protected:
     virtual void setDescriptions() {
@@ -79,7 +80,6 @@ protected:
         geometryOutport_.setDescription("LLF and URB of the ROI. Can be used with the BoundingBoxRenderer to visualize the ROI.");
         //properties
         enabled_.setDescription("If disabled, the input is not modified.");
-        clearSelection_.setDescription("Clears the selection without changing the ROI.");
         inside_.setDescription("Defines, if streamlines must (not) be in the region of interest.");
         selectionMode_.setDescription("Defines, if streamlines must begin/end in the region of interest or must intersect it.");
         roi_.setDescription("The region of interest where streamlines must (not) begin/end or intersect.");
@@ -91,9 +91,6 @@ protected:
     virtual void dataWillChange(const Port* source);
 
 private:
-
-    /** Triggered by the button with the same name. */
-    void clearSelectionOnChange();
 
     /** Enum used to define intersection mode. */
     enum StreamlineSelectionMode {
@@ -109,8 +106,6 @@ private:
     // properties
         // enable
     BoolProperty enabled_;                                  ///< toggles the processor on and off
-        // start configuration
-    ButtonProperty clearSelection_;                         ///< clears the current selection
         // config
     OptionProperty<bool> inside_;                           ///< streamlines must be (not) inside the ROI
     OptionProperty<StreamlineSelectionMode> selectionMode_; ///< streamlines must start/end/intersect ROI

@@ -126,7 +126,7 @@ void StreamlineList::addStreamlineList(const StreamlineListBase& list) {
 void StreamlineList::removeStreamline(size_t pos) {
     tgtAssert(pos < streamlines_.size(), "Index out of bounds.");
     notifyPendingDataInvalidation();
-    streamlines_[pos] = streamlines_[streamlines_.size()-1];
+    std::swap(streamlines_[pos], streamlines_[streamlines_.size()-1]);
     streamlines_.pop_back();
 }
 

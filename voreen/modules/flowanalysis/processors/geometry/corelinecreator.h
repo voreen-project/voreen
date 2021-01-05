@@ -40,6 +40,7 @@ public:
     virtual Processor* create() const { return new CorelineCreator(); }
     virtual std::string getClassName() const { return "CorelineCreator"; }
     virtual std::string getCategory() const { return "Geometry"; }
+    virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     static void Process( const ParallelVectorSolutions& solutions, int lengthThreshold, std::vector<std::vector<tgt::vec3>>& corelines );
 

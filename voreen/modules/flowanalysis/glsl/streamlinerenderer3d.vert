@@ -32,16 +32,14 @@ uniform mat4 viewMatrix_;
 //set manuell in process
 uniform mat4 velocityTransformMatrix_;
 
-out vData
-{
+out vData {
     vec3 position;
     vec3 velocity;
     float radius;
     float time;
 } vertex;
 
-void main()
-{
+void main() {
     gl_Position = projectionMatrix_ * (viewMatrix_ * vec4(position_, 1));
     vertex.position = gl_Position.xyz;
     vertex.velocity = (velocityTransformMatrix_* vec4(color_.rgb, 1.0)).xyz;

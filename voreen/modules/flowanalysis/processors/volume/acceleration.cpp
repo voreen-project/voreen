@@ -53,6 +53,16 @@ bool Acceleration::isReady() const {
         return false;
     }
 
+    if(inportJacobianVolume_.getData()->getSpacing() != inportVelocityVolume_.getData()->getSpacing()) {
+        setNotReadyErrorMessage("Input spacing must match");
+        return false;
+    }
+
+    if(inportJacobianVolume_.getData()->getOffset() != inportVelocityVolume_.getData()->getOffset()) {
+        setNotReadyErrorMessage("Input offset must match");
+        return false;
+    }
+
     return true;
 }
 

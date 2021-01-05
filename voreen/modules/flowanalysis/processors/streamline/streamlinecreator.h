@@ -115,6 +115,9 @@ private:
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
 
+    // debug
+    IntProperty integrationSteps_;
+
     static const std::string loggerCat_;
 };
 

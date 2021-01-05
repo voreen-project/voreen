@@ -167,7 +167,6 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
     tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
     RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
     rwm.setScale(rwm.getScale() * velocityUnitConversion_.getValue()); // Now we have mm/s.
-    SpatialSampler sampler(*reference, rwm, filterMode_.getValue(), worldToVoxelMatrix);
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
 
     auto seedMask = seedMask_.getData();
@@ -196,7 +195,7 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
                     if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
                         tgt::vec3 pos = seedMaskVoxelToWorldMatrix * tgt::vec3(x, y, z);
                         if(roi.containsPoint(pos)) {
-                            seedPoints.emplace_back(worldToVoxelMatrix * pos);
+                            seedPoints.emplace_back(pos);
                         }
                     }
                 }
@@ -218,17 +217,18 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
             tgt::vec3 seedPoint;
             seedPoint = tgt::vec3(rnd(), rnd(), rnd());
             seedPoint = roi.getLLF() + seedPoint * roi.diagonal();
-            seedPoints.push_back(worldToVoxelMatrix * seedPoint);
+            seedPoints.push_back(seedPoint);
         }
     }
 
+    SpatialSampler sampler(*reference, rwm, filterMode_.getValue(), worldToVoxelMatrix);
     std::list<Streamline> pathlines;
     for (const tgt::vec3& seedPoint : seedPoints) {
         tgt::vec3 velocity = sampler.sample(seedPoint);
 
         Streamline pathline;
         pathline.addElementAtEnd(Streamline::StreamlineElement(seedPoint, velocity));
-        pathlines.push_back(pathline);
+        pathlines.emplace_back(pathline);
     }
 
     if (pathlines.empty()) {
@@ -276,18 +276,25 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
             input.absoluteMagnitudeThreshold * input.velocityUnitConversion,
     };
 
+    VolumeRAMRepresentationLock currVol(flowVolumes->first());
+    if(!*currVol) {
+        LERROR("RAM representation not available");
+        return PathlineCreatorOutput { nullptr };
+    }
+
     for(size_t i=0; i<flowVolumes->size() - 1; i++) {
 
-        // We ensure the current and next time frame has as RAM representation.
-        VolumeRAMRepresentationLock volume0(flowVolumes->at(i+0));
-        VolumeRAMRepresentationLock volume1(flowVolumes->at(i+1));
+        // We ensure the current and next time frame has a RAM representation.
+        VolumeRAMRepresentationLock nextVol(flowVolumes->at(i+1));
+        if(!*nextVol) {
+            LERROR("RAM representation not available");
+            return PathlineCreatorOutput { nullptr };
+        }
 
-        // Temporal integration loop. Here we actually change the field.
+        // Temporal integration loop.
         for(int t=0; t<input.temporalIntegrationSteps; t++) {
             float alpha = t * dt / input.temporalResolution;
-            SpatioTemporalSampler sampler(*volume0, *volume1, alpha, rwm, input.filterMode, worldToVoxelMatrix);
-
-            // Iterate pathlines in reverse, such that we can remove at the end.
+            SpatioTemporalSampler sampler(*currVol, *nextVol, alpha, rwm, input.filterMode, worldToVoxelMatrix);
             for (auto iter = pathlines.begin(); iter != pathlines.end();) {
                 Streamline& pathline = *iter;
                 bool continueIntegration = integrationStep(pathline, sampler, integrationInput);
@@ -299,6 +306,8 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
                     iter++;
                 }
             }
+
+            std::swap(currVol, nextVol);
 
             progressReporter.setProgress((i * input.temporalIntegrationSteps + t) * dt / totalTime);
         }

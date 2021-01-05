@@ -52,7 +52,7 @@ public:
     virtual Processor* create() const override        { return new StreamlineRotation(); }
     virtual std::string getClassName() const override { return "StreamlineRotation";  }
     virtual std::string getCategory() const override  { return "Process";          }
-    virtual CodeState getCodeState() const override   { return CODE_STATE_STABLE; }
+    virtual CodeState getCodeState() const override   { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
     virtual void setDescriptions() override {

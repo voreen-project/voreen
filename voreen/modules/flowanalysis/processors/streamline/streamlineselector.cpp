@@ -41,13 +41,11 @@ StreamlineSelector::StreamlineSelector()
     , geometryOutport_(Port::OUTPORT, "geometryOutport", "ROI Output", Processor::VALID)
     //properties
     , enabled_("enableProp", "Enable", false)
-        //generate
-    , clearSelection_("clearSelectionProp", "Clear Selection")
-        //config
+    //config
     , inside_("insideProp", "Inside?")
     , selectionMode_("selectionModeProp", "Selection Mode")
-    , roi_("roiProp", "Region of Interest")
-        //roi settings
+    , roi_("roiProp", "Region of Interest", tgt::ivec3(0), tgt::ivec3(0), tgt::ivec3(100), tgt::ivec3(1))
+    //roi settings
     , color_("usedGeometryColorProp", "ROI Color", tgt::vec4(0.f, 1.f, 0.f, 1.f), tgt::vec4(1.f, 0.f, 0.f, 1.f), Processor::VALID, Property::LOD_ADVANCED)
 {
     // ports
@@ -57,11 +55,6 @@ StreamlineSelector::StreamlineSelector()
 
     //properties
     addProperty(enabled_);
-        //general
-    addProperty(clearSelection_);
-        ON_CHANGE(clearSelection_, StreamlineSelector, clearSelectionOnChange);
-        clearSelection_.setGroupID("select");
-    setPropertyGroupGuiName("select","Start Selection");
         //config
     addProperty(inside_);
         inside_.addOption("inside" , "Select inside ROI", true);
@@ -85,6 +78,27 @@ StreamlineSelector::StreamlineSelector()
 StreamlineSelector::~StreamlineSelector() {
 }
 
+bool StreamlineSelector::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized");
+        return false;
+    }
+
+    if(!streamlineInport_.isReady()) {
+        setNotReadyErrorMessage("Inport not ready");
+        return false;
+    }
+
+    if(!streamlineOutport_.isReady()) {
+        setNotReadyErrorMessage("Streamline Outport not connected");
+        return false;
+    }
+
+    // Note: Geometry Outport is optional!
+
+    return true;
+}
+
 StreamlineSelectorComputeInput StreamlineSelector::prepareComputeInput() {
     if(!enabled_.get()) {
         streamlineOutport_.setData(streamlineInport_.getData(), false);
@@ -98,6 +112,10 @@ StreamlineSelectorComputeInput StreamlineSelector::prepareComputeInput() {
 
     if(!streamlineInport_.hasData()) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
+    }
+
+    if(!roi_.get().isDefined()) {
+        throw InvalidInputException("Bounding Box undefined", InvalidInputException::S_ERROR);
     }
 
     std::unique_ptr<StreamlineListBase> streamlines(streamlineInport_.getData()->clone());
@@ -172,7 +190,7 @@ void StreamlineSelector::afterProcess() {
     AsyncComputeProcessor::afterProcess();
 
     if(streamlineOutport_.hasData()) {
-        color_.setUseActiveColor(lastUsedGeometry_.isDefined() ? roi_.get() == lastUsedGeometry_ : false);
+        color_.setUseActiveColor(lastUsedGeometry_.isDefined() && roi_.get() == lastUsedGeometry_);
     } else {
         color_.setUseActiveColor(false);
     }
@@ -181,7 +199,7 @@ void StreamlineSelector::afterProcess() {
         // Update bounding box geometry.
         PointListGeometryVec3* list = new PointListGeometryVec3();
         list->addPoint(roi_.get().getLLF());
-        list->addPoint(roi_.get().getURB() + tgt::ivec3::one);
+        list->addPoint(roi_.get().getURB());
         list->setTransformationMatrix(streamlineInport_.getData()->getListTransformMatrix() *
                                       streamlineInport_.getData()->getOriginalVoxelToWorldMatrix());
         geometryOutport_.setData(list);
@@ -206,11 +224,6 @@ void StreamlineSelector::adjustPropertiesToInput() {
 void StreamlineSelector::dataWillChange(const Port* source) {
     streamlineOutport_.clear();
     AsyncComputeProcessor::dataWillChange(source);
-}
-
-void StreamlineSelector::clearSelectionOnChange() {
-    if(lastUsedGeometry_.isDefined())
-        roi_.set(lastUsedGeometry_);
 }
 
 }   // namespace

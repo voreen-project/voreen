@@ -1,0 +1,307 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="0" y="-94.450363159" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.259921074" />
+            </MetaData>
+            <Processors>
+                <Processor type="StreamlineSource" name="StreamlineSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-230" y="-291" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="currentListProp" name="currentListProp" value="-1" minValue="-1" maxValue="-1" />
+                        <Property mapKey="directoryFileProp" name="directoryFileProp" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../voreen/data" />
+                                    <item value="data" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/data" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="loadOptionProp" name="loadOptionProp" value="single" />
+                        <Property mapKey="singleFileProp" name="singleFileProp" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/flow/streamlines.vsd" />
+                                    <item value="../test-data/voreen-testdata/input/flow/streamlines.vsd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/streamlines.vsd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="tableProp" name="tableProp" columnCount="4" selectedRow="-1">
+                            <columnLabels>
+                                <item value="#" />
+                                <item value="Streamlines" />
+                                <item value="Ref.Volume" />
+                                <item value="Filename" />
+                            </columnLabels>
+                            <values />
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="streamlineOutport" direction="0" portID="streamlineOutport" guiName="Streamline Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="volumeOutport" direction="0" portID="volumeOutport" guiName="Reference Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StreamlineSave" name="StreamlineSave" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-265" y="54" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/streamlines_length_filtered.vsd" />
+                                    <item value="../test-data/voreen-testdata/output/streamlines_length_filtered.vsd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/streamlines_length_filtered.vsd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                        <Property mapKey="saveVolumeInVsd" name="saveVolumeInVsd" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="streamlineInport" direction="1" portID="streamlineInport" guiName="Streamline Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="volumeInport" direction="1" portID="volumeInport" guiName="Volume input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StreamlineSave" name="StreamlineSave 3" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="54" y="55" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/streamlines_lambda2predicate_filtered.vsd" />
+                                    <item value="../test-data/voreen-testdata/output/streamlines_lambda2predicate_filtered.vsd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/streamlines_lambda2predicate_filtered.vsd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                        <Property mapKey="saveVolumeInVsd" name="saveVolumeInVsd" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="streamlineInport" direction="1" portID="streamlineInport" guiName="Streamline Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="volumeInport" direction="1" portID="volumeInport" guiName="Volume input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StreamlinePredicates" name="None" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-257" y="-112" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="curvatureRange" minValue="0" maxValue="180" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
+                            <value x="0" y="180" />
+                        </Property>
+                        <Property mapKey="enableProp" name="enableProp" value="true" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="physicalLengthRange" minValue="0" maxValue="299.618774414" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="150" y="299.618774414" />
+                        </Property>
+                        <Property mapKey="predicateFiltering" name="predicateFiltering" value="disable" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="predicatePort" direction="1" portID="predicatePort" guiName="Volume Predicate" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="streamlineInport" direction="1" portID="streamlineInport" guiName="Streamline Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="streamlineOutport" direction="0" portID="streamlineOutport" guiName="Streamline Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StreamlinePredicates" name="Intersection" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="47" y="-118" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="curvatureRange" minValue="0" maxValue="180" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
+                            <value x="0" y="180" />
+                        </Property>
+                        <Property mapKey="enableProp" name="enableProp" value="true" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="physicalLengthRange" minValue="0" maxValue="299.618774414" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="150" y="299.618774414" />
+                        </Property>
+                        <Property mapKey="predicateFiltering" name="predicateFiltering" value="intersection" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="predicatePort" direction="1" portID="predicatePort" guiName="Volume Predicate" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="streamlineInport" direction="1" portID="streamlineInport" guiName="Streamline Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="streamlineOutport" direction="0" portID="streamlineOutport" guiName="Streamline Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="61" y="-294" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/flow/aneurysm_lambda2_predicate.vvd" />
+                                        <item value="../test-data/voreen-testdata/input/flow/aneurysm_lambda2_predicate.vvd" />
+                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/aneurysm_lambda2_predicate.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="streamlineOutport">
+                        <Processor type="StreamlineSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="streamlineInport">
+                        <Processor type="StreamlinePredicates" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="streamlineOutport">
+                        <Processor type="StreamlineSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="streamlineInport">
+                        <Processor type="StreamlinePredicates" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="streamlineOutport">
+                        <Processor type="StreamlinePredicates" ref="ref1" />
+                    </Outport>
+                    <Inport name="streamlineInport">
+                        <Processor type="StreamlineSave" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="streamlineOutport">
+                        <Processor type="StreamlinePredicates" ref="ref2" />
+                    </Outport>
+                    <Inport name="streamlineInport">
+                        <Processor type="StreamlineSave" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref5" />
+                    </Outport>
+                    <Inport name="predicatePort">
+                        <Processor type="StreamlinePredicates" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

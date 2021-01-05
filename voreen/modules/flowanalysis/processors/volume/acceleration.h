@@ -39,6 +39,7 @@ public:
     virtual Processor* create() const { return new Acceleration(); }
     virtual std::string getClassName() const { return "Acceleration"; }
     virtual std::string getCategory() const { return "Volume Processing"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
     virtual bool isReady() const;
 
     static void Process(const VolumeRAM_Mat3Float& jacobian, const VolumeRAM& velocity, VolumeRAM_3xFloat& outAcceleration, RealWorldMapping rwm = RealWorldMapping());

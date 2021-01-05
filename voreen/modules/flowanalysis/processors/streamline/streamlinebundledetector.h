@@ -61,7 +61,7 @@ public:
 
     virtual std::string getCategory() const { return "Streamline Processing"; }
     virtual std::string getClassName() const { return "StreamlineBundleDetector"; }
-    virtual Processor::CodeState getCodeState() const { return CODE_STATE_STABLE; }
+    virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;

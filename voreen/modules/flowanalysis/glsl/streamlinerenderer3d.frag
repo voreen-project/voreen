@@ -26,8 +26,7 @@
 #include "modules/mod_transfunc.frag"
 #include "modules/mod_shading.frag"
 
-in vData
-{
+in vData {
     vec3 position;
     vec3 velocity;
     float radius;
@@ -52,8 +51,8 @@ uniform float timeWindowSize_;
 #endif
 
 
-void main()
-{
+void main() {
+
     if(frag.time < timeWindowStart_ || frag.time > timeWindowStart_ + timeWindowSize_)
         discard;
 

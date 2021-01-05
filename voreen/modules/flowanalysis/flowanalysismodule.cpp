@@ -36,7 +36,7 @@
 #include "processors/streamline/streamlinebundledetector.h"
 #include "processors/streamline/streamlinecombine.h"
 #include "processors/streamline/streamlinecreator.h"
-#include "processors/streamline/streamlinefilter.h"
+#include "processors/streamline/streamlinepredicates.h"
 #include "processors/streamline/streamlinerotation.h"
 #include "processors/streamline/streamlinesave.h"
 #include "processors/streamline/streamlineselector.h"
@@ -67,7 +67,7 @@ FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
     registerProcessor(new StreamlineBundleDetector());
     registerProcessor(new StreamlineCombine());
     registerProcessor(new StreamlineCreator());
-    registerProcessor(new StreamlineFilter());
+    registerProcessor(new StreamlinePredicates());
     registerProcessor(new StreamlineRenderer3D());
     registerProcessor(new StreamlineRotation());
     registerProcessor(new StreamlineSave());

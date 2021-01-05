@@ -66,7 +66,7 @@ public:
 
     virtual std::string getCategory() const { return "Flow Visualization"; }
     virtual std::string getClassName() const { return "StreamlineRenderer3D"; }
-    virtual Processor::CodeState getCodeState() const { return CODE_STATE_TESTING; }
+    virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
 protected:
     virtual void setDescriptions() {
         setDescription("Renders streamline objects from 3D vector fields for visualizing flow. " \

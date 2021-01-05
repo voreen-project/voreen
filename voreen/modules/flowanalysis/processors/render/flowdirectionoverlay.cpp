@@ -36,7 +36,7 @@
 
 namespace voreen {
 
-const std::string FlowDirectionOverlay::loggerCat_("voreen.FlowDirectionOverlay");
+const std::string FlowDirectionOverlay::loggerCat_("flowanalsyis.FlowDirectionOverlay");
 
 FlowDirectionOverlay::FlowDirectionOverlay()
     : ImageProcessor("image/orientationoverlay") //determines .frag shader

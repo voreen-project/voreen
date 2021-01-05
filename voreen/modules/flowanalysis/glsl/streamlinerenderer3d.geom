@@ -26,24 +26,21 @@
 layout(lines) in;
 layout(line_strip, max_vertices = 2) out;
 
-in vData
-{
+in vData {
     vec3 position;
     vec3 velocity;
     float radius;
     float time;
-}vertex[];
+} vertex[];
 
-out fData
-{
+out fData {
     vec3 position;
     vec3 velocity;
     float radius;
     float time;
-}frag;
+} frag;
 
-void main()
-{
+void main() {
     frag.position = vertex[0].position;
     frag.velocity = vertex[0].velocity;
     gl_Position = gl_in[0].gl_Position;

@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_STREAMLINEFILTER_H
-#define VRN_STREAMLINEFILTER_H
+#ifndef VRN_STREAMLINEPREDICATES_H
+#define VRN_STREAMLINEPREDICATES_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -36,31 +36,31 @@
 
 namespace voreen {
 
-struct StreamlineFilterComputeInput {
+struct StreamlinePredicatesComputeInput {
     std::unique_ptr<StreamlineListBase> streamlines;
+    PortDataPointer<VolumeBase> streamlinePredicateVolume;
+    std::function<bool(const Streamline&, const std::function<bool(const tgt::vec3&)>&)> predicateFilter;
     tgt::vec2 physicalLengthRange;
     tgt::vec2 curvatureRange;
 };
 
-struct StreamlineFilterComputeOutput {
+struct StreamlinePredicatesComputeOutput {
     std::unique_ptr<StreamlineListBase> streamlines;
 };
 
 /**
- * Used to filter streamlines according to different conditions.
- *
- * @Note: It uses a background thread to handle changed parameters during calculation.
+ * Used to filter streamlines according to (optionally) multiple predicates.
  */
-class StreamlineFilter : public AsyncComputeProcessor<StreamlineFilterComputeInput, StreamlineFilterComputeOutput> {
+class StreamlinePredicates : public AsyncComputeProcessor<StreamlinePredicatesComputeInput, StreamlinePredicatesComputeOutput> {
 public:
-    StreamlineFilter();
-    virtual ~StreamlineFilter();
+    StreamlinePredicates();
+    virtual ~StreamlinePredicates();
 
-    virtual Processor* create() const { return new StreamlineFilter(); }
+    virtual Processor* create() const { return new StreamlinePredicates(); }
 
     virtual std::string getCategory() const { return "Streamline Processing"; }
-    virtual std::string getClassName() const { return "StreamlineFilter"; }
-    virtual Processor::CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
+    virtual std::string getClassName() const { return "StreamlinePredicates"; }
+    virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
@@ -70,23 +70,27 @@ protected:
     virtual void setDescriptions() {
         setDescription("Used to filter streamlines according to length and curvature.");
         //ports
-        streamlineInport_.setDescription("Streamlines, which should be filtered.");
+        streamlineInport_.setDescription("Streamlines, which shall be filtered.");
+        streamlinePredicateVolumeInport_.setDescription("(Optional) Predicate (aka mask) volume. Streamlines that do not intersect this volume will be discarded.");
         streamlineOutport_.setDescription("Filtered streamlines.");
     }
 
     virtual void adjustPropertiesToInput();
     virtual void dataWillChange(const Port* source);
+    virtual bool isReady() const;
 
 private:
 
     // ports
     StreamlineListPort streamlineInport_;
+    VolumePort streamlinePredicateVolumeInport_;
     StreamlineListPort streamlineOutport_;
 
     // properties
     // enable
     BoolProperty enabled_;                       ///< toggles the processor on and off
 
+    StringOptionProperty predicateVolumeFiltering_;
     FloatIntervalProperty physicalLengthRange_;
     IntIntervalProperty curvatureRange_;
 

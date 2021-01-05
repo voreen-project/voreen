@@ -23,44 +23,68 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "streamlinefilter.h"
+#include "streamlinepredicates.h"
 
 #include "../../datastructures/streamlinelist.h"
 
 namespace voreen {
 
-const std::string StreamlineFilter::loggerCat_("flowanalysis.StreamlineFilter");
+const std::string StreamlinePredicates::loggerCat_("flowanalysis.StreamlineFilter");
 
-StreamlineFilter::StreamlineFilter()
+StreamlinePredicates::StreamlinePredicates()
     : AsyncComputeProcessor()
     //ports
     , streamlineInport_(Port::INPORT, "streamlineInport", "Streamline Input")
+    , streamlinePredicateVolumeInport_(Port::INPORT, "predicatePort", "Volume Predicate")
     , streamlineOutport_(Port::OUTPORT, "streamlineOutport", "Streamline Output")
     //properties
     , enabled_("enableProp", "Enable", false)
+    , predicateVolumeFiltering_("predicateFiltering", "Predicate Filtering")
     , physicalLengthRange_("physicalLengthRange", "Physical Length Range (mm)", 0.0f, 0.0f, 1.0f)
     , curvatureRange_("curvatureRange", "Avg. Angle (degrees)", tgt::ivec2(0, 180), 0, 180)
 {
     // ports
     addPort(streamlineInport_);
+    addPort(streamlinePredicateVolumeInport_);
     addPort(streamlineOutport_);
 
     //properties
     addProperty(enabled_);
     //general
+    addProperty(predicateVolumeFiltering_);
+        predicateVolumeFiltering_.addOption("disable", "Disable");
+        predicateVolumeFiltering_.addOption("intersection", "Intersection");
+        predicateVolumeFiltering_.setGroupID("filter");
     addProperty(physicalLengthRange_);
         physicalLengthRange_.setTracking(false);
         physicalLengthRange_.setGroupID("filter");
-    addProperty(curvatureRange_);
-        curvatureRange_.setTracking(false);
-        curvatureRange_.setGroupID("filter");
+    // Experimental:
+    //addProperty(curvatureRange_);
+    //    curvatureRange_.setTracking(false);
+    //    curvatureRange_.setGroupID("filter");
     setPropertyGroupGuiName("filter", "Filter");
 }
 
-StreamlineFilter::~StreamlineFilter() {
+StreamlinePredicates::~StreamlinePredicates() {
 }
 
-StreamlineFilterComputeInput StreamlineFilter::prepareComputeInput() {
+bool StreamlinePredicates::isReady() const {
+    if(!streamlineInport_.isReady()) {
+        setNotReadyErrorMessage("No streamline input");
+        return false;
+    }
+
+    // Note: predicate volume is optional.
+
+    if(!streamlineOutport_.isReady()) {
+        setNotReadyErrorMessage("No output connected");
+        return false;
+    }
+
+    return true;
+}
+
+StreamlinePredicatesComputeInput StreamlinePredicates::prepareComputeInput() {
     if(!enabled_.get()) {
         streamlineOutport_.setData(streamlineInport_.getData(), false);
         throw InvalidInputException("", InvalidInputException::S_IGNORE);
@@ -75,53 +99,93 @@ StreamlineFilterComputeInput StreamlineFilter::prepareComputeInput() {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
+    auto streamlinePredicateVolume = streamlinePredicateVolumeInport_.getThreadSafeData();
+
+    std::function<bool(const Streamline&, const std::function<bool(const tgt::vec3&)>&)> predicateFilter;
+    if(!streamlinePredicateVolume || predicateVolumeFiltering_.get() == "disable") {
+        predicateFilter = [] (const Streamline&, const std::function<bool(const tgt::vec3&)>&) -> bool { return false; };
+    }
+    else if(predicateVolumeFiltering_.get() == "intersection") {
+        predicateFilter = [] (const Streamline& streamline, const std::function<bool(const tgt::vec3&)>& predicate) -> bool {
+            for(size_t i=0; i<streamline.getNumElements(); i++) {
+                if(predicate(streamline.getElementAt(i).position_)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+    }
+    else {
+        tgtAssert(false, "Unimplemented predicate");
+    }
+
     std::unique_ptr<StreamlineListBase> streamlines(streamlineInport_.getData()->clone());
 
-    return StreamlineFilterComputeInput {
+    return StreamlinePredicatesComputeInput {
             std::move(streamlines),
+            std::move(streamlinePredicateVolume),
+            std::move(predicateFilter),
             physicalLengthRange_.get(),
             tgt::vec2(curvatureRange_.get()) * tgt::PIf / 180.0f
     };
 }
 
-StreamlineFilterComputeOutput StreamlineFilter::compute(ComputeInput input, ProgressReporter& progressReporter) const {
+StreamlinePredicatesComputeOutput StreamlinePredicates::compute(ComputeInput input, ProgressReporter& progressReporter) const {
 
     std::unique_ptr<StreamlineListBase> streamlines = std::move(input.streamlines);
+
+    auto streamlinePredicateVolume = std::move(input.streamlinePredicateVolume);
+
+    std::function<bool(const tgt::vec3&)> predicate = [] (const tgt::vec3&) -> bool { return true; };
+    if(streamlinePredicateVolume) {
+        tgt::mat4 worldToVoxel = streamlinePredicateVolume->getWorldToVoxelMatrix();
+        tgt::Bounds bounds = streamlinePredicateVolume->getBoundingBox().getBoundingBox();
+        VolumeRAMRepresentationLock lock(streamlinePredicateVolume);
+        predicate = [=] (const tgt::vec3& position) -> bool {
+            if(!bounds.containsPoint(position)) {
+                return false;
+            }
+            return lock->getVoxelNormalized(worldToVoxel * position) != 0.0f;
+        };
+    }
 
     size_t numStreamlines = streamlines->getStreamlines().size();
     for (size_t i = 0; i < numStreamlines; i++) {
         size_t index = numStreamlines - i - 1;
         const Streamline& streamline = streamlines->getStreamlines()[index];
 
-        bool remove = false;
+        // Check predicate first.
+        bool remove = input.predicateFilter(streamline, predicate);
 
-        if(streamline.getPhysicalLength() < input.physicalLengthRange.x ||
-            streamline.getPhysicalLength() > input.physicalLengthRange.y) {
+        if(!remove && (streamline.getPhysicalLength() < input.physicalLengthRange.x ||
+            streamline.getPhysicalLength() > input.physicalLengthRange.y)) {
             remove = true;
         }
-
+/*
         if(!remove && (streamline.getCurvatureStatistics().getMean() < input.curvatureRange.x ||
             streamline.getCurvatureStatistics().getMean() > input.curvatureRange.y)) {
             remove = true;
         }
-
+*/
         if(remove) {
             streamlines->removeStreamline(index);
         }
     }
 
-    return StreamlineFilterComputeOutput {
+    return StreamlinePredicatesComputeOutput {
             std::move(streamlines)
     };
 }
 
-void StreamlineFilter::processComputeOutput(ComputeOutput output) {
+void StreamlinePredicates::processComputeOutput(ComputeOutput output) {
     streamlineOutport_.setData(output.streamlines.release());
 }
 
-void StreamlineFilter::adjustPropertiesToInput() {
+void StreamlinePredicates::adjustPropertiesToInput() {
     const StreamlineListBase* streamlines = streamlineInport_.getData();
     if(streamlines) {
+
+        predicateVolumeFiltering_.setReadOnlyFlag(!streamlinePredicateVolumeInport_.hasData());
 
         float maxPhysicalLength = 0.0f;
         for(const Streamline& streamline : streamlines->getStreamlines()) {
@@ -129,15 +193,10 @@ void StreamlineFilter::adjustPropertiesToInput() {
         }
 
         physicalLengthRange_.setMaxValue(maxPhysicalLength);
-
-        // Do not update currently set values, because we might
-        // just want to recalculate pathlines on the same dataset.
-        //physicalLengthRange_.set(maxPhysicalLength);
-        //curvatureRange_.set(tgt::ivec2(0, 180));
     }
 }
 
-void StreamlineFilter::dataWillChange(const Port* source) {
+void StreamlinePredicates::dataWillChange(const Port* source) {
     streamlineOutport_.clear();
     AsyncComputeProcessor::dataWillChange(source);
 }

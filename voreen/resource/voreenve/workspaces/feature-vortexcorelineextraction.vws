@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="false">
+    <Workspace version="2" readonly="true">
         <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VolumeSource" ref="ref14" />
+                        <item type="Canvas" ref="ref11" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -27,7 +27,7 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../resource/voreenve/volumes/aneurysm.vvd" />
+                                        <item value="../volumes/aneurysm.vvd" />
                                         <item value="resource/voreenve/volumes/aneurysm.vvd" />
                                         <item value="/home/spider/programming/voreen-flow/voreen/resource/voreenve/volumes/aneurysm.vvd" />
                                     </paths>
@@ -228,13 +228,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001060804" id="ref18">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12600" minValue="0.252000004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="12650.400390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000993834" id="ref18">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="24.869159698" y="-67.422561646" z="9.36250782" />
-                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
-                            <upVector x="-0.001123519" y="0.195145875" z="-0.980773628" />
+                            <position x="26.84176445" y="-73.861495972" z="4.258965015" />
+                            <focus x="24.241043091" y="24.35931778" z="25.94695282" />
+                            <upVector x="-0.007179831" y="0.506394088" z="-0.862272322" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
@@ -368,7 +368,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="649" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="953" y="178" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="365" y="183" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -378,7 +378,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="953" y="178" />
+                            <value x="365" y="183" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -515,6 +515,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-866" y="484" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="cullFace" name="cullFace" value="none" />
                         <Property mapKey="enable.clipping" name="enable.clipping" value="false" />
                         <Property mapKey="enableLighting" name="enableLighting" value="true" />
                         <Property mapKey="geometry_opaque.prg" name="geometry_opaque.prg">
@@ -594,7 +595,7 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../resource/voreenve/volumes/aneurysm_mask.vvd" />
+                                        <item value="../volumes/aneurysm_mask.vvd" />
                                         <item value="resource/voreenve/volumes/aneurysm_mask.vvd" />
                                         <item value="/home/spider/programming/voreen-flow/voreen/resource/voreenve/volumes/aneurysm_mask.vvd" />
                                     </paths>
@@ -622,18 +623,18 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-214" y="268" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7500.000488281" minValue="0.150000006" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7530.000488281" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001060804" id="ref19">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12600" minValue="0.252000004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="12650.400390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000993834" id="ref19">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="24.869159698" y="-67.422561646" z="9.36250782" />
-                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
-                            <upVector x="-0.001123519" y="0.195145875" z="-0.980773628" />
+                            <position x="26.84176445" y="-73.861495972" z="4.258965015" />
+                            <focus x="24.241043091" y="24.35931778" z="25.94695282" />
+                            <upVector x="-0.007179831" y="0.506394088" z="-0.862272322" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
-                            <sceneLLF x="0" y="0" z="0" />
-                            <sceneURB x="0" y="0" z="0" />
+                            <sceneLLF x="-0.300000012" y="-0.300000012" z="-0.300000012" />
+                            <sceneURB x="49.500003815" y="49.500003815" z="50.100002289" />
                         </Property>
                         <Property mapKey="colorProp" name="colorProp" value="velocity" />
                         <Property mapKey="colorRotationMatrix" name="colorRotationMatrix">
@@ -716,7 +717,7 @@
                 </Processor>
                 <Processor type="StreamlineCreator" name="StreamlineCreator" id="ref5">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-192" y="165" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-192" y="168" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="150.411895752" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
@@ -729,7 +730,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="200" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607445778" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 353 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 359 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">

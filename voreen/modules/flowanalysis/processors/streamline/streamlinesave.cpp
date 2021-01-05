@@ -145,7 +145,7 @@ void StreamlineSave::saveStreamlines() {
 
         outFile.close();
     }
-    catch(tgt::FileException e) {
+    catch(tgt::FileException& e) {
         LERROR(e.what());
         filenameProp_.set("");
     }

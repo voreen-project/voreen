@@ -143,7 +143,7 @@ const std::string VortexCriterion::loggerCat_("voreen.flowanalysis.VortexCriteri
 
 VortexCriterion::VortexCriterion()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
-    , inputJacobian_(Port::INPORT, "VortexCriterion.inputJacobian", "Jacobi Matrix")
+    , inputJacobian_(Port::INPORT, "VortexCriterion.inputJacobian", "Jacobian Matrix")
     , outputCriterion_(Port::OUTPORT, "VortexCriterion.outputCriterion", "Vortex Criterion")
     , criterion_("criterion", "Criterion")
 {

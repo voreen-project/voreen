@@ -5,13 +5,21 @@ Voreen Changelog
 ------------------------
 
     * Features:
-      o Add PathlineCreator which takes a vector field time series as input
       o Add Gradient, Vorticity, ValueMap and RescaleFilter to VolumeFilterList
       o Add id sorting of components created by ConnectedComponentAnalysis
+      o Add new template workspaces featuring the new FlowAnalysis module: feature-vortexcorelineextraction, feature-streamlines
+      o Add PathlineCreator which takes a vector field time series as input
+      o Add Jacobian processor that calculates the Jacobian matrix for 3-channel volumes using central differences
+      o Add VortexCriterion processor to calculate the Q, Delta, and Lambda2 vortex criterion (requires Jacobian)
+      o Add Acceleration processor (requires Jacobian)
+      o Add HelicityDensity processor (requires VolumeVorticity)
+      o Add CorelineCreator and ParallelVectors processor to extract vortex corelines from 3-channel volumes (featured in feature-vortexcorelineextract workspace)
+      o Add StreamlinePredicates processor to filter streamlines (featured in feature-streamlines)
 
     * Framework/API Changes:
       o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
       o Add interface NumericPropertyBase which is implemented by NumericProperty, IntervalProperty and BoundingBoxProperty. This allows to properly disable property tracking for asynchronous computations.
+      o Rename and rework Flowreen module to FlowAnalysis module. Old workspaces containing respective processors (Streamline might need to be reconfigured.
 
     * Bug Fixes/Minor Changes:
       o Fix bugs in handling of octrees with non-power-of-two dimensions

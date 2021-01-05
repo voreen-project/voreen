@@ -40,9 +40,9 @@ public:
     virtual ~HelicityDensity();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "HelicityDensity";      }
-    virtual std::string getCategory() const   { return "Volume Processing";     }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual std::string getClassName() const  { return "HelicityDensity"; }
+    virtual std::string getCategory() const   { return "Volume Processing"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
 
 protected:
     virtual void setDescriptions() {

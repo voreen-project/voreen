@@ -40,7 +40,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/streamline/streamlinebundledetector.cpp
     ${MOD_DIR}/processors/streamline/streamlinecombine.cpp
     ${MOD_DIR}/processors/streamline/streamlinecreator.cpp
-    ${MOD_DIR}/processors/streamline/streamlinefilter.cpp
+    ${MOD_DIR}/processors/streamline/streamlinepredicates.cpp
     ${MOD_DIR}/processors/streamline/streamlinerotation.cpp
     ${MOD_DIR}/processors/streamline/streamlinesave.cpp
     ${MOD_DIR}/processors/streamline/streamlineselector.cpp
@@ -87,7 +87,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/streamline/streamlinebundledetector.h
     ${MOD_DIR}/processors/streamline/streamlinecombine.h
     ${MOD_DIR}/processors/streamline/streamlinecreator.h
-    ${MOD_DIR}/processors/streamline/streamlinefilter.h
+    ${MOD_DIR}/processors/streamline/streamlinepredicates.h
     ${MOD_DIR}/processors/streamline/streamlinerotation.h
     ${MOD_DIR}/processors/streamline/streamlinesave.h
     ${MOD_DIR}/processors/streamline/streamlineselector.h

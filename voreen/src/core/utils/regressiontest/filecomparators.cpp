@@ -905,80 +905,21 @@ static bool compareVolumeRAM(const VolumeRAM* refVolume, const VolumeRAM* output
         size_t numChannels = refVolume->getNumChannels();
         tgtAssert(outputVolume->getNumChannels() == numChannels, "output vol channel count differs from ref channel count");
 
-        if (numChannels == 1) {
-            for (size_t i = 0; i<numVoxels; i++) {
-                float refVol = refVolume->getVoxelNormalized(i);
-                float outputVol = outputVolume->getVoxelNormalized(i);
-                if (refVol != outputVol) {
-                    numDiffVoxels++;
-                    float diff = std::abs(refVol - outputVol);
-                    maxError = std::max(diff, maxError);
-                    if (diff > voxelDiffTolerance)
-                        numDiffVoxelsAboveThreshold++;
+        for(size_t i=0; i<numVoxels; i++) {
+            float diff = 0.0f;
+            for(size_t channel = 0; channel < numChannels; channel++) {
+                float v = refVolume->getVoxelNormalized(i, channel) - outputVolume->getVoxelNormalized(i, channel);
+                diff += v * v;
+            }
+
+            if(diff > std::numeric_limits<float>::epsilon()) {
+                numDiffVoxels++;
+                diff /= std::sqrt(numChannels); //< normalize to [0.0;1.0]
+                maxError = std::max(diff, maxError);
+                if(diff > voxelDiffTolerance) {
+                    numDiffVoxelsAboveThreshold++;
                 }
             }
-        }
-        else if (numChannels == 2) {
-            for (size_t i = 0; i<numVoxels; i++) {
-                tgt::vec2 refVol;
-                refVol.x = refVolume->getVoxelNormalized(i, 0);
-                refVol.y = refVolume->getVoxelNormalized(i, 1);
-                tgt::vec2 outputVol;
-                outputVol.x = outputVolume->getVoxelNormalized(i, 0);
-                outputVol.y = outputVolume->getVoxelNormalized(i, 1);
-                if (refVol != outputVol) {
-                    numDiffVoxels++;
-                    float diff = tgt::length(refVol - outputVol) / sqrt(2.f); //< normalize to [0.0;1.0]
-                    maxError = std::max(diff, maxError);
-                    if (diff > voxelDiffTolerance)
-                        numDiffVoxelsAboveThreshold++;
-                }
-            }
-        }
-        else if (numChannels == 3) {
-            for (size_t i = 0; i<numVoxels; i++) {
-                tgt::vec3 refVol;
-                refVol.x = refVolume->getVoxelNormalized(i, 0);
-                refVol.y = refVolume->getVoxelNormalized(i, 1);
-                refVol.z = refVolume->getVoxelNormalized(i, 2);
-                tgt::vec3 outputVol;
-                outputVol.x = outputVolume->getVoxelNormalized(i, 0);
-                outputVol.y = outputVolume->getVoxelNormalized(i, 1);
-                outputVol.z = outputVolume->getVoxelNormalized(i, 2);
-                if (refVol != outputVol) {
-                    numDiffVoxels++;
-                    float diff = tgt::length(refVol - outputVol) / sqrt(3.f); //< normalize to [0.0;1.0]
-                    maxError = std::max(diff, maxError);
-                    if (diff > voxelDiffTolerance)
-                        numDiffVoxelsAboveThreshold++;
-                }
-            }
-        }
-        else if (numChannels == 4) {
-            for (size_t i = 0; i<numVoxels; i++) {
-                tgt::vec4 refVol;
-                refVol.x = refVolume->getVoxelNormalized(i, 0);
-                refVol.y = refVolume->getVoxelNormalized(i, 1);
-                refVol.z = refVolume->getVoxelNormalized(i, 2);
-                refVol.w = refVolume->getVoxelNormalized(i, 3);
-                tgt::vec4 outputVol;
-                outputVol.x = outputVolume->getVoxelNormalized(i, 0);
-                outputVol.y = outputVolume->getVoxelNormalized(i, 1);
-                outputVol.z = outputVolume->getVoxelNormalized(i, 2);
-                outputVol.w = outputVolume->getVoxelNormalized(i, 3);
-                if (refVol != outputVol) {
-                    numDiffVoxels++;
-                    float diff = tgt::length(refVol - outputVol) / 2.f; //< normalize to [0.0;1.0]
-                    maxError = std::max(diff, maxError);
-                    if (diff > voxelDiffTolerance)
-                        numDiffVoxelsAboveThreshold++;
-                }
-            }
-        }
-        else {
-            //LWARNING("unsupported channel count: " << numChannels);
-            report = "unsupported channel count: " + itos(numChannels);
-            return false;
         }
     }
 
@@ -1543,14 +1484,14 @@ static bool compareStreamlineListMetaData(StreamlineList* l1, StreamlineList* l2
  * @param s2 Second streamline.
  * @returns Whether the two streamlines can be considered the same.
  */
-static bool compareStreamlines(const Streamline& s1, const Streamline& s2) {
+static bool compareStreamlines(const Streamline& s1, const Streamline& s2, float epsilon = 0.0f) {
     if(s1.getNumElements() != s2.getNumElements())
         return false;
 
     for(size_t k=0; k < s1.getNumElements(); k++) {
-        if(!compareVec(s1.getElementAt(k).position_, s2.getElementAt(k).position_, 0.0f) ||
-           !compareVec(s1.getElementAt(k).velocity_, s2.getElementAt(k).velocity_, 0.0f) ||
-           !compareFloat(s1.getElementAt(k).radius_, s2.getElementAt(k).radius_, 0.0f)) {
+        if(!compareVec(s1.getElementAt(k).position_, s2.getElementAt(k).position_, epsilon) ||
+           !compareVec(s1.getElementAt(k).velocity_, s2.getElementAt(k).velocity_, epsilon) ||
+           !compareFloat(s1.getElementAt(k).radius_, s2.getElementAt(k).radius_, epsilon)) {
             return false;
         }
     }
@@ -1632,9 +1573,6 @@ bool VsdFileComparator::compare(RegressionTestDataset& refDataset, RegressionTes
     std::string outputFile = FileSystem::cleanupPath(testCase.outputDir_ + "/" + outputDataset.files_.at(0).filename_);
     outputDataset.files_.at(0).fileType_ = BinaryFile;
 
-    // Pretend files are equals.
-    bool equals = true;
-
     // Extract reference dataset.
     std::pair<StreamlineList*, Volume*> refVsd = loadVsdFile(refFile, report);
     StreamlineList* refList = refVsd.first;
@@ -1653,7 +1591,7 @@ bool VsdFileComparator::compare(RegressionTestDataset& refDataset, RegressionTes
     Volume* outputVolume = outputVsd.second;
 
     // Check if error report has been written.
-    equals = report.empty();
+    bool equals = report.empty();
 
     // Continue, if files have been loaded successfully.
     if (equals) {

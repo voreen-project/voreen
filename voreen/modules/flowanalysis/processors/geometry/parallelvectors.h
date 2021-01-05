@@ -47,6 +47,7 @@ public:
     virtual Processor* create() const { return new ParallelVectors(); }
     virtual std::string getClassName() const { return "ParallelVectors"; }
     virtual std::string getCategory() const { return "Volume Processing"; }
+    virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
     virtual bool isReady() const;
 
     static void Process(const VolumeRAM& v, const VolumeRAM& w, const VolumeRAM_Mat3Float* jacobian, const VolumeRAM* mask, ParallelVectorSolutions& outSolution, const RealWorldMapping& rwmV = RealWorldMapping(), const RealWorldMapping& rwmW = RealWorldMapping());

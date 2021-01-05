@@ -45,13 +45,13 @@ public:
     virtual Processor* create() const;
     virtual std::string getClassName() const      { return "VortexCriterion";       }
     virtual std::string getCategory() const       { return "Volume Processing";     }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING; }
 
 protected:
 
     virtual void setDescriptions() {
         setDescription("Calculates a voxel-wise vortex criterion");
-        inputJacobian_.setDescription("Jacobi matrix of a 3D vector-valued volume");
+        inputJacobian_.setDescription("Jacobian matrix of a 3D vector-valued volume");
         criterion_.setDescription("Choose between on of the currently implemented vortex criteria.");
     }
 
