@@ -136,7 +136,7 @@ void VolumeListSpacing::process() {
         if (scale)
             tmpSpacing *= inputVolume->getSpacing();
         VolumeBase* outputVolume =
-            new VolumeDecoratorReplaceSpacing(inputVolume, spacing);
+            new VolumeDecoratorReplaceSpacing(inputVolume, tmpSpacing);
 
         outputList->add(outputVolume);
 
