@@ -323,6 +323,10 @@ EnsembleDataset::EnsembleDataset(EnsembleDataset&& origin)
 
 EnsembleDataset& EnsembleDataset::operator=(const EnsembleDataset& origin) {
 
+    if(&origin == this) {
+        return *this;
+    }
+
     members_                    = origin.members_;
     uniqueFieldNames_           = origin.uniqueFieldNames_;
     commonFieldNames_           = origin.commonFieldNames_;

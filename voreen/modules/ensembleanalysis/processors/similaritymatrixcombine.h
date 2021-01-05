@@ -53,6 +53,9 @@ struct SimilarityMatrixCombineOutput {
     std::unique_ptr<SimilarityMatrixList> outputMatrices;
 };
 
+/**
+ * This processor combines two equally shaped similarity matrices as described in "Interactive Visual Similarity Analysis of Measured and Simulated Multi-field Tubular Flow Ensembles" by Leistikow et al.
+ */
 class VRN_CORE_API SimilarityMatrixCombine : public AsyncComputeProcessor<SimilarityMatrixCombineInput, SimilarityMatrixCombineOutput> {
 public:
     SimilarityMatrixCombine();
@@ -69,6 +72,11 @@ public:
 protected:
 
     virtual bool isReady() const;
+    virtual void setDescriptions() {
+        setDescription("Combines two equally shaped similarity matrices as described in \"Interactive Visual Similarity Analysis of Measured and Simulated Multi-field Tubular Flow Ensembles\" by Leistikow et al. ");
+        similarityCombinationMethod_.setDescription("Defines which approach is to be used for combining the input matrices");
+        ignoreHash_.setDescription("It is possible to combine two matrices of the same shape for different ensembles. If it's ensured that combining these different ensembles is semantically useful, tick this box to ignore the respective test.");
+    }
 
 private:
 

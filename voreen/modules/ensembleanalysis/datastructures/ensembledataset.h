@@ -153,8 +153,10 @@ public:
     const std::vector<TimeStep>& getTimeSteps() const;
 
     /**
-     * This utility function returns a time step index corresponding to the specified time of the specified member.
-     * If time is behind the end of the specified member, the last time step index is returned.
+     * This utility function returns a time step index corresponding to the specified time.
+     * If time is before the first time step, the first time step index is returned.
+     * If time is behind the last time step, the first time step index is returned.
+     * If the member contains no time step, -1 is returned.
      */
     size_t getTimeStep(float time) const;
 

@@ -121,27 +121,6 @@ bool SimilarityMatrixCreator::isReady() const {
     return true;
 }
 
-void SimilarityMatrixCreator::setDescriptions() {
-    setDescription("Creates a Similarity matrix for each field of the ensemble, containing all pairwise "
-                   "dissimilarities of its members");
-    singleChannelSimilarityMeasure_.setDescription("Specifies how similarity is calculated for single channel fields:<br>"
-                                                   "<strong>Iso-Contours</strong>: Uses the isovalue and applies the Jaccard index<br>"
-                                                   "<strong>Generalized</strong>: Applies the generalized field similarity by Fofonov et al.<br>"
-                                                   "<strong>Avg. Difference</strong>: Calculates the normalized average difference");
-    isoValue_.setDescription("Defines the isovalue used for the Iso-Contour similarity measure");
-    multiChannelSimilarityMeasure_.setDescription("Specifies how similarity is calculated for multi-channel fields:<br>"
-                                                  "<strong>Magnitude</strong>: Uses the vector magnitude and uses the generalized field similarity by Fofonov et al.<br>"
-                                                  "<strong>Angle</strong>: Calculates the average normalized angle between vectors<br>"
-                                                  "<strong>Jiang</strong>: Uses the vector similarity introduced by Jiang et al.<br>"
-                                                  "<strong>Crossproduct Magnitude</strong>: Calculates the cross product magnitude of two vectors<br>"
-                                                  "<strong>Split Channels</strong>: Treats each channel as separate scalar field and applies the generalized field similarity by Fofonov et al.<br>"
-                                                  "<strong>Magnitude of Vector Difference</strong>: Uses the magnitude of the difference between two vectors");
-    weight_.setDescription("Defines the weights between magnitude and direction used by similarity measure of Jiang et al.");
-    numSeedPoints_.setDescription("Number of seeds to define a Monte Carlo sampling");
-    seedTime_.setDescription("Allows to use a fixed seed");
-    seedMask_.setDescription("Optional seed mask. Only voxels different from zero are seeding candidates");
-}
-
 std::vector<std::reference_wrapper<Port>> SimilarityMatrixCreator::getCriticalPorts() {
     auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
     criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){

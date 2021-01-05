@@ -43,9 +43,26 @@ public:
     virtual Processor* create() const override { return new ParallelCoordinatesViewer(); }
     virtual std::string getClassName() const override { return "ParallelCoordinatesViewer"; }
     virtual std::string getCategory() const override { return "ParallelCoordinates"; }
+    virtual CodeState getCodeState() const override { return CODE_STATE_EXPERIMENTAL; }
 
 private:
-    virtual void setDescriptions() override;
+    virtual void setDescriptions() {
+        setDescription("Viewer for parallel coordinates created by ParallelCoordinatesCreator");
+        _propertySelectedMember.setDescription("Currently displayed member");
+        _propertyVisualizationMode.setDescription("Visualization mode for currently displayed member:<br>"
+                                                  "<strong>Single Time Step</strong>: Each axis represents a field<br>"
+                                                  "<strong>All Time Steps</strong>: Each axis represents a time step<br>");
+        _propertySelectedTimestep.setDescription("If single Time Step visualization mode is selected, "
+                                                 "this property determines the time step to be displayed");
+        _propertySelectedTimestep.setDescription("If all Time Steps are visualized, this property determines<br>"
+                                                 "the field to be displayed");
+        _propertyDensityBlending.setDescription("Enable to use a density visualization for rendered lines");
+        //_propertyDensityVisibleSamples.setDescription("Determines the mini");
+        //_propertyDensitySelectedSamples.setDescription("");
+
+        _propertyTransFuncField.front().setDescription("Assigns the respective transfer function to the selected field");
+        _propertyTransFunc.front().setDescription("Transfer function to be used for the selected field");
+    }
 
     virtual void initialize() override;
     virtual void deinitialize() override;

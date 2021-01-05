@@ -26,6 +26,8 @@
 #include "parallelcoordinatesviewer.h"
 #include "voreen/core/properties/fontproperty.h"
 
+#include "tgt/immediatemode/immediatemode.h"
+
 namespace util {
 
 tgt::vec2 screenToPoint( tgt::ivec2 screen, tgt::ivec2 viewport ) {
@@ -258,24 +260,6 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     } ) );
 }
 
-void ParallelCoordinatesViewer::setDescriptions() {
-    setDescription("Viewer for parallel coordinates created by ParallelCoordinatesCreator");
-    _propertySelectedMember.setDescription("Currently displayed member");
-    _propertyVisualizationMode.setDescription("Visualization mode for currently displayed member:<br>"
-                                              "<strong>Single Time Step</strong>: Each axis represents a field<br>"
-                                              "<strong>All Time Steps</strong>: Each axis represents a time step<br>");
-    _propertySelectedTimestep.setDescription("If single Time Step visualization mode is selected, "
-                                             "this property determines the time step to be displayed");
-    _propertySelectedTimestep.setDescription("If all Time Steps are visualized, this property determines<br>"
-                                             "the field to be displayed");
-    _propertyDensityBlending.setDescription("Enable to use a density visualization for rendered lines");
-    //_propertyDensityVisibleSamples.setDescription("Determines the mini");
-    //_propertyDensitySelectedSamples.setDescription("");
-
-    _propertyTransFuncField.front().setDescription("Assigns the respective transfer function to the selected field");
-    _propertyTransFunc.front().setDescription("Transfer function to be used for the selected field");
-}
-
 void ParallelCoordinatesViewer::initialize()
 {
     RenderProcessor::initialize();
@@ -365,7 +349,6 @@ void ParallelCoordinatesViewer::deinitialize()
 }
 void ParallelCoordinatesViewer::process()
 {
-    if( !_axesport.hasData() ) return;
     const auto axes = _axesport.getData();
     const auto axisCount = _propertyVisualizationMode.getValue() ? axes->timesteps() : axes->fields();
 
@@ -401,14 +384,14 @@ void ParallelCoordinatesViewer::process()
         glUseProgram( 0 );
 
         // Reset alpha channel
-        glBegin( GL_TRIANGLE_STRIP );
+        IMode.begin( tgt::ImmediateMode::TRIANGLE_STRIP );
         glBlendFuncSeparate( GL_ZERO, GL_ONE, GL_ONE, GL_ZERO );
-        glColor4f( 1.0f, 0.0f, 0.0f, _propertyDensitySelectedSamples.get() == 1 ? 1.0f : 0.2f );
-        glVertex2f( -1.0f, 1.0f );
-        glVertex2f( -1.0f, -1.0f );
-        glVertex2f( 1.0f, 1.0f );
-        glVertex2f( 1.0f, -1.0f );
-        glEnd();
+        IMode.color( 1.0f, 0.0f, 0.0f, _propertyDensitySelectedSamples.get() == 1 ? 1.0f : 0.2f );
+        IMode.vertex( -1.0f, 1.0f );
+        IMode.vertex( -1.0f, -1.0f );
+        IMode.vertex( 1.0f, 1.0f );
+        IMode.vertex( 1.0f, -1.0f );
+        IMode.end();
 
         glUseProgram( _shaderProgram );
         glBindVertexArray( _vertexArray );
@@ -428,22 +411,22 @@ void ParallelCoordinatesViewer::process()
     glDisable( GL_BLEND );
 
     // --- Draw Axes & Top Boundary --- //
-    glBegin( GL_LINES );
+    IMode.begin( tgt::ImmediateMode::LINES );
     glEnable( GL_LINE_SMOOTH );
     glLineWidth( 3.0f );
 
-    glColor4f( 0.0f, 0.0f, 0.0f, 1.0f );
+    IMode.color( 0.0f, 0.0f, 0.0f, 1.0f );
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto x = _uniformBufferVec[i].x;
-        glVertex2f( x, -Y_LIMIT );
-        glVertex2f(x, Y_LIMIT );
+        IMode.vertex( x, -Y_LIMIT );
+        IMode.vertex(x, Y_LIMIT );
     }
-    glVertex2f(-1.0f, Y_LIMIT );
-    glVertex2f(1.0f, Y_LIMIT );
+    IMode.vertex(-1.0f, Y_LIMIT );
+    IMode.vertex(1.0f, Y_LIMIT );
 
     // --- Draw sections --- //
-    glColor4f( 0.988f, 0.729f, 0.012f, 1.0f );
+    IMode.color( 0.988f, 0.729f, 0.012f, 1.0f );
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto& sections = _sections[i];
@@ -455,8 +438,8 @@ void ParallelCoordinatesViewer::process()
             const auto high = Y_LIMIT * ((section.second - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
             if( high < -Y_LIMIT || low > Y_LIMIT ) continue;
 
-            glVertex2f( uniform.x, std::max(-Y_LIMIT, low ) );
-            glVertex2f( uniform.x, std::min(Y_LIMIT, high ) );
+            IMode.vertex( uniform.x, std::max(-Y_LIMIT, low ) );
+            IMode.vertex( uniform.x, std::min(Y_LIMIT, high ) );
         }
     }
 
@@ -473,11 +456,11 @@ void ParallelCoordinatesViewer::process()
         const auto x = this->screenAxisToCoordinate( _hoveredScreenAxis );
         const auto uniform = _uniformBufferVec[index];
 
-        glColor4f( 0.741f, 0.547f, 0.009f, 1.0f );
+        IMode.color( 0.741f, 0.547f, 0.009f, 1.0f );
         auto y = ( _activeSection.first - uniform.y ) / ( uniform.z - uniform.y );
-        glVertex2f(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
+        IMode.vertex(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
         y = ( _activeSection.second - uniform.y ) / ( uniform.z - uniform.y );
-        glVertex2f(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
+        IMode.vertex(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
 
         const auto minmax = std::minmax( _activeSection.first, _activeSection.second );
 
@@ -492,7 +475,7 @@ void ParallelCoordinatesViewer::process()
         font.render( tgt::vec3( x + offset, 10.0f, 0.0f ), str, _renderport.getSize() );
     }
 
-    glEnd();
+    IMode.end();
     glDisable( GL_LINE_SMOOTH );
     glLineWidth( 1.0f );
 
@@ -558,9 +541,11 @@ void ParallelCoordinatesViewer::process()
         }
     }
 
+    IMode.color(tgt::vec4::one);
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
     glBlendFunc(GL_ONE, GL_ZERO);
     glDisable( GL_BLEND );
+    glEnable( GL_DEPTH_TEST );
 
     _renderport.deactivateTarget();
 }
@@ -843,7 +828,9 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         glUniform3fv( glGetUniformLocation( _shaderProgram, "axes" ), static_cast<GLsizei>( _uniformBufferVec.size() ), reinterpret_cast<const GLfloat*>( _uniformBufferVec.data() ) );
         glUseProgram( 0 );
     }
-    if( render ) this->process();
+    if( render ) {
+        this->invalidate();
+    }
 }
 
 void ParallelCoordinatesViewer::updateSampleStates()
