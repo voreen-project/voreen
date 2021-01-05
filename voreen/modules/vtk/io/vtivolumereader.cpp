@@ -220,7 +220,7 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
     volume->addDerivedData(new VolumeMinMax(min, max, min, max));
     volume->setOrigin(origin);
     volume->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(volume->getBaseType()));
-    volume->setMetaDataValue<StringMetaData>("name", name);
+    volume->setModality(Modality(name));
 
     // Read meta data.
     for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {

@@ -34,12 +34,6 @@ ELSE()
 
 ENDIF()
 
-# deployment
-SET(MOD_INSTALL_DIRECTORIES
-    ${MOD_DIR}/scripts
-    ${MOD_DIR}/workspaces
-)
-
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/netcdfvolumereader.cpp
     ${MOD_DIR}/io/niftivolumewriter.cpp
