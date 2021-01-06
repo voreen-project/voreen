@@ -1,15 +1,10 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="19">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
-                </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="VolumeSave" ref="ref4" />
-                    </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-370.24798584" y="-282.066802979" />
@@ -27,9 +22,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="input/flow/flow_data.vvd" />
-                                        <item value="../../voreen-testdata/voreen-testdata/input/flow/flow_data.vvd" />
-                                        <item value="/home/aaron/voreen-testdata/voreen-testdata/input/flow/flow_data.vvd" />
+                                        <item value="input/flow/aneurysm.vvd" />
+                                        <item value="../test-data/voreen-testdata/input/flow/aneurysm.vvd" />
+                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/aneurysm.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -89,8 +84,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/flow_magnitudes.vvd" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/flow_magnitudes.vvd" />
-                                    <item value="/home/aaron/voreen-testdata/voreen-testdata/output/flow_magnitudes.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/flow_magnitudes.vvd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/flow_magnitudes.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -151,8 +146,8 @@
                             <paths noPathSet="false">
                                 <paths>
                                     <item value="output/disabled.vvd" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/disabled.vvd" />
-                                    <item value="/home/aaron/voreen-testdata/voreen-testdata/output/disabled.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/disabled.vvd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/disabled.vvd" />
                                 </paths>
                             </paths>
                         </Property>

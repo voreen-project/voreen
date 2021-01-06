@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="VolumeSave" ref="ref5" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-51.59053421" y="-85.719657898" />
                 </MetaItem>
@@ -19,7 +14,7 @@
             <Processors>
                 <Processor type="VolumeSource" name="Velocity" id="ref0">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-12" y="-394" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-96" y="-376" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -50,7 +45,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSave" name="VolumeSave" id="ref4">
+                <Processor type="VolumeSave" name="VolumeSave" id="ref3">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-132" y="-83" />
                     </MetaData>
@@ -83,37 +78,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeVorticity" name="VolumeVorticity" id="ref1">
-                    <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-19" y="-269" />
-                    </MetaData>
-                    <Properties>
-                        <Property mapKey="clearCache" name="clearCache" />
-                        <Property mapKey="enableProcessing" name="enableProcessing" value="true" />
-                        <Property mapKey="technique" name="technique" value="central-differences" />
-                        <Property mapKey="useCaching" name="useCaching" value="false" />
-                    </Properties>
-                    <Inports>
-                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties>
-                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
-                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
-                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
-                            </Properties>
-                        </Port>
-                    </Inports>
-                    <Outports>
-                        <Port name="volumehandle.output" direction="0" portID="volumehandle.output" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
-                            <Properties>
-                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                            </Properties>
-                        </Port>
-                    </Outports>
-                    <CoProcessorInports />
-                    <CoProcessorOutports />
-                    <InteractionHandlers />
-                </Processor>
-                <Processor type="HelicityDensity" name="HelicityDensity" id="ref2">
+                <Processor type="HelicityDensity" name="HelicityDensity" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-134" y="-177" />
                     </MetaData>
@@ -147,7 +112,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="HelicityDensity" name="Normalized HelicityDensity" id="ref3">
+                <Processor type="HelicityDensity" name="Normalized HelicityDensity" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="42" y="-173" />
                     </MetaData>
@@ -181,7 +146,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSave" name="VolumeSave 2" id="ref5">
+                <Processor type="VolumeSave" name="VolumeSave 2" id="ref4">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="77" y="-84" />
                     </MetaData>
@@ -214,46 +179,63 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
+                <Processor type="VolumeSource" name="Vorticity" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="74" y="-376" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/flow/vorticity.vvd" />
+                                        <item value="../test-data/voreen-testdata/input/flow/vorticity.vvd" />
+                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/vorticity.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
             </Processors>
             <Connections>
                 <Connection>
                     <Outport name="volumehandle.volumehandle">
                         <Processor type="VolumeSource" ref="ref0" />
                     </Outport>
+                    <Inport name="velocity">
+                        <Processor type="HelicityDensity" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="velocity">
+                        <Processor type="HelicityDensity" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="helicityDensity">
+                        <Processor type="HelicityDensity" ref="ref1" />
+                    </Outport>
                     <Inport name="volumehandle.input">
-                        <Processor type="VolumeVorticity" ref="ref1" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.volumehandle">
-                        <Processor type="VolumeSource" ref="ref0" />
-                    </Outport>
-                    <Inport name="velocity">
-                        <Processor type="HelicityDensity" ref="ref2" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.volumehandle">
-                        <Processor type="VolumeSource" ref="ref0" />
-                    </Outport>
-                    <Inport name="velocity">
-                        <Processor type="HelicityDensity" ref="ref3" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.output">
-                        <Processor type="VolumeVorticity" ref="ref1" />
-                    </Outport>
-                    <Inport name="vorticity">
-                        <Processor type="HelicityDensity" ref="ref2" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="volumehandle.output">
-                        <Processor type="VolumeVorticity" ref="ref1" />
-                    </Outport>
-                    <Inport name="vorticity">
-                        <Processor type="HelicityDensity" ref="ref3" />
+                        <Processor type="VolumeSave" ref="ref3" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -265,11 +247,19 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="helicityDensity">
-                        <Processor type="HelicityDensity" ref="ref3" />
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref5" />
                     </Outport>
-                    <Inport name="volumehandle.input">
-                        <Processor type="VolumeSave" ref="ref5" />
+                    <Inport name="vorticity">
+                        <Processor type="HelicityDensity" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref5" />
+                    </Outport>
+                    <Inport name="vorticity">
+                        <Processor type="HelicityDensity" ref="ref2" />
                     </Inport>
                 </Connection>
             </Connections>

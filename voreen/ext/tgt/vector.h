@@ -1450,10 +1450,6 @@ std::istream& operator >> (std::istream& s, Vector4<T>& v) {
     return s;
 }
 
-inline tgt::vec3 uniformRandomVec3() {
-    return tgt::vec3(uniformRandom(), uniformRandom(), uniformRandom());
-}
-
 } // namespace
 
 // Hash implementation for tgt::Vector*<T>

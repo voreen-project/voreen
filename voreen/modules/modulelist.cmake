@@ -6,7 +6,7 @@
 OPTION(VRN_MODULE_BASE                              "Provides basic rendering and data processing functionality"                                ON )
 OPTION(VRN_MODULE_CONNEXE                           "Connected component analysis using the Connexe library"                                    ON )
 OPTION(VRN_MODULE_EXPERIMENTAL                      "Provides experimental code not yet ready for productive use"                               OFF)
-OPTION(VRN_MODULE_FLOWREEN                          "Provides flow visualization techniques"                                                    ON )
+OPTION(VRN_MODULE_FLOWANALYSIS                      "Provides flow field visualization and analysis techniques"                                 ON )
 OPTION(VRN_MODULE_PLOTTING                          "Provides plotting components"                                                              ON )
 OPTION(VRN_MODULE_POI                               "Points of interest in 2D and 3D"                                                           OFF)
 OPTION(VRN_MODULE_PVM                               "Provides a volume reader for Stefan Roettger's PVM format"                                 ON )

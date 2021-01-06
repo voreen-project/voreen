@@ -6,6 +6,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSave" ref="ref2" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-253" y="-114" />
                 </MetaItem>

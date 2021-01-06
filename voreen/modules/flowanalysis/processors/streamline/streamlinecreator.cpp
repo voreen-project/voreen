@@ -174,7 +174,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
             throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
         }
 
-        std::shuffle(seedPoints.begin(), seedPoints.end(), std::mt19937(seedTime_.get()));
+        tgt::shuffle(seedPoints.begin(), seedPoints.end(), std::mt19937(seedTime_.get()));
         seedPoints.resize(std::min(seedPoints.size(), numSeedPoints));
 
         LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
@@ -182,8 +182,12 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
     else {
         // Without a seed mask, we uniformly sample the whole space enclosed by the roi.
         for (size_t k = 0; k<numSeedPoints; k++) {
-            tgt::vec3 seedPoint;
-            seedPoint = tgt::vec3(rnd(), rnd(), rnd());
+            // Since argument evaluation order is unspecified in c++, we need to ensure the order manually.
+            float x = rnd();
+            float y = rnd();
+            float z = rnd();
+
+            tgt::vec3 seedPoint(x, y, z);
             seedPoint = roi.getLLF() + seedPoint * roi.diagonal();
             seedPoints.push_back(worldToVoxelMatrix * seedPoint);
         }

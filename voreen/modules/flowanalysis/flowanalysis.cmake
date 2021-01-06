@@ -2,11 +2,6 @@
 # Core module resources
 ################################################################################
 
-IF(NOT VRN_MODULE_ENSEMBLEANALYSIS)
-    MESSAGE(WARNING "EnsembleAnalysis Module not enabled, some features will not be available")
-ENDIF()
-
-
 SET(MOD_CORE_MODULECLASS FlowAnalysisModule)
 
 SET(MOD_CORE_SOURCES

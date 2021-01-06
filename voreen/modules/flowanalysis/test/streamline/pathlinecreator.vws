@@ -6,6 +6,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="StreamlineSave" ref="ref4" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="88" y="-111" />
                 </MetaItem>
@@ -176,8 +181,8 @@
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="temporalIntegrationSteps" name="temporalIntegrationSteps" value="20" tracking="false" id="ref7" />
-                        <Property mapKey="temporalResolution" name="temporalResolution" value="100" tracking="false" id="ref13" />
-                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="cm/s" id="ref9" />
+                        <Property mapKey="temporalResolution" name="temporalResolution" value="10" tracking="false" id="ref13" />
+                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="m/s" id="ref9" />
                     </Properties>
                     <Inports>
                         <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">
@@ -221,8 +226,8 @@
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                         <Property mapKey="temporalIntegrationSteps" name="temporalIntegrationSteps" value="20" tracking="false" id="ref6" />
-                        <Property mapKey="temporalResolution" name="temporalResolution" value="100" tracking="false" id="ref12" />
-                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="cm/s" id="ref8" />
+                        <Property mapKey="temporalResolution" name="temporalResolution" value="10" tracking="false" id="ref12" />
+                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="m/s" id="ref8" />
                     </Properties>
                     <Inports>
                         <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">

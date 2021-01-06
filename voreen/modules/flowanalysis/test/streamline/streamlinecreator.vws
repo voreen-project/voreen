@@ -17,8 +17,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-243" y="-203" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="150.411895752" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
-                            <value x="0" y="150.411895752" />
+                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="98.309036255" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="98.309036255" />
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />
@@ -133,8 +133,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="72" y="-207" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="150.411895752" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
-                            <value x="0" y="150.411895752" />
+                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="98.309036255" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="98.309036255" />
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />

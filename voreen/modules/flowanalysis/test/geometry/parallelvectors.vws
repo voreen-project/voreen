@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="GeometrySave" ref="ref5" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-51.59053421" y="-85.719657898" />
                 </MetaItem>
@@ -131,9 +126,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSource" name="VolumeSource" id="ref4">
+                <Processor type="VolumeSource" name="Acceleration" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-111" y="-312" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-103" y="-308" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
@@ -169,7 +164,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-125" y="-92" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="lengthThreshold" name="lengthThreshold" value="100" />
+                        <Property mapKey="lengthThreshold" name="lengthThreshold" value="30" />
                     </Properties>
                     <Inports>
                         <Port name="inport" direction="1" portID="inport" guiName="Parallel vectors solutions" allowMultipleConnections="false" invalidationLevel="1">

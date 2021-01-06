@@ -137,9 +137,6 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-257" y="-112" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="curvatureRange" minValue="0" maxValue="180" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
-                            <value x="0" y="180" />
-                        </Property>
                         <Property mapKey="enableProp" name="enableProp" value="true" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
@@ -180,9 +177,6 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="47" y="-118" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="curvatureRange" minValue="0" maxValue="180" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
-                            <value x="0" y="180" />
-                        </Property>
                         <Property mapKey="enableProp" name="enableProp" value="true" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />

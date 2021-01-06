@@ -102,9 +102,9 @@ void ParallelVectors::Process(const VolumeRAM& v, const VolumeRAM& w, const Volu
     // We are very pessimistic to check for complex numbers.
     const double epsilon = 0;
 
-    const auto trianglesPerXInc = 24;
-    const auto trianglesPerYInc = (dim.x - 1) * TetrahedraPerCube * TrianglesPerTetrahedron;
-    const auto trianglesPerZInc = (dim.x - 1) * (dim.y - 1) * TetrahedraPerCube * TrianglesPerTetrahedron;
+    const int32_t trianglesPerXInc = 24;
+    const int32_t trianglesPerYInc = (dim.x - 1) * TetrahedraPerCube * TrianglesPerTetrahedron;
+    const int32_t trianglesPerZInc = (dim.x - 1) * (dim.y - 1) * TetrahedraPerCube * TrianglesPerTetrahedron;
     const std::array<int32_t, 24> partnerTriangleOffsets
     {
         -trianglesPerZInc + 19, 20, 4, trianglesPerYInc + 5,
