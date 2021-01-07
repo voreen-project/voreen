@@ -35,7 +35,11 @@ const std::string VesselGraphSource::loggerCat_("voreen.vesseltoplogy.vesselgrap
 VesselGraphSource::VesselGraphSource()
     : Processor()
     , outport_(Port::OUTPORT, "graph.output", "Graph Output", false, Processor::VALID)
-    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "*.vvg.gz", FileDialogProperty::OPEN_FILE)
+#ifdef WIN32
+    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "uncompressed (*.vvg)", FileDialogProperty::OPEN_FILE)
+#else
+    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "Voreen Vessel Graph (*.vvg *.vvg.gz);;compressed (*.vvg.gz);;uncompressed (*.vvg)", FileDialogProperty::OPEN_FILE)
+#endif
     , reload_("reload", "Reload Graph")
 {
     addPort(outport_);
@@ -58,7 +62,8 @@ void VesselGraphSource::process() {
     JsonDeserializer deserializer;
     try {
         std::fstream f(path, std::ios::in);
-        deserializer.read(f, true);
+        bool compressed = tgt::FileSystem::fileExtension(path) == "gz";
+        deserializer.read(f, compressed);
         deserializer.deserialize("graph", *output);
 
     } catch(SerializationException& e) {

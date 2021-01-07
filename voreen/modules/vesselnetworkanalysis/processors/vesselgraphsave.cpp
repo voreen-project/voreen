@@ -35,7 +35,11 @@ const std::string VesselGraphSave::loggerCat_("voreen.vesseltoplogy.vesselgraphs
 VesselGraphSave::VesselGraphSave()
     : Processor()
     , inport_(Port::INPORT, "graph.input", "Graph Input", false, Processor::INVALID_RESULT)
-    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "*.vvg.gz", FileDialogProperty::SAVE_FILE)
+#ifdef WIN32
+    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "uncompressed (*.vvg)", FileDialogProperty::SAVE_FILE)
+#else
+    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "compressed (*.vvg.gz);;uncompressed (*.vvg)", FileDialogProperty::SAVE_FILE)
+#endif
     , saveButton_("save", "Save")
     , continousSave_("continousSave", "Save on inport change", false)
     , prettyJson_("prettyJson", "Prettify Json", false)
@@ -72,8 +76,8 @@ void VesselGraphSave::saveCurrentGraph() {
     }
     try {
         std::fstream f(path, std::ios::out);
-
-        serializer.write(f, prettyJson_.get(), true);
+        bool compressed = tgt::FileSystem::fileExtension(path) == "gz";
+        serializer.write(f, prettyJson_.get(), compressed);
     } catch(...) {
         LERROR("Could not save graph " << path);
         return;
