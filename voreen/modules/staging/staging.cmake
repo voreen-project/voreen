@@ -29,7 +29,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer2d.cpp
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer3d.cpp
 
-    ${MOD_DIR}/processors/simdraycaster/apvtestraycaster.cpp
     ${MOD_DIR}/processors/simdraycaster/simdraycaster.cpp
 	
     ${MOD_DIR}/utils/simdraycaster/jobqueue.cpp
@@ -67,7 +66,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer2d.h
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer3d.h
 
-    ${MOD_DIR}/processors/simdraycaster/apvtestraycaster.h
     ${MOD_DIR}/processors/simdraycaster/raycast_generic.h
     ${MOD_DIR}/processors/simdraycaster/simdraycaster.h
 	

@@ -48,7 +48,6 @@
 #include "processors/slicepoints/slicepointrenderer2d.h"
 #include "processors/slicepoints/slicepointrenderer3d.h"
 #include "processors/simdraycaster/simdraycaster.h"
-#include "processors/simdraycaster/apvtestraycaster.h"
 
 namespace voreen {
 
@@ -80,7 +79,6 @@ StagingModule::StagingModule(const std::string& modulePath)
     registerSerializableType(new SlicePointRenderer2D());
     registerSerializableType(new SlicePointRenderer3D());
     registerSerializableType(new SIMDRayCaster());
-    registerSerializableType(new APVTestRaycaster());
     #ifdef GL_COMPUTE_SHADER //disable compilation for old gl headers
         registerSerializableType(new Particles());
     #endif
