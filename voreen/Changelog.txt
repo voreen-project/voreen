@@ -19,7 +19,8 @@ Voreen Changelog
     * Framework/API Changes:
       o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
       o Add interface NumericPropertyBase which is implemented by NumericProperty, IntervalProperty and BoundingBoxProperty. This allows to properly disable property tracking for asynchronous computations.
-      o Rename and rework Flowreen module to FlowAnalysis module. Old workspaces containing respective processors (Streamline might need to be reconfigured.
+      o Rename and rework Flowreen module to FlowAnalysis module. Old workspaces containing respective processors (e.g. StreamlineCreator, StreamlineRenderer3D) might need to be reconfigured.
+      o Remove processors from deprecated module that depend on OpenGL compatibility profile
 
     * Bug Fixes/Minor Changes:
       o Fix bugs in handling of octrees with non-power-of-two dimensions

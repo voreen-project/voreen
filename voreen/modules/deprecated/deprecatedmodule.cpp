@@ -25,27 +25,10 @@
 
 #include "deprecatedmodule.h"
 
-#ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
-#include "processors/buttonoverlayprocessor.h"
-#include "processors/canny.h"
-#include "processors/cubeproxygeometry.h"
-#include "processors/geometryclippingwidget.h"
-#include "processors/multiview.h"
-#include "processors/textseriessource.h"
-#include "processors/rawtexturesource.h"
-#include "processors/rawtexturesave.h"
-#include "processors/targettotexture.h"
-#include "processors/texturetotarget.h"
-#include "processors/volumenormalization.h"
-#include "processors/volumeseriessource.h"
-#endif
-
 #include "processors/volume/volumefiltering.h"
 #include "processors/volume/volumemorphology.h"
 
 #include "io/philipsusvolumereader.h"
-
-#include "operators/volumeoperatornormalize.h"
 
 namespace voreen {
 
@@ -57,27 +40,10 @@ DeprecatedModule::DeprecatedModule(const std::string& modulePath)
 
     addShaderPath(getModulePath("glsl"));
 
-#ifdef VRN_OPENGL_COMPATIBILITY_PROFILE
-    registerSerializableType(new ButtonOverlayProcessor());
-    registerSerializableType(new Canny());
-    registerSerializableType(new CubeProxyGeometry());
-    registerSerializableType(new GeometryClippingWidget());
-    registerSerializableType(new MultiView());
-    registerSerializableType(new TextSeriesSource());
-    registerSerializableType(new RawTextureSource());
-    registerSerializableType(new RawTextureSave());
-    registerSerializableType(new TargetToTexture);
-    registerSerializableType(new TextureToTarget());
-    registerSerializableType(new VolumeSeriesSource());
-    registerSerializableType(new VolumeNormalization());
-#endif
-
     registerSerializableType(new VolumeFiltering());
     registerSerializableType(new VolumeMorphology());
-    registerVolumeReader(new PhilipsUSVolumeReader());
 
-    INST_SCALAR_TYPES(VolumeOperatorNormalize, VolumeOperatorNormalizeGeneric)
-    //INST_VECTOR_TYPES(VolumeOperatorNormalize, VolumeOperatorNormalizeGeneric)
+    registerVolumeReader(new PhilipsUSVolumeReader());
 }
 
 } // namespace
