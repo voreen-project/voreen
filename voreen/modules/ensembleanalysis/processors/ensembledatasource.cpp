@@ -132,6 +132,7 @@ void EnsembleDataSource::deserialize(Deserializer& s) {
                 d.read(inFile, true);
                 Deserializer deserializer(d);
                 deserializer.deserialize("ensemble", *output_);
+                setProgress(1.0f);
             }
             catch (tgt::Exception& e) {
                 LWARNING("Loading ensemble from cache failed: " << e.what());

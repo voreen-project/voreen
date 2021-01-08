@@ -12,7 +12,6 @@ SET(MOD_CORE_MODULECLASS EnsembleAnalysisExtraModule)
 # deployment
 SET(MOD_INSTALL_DIRECTORIES
     ${MOD_DIR}/glsl
-    ${MOD_DIR}/workspaces
 )
 
 SET(MOD_CORE_SOURCES

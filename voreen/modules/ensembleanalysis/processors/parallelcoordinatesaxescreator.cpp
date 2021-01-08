@@ -44,6 +44,7 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     , propertyFields_("property_fields", "Selected Fields", Processor::VALID )
     , propertySpatialSampleCount_("property_spatial_sample_count", "Spatial Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
     , propertyTemporalSampleCount_("property_temporal_sample_count", "Temporal Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
+    , propertySeedTime_("property_seed_time", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , propertyAggregateMembers_("property_aggregate_runs", "Aggregate Members", false, Processor::VALID )
     , propertyFileDialog_("property_file_dialog", "File Output", "Select File...", "", "Parallel Coordinates (*.pc)", FileDialogProperty::FileMode::SAVE_FILE, Processor::VALID )
     , propertySaveButton_("property_save", "Save File", Processor::VALID )
@@ -58,12 +59,13 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     this->addProperty(propertyFields_ );
     this->addProperty(propertySpatialSampleCount_);
     this->addProperty(propertyTemporalSampleCount_ );
+    this->addProperty(propertySeedTime_);
     this->addProperty(propertyAggregateMembers_ );
     this->addProperty(propertyFileDialog_ );
     this->addProperty(propertySaveButton_ );
 
     // --- Initialize Callbacks --- //
-    ensembleport_.onNewData(LambdaFunctionCallback([this] {
+    ensembleport_.onChange(LambdaFunctionCallback([this] {
         propertyMembers_.blockCallbacks(true );
         propertyMembers_.reset();
         if( ensembleport_.hasData() )
@@ -98,25 +100,21 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
 Processor* ParallelCoordinatesAxesCreator::create() const {
     return new ParallelCoordinatesAxesCreator();
 }
-std::string ParallelCoordinatesAxesCreator::getClassName() const {
-    return "ParallelCoordinatesAxesCreator";
-}
-std::string ParallelCoordinatesAxesCreator::getCategory() const {
-    return "ParallelCoordinates";
-}
+
 bool ParallelCoordinatesAxesCreator::isReady() const {
-    return ensembleport_.isReady() && axesport_.isReady();
-}
+    if(!ensembleport_.isReady()) {
+        setNotReadyErrorMessage("No input");
+        return false;
+    }
 
-void ParallelCoordinatesAxesCreator::setDescriptions() {
-    setDescription("Creates parallel coordinates for a given ensemble dataset.<br>"
-                   "The ensemble must contain more than a single field.");
+    // Note: volumeport is optional!
 
-    propertyMembers_.setDescription("Use to select considered members from the ensemble.");
-    propertyFields_.setDescription("Use to select considered fields from the ensemble.");
-    propertySpatialSampleCount_.setDescription("Number of spatial samples");
-    propertyTemporalSampleCount_.setDescription("Number of temporal samples");
-    propertyAggregateMembers_.setDescription("If enabled, values from selected runs will be aggregated");
+    if(!axesport_.isReady()) {
+        setNotReadyErrorMessage("Outport not connected");
+        return false;
+    }
+
+    return true;
 }
 
 void ParallelCoordinatesAxesCreator::updateValidVoxels() {
@@ -158,7 +156,7 @@ ParallelCoordianesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareComput
     // --- Shuffle valid voxels --- //
     const auto spatialSampleCount = propertySpatialSampleCount_.get();
     auto validVoxels = validVoxels_;
-    std::shuffle( validVoxels.begin(), validVoxels.end(), std::mt19937( std::random_device()( ) ) );
+    tgt::shuffle( validVoxels.begin(), validVoxels.end(), std::mt19937( propertySeedTime_.get() ) );
     validVoxels.resize( spatialSampleCount );
 
     // --- Gather values --- //

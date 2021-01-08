@@ -54,13 +54,23 @@ public:
     ParallelCoordinatesAxesCreator();
 
     Processor* create() const override;
-    std::string getClassName() const override;
-    std::string getCategory() const override;
+    std::string getClassName() const override { return "ParallelCoordinatesAxesCreator"; }
+    std::string getCategory() const override { return "ParallelCoordinates"; }
+    CodeState getCodeState() const override { return CODE_STATE_EXPERIMENTAL; }
     bool isReady() const override;
 
 private:
 
-    void setDescriptions() override;
+    void setDescriptions() {
+        setDescription("Creates parallel coordinates for a given ensemble dataset.<br>"
+                       "The ensemble must contain more than a single field.");
+
+        propertyMembers_.setDescription("Use to select considered members from the ensemble.");
+        propertyFields_.setDescription("Use to select considered fields from the ensemble.");
+        propertySpatialSampleCount_.setDescription("Number of spatial samples");
+        propertyTemporalSampleCount_.setDescription("Number of temporal samples");
+        propertyAggregateMembers_.setDescription("If enabled, values from selected runs will be aggregated");
+    }
 
     ComputeInput prepareComputeInput() override;
     ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const override;
@@ -78,6 +88,7 @@ private:
     StringListProperty propertyFields_;
     IntProperty propertySpatialSampleCount_;
     IntProperty propertyTemporalSampleCount_;
+    IntProperty propertySeedTime_;
     BoolProperty propertyAggregateMembers_;
     FileDialogProperty propertyFileDialog_;
     ButtonProperty propertySaveButton_;
