@@ -24,15 +24,19 @@
  ***********************************************************************************/
 
 #include "metadataadder.h"
+
+#include "voreen/core/datastructures/volume/volumedecorator.h"
+
 #include <fstream>
+
 namespace voreen {
 
 MetaDataAdder::MetaDataAdder()
     : Processor()
     , inport_(Port::INPORT, "inport", "Volume List Inport")
     , outport_(Port::OUTPORT, "outport", "Volume List Outport")
-    , addTime_("addTime", "Add Time?")
-    , timeInformationFile_("timeInformationFile", "Time Information: ", "Select file with timestep information", "")
+    , addTime_("addTime", "Add TimeStep")
+    , timeInformationFile_("timeInformationFile", "Time Information: ", "Select file with timestep information", "", "", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , modalityString_("nameString", "Modality")
 {
     addPort(inport_);
@@ -44,16 +48,11 @@ MetaDataAdder::MetaDataAdder()
     addProperty(timeInformationFile_);
     timeInformationFile_.setVisibleFlag(false);
     addProperty(modalityString_);
+    modalityString_.setInstantUpdate(false);
 }
 
 Processor* MetaDataAdder::create() const {
     return new MetaDataAdder();
-}
-
-void MetaDataAdder::setDescriptions() {
-    setDescription("This processor can add explicit time steps to the data as well as " \
-                   "a name. The time information should be given in a file where each line " \
-                   "contains one number which is used as a timestep.");
 }
 
 void MetaDataAdder::process() {
@@ -71,6 +70,10 @@ void MetaDataAdder::process() {
             timesteps.push_back(time);
         }
         infile.close();
+
+        if(timesteps.size() != inport_.getData()->size()) {
+            LWARNING("Number of parsed time steps (" << timesteps.size() << ") is different from number of volumes (" << inport_.getData()->size() << ")");
+        }
     }
 
     // Add data to volumes

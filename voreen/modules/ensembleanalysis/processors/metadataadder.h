@@ -37,13 +37,10 @@
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 
-#include "voreen/core/datastructures/volume/volumedecorator.h"
-
 
 namespace voreen {
 
-class VRN_CORE_API MetaDataAdder : public Processor
-{
+class VRN_CORE_API MetaDataAdder : public Processor {
 public:
     MetaDataAdder();
     virtual Processor* create() const;
@@ -53,7 +50,11 @@ public:
 
 protected:
     virtual void process();
-    virtual void setDescriptions();
+    virtual void setDescriptions() {
+        setDescription("This processor can add explicit time steps to the data as well as "
+                   "a name. The time information should be given in a file where each line "
+                   "contains one number which is used as a timestep.");
+    }
 
 private:
     VolumeListPort inport_;
