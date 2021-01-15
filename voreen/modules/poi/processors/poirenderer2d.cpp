@@ -80,7 +80,7 @@ POIRenderer2d::POIRenderer2d()
     , distanceMeasureColor_("distanceMeasureColor", "Color for distance measurement")
     , selectionMode_("selectionMode", "Selection Mode")
     , selectBackgroud_("selectBackgroud", "Select points in other slices.")
-    , linkedMousePositionInSlice_("linkedMousePositionInSlice","\"Mouse Position\" from SliceViewer",tgt::ivec3(-1),tgt::ivec3(-1),tgt::ivec3(INT_MAX),
+    , linkedMousePositionInSlice_("linkedMousePositionInSlice","\"Mouse Position\" from SliceViewer",tgt::ivec3(-1),tgt::ivec3(-1),tgt::ivec3(std::numeric_limits<int>::max()-1),
                                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , linkedSliceAlignment_("linkedSliceAlignment", "\"Slice Alignment\" from SliceViewer",Processor::INVALID_RESULT,false,Property::LOD_DEBUG)
     , linkedSliceIndex_("linkedSliceIndex", "\"Slice Number\" from SliceViewer", 0, 0, 10000,Processor::INVALID_RESULT,NumericProperty<int>::STATIC, Property::LOD_DEBUG)

@@ -44,6 +44,7 @@ Voreen Changelog
       o Fix reading and writing of VolumeMinMax(Magnitude) for multi-channel volumes from and to HDF5 files
       o Enable camera interaction of GeometryProcessor per default
       o Fix VolumeListSpacing 'scale' option
+      o Fix arithmetic exceptions when adding POIStorage or POIRenderer2d to the network
 
 2020-01-17: Voreen 5.1.1
 ------------------------

@@ -38,7 +38,7 @@ POIStorage::POIStorage()
     , groupName_("groupName", "Name of Group")
     , groupEnabled_("groupEnabled", "Is Enabled")
     , groupColor_("groupColor", "Color of Group")
-    , mouseOverPoint_("mouseOverPoint", "Mouseover Point", POI_NO_SUCH_POINT, -1, std::numeric_limits<int>::max())
+    , mouseOverPoint_("mouseOverPoint", "Mouseover Point", POI_NO_SUCH_POINT, -1, std::numeric_limits<int>::max()-1)
     , clearButton_("clearButton", "Clear all Data")
     , enableInteraction_("isEnableInteraction", "Enable Interaction", true)
 {
