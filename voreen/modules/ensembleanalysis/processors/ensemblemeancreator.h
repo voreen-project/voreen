@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_REFERENCEVOLUMECREATOR_H
-#define VRN_REFERENCEVOLUMECREATOR_H
+#ifndef VRN_ENSEMBLEMEANCREATOR_H
+#define VRN_ENSEMBLEMEANCREATOR_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -36,7 +36,7 @@
 
 namespace voreen {
     
-struct ReferenceVolumeCreatorInput {
+struct EnsembleMeanCreatorInput {
     PortDataPointer<EnsembleDataset> ensemble;
     std::unique_ptr<VolumeRAM> outputVolume;
     tgt::Bounds bounds;
@@ -46,22 +46,23 @@ struct ReferenceVolumeCreatorInput {
     size_t referenceMember;
 };
 
-struct ReferenceVolumeCreatorOutput {
+struct EnsembleMeanCreatorOutput {
     std::unique_ptr<VolumeBase> volume;
 };
 
 /**
- *
+ * This processor creates a reference volume for a given input ensemble which can be used for variance calculation
+ * and visualization as done in LocalSimilarityAnalysis
  */
-class VRN_CORE_API ReferenceVolumeCreator : public AsyncComputeProcessor<ReferenceVolumeCreatorInput, ReferenceVolumeCreatorOutput>  {
+class VRN_CORE_API EnsembleMeanCreator : public AsyncComputeProcessor<EnsembleMeanCreatorInput, EnsembleMeanCreatorOutput>  {
 public:
-    ReferenceVolumeCreator();
-    virtual ~ReferenceVolumeCreator();
+    EnsembleMeanCreator();
+    virtual ~EnsembleMeanCreator();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const      { return "ReferenceVolumeCreator"; }
-    virtual std::string getCategory() const       { return "Ensemble Processing";    }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;  }
+    virtual std::string getClassName() const      { return "EnsembleMeanCreator";   }
+    virtual std::string getCategory() const       { return "Ensemble Processing";   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
 
 protected:
 
@@ -72,8 +73,7 @@ protected:
 protected:
 
     virtual void setDescriptions() {
-        setDescription("Creates a reference volume from the input ensemble for a selected time step and field.");
-        referenceMethod_.setDescription("Use the reference method to determine how the reference volume is created.");
+        setDescription("Creates a mean volume from the input ensemble for a selected time step and field.");
     }
 
     void adjustToEnsemble();
@@ -83,9 +83,6 @@ protected:
 
     StringOptionProperty selectedField_;
     FloatProperty time_;
-
-    StringOptionProperty referenceMethod_;
-    StringOptionProperty referenceMember_;
 
     StringOptionProperty sampleRegion_;
     IntVec3Property outputDimensions_;

@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMELISTMULTICHANNELADAPTER_H
-#define VRN_VOLUMELISTMULTICHANNELADAPTER_H
+#ifndef VRN_FLOWMAPCREATOR_H
+#define VRN_FLOWMAPCREATOR_H
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/genericport.h"
@@ -33,22 +33,38 @@
 namespace voreen {
 
 /**
- * Merges all separated channel volumes inside the input list to a single multi-channel volume in the output list.
+ * Creates Flow Maps from separated x, y and z (volume) images.
  */
-class VRN_CORE_API VolumeListMultiChannelAdapter : public Processor {
+class VRN_CORE_API FlowMapCreator : public Processor {
 public:
-    VolumeListMultiChannelAdapter();
-    virtual ~VolumeListMultiChannelAdapter();
+    FlowMapCreator();
+    virtual ~FlowMapCreator();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "VolumeListMultiChannelAdapter"; }
-    virtual std::string getCategory() const   { return "Input"; }
+    virtual std::string getClassName() const  { return "FlowMapCreator";        }
+    virtual std::string getCategory() const   { return "Volume Processing";     }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool isUtility() const { return true; }
+    virtual bool isUtility() const            { return true; }
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Merges all separated channel volumes inside the input list to a single multi-channel volume in the output list.");
+        setDescription("Creates Flow Maps from separated x, y and z (volume) images and provides additional options to "
+                       "adjust certain properties. This is even supported for single-channel volumes. However, the "
+                       "typical use-case is a series of x, y and z images converted into 3D vector fields to then be "
+                       "used by other processors of the <br>FlowAnalysis</br> module.");
+        numChannels_.setDescription("Number of channels of the output volume");
+        layout_.setDescription("Layout in which channel volumes are stored in input list");
+        mirrorX_.setDescription("Shall voxels be mirrored along x axis?");
+        mirrorY_.setDescription("Shall voxels be mirrored along y axis?");
+        mirrorZ_.setDescription("Shall voxels be mirrored along z axis?");
+        swizzleChannel1_.setDescription("Map first channel to any other channel");
+        swizzleChannel2_.setDescription("Map second channel to any other channel");
+        swizzleChannel3_.setDescription("Map third channel to any other channel");
+        swizzleChannel4_.setDescription("Map fourth channel to any other channel");
+        negateChannel1_.setDescription("Shall the first channel (after swizzling) be negated?");
+        negateChannel2_.setDescription("Shall the second channel (after swizzling) be negated?");
+        negateChannel3_.setDescription("Shall the third channel (after swizzling) be negated?");
+        negateChannel4_.setDescription("Shall the fourth channel (after swizzling) be negated?");
     }
 
     virtual void process();
@@ -57,7 +73,7 @@ private:
 
     void onChannelCountChanged();
 
-    std::vector<std::unique_ptr<const VolumeBase>> volumes_;
+    std::vector<std::unique_ptr<VolumeBase>> volumes_;
 
     IntProperty numChannels_;
     StringOptionProperty layout_;
@@ -66,15 +82,15 @@ private:
     BoolProperty mirrorY_;
     BoolProperty mirrorZ_;
 
-    BoolProperty invertChannel1_;
-    BoolProperty invertChannel2_;
-    BoolProperty invertChannel3_;
-    BoolProperty invertChannel4_;
-
     OptionProperty<size_t> swizzleChannel1_;
     OptionProperty<size_t> swizzleChannel2_;
     OptionProperty<size_t> swizzleChannel3_;
     OptionProperty<size_t> swizzleChannel4_;
+
+    BoolProperty negateChannel1_;
+    BoolProperty negateChannel2_;
+    BoolProperty negateChannel3_;
+    BoolProperty negateChannel4_;
 
     VolumeListPort inport_;
     VolumeListPort outport_;

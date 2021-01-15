@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_LOCALSIMILARITYANALYSIS_H
-#define VRN_LOCALSIMILARITYANALYSIS_H
+#ifndef VRN_ENSEMBLEVARIANCEANALYSIS_H
+#define VRN_ENSEMBLEVARIANCEANALYSIS_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -38,9 +38,9 @@
 namespace voreen {
 
 
-struct LocalSimilarityAnalysisInput {
+struct EnsembleVarianceAnalysisInput {
     PortDataPointer<EnsembleDataset> ensemble;
-    const VolumeBase* referenceVolume;
+    const VolumeBase* meanVolume;
     std::unique_ptr<VolumeRAM_Float> outputVolume;
     std::string field;
     float vectorMagnitudeThreshold;
@@ -48,22 +48,23 @@ struct LocalSimilarityAnalysisInput {
     float time;
 };
 
-struct LocalSimilarityAnalysisOutput {
+struct EnsembleVarianceAnalysisOutput {
     std::unique_ptr<VolumeBase> volume;
 };
 
 /**
- *
+ * Calculates ensemble variance for scalar and vector fields as described in \"Interactive Visual
+ * Similarity Analysis of Measured and Simulated Multi-field Tubular Flow Ensembles\" by Leistikow et al.
  */
-class VRN_CORE_API LocalSimilarityAnalysis : public AsyncComputeProcessor<LocalSimilarityAnalysisInput, LocalSimilarityAnalysisOutput>  {
+class VRN_CORE_API EnsembleVarianceAnalysis : public AsyncComputeProcessor<EnsembleVarianceAnalysisInput, EnsembleVarianceAnalysisOutput>  {
 public:
-    LocalSimilarityAnalysis();
-    virtual ~LocalSimilarityAnalysis();
+    EnsembleVarianceAnalysis();
+    virtual ~EnsembleVarianceAnalysis();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const      { return "LocalSimilarityAnalysis"; }
-    virtual std::string getCategory() const       { return "Plotting";                }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
+    virtual std::string getClassName() const      { return "EnsembleVarianceAnalysis"; }
+    virtual std::string getCategory() const       { return "Ensemble Processing";      }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;    }
 
 protected:
 
@@ -76,7 +77,15 @@ protected:
 protected:
 
     virtual void setDescriptions() {
-        setDescription("");
+        setDescription("Calculates ensemble variance for scalar and vector fields as described in \"Interactive Visual "
+                       "Similarity Analysis of Measured and Simulated Multi-field Tubular Flow Ensembles\" by Leistikow et al. ");
+        ensembleMeanPort_.setDescription("Mean volume as calculated by <br>EnsembleMeanCreator</br>");
+        selectedField_.setDescription("Link with <br>EnsembleMeanCreator</br>");
+        time_.setDescription("Link with <br>EnsembleMeanCreator</br>");
+        vectorComponent_.setDescription("Defines if magnitude, direction or both should be used for calculating vector variance");
+        vectorMagnitudeThreshold_.setDescription("Only calculate vector variance based on direction if magnitude "
+                                                 "surpasses this threshold (direction calculation of very small vectors "
+                                                 "is unstable.");
     }
 
     enum VectorComponent {
@@ -86,7 +95,7 @@ protected:
     };
 
     EnsembleDatasetPort ensembleInport_;
-    VolumePort referencePort_;
+    VolumePort ensembleMeanPort_;
     VolumePort outport_;
 
     StringOptionProperty selectedField_;

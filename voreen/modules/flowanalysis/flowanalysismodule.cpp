@@ -42,6 +42,7 @@
 #include "processors/streamline/streamlineselector.h"
 #include "processors/streamline/streamlinesource.h"
 #include "processors/volume/acceleration.h"
+#include "processors/volume/flowmapcreator.h"
 #include "processors/volume/helicitydensity.h"
 #include "processors/volume/jacobian.h"
 #include "processors/volume/vortexcriterion.h"
@@ -60,6 +61,7 @@ FlowAnalysisModule::FlowAnalysisModule(const std::string& modulePath)
     registerProcessor(new Acceleration());
     registerProcessor(new CorelineCreator());
     registerProcessor(new FlowDirectionOverlay());
+    registerProcessor(new FlowMapCreator());
     registerProcessor(new HelicityDensity());
     registerProcessor(new Jacobian());
     registerProcessor(new ParallelVectors());

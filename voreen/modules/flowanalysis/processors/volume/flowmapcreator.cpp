@@ -23,27 +23,29 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "volumelistmultichanneladapter.h"
+#include "flowmapcreator.h"
 
 #include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 #include "voreen/core/utils/hashing.h"
 
-namespace voreen {
+namespace {
+
+using namespace voreen;
 
 class VolumeDiskMultiChannelAdapter : public VolumeDisk {
 public:
 
-    VolumeDiskMultiChannelAdapter(const std::vector<const VolumeBase*>& channels, tgt::bvec3 mirror, std::vector<bool> invert, std::vector<size_t> swizzle)
+    VolumeDiskMultiChannelAdapter(const std::vector<const VolumeBase*>& channels, tgt::bvec3 mirror, std::vector<size_t> swizzle, std::vector<bool> negate)
         : VolumeDisk(VolumeFactory().getFormat(channels.front()->getBaseType(), channels.size()), channels.front()->getDimensions())
         , channels_(channels)
         , mirror_(mirror)
-        , invert_(std::move(invert))
         , swizzle_(std::move(swizzle))
+        , negate_(std::move(negate))
     {
-        tgtAssert(channels_.size() == invert_.size(), "size mismatch");
         tgtAssert(channels_.size() == swizzle_.size(), "size mismatch");
+        tgtAssert(channels_.size() == negate_.size(), "size mismatch");
         const VolumeBase* ref = channels_.front();
         for (const VolumeBase* channel : channels_) {
             tgtAssert(ref->getFormat() == channel->getFormat(), "Base Type mismatch");
@@ -58,7 +60,12 @@ public:
             hash += channel->getHash();
         }
 
-        return VoreenHash::getHash(hash);
+        std::stringstream stream;
+        stream << mirror_;
+        stream << std::accumulate(swizzle_.begin(), swizzle_.end(), "");
+        stream << std::accumulate(negate_.begin(), negate_.end(), "");
+
+        return hash + stream.str();
     }
 
     VolumeRAM* loadVolume() const {
@@ -69,7 +76,8 @@ public:
         if (firstZSlice > lastZSlice)
             throw VoreenException("last slice must be behind first slice");
 
-        return loadBrick(tgt::svec3(0, 0, firstZSlice), tgt::svec3(dimensions_.x, dimensions_.y, lastZSlice - firstZSlice + 1));
+        return loadBrick(tgt::svec3(0, 0, firstZSlice),
+                         tgt::svec3(dimensions_.x, dimensions_.y, lastZSlice - firstZSlice + 1));
     }
 
     VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
@@ -98,15 +106,14 @@ public:
                         for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
                             size_t x = mirror_.x ? dimensions.x - offset.x - pos.x - 1 : pos.x;
                             float value = lock->getVoxelNormalized(x, y, z);
-                            if(invert_[swizzledChannel]) {
+                            if (negate_[swizzledChannel]) {
                                 value = -value;
                             }
                             output->setVoxelNormalized(value, pos, channel);
                         }
                     }
                 }
-            }
-            else if(const VolumeDisk* vd = channels_[swizzledChannel]->getRepresentation<VolumeDisk>()) {
+            } else if (const VolumeDisk* vd = channels_[swizzledChannel]->getRepresentation<VolumeDisk>()) {
                 tgt::svec3 effOffset = offset;
                 effOffset.x = mirror_.x ? dimensions_.x - dimensions.x - offset.x : offset.x;
                 effOffset.y = mirror_.y ? dimensions_.y - dimensions.y - offset.y : offset.y;
@@ -121,15 +128,14 @@ public:
                         for (pos.x = 0; pos.x < dimensions.x; pos.x++) {
                             size_t x = mirror_.x ? dimensions.x - pos.x - 1 : pos.x;
                             float value = brick->getVoxelNormalized(x, y, z);
-                            if(invert_[swizzledChannel]) {
+                            if (negate_[swizzledChannel]) {
                                 value = -value;
                             }
                             output->setVoxelNormalized(value, pos, channel);
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 tgtAssert(false, "Could not get representation for channel");
             }
         }
@@ -141,13 +147,15 @@ private:
 
     std::vector<const VolumeBase*> channels_;
     tgt::bvec3 mirror_;
-    std::vector<bool> invert_;
     std::vector<size_t> swizzle_;
+    std::vector<bool> negate_;
 };
 
+}
 
+namespace voreen {
 
-VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
+FlowMapCreator::FlowMapCreator()
     : Processor()
     , inport_(Port::INPORT, "volumelist.input", "Volume List Input", false)
     , outport_(Port::OUTPORT, "volumelist.output", "Volume List Output ", false)
@@ -156,14 +164,14 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     , mirrorX_("mirrorX", "Mirror X", false)
     , mirrorY_("mirrorY", "Mirror Y", false)
     , mirrorZ_("mirrorZ", "Mirror Z", false)
-    , invertChannel1_("invertChannel1", "Invert Channel 1", false)
-    , invertChannel2_("invertChannel2", "Invert Channel 2", false)
-    , invertChannel3_("invertChannel3", "Invert Channel 3", false)
-    , invertChannel4_("invertChannel4", "Invert Channel 4", false)
     , swizzleChannel1_("swizzleChannel1", "Swizzle Channel 1")
     , swizzleChannel2_("swizzleChannel2", "Swizzle Channel 2")
     , swizzleChannel3_("swizzleChannel3", "Swizzle Channel 3")
     , swizzleChannel4_("swizzleChannel4", "Swizzle Channel 4")
+    , negateChannel1_("negateChannel1", "Negate Channel 1", false)
+    , negateChannel2_("negateChannel2", "Negate Channel 2", false)
+    , negateChannel3_("negateChannel3", "Negate Channel 3", false)
+    , negateChannel4_("negateChannel4", "Negate Channel 4", false)
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
@@ -171,7 +179,7 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     addPort(outport_);
 
     addProperty(numChannels_);
-    ON_CHANGE(numChannels_, VolumeListMultiChannelAdapter, onChannelCountChanged);
+    ON_CHANGE(numChannels_, FlowMapCreator, onChannelCountChanged);
     addProperty(layout_);
     layout_.addOption("xyzxyz", "xyzxyz");
     layout_.addOption("xxyyzz", "xxyyzz");
@@ -180,36 +188,36 @@ VolumeListMultiChannelAdapter::VolumeListMultiChannelAdapter()
     addProperty(mirrorY_);
     addProperty(mirrorZ_);
 
-    addProperty(invertChannel1_);
-    addProperty(invertChannel2_);
-    addProperty(invertChannel3_);
-    addProperty(invertChannel4_);
-
     addProperty(swizzleChannel1_);
     addProperty(swizzleChannel2_);
     addProperty(swizzleChannel3_);
     addProperty(swizzleChannel4_);
 
+    addProperty(negateChannel1_);
+    addProperty(negateChannel2_);
+    addProperty(negateChannel3_);
+    addProperty(negateChannel4_);
+
     // Update GUI according to initial state.
     onChannelCountChanged();
 }
 
-VolumeListMultiChannelAdapter::~VolumeListMultiChannelAdapter() {}
+FlowMapCreator::~FlowMapCreator() {}
 
-Processor* VolumeListMultiChannelAdapter::create() const {
-    return new VolumeListMultiChannelAdapter();
+Processor* FlowMapCreator::create() const {
+    return new FlowMapCreator();
 }
 
-void VolumeListMultiChannelAdapter::onChannelCountChanged() {
-    //invertChannel1_.setReadOnlyFlag(numChannels_.get() < 1); // always false.
-    invertChannel2_.setReadOnlyFlag(numChannels_.get() < 2);
-    invertChannel3_.setReadOnlyFlag(numChannels_.get() < 3);
-    invertChannel4_.setReadOnlyFlag(numChannels_.get() < 4);
+void FlowMapCreator::onChannelCountChanged() {
+    //swizzleChannel1_.setVisibleFlag(numChannels_.get() > 0); // always true.
+    swizzleChannel2_.setVisibleFlag(numChannels_.get() > 1);
+    swizzleChannel3_.setVisibleFlag(numChannels_.get() > 2);
+    swizzleChannel4_.setVisibleFlag(numChannels_.get() > 3);
 
-    //swizzleChannel1_.setReadOnlyFlag(numChannels_.get() < 1); // always false.
-    swizzleChannel2_.setReadOnlyFlag(numChannels_.get() < 2);
-    swizzleChannel3_.setReadOnlyFlag(numChannels_.get() < 3);
-    swizzleChannel4_.setReadOnlyFlag(numChannels_.get() < 4);
+    //negateChannel1_.setVisibleFlag(numChannels_.get() > 0); // always true.
+    negateChannel2_.setVisibleFlag(numChannels_.get() > 1);
+    negateChannel3_.setVisibleFlag(numChannels_.get() > 2);
+    negateChannel4_.setVisibleFlag(numChannels_.get() > 3);
 
     std::deque<Option<size_t>> options;
     options.push_back(Option<size_t>("x", "x", 0));
@@ -233,7 +241,7 @@ void VolumeListMultiChannelAdapter::onChannelCountChanged() {
     }
 }
 
-void VolumeListMultiChannelAdapter::process() {
+void FlowMapCreator::process() {
 
     const VolumeList* input = inport_.getData();
     tgtAssert(input, "no input");
@@ -250,21 +258,21 @@ void VolumeListMultiChannelAdapter::process() {
     mirror.y = mirrorY_.get();
     mirror.z = mirrorZ_.get();
 
-    std::vector<bool> invert;
-    std::vector<size_t> swizzel;
-    invert.push_back(invertChannel1_.get());
-    swizzel.push_back(swizzleChannel1_.getValue());
+    std::vector<size_t> swizzle;
+    std::vector<bool> negate;
+    swizzle.push_back(swizzleChannel1_.getValue());
+    negate.push_back(negateChannel1_.get());
     if(numChannels > 1) {
-        invert.push_back(invertChannel2_.get());
-        swizzel.push_back(swizzleChannel2_.getValue());
+        swizzle.push_back(swizzleChannel2_.getValue());
+        negate.push_back(negateChannel2_.get());
     }
     if(numChannels > 2) {
-        invert.push_back(invertChannel3_.get());
-        swizzel.push_back(swizzleChannel3_.getValue());
+        swizzle.push_back(swizzleChannel3_.getValue());
+        negate.push_back(negateChannel3_.get());
     }
     if(numChannels > 3) {
-        invert.push_back(invertChannel4_.get());
-        swizzel.push_back(swizzleChannel4_.getValue());
+        swizzle.push_back(swizzleChannel4_.getValue());
+        negate.push_back(negateChannel4_.get());
     }
 
     VolumeList* output = new VolumeList();
@@ -288,12 +296,12 @@ void VolumeListMultiChannelAdapter::process() {
             tgtAssert(false, "unknown layout");
         }
 
-        VolumeDisk* vd = new VolumeDiskMultiChannelAdapter(channels, mirror, invert, swizzel);
+        VolumeDisk* vd = new VolumeDiskMultiChannelAdapter(channels, mirror, swizzle, negate);
         VolumeBase* volume = new Volume(vd, input->first());
         output->add(volume);
 
         // Transfer ownership.
-        volumes_.push_back(std::unique_ptr<const VolumeBase>(volume));
+        volumes_.push_back(std::unique_ptr<VolumeBase>(volume));
     }
 
     outport_.setData(output, true);

@@ -23,19 +23,19 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "localsimilarityanalysis.h"
+#include "ensemblevarianceanalysis.h"
 
 #include "voreen/core/utils/statistics.h"
 #include "../utils/utils.h"
 
 namespace voreen {
 
-const std::string LocalSimilarityAnalysis::loggerCat_("voreen.ensembleanalysis.LocalSimilarityAnalysis");
+const std::string EnsembleVarianceAnalysis::loggerCat_("voreen.ensembleanalysis.LocalSimilarityAnalysis");
 
-LocalSimilarityAnalysis::LocalSimilarityAnalysis()
+EnsembleVarianceAnalysis::EnsembleVarianceAnalysis()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , ensembleInport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
-    , referencePort_(Port::INPORT, "referenceport", "Reference Volume Port")
+    , ensembleMeanPort_(Port::INPORT, "meanport", "Ensemble Mean Volume Port")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
     , selectedField_("selectedField", "Selected Field")
     , vectorMagnitudeThreshold_("vectorMagnitudeThreshold", "Vector Magnitude Threshold", 0.0f, 0.0f, 10000.0f)
@@ -44,7 +44,7 @@ LocalSimilarityAnalysis::LocalSimilarityAnalysis()
 {
     // Ports
     addPort(ensembleInport_);
-    addPort(referencePort_);
+    addPort(ensembleMeanPort_);
     addPort(outport_);
 
     addProperty(selectedField_);
@@ -72,10 +72,10 @@ LocalSimilarityAnalysis::LocalSimilarityAnalysis()
     time_.setTracking(false);
 }
 
-LocalSimilarityAnalysis::~LocalSimilarityAnalysis() {
+EnsembleVarianceAnalysis::~EnsembleVarianceAnalysis() {
 }
 
-LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
+EnsembleVarianceAnalysisInput EnsembleVarianceAnalysis::prepareComputeInput() {
     PortDataPointer<EnsembleDataset> ensemble = ensembleInport_.getThreadSafeData();
     if (!ensemble) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
@@ -85,12 +85,12 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
         throw InvalidInputException("Need at least a single run", InvalidInputException::S_ERROR);
     }
 
-    const VolumeBase* referenceVolume = referencePort_.getData();
-    if(!referenceVolume) {
+    const VolumeBase* meanVolume = ensembleMeanPort_.getData();
+    if(!meanVolume) {
         throw InvalidInputException("No reference volume", InvalidInputException::S_ERROR);
     }
 
-    if(ensemble->getNumChannels(selectedField_.get()) != referenceVolume->getNumChannels()) {
+    if(ensemble->getNumChannels(selectedField_.get()) != meanVolume->getNumChannels()) {
         throw InvalidInputException("Reference Volume channel count is different from selected field", InvalidInputException::S_ERROR);
     }
 
@@ -98,12 +98,12 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
         throw InvalidInputException("Only up to 4 channels supported", InvalidInputException::S_ERROR);
     }
 
-    std::unique_ptr<VolumeRAM_Float> outputVolume(new VolumeRAM_Float(referenceVolume->getDimensions()));
+    std::unique_ptr<VolumeRAM_Float> outputVolume(new VolumeRAM_Float(meanVolume->getDimensions()));
     outputVolume->clear();
 
-    return LocalSimilarityAnalysisInput{
+    return EnsembleVarianceAnalysisInput{
             std::move(ensemble),
-            referenceVolume,
+            meanVolume,
             std::move(outputVolume),
             selectedField_.get(),
             vectorMagnitudeThreshold_.get(),
@@ -112,7 +112,7 @@ LocalSimilarityAnalysisInput LocalSimilarityAnalysis::prepareComputeInput() {
     };
 }
 
-LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAnalysisInput input, ProgressReporter& progress) const {
+EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianceAnalysisInput input, ProgressReporter& progress) const {
 
     auto ensemble = std::move(input.ensemble);
     const std::string& field = input.field;
@@ -121,8 +121,8 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.outputVolume);
     const tgt::svec3 dims = output->getDimensions();
 
-    VolumeRAMRepresentationLock referenceVolume(input.referenceVolume);
-    tgt::mat4 refVoxelToWorld = input.referenceVolume->getVoxelToWorldMatrix();
+    VolumeRAMRepresentationLock meanVolume(input.meanVolume);
+    tgt::mat4 refVoxelToWorld = input.meanVolume->getVoxelToWorldMatrix();
 
     for (size_t r = 0; r < numMembers; r++) {
         size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
@@ -150,7 +150,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                     if(numChannels == 1 || input.vectorComponent == BOTH) {
                         float length = 0.0f;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            float value = lock->getVoxelNormalized(sample, channel) - referenceVolume->getVoxelNormalized(pos, channel);
+                            float value = lock->getVoxelNormalized(sample, channel) - meanVolume->getVoxelNormalized(pos, channel);
                             length += value * value;
                         }
 
@@ -163,7 +163,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                             float value = lock->getVoxelNormalized(sample, channel);
                             lengthSqCurrent += value * value;
 
-                            value = referenceVolume->getVoxelNormalized(sample, channel);
+                            value = meanVolume->getVoxelNormalized(sample, channel);
                             lengthSqReference += value * value;
                         }
                         float magnitude = std::abs(std::sqrt(lengthSqCurrent) - std::sqrt(lengthSqReference));
@@ -174,7 +174,7 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
                         tgt::vec4 v2 = tgt::vec4::zero;
                         for (size_t channel = 0; channel < numChannels; channel++) {
                             v1[channel] = lock->getVoxelNormalized(sample, channel);
-                            v2[channel] = referenceVolume->getVoxelNormalized(sample, channel);
+                            v2[channel] = meanVolume->getVoxelNormalized(sample, channel);
                         }
 
                         // Test if any magnitude of both vectors is too small to be considered for direction calculation.
@@ -203,23 +203,23 @@ LocalSimilarityAnalysisOutput LocalSimilarityAnalysis::compute(LocalSimilarityAn
         output->voxel(i) = std::sqrt(variance);
     }
 
-    std::unique_ptr<Volume> volume(new Volume(output.release(), input.referenceVolume->getSpacing(), input.referenceVolume->getOffset()));
+    std::unique_ptr<Volume> volume(new Volume(output.release(), input.meanVolume->getSpacing(), input.meanVolume->getOffset()));
     volume->setMetaDataValue<FloatMetaData>("time", input.time);
     volume->setMetaDataValue<StringMetaData>("field", field);
 
     progress.setProgress(1.0f);
 
-    return LocalSimilarityAnalysisOutput{
+    return EnsembleVarianceAnalysisOutput{
         std::move(volume)
     };
 }
 
-void LocalSimilarityAnalysis::processComputeOutput(LocalSimilarityAnalysisOutput output) {
+void EnsembleVarianceAnalysis::processComputeOutput(EnsembleVarianceAnalysisOutput output) {
     outport_.setData(output.volume.release(), true);
 }
 
 
-void LocalSimilarityAnalysis::adjustPropertiesToInput() {
+void EnsembleVarianceAnalysis::adjustPropertiesToInput() {
     if(!ensembleInport_.hasData()) return;
 
     const EnsembleDataset* ensemble = ensembleInport_.getData();
@@ -235,8 +235,8 @@ void LocalSimilarityAnalysis::adjustPropertiesToInput() {
     //time_.set(ensemble->getEndTime());
 }
 
-Processor* LocalSimilarityAnalysis::create() const {
-    return new LocalSimilarityAnalysis();
+Processor* EnsembleVarianceAnalysis::create() const {
+    return new EnsembleVarianceAnalysis();
 }
 
 } // namespace voreen

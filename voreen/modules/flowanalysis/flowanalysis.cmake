@@ -43,6 +43,7 @@ SET(MOD_CORE_SOURCES
 
     # volume
     ${MOD_DIR}/processors/volume/acceleration.cpp
+    ${MOD_DIR}/processors/volume/flowmapcreator.cpp
     ${MOD_DIR}/processors/volume/helicitydensity.cpp
     ${MOD_DIR}/processors/volume/jacobian.cpp
     ${MOD_DIR}/processors/volume/vortexcriterion.cpp
@@ -90,6 +91,7 @@ SET(MOD_CORE_HEADERS
 
     # volume
     ${MOD_DIR}/processors/volume/acceleration.h
+    ${MOD_DIR}/processors/volume/flowmapcreator.h
     ${MOD_DIR}/processors/volume/helicitydensity.h
     ${MOD_DIR}/processors/volume/jacobian.h
     ${MOD_DIR}/processors/volume/vortexcriterion.h

@@ -36,13 +36,15 @@
 #include "processors/simulation/flowparametrizationrun.h"
 #include "processors/simulation/flowsimulationcluster.h"
 #include "processors/simulation/flowsimulationgeometry.h"
+#include "processors/volume/connectedcomponentselector.h"
 #include "processors/volume/flowtestdatagenerator.h"
 #include "processors/volume/phaseunwrapping.h"
 #include "processors/volume/vectordecompose.h"
 #include "processors/volume/volumeapplyrealworldmapping.h"
 #include "processors/volume/volumelistadapter.h"
 #include "processors/volume/volumelistaggregate.h"
-#include "processors/volume/volumelistmultichanneladapter.h"
+#include "processors/volume/volumelistmerger.h"
+#include "processors/volume/volumemerger.h"
 #include "processors/volume/volumenoise.h"
 #include "processors/volume/volumeselectormultichannel.h"
 
@@ -71,36 +73,38 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     setGuiName("Flow Simulation");
 
     // processors
-    registerSerializableType(new GeometryClose());
-    registerSerializableType(new GeometrySmoothNormals());
-    registerSerializableType(new UnalignedSliceViewer());
-    registerSerializableType(new FlowCharacteristics());
-    registerSerializableType(new FlowEnsembleCreator());
-    registerSerializableType(new FlowIndicatorRenderer());
-    registerSerializableType(new FlowParametrizationEnsemble());
-    registerSerializableType(new FlowParametrizationRun());
-    registerSerializableType(new FlowSimulationCluster());
-    registerSerializableType(new FlowSimulationGeometry());
-    registerSerializableType(new FlowTestDataGenerator());
-    registerSerializableType(new PhaseUnwrapping());
-    registerSerializableType(new VectorDecompose());
-    registerSerializableType(new VolumeApplyRealWorldMapping());
-    registerSerializableType(new VolumeListAdapter());
-    registerSerializableType(new VolumeListAggregate());
-    registerSerializableType(new VolumeListMultiChannelAdapter());
-    registerSerializableType(new VolumeNoise());
-    registerSerializableType(new VolumeSelectorMultiChannel());
+    registerProcessor(new ConnectedComponentSelector());
+    registerProcessor(new GeometryClose());
+    registerProcessor(new GeometrySmoothNormals());
+    registerProcessor(new UnalignedSliceViewer());
+    registerProcessor(new FlowCharacteristics());
+    registerProcessor(new FlowEnsembleCreator());
+    registerProcessor(new FlowIndicatorRenderer());
+    registerProcessor(new FlowParametrizationEnsemble());
+    registerProcessor(new FlowParametrizationRun());
+    registerProcessor(new FlowSimulationCluster());
+    registerProcessor(new FlowSimulationGeometry());
+    registerProcessor(new FlowTestDataGenerator());
+    registerProcessor(new PhaseUnwrapping());
+    registerProcessor(new VectorDecompose());
+    registerProcessor(new VolumeApplyRealWorldMapping());
+    registerProcessor(new VolumeListAdapter());
+    registerProcessor(new VolumeListAggregate());
+    registerProcessor(new VolumeListMerger());
+    registerProcessor(new VolumeMerger());
+    registerProcessor(new VolumeNoise());
+    registerProcessor(new VolumeSelectorMultiChannel());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-    registerSerializableType(new FlowIndicatorDetection());
+    registerProcessor(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_MODULE_PLOTTING
-    registerSerializableType(new RoiAnalysis());
-    registerSerializableType(new FlowIndicatorAnalysis());
+    registerProcessor(new RoiAnalysis());
+    registerProcessor(new FlowIndicatorAnalysis());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
-    registerSerializableType(new WallShearStressExtractor());
-    registerSerializableType(new GeometryInsideTest());
-    registerSerializableType(new FlowSimulation());
+    registerProcessor(new WallShearStressExtractor());
+    registerProcessor(new GeometryInsideTest());
+    registerProcessor(new FlowSimulation());
 #endif
 }
 

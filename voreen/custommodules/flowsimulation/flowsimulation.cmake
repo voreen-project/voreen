@@ -35,13 +35,15 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
+    ${MOD_DIR}/processors/volume/connectedcomponentselector.cpp
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.cpp
     ${MOD_DIR}/processors/volume/phaseunwrapping.cpp
     ${MOD_DIR}/processors/volume/vectordecompose.cpp
     ${MOD_DIR}/processors/volume/volumeapplyrealworldmapping.cpp
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistaggregate.cpp
-    ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.cpp
+    ${MOD_DIR}/processors/volume/volumelistmerger.cpp
+    ${MOD_DIR}/processors/volume/volumemerger.cpp
     ${MOD_DIR}/processors/volume/volumenoise.cpp
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
 
@@ -70,13 +72,15 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.h
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
+    ${MOD_DIR}/processors/volume/connectedcomponentselector.h
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.h
     ${MOD_DIR}/processors/volume/phaseunwrapping.h
     ${MOD_DIR}/processors/volume/vectordecompose.h
     ${MOD_DIR}/processors/volume/volumeapplyrealworldmapping.h
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistaggregate.h
-    ${MOD_DIR}/processors/volume/volumelistmultichanneladapter.h
+    ${MOD_DIR}/processors/volume/volumelistmerger.h
+    ${MOD_DIR}/processors/volume/volumemerger.h
     ${MOD_DIR}/processors/volume/volumenoise.h
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.h
 
