@@ -49,7 +49,7 @@ enum MultiChannelSimilarityMeasure {
     MEASURE_JIANG,
     MEASURE_CROSSPRODUCT,
     MEASURE_SPLIT_CHANNELS,
-    MEASURE_VECTOR_DIFFERENCE_MAGNITUDE
+    MEASURE_EUCLIDEAN_NORM
 };
 
 struct SimilarityMatrixCreatorInput {

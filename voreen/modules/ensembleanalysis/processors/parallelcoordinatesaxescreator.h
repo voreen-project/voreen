@@ -69,7 +69,7 @@ private:
         propertyFields_.setDescription("Use to select considered fields from the ensemble.");
         propertySpatialSampleCount_.setDescription("Number of spatial samples");
         propertyTemporalSampleCount_.setDescription("Number of temporal samples");
-        propertyAggregateMembers_.setDescription("If enabled, values from selected runs will be aggregated");
+        propertyAggregateMembers_.setDescription("If enabled, values from selected members will be aggregated");
     }
 
     ComputeInput prepareComputeInput() override;

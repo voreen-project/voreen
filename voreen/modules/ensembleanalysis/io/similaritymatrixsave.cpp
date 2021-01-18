@@ -38,7 +38,7 @@ SimilarityMatrixSave::SimilarityMatrixSave()
     // ports
     , inport_(Port::INPORT, "inport", "Similarity Matrix Input", false)
     // properties
-    , filenameProp_("filenameprop", "Save File as", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH)
+    , filenameProp_("filenameprop", "Save File as", "Select file...", VoreenApplication::app()->getUserDataPath(), "Voreen Similarity Matrix (*.vsm)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH)
     , saveButton_("saveButton", "Save", Processor::INVALID_PATH)
     // members
     , saveSimilarityMatrix_(true)

@@ -62,14 +62,14 @@ static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
 const std::string SimilarityPlot::fontName_("Vera.ttf");
 const std::string SimilarityPlot::loggerCat_("voreen.ensembleanalysis.SimilarityPlot");
 
-void SimilarityPlot::MDSData::serialize(Serializer& s) const {
+void SimilarityPlot::Embedding::serialize(Serializer& s) const {
     s.serialize("nVectors", nVectors_);
     s.serialize("eigenvalues", eigenvalues_);
     if(!names_.empty())
         s.serialize("names", names_);
 }
 
-void SimilarityPlot::MDSData::deserialize(Deserializer& s) {
+void SimilarityPlot::Embedding::deserialize(Deserializer& s) {
     s.deserialize("nVectors", nVectors_);
     s.deserialize("eigenvalues", eigenvalues_);
     s.optionalDeserialize("names", names_, decltype(names_)());
@@ -83,7 +83,7 @@ SimilarityPlot::SimilarityPlot()
     , privatePort_(Port::OUTPORT, "image.tmp", "image.tmp", false)
     , pickingBuffer_(Port::OUTPORT, "picking", "Picking", false)
     , eigenValueOutport_(Port::OUTPORT, "eigenvalueOutport", "Eigenvalues", false)
-    , calculateButton_("calculate", "Calculate")
+    , calculateButton_("calculate", "Create Embeddings")
     , autoCalculate_("autoCalculate", "Auto Calculate", true)
     , progressBar_("progressBar", "Progress")
     , numIterations_("numIterations", "Number of Iterations", 1000, 1, 10000)
@@ -94,7 +94,6 @@ SimilarityPlot::SimilarityPlot()
     , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , showTooltip_("showTooltip", "Show Tooltip", true)
-    , toggleAxes_("toggleAxes", "Render Axes", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , renderTimeSelection_("renderTimeSelection", "Render Time Selection", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , colorCoding_("colorCoding", "Color Coding")
     , renderedField_("renderedChannel", "Field")
@@ -103,10 +102,10 @@ SimilarityPlot::SimilarityPlot()
     , selectedTimeStep_("selectedTimeSteps", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , referenceMember_("referenceMember", "Reference Member")
     , referenceTimeStep_("referenceTimeStep", "Reference Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
-    , saveFileDialog_("saveFileDialog", "Export MDS Plot", "Select file...", VoreenApplication::app()->getUserDataPath(),
-                      "MDS Plot data (*.mds)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , loadFileDialog_("loadFile", "Import MDS Plot", "Select file...", VoreenApplication::app()->getUserDataPath(),
-                      "MDS Plot data (*.mds)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , saveFileDialog_("saveFileDialog", "Export Embedding", "Select file...", VoreenApplication::app()->getUserDataPath(),
+                      "Voreen MDS Embedding (*.vmds)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , loadFileDialog_("loadFile", "Import Embedding", "Select file...", VoreenApplication::app()->getUserDataPath(),
+                      "Voreen MDS Embedding (*.vmds)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , camera_("camera", "Camera", tgt::Camera(tgt::vec3(0.0f, 0.0f, 3.5f), tgt::vec3(0.0f, 0.0f, 0.0f), tgt::vec3(0.0f, 1.0f, 0.0f)))
     , cameraHandler_(nullptr)
     , plotLib_(new PlotLibraryOpenGl())
@@ -127,7 +126,7 @@ SimilarityPlot::SimilarityPlot()
     addProperty(calculateButton_);
         calculateButton_.setGroupID("calculation");
         calculateButton_.setReadOnlyFlag(true);
-        ON_CHANGE(calculateButton_, SimilarityPlot, calculate);
+        ON_CHANGE(calculateButton_, SimilarityPlot, createEmbeddings);
     addProperty(autoCalculate_);
         autoCalculate_.setGroupID("calculation");
     addProperty(progressBar_);
@@ -173,8 +172,6 @@ SimilarityPlot::SimilarityPlot()
         fontSize_.setGroupID("rendering");
     addProperty(showTooltip_);
         showTooltip_.setGroupID("rendering");
-    addProperty(toggleAxes_);
-        toggleAxes_.setGroupID("rendering");
     addProperty(renderTimeSelection_);
         renderTimeSelection_.setGroupID("rendering");
     addProperty(colorCoding_);
@@ -206,10 +203,10 @@ SimilarityPlot::SimilarityPlot()
 
     // IO
     addProperty(saveFileDialog_);
-        ON_CHANGE(saveFileDialog_, SimilarityPlot, save);
+        ON_CHANGE(saveFileDialog_, SimilarityPlot, saveEmbeddings);
         saveFileDialog_.setGroupID("io");
     addProperty(loadFileDialog_);
-        ON_CHANGE(loadFileDialog_, SimilarityPlot, load);
+        ON_CHANGE(loadFileDialog_, SimilarityPlot, loadEmbeddings);
         loadFileDialog_.setGroupID("io");
     setPropertyGroupGuiName("io", "Save/Load MDS Plot");
 
@@ -267,20 +264,20 @@ void SimilarityPlot::process() {
 
         // Draw tooltip.
         if(showTooltip_.get()) {
-            drawTooltip();
+            renderTooltip();
         }
 
         outport_.deactivateTarget();
     }
     else {
         privatePort_.activateTarget();
-        privatePort_.clearTarget(); // TODO: may change clear color to..?
+        privatePort_.clearTarget();
 
         renderingPass(false);
 
         // Draw tooltip.
         if(showTooltip_.get()) {
-            drawTooltip();
+            renderTooltip();
         }
 
         privatePort_.deactivateTarget();
@@ -300,67 +297,65 @@ void SimilarityPlot::renderAxes() {
     outport_.activateTarget();
     outport_.clearTarget();
 
-    if(toggleAxes_.get()) {
-        // Set Plot status.
-        plotLib_->setWindowSize(outport_.getSize());
-        plotLib_->setAxesWidth(1.0f);
-        plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-        plotLib_->setLineWidth(1.0f);
-        plotLib_->setMaxGlyphSize(1.0f);
-        plotLib_->setMarginBottom(MARGINS.y);
-        plotLib_->setMarginTop(MARGINS.y);
-        plotLib_->setMarginLeft(MARGINS.x);
-        plotLib_->setMarginRight(MARGINS.x);
-        plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
-        plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
-        plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
-        if (numDimensions_.get() == 1) {
-            plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(),
-                                                 ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
-        }
-        else {
-            plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
-        }
-        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Y_AXIS);
-        if (numDimensions_.get() == 3) {
-            plotLib_->setDimension(PlotLibrary::THREE);
-            plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Z_AXIS);
-        } else
-            plotLib_->setDimension(PlotLibrary::TWO);
-
-        if (plotLib_->setRenderStatus()) {
-            plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-            plotLib_->renderAxes();
-            plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-            plotLib_->setFontSize(fontSize_.get() + 2);
-
-            switch (numDimensions_.get()) {
-                case 1:
-                    plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
-                    if (principleComponent_.get() == 1)
-                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1st PC");
-                    else if (principleComponent_.get() == 2)
-                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
-                    else
-                        plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
-
-                    plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-                    plotLib_->setFontSize(fontSize_.get());
-                    plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-                    plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
-                    plotLib_->setFontSize(fontSize_.get() + 2);
-                    break;
-                case 3:
-                    plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
-                    // Fallthrough
-                case 2:
-                    plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1st PC");
-                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
-                    break;
-            }
-        }
-        plotLib_->resetRenderStatus();
+    // Set Plot status.
+    plotLib_->setWindowSize(outport_.getSize());
+    plotLib_->setAxesWidth(1.0f);
+    plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+    plotLib_->setLineWidth(1.0f);
+    plotLib_->setMaxGlyphSize(1.0f);
+    plotLib_->setMarginBottom(MARGINS.y);
+    plotLib_->setMarginTop(MARGINS.y);
+    plotLib_->setMarginLeft(MARGINS.x);
+    plotLib_->setMarginRight(MARGINS.x);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
+    plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
+    if (numDimensions_.get() == 1) {
+        plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(),
+                                             ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
     }
+    else {
+        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
+    }
+    plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Y_AXIS);
+    if (numDimensions_.get() == 3) {
+        plotLib_->setDimension(PlotLibrary::THREE);
+        plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::Z_AXIS);
+    } else
+        plotLib_->setDimension(PlotLibrary::TWO);
+
+    if (plotLib_->setRenderStatus()) {
+        plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+        plotLib_->renderAxes();
+        plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+        plotLib_->setFontSize(fontSize_.get() + 2);
+
+        switch (numDimensions_.get()) {
+            case 1:
+                plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
+                if (principleComponent_.get() == 1)
+                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1st PC");
+                else if (principleComponent_.get() == 2)
+                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+                else
+                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
+
+                plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+                plotLib_->setFontSize(fontSize_.get());
+                plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+                plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
+                plotLib_->setFontSize(fontSize_.get() + 2);
+                break;
+            case 3:
+                plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
+                // Fallthrough
+            case 2:
+                plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1st PC");
+                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+                break;
+        }
+    }
+    plotLib_->resetRenderStatus();
 
     // Plot data
     float xMinMarginNDC = mapRange(MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
@@ -391,7 +386,7 @@ void SimilarityPlot::renderAxes() {
     LGL_ERROR;
 }
 
-void SimilarityPlot::drawTooltip() const {
+void SimilarityPlot::renderTooltip() const {
 
     const EnsembleDataset* ensemble = ensembleInport_.getData();
     if(!ensemble || !lastHit_) {
@@ -454,8 +449,8 @@ bool SimilarityPlot::isReady() const {
 
     // Note: Similarity Matrix is optional.
 
-    if(mdsData_.empty()) {
-        setNotReadyErrorMessage("No Plot data available");
+    if(embeddings_.empty()) {
+        setNotReadyErrorMessage("No embedding available");
         return false;
     }
 
@@ -464,157 +459,178 @@ bool SimilarityPlot::isReady() const {
 
 void SimilarityPlot::renderingPass(bool picking) {
 
-    // Retrieve dataset.
-    const EnsembleDataset* dataset = ensembleInport_.getData();
-
-    // Retrieve selected mds data.
-    const MDSData& mdsData = mdsData_[renderedField_.getSelectedIndex()];
-
     switch(numDimensions_.get()) {
     case 1:
-    {
-        tgt::vec2 timeRange = tgt::vec2(dataset->getStartTime(), dataset->getEndTime());
-        if(renderTimeSelection_.get()) {
-            timeRange = selectedTimeStep_.get();
-        }
-
-        for(int memberIdx : renderingOrder_) {
-
-            glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
-
-            const EnsembleMember& member = dataset->getMembers()[memberIdx];
-            size_t numTimeSteps = member.getTimeSteps().size();
-            int eigenValueIdx = principleComponent_.get() - 1;
-            const auto& vertices = mdsData.nVectors_.at(memberIdx);
-
-            if(numTimeSteps == 1) {
-                // In case we have a single time step, we draw it across the whole range,
-                // since it doesn't change. This could (and should!) be improved, however,
-                // such that it becomes clear at which t the time step is recorded.
-                IMode.begin(tgt::ImmediateMode::FAKE_LINES);
-                IMode.color(getColor(memberIdx, 0, picking));
-                const int segments = 40;
-                for(int i=0; i<segments; i+=2) {
-                    float x0 = mapRange(i+0, 0, segments-1, -1.0f, 1.0f);
-                    float x1 = mapRange(i+1, 0, segments-1, -1.0f, 1.0f);
-                    IMode.vertex(tgt::vec2(x0, vertices[0][eigenValueIdx]));
-                    IMode.vertex(tgt::vec2(x1, vertices[0][eigenValueIdx]));
-                }
-            }
-            else {
-                IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
-                for (size_t j = 0; j < numTimeSteps; j++) {
-                    float colorSaturation = 1.0f;
-                    if(member.getTimeSteps()[j].getTime() < timeRange.x || member.getTimeSteps()[j].getTime() > timeRange.y) {
-                        colorSaturation = 0.25f;
-                    }
-                    float t = mapRange(member.getTimeSteps()[j].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
-                    IMode.color(getColor(memberIdx, j, picking) * colorSaturation + tgt::vec3(1.0f - colorSaturation));
-                    IMode.vertex(tgt::vec2(t, vertices[j][eigenValueIdx]));
-                }
-            }
-            IMode.end();
-
-            if(!picking) {
-                size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
-                float x = mapRange(member.getTimeSteps()[selectedTimeStep].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
-                tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
-                tgt::vec3 color = tgt::vec3::one; // in 1D-case the selection is always white.!
-                drawTimeStepSelection(memberIdx, selectedTimeStep, position, color);
-            }
-        }
-
-        if(!picking && renderTimeSelection_.get()) {
-            tgt::vec2 mappedTimeRange = mapRange(selectedTimeStep_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
-
-            glLineWidth(3.0f);
-            IMode.color(tgt::vec3::zero);
-            IMode.begin(tgt::ImmediateMode::LINES);
-            IMode.vertex(tgt::vec2(mappedTimeRange.x, -1.0f));
-            IMode.vertex(tgt::vec2(mappedTimeRange.x,  1.0f));
-            IMode.vertex(tgt::vec2(mappedTimeRange.y, -1.0f));
-            IMode.vertex(tgt::vec2(mappedTimeRange.y,  1.0f));
-            IMode.end();
-        }
-
+        renderEmbedding1D(picking);
         break;
-    }
     case 2:
-    {
-        for (int memberIdx : renderingOrder_) {
-
-            glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
-
-            size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
-            const auto& vertices = mdsData.nVectors_.at(memberIdx);
-
-            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
-            for(size_t j=0; j<numTimeSteps; j++) {
-                IMode.color(getColor(memberIdx, j, picking));
-                IMode.vertex(tgt::vec2(vertices[j][0], vertices[j][1]));
-            }
-            IMode.end();
-
-            if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
-                size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
-                tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
-                tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
-                drawTimeStepSelection(memberIdx, selectedTimeStep, position, color);
-            }
-        }
+        renderEmbedding2D(picking);
         break;
-    }
     case 3:
-    {
-        // If using 3D visualisation, use camera interaction.
-        MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
-        MatStack.loadMatrix(camera_.get().getProjectionMatrix(outport_.getSize()));
-        MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
-        MatStack.loadMatrix(camera_.get().getViewMatrix());
-
-        tgt::vec3 scale = tgt::vec3::one;
-        if(scaleToMagnitude_.get()) {
-            // Scale each axis to it's eigenvalues size.
-            scale = tgt::vec3::fromPointer(&mdsData.eigenvalues_[0]);
-            scale /= tgt::vec3(mdsData.eigenvalues_[0]);
-        }
-
-        for (int memberIdx : renderingOrder_) {
-
-            glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
-
-            size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
-            const auto& vertices = mdsData.nVectors_.at(memberIdx);
-
-            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
-            for(size_t j=0; j<numTimeSteps; j++) {
-                IMode.color(getColor(memberIdx, j, picking));
-                IMode.vertex(tgt::vec3::fromPointer(&vertices[j][0]) * scale);
-            }
-            IMode.end();
-
-            if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
-                size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
-                tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
-                tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
-                drawTimeStepSelection(memberIdx, selectedTimeStep, position, color);
-            }
-        }
-
-        // restore matrices
-        MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
-        MatStack.loadIdentity();
-        MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
-        MatStack.loadIdentity();
+        renderEmbedding3D(picking);
         break;
-    }
     default:
         // No visualization available
         break;
     }
 }
 
-void SimilarityPlot::drawTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const {
+void SimilarityPlot::renderEmbedding1D(bool picking) {
+
+    // Retrieve dataset.
+    const EnsembleDataset* dataset = ensembleInport_.getData();
+
+    // Retrieve selected embedding.
+    const Embedding& embedding = embeddings_[renderedField_.getSelectedIndex()];
+
+    tgt::vec2 timeRange = tgt::vec2(dataset->getStartTime(), dataset->getEndTime());
+    if(renderTimeSelection_.get()) {
+        timeRange = selectedTimeStep_.get();
+    }
+
+    for(int memberIdx : renderingOrder_) {
+
+        glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
+
+        const EnsembleMember& member = dataset->getMembers()[memberIdx];
+        size_t numTimeSteps = member.getTimeSteps().size();
+        int eigenValueIdx = principleComponent_.get() - 1;
+        const auto& vertices = embedding.nVectors_.at(memberIdx);
+
+        // In case we have a single time step, we draw it across the whole range,
+        // since it doesn't change. This could (and should!) be improved, however,
+        // such that it becomes clear at which t the time step is recorded.
+        if(numTimeSteps == 1) {
+            IMode.begin(tgt::ImmediateMode::FAKE_LINES);
+            IMode.color(getColor(memberIdx, 0, picking));
+            const int segments = 40;
+            for(int i=0; i<segments; i+=2) {
+                float x0 = mapRange(i+0, 0, segments-1, -1.0f, 1.0f);
+                float x1 = mapRange(i+1, 0, segments-1, -1.0f, 1.0f);
+                IMode.vertex(tgt::vec2(x0, vertices[0][eigenValueIdx]));
+                IMode.vertex(tgt::vec2(x1, vertices[0][eigenValueIdx]));
+            }
+            IMode.end();
+        }
+        else {
+            IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
+            for (size_t j = 0; j < numTimeSteps; j++) {
+                float colorSaturation = 1.0f;
+                if(member.getTimeSteps()[j].getTime() < timeRange.x || member.getTimeSteps()[j].getTime() > timeRange.y) {
+                    colorSaturation = 0.25f;
+                }
+                float t = mapRange(member.getTimeSteps()[j].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
+                IMode.color(getColor(memberIdx, j, picking) * colorSaturation + tgt::vec3(1.0f - colorSaturation));
+                IMode.vertex(tgt::vec2(t, vertices[j][eigenValueIdx]));
+            }
+            IMode.end();
+        }
+
+        if(!picking) {
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
+            float x = mapRange(member.getTimeSteps()[selectedTimeStep].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
+            tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
+            tgt::vec3 color = tgt::vec3::one; // in 1D-case the selection is always white.!
+            renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
+        }
+    }
+
+    if(!picking && renderTimeSelection_.get()) {
+        tgt::vec2 mappedTimeRange = mapRange(selectedTimeStep_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
+
+        glLineWidth(3.0f);
+        IMode.color(tgt::vec3::zero);
+        IMode.begin(tgt::ImmediateMode::LINES);
+        IMode.vertex(tgt::vec2(mappedTimeRange.x, -1.0f));
+        IMode.vertex(tgt::vec2(mappedTimeRange.x,  1.0f));
+        IMode.vertex(tgt::vec2(mappedTimeRange.y, -1.0f));
+        IMode.vertex(tgt::vec2(mappedTimeRange.y,  1.0f));
+        IMode.end();
+    }
+}
+
+void SimilarityPlot::renderEmbedding2D(bool picking) {
+
+    // Retrieve dataset.
+    const EnsembleDataset* dataset = ensembleInport_.getData();
+
+    // Retrieve selected embedding.
+    const Embedding& embedding = embeddings_[renderedField_.getSelectedIndex()];
+
+    for (int memberIdx : renderingOrder_) {
+
+        glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
+
+        size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
+        const auto& vertices = embedding.nVectors_.at(memberIdx);
+
+        IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
+        for(size_t j=0; j<numTimeSteps; j++) {
+            IMode.color(getColor(memberIdx, j, picking));
+            IMode.vertex(tgt::vec2(vertices[j][0], vertices[j][1]));
+        }
+        IMode.end();
+
+        if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
+            tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
+            tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
+            renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
+        }
+    }
+}
+
+void SimilarityPlot::renderEmbedding3D(bool picking) {
+
+    // Retrieve dataset.
+    const EnsembleDataset* dataset = ensembleInport_.getData();
+
+    // Retrieve selected embedding.
+    const Embedding& embedding = embeddings_[renderedField_.getSelectedIndex()];
+
+    // If using 3D visualisation, use camera interaction.
+    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+    MatStack.loadMatrix(camera_.get().getProjectionMatrix(outport_.getSize()));
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    MatStack.loadMatrix(camera_.get().getViewMatrix());
+
+    tgt::vec3 scale = tgt::vec3::one;
+    if(scaleToMagnitude_.get()) {
+        // Scale each axis to it's eigenvalues size.
+        scale = tgt::vec3::fromPointer(&embedding.eigenvalues_[0]);
+        scale /= tgt::vec3(embedding.eigenvalues_[0]);
+    }
+
+    for (int memberIdx : renderingOrder_) {
+
+        glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
+
+        size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
+        const auto& vertices = embedding.nVectors_.at(memberIdx);
+
+        IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
+        for(size_t j=0; j<numTimeSteps; j++) {
+            IMode.color(getColor(memberIdx, j, picking));
+            IMode.vertex(tgt::vec3::fromPointer(&vertices[j][0]) * scale);
+        }
+        IMode.end();
+
+        if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
+            tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
+            tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
+            renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
+        }
+    }
+
+    // restore matrices
+    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+    MatStack.loadIdentity();
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    MatStack.loadIdentity();
+}
+
+void SimilarityPlot::renderTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const {
 
     // Skip rendering, if not visible anyways.
     if(sphereRadius_.get() <= std::numeric_limits<float>::epsilon())
@@ -822,7 +838,7 @@ void SimilarityPlot::onEvent(tgt::Event* e) {
 void SimilarityPlot::adjustToEnsemble() {
 
     ensembleHash_.clear();
-    mdsData_.clear();
+    embeddings_.clear();
     subSelection_.clear();
     renderedField_.setOptions(std::deque<Option<std::string>>());
     renderedMembers_.reset();
@@ -830,15 +846,17 @@ void SimilarityPlot::adjustToEnsemble() {
     referenceMember_.reset();
     calculateButton_.setReadOnlyFlag(true);
 
-    if (!ensembleInport_.isReady())
-        return;
-
+    // Check for data set.
     const EnsembleDataset* dataset = ensembleInport_.getData();
-
-    if (!similarityMatrixInport_.isReady())
+    if (!dataset)
         return;
 
+    // Check for similarity matrices.
     const SimilarityMatrixList* similarityMatrices = similarityMatrixInport_.getData();
+    if (!similarityMatrices)
+        return;
+
+    // Check if both match.
     if(EnsembleHash(*dataset).getHash() != similarityMatrices->getHash())
         return;
 
@@ -872,17 +890,17 @@ void SimilarityPlot::adjustToEnsemble() {
 
     // Try to load plot data, if already set.
     if(!loadFileDialog_.get().empty()) {
-        load();
+        loadEmbeddings();
     }
 
     calculateButton_.setReadOnlyFlag(false);
 
     if (autoCalculate_.get()) {
-        calculate();
+        createEmbeddings();
     }
 }
 
-void SimilarityPlot::calculate() {
+void SimilarityPlot::createEmbeddings() {
 
     if(subSelection_.empty()) {
         LERROR("No member selected");
@@ -891,10 +909,10 @@ void SimilarityPlot::calculate() {
 
     size_t numMembers = ensembleInport_.getData()->getMembers().size();
     if(subSelection_.size() == numMembers) {
-        LINFO("Calculating for whole data");
+        LINFO("Calculating for whole data set..");
     }
     else {
-        LINFO("Calculating for subset");
+        LINFO("Calculating for subset..");
     }
 
     std::vector<std::string> names;
@@ -904,7 +922,7 @@ void SimilarityPlot::calculate() {
 
     calculateButton_.setReadOnlyFlag(true);
     ensembleHash_.clear();
-    mdsData_.clear();
+    embeddings_.clear();
 
     const SimilarityMatrixList* matrices = similarityMatrixInport_.getData();
     std::vector<std::string> fieldNames = matrices->getFieldNames();
@@ -913,76 +931,78 @@ void SimilarityPlot::calculate() {
     for (size_t i=0; i<fieldNames.size(); i++) {
         SubtaskProgressReporter progressReporter(*this, tgt::vec2(i, i+1) / tgt::vec2(fieldNames.size()));
 
-        // Get distance matrix.
+        // Get distance matrix for current field.
         const SimilarityMatrix& distanceMatrix = matrices->getSimilarityMatrix(fieldNames[i]);
 
         // Compute Principal components and corresponding eigenvectors.
-        MDSData mdsData = computeFromDM(distanceMatrix, progressReporter);
+        Embedding embedding = createEmbedding(distanceMatrix, progressReporter);
 
         // Add member name.
-        mdsData.names_ = names;
+        embedding.names_ = names;
 
         // Add the result.
-        mdsData_.push_back(std::move(mdsData));
+        embeddings_.emplace_back(std::move(embedding));
     }
 
     // Finally, output eigen values to allow an eigen value analysis.
     outputEigenValues();
-    setProgress(1.0f);
 
     // Update rendering order.
     renderedMembers_.setSelectedRowIndices(std::vector<int>(subSelection_.rbegin(), subSelection_.rend()));
     //renderingOrder_.assign(subSelection_.rbegin(), subSelection_.rend());
 
+    // Update hash.
     ensembleHash_ = EnsembleHash(*ensembleInport_.getData()).getHash();
+
+    // Done.
     calculateButton_.setReadOnlyFlag(false);
+    setProgress(1.0f);
     invalidate();
 }
 
-SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& DistanceMatrix, ProgressReporter& progressReporter, float epsilon) const {
+SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix& distanceMatrix, ProgressReporter& progressReporter, float epsilon) const {
     using namespace Eigen;
+
+    progressReporter.setProgress(0.1f);
 
     const std::vector<EnsembleMember>& members = ensembleInport_.getData()->getMembers();
 
-    const size_t dimNum = numEigenvalues_.get();
-    const int iterNum = numIterations_.get();
-    const size_t membersNum = members.size();
+    const size_t numDimensions = numEigenvalues_.get();
+    const int numIterations = numIterations_.get();
+    const size_t numMembers = members.size();
 
-    MDSData result;
+    Embedding embedding;
 
-    size_t PointsNumber = 0;
+    size_t numPoints = 0;
     for(int memberIdx : subSelection_) {
         size_t numTimeSteps = members[memberIdx].getTimeSteps().size();
-        PointsNumber += numTimeSteps;
-        result.nVectors_[memberIdx] = std::vector<std::vector<float>>(numTimeSteps, std::vector<float>(dimNum, 0.0f));
+        numPoints += numTimeSteps;
+        embedding.nVectors_[memberIdx] = std::vector<std::vector<float>>(numTimeSteps, std::vector<float>(numDimensions, 0.0f));
     }
 
-    MatrixXf Result(PointsNumber, dimNum);
-    MatrixXf EigSq = MatrixXf::Zero(dimNum, dimNum);
-    MatrixXf PMatrix(PointsNumber, PointsNumber);
+    MatrixXf result(numPoints, numDimensions);
+    MatrixXf EigSq = MatrixXf::Zero(numDimensions, numDimensions);
+    MatrixXf PMatrix(numPoints, numPoints);
 
     // Init datastructures.
     size_t offsetA = 0;
     size_t positionA = 0;
 
     // Iterate each member, call it A.
-    for(size_t memberIdxA=0; memberIdxA<membersNum; memberIdxA++) {
+    for(size_t memberIdxA=0; memberIdxA < numMembers; memberIdxA++) {
         size_t offsetB = 0;
         size_t positionB = 0;
         size_t numTimeStepsA = members[memberIdxA].getTimeSteps().size();
-        if(subSelection_.count(memberIdxA) != 0) {
+        if(subSelection_.count(memberIdxA) != 0) { // Do we consider member A?
             // Again iterate each member, call it B. Now looking at pairs of member A and B.
             for(size_t memberIdxB=0; memberIdxB<=memberIdxA; memberIdxB++) {
                 size_t numTimeStepsB = members[memberIdxB].getTimeSteps().size();
-                if (subSelection_.count(memberIdxB) != 0) {
+                if (subSelection_.count(memberIdxB) != 0) { // Do we consider member B?
                     // Iterate time steps of member A.
                     for (size_t i = 0; i < numTimeStepsA; i++) {
                         // Iterate time steps of member B.
                         for (size_t j = 0; j < numTimeStepsB; j++) {
-//                            if(memberIdxA == memberIdxB && j < i){
-//                                continue;
-//                            }
-                            float v = DistanceMatrix(i + offsetA, j + offsetB);
+                            float v = distanceMatrix(i + offsetA, j + offsetB);
                             PMatrix(i + positionA, j + positionB) = PMatrix(j + positionB, i + positionA) = v * v;
                         }
                     }
@@ -995,77 +1015,79 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
         offsetA+=numTimeStepsA;
     }
 
-    MatrixXf JMatrix = MatrixXf::Identity (PointsNumber, PointsNumber) -
-              (1.0f / PointsNumber) * MatrixXf::Ones (PointsNumber, PointsNumber);
+    MatrixXf JMatrix = MatrixXf::Identity (numPoints, numPoints) -
+                       (1.0f / numPoints) * MatrixXf::Ones (numPoints, numPoints);
 
     MatrixXf BMatrix = -0.5f*JMatrix*PMatrix*JMatrix;
 
-    VectorXf TempVector(PointsNumber);
-    VectorXf* EVectors = new VectorXf[dimNum];
+    VectorXf* EigenVectors = new VectorXf[numDimensions];
 
     progressReporter.setProgress(0.1f);
-    for(size_t i=0; i<dimNum; i++) {
+    for(size_t i=0; i < numDimensions; i++) {
 
-        VectorXf& EVector = EVectors[i];
-        EVector = VectorXf::Ones(PointsNumber);
-        float EValue = 0.0;
+        VectorXf& EigenVector = EigenVectors[i];
+        EigenVector = VectorXf::Ones(numPoints);
+        float EigenValue = 0.0;
 
-        VectorXf PrVector = VectorXf::Zero(PointsNumber);
-        VectorXf TVector = VectorXf::Ones(PointsNumber);
+        VectorXf PrVector = VectorXf::Zero(numPoints);
+        VectorXf TVector = VectorXf::Ones(numPoints);
 
         int iter = 0;
 
-        MatrixXf EMVector(PointsNumber, 1);
+        MatrixXf EMVector(numPoints, 1);
 
-        while (iter < iterNum && TVector.norm() > epsilon) {
+        while (iter < numIterations && TVector.norm() > epsilon) {
 
-            EMVector.col(0) = EVector;
-            TempVector = BMatrix * EMVector;
-            EVector = TempVector;
+            EMVector.col(0) = EigenVector;
+            VectorXf TempVector = BMatrix * EMVector;
+            EigenVector = TempVector;
             for(size_t j=0; j < i; j++)
-                EVector -= EVectors[j] * (EVectors[j].dot(TempVector));
-            EValue = EVector.norm();
-            EVector.normalize();
-            TVector = EVector - PrVector;
-            PrVector = EVector;
+                EigenVector -= EigenVectors[j] * (EigenVectors[j].dot(TempVector));
+            EigenValue = EigenVector.norm();
+            EigenVector.normalize();
+            TVector = EigenVector - PrVector;
+            PrVector = EigenVector;
             iter++;
         }
 
-        EMVector.col(0) = EVector;
+        EMVector.col(0) = EigenVector;
 
         // Don't continue calculating when eigenvalues get too small in relation to biggest eigenvalue.
-        if(i >= static_cast<size_t>(numDimensions_.get()) && EValue < result.eigenvalues_[0] * EIGENVALUE_RELATIVE_THRESHOLD)
+        if(i >= static_cast<size_t>(numDimensions_.get()) && // We do have calculated at least as many PCs as we want to display.
+                (EigenValue < embedding.eigenvalues_[0] * EIGENVALUE_RELATIVE_THRESHOLD) || // EV is insignificant compared to first EV.
+                EigenValue < std::numeric_limits<float>::epsilon() || // Eigenvalue is de-facto zero.
+                (i > 0 && EigenValue > embedding.eigenvalues_[i-1])) // EV must not be larger than predecessor.
             break;
 
-        Result.col(i) = EVector;
-        EigSq(i, i) = std::sqrt(EValue);
-        result.eigenvalues_.push_back(EValue);
+        result.col(i) = EigenVector;
+        EigSq(i, i) = std::sqrt(EigenValue);
+        embedding.eigenvalues_.push_back(EigenValue);
 
-        progressReporter.setProgress(0.1f + 0.8f*i/dimNum);
+        progressReporter.setProgress(0.1f + 0.8f * i / numDimensions);
     }
-    delete [] EVectors;
+    delete [] EigenVectors;
 
     // Now get the resulting matrix.
-    Result = Result*EigSq;
+    result = result * EigSq;
 
-    for (size_t i=0; i<result.eigenvalues_.size(); i++) {
+    for (size_t i=0; i < embedding.eigenvalues_.size(); i++) {
 
-        float MaxValue = Result(0, i);
-        float MinValue = Result(0, i);
+        float maxValue = result(0, i);
+        float minValue = result(0, i);
 
-        for (size_t j=1; j<PointsNumber; j++) {
-            if (MaxValue < Result(j, i))
-                MaxValue = Result(j, i);
-            else if (MinValue > Result(j, i))
-                MinValue = Result(j, i);
+        for (size_t j=1; j < numPoints; j++) {
+            if (maxValue < result(j, i))
+                maxValue = result(j, i);
+            else if (minValue > result(j, i))
+                minValue = result(j, i);
         }
 
         // Interpret as member and time steps.
         size_t j=0;
         for (int memberIdx : subSelection_) {
             for(size_t t=0; t<members[memberIdx].getTimeSteps().size(); t++) {
-                float value = mapRange(Result(j, i), MinValue, MaxValue, -1.0f, 1.0f);
-                result.nVectors_[memberIdx][t][i] = value;
+                float value = mapRange(result(j, i), minValue, maxValue, -1.0f, 1.0f);
+                embedding.nVectors_[memberIdx][t][i] = value;
                 j++;
             }
         }
@@ -1073,12 +1095,12 @@ SimilarityPlot::MDSData SimilarityPlot::computeFromDM(const SimilarityMatrix& Di
 
     progressReporter.setProgress(1.0f);
 
-    return result;
+    return embedding;
 }
 
 void SimilarityPlot::outputEigenValues() {
 
-    if (mdsData_.empty()) {
+    if (embeddings_.empty()) {
         eigenValueOutport_.setData(nullptr);
         return;
     }
@@ -1088,11 +1110,11 @@ void SimilarityPlot::outputEigenValues() {
     data->setColumnLabel(0, "Index");
     data->setColumnLabel(1, "Eigenvalue");
 
-    const MDSData& mdsData = mdsData_[renderedField_.getSelectedIndex()];
-    for(size_t i = 0; i < mdsData.eigenvalues_.size(); i++) {
+    const Embedding& embedding = embeddings_[renderedField_.getSelectedIndex()];
+    for(size_t i = 0; i < embedding.eigenvalues_.size(); i++) {
         std::vector<PlotCellValue> values;
         values.push_back(PlotCellValue(i+1));
-        values.push_back(PlotCellValue(static_cast<plot_t>(mdsData.eigenvalues_[i])));
+        values.push_back(PlotCellValue(static_cast<plot_t>(embedding.eigenvalues_[i])));
         data->insert(values);
     }
     eigenValueOutport_.setData(data, true);
@@ -1101,25 +1123,25 @@ void SimilarityPlot::outputEigenValues() {
 void SimilarityPlot::renderedMembersChanged() {
     renderingOrder_.clear();
 
-    if(mdsData_.empty())
+    if(embeddings_.empty())
         return;
 
     for(int memberIdx : renderedMembers_.getSelectedRowIndices()) {
         // The first field is representative for all fields here.
-        // We just want to check if the mds data was calculated for the member.
-        if(mdsData_.front().nVectors_.count(memberIdx)) {
+        // We just want to check if the embedding was already calculated for the member.
+        if(embeddings_.front().nVectors_.count(memberIdx)) {
             renderingOrder_.push_back(memberIdx);
         }
     }
 }
 
-void SimilarityPlot::save() {
+void SimilarityPlot::saveEmbeddings() {
     if (saveFileDialog_.get().empty()) {
         LWARNING("no filename specified");
         return;
     }
-    if(mdsData_.empty()) {
-        LWARNING("No projection calculated.");
+    if(embeddings_.empty()) {
+        LWARNING("No embeddings calculated.");
         return;
     }
 
@@ -1127,12 +1149,12 @@ void SimilarityPlot::save() {
     try {
         std::ofstream outFile;
         outFile.open(saveFileDialog_.get().c_str());
-        LINFO("Writing mds to file " << saveFileDialog_.get());
+        LINFO("Writing embeddings to file " << saveFileDialog_.get());
 
         JsonSerializer s;
         Serializer serializer(s);
         serializer.serialize("hash", ensembleHash_);
-        serializer.serialize("mds_data", mdsData_);
+        serializer.serialize("embeddings", embeddings_);
         s.write(outFile, true);
 
         outFile.close();
@@ -1145,7 +1167,7 @@ void SimilarityPlot::save() {
     }
 }
 
-void SimilarityPlot::load() {
+void SimilarityPlot::loadEmbeddings() {
     if (loadFileDialog_.get().empty()) {
         LWARNING("no filename specified");
         return;
@@ -1166,14 +1188,14 @@ void SimilarityPlot::load() {
         deserializer.deserialize("hash", ensembleHash_);
         if (ensembleHash_ != EnsembleHash(*ensembleInport_.getData()).getHash())
             throw VoreenException("The plot was probably not generated by the currently loaded ensemble dataset");
-        deserializer.deserialize("mds_data", mdsData_);
+        deserializer.deserialize("embeddings", embeddings_);
 
         inFile.close();
         outputEigenValues();
-        LINFO("Reading mds plot vectors from file " << absPath << " was successful");
+        LINFO("Reading embeddings from file " << absPath << " was successful");
     }
     catch(tgt::Exception& e) {
-        VoreenApplication::app()->showMessageBox("loading MDS Plot failed", e.what(), true);
+        VoreenApplication::app()->showMessageBox("loading embeddings failed", e.what(), true);
         LERROR(e.what());
         loadFileDialog_.set("");
     }

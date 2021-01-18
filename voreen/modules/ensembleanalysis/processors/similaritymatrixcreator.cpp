@@ -84,13 +84,14 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     multiChannelSimilarityMeasure_.addOption("jiang", "Jiang", MEASURE_JIANG);
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
     multiChannelSimilarityMeasure_.addOption("split_channels", "Split Channels", MEASURE_SPLIT_CHANNELS);
-    multiChannelSimilarityMeasure_.addOption("vector_difference_magnitude", "Magnitude of Vector Difference", MEASURE_VECTOR_DIFFERENCE_MAGNITUDE);
-    multiChannelSimilarityMeasure_.set("vector_difference_magnitude");
+    multiChannelSimilarityMeasure_.addOption("euclidean_norm", "Euclidean norm", MEASURE_EUCLIDEAN_NORM);
+    multiChannelSimilarityMeasure_.set("euclidean_norm");
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
         weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_JIANG);
     });
 
     addProperty(weight_);
+    weight_.setVisibleFlag(false);
 
     addProperty(numSeedPoints_);
     addProperty(seedTime_);
@@ -553,7 +554,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 statistics.addSample(0.0f);
                             }
                         }
-                        else if(input.multiChannelSimilarityMeasure == MEASURE_VECTOR_DIFFERENCE_MAGNITUDE) {
+                        else if(input.multiChannelSimilarityMeasure == MEASURE_EUCLIDEAN_NORM) {
                             statistics.addSample(tgt::length(vector_i - vector_j) / (2*valueRange.y));
                         }
                     }
@@ -562,9 +563,6 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     //DistanceMatrix(i, j) = statistics.getMedian(); // Needs collecting samples enabled
                     //DistanceMatrix(i, j) = statistics.getRelStdDev();
                 }
-
-                // Copy to other side of diagonal.
-                distanceMatrix(j, i) = distanceMatrix(i, j);
             }
 
 

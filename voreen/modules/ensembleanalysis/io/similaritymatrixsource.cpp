@@ -38,7 +38,7 @@ SimilarityMatrixSource::SimilarityMatrixSource()
     // ports
     , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
     // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
+    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "Voreen Similarity Matrix (*.vsm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
     , loadButton_("loadButton", "Load", INVALID_PATH)
     // members
     , loadSimilarityMatrix_(true)
