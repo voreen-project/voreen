@@ -104,13 +104,12 @@ Processor* VolumeCombine::create() const {
 }
 
 bool VolumeCombine::isReady() const {
-    bool ready = false;
-    if(combineFunction_.getValue() == OP_TAKE_FIRST) {
+    if(pipeThroughIfSecondNotReady_.get()) {
+        return inportFirst_.isReady();
+    } else if(combineFunction_.getValue() == OP_TAKE_FIRST) {
         return inportFirst_.isReady();
     } else if(combineFunction_.getValue() == OP_TAKE_SECOND) {
         return inportSecond_.isReady();
-    } else if(pipeThroughIfSecondNotReady_.get()) {
-        return inportFirst_.isReady();
     } else {
         return inportFirst_.isReady() && inportSecond_.isReady();
     }
