@@ -120,6 +120,8 @@ public:
                 "This is the original implementation of the algorithm described in \"Scalable Robust Graph and Feature Extraction for Arbitrary Vessel Networks in Volumetric Datasets\" by Drees et al. "
                 "The resulting VesselGraph can be rendered using <b>VesselGraphRenderer</b> or exported using <b>VesselGraphGlobalStats</b> or <b>VesselGraphSave</b>. "
                 "The centerlines of the graph can be extracted using a <b>VesselGraphCenterlineConverter</b>."
+                "<br><br>"
+                "This processor implements the algorithm described in the article <b>Scalable Robust Graph and Feature Extraction for Arbitrary Vessel Networks in Large Volumetric Datasets</b> (Drees et al.), which you are kindly asked to cite if you find it useful in your research."
                 );
         binarizationThresholdSegmentation_.setDescription("Values above this threshold will be considered foreground, others background. If the input volume is not binary already, this property can therefore be used for thresholding.");
         numRefinementIterations_.setDescription("Maximum number of refinement iterations. Note that this value can generally be set to a very high value as the computation is interrupted automatically once a fixed point is reached, i.e., when the refinement does not make progress anymore.");
