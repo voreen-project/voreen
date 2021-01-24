@@ -5,7 +5,7 @@
 # standard modules without external dependencies (enabled by default)
 OPTION(VRN_MODULE_BASE                              "Provides basic rendering and data processing functionality"                                ON )
 OPTION(VRN_MODULE_CONNEXE                           "Connected component analysis using the Connexe library"                                    ON )
-OPTION(VRN_MODULE_ENSEMBLEANALYSIS                  "Provices visualization and analysis tools for spatio-temporal multi-field ensembles"       ON )
+OPTION(VRN_MODULE_ENSEMBLEANALYSIS                  "Provides visualization and analysis tools for spatio-temporal multi-field ensembles"       ON )
 OPTION(VRN_MODULE_EXPERIMENTAL                      "Provides experimental code not yet ready for productive use"                               OFF)
 OPTION(VRN_MODULE_FLOWANALYSIS                      "Provides flow field visualization and analysis techniques"                                 ON )
 OPTION(VRN_MODULE_PLOTTING                          "Provides plotting components"                                                              ON )
