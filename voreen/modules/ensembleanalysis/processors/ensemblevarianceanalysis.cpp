@@ -87,11 +87,11 @@ EnsembleVarianceAnalysisInput EnsembleVarianceAnalysis::prepareComputeInput() {
 
     const VolumeBase* meanVolume = ensembleMeanPort_.getData();
     if(!meanVolume) {
-        throw InvalidInputException("No reference volume", InvalidInputException::S_ERROR);
+        throw InvalidInputException("No mean volume", InvalidInputException::S_ERROR);
     }
 
     if(ensemble->getNumChannels(selectedField_.get()) != meanVolume->getNumChannels()) {
-        throw InvalidInputException("Reference Volume channel count is different from selected field", InvalidInputException::S_ERROR);
+        throw InvalidInputException("Mean Volume channel count is different from selected field", InvalidInputException::S_ERROR);
     }
 
     if(ensemble->getNumChannels(selectedField_.get()) > 4) {
@@ -115,14 +115,14 @@ EnsembleVarianceAnalysisInput EnsembleVarianceAnalysis::prepareComputeInput() {
 EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianceAnalysisInput input, ProgressReporter& progress) const {
 
     auto ensemble = std::move(input.ensemble);
-    const std::string& field = input.field;
+    std::string field = std::move(input.field);
     const size_t numMembers = ensemble->getMembers().size();
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM_Float> output = std::move(input.outputVolume);
     const tgt::svec3 dims = output->getDimensions();
 
     VolumeRAMRepresentationLock meanVolume(input.meanVolume);
-    tgt::mat4 refVoxelToWorld = input.meanVolume->getVoxelToWorldMatrix();
+    tgt::mat4 meanVoxelToWorld = input.meanVolume->getVoxelToWorldMatrix();
 
     for (size_t r = 0; r < numMembers; r++) {
         size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
@@ -137,7 +137,7 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
                 for (pos.x = 0; pos.x < dims.x; ++pos.x) {
 
                     // Transform sample into world space.
-                    tgt::vec3 sample = refVoxelToWorld * tgt::vec3(pos);
+                    tgt::vec3 sample = meanVoxelToWorld * tgt::vec3(pos);
 
                     // Ignore, if out of bounds.
                     if(!bounds.containsPoint(sample)) {
@@ -158,15 +158,15 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
                     }
                     else if(input.vectorComponent == MAGNITUDE) {
                         float lengthSqCurrent = 0.0f;
-                        float lengthSqReference = 0.0f;
+                        float lengthSqMean = 0.0f;
                         for (size_t channel = 0; channel < numChannels; channel++) {
                             float value = lock->getVoxelNormalized(sample, channel);
                             lengthSqCurrent += value * value;
 
                             value = meanVolume->getVoxelNormalized(sample, channel);
-                            lengthSqReference += value * value;
+                            lengthSqMean += value * value;
                         }
-                        float magnitude = std::abs(std::sqrt(lengthSqCurrent) - std::sqrt(lengthSqReference));
+                        float magnitude = std::abs(std::sqrt(lengthSqCurrent) - std::sqrt(lengthSqMean));
                         output->voxel(pos) += magnitude;
                     }
                     else if(input.vectorComponent == DIRECTION) {
@@ -204,8 +204,8 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
     }
 
     std::unique_ptr<Volume> volume(new Volume(output.release(), input.meanVolume->getSpacing(), input.meanVolume->getOffset()));
-    volume->setMetaDataValue<FloatMetaData>("time", input.time);
-    volume->setMetaDataValue<StringMetaData>("field", field);
+    volume->setTimestep(input.time);
+    volume->setModality(Modality(field));
 
     progress.setProgress(1.0f);
 

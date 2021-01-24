@@ -40,7 +40,7 @@ EnsembleMeanCreator::EnsembleMeanCreator()
     , selectedField_("selectedField", "Selected Field")
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
     , sampleRegion_("sampleRegion", "Sample Region")
-    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(1), tgt::ivec3(1000))
+    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(2), tgt::ivec3(1000))
 {
     // Ports
     addPort(inport_);
@@ -65,7 +65,7 @@ EnsembleMeanCreatorInput EnsembleMeanCreator::prepareComputeInput() {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
-    // Get required information about reference volume format.
+    // Get required information about mean volume format.
     tgt::ivec3 newDims = outputDimensions_.get();
     size_t numChannels = ensemble->getNumChannels(selectedField_.get());
     const std::string& baseType = ensemble->getBaseType(selectedField_.get());
@@ -103,7 +103,7 @@ EnsembleMeanCreatorOutput EnsembleMeanCreator::compute(EnsembleMeanCreatorInput 
 
     auto ensemble = std::move(input.ensemble);
     const tgt::Bounds& bounds = input.bounds;
-    const std::string& field = input.field;
+    std::string field = std::move(input.field);
     const size_t numMembers = ensemble->getMembers().size();
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM> output = std::move(input.outputVolume);
@@ -144,8 +144,8 @@ EnsembleMeanCreatorOutput EnsembleMeanCreator::compute(EnsembleMeanCreatorInput 
 
     tgt::vec3 spacing = bounds.diagonal() / tgt::vec3(newDims);
     std::unique_ptr<Volume> volume(new Volume(output.release(), spacing, bounds.getLLF()));
-    volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
-    volume->getMetaDataContainer().addMetaData("field", new StringMetaData(field));
+    volume->setTimestep(input.time);
+    volume->setModality(Modality(field));
 
     progress.setProgress(1.0f);
 

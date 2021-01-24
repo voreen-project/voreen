@@ -42,8 +42,6 @@ struct EnsembleMeanCreatorInput {
     tgt::Bounds bounds;
     std::string field;
     float time;
-    std::string referenceMethod;
-    size_t referenceMember;
 };
 
 struct EnsembleMeanCreatorOutput {
@@ -69,8 +67,6 @@ protected:
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
-
-protected:
 
     virtual void setDescriptions() {
         setDescription("Creates a mean volume from the input ensemble for a selected time step and field.");

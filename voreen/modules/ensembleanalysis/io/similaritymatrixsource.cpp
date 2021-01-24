@@ -85,7 +85,7 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
         s.deserialize("similarity", *similarityMatrices);
         outport_.setData(similarityMatrices.release(), true);
         LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
+    } catch(tgt::Exception& e) {
         LERROR(e.what());
         filenameProp_.set("");
     }

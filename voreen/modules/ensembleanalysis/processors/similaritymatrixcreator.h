@@ -72,6 +72,9 @@ struct SimilarityMatrixCreatorOutput {
  * of all time steps of its members.
  */
 class VRN_CORE_API SimilarityMatrixCreator : public AsyncComputeProcessor<SimilarityMatrixCreatorInput, SimilarityMatrixCreatorOutput> {
+    // Missing values (due to out of bounds sampling, volume could not be loaded) are filled by the following value.
+    // TODO: this should either be adjustable by property or handled differently.
+    static constexpr float MissingValue = 0.0f;
 public:
     SimilarityMatrixCreator();
 
@@ -104,7 +107,7 @@ protected:
                                                       "<strong>Jiang</strong>: Uses the vector similarity introduced by Jiang et al.<br>"
                                                       "<strong>Crossproduct Magnitude</strong>: Calculates the cross product magnitude of two vectors<br>"
                                                       "<strong>Split Channels</strong>: Treats each channel as separate scalar field and applies the generalized field similarity by Fofonov et al.<br>"
-                                                      "<strong>Magnitude of Vector Difference</strong>: Uses the magnitude of the difference between two vectors");
+                                                      "<strong>Euclidean Norm</strong>: Uses the magnitude of the difference between two vectors");
         weight_.setDescription("Defines the weights between magnitude and direction used by similarity measure of Jiang et al.");
         numSeedPoints_.setDescription("Number of seeds to define a Monte Carlo sampling");
         seedTime_.setDescription("Allows to use a fixed seed");

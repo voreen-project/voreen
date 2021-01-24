@@ -163,11 +163,15 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         }
     }
 
+    tgt::Bounds bounds = ensemble->getCommonBounds();
+    if(!bounds.isDefined()) {
+        throw InvalidInputException("Bounding box is empty", InvalidInputException::S_ERROR);
+    }
+
     // Set up random generator.
     std::function<float()> rnd(
             std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
-    tgt::Bounds bounds = ensemble->getCommonBounds();
     const VolumeBase* seedMask = seedMask_.getThreadSafeData();
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
     std::vector<tgt::vec3> seedPoints;
@@ -179,12 +183,6 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
         }
 
         VolumeRAMRepresentationLock seedMaskLock(seedMask);
-
-        VolumeMinMax* vmm = seedMask->getDerivedData<VolumeMinMax>();
-        if(vmm->getMinNormalized() == 0.0f && vmm->getMaxNormalized() == 0.0f) {
-            throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
-        }
-
         tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
         tgt::svec3 dim = seedMaskLock->getDimensions();
         for(size_t z=0; z < dim.z; z++) {
@@ -269,9 +267,11 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #ifdef USE_MEMORY_MAPPED_FILES
         std::unique_ptr<DiskArrayStorage<float>> flagStorage;
         DiskArray<float> Flags;
+        auto storeValue = [&] (float value) { flagStorage->storeElement(value); };
 #else
         std::vector<float> Flags;
         Flags.reserve(numElements);
+        auto storeValue = [&] (float value) { Flags.push_back(value); };
 #endif
 
         std::string tmpPath =  VoreenApplication::app()->getUniqueTmpFilePath();
@@ -305,34 +305,48 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
             flagStorage.reset(new DiskArrayStorage<float>(tmpPath));
 #endif
 
-            SubtaskProgressReporter memberProgressReporter(progress, tgt::vec2(fi, 0.7f * (fi + 1)) / tgt::vec2(fieldNames.size()));
+            SubtaskProgressReporter memberProgressReporter(progress, tgt::vec2(fi, fi+0.7f) / tgt::vec2(fieldNames.size()));
             float progressPerTimeStep = 1.0f / (input.ensemble->getTotalNumTimeSteps());
             size_t index = 0;
             for (const EnsembleMember& member : input.ensemble->getMembers()) {
                 for (const TimeStep& timeStep : member.getTimeSteps()) {
 
                     const VolumeBase* volume = timeStep.getVolume(fieldName);
+                    if(!volume) {
+                        LERROR("Could not load volume " << timeStep.getURL(fieldName).getURL() << ". Filling with " << MissingValue);
+                        size_t numMissingValues = seedPoints.size() * numChannels;
+                        for(size_t i=0; i<numMissingValues; i++) {
+                            storeValue(MissingValue);
+                        }
+                        continue;
+                    }
+
+                    tgt::Bounds bounds = volume->getBoundingBox().getBoundingBox();
                     tgt::mat4 worldToVoxelMatrix = volume->getWorldToVoxelMatrix();
                     RealWorldMapping rwm = volume->getRealWorldMapping();
 
                     VolumeRAMRepresentationLock lock(volume);
                     for (const tgt::vec3& seedPoint : seedPoints) {
+
+                        // Skip points outside bounds.
+                        if(!bounds.containsPoint(seedPoint)) {
+                            for (size_t channel = 0; channel < numChannels; channel++) {
+                                storeValue(MissingValue);
+                            }
+                            continue;
+                        }
+
                         tgt::vec3 pos = worldToVoxelMatrix * seedPoint;
                         for (size_t channel = 0; channel < numChannels; channel++) {
                             float value = lock->getVoxelNormalizedLinear(pos, channel);
                             value = rwm.normalizedToRealWorld(value);
-
-#ifdef USE_MEMORY_MAPPED_FILES
-                            flagStorage->storeElement(value);
-#else
-                            Flags.push_back(value);
-#endif
+                            storeValue(value);
                         }
                     }
 
                     // Update progress.
-                    memberProgressReporter.setProgress(index * progressPerTimeStep);
                     index++;
+                    memberProgressReporter.setProgress(index * progressPerTimeStep);
                 }
             }
 
@@ -372,7 +386,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         SimilarityMatrix& distanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
         long size = static_cast<long>(distanceMatrix.getSize());
 
-        SubtaskProgressReporter flagsProgress(progress,tgt::vec2(0.7f*(fi+1), (fi+1)) / tgt::vec2(fieldNames.size()));
+        SubtaskProgressReporter flagsProgress(progress,tgt::vec2((fi+0.7f), (fi+1.0f)) / tgt::vec2(fieldNames.size()));
         ThreadedTaskProgressReporter threadedProgress(flagsProgress, size);
         bool aborted = false;
 
