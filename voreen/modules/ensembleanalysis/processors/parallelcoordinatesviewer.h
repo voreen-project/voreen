@@ -57,8 +57,8 @@ private:
         _propertySelectedTimestep.setDescription("If all Time Steps are visualized, this property determines<br>"
                                                  "the field to be displayed");
         _propertyDensityBlending.setDescription("Enable to use a density visualization for rendered lines");
-        //_propertyDensityVisibleSamples.setDescription("Determines the mini");
-        //_propertyDensitySelectedSamples.setDescription("");
+        _propertyDensityVisibleSamples.setDescription("Adjust this property to enhance line density contrast of visible samples");
+        _propertyDensitySelectedSamples.setDescription("Adjust this property to enhance line density contrast of selected samples");
 
         _propertyTransFuncField.front().setDescription("Assigns the respective transfer function to the selected field");
         _propertyTransFunc.front().setDescription("Transfer function to be used for the selected field");
@@ -67,6 +67,9 @@ private:
     virtual void initialize() override;
     virtual void deinitialize() override;
     virtual void process() override;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 
     void onNewInportData();
     void onHoverEvent( tgt::MouseEvent* event );
@@ -78,8 +81,8 @@ private:
     float screenAxisToCoordinate( size_t axis ) const;
 
     // Ports
-    RenderPort _renderport;
     ParallelCoordinatesAxesPort _axesport;
+    RenderPort _renderport;
 
     // Event Properties
     std::unique_ptr<EventProperty<ParallelCoordinatesViewer>> _eventPropertyHover, _eventPropertyMouse;
@@ -111,8 +114,8 @@ private:
     // Interaction Data
     enum class Interaction { eNone, eMoving, eSelection } _interaction = Interaction::eNone;
     size_t _hoveredScreenAxis = ~0u;
-    std::pair<float, float> _activeSection;
-    std::vector<std::list<std::pair<float, float>>> _sections;
+    tgt::vec2 _activeSection;
+    std::vector<std::list<tgt::vec2>> _sections;
     std::vector<bool> _samplesVisiblity;
     std::vector<int> _samplesSelection;
 

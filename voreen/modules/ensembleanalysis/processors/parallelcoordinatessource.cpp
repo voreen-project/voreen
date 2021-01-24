@@ -30,7 +30,7 @@ namespace voreen {
 ParallelCoordinatesSource::ParallelCoordinatesSource()
     : Processor()
     , _outport( Port::OUTPORT, "outport", "Parallel Coordinates Axes" )
-    , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Parallel Coordinates (*.pc)", FileDialogProperty::OPEN_FILE, Processor::VALID )
+    , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::OPEN_FILE, Processor::VALID )
     , _propertyLoadButton( "property_load_button", "Load" )
 {
     this->addPort( _outport );

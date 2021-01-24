@@ -32,17 +32,27 @@
 namespace voreen {
 
 struct ParallelCoordinatesSectionsPropertyData {
+    std::string ensembleHash;
     std::string member;
     float time;
-    std::vector<std::string> fields;
-    std::vector<std::list<std::pair<float, float>>> sections;
+    std::vector<std::pair<std::string, int>> fields;
+    std::vector<std::list<tgt::vec2>> sections;
 
     ParallelCoordinatesSectionsPropertyData() = default;
-    ParallelCoordinatesSectionsPropertyData( std::string member, float time, std::vector<std::string> fields, std::vector<std::list<std::pair<float, float>>> sections ) : member( std::move( member ) ), time( time ), fields( std::move( fields ) ), sections( std::move( sections ) )
+    ParallelCoordinatesSectionsPropertyData( std::string ensembleHash,
+                                             std::string member,
+                                             float time,
+                                             std::vector<std::pair<std::string, int>> fields,
+                                             std::vector<std::list<tgt::vec2>> sections )
+         : ensembleHash(std::move(ensembleHash))
+         , member( std::move( member ) )
+         , time( time )
+         , fields( std::move( fields ) )
+         , sections( std::move( sections ) )
     {}
 
     bool operator!=( const ParallelCoordinatesSectionsPropertyData& other ) const {
-        return ( member != other.member ) || ( time != other.time ) || ( fields != other.fields ) || ( sections != other.sections );
+        return (ensembleHash != other.ensembleHash) || ( member != other.member ) || ( time != other.time ) || ( fields != other.fields ) || ( sections != other.sections );
     }
 };
 

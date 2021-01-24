@@ -36,20 +36,22 @@
 
 namespace voreen {
 
-struct ParallelCoordianesAxesCreatorInput {
+struct ParallelCoordinatesAxesCreatorInput {
     std::unique_ptr<EnsembleDataset> ensemble;
-    int spatialSampleCount;
+    std::string ensembleHash;
     int temporalSampleCount;
-    std::vector<int32_t> validVoxels;
-    std::vector<std::string> fieldNames;
-    std::vector<std::pair<float, float>> ranges;
+    bool aggregate;
+    std::vector<tgt::vec3> seedPoints;
+    std::vector<std::pair<std::string, int>> fields;
+    std::vector<std::string> axesLabels;
+    std::vector<tgt::vec2> ranges;
 };
 
-struct ParallelCoordianesAxesCreatorOutput {
+struct ParallelCoordinatesAxesCreatorOutput {
     std::unique_ptr<ParallelCoordinatesAxes> axes;
 };
 
-class ParallelCoordinatesAxesCreator : public AsyncComputeProcessor<ParallelCoordianesAxesCreatorInput, ParallelCoordianesAxesCreatorOutput> {
+class ParallelCoordinatesAxesCreator : public AsyncComputeProcessor<ParallelCoordinatesAxesCreatorInput, ParallelCoordinatesAxesCreatorOutput> {
 public:
     ParallelCoordinatesAxesCreator();
 
@@ -58,6 +60,9 @@ public:
     std::string getCategory() const override { return "ParallelCoordinates"; }
     CodeState getCodeState() const override { return CODE_STATE_EXPERIMENTAL; }
     bool isReady() const override;
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
 
 private:
 
@@ -78,22 +83,31 @@ private:
 
     std::vector<std::reference_wrapper<Port>> getCriticalPorts() override;
 
-    void updateValidVoxels();
+    void adjustToEnsemble();
+    void adjustToSelection();
 
     EnsembleDatasetPort ensembleport_;
-    VolumePort volumeport_;
+    VolumePort seedMask_;
     ParallelCoordinatesAxesPort axesport_;
 
     StringListProperty propertyMembers_;
     StringListProperty propertyFields_;
     IntProperty propertySpatialSampleCount_;
     IntProperty propertyTemporalSampleCount_;
+    StringOptionProperty propertySampleRegion_;
     IntProperty propertySeedTime_;
     BoolProperty propertyAggregateMembers_;
     FileDialogProperty propertyFileDialog_;
     ButtonProperty propertySaveButton_;
 
-    std::vector<int32_t> validVoxels_;
+    /// Hash value of last valid data.
+    std::string hash_;
+
+    /// Common fields of last member selection.
+    std::vector<std::pair<std::string, int>> fields_;
+
+    /// ..and their respective labels.
+    std::vector<std::string> axesLabels_;
 };
 }
 

@@ -26,7 +26,7 @@
 #ifndef VRN_PARALLELCOORDINATESVOXELSELECTION_H
 #define VRN_PARALLELCOORDINATESVOXELSELECTION_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/volumeport.h"
 
 #include "../ports/ensembledatasetport.h"
@@ -34,21 +34,52 @@
 
 namespace voreen {
 
-class ParallelCoordinatesVoxelSelection : public Processor {
+struct ParallelCoordinatesVoxelSelectionInput {
+    PortDataPointer<EnsembleDataset> ensemble;
+    ParallelCoordinatesSectionsPropertyData sectionData;
+    std::vector<std::pair<const VolumeBase*, int>> inputVolumes;
+    std::unique_ptr<VolumeRAM_UInt8> outputVolume;
+};
+
+struct ParallelCoordinatesVoxelSelectionOutput {
+    std::unique_ptr<VolumeBase> volume;
+};
+
+/**
+ * This processor is to be used with a ParallelCoordinatesViewer (link "sections" property).
+ * It creates a binary volume mask according to the selection made in ParallelCoordinatesViewer.
+ */
+class ParallelCoordinatesVoxelSelection : public AsyncComputeProcessor<ParallelCoordinatesVoxelSelectionInput, ParallelCoordinatesVoxelSelectionOutput> {
 public:
     ParallelCoordinatesVoxelSelection();
 
     virtual Processor* create() const override { return new ParallelCoordinatesVoxelSelection(); }
     virtual std::string getClassName() const override { return "ParallelCoordinatesVoxelSelection"; }
     virtual std::string getCategory() const override { return "ParallelCoordinates"; }
+    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
 
 private:
-    virtual void process() override;
+
+    virtual void setDescriptions() {
+        setDescription("This processor needs to be linked with a <br>ParallelCoordinatesViewer</br> processor. "
+                       "It creates a mask where only those voxels are non-zero where the respective value of each field "
+                       "is inside all respective ranges selected in the ParallelCoordinatesViewer.");
+        propertySections_.setDescription("Link with <br>ParallelCoordinatesViewer</br>");
+        outputDimensions_.setDescription("Resolution of the mask");
+    }
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
     EnsembleDatasetPort ensembleport_;
     VolumePort volumeport_;
 
     ParallelCoordinatesSectionsProperty propertySections_;
+
+    IntVec3Property outputDimensions_;
+
+    static const std::string loggerCat_;
 };
 
 }

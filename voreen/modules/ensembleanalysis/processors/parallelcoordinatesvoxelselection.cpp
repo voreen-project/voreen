@@ -25,12 +25,19 @@
 
 #include "parallelcoordinatesvoxelselection.h"
 
+#include "modules/ensembleanalysis/utils/ensemblehash.h"
+#include "modules/ensembleanalysis/utils/utils.h"
+
 namespace voreen {
+
+const std::string ParallelCoordinatesVoxelSelection::loggerCat_("voreen.EnsembleAnalysis.ParallelCoordinatesVoxelSelection");
+
 ParallelCoordinatesVoxelSelection::ParallelCoordinatesVoxelSelection()
-    : Processor(),
-      ensembleport_(Port::INPORT, "port_ensemble", "Ensemble Input" ),
-      volumeport_(Port::OUTPORT, "port_volume", "Binary Volume Output" ),
-      propertySections_("property_sections", "Sections", Processor::INVALID_RESULT )
+    : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
+    , ensembleport_(Port::INPORT, "port_ensemble", "Ensemble Input" )
+    , volumeport_(Port::OUTPORT, "port_volume", "Binary Volume Output" )
+    , propertySections_("property_sections", "Sections")
+    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(2), tgt::ivec3(1000))
 {
     // --- Initialize Ports --- //
     this->addPort(ensembleport_ );
@@ -39,74 +46,166 @@ ParallelCoordinatesVoxelSelection::ParallelCoordinatesVoxelSelection()
     // --- Initialize Properties --- //
     this->addProperty(propertySections_ );
     propertySections_.setVisibleFlag(false );
+    this->addProperty(outputDimensions_);
 }
 
-void ParallelCoordinatesVoxelSelection::process()
-{
-    const auto* ensemble = ensembleport_.getData();
+ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepareComputeInput() {
 
-    // --- Find Member --- //
+    // Clear output first!
+    volumeport_.clear();
+
+    PortDataPointer<EnsembleDataset> ensemble = ensembleport_.getThreadSafeData();
+    if (!ensemble) {
+        throw InvalidInputException("No input", InvalidInputException::S_WARNING);
+    }
+
+    auto sectionData = propertySections_.get();
+    if(EnsembleHash(*ensemble).getHash() != sectionData.ensembleHash) {
+        LERROR("Ensemble hash does not match");
+        throw InvalidInputException("Ensemble hash does not match", InvalidInputException::S_IGNORE);
+    }
+
     const EnsembleMember* member = nullptr;
     for( const auto& m : ensemble->getMembers() ) {
-        if(m.getName() == propertySections_.get().member ) {
+        if(m.getName() == sectionData.member ) {
             member = &m;
             break;
         }
     }
-    if( !member ) {
-        volumeport_.clear();
-        return;
-    }
 
-    // --- Collect Volumes --- //
-    auto volumes = std::vector<const VolumeBase*>();
-    for( const auto& field : propertySections_.get().fields ) {
-        size_t timeStep = member->getTimeStep(propertySections_.get().time);
-        const VolumeBase* volume = member->getTimeSteps()[timeStep].getVolume(field);
-        if(volume) {
-            volumes.emplace_back(volume);
+    if(!member) {
+        if(sectionData.member == "Aggregated") {
+            throw InvalidInputException("Selection on Aggregated plots can't be selected, switch to non-aggregated mode", InvalidInputException::S_WARNING);
+        }
+        else {
+            throw InvalidInputException("Could not find member " + sectionData.member, InvalidInputException::S_ERROR);
         }
     }
-    if(volumes.size() != propertySections_.get().fields.size() ) {
-        volumeport_.clear();
-        return;
+
+    // Collect Volumes.
+    auto volumes = std::vector<std::pair<const VolumeBase*, int>>();
+    for( const auto& field : sectionData.fields ) {
+        size_t timeStep = member->getTimeStep(sectionData.time);
+        const VolumeBase* volume = member->getTimeSteps()[timeStep].getVolume(field.first);
+        if(!volume) {
+            std::string url = member->getTimeSteps()[timeStep].getURL(field.first).getURL();
+            throw InvalidInputException("Could not load volume " + url, InvalidInputException::S_ERROR);
+        }
+        volumes.emplace_back(std::pair<const VolumeBase*, int>(volume, field.second));
     }
 
-    // --- Fill Output --- //
-    auto volume = std::unique_ptr<VolumeRAM_UInt8>( new VolumeRAM_UInt8( volumes.front()->getDimensions() ) );
+    // Create output volume.
+    tgt::ivec3 newDims = outputDimensions_.get();
+    std::unique_ptr<VolumeRAM_UInt8> outputVolume(new VolumeRAM_UInt8(newDims));
+    outputVolume->fill(0);
 
-#ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for
-#endif
-    for( long i = 0; i < static_cast<long>( volume->getNumVoxels() ); ++i )
-    {
-        volume->voxel( i ) = std::numeric_limits<uint8_t>::max();
+    // Clear old data.
+    volumeport_.clear();
 
-        for( size_t j = 0; j < volumes.size(); ++j )
-        {
-            VolumeRAMRepresentationLock lock(volumes[j]);
-            const auto& sections = propertySections_.get().sections[j];
-            const auto value = lock->getVoxelNormalized( i );
+    return ParallelCoordinatesVoxelSelectionInput{
+            std::move(ensemble),
+            std::move(sectionData),
+            std::move(volumes),
+            std::move(outputVolume)
+    };
+}
 
-            auto selected = sections.empty();
-            for( const auto& section : sections )
-            {
-                if( value >= section.first && value <= section.second )
-                {
+ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compute(ParallelCoordinatesVoxelSelectionInput input, ProgressReporter& progress) const {
+
+    auto ensemble = std::move(input.ensemble);
+    auto sectionData = std::move(input.sectionData);
+    auto volumes = std::move(input.inputVolumes);
+
+    auto output = std::move(input.outputVolume);
+    const tgt::svec3 newDims = output->getDimensions();
+
+    // First we consider all voxels.
+    // The idea is that we thin out the voxel indices by testing for each of them,
+    // if it is within the selected value ranges of each selected (field) volume.
+    std::deque<tgt::svec3> voxels;
+    for(size_t z=0; z<newDims.z; z++) {
+        for(size_t y=0; y<newDims.y; y++) {
+            for(size_t x=0; x<newDims.x; x++) {
+                voxels.emplace_back(tgt::vec3(x, y, z));
+            }
+        }
+    }
+
+    // Define the bounds within the mask is sampled.
+    // Note: Must match bounds selected in ParallelCoordinateAxisCreator!
+    tgt::Bounds ensembleBounds = ensemble->getBounds();
+
+    // In favor of memory caching, we iterate volumes first.
+    for(size_t i=0; i<volumes.size(); i++) {
+
+        const VolumeBase* volumeHandle = volumes[i].first;
+        int channel = volumes[i].second;
+
+        tgt::Bounds bounds = volumeHandle->getBoundingBox().getBoundingBox();
+        RealWorldMapping rwm = volumeHandle->getRealWorldMapping();
+        tgt::mat4 worldToVoxel = volumeHandle->getWorldToVoxelMatrix();
+        VolumeRAMRepresentationLock volume(volumeHandle);
+
+        const auto& sections = sectionData.sections[i];
+
+        for(auto iter = voxels.begin(); iter != voxels.end();) {
+
+            // Map sample position to world space.
+            tgt::vec3 pos = mapRange(tgt::vec3(*iter), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
+
+            // Convert voxel to world pos.
+            if(!bounds.containsPoint(pos)) {
+                iter++; // The voxel is not contained in this volume but might in another.
+                continue;
+            }
+
+            const auto value = rwm.normalizedToRealWorld(volume->getVoxelNormalized( worldToVoxel * pos, channel ));
+
+            bool selected = sections.empty();
+            for( const auto& section : sections ) {
+                if( value >= section.x && value <= section.y ) {
                     selected = true;
                     break;
                 }
             }
 
-            if( !selected )
-            {
-                volume->voxel( i ) = 0;
-                break;
+            if( !selected ) {
+                iter = voxels.erase(iter);
             }
+            else {
+                iter++;
+            }
+
+            interruptionPoint();
         }
+
+        if(voxels.empty()) {
+            break;
+        }
+
+        progress.setProgress((i+1.0f) / volumes.size());
     }
 
-    volumeport_.setData(new Volume(volume.release(), tgt::vec3::one, tgt::vec3::zero ) );
+    // Enable remaining voxels.
+    for(const tgt::svec3& p : voxels) {
+        output->voxel(p) = std::numeric_limits<uint8_t>::max();
+    }
+
+    progress.setProgress(1.0f);
+
+    tgt::vec3 spacing = ensembleBounds.diagonal() / tgt::vec3(newDims);
+    std::unique_ptr<Volume> volume(new Volume(output.release(), spacing, ensembleBounds.getLLF()));
+    volume->setTimestep(sectionData.time);
+
+    progress.setProgress(1.0f);
+
+    return ParallelCoordinatesVoxelSelectionOutput{
+            std::move(volume)
+    };
+}
+
+void ParallelCoordinatesVoxelSelection::processComputeOutput(ParallelCoordinatesVoxelSelectionOutput output) {
+    volumeport_.setData(output.volume.release(), true);
 }
 
 }

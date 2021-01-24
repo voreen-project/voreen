@@ -26,52 +26,59 @@
 #include "parallelcoordinatesaxes.h"
 #include <fstream>
 
+#include "voreen/core/io/serialization/deserializer.h"
+#include "voreen/core/io/serialization/serializer.h"
+
+#include "voreen/core/io/serialization/jsondeserializer.h"
+#include "voreen/core/io/serialization/jsonserializer.h"
+
 namespace voreen
 {
 
-ParallelCoordinatesAxes::ParallelCoordinatesAxes( std::vector<std::string> members, std::vector<std::string> fields, std::vector<std::pair<float, float>> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples )
-    : timesteps_(numTimesteps ), samples_(numSamples ), members_(std::move(members ) ), fields_(std::move(fields ) ), ranges_(std::move(ranges ) ), values_(std::move(values ) ), vertexBuffer_(0 )
+ParallelCoordinatesAxes::ParallelCoordinatesAxes( std::string ensembleHash,
+                                                  std::vector<std::string> members,
+                                                  std::vector<std::pair<std::string, int>> fields,
+                                                  std::vector<std::string> axesLabels,
+                                                  std::vector<tgt::vec2> ranges,
+                                                  std::vector<float> values,
+                                                  size_t numTimesteps,
+                                                  size_t numSamples )
+    : timesteps_(numTimesteps )
+    , samples_(numSamples )
+    , ensembleHash_(std::move(ensembleHash))
+    , members_(std::move(members ) )
+    , fields_(std::move(fields ) )
+    , axesLabels_(std::move(axesLabels))
+    , ranges_(std::move(ranges ) )
+    , values_(std::move(values ) )
+    , vertexBuffer_(0)
 {}
 
-ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath ) : vertexBuffer_(0 )
+ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath )
+    : vertexBuffer_(0)
 {
-    auto stream = std::ifstream( filepath, std::ios::in | std::ios::binary );
+    auto stream = std::ifstream( filepath );
     if( !stream ) {
-        std::cout << "[ERROR]: ParallelCoordinatesAxes::ParallelCoordinatesAxes --> Failed to open file " << filepath << std::endl;
+        LERRORC("voreen.ParallelCoordinateAxes", "Failed to open file " << filepath);
         return;
     }
 
-    size_t members, fields;
-    stream.read( reinterpret_cast<char*>( &members ), sizeof( size_t ) );
-    stream.read(reinterpret_cast<char*>( &timesteps_ ), sizeof( size_t ) );
-    stream.read( reinterpret_cast<char*>( &fields ), sizeof( size_t ) );
-    stream.read(reinterpret_cast<char*>( &samples_ ), sizeof( size_t ) );
-
-    members_.resize(members );
-    for( size_t i = 0; i < members; ++i ) {
-        size_t length;
-        stream.read( reinterpret_cast<char*>( &length ), sizeof( size_t ) );
-
-        members_[i].resize(length );
-        stream.read(reinterpret_cast<char*>( &members_[i][0] ), length );
+    try {
+        JsonDeserializer json;
+        Deserializer s(json);
+        json.read(stream, false);
+        s.deserialize("ensembleHash", ensembleHash_);
+        s.deserialize("members", members_);
+        s.deserialize("fields", fields_);
+        s.deserialize("axesLabels", axesLabels_);
+        s.deserialize("timesteps", timesteps_);
+        s.deserialize("samples", samples_);
+        s.deserialize("ranges", ranges_);
+        s.deserialize("values", values_);
+        LINFOC("voreen.ParallelCoordinateAxes", "Loaded successfully");
+    } catch(tgt::Exception& e) {
+        LERRORC("voreen.ParallelCoordinateAxes", e.what());
     }
-
-    fields_.resize(fields );
-    for( size_t i = 0; i < fields; ++i ) {
-        size_t length;
-        stream.read( reinterpret_cast<char*>( &length ), sizeof( size_t ) );
-
-        fields_[i].resize(length );
-        stream.read(reinterpret_cast<char*>( &fields_[i][0] ), length );
-    }
-
-    ranges_.resize(fields );
-    stream.read(reinterpret_cast<char*>( ranges_.data() ), ranges_.size() * sizeof( std::pair<float, float> ) );
-
-    values_.resize(members * timesteps_ * fields * samples_ );
-    stream.read(reinterpret_cast<char*>( values_.data() ), values_.size() * sizeof( float ) );
-
-    if( !stream ) std::cout << "[ERROR]: ParallelCoordinatesAxes::ParallelCoordinatesAxes --> Failed read file " << filepath << std::endl;
 }
 ParallelCoordinatesAxes::~ParallelCoordinatesAxes() {
     if( vertexBuffer_ ) glDeleteBuffers(1, &vertexBuffer_ );
@@ -79,67 +86,71 @@ ParallelCoordinatesAxes::~ParallelCoordinatesAxes() {
 
 void ParallelCoordinatesAxes::serialize( const std::string& filepath ) const {
 
-    auto stream = std::ofstream( filepath, std::ios::out | std::ios::binary );
+    auto stream = std::ofstream( filepath );
     if( !stream ) {
-        std::cout << "[ERROR]: ParallelCoordinatesAxes::serialize --> Failed to open file " << filepath << std::endl;
+        LERRORC("voreen.ParallelCoordinateAxes", "Failed to open file " << filepath);
         return;
     }
 
-    const auto members = this->members(), timesteps = this->timesteps(), fields = this->fields(), samples = this->samples();
-    stream.write( reinterpret_cast<const char*>( &members ), sizeof( size_t ) );
-    stream.write( reinterpret_cast<const char*>( &timesteps ), sizeof( size_t ) );
-    stream.write( reinterpret_cast<const char*>( &fields ), sizeof( size_t ) );
-    stream.write( reinterpret_cast<const char*>( &samples ), sizeof( size_t ) );
-
-    for( size_t i = 0; i < members; ++i ) {
-        const auto length = members_[i].size();
-        stream.write( reinterpret_cast<const char*>( &length ), sizeof( size_t ) );
-        stream.write(reinterpret_cast<const char*>( members_[i].data() ), length );
+    try {
+        JsonSerializer json;
+        Serializer s(json);
+        s.serialize("ensembleHash", ensembleHash_);
+        s.serialize("members", members_);
+        s.serialize("fields", fields_);
+        s.serialize("axesLabels", axesLabels_);
+        s.serialize("timesteps", timesteps_);
+        s.serialize("samples", samples_);
+        s.serialize("ranges", ranges_);
+        s.serialize("values", values_);
+        json.write(stream, true, false);
+        LINFOC("voreen.ParallelCoordinateAxes", "Saved successfully");
+    } catch(tgt::Exception& e) {
+        LERRORC("voreen.ParallelCoordinateAxes", e.what());
     }
-
-    for( size_t i = 0; i < fields; ++i ) {
-        const auto length = fields_[i].size();
-        stream.write( reinterpret_cast<const char*>( &length ), sizeof( size_t ) );
-        stream.write(reinterpret_cast<const char*>( fields_[i].data() ), length );
-    }
-
-    stream.write(reinterpret_cast<const char*>( ranges_.data() ), ranges_.size() * sizeof( std::pair<float, float> ) );
-    stream.write(reinterpret_cast<const char*>( values_.data() ), values_.size() * sizeof( float ) );
-
-    if( !stream ) std::cout << "[ERROR]: ParallelCoordinatesAxes::serialize --> Failed write file " << filepath << std::endl;
 }
 
 size_t ParallelCoordinatesAxes::members() const noexcept {
     return members_.size();
 }
-size_t ParallelCoordinatesAxes::timesteps() const noexcept {
-    return timesteps_;
-}
 size_t ParallelCoordinatesAxes::fields() const noexcept {
     return fields_.size();
 }
+size_t ParallelCoordinatesAxes::timesteps() const noexcept {
+    return timesteps_;
+}
 size_t ParallelCoordinatesAxes::samples() const noexcept {
     return samples_;
+}
+
+const std::string& ParallelCoordinatesAxes::getEnsembleHash() const {
+    return ensembleHash_;
 }
 
 const std::string& ParallelCoordinatesAxes::getMemberName( size_t i ) const {
     return members_[i];
 }
 const std::string& ParallelCoordinatesAxes::getFieldName( size_t i ) const {
-    return fields_[i];
+    return fields_[i].first;
+}
+int ParallelCoordinatesAxes::getChannel( size_t i) const {
+    return fields_[i].second;
 }
 
 const std::vector<std::string>& ParallelCoordinatesAxes::getMemberNames() const noexcept {
     return members_;
 }
-const std::vector<std::string>& ParallelCoordinatesAxes::getFieldNames() const noexcept {
+const std::vector<std::pair<std::string, int>>& ParallelCoordinatesAxes::getFields() const noexcept {
     return fields_;
 }
+const std::vector<std::string>& ParallelCoordinatesAxes::getAxesLabels() const noexcept {
+    return axesLabels_;
+}
 
-std::pair<float, float> ParallelCoordinatesAxes::getRange( size_t field ) const {
+tgt::vec2 ParallelCoordinatesAxes::getRange( size_t field ) const {
     return ranges_[field];
 }
-const std::vector<std::pair<float, float>>& ParallelCoordinatesAxes::getRanges() const noexcept {
+const std::vector<tgt::vec2>& ParallelCoordinatesAxes::getRanges() const noexcept {
     return ranges_;
 }
 
@@ -159,7 +170,7 @@ size_t ParallelCoordinatesAxes::getStrideTimestep() const noexcept {
 }
 
 size_t ParallelCoordinatesAxes::memorySize() const noexcept {
-    return values_.size() * sizeof( float ) + ranges_.size() * sizeof( std::pair<float, float> );
+    return values_.size() * sizeof( float ) + ranges_.size() * sizeof( tgt::vec2 );
 }
 
 GLuint ParallelCoordinatesAxes::getVertexBuffer() const {
