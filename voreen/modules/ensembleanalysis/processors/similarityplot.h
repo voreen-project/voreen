@@ -96,7 +96,10 @@ protected:
                        "Distances are stored in the input <br>SimilarityMatrix</br>, e.g. provided by "
                        "<br>SimilarityMatrixCreator</br>. Members with multiple runs are represented by "
                        "curves, members with a single time step by points (in a 2D and 3D embedding) or dotted "
-                       "lines (when using a 1D embedding).");
+                       "lines (when using a 1D embedding). Use CTRL to add hovered members to the subselection and "
+                       "use ALT to remove them. Click the middle mouse button to reset the subselection to all "
+                       "currently rendered members. Pressing shift and the middle mouse button will change the "
+                       "rendering order of hovered members.");
 
         ensembleInport_.setDescription("The input ensemble");
         similarityMatrixInport_.setDescription("Input similarity matrix. It must have been created for the "
@@ -124,6 +127,12 @@ protected:
         colorCoding_.setDescription("Defines the color coding for the ensemble members to be used");
         renderedField_.setDescription("Sets the currently rendered field of input ensemble");
         renderedMembers_.setDescription("Can be used to show all members at the same time or a subset thereof");
+
+        firstSelectedMember_.setDescription("Use left-click to perform selection of a member. Link this with <br>EnsembleFilter</br>.");
+        firstSelectedTimeStep_.setDescription("Use left-click to perform selection of a time step. Link this with <br>EnsembleFilter</br>.");
+
+        secondSelectedMember_.setDescription("Use right-click to perform selection of another member. Link this with another <br>EnsembleFilter</br>.");
+        secondSelectedTimeStep_.setDescription("Use right-click to perform selection of another time step. Link this with another <br>EnsembleFilter</br>.");
     }
 
 private:
@@ -148,7 +157,7 @@ private:
     tgt::vec3 getColor(size_t memberIdx, size_t timeStepIdx, bool picking) const;
 
     void createEmbeddings();
-    Embedding createEmbedding(const SimilarityMatrix& distanceMatrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
+    Embedding createEmbedding(const SimilarityMatrix& distanceMatrix, ProgressReporter& progressReporter, float epsilon = 0.0f) const;
 
     void outputEigenValues();
     void renderedMembersChanged();
@@ -172,13 +181,15 @@ private:
     OptionProperty<std::string> renderedField_;
     StringListProperty renderedMembers_;
 
-    StringListProperty selectedMember_;
-    FloatIntervalProperty selectedTimeStep_;
-    StringListProperty referenceMember_;
-    FloatIntervalProperty referenceTimeStep_;
+    StringListProperty firstSelectedMember_;
+    FloatIntervalProperty firstSelectedTimeStep_;
+    StringListProperty secondSelectedMember_;
+    FloatIntervalProperty secondSelectedTimeStep_;
 
     FileDialogProperty saveFileDialog_;
+    ButtonProperty saveButton_;
     FileDialogProperty loadFileDialog_;
+    ButtonProperty loadButton_;
 
     CameraProperty camera_;
     CameraInteractionHandler* cameraHandler_;

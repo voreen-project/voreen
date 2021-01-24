@@ -31,7 +31,6 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/volume/volume.h"
-#include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/interaction/camerainteractionhandler.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
@@ -52,11 +51,10 @@ namespace voreen {
 static const int MAX_NUM_DIMENSIONS = 3;
 static const int GRAB_ENABLE_DISTANCE = 0;
 static const tgt::ivec2 MARGINS(75, 50);
-static const float EIGENVALUE_RELATIVE_THRESHOLD = 0.01f;
-static const tgt::vec3 FIRST_TIME_STEP_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
+static const tgt::vec3 FIRST_TIME_STEP_COLOR(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3::one;
-static const tgt::vec3 MIN_DURATION_COLOR = tgt::vec3(1.0f, 0.0f, 0.0f);
-static const tgt::vec3 MAX_DURATION_COLOR = tgt::vec3(0.0f, 0.0f, 1.0f);
+static const tgt::vec3 MIN_DURATION_COLOR(1.0f, 0.0f, 0.0f);
+static const tgt::vec3 MAX_DURATION_COLOR(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
 
 const std::string SimilarityPlot::fontName_("Vera.ttf");
@@ -98,14 +96,16 @@ SimilarityPlot::SimilarityPlot()
     , colorCoding_("colorCoding", "Color Coding")
     , renderedField_("renderedChannel", "Field")
     , renderedMembers_("renderedMembers", "Rendered Members")
-    , selectedMember_("selectedMembers", "Selected Members")
-    , selectedTimeStep_("selectedTimeSteps", "Selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
-    , referenceMember_("referenceMember", "Reference Member")
-    , referenceTimeStep_("referenceTimeStep", "Reference Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
+    , firstSelectedMember_("selectedMembers", "First selected Members")
+    , firstSelectedTimeStep_("selectedTimeSteps", "First selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
+    , secondSelectedMember_("referenceMember", "Second selected Member")
+    , secondSelectedTimeStep_("referenceTimeStep", "Second selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , saveFileDialog_("saveFileDialog", "Export Embedding", "Select file...", VoreenApplication::app()->getUserDataPath(),
                       "Voreen MDS Embedding (*.vmds)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , saveButton_("saveButton", "Save")
     , loadFileDialog_("loadFile", "Import Embedding", "Select file...", VoreenApplication::app()->getUserDataPath(),
                       "Voreen MDS Embedding (*.vmds)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , loadButton_("loadButton", "Load")
     , camera_("camera", "Camera", tgt::Camera(tgt::vec3(0.0f, 0.0f, 3.5f), tgt::vec3(0.0f, 0.0f, 0.0f), tgt::vec3(0.0f, 1.0f, 0.0f)))
     , cameraHandler_(nullptr)
     , plotLib_(new PlotLibraryOpenGl())
@@ -158,7 +158,7 @@ SimilarityPlot::SimilarityPlot()
             }
 
             // We currently only allow for manual time range selection in 1D mode.
-            selectedTimeStep_.setVisibleFlag(numDimensions_.get() == 1);
+            firstSelectedTimeStep_.setVisibleFlag(numDimensions_.get() == 1);
         });
     addProperty(principleComponent_);
         principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
@@ -190,14 +190,14 @@ SimilarityPlot::SimilarityPlot()
     setPropertyGroupGuiName("rendering", "Rendering");
 
     // Selection (Linking)
-    addProperty(selectedMember_);
-        selectedMember_.setGroupID("selection");
-    addProperty(selectedTimeStep_);
-        selectedTimeStep_.setGroupID("selection");
-    addProperty(referenceMember_);
-        referenceMember_.setGroupID("selection");
-    addProperty(referenceTimeStep_);
-        referenceTimeStep_.setGroupID("selection");
+    addProperty(firstSelectedMember_);
+        firstSelectedMember_.setGroupID("selection");
+    addProperty(firstSelectedTimeStep_);
+        firstSelectedTimeStep_.setGroupID("selection");
+    addProperty(secondSelectedMember_);
+        secondSelectedMember_.setGroupID("selection");
+    addProperty(secondSelectedTimeStep_);
+        secondSelectedTimeStep_.setGroupID("selection");
     setPropertyGroupGuiName("selection", "Selection");
     setPropertyGroupVisible("selection", false);
 
@@ -205,9 +205,15 @@ SimilarityPlot::SimilarityPlot()
     addProperty(saveFileDialog_);
         ON_CHANGE(saveFileDialog_, SimilarityPlot, saveEmbeddings);
         saveFileDialog_.setGroupID("io");
+    addProperty(saveButton_);
+        ON_CHANGE(saveButton_, SimilarityPlot, saveEmbeddings);
+        saveButton_.setGroupID("io");
     addProperty(loadFileDialog_);
         ON_CHANGE(loadFileDialog_, SimilarityPlot, loadEmbeddings);
         loadFileDialog_.setGroupID("io");
+    addProperty(loadButton_);
+        ON_CHANGE(loadButton_, SimilarityPlot, loadEmbeddings);
+        loadButton_.setGroupID("io");
     setPropertyGroupGuiName("io", "Save/Load MDS Plot");
 
     // Camera
@@ -485,7 +491,7 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
 
     tgt::vec2 timeRange = tgt::vec2(dataset->getStartTime(), dataset->getEndTime());
     if(renderTimeSelection_.get()) {
-        timeRange = selectedTimeStep_.get();
+        timeRange = firstSelectedTimeStep_.get();
     }
 
     for(int memberIdx : renderingOrder_) {
@@ -503,7 +509,7 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
         if(numTimeSteps == 1) {
             IMode.begin(tgt::ImmediateMode::FAKE_LINES);
             IMode.color(getColor(memberIdx, 0, picking));
-            const int segments = 40;
+            const int segments = 80;
             for(int i=0; i<segments; i+=2) {
                 float x0 = mapRange(i+0, 0, segments-1, -1.0f, 1.0f);
                 float x1 = mapRange(i+1, 0, segments-1, -1.0f, 1.0f);
@@ -527,7 +533,7 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
         }
 
         if(!picking) {
-            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeStep_.get().x);
             float x = mapRange(member.getTimeSteps()[selectedTimeStep].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
             tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
             tgt::vec3 color = tgt::vec3::one; // in 1D-case the selection is always white.!
@@ -536,7 +542,7 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
     }
 
     if(!picking && renderTimeSelection_.get()) {
-        tgt::vec2 mappedTimeRange = mapRange(selectedTimeStep_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
+        tgt::vec2 mappedTimeRange = mapRange(firstSelectedTimeStep_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
 
         glLineWidth(3.0f);
         IMode.color(tgt::vec3::zero);
@@ -572,7 +578,7 @@ void SimilarityPlot::renderEmbedding2D(bool picking) {
         IMode.end();
 
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
-            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeStep_.get().x);
             tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
             renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
@@ -616,7 +622,7 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
         IMode.end();
 
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
-            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(selectedTimeStep_.get().x);
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeStep_.get().x);
             tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
             renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
@@ -699,20 +705,11 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
     e->accept();
     invalidate();
 
-    // Right click resets subselection.
-    if(e->button() == tgt::MouseEvent::MOUSE_BUTTON_RIGHT && e->action() == tgt::MouseEvent::PRESSED) {
-        subSelection_.clear();
-    }
-    // Middle click inverts subselection, but only considers rendered members.
-    else if(e->button() == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE && e->action() == tgt::MouseEvent::PRESSED) {
-        std::set<int> invertedSelection;
-        for(int i : renderedMembers_.get()) {
-            if(subSelection_.count(i) == 0) {
-                invertedSelection.insert(i);
-            }
-        }
-
-        subSelection_ = invertedSelection;
+    // Right click resets subselection to rendered members.
+    if(e->button() == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE && e->action() == tgt::MouseEvent::PRESSED
+    && e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
+        //subSelection_.clear(); // Old behavior.
+        subSelection_ = std::set<int>(renderedMembers_.get().begin(), renderedMembers_.get().end());
     }
     // Otherwise, we look for a hit.
     else {
@@ -734,15 +731,16 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
             return;
         }
 
+        const EnsembleDataset* dataset = ensembleInport_.getData();
         if(y != e->y() && numDimensions_.get() == 1) {
             // Select a time interval outside of the axis
             if(e->action() == tgt::MouseEvent::PRESSED) {
-                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, ensembleInport_.getData()->getStartTime(), ensembleInport_.getData()->getEndTime());
-                selectedTimeStep_.set(tgt::vec2(t, selectedTimeStep_.get().y));
+                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
+                firstSelectedTimeStep_.set(tgt::vec2(t, firstSelectedTimeStep_.get().y));
             }
             else if(e->action() == tgt::MouseEvent::RELEASED) {
-                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, ensembleInport_.getData()->getStartTime(), ensembleInport_.getData()->getEndTime());
-                selectedTimeStep_.set(tgt::vec2(selectedTimeStep_.get().x, t));
+                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
+                firstSelectedTimeStep_.set(tgt::vec2(firstSelectedTimeStep_.get().x, t));
             }
             return;
         }
@@ -766,7 +764,6 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
         }
 
         // Calculate member index.
-        const EnsembleDataset* dataset = ensembleInport_.getData();
         const std::vector<EnsembleMember>& members = dataset->getMembers();
         size_t numMembers = members.size();
         int r = tgt::clamp<int>(std::round(texel.r * numMembers), 0, numMembers - 1);
@@ -778,50 +775,52 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
         // Update last hit.
         lastHit_ = Hit{x, y, r, t};
 
-        // Handle selection.
-        if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT && e->action() == tgt::MouseEvent::PRESSED) {
+        // Handle simple selection, for both main selection (left button) and reference selection (right button).
+        if((e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT || e->button() == tgt::MouseEvent::MOUSE_BUTTON_RIGHT)
+        && e->action() == tgt::MouseEvent::PRESSED && e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
 
-            // Right-click selection changes rendering order.
-            if (e->modifiers() == tgt::MouseEvent::SHIFT) {
-                // Push selected member to the front of the rendering order.
-                renderingOrder_.erase(std::find(renderingOrder_.begin(), renderingOrder_.end(), r));
-                renderingOrder_.push_front(r);
+            // Reset subselection.
+            //subSelection_.clear();
+
+            std::vector<int> memberIndices;
+            memberIndices.push_back(r);
+            subSelection_.insert(r);
+
+            const TimeStep& timeStep = members[r].getTimeSteps()[t];
+            float lower = std::floor(timeStep.getTime() * 100.0f) / 100.0f;
+            float upper = std::ceil((timeStep.getTime() + timeStep.getDuration()) * 100.0f) / 100.0f;
+            if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
+                firstSelectedMember_.setSelectedRowIndices(memberIndices);
+                firstSelectedTimeStep_.set(tgt::vec2(lower, upper));
             }
-            else if (e->modifiers() == tgt::MouseEvent::CTRL) {
-                // This selection mode modifies the sub selection for the MDS plot.
-                auto iter = std::find(subSelection_.begin(), subSelection_.end(), r);
-                if (iter != subSelection_.end()) {
-                    subSelection_.erase(iter);
-                }
-                else {
-                    subSelection_.insert(r);
-                }
+            else if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
+                secondSelectedMember_.setSelectedRowIndices(memberIndices);
+                secondSelectedTimeStep_.set(tgt::vec2(lower, upper));
             }
-            else {
 
-                // Define some modifier to enable reference dataset selection.
-                // This is currently done hardcoded but should at least show up in documentation.
-                const int referenceModifier = tgt::MouseEvent::Modifier::SHIFT | tgt::MouseEvent::Modifier::CTRL;
+            return;
+        }
 
-                // Reset subselection.
-                //subSelection_.clear();
-
-                std::vector<int> memberIndices;
-                memberIndices.push_back(r);
+        // Add (CTRL) or remove (ALT) members from subselection.
+        if(e->button() == tgt::MouseEvent::MOUSE_BUTTON_NONE) {
+            auto iter = subSelection_.find(r);
+            if(e->modifiers() == tgt::MouseEvent::CTRL && iter == subSelection_.end()) {
                 subSelection_.insert(r);
-
-                const TimeStep& timeStep = members[r].getTimeSteps()[t];
-                float lower = std::floor(timeStep.getTime() * 100.0f) / 100.0f;
-                float upper = std::ceil((timeStep.getTime() + timeStep.getDuration()) * 100.0f) / 100.0f;
-                if (e->modifiers() == referenceModifier) {
-                    referenceMember_.setSelectedRowIndices(memberIndices);
-                    referenceTimeStep_.set(tgt::vec2(lower, upper));
-                }
-                else if (e->modifiers() == tgt::MouseEvent::MODIFIER_NONE) {
-                    selectedMember_.setSelectedRowIndices(memberIndices);
-                    selectedTimeStep_.set(tgt::vec2(lower, upper));
-                }
             }
+            else if(e->modifiers() == tgt::MouseEvent::ALT && iter != subSelection_.end()) {
+                subSelection_.erase(iter);
+            }
+            return;
+        }
+
+        // Modify rendering order as simple workaround for occlusion.
+        if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_MIDDLE && e->action() == tgt::MouseEvent::PRESSED
+        && e->modifiers() == tgt::MouseEvent::SHIFT) {
+            // Push selected member to the front of the rendering order.
+            renderingOrder_.erase(std::find(renderingOrder_.begin(), renderingOrder_.end(), r));
+            renderingOrder_.push_front(r);
+
+            return;
         }
     }
 }
@@ -842,8 +841,8 @@ void SimilarityPlot::adjustToEnsemble() {
     subSelection_.clear();
     renderedField_.setOptions(std::deque<Option<std::string>>());
     renderedMembers_.reset();
-    selectedMember_.reset();
-    referenceMember_.reset();
+    firstSelectedMember_.reset();
+    secondSelectedMember_.reset();
     calculateButton_.setReadOnlyFlag(true);
 
     // Check for data set.
@@ -871,22 +870,22 @@ void SimilarityPlot::adjustToEnsemble() {
     std::vector<int> memberIndices;
     for (const EnsembleMember& member : dataset->getMembers()) {
         renderedMembers_.addRow(member.getName(), member.getColor());
-        selectedMember_.addRow(member.getName(), member.getColor());
-        referenceMember_.addRow(member.getName(), member.getColor());
+        firstSelectedMember_.addRow(member.getName(), member.getColor());
+        secondSelectedMember_.addRow(member.getName(), member.getColor());
         subSelection_.insert(static_cast<int>(memberIndices.size()));
         memberIndices.push_back(static_cast<int>(memberIndices.size()));
     }
     renderedMembers_.setSelectedRowIndices(memberIndices);
-    selectedMember_.setSelectedRowIndices(memberIndices);
-    referenceMember_.setSelectedRowIndices(memberIndices);
+    firstSelectedMember_.setSelectedRowIndices(memberIndices);
+    secondSelectedMember_.setSelectedRowIndices(memberIndices);
 
-    selectedTimeStep_.setMinValue(dataset->getStartTime());
-    selectedTimeStep_.setMaxValue(dataset->getEndTime());
-    selectedTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+    firstSelectedTimeStep_.setMinValue(dataset->getStartTime());
+    firstSelectedTimeStep_.setMaxValue(dataset->getEndTime());
+    firstSelectedTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
-    referenceTimeStep_.setMinValue(dataset->getStartTime());
-    referenceTimeStep_.setMaxValue(dataset->getEndTime());
-    referenceTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+    secondSelectedTimeStep_.setMinValue(dataset->getStartTime());
+    secondSelectedTimeStep_.setMaxValue(dataset->getEndTime());
+    secondSelectedTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
     // Try to load plot data, if already set.
     if(!loadFileDialog_.get().empty()) {
@@ -1020,52 +1019,51 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
 
     MatrixXf BMatrix = -0.5f*JMatrix*PMatrix*JMatrix;
 
-    VectorXf* EigenVectors = new VectorXf[numDimensions];
+    VectorXf* eigenVectors = new VectorXf[numDimensions];
 
     progressReporter.setProgress(0.1f);
     for(size_t i=0; i < numDimensions; i++) {
 
-        VectorXf& EigenVector = EigenVectors[i];
-        EigenVector = VectorXf::Ones(numPoints);
-        float EigenValue = 0.0;
+        VectorXf& eigenVector = eigenVectors[i];
+        eigenVector = VectorXf::Ones(numPoints);
+        float eigenValue = 0.0;
 
         VectorXf PrVector = VectorXf::Zero(numPoints);
         VectorXf TVector = VectorXf::Ones(numPoints);
 
-        int iter = 0;
-
         MatrixXf EMVector(numPoints, 1);
 
-        while (iter < numIterations && TVector.norm() > epsilon) {
+        for (int iter=0; iter < numIterations; iter++) {
 
-            EMVector.col(0) = EigenVector;
+            EMVector.col(0) = eigenVector;
             VectorXf TempVector = BMatrix * EMVector;
-            EigenVector = TempVector;
+            eigenVector = TempVector;
             for(size_t j=0; j < i; j++)
-                EigenVector -= EigenVectors[j] * (EigenVectors[j].dot(TempVector));
-            EigenValue = EigenVector.norm();
-            EigenVector.normalize();
-            TVector = EigenVector - PrVector;
-            PrVector = EigenVector;
-            iter++;
-        }
+                eigenVector -= eigenVectors[j] * (eigenVectors[j].dot(TempVector));
+            eigenValue = eigenVector.norm();
+            eigenVector.normalize();
+            TVector = eigenVector - PrVector;
+            PrVector = eigenVector;
 
-        EMVector.col(0) = EigenVector;
+            if(TVector.norm() <= epsilon) {
+                break;
+            }
+        }
 
         // Don't continue calculating when eigenvalues get too small in relation to biggest eigenvalue.
         if(i >= static_cast<size_t>(numDimensions_.get()) && // We do have calculated at least as many PCs as we want to display.
-                (EigenValue < embedding.eigenvalues_[0] * EIGENVALUE_RELATIVE_THRESHOLD) || // EV is insignificant compared to first EV.
-                EigenValue < std::numeric_limits<float>::epsilon() || // Eigenvalue is de-facto zero.
-                (i > 0 && EigenValue > embedding.eigenvalues_[i-1])) // EV must not be larger than predecessor.
+        (eigenValue <= std::numeric_limits<float>::epsilon() || // Eigenvalue is de-facto zero.
+        (i > 0 && eigenValue < embedding.eigenvalues_[i - 1]))) // EV must not be smaller than predecessor.
             break;
 
-        result.col(i) = EigenVector;
-        EigSq(i, i) = std::sqrt(EigenValue);
-        embedding.eigenvalues_.push_back(EigenValue);
+        EMVector.col(0) = eigenVector;
+        result.col(i) = eigenVector;
+        EigSq(i, i) = std::sqrt(eigenValue);
+        embedding.eigenvalues_.push_back(eigenValue);
 
         progressReporter.setProgress(0.1f + 0.8f * i / numDimensions);
     }
-    delete [] EigenVectors;
+    delete [] eigenVectors;
 
     // Now get the resulting matrix.
     result = result * EigSq;
