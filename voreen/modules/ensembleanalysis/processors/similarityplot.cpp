@@ -372,19 +372,18 @@ void SimilarityPlot::renderAxes() {
     tgt::TextureUnit::setZeroUnit();
     tgt::Texture* texture = privatePort_.getColorTexture();
     if(texture) {
-        texture->enable();
+        IMode.setTextureMode(tgt::ImmediateMode::TEX2D);
         texture->bind();
+
+        IMode.begin(tgt::ImmediateMode::QUADS);
+            IMode.texcoord(0.0f, 0.0f); IMode.vertex(xMinMarginNDC, yMinMarginNDC);
+            IMode.texcoord(1.0f, 0.0f); IMode.vertex(xMaxMarginNDC, yMinMarginNDC);
+            IMode.texcoord(1.0f, 1.0f); IMode.vertex(xMaxMarginNDC, yMaxMarginNDC);
+            IMode.texcoord(0.0f, 1.0f); IMode.vertex(xMinMarginNDC, yMaxMarginNDC);
+        IMode.end();
+
+        IMode.setTextureMode(tgt::ImmediateMode::TEXNONE);
     }
-
-    IMode.begin(tgt::ImmediateMode::QUADS);
-        IMode.texcoord(0.0f, 0.0f); IMode.vertex(xMinMarginNDC, yMinMarginNDC);
-        IMode.texcoord(1.0f, 0.0f); IMode.vertex(xMaxMarginNDC, yMinMarginNDC);
-        IMode.texcoord(1.0f, 1.0f); IMode.vertex(xMaxMarginNDC, yMaxMarginNDC);
-        IMode.texcoord(0.0f, 1.0f); IMode.vertex(xMinMarginNDC, yMaxMarginNDC);
-    IMode.end();
-
-    if(texture)
-        texture->disable();
 
     // Reset state.
     IMode.color(1.0f, 1.0f, 1.0f, 1.0f);
