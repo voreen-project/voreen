@@ -25,13 +25,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref33">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-263" y="919" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-67" y="441" width="1723" height="1185" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="368" y="42" width="1723" height="1185" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1723" y="1185" />
+                            <value x="1723" y="1189" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -42,7 +42,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-67" y="441" />
+                            <value x="368" y="42" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1723" y="1185" />
@@ -147,7 +147,7 @@
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
+                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -4415,7 +4415,7 @@ void main() {
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
+                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -4689,12 +4689,12 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" id="ref8">
+                <Processor type="OctreeWalker" name="OctreeWalker" prevResultPath="/home/dominik/data/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-245" y="48" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="betaBias" name="betaBias" value="0" tracking="false" />
+                        <Property mapKey="betaBias" name="betaBias" value="5" tracking="false" />
                         <Property mapKey="clearResult" name="clearResult" />
                         <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCL" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
@@ -4710,13 +4710,13 @@ void main() {
                         <Property mapKey="resultPath" name="resultPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../../nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" />
-                                    <item value="../../../nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" />
-                                    <item value="/nosnapshot/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/81c041f3-483e-477d-9475-d108280de2a9" />
+                                    <item value="../../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/c9a0dd18-d945-4bfe-8921-ced29a4068d2" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 627 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.319 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -4762,7 +4762,7 @@ void main() {
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
+                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -4809,7 +4809,7 @@ void main() {
                                 <paths>
                                     <item value="../../../../modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="/git/voreen1/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/git/voreen-develop/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
@@ -4960,7 +4960,7 @@ void main() {
                             </MetaData>
                             <position x="-2.306960821" y="0.906304121" z="-2.109793663" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="0.245220155" y="0.855372548" z="0.456294954" />
+                            <upVector x="0.245220125" y="0.855372429" z="0.456294894" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -5007,7 +5007,7 @@ void main() {
                                 <paths>
                                     <item value="../../../../modules/opencl/cl/singleoctreeraycaster.cl" />
                                     <item value="modules/opencl/cl/singleoctreeraycaster.cl" />
-                                    <item value="/git/voreen1/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
+                                    <item value="/git/voreen-develop/voreen/modules/opencl/cl/singleoctreeraycaster.cl" />
                                 </paths>
                             </programFilenamePaths>
                         </Property>
@@ -5210,11 +5210,11 @@ void main() {
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numThreads" name="numThreads" value="8" />
-                        <Property mapKey="octreeHash" name="octreeHash" value="89afa2abd07404da891cad8a658c1681-bf5cb7cb165c71d26e4b0a780f4808ff" />
+                        <Property mapKey="octreeHash" name="octreeHash" value="a333506c83250f47086ed82a0e492a66-bf5cb7cb165c71d26e4b0a780f4808ff" />
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="OctreeCreator Progress (for Rendering)" />
-                        <Property mapKey="progressMessage" name="progressMessage" value="Octree loaded from cache." />
+                        <Property mapKey="progressMessage" name="progressMessage" value="Octree generated." />
                         <Property mapKey="singleBufferMemorySize" name="singleBufferMemorySize" value="32" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 131 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 230 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="treeDepth" name="treeDepth" value="3" />
@@ -5273,7 +5273,7 @@ void main() {
                                     <paths>
                                         <item value="../../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/git/voreen1/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -6390,21 +6390,25 @@ void main() {
                     <First value="Output" />
                     <Second value="8" />
                 </value>
-                <value key="OctreeWalker.conjGradIterations">
-                    <First value="Random Walker" />
-                    <Second value="19" />
-                </value>
-                <value key="OctreeWalker.errorThreshold">
-                    <First value="Random Walker" />
-                    <Second value="17" />
-                </value>
-                <value key="OctreeWalker.homogeneityThreshold">
+                <value key="OctreeWalker.betaBias">
                     <First value="Random Walker" />
                     <Second value="15" />
                 </value>
-                <value key="OctreeWalker.incrementalSimilarityThreshold">
+                <value key="OctreeWalker.conjGradIterations">
+                    <First value="Random Walker" />
+                    <Second value="20" />
+                </value>
+                <value key="OctreeWalker.errorThreshold">
+                    <First value="Random Walker" />
+                    <Second value="18" />
+                </value>
+                <value key="OctreeWalker.homogeneityThreshold">
                     <First value="Random Walker" />
                     <Second value="16" />
+                </value>
+                <value key="OctreeWalker.incrementalSimilarityThreshold">
+                    <First value="Random Walker" />
+                    <Second value="17" />
                 </value>
                 <value key="OctreeWalker.invalidationMode">
                     <First value="Random Walker" />
@@ -6428,7 +6432,7 @@ void main() {
                 </value>
                 <value key="OctreeWalker.resultPath">
                     <First value="Random Walker" />
-                    <Second value="20" />
+                    <Second value="21" />
                 </value>
                 <value key="OctreeWalker.statusDisplay">
                     <First value="Random Walker" />
@@ -6496,7 +6500,10 @@ void main() {
         <GlobalDescription>
             <![CDATA[Interactive 3D Volume Segmentation<br>
 <br>
-Hold Control/Alt and the left mouse button to draw Foreground/Background labels onto the 2D Slices. Use the right mouse button to undo the last edit operation.]]>
+Hold Control/Shit and the left mouse button to draw Foreground/Background labels onto the 2D Slices. Use the right mouse button to undo the last edit operation.
+<br>
+<br>
+This uses an algorithmic advancement of the standard Random Walker method that can be applied to octree representations of volumes that thus may be larger than main and graphics memory. A limitation of this approach that the assumed noise model of the image <b>must</b> be specified. Currently, only Gaussian and Poisson noise are supported, although in some cases (such as the example dataset used here), it may be possible to apply the method even though it exhibits a different noise model by changing the <b>beta bias</b> parameter.]]>
         </GlobalDescription>
     </Workspace>
 </VoreenData>
