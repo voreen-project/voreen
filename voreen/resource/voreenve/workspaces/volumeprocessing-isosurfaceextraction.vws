@@ -1,15 +1,10 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription="A basic workspace showing of how &lt;b&gt;IsoSurfaceExtractor&lt;/b&gt; can be used to generate geometries from volumes.">
-        <ProcessorNetwork version="20">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
-                </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="GeometryRenderer" ref="ref4" />
-                    </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-435.619110107" y="-14.424473763" />
@@ -17,16 +12,16 @@
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.039899349" />
             </MetaData>
             <Processors>
-                <Processor type="Canvas" name="Canvas" id="ref5">
+                <Processor type="Canvas" name="Canvas" id="ref6">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-513" y="16" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="90" y="479" width="512" height="512" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1401" height="1189" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="8" y="8" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="2012" y="1326" />
+                            <value x="1401" y="1189" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -37,7 +32,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="90" y="479" />
+                            <value x="608" y="361" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="512" y="512" />
@@ -45,7 +40,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="512" y="512" />
+                            <value x="1401" y="1189" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -58,8 +53,8 @@
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref6">
-                                    <value x="512" y="512" />
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref7">
+                                    <value x="1401" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -81,7 +76,7 @@
                                     <paths>
                                         <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -107,11 +102,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-699" y="-166" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="cullFace" name="cullFace" value="none" />
                         <Property mapKey="enable.clipping" name="enable.clipping" value="false" />
                         <Property mapKey="enableLighting" name="enableLighting" value="true" />
                         <Property mapKey="geometry_opaque.prg" name="geometry_opaque.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
@@ -121,7 +117,7 @@
                         </Property>
                         <Property mapKey="geometry_transparent.prg" name="geometry_transparent.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="8" y="8" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
@@ -183,18 +179,18 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="478.610931396" minValue="0.009572218" frustLeft="-0.020205542" frustRight="0.020205542" frustBottom="-0.020205542" frustTop="0.020205542" frustNear="0.04878049" frustFar="480.525360107" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.029887883">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="478.610931396" minValue="0.009572218" frustLeft="-0.020205542" frustRight="0.020205542" frustBottom="-0.020205542" frustTop="0.020205542" frustNear="0.04878049" frustFar="480.525360107" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.029887859">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <position x="-1.677148581" y="1.40724206" z="2.496279478" />
-                            <focus x="0.012297332" y="-0.031487286" z="-0.0078125" />
+                            <focus x="0.012297332" y="-0.031487226" z="-0.0078125" />
                             <upVector x="0.292968333" y="0.901641488" z="-0.318138659" />
                             <trackball moveCenter="false">
-                                <center x="0.012297332" y="-0.031487286" z="-0.0078125" />
+                                <center x="0.012297332" y="-0.031487226" z="-0.0078125" />
                             </trackball>
                             <sceneLLF x="-0.944924533" y="-0.715829372" z="-0.890625" />
-                            <sceneURB x="0.969519258" y="0.6528548" z="0.875" />
+                            <sceneURB x="0.969519258" y="0.652854919" z="0.875" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -206,7 +202,7 @@
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
-                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
+                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1" tracking="true">
                             <value x="15" y="20" />
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
@@ -233,7 +229,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
-                                    <value x="512" y="512" />
+                                    <value x="1401" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -242,8 +238,8 @@
                         <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref7">
-                                    <value x="512" y="512" />
+                                <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref8">
+                                    <value x="1401" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -375,6 +371,33 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
+                <Processor type="GeometrySave" name="GeometrySave" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-368" y="-171" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="file" name="file" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../../home/dominik/nuss.stl" />
+                                    <item value="../../../home/dominik/nuss.stl" />
+                                    <item value="/home/dominik/nuss.stl" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
             </Processors>
             <Connections>
                 <Connection>
@@ -402,11 +425,19 @@
                     </Inport>
                 </Connection>
                 <Connection>
+                    <Outport name="isosurfaceextractor.outport">
+                        <Processor type="IsosurfaceExtractor" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="GeometrySave" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
                     <Outport name="image.output">
                         <Processor type="Background" ref="ref3" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="Canvas" ref="ref5" />
+                        <Processor type="Canvas" ref="ref6" />
                     </Inport>
                 </Connection>
             </Connections>
@@ -422,8 +453,8 @@
             </CoProcessorConnections>
             <PropertyLinks>
                 <PropertyLink>
-                    <SourceProperty ref="ref6" />
-                    <DestinationProperty ref="ref7" />
+                    <SourceProperty ref="ref7" />
+                    <DestinationProperty ref="ref8" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
             </PropertyLinks>
@@ -431,10 +462,19 @@
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
             <PropertyGroups>
-                <item value="Data Input" />
+                <item value="Volume Input" />
                 <item value="Isosurface Extraction" />
+                <item value="Geometry Output" />
             </PropertyGroups>
             <GroupMembership>
+                <value key="GeometrySave.file">
+                    <First value="Geometry Output" />
+                    <Second value="0" />
+                </value>
+                <value key="GeometrySave.save">
+                    <First value="Geometry Output" />
+                    <Second value="1" />
+                </value>
                 <value key="IsosurfaceExtractor.isoValueProp">
                     <First value="Isosurface Extraction" />
                     <Second value="2" />
@@ -444,11 +484,11 @@
                     <Second value="0" />
                 </value>
                 <value key="VolumeSource.volumeInfo">
-                    <First value="Data Input" />
+                    <First value="Volume Input" />
                     <Second value="1" />
                 </value>
                 <value key="VolumeSource.volumeURL">
-                    <First value="Data Input" />
+                    <First value="Volume Input" />
                     <Second value="0" />
                 </value>
             </GroupMembership>
