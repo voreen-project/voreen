@@ -77,6 +77,7 @@ public:
     CodeState getCodeState() const { return CODE_STATE_TESTING; }
 
     virtual bool isReady() const;
+    virtual bool isEndProcessor() const       { return true; }
 
     /** @see Property::serialize */
     virtual void serialize(Serializer& s) const;
