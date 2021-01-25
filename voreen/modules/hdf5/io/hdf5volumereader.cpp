@@ -172,7 +172,7 @@ VolumeBase* HDF5VolumeReaderBase::read(const VolumeURL& origin) {
             numberOfChannels = std::stoi(numberOfChannelsStr);
         }
     }
-    LINFO("Loading " << fileName);
+    LINFO("Loading " << origin.getURL());
 
     // Open the in file volume.
     std::unique_ptr<HDF5FileVolume> fileVolume = HDF5FileVolume::openVolume(fileName, inFilePath, true);

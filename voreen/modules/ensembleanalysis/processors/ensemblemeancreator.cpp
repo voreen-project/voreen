@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "referencevolumecreator.h"
+#include "ensemblemeancreator.h"
 
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/utils/statistics.h"
@@ -31,51 +31,41 @@
 
 namespace voreen {
 
-const std::string ReferenceVolumeCreator::loggerCat_("voreen.ensembleanalysis.ReferenceVolumeCreator");
+const std::string EnsembleMeanCreator::loggerCat_("voreen.ensembleanalysis.EnsembleMeanCreator");
 
-ReferenceVolumeCreator::ReferenceVolumeCreator()
+EnsembleMeanCreator::EnsembleMeanCreator()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "ensembleinport", "Ensemble Data Input")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
     , selectedField_("selectedField", "Selected Field")
     , time_("time", "Time", 0.0f, 0.0f, 1000000.0f)
-    , referenceMethod_("referenceMethode", "Reference Method")
-    , referenceMember_("referenceMember", "Reference Member")
     , sampleRegion_("sampleRegion", "Sample Region")
-    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(1), tgt::ivec3(1000))
+    , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(2), tgt::ivec3(1000))
 {
     // Ports
     addPort(inport_);
-    ON_CHANGE(inport_, ReferenceVolumeCreator, adjustToEnsemble);
+    ON_CHANGE(inport_, EnsembleMeanCreator, adjustToEnsemble);
     addPort(outport_);
 
     addProperty(selectedField_);
     addProperty(time_);
     time_.setTracking(false);
-    addProperty(referenceMethod_);
-    referenceMethod_.addOption("run", "Select Member");
-    referenceMethod_.addOption("zero", "Zero volume");
-    referenceMethod_.addOption("mean", "Global Mean");
-    ON_CHANGE_LAMBDA(referenceMethod_, [this] {
-        referenceMember_.setReadOnlyFlag(referenceMethod_.get() != "run");
-    });
-    addProperty(referenceMember_);
     addProperty(sampleRegion_);
     sampleRegion_.addOption("bounds", "Ensemble Bounds");
     sampleRegion_.addOption("common", "Common Bounds");
     addProperty(outputDimensions_);
 }
 
-ReferenceVolumeCreator::~ReferenceVolumeCreator() {
+EnsembleMeanCreator::~EnsembleMeanCreator() {
 }
 
-ReferenceVolumeCreatorInput ReferenceVolumeCreator::prepareComputeInput() {
+EnsembleMeanCreatorInput EnsembleMeanCreator::prepareComputeInput() {
     PortDataPointer<EnsembleDataset> ensemble = inport_.getThreadSafeData();
     if (!ensemble) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
-    // Get required information about reference volume format.
+    // Get required information about mean volume format.
     tgt::ivec3 newDims = outputDimensions_.get();
     size_t numChannels = ensemble->getNumChannels(selectedField_.get());
     const std::string& baseType = ensemble->getBaseType(selectedField_.get());
@@ -100,33 +90,30 @@ ReferenceVolumeCreatorInput ReferenceVolumeCreator::prepareComputeInput() {
     // Clear old data.
     outport_.clear();
 
-    return ReferenceVolumeCreatorInput{
+    return EnsembleMeanCreatorInput{
             std::move(ensemble),
             std::move(outputVolume),
             bounds,
             selectedField_.get(),
-            time_.get(),
-            referenceMethod_.get(),
-            static_cast<size_t>(referenceMember_.getSelectedIndex())
+            time_.get()
     };
 }
 
-ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCreatorInput input, ProgressReporter& progress) const {
+EnsembleMeanCreatorOutput EnsembleMeanCreator::compute(EnsembleMeanCreatorInput input, ProgressReporter& progress) const {
 
     auto ensemble = std::move(input.ensemble);
     const tgt::Bounds& bounds = input.bounds;
-    const std::string& field = input.field;
+    std::string field = std::move(input.field);
     const size_t numMembers = ensemble->getMembers().size();
     const size_t numChannels = ensemble->getNumChannels(field);
     std::unique_ptr<VolumeRAM> output = std::move(input.outputVolume);
     const tgt::ivec3 newDims = output->getDimensions();
 
-    if(input.referenceMethod == "run") {
-
-        size_t referenceTimeStep = ensemble->getMembers()[input.referenceMember].getTimeStep(input.time);
-        const VolumeBase* refVolume = ensemble->getMembers()[input.referenceMember].getTimeSteps()[referenceTimeStep].getVolume(input.field);
-        VolumeRAMRepresentationLock referenceVolume(refVolume);
-        tgt::mat4 worldToVoxel = refVolume->getWorldToVoxelMatrix();
+    for (size_t r = 0; r < numMembers; r++) {
+        size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
+        const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
+        VolumeRAMRepresentationLock lock(vol);
+        tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
 
         tgt::ivec3 pos = tgt::ivec3::zero;
         for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
@@ -137,89 +124,45 @@ ReferenceVolumeCreatorOutput ReferenceVolumeCreator::compute(ReferenceVolumeCrea
                     tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
 
                     // Map to voxel space.
-                    tgt::svec3 sampleInRefVoxelSpace = worldToVoxel * sample;
+                    tgt::svec3 sampleInVoxelSpace = worldToVoxel * sample;
 
-                    // Ignore, if out of bounds.
-                    if(tgt::clamp(sampleInRefVoxelSpace, tgt::svec3::zero, referenceVolume->getDimensions() - tgt::svec3::one) != sampleInRefVoxelSpace) {
+                    // Ignore, if out of source bounds.
+                    if(tgt::clamp(sampleInVoxelSpace, tgt::svec3::zero, lock->getDimensions() - tgt::svec3::one) != sampleInVoxelSpace) {
                         continue;
                     }
 
-                    // Sample the volume.
-                    for(size_t channel=0; channel<numChannels; channel++) {
-                        float value = referenceVolume->getVoxelNormalized(sampleInRefVoxelSpace, channel);
-                        output->setVoxelNormalized(value, pos, channel);
+                    for (size_t channel = 0; channel < numChannels; channel++) {
+                        float oldValue = output->getVoxelNormalized(pos, channel);
+                        float newValue = lock->getVoxelNormalized(sampleInVoxelSpace, channel) / numMembers;
+                        output->setVoxelNormalized(oldValue + newValue, pos, channel);
                     }
                 }
             }
-            progress.setProgress((pos.z+1.0f) / newDims.z);
         }
-    }
-    else if(input.referenceMethod == "zero") {
-        // Do nothing, the volume was already initialized all zero.
-    }
-    else if(input.referenceMethod == "mean") {
-
-        for (size_t r = 0; r < numMembers; r++) {
-            size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
-            const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
-            VolumeRAMRepresentationLock lock(vol);
-            tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
-
-            tgt::ivec3 pos = tgt::ivec3::zero;
-            for (pos.z = 0; pos.z < newDims.z; ++pos.z) {
-                for (pos.y = 0; pos.y < newDims.y; ++pos.y) {
-                    for (pos.x = 0; pos.x < newDims.x; ++pos.x) {
-
-                        // Map sample position to world space.
-                        tgt::vec3 sample = mapRange(tgt::vec3(pos), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
-
-                        // Map to voxel space.
-                        tgt::svec3 sampleInVoxelSpace = worldToVoxel * sample;
-
-                        // Ignore, if out of source bounds.
-                        if(tgt::clamp(sampleInVoxelSpace, tgt::svec3::zero, lock->getDimensions() - tgt::svec3::one) != sampleInVoxelSpace) {
-                            continue;
-                        }
-
-                        for (size_t channel = 0; channel < numChannels; channel++) {
-                            float oldValue = output->getVoxelNormalized(pos, channel);
-                            float newValue = lock->getVoxelNormalized(sampleInVoxelSpace, channel) / numMembers;
-                            output->setVoxelNormalized(oldValue + newValue, pos, channel);
-                        }
-                    }
-                }
-            }
-            progress.setProgress((r+1.0f) / numMembers);
-        }
+        progress.setProgress((r+1.0f) / numMembers);
     }
 
     tgt::vec3 spacing = bounds.diagonal() / tgt::vec3(newDims);
     std::unique_ptr<Volume> volume(new Volume(output.release(), spacing, bounds.getLLF()));
-    volume->getMetaDataContainer().addMetaData("time", new FloatMetaData(input.time));
-    volume->getMetaDataContainer().addMetaData("field", new StringMetaData(field));
+    volume->setTimestep(input.time);
+    volume->setModality(Modality(field));
 
     progress.setProgress(1.0f);
 
-    return ReferenceVolumeCreatorOutput{
+    return EnsembleMeanCreatorOutput{
             std::move(volume)
     };
 }
 
-void ReferenceVolumeCreator::processComputeOutput(ReferenceVolumeCreatorOutput output) {
+void EnsembleMeanCreator::processComputeOutput(EnsembleMeanCreatorOutput output) {
     outport_.setData(output.volume.release(), true);
 }
 
 
-void ReferenceVolumeCreator::adjustToEnsemble() {
+void EnsembleMeanCreator::adjustToEnsemble() {
     if(!inport_.hasData()) return;
 
     const EnsembleDataset* ensemble = inport_.getData();
-
-    referenceMember_.reset();
-    referenceMember_.setOptions(std::deque<Option<std::string>>());
-    for(const EnsembleMember& run : ensemble->getMembers()) {
-        referenceMember_.addOption(run.getName(), run.getName());
-    }
 
     selectedField_.reset();
     selectedField_.setOptions(std::deque<Option<std::string>>());
@@ -232,8 +175,8 @@ void ReferenceVolumeCreator::adjustToEnsemble() {
     //time_.set(ensemble->getStartTime());
 }
 
-Processor* ReferenceVolumeCreator::create() const {
-    return new ReferenceVolumeCreator();
+Processor* EnsembleMeanCreator::create() const {
+    return new EnsembleMeanCreator();
 }
 
 } // namespace voreen

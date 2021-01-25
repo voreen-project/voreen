@@ -38,7 +38,7 @@ SimilarityMatrixSource::SimilarityMatrixSource()
     // ports
     , outport_(Port::OUTPORT, "outport", "Similarity Matrix Output", false)
     // properties
-    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "similarity matrix (*.sm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
+    , filenameProp_("filenameprop", "Load Similarity Matrix File from", "Select file...", VoreenApplication::app()->getUserDataPath(), "Voreen Similarity Matrix (*.vsm)", FileDialogProperty::OPEN_FILE, Processor::INVALID_PATH)
     , loadButton_("loadButton", "Load", INVALID_PATH)
     // members
     , loadSimilarityMatrix_(true)
@@ -85,7 +85,7 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
         s.deserialize("similarity", *similarityMatrices);
         outport_.setData(similarityMatrices.release(), true);
         LINFO(filenameProp_.get() << " loaded sucessfully!");
-    } catch(std::exception& e) {
+    } catch(tgt::Exception& e) {
         LERROR(e.what());
         filenameProp_.set("");
     }

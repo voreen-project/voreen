@@ -23,76 +23,34 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_REFERENCEVOLUMECREATOR_H
-#define VRN_REFERENCEVOLUMECREATOR_H
+#ifndef VRN_PARALLELCOORDINATESAFE_H
+#define VRN_PARALLELCOORDINATESAFE_H
 
-#include "voreen/core/processors/asynccomputeprocessor.h"
-
-#include "voreen/core/ports/volumeport.h"
-#include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/vectorproperty.h"
-
-#include "../ports/ensembledatasetport.h"
+#include "../ports/parallelcoordinatesaxesport.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/properties/filedialogproperty.h"
 
 namespace voreen {
-    
-struct ReferenceVolumeCreatorInput {
-    PortDataPointer<EnsembleDataset> ensemble;
-    std::unique_ptr<VolumeRAM> outputVolume;
-    tgt::Bounds bounds;
-    std::string field;
-    float time;
-    std::string referenceMethod;
-    size_t referenceMember;
-};
 
-struct ReferenceVolumeCreatorOutput {
-    std::unique_ptr<VolumeBase> volume;
-};
-
-/**
- *
- */
-class VRN_CORE_API ReferenceVolumeCreator : public AsyncComputeProcessor<ReferenceVolumeCreatorInput, ReferenceVolumeCreatorOutput>  {
+class VRN_CORE_API ParallelCoordinatesSave : public Processor {
 public:
-    ReferenceVolumeCreator();
-    virtual ~ReferenceVolumeCreator();
+    ParallelCoordinatesSave();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const      { return "ReferenceVolumeCreator"; }
-    virtual std::string getCategory() const       { return "Ensemble Processing";    }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;  }
+    virtual std::string getClassName() const  { return "ParallelCoordinatesSave"; }
+    virtual std::string getCategory() const   { return "Output"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
+    virtual bool isEndProcessor() const       { return true; }
 
-protected:
+private:
+    virtual void process();
 
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
+    ParallelCoordinatesAxesPort _inport;
 
-protected:
-
-    virtual void setDescriptions() {
-        setDescription("Creates a reference volume from the input ensemble for a selected time step and field.");
-        referenceMethod_.setDescription("Use the reference method to determine how the reference volume is created.");
-    }
-
-    void adjustToEnsemble();
-
-    EnsembleDatasetPort inport_;
-    VolumePort outport_;
-
-    StringOptionProperty selectedField_;
-    FloatProperty time_;
-
-    StringOptionProperty referenceMethod_;
-    StringOptionProperty referenceMember_;
-
-    StringOptionProperty sampleRegion_;
-    IntVec3Property outputDimensions_;
-
-    static const std::string loggerCat_;
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertySaveButton;
 };
 
-} // namespace
+}
 
-#endif
+#endif // VRN_PARALLELCOORDINATESSAFE_H

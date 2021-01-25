@@ -1,0 +1,512 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-431.06942749" y="-344.015014648" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.665624976" />
+            </MetaData>
+            <Processors>
+                <Processor type="EnsembleDataSource" name="EnsembleDataSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-577" y="-594" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="colorMap" name="colorMap">
+                            <colors name="">
+                                <colors>
+                                    <item x="0" y="0" z="1" w="1" />
+                                    <item x="1" y="0" z="0" w="1" />
+                                    <item x="1" y="1" z="0" w="1" />
+                                </colors>
+                            </colors>
+                        </Property>
+                        <Property mapKey="ensemblepath" name="ensemblepath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/ensemble/aneurysm" />
+                                    <item value="../test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="hash" name="hash" value="a5ab9131c2fdd9b9db12ae519fecad90" />
+                        <Property mapKey="loadDataset" name="loadDataset" />
+                        <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Name" />
+                                <item value="Num Time Steps" />
+                                <item value="Start Time" />
+                                <item value="End Time" />
+                                <item value="Duration" />
+                            </columnLabels>
+                            <values>
+                                <item>
+                                    <item value="sense_10" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_15" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_20" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_25" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_30" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_35" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_40" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_45" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_50" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="full" />
+                        <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideTime" name="overrideTime" value="false" />
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="timeStepProgress" name="timeStepProgress" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="ensembledataset" direction="0" portID="ensembledataset" guiName="EnsembleDataset Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ParallelCoordinatesAxesCreator" name="ParallelCoordinatesAxesCreator" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-724" y="-477" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="property_aggregate_members" name="property_aggregate_members" value="false" />
+                        <Property mapKey="property_fields" name="property_fields">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="Magnitude" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="Velocity(1)" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="Velocity(2)" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="Velocity(3)" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="property_members" name="property_members">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
+                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
+                        <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="port_ensemble" direction="1" portID="port_ensemble" guiName="Ensemble Input" allowMultipleConnections="false" invalidationLevel="0">
+                            <Properties />
+                        </Port>
+                        <Port name="port_volume" direction="1" portID="port_volume" guiName="Volume Mask Input" allowMultipleConnections="false" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="port_axes" direction="0" portID="port_axes" guiName="Parallel Coordinates Axes" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                    <fields>
+                        <item>
+                            <First value="Magnitude" />
+                            <Second value="0" />
+                        </item>
+                        <item>
+                            <First value="Velocity" />
+                            <Second value="0" />
+                        </item>
+                        <item>
+                            <First value="Velocity" />
+                            <Second value="1" />
+                        </item>
+                        <item>
+                            <First value="Velocity" />
+                            <Second value="2" />
+                        </item>
+                    </fields>
+                    <axesLabels>
+                        <item value="Magnitude" />
+                        <item value="Velocity(1)" />
+                        <item value="Velocity(2)" />
+                        <item value="Velocity(3)" />
+                    </axesLabels>
+                </Processor>
+                <Processor type="ParallelCoordinatesAxesCreator" name="Aggregated" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-419" y="-480" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="property_aggregate_members" name="property_aggregate_members" value="true" />
+                        <Property mapKey="property_fields" name="property_fields">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="Magnitude" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="Velocity(1)" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="Velocity(2)" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="Velocity(3)" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="property_members" name="property_members">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
+                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
+                        <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="port_ensemble" direction="1" portID="port_ensemble" guiName="Ensemble Input" allowMultipleConnections="false" invalidationLevel="0">
+                            <Properties />
+                        </Port>
+                        <Port name="port_volume" direction="1" portID="port_volume" guiName="Volume Mask Input" allowMultipleConnections="false" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="port_axes" direction="0" portID="port_axes" guiName="Parallel Coordinates Axes" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                    <fields>
+                        <item>
+                            <First value="Magnitude" />
+                            <Second value="0" />
+                        </item>
+                        <item>
+                            <First value="Velocity" />
+                            <Second value="0" />
+                        </item>
+                        <item>
+                            <First value="Velocity" />
+                            <Second value="1" />
+                        </item>
+                        <item>
+                            <First value="Velocity" />
+                            <Second value="2" />
+                        </item>
+                    </fields>
+                    <axesLabels>
+                        <item value="Magnitude" />
+                        <item value="Velocity(1)" />
+                        <item value="Velocity(2)" />
+                        <item value="Velocity(3)" />
+                    </axesLabels>
+                </Processor>
+                <Processor type="ParallelCoordinatesSave" name="ParallelCoordinatesSave" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-707" y="-369" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="property_file_dialog" name="property_file_dialog" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/parallelcoordinates.vpc" />
+                                    <item value="../test-data/voreen-testdata/output/parallelcoordinates.vpc" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates.vpc" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="property_save_button" name="property_save_button" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Parallel Coordinates Axes" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="ParallelCoordinatesSave" name="ParallelCoordinatesSave 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-458" y="-366" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="property_file_dialog" name="property_file_dialog" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/parallelcoordinates_aggregated.vpc" />
+                                    <item value="../test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="property_save_button" name="property_save_button" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Parallel Coordinates Axes" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="port_ensemble">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="port_ensemble">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="port_axes">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ParallelCoordinatesSave" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="port_axes">
+                        <Processor type="ParallelCoordinatesAxesCreator" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="ParallelCoordinatesSave" ref="ref4" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

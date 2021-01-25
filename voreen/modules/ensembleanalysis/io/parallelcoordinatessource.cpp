@@ -23,80 +23,29 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_LOCALSIMILARITYANALYSIS_H
-#define VRN_LOCALSIMILARITYANALYSIS_H
-
-#include "voreen/core/processors/asynccomputeprocessor.h"
-
-#include "voreen/core/ports/volumeport.h"
-
-#include "voreen/core/properties/floatproperty.h"
-#include "voreen/core/properties/optionproperty.h"
-
-#include "../ports/ensembledatasetport.h"
+#include "parallelcoordinatessource.h"
 
 namespace voreen {
 
+ParallelCoordinatesSource::ParallelCoordinatesSource()
+    : Processor()
+    , _outport( Port::OUTPORT, "outport", "Parallel Coordinates Axes" )
+    , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::OPEN_FILE )
+    , _propertyLoadButton( "property_load_button", "Load" )
+{
+    this->addPort( _outport );
 
-struct LocalSimilarityAnalysisInput {
-    PortDataPointer<EnsembleDataset> ensemble;
-    const VolumeBase* referenceVolume;
-    std::unique_ptr<VolumeRAM_Float> outputVolume;
-    std::string field;
-    float vectorMagnitudeThreshold;
-    int vectorComponent;
-    float time;
-};
+    this->addProperty( _propertyFileDialog );
+    this->addProperty( _propertyLoadButton );
+}
 
-struct LocalSimilarityAnalysisOutput {
-    std::unique_ptr<VolumeBase> volume;
-};
+Processor* ParallelCoordinatesSource::create() const {
+    return new ParallelCoordinatesSource();
+}
 
-/**
- *
- */
-class VRN_CORE_API LocalSimilarityAnalysis : public AsyncComputeProcessor<LocalSimilarityAnalysisInput, LocalSimilarityAnalysisOutput>  {
-public:
-    LocalSimilarityAnalysis();
-    virtual ~LocalSimilarityAnalysis();
-    virtual Processor* create() const;
+void ParallelCoordinatesSource::process() {
+    if( !_propertyFileDialog.get().empty() )
+        _outport.setData( new ParallelCoordinatesAxes( _propertyFileDialog.get() ) );
+}
 
-    virtual std::string getClassName() const      { return "LocalSimilarityAnalysis"; }
-    virtual std::string getCategory() const       { return "Plotting";                }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;   }
-
-protected:
-
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
-
-    void adjustPropertiesToInput();
-
-protected:
-
-    virtual void setDescriptions() {
-        setDescription("");
-    }
-
-    enum VectorComponent {
-        BOTH = 0,
-        MAGNITUDE = 1,
-        DIRECTION = 2
-    };
-
-    EnsembleDatasetPort ensembleInport_;
-    VolumePort referencePort_;
-    VolumePort outport_;
-
-    StringOptionProperty selectedField_;
-    FloatProperty vectorMagnitudeThreshold_;
-    IntOptionProperty vectorComponent_;
-    FloatProperty time_;
-
-    static const std::string loggerCat_;
-};
-
-} // namespace
-
-#endif
+}

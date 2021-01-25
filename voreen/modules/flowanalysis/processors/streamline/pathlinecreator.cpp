@@ -181,12 +181,6 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
         }
 
         VolumeRAMRepresentationLock seedMaskLock(seedMask);
-
-        VolumeMinMax* vmm = seedMask->getDerivedData<VolumeMinMax>();
-        if(vmm->getMinNormalized() == 0.0f && vmm->getMaxNormalized() == 0.0f) {
-            throw InvalidInputException("Seed Mask is empty", InvalidInputException::S_ERROR);
-        }
-
         tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
         tgt::svec3 dim = seedMaskLock->getDimensions();
         for(size_t z=0; z < dim.z; z++) {

@@ -43,7 +43,7 @@ public:
     virtual Processor* create() const         { return new SimilarityMatrixSave(); }
     virtual std::string getClassName() const  { return "SimilarityMatrixSave"; }
     virtual std::string getCategory() const   { return "Output"; }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
     virtual bool isEndProcessor() const       { return true; }
 
 protected:

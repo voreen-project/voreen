@@ -1,0 +1,231 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-24.446392059" y="-317.803100586" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="2.577067375" />
+            </MetaData>
+            <Processors>
+                <Processor type="EnsembleDataSource" name="EnsembleDataSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-61" y="-447" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="colorMap" name="colorMap">
+                            <colors name="">
+                                <colors>
+                                    <item x="0" y="0" z="1" w="1" />
+                                    <item x="1" y="0" z="0" w="1" />
+                                    <item x="1" y="1" z="0" w="1" />
+                                </colors>
+                            </colors>
+                        </Property>
+                        <Property mapKey="ensemblepath" name="ensemblepath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/ensemble/aneurysm" />
+                                    <item value="../test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="hash" name="hash" value="a5ab9131c2fdd9b9db12ae519fecad90" />
+                        <Property mapKey="loadDataset" name="loadDataset" />
+                        <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Name" />
+                                <item value="Num Time Steps" />
+                                <item value="Start Time" />
+                                <item value="End Time" />
+                                <item value="Duration" />
+                            </columnLabels>
+                            <values>
+                                <item>
+                                    <item value="sense_10" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_15" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_20" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_25" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_30" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_35" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_40" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_45" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_50" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="full" />
+                        <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideTime" name="overrideTime" value="false" />
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="timeStepProgress" name="timeStepProgress" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="ensembledataset" direction="0" portID="ensembledataset" guiName="EnsembleDataset Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-36" y="-248" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/magnitude_mean.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/magnitude_mean.vvd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/magnitude_mean.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="EnsembleMeanCreator" name="EnsembleMeanCreator" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-66" y="-346" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="outputDimensions" name="outputDimensions">
+                            <value x="50" y="50" z="50" />
+                        </Property>
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="sampleRegion" name="sampleRegion" value="bounds" />
+                        <Property mapKey="selectedField" name="selectedField" value="Magnitude" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 574 ms" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="time" name="time" value="0" tracking="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembleinport" direction="1" portID="ensembleinport" guiName="Ensemble Data Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="ensembleinport">
+                        <Processor type="EnsembleMeanCreator" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="EnsembleMeanCreator" ref="ref1" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

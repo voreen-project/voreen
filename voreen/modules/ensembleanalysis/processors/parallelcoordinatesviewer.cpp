@@ -151,21 +151,21 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
         const auto range = axes->getRange( axisIndex );
 
         _propertyFieldInterval.blockCallbacks( true );
-        _propertyFieldInterval.setMinValue( range.first );
-        _propertyFieldInterval.setMaxValue( range.second );
+        _propertyFieldInterval.setMinValue( range.x );
+        _propertyFieldInterval.setMaxValue( range.y );
         _propertyFieldInterval.blockCallbacks( false );
 
         if( _propertyVisualizationMode.getValue() )
         {
             _propertyFieldInterval.blockCallbacks( true );
-            _propertyFieldInterval.set( tgt::vec2( range.first, range.second ) );
+            _propertyFieldInterval.set( tgt::vec2( range.x, range.y ) );
             _propertyFieldInterval.blockCallbacks( false );
 
             // Update uniform buffer
             for( auto& uniform : _uniformBufferVec )
             {
-                uniform.y = range.first;
-                uniform.z = range.second;
+                uniform.y = range.x;
+                uniform.z = range.y;
             }
             glUseProgram( _shaderProgram );
             glUniform3fv( glGetUniformLocation( _shaderProgram, "axes" ), static_cast<GLsizei>( _uniformBufferVec.size() ), reinterpret_cast<const GLfloat*>( _uniformBufferVec.data() ) );
@@ -310,7 +310,7 @@ void ParallelCoordinatesViewer::initialize()
         "\n"
         "void main()\n"
         "{\n"
-        "   outColor = color; // vec4( vec3( 0.8 ), 0.95 / 110683 );\n"
+        "   outColor = color;\n"
         "}"
     );
     if( !vertexShader || !fragmentShader ) return;
@@ -400,10 +400,13 @@ void ParallelCoordinatesViewer::process()
     // Draw selected lines
     glBlendFuncSeparate( GL_DST_ALPHA, GL_ZERO, GL_ONE, GL_ONE );
     glUniform4f( glGetUniformLocation( _shaderProgram, "color" ), 0.922f, 0.251f, 0.204f, 0.8f / _propertyDensitySelectedSamples.get() );
-    for( size_t i = 0; i < axes->samples(); ++i )  if( _samplesVisiblity[i] && _samplesSelection[i] )
-    {
-        const auto baseVertex = _propertyVisualizationMode.getValue() ? static_cast<GLint>( _propertySelectedField.getValue() + i * axes->fields() ) : static_cast<GLint>( i * axes->fields() );
-        glDrawElementsBaseVertex( GL_LINE_STRIP, static_cast<GLsizei>( axisCount ), GL_UNSIGNED_INT, nullptr, baseVertex );
+    for( size_t i = 0; i < axes->samples(); ++i ) {
+        if (_samplesVisiblity[i] && _samplesSelection[i]) {
+            const auto baseVertex = _propertyVisualizationMode.getValue() ? static_cast<GLint>(
+                    _propertySelectedField.getValue() + i * axes->fields()) : static_cast<GLint>( i * axes->fields());
+            glDrawElementsBaseVertex(GL_LINE_STRIP, static_cast<GLsizei>( axisCount ), GL_UNSIGNED_INT, nullptr,
+                                     baseVertex);
+        }
     }
 
     glBindVertexArray( 0 );
@@ -434,8 +437,8 @@ void ParallelCoordinatesViewer::process()
 
         for( auto& section : sections )
         {
-            const auto low = Y_LIMIT * ((section.first - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
-            const auto high = Y_LIMIT * ((section.second - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
+            const auto low = Y_LIMIT * ((section.x - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
+            const auto high = Y_LIMIT * ((section.y - uniform.y ) / (uniform.z - uniform.y ) * 2.0f - 1.0f );
             if( high < -Y_LIMIT || low > Y_LIMIT ) continue;
 
             IMode.vertex( uniform.x, std::max(-Y_LIMIT, low ) );
@@ -450,19 +453,19 @@ void ParallelCoordinatesViewer::process()
     font.setFontColor( tgt::vec4( 0.05f, 0.05f, 0.05f, 1.0f ) );
 
     // --- Draw active section --- //
-    if( _interaction == Interaction::eSelection )
+    if( _interaction == Interaction::eSelection && _hoveredScreenAxis != ~0u )
     {
         const auto index = _propertyVisualizationMode.getValue() ? _hoveredScreenAxis : _indexBufferVec[_hoveredScreenAxis];
         const auto x = this->screenAxisToCoordinate( _hoveredScreenAxis );
         const auto uniform = _uniformBufferVec[index];
 
         IMode.color( 0.741f, 0.547f, 0.009f, 1.0f );
-        auto y = ( _activeSection.first - uniform.y ) / ( uniform.z - uniform.y );
+        auto y = ( _activeSection.x - uniform.y ) / ( uniform.z - uniform.y );
         IMode.vertex(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
-        y = ( _activeSection.second - uniform.y ) / ( uniform.z - uniform.y );
+        y = ( _activeSection.y - uniform.y ) / ( uniform.z - uniform.y );
         IMode.vertex(x, Y_LIMIT * (y * 2.0f - 1.0f ) );
 
-        const auto minmax = std::minmax( _activeSection.first, _activeSection.second );
+        const auto minmax = std::minmax( _activeSection.x, _activeSection.y );
 
         auto str = std::to_string( minmax.first );
         if( minmax.second != minmax.first ) str += " - " + std::to_string( minmax.second );
@@ -484,7 +487,7 @@ void ParallelCoordinatesViewer::process()
 
     for( size_t i = 0; i < axisCount; ++i )
     {
-        const auto text = _propertyVisualizationMode.getValue() ? std::to_string( i ) : axes->getFieldName( i );
+        const auto text = _propertyVisualizationMode.getValue() ? std::to_string( i ) : axes->getAxesLabels()[i];
         const auto x = util::pointToScreen( tgt::vec2( _uniformBufferVec[i].x, 0.0f ), _renderport.getSize() ).x;
         const auto textWidth = font.getSize( tgt::vec3( 512.0f, 512.0f, 0.0f ), text, _renderport.getSize() ).x;
 
@@ -559,13 +562,13 @@ void ParallelCoordinatesViewer::onNewInportData()
     for( size_t i = 0; i < axes->members(); ++i )
     {
         const auto name = axes->getMemberName( i );
-        memberOptions.push_back( Option<int>( name, name, static_cast<int>( i ) ) );
+        memberOptions.emplace_back( Option<int>( name, name, static_cast<int>( i ) ) );
     }
 
     // Selected member
     _propertySelectedMember.blockCallbacks( true );
     _propertySelectedMember.setOptions( memberOptions );
-    _propertySelectedMember.invalidate();
+    _propertySelectedMember.selectByIndex(0);
     _propertySelectedMember.blockCallbacks( false );
 
     // Selected timestep
@@ -578,20 +581,20 @@ void ParallelCoordinatesViewer::onNewInportData()
     auto fieldOptions = std::deque<Option<int>>();
     for( size_t i = 0; i < axes->fields(); ++i )
     {
-        const auto name = axes->getFieldName( i );
-        fieldOptions.push_back( Option<int>( name, name, static_cast<int>( i ) ) );
+        const auto name = axes->getAxesLabels()[i];
+        fieldOptions.emplace_back( Option<int>( name, name, static_cast<int>( i ) ) );
     }
     _propertySelectedField.blockCallbacks( true );
     _propertySelectedField.setOptions( fieldOptions );
-    _propertySelectedField.invalidate();
+    _propertySelectedField.selectByIndex(0);
     _propertySelectedField.blockCallbacks( false );
 
     // Field interval
     const auto fieldInterval = axes->getRange( _propertySelectedField.getValue() );
     _propertyFieldInterval.blockCallbacks( true );
-    _propertyFieldInterval.setMinValue( fieldInterval.first );
-    _propertyFieldInterval.setMaxValue( fieldInterval.second );
-    _propertyFieldInterval.set( tgt::vec2( fieldInterval.first, fieldInterval.second ) );
+    _propertyFieldInterval.setMinValue( fieldInterval.x );
+    _propertyFieldInterval.setMaxValue( fieldInterval.y );
+    _propertyFieldInterval.set( tgt::vec2( fieldInterval.x, fieldInterval.y ) );
     _propertyFieldInterval.blockCallbacks( false );
 
     // Density visible samples
@@ -610,8 +613,8 @@ void ParallelCoordinatesViewer::onNewInportData()
     {
         _propertyTransFuncField[i].blockCallbacks( true );
         _propertyTransFuncField[i].setOptions( fieldOptions );
+        _propertyTransFuncField[i].selectByIndex(0);
         _propertyTransFuncField[i].setVisibleFlag( !_propertyVisualizationMode.getValue() );
-        _propertyTransFuncField[i].invalidate();
         _propertyTransFuncField[i].blockCallbacks( false );
     }
 
@@ -643,7 +646,7 @@ void ParallelCoordinatesViewer::onNewInportData()
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto range = axes->getRange( _propertyVisualizationMode.getValue() ? _propertySelectedField.getValue() : i );
-        _uniformBufferVec[i] = tgt::vec3( this->screenAxisToCoordinate( i ), range.first, range.second );
+        _uniformBufferVec[i] = tgt::vec3( this->screenAxisToCoordinate( i ), range.x, range.y );
     }
     glUseProgram( _shaderProgram );
     glUniform1i( glGetUniformLocation( _shaderProgram, "operator" ), _propertyVisualizationMode.getValue() ? 1 : 0 );
@@ -654,8 +657,8 @@ void ParallelCoordinatesViewer::onNewInportData()
     // Interaction data
     _interaction = Interaction::eNone;
     _hoveredScreenAxis = ~0u;
-    _activeSection = std::pair<float, float>( 0.0f, 0.0f );
-    _sections = std::vector<std::list<std::pair<float, float>>>( axisCount );
+    _activeSection = tgt::vec2( 0.0f, 0.0f );
+    _sections = std::vector<std::list<tgt::vec2>>( axisCount );
     _samplesVisiblity = std::vector<bool>( axes->samples(), true );
     _samplesSelection = std::vector<int>( axes->samples(), false );
 }
@@ -678,7 +681,7 @@ void ParallelCoordinatesViewer::onHoverEvent( tgt::MouseEvent* event )
     if( current.axis != _hoveredScreenAxis )
     {
         _hoveredScreenAxis = current.axis;
-        this->process();
+        invalidate();
     }
 }
 void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
@@ -702,7 +705,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         {
             const auto uniform = _uniformBufferVec[axisIndex];
             const auto x = std::max( 0.0f, std::min( 1.0f, ((point.y / Y_LIMIT ) + 1.0f ) / 2.0f ) );
-            _activeSection.first = _activeSection.second = uniform.y + x * ( uniform.z - uniform.y );
+            _activeSection.x = _activeSection.y = uniform.y + x * ( uniform.z - uniform.y );
             _interaction = Interaction::eSelection;
             render = true;
         }
@@ -716,21 +719,26 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         }
         else if( _interaction == Interaction::eSelection )
         {
-            // Swap value so that first < second
-            if( _activeSection.first > _activeSection.second )
-                std::swap( _activeSection.first, _activeSection.second );
+            // Swap value so that x < y
+            if( _activeSection.x > _activeSection.y )
+                std::swap( _activeSection.x, _activeSection.y );
 
             // Add or remove section
             auto& sections = _sections[axisIndex];
             if( event->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT ) // Add section
             {
-                sections.insert( std::upper_bound( sections.begin(), sections.end(), _activeSection ), _activeSection );
+                // Lexicographic sorting similar to std::pair.
+                auto less = [] (const tgt::vec2& lhs, const tgt::vec2& rhs) {
+                    return lhs.x == rhs.x ? lhs.y < rhs.y : lhs.x < rhs.x;
+                };
+
+                sections.insert( std::upper_bound( sections.begin(), sections.end(), _activeSection, less), _activeSection );
                 for( auto it = sections.begin(); std::next( it ) != sections.end(); )
                 {
                     auto next = std::next( it );
-                    if( it->second >= next->first )
+                    if( it->y >= next->x )
                     {
-                        it->second = std::max( it->second, next->second );
+                        it->y = std::max( it->y, next->y );
                         sections.erase( next );
                     }
                     else ++it;
@@ -740,30 +748,30 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
             {
                 for( auto it = sections.begin(); it != sections.end(); )
                 {
-                    if( it->first < _activeSection.first )
+                    if( it->x < _activeSection.x )
                     {
-                        if( it->second <= _activeSection.first ) ++it;
+                        if( it->y <= _activeSection.x ) ++it;
                         else
                         {
-                            if( it->second <= _activeSection.second )
+                            if( it->y <= _activeSection.y )
                             {
-                                it->second = _activeSection.first;
+                                it->y = _activeSection.x;
                                 ++it;
                             }
                             else
                             {
-                                sections.insert( std::next( it ), std::pair<float, float>( _activeSection.second, it->second ) );
-                                it->second = _activeSection.first;
+                                sections.insert( std::next( it ), tgt::vec2( _activeSection.y, it->y ) );
+                                it->y = _activeSection.x;
                                 break;
                             }
                         }
                     }
-                    else if( it->first < _activeSection.second )
+                    else if( it->x < _activeSection.y )
                     {
-                        if( it->second <= _activeSection.second ) it = sections.erase( it );
+                        if( it->y <= _activeSection.y ) it = sections.erase( it );
                         else
                         {
-                            it->first = _activeSection.second;
+                            it->x = _activeSection.y;
                             break;
                         }
                     }
@@ -778,7 +786,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
                         this->updateTransferFunction( i );
 
 
-            _activeSection = std::pair<float, float>( 0.0f, 0.0f );
+            _activeSection = tgt::vec2( 0.0f, 0.0f );
             render = true;
         }
 
@@ -816,7 +824,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         {
             const auto uniform = _uniformBufferVec[axisIndex];
             const auto x = std::max( 0.0f, std::min( 1.0f, ((point.y / Y_LIMIT ) + 1.0f ) / 2.0f ) );
-            _activeSection.second = uniform.y + x * ( uniform.z - uniform.y );
+            _activeSection.y = uniform.y + x * ( uniform.z - uniform.y );
             render = true;
         }
     }
@@ -838,7 +846,7 @@ void ParallelCoordinatesViewer::updateSampleStates()
     const auto axes = _axesport.getData();
     const auto axisCount = _propertyVisualizationMode.getValue() ? axes->timesteps() : axes->fields();
     const auto sectionsCount = std::accumulate( _sections.begin(), _sections.end(), size_t( 0 ),
-        [] ( size_t val, const std::list<std::pair<float, float>>& sections ) { return val + sections.size(); } );
+        [] ( size_t val, const std::list<tgt::vec2>& sections ) { return val + sections.size(); } );
 
     std::fill( _samplesSelection.begin(), _samplesSelection.end(), false );
     for( size_t i = 0; i < axes->samples(); ++i )
@@ -863,23 +871,24 @@ void ParallelCoordinatesViewer::updateSampleStates()
         if( sectionsCount && _samplesVisiblity[i] )
         {
             _samplesSelection[i] = true;
-            for( size_t j = 0; j < axisCount; ++j ) if( _sections[j].size() )
-            {
-                const auto field = _propertyVisualizationMode.getValue() ? _propertySelectedField.getValue() : j;
-                const auto timestep = _propertyVisualizationMode.getValue() ? j : _propertySelectedTimestep.get();
-                const auto value = axes->getValue( field, i, timestep, _propertySelectedMember.getValue() );
+            for( size_t j = 0; j < axisCount; ++j ) {
+                if (!_sections[j].empty()) {
+                    const auto field = _propertyVisualizationMode.getValue() ? _propertySelectedField.getValue() : j;
+                    const auto timestep = _propertyVisualizationMode.getValue() ? j : _propertySelectedTimestep.get();
+                    const auto value = axes->getValue(field, i, timestep, _propertySelectedMember.getValue());
 
-                bool select = false;
-                for( const auto section : _sections[j] ) if( value >= section.first && value <= section.second )
-                {
-                    select = true;
-                    break;
-                }
+                    bool select = false;
+                    for (const auto section : _sections[j]) {
+                        if (value >= section.x && value <= section.y) {
+                            select = true;
+                            break;
+                        }
+                    }
 
-                if( !select )
-                {
-                    _samplesSelection[i] = false;
-                    break;
+                    if (!select) {
+                        _samplesSelection[i] = false;
+                        break;
+                    }
                 }
             }
         }
@@ -889,7 +898,7 @@ void ParallelCoordinatesViewer::updateSampleStates()
     _propertySelectedSamples.set( _samplesSelection );
     _propertySelectedSamples.blockCallbacks( false );
 
-    _propertySections.set( ParallelCoordinatesSectionsPropertyData( _propertySelectedMember.getDescription(), static_cast<size_t>( _propertySelectedTimestep.get() ), axes->getFieldNames(), _sections ) );
+    _propertySections.set( ParallelCoordinatesSectionsPropertyData( axes->getEnsembleHash(), _propertySelectedMember.get(), static_cast<size_t>( _propertySelectedTimestep.get() ), axes->getFields(), _sections ) );
 }
 void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
 {
@@ -928,21 +937,21 @@ void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
     auto transferFunctionKeys = std::unique_ptr<TransFunc1DKeys>( _propertyTransFunc[index].get()->clone() );
     auto keys = std::vector<TransFuncMappingKey*>();
 
-    const auto range =  _uniformBufferVec[axisIndex].yz(); // tgt::vec2( sections.front().first, sections.back().second );
+    const auto range =  _uniformBufferVec[axisIndex].yz(); // tgt::vec2( sections.front().x, sections.back().y );
     transferFunctionKeys->setDomain( range.x, range.y );
 
     if( sections.size() )
     {
         for( const auto section : sections )
         {
-            auto intensity = ( section.first - range.x ) / ( range.y - range.x );
+            auto intensity = ( section.x - range.x ) / ( range.y - range.x );
             auto interpolation = interpolationFromIntensity( intensity );
             auto begin = new TransFuncMappingKey( intensity, interpolation );
             begin->setSplit( true );
             begin->setColorL( tgt::col4( 0, 0, 0, 0 ) );
             keys.push_back( begin );
 
-            intensity = ( section.second - range.x ) / ( range.y - range.x );
+            intensity = ( section.y - range.x ) / ( range.y - range.x );
             interpolation = interpolationFromIntensity( intensity );
             auto end = new TransFuncMappingKey( intensity, interpolation );
             end->setSplit( true );
@@ -956,8 +965,8 @@ void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
     {
         for( const auto section : sections )
         {
-            const auto lower = ( section.first - range.x ) / ( range.y - range.x );
-            const auto upper = ( section.second - range.x ) / ( range.y - range.x );
+            const auto lower = ( section.x - range.x ) / ( range.y - range.x );
+            const auto upper = ( section.y - range.x ) / ( range.y - range.x );
             if( key->getIntensity() >= lower && key->getIntensity() <= upper )
             {
                 transferFunctionKeys->addKey( key->clone() );
@@ -968,6 +977,21 @@ void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
 
     _propertyTransFuncIntern[index].set1DKeys( transferFunctionKeys.release() );
     _propertyTransFuncIntern[index].invalidate();
+}
+
+void ParallelCoordinatesViewer::serialize(Serializer& s) const {
+    RenderProcessor::serialize(s);
+
+    //s.serialize("sections", _sections);
+    //s.serialize("samplesVisiblity", _samplesVisiblity);
+    //s.serialize("samplesSelection", _samplesSelection);
+}
+void ParallelCoordinatesViewer::deserialize(Deserializer& s) {
+    RenderProcessor::deserialize(s);
+
+    //s.deserialize("sections", _sections);
+    //s.deserialize("samplesVisiblity", _samplesVisiblity);
+    //s.deserialize("samplesSelection", _samplesSelection);
 }
 
 float ParallelCoordinatesViewer::screenAxisToCoordinate( size_t axis ) const

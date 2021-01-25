@@ -1,0 +1,1283 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="Canvas" ref="ref8" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-431.06942749" y="-344.015014648" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.665624976" />
+            </MetaData>
+            <Processors>
+                <Processor type="SimilarityPlot" name="1D" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-575" y="-383" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autoCalculate" name="autoCalculate" value="true" />
+                        <Property mapKey="calculate" name="calculate" />
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974076" id="ref11">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <position x="0.905592263" y="-0.435371369" z="-3.716560841" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="-0.74361968" y="0.618616879" z="-0.253659338" />
+                            <trackball moveCenter="false">
+                                <center x="0" y="0" z="0" />
+                            </trackball>
+                            <sceneLLF x="0" y="0" z="0" />
+                            <sceneURB x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="colorCoding" name="colorCoding" value="memberAndTimeStep" />
+                        <Property mapKey="fontSize" name="fontSize" value="10" />
+                        <Property mapKey="loadButton" name="loadButton" />
+                        <Property mapKey="loadFile" name="loadFile" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="numDimensions" name="numDimensions" value="1" />
+                        <Property mapKey="numEigenvalues" name="numEigenvalues" value="3" />
+                        <Property mapKey="numIterations" name="numIterations" value="1000" />
+                        <Property mapKey="principalComponent" name="principalComponent" value="1" />
+                        <Property mapKey="progressBar" name="progressBar" />
+                        <Property mapKey="referenceMember" name="referenceMember">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="referenceTimeStep" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="renderTimeSelection" name="renderTimeSelection" value="false" />
+                        <Property mapKey="renderedChannel" name="renderedChannel" value="Velocity" />
+                        <Property mapKey="renderedMembers" name="renderedMembers">
+                            <selectedRow>
+                                <item value="8" />
+                                <item value="7" />
+                                <item value="6" />
+                                <item value="5" />
+                                <item value="4" />
+                                <item value="3" />
+                                <item value="2" />
+                                <item value="1" />
+                                <item value="0" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                        <Property mapKey="saveFileDialog" name="saveFileDialog" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="scaleToMagnitude" name="scaleToMagnitude" value="true" />
+                        <Property mapKey="selectedMembers" name="selectedMembers">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="selectedTimeSteps" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="showTooltip" name="showTooltip" value="true" />
+                        <Property mapKey="sphereRadius" name="sphereRadius" value="0.063660003" />
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembledatastructurein" direction="1" portID="ensembledatastructurein" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="similaritymatrixin" direction="1" portID="similaritymatrixin" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="eigenvalueOutport" direction="0" portID="eigenvalueOutport" guiName="Eigenvalues" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="outport" direction="0" portID="outport" guiName="Outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref10">
+                                    <value x="462" y="457" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="EnsembleDataSource" name="EnsembleDataSource" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-717" y="-609" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="colorMap" name="colorMap">
+                            <colors name="">
+                                <colors>
+                                    <item x="0" y="0" z="1" w="1" />
+                                    <item x="1" y="0" z="0" w="1" />
+                                    <item x="1" y="1" z="0" w="1" />
+                                </colors>
+                            </colors>
+                        </Property>
+                        <Property mapKey="ensemblepath" name="ensemblepath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/ensemble/aneurysm" />
+                                    <item value="../test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="hash" name="hash" value="a5ab9131c2fdd9b9db12ae519fecad90" />
+                        <Property mapKey="loadDataset" name="loadDataset" />
+                        <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Name" />
+                                <item value="Num Time Steps" />
+                                <item value="Start Time" />
+                                <item value="End Time" />
+                                <item value="Duration" />
+                            </columnLabels>
+                            <values>
+                                <item>
+                                    <item value="sense_10" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_15" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_20" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_25" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_30" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_35" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_40" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_45" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_50" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="full" />
+                        <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideTime" name="overrideTime" value="false" />
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="timeStepProgress" name="timeStepProgress" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="ensembledataset" direction="0" portID="ensembledataset" guiName="EnsembleDataset Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixSource" name="SimilarityMatrixSource" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-502" y="-612" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/ensemble/combined_similarity_mult.vsm" />
+                                    <item value="../test-data/voreen-testdata/input/ensemble/combined_similarity_mult.vsm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/combined_similarity_mult.vsm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="loadButton" name="loadButton" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Similarity Matrix Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-591" y="-243" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="71" y="268" width="462" height="457" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="71" y="268" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="462" y="457" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize" id="ref18">
+                            <value x="462" y="457" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/similarityplot_1D.png" />
+                                    <item value="../test-data/voreen-testdata/output/similarityplot_1D.png" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/similarityplot_1D.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref9">
+                                    <value x="462" y="457" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="EnsembleFilter" name="EnsembleFilter" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-695" y="-504" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="channel" name="channel" value="Velocity">
+                            <Options>
+                                <Option Key="Magnitude" Description="Magnitude (*)" Value="Magnitude">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Velocity" Description="Velocity (*)" Value="Velocity">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                            </Options>
+                        </Property>
+                        <Property mapKey="enableRemoveFirstTimeStep" name="enableRemoveFirstTimeStep" value="false" />
+                        <Property mapKey="enableSelectLastTimeStep" name="enableSelectLastTimeStep" value="false" />
+                        <Property mapKey="keepIfOnlyTimeStep" name="keepIfOnlyTimeStep" value="true" />
+                        <Property mapKey="members" name="members">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="timeInterval" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
+                            <value x="0" y="0" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembledatastructurein" direction="1" portID="ensembledatastructurein" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="ensembledatastructureout" direction="0" portID="ensembledatastructureout" guiName="Ensemble Datastructure Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-441" y="-243" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="205" y="363" width="462" height="457" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="205" y="363" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="462" y="457" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize" id="ref19">
+                            <value x="462" y="457" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/similarityplot_2D.png" />
+                                    <item value="../test-data/voreen-testdata/output/similarityplot_2D.png" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/similarityplot_2D.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref13">
+                                    <value x="462" y="457" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityPlot" name="2D" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-428" y="-385" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autoCalculate" name="autoCalculate" value="true" />
+                        <Property mapKey="calculate" name="calculate" />
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974076" id="ref12">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <position x="0.905592263" y="-0.435371369" z="-3.716560841" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="-0.74361968" y="0.618616879" z="-0.253659338" />
+                            <trackball moveCenter="false">
+                                <center x="0" y="0" z="0" />
+                            </trackball>
+                            <sceneLLF x="0" y="0" z="0" />
+                            <sceneURB x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="colorCoding" name="colorCoding" value="memberAndTimeStep" />
+                        <Property mapKey="fontSize" name="fontSize" value="14" />
+                        <Property mapKey="loadButton" name="loadButton" />
+                        <Property mapKey="loadFile" name="loadFile" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="numDimensions" name="numDimensions" value="2" />
+                        <Property mapKey="numEigenvalues" name="numEigenvalues" value="3" />
+                        <Property mapKey="numIterations" name="numIterations" value="1000" />
+                        <Property mapKey="principalComponent" name="principalComponent" value="1" />
+                        <Property mapKey="progressBar" name="progressBar" />
+                        <Property mapKey="referenceMember" name="referenceMember">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="referenceTimeStep" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="renderTimeSelection" name="renderTimeSelection" value="false" />
+                        <Property mapKey="renderedChannel" name="renderedChannel" value="Velocity" />
+                        <Property mapKey="renderedMembers" name="renderedMembers">
+                            <selectedRow>
+                                <item value="8" />
+                                <item value="7" />
+                                <item value="6" />
+                                <item value="5" />
+                                <item value="4" />
+                                <item value="3" />
+                                <item value="2" />
+                                <item value="1" />
+                                <item value="0" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                        <Property mapKey="saveFileDialog" name="saveFileDialog" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="scaleToMagnitude" name="scaleToMagnitude" value="true" />
+                        <Property mapKey="selectedMembers" name="selectedMembers">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="selectedTimeSteps" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="showTooltip" name="showTooltip" value="true" />
+                        <Property mapKey="sphereRadius" name="sphereRadius" value="0.063660003" />
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembledatastructurein" direction="1" portID="ensembledatastructurein" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="similaritymatrixin" direction="1" portID="similaritymatrixin" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="eigenvalueOutport" direction="0" portID="eigenvalueOutport" guiName="Eigenvalues" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="outport" direction="0" portID="outport" guiName="Outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref14">
+                                    <value x="462" y="457" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas 3" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-288" y="-236" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="365" y="462" width="462" height="457" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="365" y="462" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="462" y="457" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize" id="ref20">
+                            <value x="462" y="457" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/similarityplot_3D.png" />
+                                    <item value="../test-data/voreen-testdata/output/similarityplot_3D.png" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/similarityplot_3D.png" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref16">
+                                    <value x="462" y="457" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityPlot" name="3D" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-275" y="-378" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="autoCalculate" name="autoCalculate" value="true" />
+                        <Property mapKey="calculate" name="calculate" />
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974076" id="ref15">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <position x="0.905592263" y="-0.435371369" z="-3.716560841" />
+                            <focus x="0" y="0" z="0" />
+                            <upVector x="-0.74361968" y="0.618616879" z="-0.253659338" />
+                            <trackball moveCenter="false">
+                                <center x="0" y="0" z="0" />
+                            </trackball>
+                            <sceneLLF x="0" y="0" z="0" />
+                            <sceneURB x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="colorCoding" name="colorCoding" value="memberAndTimeStep" />
+                        <Property mapKey="fontSize" name="fontSize" value="10" />
+                        <Property mapKey="loadButton" name="loadButton" />
+                        <Property mapKey="loadFile" name="loadFile" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="numDimensions" name="numDimensions" value="3" />
+                        <Property mapKey="numEigenvalues" name="numEigenvalues" value="3" />
+                        <Property mapKey="numIterations" name="numIterations" value="1000" />
+                        <Property mapKey="principalComponent" name="principalComponent" value="1" />
+                        <Property mapKey="progressBar" name="progressBar" />
+                        <Property mapKey="referenceMember" name="referenceMember">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="referenceTimeStep" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="renderTimeSelection" name="renderTimeSelection" value="false" />
+                        <Property mapKey="renderedChannel" name="renderedChannel" value="Velocity" />
+                        <Property mapKey="renderedMembers" name="renderedMembers">
+                            <selectedRow>
+                                <item value="8" />
+                                <item value="7" />
+                                <item value="6" />
+                                <item value="5" />
+                                <item value="4" />
+                                <item value="3" />
+                                <item value="2" />
+                                <item value="1" />
+                                <item value="0" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                        <Property mapKey="saveFileDialog" name="saveFileDialog" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="scaleToMagnitude" name="scaleToMagnitude" value="true" />
+                        <Property mapKey="selectedMembers" name="selectedMembers">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="selectedTimeSteps" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="showTooltip" name="showTooltip" value="true" />
+                        <Property mapKey="sphereRadius" name="sphereRadius" value="0.063660003" />
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembledatastructurein" direction="1" portID="ensembledatastructurein" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="similaritymatrixin" direction="1" portID="similaritymatrixin" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="eigenvalueOutport" direction="0" portID="eigenvalueOutport" guiName="Eigenvalues" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="outport" direction="0" portID="outport" guiName="Outport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref17">
+                                    <value x="462" y="457" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityPlot" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref2" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="EnsembleFilter" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="similaritymatrixin">
+                        <Processor type="SimilarityPlot" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="similaritymatrixin">
+                        <Processor type="SimilarityPlot" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixSource" ref="ref4" />
+                    </Outport>
+                    <Inport name="similaritymatrixin">
+                        <Processor type="SimilarityPlot" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledatastructureout">
+                        <Processor type="EnsembleFilter" ref="ref3" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="SimilarityPlot" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledatastructureout">
+                        <Processor type="EnsembleFilter" ref="ref3" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="SimilarityPlot" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledatastructureout">
+                        <Processor type="EnsembleFilter" ref="ref3" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="SimilarityPlot" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityPlot" ref="ref5" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityPlot" ref="ref6" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref8" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref9" />
+                    <DestinationProperty ref="ref10" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref11" />
+                    <DestinationProperty type="CameraProperty" ref="ref12" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref12" />
+                    <DestinationProperty type="CameraProperty" ref="ref11" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref13" />
+                    <DestinationProperty ref="ref14" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref11" />
+                    <DestinationProperty type="CameraProperty" ref="ref15" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref15" />
+                    <DestinationProperty type="CameraProperty" ref="ref11" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref12" />
+                    <DestinationProperty type="CameraProperty" ref="ref15" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref15" />
+                    <DestinationProperty type="CameraProperty" ref="ref12" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref16" />
+                    <DestinationProperty ref="ref17" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref18" />
+                    <DestinationProperty type="IntVec2Property" ref="ref19" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref19" />
+                    <DestinationProperty type="IntVec2Property" ref="ref18" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref19" />
+                    <DestinationProperty type="IntVec2Property" ref="ref20" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="IntVec2Property" ref="ref20" />
+                    <DestinationProperty type="IntVec2Property" ref="ref19" />
+                    <Evaluator type="LinkEvaluatorIVec2Id" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

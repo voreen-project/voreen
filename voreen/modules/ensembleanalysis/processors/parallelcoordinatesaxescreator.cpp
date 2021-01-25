@@ -28,73 +28,44 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 
+#include "modules/ensembleanalysis/utils/ensemblehash.h"
 #include "modules/ensembleanalysis/utils/utils.h"
 
 #include <random>
-#include <tuple>
+
 
 namespace voreen {
 
 ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
-    : AsyncComputeProcessor<ParallelCoordianesAxesCreatorInput, ParallelCoordianesAxesCreatorOutput>()
+    : AsyncComputeProcessor<ParallelCoordinatesAxesCreatorInput, ParallelCoordinatesAxesCreatorOutput>()
     , ensembleport_(Port::INPORT, "port_ensemble", "Ensemble Input", false, Processor::VALID )
-    , volumeport_(Port::INPORT, "port_volume", "Volume Mask Input", false, Processor::VALID )
+    , seedMask_(Port::INPORT, "port_volume", "Volume Mask Input", false, Processor::VALID )
     , axesport_(Port::OUTPORT, "port_axes", "Parallel Coordinates Axes" )
-    , propertyMembers_("property_runs", "Selected Members", Processor::VALID )
+    , propertyMembers_("property_members", "Selected Members", Processor::VALID )
     , propertyFields_("property_fields", "Selected Fields", Processor::VALID )
-    , propertySpatialSampleCount_("property_spatial_sample_count", "Spatial Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
+    , propertySpatialSampleCount_("property_spatial_sample_count", "Spatial Sample Count", 32768, 1, 4194304, Processor::VALID )
     , propertyTemporalSampleCount_("property_temporal_sample_count", "Temporal Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
+    , propertySampleRegion_("sampleRegion", "Sample Region")
     , propertySeedTime_("property_seed_time", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
-    , propertyAggregateMembers_("property_aggregate_runs", "Aggregate Members", false, Processor::VALID )
-    , propertyFileDialog_("property_file_dialog", "File Output", "Select File...", "", "Parallel Coordinates (*.pc)", FileDialogProperty::FileMode::SAVE_FILE, Processor::VALID )
-    , propertySaveButton_("property_save", "Save File", Processor::VALID )
+    , propertyAggregateMembers_("property_aggregate_members", "Aggregate Members", false, Processor::VALID )
 {
     // --- Initialize Ports --- //
     this->addPort(ensembleport_ );
-    this->addPort(volumeport_ );
+    ON_CHANGE(ensembleport_, ParallelCoordinatesAxesCreator, adjustToEnsemble);
+    this->addPort(seedMask_ );
     this->addPort(axesport_ );
 
     // --- Initialize Properties --- //
     this->addProperty(propertyMembers_ );
+    ON_CHANGE(propertyMembers_, ParallelCoordinatesAxesCreator, adjustToSelection);
     this->addProperty(propertyFields_ );
     this->addProperty(propertySpatialSampleCount_);
     this->addProperty(propertyTemporalSampleCount_ );
+    //this->addProperty(propertySampleRegion_); // Only allow ensemble bounds to sync with ParallelCoordinatesVoxelSelection
+    propertySampleRegion_.addOption("bounds", "Ensemble Bounds"); // Will be selected.
+    propertySampleRegion_.addOption("common", "Common Bounds");
     this->addProperty(propertySeedTime_);
     this->addProperty(propertyAggregateMembers_ );
-    this->addProperty(propertyFileDialog_ );
-    this->addProperty(propertySaveButton_ );
-
-    // --- Initialize Callbacks --- //
-    ensembleport_.onChange(LambdaFunctionCallback([this] {
-        propertyMembers_.blockCallbacks(true );
-        propertyMembers_.reset();
-        if( ensembleport_.hasData() )
-            for( const auto& run : ensembleport_.getData()->getMembers() )
-                propertyMembers_.addRow(run.getName(), run.getColor() );
-        propertyMembers_.blockCallbacks(false );
-        propertyMembers_.invalidate();
-    } ) );
-    volumeport_.onChange(MemberFunctionCallback<ParallelCoordinatesAxesCreator>(this, &ParallelCoordinatesAxesCreator::updateValidVoxels ) );
-    propertyMembers_.onChange(LambdaFunctionCallback([this]{
-        auto ensemble = EnsembleDataset();
-        for( const auto run : propertyMembers_.get() )
-            ensemble.addMember(ensembleport_.getData()->getMembers()[run]);
-
-        propertyFields_.blockCallbacks(true );
-        propertyFields_.reset();
-        for( const auto& field : ensemble.getCommonFieldNames() )
-            propertyFields_.addRow(field);
-        propertyFields_.blockCallbacks(false );
-        propertyFields_.invalidate();
-
-        propertyTemporalSampleCount_.setMaxValue(ensemble.getMaxNumTimeSteps());
-        propertyTemporalSampleCount_.set(ensemble.getMaxNumTimeSteps());
-    } ) );
-    propertyFields_.onChange(MemberFunctionCallback<ParallelCoordinatesAxesCreator>(this, &ParallelCoordinatesAxesCreator::updateValidVoxels ) );
-    propertySaveButton_.onChange(LambdaFunctionCallback([this] {
-        if(axesport_.hasData() && !propertyFileDialog_.get().empty() )
-            axesport_.getData()->serialize(propertyFileDialog_.get() );
-    } ) );
 }
 
 Processor* ParallelCoordinatesAxesCreator::create() const {
@@ -117,116 +88,244 @@ bool ParallelCoordinatesAxesCreator::isReady() const {
     return true;
 }
 
-void ParallelCoordinatesAxesCreator::updateValidVoxels() {
-    if( volumeport_.hasData() ) {
-        const auto volume = volumeport_.getData()->getRepresentation<VolumeRAM>();
+void ParallelCoordinatesAxesCreator::adjustToEnsemble() {
+    bool hasData = ensembleport_.hasData();
+    propertyMembers_.setReadOnlyFlag(!hasData);
+    propertyFields_.setReadOnlyFlag(!hasData);
 
-        validVoxels_.clear();
-        validVoxels_.reserve(volume->getNumVoxels() );
-        for( size_t i = 0; i < volume->getNumVoxels(); ++i )
-            if( volume->getVoxelNormalized( i ) )
-                validVoxels_.push_back(static_cast<int32_t>( i ) );
-        validVoxels_.shrink_to_fit();
+    if(!hasData) {
+        return;
     }
-    else {
-        if( ensembleport_.hasData() ) {
-            auto ensemble = EnsembleDataset();
-            for( const auto run : propertyMembers_.get() )
-                ensemble.addMember(ensembleport_.getData()->getMembers()[run]);
 
-            if(ensemble.getMembers().size() && propertyFields_.get().size() ) {
-                const auto field = ensemble.getCommonFieldNames()[propertyFields_.get().front()];
-                const auto voxelCount = ensemble.getMembers().front().getTimeSteps().front().getVolume(field)->getNumVoxels();
+    const EnsembleDataset& ensemble = *ensembleport_.getData();
 
-                validVoxels_.resize(voxelCount );
-                std::iota(validVoxels_.begin(), validVoxels_.end(), 0 );
-            }
+    std::string hash = EnsembleHash(ensemble).getHash();
+    if(hash != hash_) {
+        propertyMembers_.blockCallbacks(true );
+        propertyMembers_.reset();
+        for( const auto& member : ensemble.getMembers() ) {
+            propertyMembers_.addRow(member.getName(), member.getColor());
         }
-        else validVoxels_.clear();
+        propertyMembers_.blockCallbacks(false );
+        propertyMembers_.invalidate();
+
+        hash_ = hash;
     }
-    propertySpatialSampleCount_.setMaxValue(static_cast<int>( validVoxels_.size() ) );
 }
 
-ParallelCoordianesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareComputeInput() {
+void ParallelCoordinatesAxesCreator::adjustToSelection() {
+    auto ensemble = EnsembleDataset();
+    for( const auto member : propertyMembers_.get() )
+        ensemble.addMember(ensembleport_.getData()->getMembers()[member]);
 
-    if(!ensembleport_.hasData()) {
+    auto fields = std::vector<std::pair<std::string, int>>();
+    for( const auto& fieldName : ensemble.getCommonFieldNames()) {
+        size_t numChannels = ensemble.getNumChannels(fieldName);
+        for(size_t channel=0; channel<numChannels; channel++) {
+            fields.emplace_back(std::pair<std::string, int>(fieldName, channel));
+        }
+    }
+
+    if(fields != fields_) {
+
+        propertyFields_.blockCallbacks(true);
+        propertyFields_.reset();
+
+        axesLabels_.clear();
+        for( const auto& fieldName : ensemble.getCommonFieldNames()) {
+            size_t numChannels = ensemble.getNumChannels(fieldName);
+            if(numChannels > 1) {
+                for(size_t channel=0; channel<numChannels; channel++) {
+                    // We add the channel index to the field name (using 1-based counting) to identify the channels.
+                    std::string axisLabel = fieldName + "(" + std::to_string(channel + 1) + ')';
+                    axesLabels_.emplace_back(axisLabel);
+                    propertyFields_.addRow(axisLabel);
+                }
+            }
+            else {
+                axesLabels_.emplace_back(fieldName);
+                propertyFields_.addRow(fieldName);
+            }
+        }
+
+        propertyFields_.blockCallbacks(false);
+        propertyFields_.invalidate();
+
+        propertyTemporalSampleCount_.setMaxValue(std::max<size_t>(1, ensemble.getMaxNumTimeSteps()));
+        //propertyTemporalSampleCount_.set(ensemble.getMaxNumTimeSteps());
+
+        fields_ = fields;
+    }
+}
+
+ParallelCoordinatesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareComputeInput() {
+
+    const EnsembleDataset* inputEnsemble = ensembleport_.getThreadSafeData();
+    if(!inputEnsemble) {
         throw InvalidInputException("No input", InvalidInputException::S_ERROR);
     }
 
-    // --- Shuffle valid voxels --- //
-    const auto spatialSampleCount = propertySpatialSampleCount_.get();
-    auto validVoxels = validVoxels_;
-    tgt::shuffle( validVoxels.begin(), validVoxels.end(), std::mt19937( propertySeedTime_.get() ) );
-    validVoxels.resize( spatialSampleCount );
+    tgt::Bounds bounds;
+    if (propertySampleRegion_.get() == "bounds") {
+        bounds = inputEnsemble->getBounds();
+    }
+    else if (propertySampleRegion_.get() == "common") {
+        bounds = inputEnsemble->getCommonBounds();
+    }
+    else {
+        throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
+    }
+
+    if(!bounds.isDefined()) {
+        throw InvalidInputException("Bounding box is empty", InvalidInputException::S_ERROR);
+    }
+
+    // Set up random generator.
+    std::function<float()> rnd(
+            std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(propertySeedTime_.get())));
+
+
+    const VolumeBase* seedMask = seedMask_.getThreadSafeData();
+    auto numSeedPoints = static_cast<size_t>(propertySpatialSampleCount_.get());
+    std::vector<tgt::vec3> seedPoints;
+    seedPoints.reserve(numSeedPoints);
+    if (seedMask) {
+        bounds.intersectVolume(seedMask->getBoundingBox().getBoundingBox());
+        if(!bounds.isDefined()) {
+            throw InvalidInputException("Seed Mask does not overlap with ensemble ROI", InvalidInputException::S_ERROR);
+        }
+
+        VolumeRAMRepresentationLock seedMaskLock(seedMask);
+        tgt::mat4 seedMaskVoxelToWorldMatrix = seedMask->getVoxelToWorldMatrix();
+        tgt::svec3 dim = seedMaskLock->getDimensions();
+        for(size_t z=0; z < dim.z; z++) {
+            for(size_t y=0; y < dim.y; y++) {
+                for(size_t x=0; x < dim.x; x++) {
+                    if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
+                        tgt::vec3 pos = seedMaskVoxelToWorldMatrix * tgt::vec3(x, y, z);
+                        if(bounds.containsPoint(pos)) {
+                            seedPoints.emplace_back(pos);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (seedPoints.empty()) {
+            throw InvalidInputException("No seed points found in ROI", InvalidInputException::S_ERROR);
+        }
+
+        tgt::shuffle(seedPoints.begin(), seedPoints.end(), std::mt19937(propertySeedTime_.get()));
+        seedPoints.resize(std::min(seedPoints.size(), numSeedPoints));
+
+        LINFO("Restricting seed points to volume mask using " << seedPoints.size() << " seeds");
+    }
+    else {
+        // Without a seed mask, we uniformly sample the whole space enclosed by the roi.
+        for (size_t k = 0; k<numSeedPoints; k++) {
+            // Since argument evaluation order is unspecified in c++, we need to ensure the order manually.
+            float x = rnd();
+            float y = rnd();
+            float z = rnd();
+
+            tgt::vec3 seedPoint(x, y, z);
+            seedPoint = bounds.getLLF() + seedPoint * bounds.diagonal();
+            seedPoints.push_back(seedPoint);
+        }
+    }
+
+    tgtAssert(!seedPoints.empty(), "no seed points found");
+    if (seedPoints.empty()) {
+        throw InvalidInputException("No seed points found", InvalidInputException::S_ERROR);
+    }
 
     // --- Gather values --- //
-    std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset());
-    for( const auto run : propertyMembers_.get() )
-        ensemble->addMember(ensembleport_.getData()->getMembers()[run]);
-
-    auto fieldNames = std::vector<std::string>();
-    for( const auto field : propertyFields_.get() )
-        fieldNames.push_back( ensemble->getCommonFieldNames()[field] );
+    std::unique_ptr<EnsembleDataset> selectedEnsemble(new EnsembleDataset());
+    for( const auto member : propertyMembers_.get() )
+        selectedEnsemble->addMember(inputEnsemble->getMembers()[member]);
 
     const auto temporalSampleCount = propertyTemporalSampleCount_.get();
-    const auto& runs = ensemble->getMembers();
+    const auto& members = selectedEnsemble->getMembers();
 
-    if(runs.empty() || fieldNames.empty() || temporalSampleCount == 0 ) {
-        throw InvalidInputException("Empty input", InvalidInputException::S_ERROR);
+    if(members.empty()) {
+        throw InvalidInputException("No members selected", InvalidInputException::S_ERROR);
+    }
+
+    auto fields = std::vector<std::pair<std::string, int>>();
+    for( const auto field : propertyFields_.get() )
+        fields.push_back( fields_[field] );
+
+    auto axesLabels = std::vector<std::string>();
+    for( const auto field : propertyFields_.get() )
+        axesLabels.push_back(axesLabels_[field] );
+
+    if(fields.empty()) {
+        throw InvalidInputException("No fields selected", InvalidInputException::S_ERROR);
     }
 
     // --- Gather ranges --- //
-    auto ranges = std::vector<std::pair<float, float>>( fieldNames.size() );
-    for( size_t i = 0; i < fieldNames.size(); ++i ) {
-        const auto range = ensemble->getValueRange( fieldNames[i] );
-        ranges[i] = std::make_pair( range.x, range.y );
+    auto ranges = std::vector<tgt::vec2>( fields.size() );
+    for( size_t i = 0; i < fields.size(); ++i ) {
+        ranges[i] = inputEnsemble->getValueRange(fields[i].first );
     }
 
     return ComputeInput {
-        std::move(ensemble),
-        spatialSampleCount,
+        std::move(selectedEnsemble),
+        EnsembleHash(*ensembleport_.getData()).getHash(), // Original hash.
         temporalSampleCount,
-        std::move(validVoxels),
-        std::move(fieldNames),
+        propertyAggregateMembers_.get(),
+        std::move(seedPoints),
+        std::move(fields),
+        std::move(axesLabels),
         std::move(ranges)
     };
 }
 
-ParallelCoordianesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(ComputeInput input, ProgressReporter& progressReporter) const {
+ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(ComputeInput input, ProgressReporter& progressReporter) const {
 
-    const auto& runs = input.ensemble->getMembers();
-    size_t spatialSampleCount = input.spatialSampleCount;
+    auto ensemble = std::move(input.ensemble);
+    const auto& members = ensemble->getMembers();
     size_t temporalSampleCount = input.temporalSampleCount;
-    auto timeInterval = input.ensemble->getCommonTimeInterval();
-    auto validVoxels = std::move(input.validVoxels);
-    auto fieldNames = std::move(input.fieldNames);
+    auto timeInterval = ensemble->getCommonTimeInterval();
+    auto seedPoints = std::move(input.seedPoints);
+    auto fields = std::move(input.fields);
+    auto axesLabels = std::move(input.axesLabels);
     auto ranges = std::move(input.ranges);
+    std::string ensembleHash = std::move(input.ensembleHash);
 
-    if( propertyAggregateMembers_.get() ) {
-        auto runNames = std::vector<std::string> { "Aggregated" };
-        auto values = std::vector<float>(runs.size() * temporalSampleCount * fieldNames.size() * spatialSampleCount );
-        auto currentValue = values.data();
-        for(size_t i = 0; i < temporalSampleCount; ++i, currentValue += runs.size() * fieldNames.size() * spatialSampleCount )
+    if( input.aggregate ) {
+        auto memberNames = std::vector<std::string> { "Aggregated" };
+        auto values = std::vector<float>(members.size() * temporalSampleCount * fields.size() * seedPoints.size() );
+        auto* currentValue = values.data();
+        for(size_t i = 0; i < temporalSampleCount; ++i, currentValue += members.size() * fields.size() * seedPoints.size() )
         {
-            for( size_t j = 0; j < fieldNames.size(); ++j )
+            for( size_t j = 0; j < fields.size(); ++j )
             {
-                auto dst = currentValue + j;
-                for( size_t k = 0; k < runs.size(); ++k )
+                auto* dst = currentValue + j;
+                for(const auto& member : members)
                 {
-                    const auto& run = runs[k];
                     auto t = mapRange(i, tgt::svec2(0, temporalSampleCount), timeInterval);
-                    const auto& timestep = run.getTimeSteps()[run.getTimeStep(t)];
-                    const auto& fieldName = fieldNames[j];
+                    const auto& timestep = member.getTimeSteps()[member.getTimeStep(t)];
+                    const auto& fieldName = fields[j].first;
+                    const auto& channel = fields[j].second;
 
-                    LDEBUG("[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << run.getName() << ", Timestep=" << j << ", Field=" << fieldName);
+                    LDEBUG("[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << member.getName() << ", Timestep=" << j << ", Field=" << fieldName);
 
-                    const auto volumeHandle = timestep.getVolume(fieldName);
+                    const auto* volumeHandle = timestep.getVolume(fieldName);
+                    tgt::Bounds bounds = volumeHandle->getBoundingBox().getBoundingBox();
+                    tgt::mat4 worldToVoxel = volumeHandle->getWorldToVoxelMatrix();
+                    RealWorldMapping rwm = volumeHandle->getRealWorldMapping();
                     const auto volume = VolumeRAMRepresentationLock( volumeHandle );
 
-                    for( const auto index : validVoxels )
+                    for( const tgt::vec3& seedPoint : seedPoints )
                     {
-                        *dst = static_cast<float>( volume->getVoxelNormalized( index ) );
-                        dst += fieldNames.size();
+                        if(bounds.containsPoint(seedPoint)) {
+                            *dst = rwm.normalizedToRealWorld(volume->getVoxelNormalized( worldToVoxel * seedPoint, channel ));
+                        }
+                        else {
+                            *dst = 0.0f; // TODO: 0 might not be a good choice depending on the dataset.
+                        }
+                        dst += fields.size();
                     }
                 }
             }
@@ -234,47 +333,76 @@ ParallelCoordianesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Comp
         }
 
         return ComputeOutput {
-            std::unique_ptr<ParallelCoordinatesAxes>(new ParallelCoordinatesAxes(std::move(runNames), std::move(fieldNames), std::move(ranges), std::move(values), temporalSampleCount, spatialSampleCount * runs.size() ) )
+            std::unique_ptr<ParallelCoordinatesAxes>(
+                    new ParallelCoordinatesAxes(
+                            ensembleHash,
+                            std::move(memberNames),
+                            std::move(fields),
+                            std::move(axesLabels),
+                            std::move(ranges),
+                            std::move(values),
+                            temporalSampleCount,
+                            seedPoints.size() * members.size()
+                        )
+                    )
         };
     }
     else {
-        auto runNames = std::vector<std::string>( runs.size() );
-        auto values = std::vector<float>(runs.size() * temporalSampleCount * fieldNames.size() * spatialSampleCount );
+        auto memberNames = std::vector<std::string>( members.size() );
+        auto values = std::vector<float>(members.size() * temporalSampleCount * fields.size() * seedPoints.size() );
 
-        for( size_t i = 0; i < runs.size(); ++i )
+        for( size_t i = 0; i < members.size(); ++i )
         {
-            const auto& run = runs[i];
-            runNames[i] = run.getName();
+            const auto& member = members[i];
+            memberNames[i] = member.getName();
 
-            auto currentValue = values.data() + i * (temporalSampleCount * fieldNames.size() * spatialSampleCount );
-            SubtaskProgressReporter runProgress(progressReporter, tgt::vec2(i, i+1) / tgt::vec2(runs.size()));
-            for(size_t j = 0; j < temporalSampleCount; ++j, currentValue += fieldNames.size() * spatialSampleCount )
+            auto* currentValue = values.data() + i * (temporalSampleCount * fields.size() * seedPoints.size() );
+            SubtaskProgressReporter memberProgress(progressReporter, tgt::vec2(i, i+1) / tgt::vec2(members.size()));
+            for(size_t j = 0; j < temporalSampleCount; ++j, currentValue += fields.size() * seedPoints.size() )
             {
                 auto t = mapRange(j, tgt::svec2(0, temporalSampleCount), timeInterval);
-                const auto& timestep = run.getTimeSteps()[run.getTimeStep(t)];
-                for( size_t k = 0; k < fieldNames.size(); ++k )
+                const auto& timestep = member.getTimeSteps()[member.getTimeStep(t)];
+                for( size_t k = 0; k < fields.size(); ++k )
                 {
-                    const auto& fieldName = fieldNames[k];
-                    LDEBUG("[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << run.getName() << ", Timestep=" << j << ", Field=" << fieldName);
+                    const auto& fieldName = fields[k].first;
+                    const auto& channel = fields[k].second;
+                    LDEBUG("[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << member.getName() << ", Timestep=" << j << ", Field=" << fieldName);
 
-                    const auto volumeHandle = timestep.getVolume(fieldName);
+                    const auto* volumeHandle = timestep.getVolume(fieldName);
+                    tgt::Bounds bounds = volumeHandle->getBoundingBox().getBoundingBox();
+                    tgt::mat4 worldToVoxel = volumeHandle->getWorldToVoxelMatrix();
+                    RealWorldMapping rwm = volumeHandle->getRealWorldMapping();
                     const auto volume = VolumeRAMRepresentationLock( volumeHandle );
-                    const auto dim = volume->getDimensions();
 
-                    auto dst = currentValue + k;
-                    for( const auto index : validVoxels )
+                    auto* dst = currentValue + k;
+                    for( const tgt::vec3& seedPoint : seedPoints )
                     {
-                        if( dim.z == 1 ) *dst = static_cast<float>( volume->getVoxelNormalized( index % ( dim.x * dim.y ) ) );
-                        else *dst = static_cast<float>( volume->getVoxelNormalized( index ) );
-                        dst += fieldNames.size();
+                        if(bounds.containsPoint(seedPoint)) {
+                            *dst = rwm.normalizedToRealWorld(volume->getVoxelNormalized( worldToVoxel * seedPoint, channel ));
+                        }
+                        else {
+                            *dst = 0.0f; // TODO: 0 might not be a good choice depending on the dataset.
+                        }
+                        dst += fields.size();
                     }
-                    runProgress.setProgress(1.0f * j / temporalSampleCount);
+                    memberProgress.setProgress(1.0f * j / temporalSampleCount);
                 }
             }
         }
 
         return ComputeOutput {
-            std::unique_ptr<ParallelCoordinatesAxes>(new ParallelCoordinatesAxes(std::move(runNames ), std::move(fieldNames ), std::move(ranges ), std::move(values ), temporalSampleCount, spatialSampleCount ) )
+            std::unique_ptr<ParallelCoordinatesAxes>(
+                    new ParallelCoordinatesAxes(
+                            ensembleHash,
+                            std::move(memberNames),
+                            std::move(fields),
+                            std::move(axesLabels),
+                            std::move(ranges),
+                            std::move(values),
+                            temporalSampleCount,
+                            seedPoints.size()
+                        )
+                    )
         };
     }
 }
@@ -286,9 +414,35 @@ void ParallelCoordinatesAxesCreator::processComputeOutput(ComputeOutput output) 
 std::vector<std::reference_wrapper<Port>> ParallelCoordinatesAxesCreator::getCriticalPorts() {
     auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
     criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
-        return port.get().getID() == volumeport_.getID();
+        return port.get().getID() == seedMask_.getID();
     }), criticalPorts.end());
     return criticalPorts;
+}
+
+void ParallelCoordinatesAxesCreator::serialize(Serializer& s) const {
+    AsyncComputeProcessor::serialize(s);
+    s.serialize("hash", hash_);
+    s.serialize("fields", fields_);
+    s.serialize("axesLabels", axesLabels_);
+}
+
+void ParallelCoordinatesAxesCreator::deserialize(Deserializer& s) {
+    AsyncComputeProcessor::deserialize(s);
+    s.optionalDeserialize("hash", hash_, std::string(""));
+    s.optionalDeserialize("fields", fields_, decltype(fields_)());
+    s.optionalDeserialize("axesLabels", axesLabels_, decltype(axesLabels_)());
+
+    if(fields_.size() != axesLabels_.size() || fields_.size() != propertyFields_.getNumRows()) {
+        LWARNINGC("voreen.EnsembleAnalysis.ParallelCoordinatesAxesCreator",
+                "Unexpected attribute mismatch after deserialization. Resetting selection.");
+
+        hash_.clear();
+        fields_.clear();
+        axesLabels_.clear();
+
+        propertyMembers_.reset();
+        propertyFields_.reset();
+    }
 }
 
 }

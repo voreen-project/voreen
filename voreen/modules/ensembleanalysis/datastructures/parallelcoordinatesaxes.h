@@ -27,6 +27,8 @@
 #define VRN_PARALLELCOORDINATESAXES_H
 
 #include "tgt/tgt_gl.h"
+#include "tgt/vector.h"
+
 #include <vector>
 #include <string>
 
@@ -34,25 +36,30 @@ namespace voreen {
 
 class ParallelCoordinatesAxes {
 public:
-    ParallelCoordinatesAxes( std::vector<std::string> members, std::vector<std::string> fields, std::vector<std::pair<float, float>> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples );
+
+    ParallelCoordinatesAxes(std::string ensembleHash, std::vector<std::string> members, std::vector<std::pair<std::string, int>> fields, std::vector<std::string> axesLabels, std::vector<tgt::vec2> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples );
     ParallelCoordinatesAxes( const std::string& filepath );
     ~ParallelCoordinatesAxes();
 
     void serialize( const std::string& filepath ) const;
 
     size_t members() const noexcept;
-    size_t timesteps() const noexcept;
     size_t fields() const noexcept;
+    size_t timesteps() const noexcept;
     size_t samples() const noexcept;
+
+    const std::string& getEnsembleHash() const;
 
     const std::string& getMemberName( size_t i ) const;
     const std::string& getFieldName( size_t i ) const;
+    int getChannel( size_t i) const;
 
     const std::vector<std::string>& getMemberNames() const noexcept;
-    const std::vector<std::string>& getFieldNames() const noexcept;
+    const std::vector<std::pair<std::string, int>>& getFields() const noexcept;
+    const std::vector<std::string>& getAxesLabels() const noexcept;
 
-    std::pair<float, float> getRange( size_t field ) const;
-    const std::vector<std::pair<float, float>>& getRanges() const noexcept;
+    tgt::vec2 getRange( size_t field ) const;
+    const std::vector<tgt::vec2>& getRanges() const noexcept;
 
     float getValue( size_t field, size_t sample, size_t timestep = 0, size_t member = 0 ) const;
     const std::vector<float>& getValues() const noexcept;
@@ -61,12 +68,20 @@ public:
     size_t getStrideTimestep() const noexcept;
     size_t memorySize() const noexcept;
 
+    /**
+     * Returns the vertex buffer name.
+     * If none has been assigned yet, a new name will be assigned.
+     * Hence, an OpenGL context is required to be active.
+     */
     GLuint getVertexBuffer() const;
 
 private:
     size_t timesteps_, samples_;
-    std::vector<std::string> members_, fields_;
-    std::vector<std::pair<float, float>> ranges_;
+    std::string ensembleHash_;
+    std::vector<std::string> members_;
+    std::vector<std::pair<std::string, int>> fields_;
+    std::vector<std::string> axesLabels_;
+    std::vector<tgt::vec2> ranges_;
     std::vector<float> values_;
     mutable GLuint vertexBuffer_;
 };

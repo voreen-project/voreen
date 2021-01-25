@@ -23,36 +23,33 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "parallelcoordinatessource.h"
+#ifndef VRN_PARALLELCOORDINATESSOURCE_H
+#define VRN_PARALLELCOORDINATESSOURCE_H
+
+#include "../ports/parallelcoordinatesaxesport.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/properties/filedialogproperty.h"
 
 namespace voreen {
 
-ParallelCoordinatesSource::ParallelCoordinatesSource()
-    : Processor()
-    , _outport( Port::OUTPORT, "outport", "Parallel Coordinates Axes" )
-    , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Parallel Coordinates (*.pc)", FileDialogProperty::OPEN_FILE, Processor::VALID )
-    , _propertyLoadButton( "property_load_button", "Load" )
-{
-    this->addPort( _outport );
+class VRN_CORE_API ParallelCoordinatesSource : public Processor	{
+public:
+    ParallelCoordinatesSource();
+    virtual Processor* create() const;
 
-    this->addProperty( _propertyFileDialog );
-    this->addProperty( _propertyLoadButton );
-}
+    virtual std::string getClassName() const  { return "ParallelCoordinatesSource"; }
+    virtual std::string getCategory() const   { return "Input"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
 
-Processor* ParallelCoordinatesSource::create() const {
-    return new ParallelCoordinatesSource();
-}
+private:
+    virtual void process();
 
-std::string ParallelCoordinatesSource::getClassName() const {
-    return "ParallelCoordinatesSource";
-}
-std::string ParallelCoordinatesSource::getCategory() const {
-    return "ParallelCoordinates";
-}
+    ParallelCoordinatesAxesPort _outport;
 
-void ParallelCoordinatesSource::process() {
-    if( !_propertyFileDialog.get().empty() )
-        _outport.setData( new ParallelCoordinatesAxes( _propertyFileDialog.get() ) );
-}
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertyLoadButton;
+};
 
 }
+
+#endif // VRN_PARALLELCOORDINATESSOURCE_H

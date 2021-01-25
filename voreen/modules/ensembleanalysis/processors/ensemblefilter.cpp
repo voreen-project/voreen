@@ -38,6 +38,7 @@ namespace voreen {
 
 class Filter {
 public:
+    virtual ~Filter() {}
     virtual std::vector<Property*> getProperties() = 0;
     virtual EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) = 0;
     virtual void adjustToEnsemble(const EnsembleDataset* ensemble) = 0;
@@ -178,11 +179,6 @@ public:
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
 
-        // Clone input, if not enabled.
-        if(!enableRemoveFirstTimeStep_.get()) {
-            return new EnsembleDataset(ensemble);
-        }
-
         EnsembleDataset* dataset = new EnsembleDataset();
 
         for (const EnsembleMember& member : ensemble.getMembers()) {
@@ -234,11 +230,6 @@ public:
     }
 
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
-
-        // Clone input, if not enabled.
-        if(!enableSelectLastTimeStep_.get()) {
-            return new EnsembleDataset(ensemble);
-        }
 
         EnsembleDataset* dataset = new EnsembleDataset();
 
@@ -432,12 +423,12 @@ void EnsembleFilter::process() {
 void EnsembleFilter::invalidate(int inv) {
     Processor::invalidate(inv);
 
-    if (inv == Processor::INVALID_RESULT && isInitialized())
+    if (inv == Processor::INVALID_RESULT)
         needsProcess_ = true;
 }
 
 void EnsembleFilter::addFilter(Filter* filter) {
-    filters_.push_back(std::unique_ptr<Filter>(filter));
+    filters_.emplace_back(std::unique_ptr<Filter>(filter));
     for(Property* property : filter->getProperties()) {
         addProperty(property);
     }

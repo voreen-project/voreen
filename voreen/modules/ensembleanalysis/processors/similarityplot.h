@@ -53,7 +53,7 @@ class PlotLibrary;
 
 class VRN_CORE_API SimilarityPlot : public RenderProcessor {
 
-    class MDSData : public Serializable {
+    class Embedding : public Serializable {
     public:
         /// Actual principal components, to be drawn.
         // * First layer encodes member.
@@ -78,10 +78,10 @@ public:
     virtual ~SimilarityPlot();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const        { return "SimilarityPlot"; }
-    virtual std::string getCategory() const         { return "Plotting";              }
-    virtual CodeState getCodeState() const          { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const   { return true;                    }
+    virtual std::string getClassName() const        { return "SimilarityPlot";   }
+    virtual std::string getCategory() const         { return "Plotting";         }
+    virtual CodeState getCodeState() const          { return CODE_STATE_TESTING; }
+    virtual bool usesExpensiveComputation() const   { return true;               }
 
 protected:
     virtual void initialize();
@@ -89,6 +89,51 @@ protected:
     virtual void process();
     virtual bool isReady() const;
     virtual void onEvent(tgt::Event* e);
+
+    virtual void setDescriptions() {
+        setDescription("This processor uses a classical Multi Dimensional Scaling (MDS) appraoch in order to "
+                       "create a distance-presevering, low-dimensional embedding for the given ensemble. "
+                       "Distances are stored in the input <br>SimilarityMatrix</br>, e.g. provided by "
+                       "<br>SimilarityMatrixCreator</br>. Members with multiple runs are represented by "
+                       "curves, members with a single time step by points (in a 2D and 3D embedding) or dotted "
+                       "lines (when using a 1D embedding). Use CTRL to add hovered members to the subselection and "
+                       "use ALT to remove them. Click the middle mouse button to reset the subselection to all "
+                       "currently rendered members. Pressing shift and the middle mouse button will change the "
+                       "rendering order of hovered members.");
+
+        ensembleInport_.setDescription("The input ensemble");
+        similarityMatrixInport_.setDescription("Input similarity matrix. It must have been created for the "
+                                               "currently connected ensemble");
+        eigenValueOutport_.setDescription("Outputs the eigenvalues of the current embedding. Connect a <br>BarPlot</br> "
+                                          "Processor to display them.");
+
+        numIterations_.setDescription("Number of iterations that define accuracy of the embedding, so less steps "
+                                      " will calculate faster. The algorithm will, however, terminate early "
+                                      "if the result converged");
+        numEigenvalues_.setDescription("Number of eigenvalues to be calculated. Since only the largest three "
+                                       "principal directions (to which the eigenvalues correspond to) can be displayed, "
+                                       "it might be sufficient to only calculate three. However, the significant "
+                                       "intrinsic dimensionality might be larger than three!");
+        numDimensions_.setDescription("Number of dimensions to be used to visualize the embedding");
+        principleComponent_.setDescription("If the 1D Embedding is used, any principle component can be plotted over time");
+        scaleToMagnitude_.setDescription("If the 3D Embeding is used, all axis can be scaled such that they represent "
+                                         "the variance of the data represented by the principle component with respect "
+                                         "to the first and largest principle component");
+        sphereRadius_.setDescription("Currently selected time steps and members with only a single time steps both "
+                                     "are represented by spheres in the 2D and 3D embedding. This sets their radius.");
+        fontSize_.setDescription("Sets the font size");
+        showTooltip_.setDescription("Enables/Disables tool tips when hovering over members");
+        renderTimeSelection_.setDescription("Enables/Disables indication of the currently selected time step/range");
+        colorCoding_.setDescription("Defines the color coding for the ensemble members to be used");
+        renderedField_.setDescription("Sets the currently rendered field of input ensemble");
+        renderedMembers_.setDescription("Can be used to show all members at the same time or a subset thereof");
+
+        firstSelectedMember_.setDescription("Use left-click to perform selection of a member. Link this with <br>EnsembleFilter</br>.");
+        firstSelectedTimeStep_.setDescription("Use left-click to perform selection of a time step. Link this with <br>EnsembleFilter</br>.");
+
+        secondSelectedMember_.setDescription("Use right-click to perform selection of another member. Link this with another <br>EnsembleFilter</br>.");
+        secondSelectedTimeStep_.setDescription("Use right-click to perform selection of another time step. Link this with another <br>EnsembleFilter</br>.");
+    }
 
 private:
 
@@ -103,18 +148,21 @@ private:
     void mouseEvent(tgt::MouseEvent* e);
 
     void renderingPass(bool picking);
+    void renderEmbedding1D(bool picking);
+    void renderEmbedding2D(bool picking);
+    void renderEmbedding3D(bool picking);
     void renderAxes();
-    void drawTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
-    void drawTooltip() const;
+    void renderTooltip() const;
+    void renderTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
     tgt::vec3 getColor(size_t memberIdx, size_t timeStepIdx, bool picking) const;
 
-    MDSData computeFromDM(const SimilarityMatrix& matrix, ProgressReporter& progressReporter, float epsilon = -1.0f) const;
-    void calculate();
+    void createEmbeddings();
+    Embedding createEmbedding(const SimilarityMatrix& distanceMatrix, ProgressReporter& progressReporter, float epsilon = 0.0f) const;
 
     void outputEigenValues();
     void renderedMembersChanged();
-    void save();
-    void load();
+    void saveEmbeddings();
+    void loadEmbeddings();
 
     ButtonProperty calculateButton_;
     BoolProperty autoCalculate_;
@@ -128,19 +176,20 @@ private:
     FloatProperty sphereRadius_;
     IntProperty fontSize_;
     BoolProperty showTooltip_;
-    BoolProperty toggleAxes_; //< used for merging plots
     BoolProperty renderTimeSelection_;
     OptionProperty<ColorCoding> colorCoding_;
     OptionProperty<std::string> renderedField_;
     StringListProperty renderedMembers_;
 
-    StringListProperty selectedMember_;
-    FloatIntervalProperty selectedTimeStep_;
-    StringListProperty referenceMember_;
-    FloatIntervalProperty referenceTimeStep_;
+    StringListProperty firstSelectedMember_;
+    FloatIntervalProperty firstSelectedTimeStep_;
+    StringListProperty secondSelectedMember_;
+    FloatIntervalProperty secondSelectedTimeStep_;
 
     FileDialogProperty saveFileDialog_;
+    ButtonProperty saveButton_;
     FileDialogProperty loadFileDialog_;
+    ButtonProperty loadButton_;
 
     CameraProperty camera_;
     CameraInteractionHandler* cameraHandler_;
@@ -167,8 +216,8 @@ private:
     /// The hash of the ensemble the plot was generated for.
     std::string ensembleHash_;
 
-    /// Actual MDS data for each field (all members selected).
-    std::vector<MDSData> mdsData_;
+    /// Actual MDS embedding for each field (all members selected).
+    std::vector<Embedding> embeddings_;
 
     /// Sphere geometry for timestep selection.
     GlMeshGeometryUInt16Simple sphere_;

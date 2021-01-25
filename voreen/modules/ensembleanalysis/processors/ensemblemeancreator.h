@@ -23,32 +23,69 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PARALLELCOORDINATESSOURCE_H
-#define VRN_PARALLELCOORDINATESSOURCE_H
+#ifndef VRN_ENSEMBLEMEANCREATOR_H
+#define VRN_ENSEMBLEMEANCREATOR_H
 
-#include "../ports/parallelcoordinatesaxesport.h"
-#include "voreen/core/processors/processor.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
+
+#include "../ports/ensembledatasetport.h"
 
 namespace voreen {
-
-class VRN_CORE_API ParallelCoordinatesSource : public Processor	{
-public:
-    ParallelCoordinatesSource();
-    virtual Processor* create() const;
-
-    virtual std::string getClassName() const;
-    virtual std::string getCategory() const;
-
-private:
-    virtual void process();
-
-    ParallelCoordinatesAxesPort _outport;
-
-    FileDialogProperty _propertyFileDialog;
-    ButtonProperty _propertyLoadButton;
+    
+struct EnsembleMeanCreatorInput {
+    PortDataPointer<EnsembleDataset> ensemble;
+    std::unique_ptr<VolumeRAM> outputVolume;
+    tgt::Bounds bounds;
+    std::string field;
+    float time;
 };
 
-}
+struct EnsembleMeanCreatorOutput {
+    std::unique_ptr<VolumeBase> volume;
+};
 
-#endif // VRN_PARALLELCOORDINATESSOURCE_H
+/**
+ * This processor creates a reference volume for a given input ensemble which can be used for variance calculation
+ * and visualization as done in LocalSimilarityAnalysis
+ */
+class VRN_CORE_API EnsembleMeanCreator : public AsyncComputeProcessor<EnsembleMeanCreatorInput, EnsembleMeanCreatorOutput>  {
+public:
+    EnsembleMeanCreator();
+    virtual ~EnsembleMeanCreator();
+    virtual Processor* create() const;
+
+    virtual std::string getClassName() const      { return "EnsembleMeanCreator";   }
+    virtual std::string getCategory() const       { return "Ensemble Processing";   }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;      }
+
+protected:
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
+
+    virtual void setDescriptions() {
+        setDescription("Creates a mean volume from the input ensemble for a selected time step and field.");
+    }
+
+    void adjustToEnsemble();
+
+    EnsembleDatasetPort inport_;
+    VolumePort outport_;
+
+    StringOptionProperty selectedField_;
+    FloatProperty time_;
+
+    StringOptionProperty sampleRegion_;
+    IntVec3Property outputDimensions_;
+
+    static const std::string loggerCat_;
+};
+
+} // namespace
+
+#endif

@@ -23,63 +23,29 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMELISTMULTICHANNELADAPTER_H
-#define VRN_VOLUMELISTMULTICHANNELADAPTER_H
-
-#include "voreen/core/processors/processor.h"
-#include "voreen/core/ports/genericport.h"
-#include "voreen/core/ports/volumeport.h"
+#include "parallelcoordinatessave.h"
 
 namespace voreen {
 
-/**
- * Merges all separated channel volumes inside the input list to a single multi-channel volume in the output list.
- */
-class VRN_CORE_API VolumeListMultiChannelAdapter : public Processor {
-public:
-    VolumeListMultiChannelAdapter();
-    virtual ~VolumeListMultiChannelAdapter();
-    virtual Processor* create() const;
+ParallelCoordinatesSave::ParallelCoordinatesSave()
+        : Processor()
+        , _inport( Port::INPORT, "inport", "Parallel Coordinates Axes" )
+        , _propertyFileDialog( "property_file_dialog", "File Output", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::SAVE_FILE )
+        , _propertySaveButton( "property_save_button", "Save" )
+{
+    this->addPort( _inport );
 
-    virtual std::string getClassName() const  { return "VolumeListMultiChannelAdapter"; }
-    virtual std::string getCategory() const   { return "Input"; }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool isUtility() const { return true; }
+    this->addProperty( _propertyFileDialog );
+    this->addProperty( _propertySaveButton );
+}
 
-protected:
-    virtual void setDescriptions() {
-        setDescription("Merges all separated channel volumes inside the input list to a single multi-channel volume in the output list.");
-    }
+Processor* ParallelCoordinatesSave::create() const {
+    return new ParallelCoordinatesSave();
+}
 
-    virtual void process();
+void ParallelCoordinatesSave::process() {
+    if( !_propertyFileDialog.get().empty() && _inport.hasData())
+        _inport.getData()->serialize(_propertyFileDialog.get());
+}
 
-private:
-
-    void onChannelCountChanged();
-
-    std::vector<std::unique_ptr<const VolumeBase>> volumes_;
-
-    IntProperty numChannels_;
-    StringOptionProperty layout_;
-
-    BoolProperty mirrorX_;
-    BoolProperty mirrorY_;
-    BoolProperty mirrorZ_;
-
-    BoolProperty invertChannel1_;
-    BoolProperty invertChannel2_;
-    BoolProperty invertChannel3_;
-    BoolProperty invertChannel4_;
-
-    OptionProperty<size_t> swizzleChannel1_;
-    OptionProperty<size_t> swizzleChannel2_;
-    OptionProperty<size_t> swizzleChannel3_;
-    OptionProperty<size_t> swizzleChannel4_;
-
-    VolumeListPort inport_;
-    VolumeListPort outport_;
-};
-
-}   //namespace
-
-#endif
+}

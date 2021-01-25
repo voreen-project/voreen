@@ -51,14 +51,14 @@ public:
 
     virtual std::string getClassName() const  { return "EnsembleDataSource";    }
     virtual std::string getCategory() const   { return "Input";                 }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING;      }
     virtual bool usesExpensiveComputation() const { return true; }
 
 protected:
     virtual void setDescriptions() {
         setDescription("Loads an Ensemble of Volumes, organized into multiple members.");
-        ensemblePath_.setDescription("Expects a folder containing a separate folder for each ensemble member "
-                                     "(aka member). Each folder must contain a single file (of any supported format) "
+        ensemblePath_.setDescription("Expects a folder containing a separate folder for each ensemble member."
+                                     "Each folder must contain a single file (of any supported format) "
                                      "for each time step of the respective member. Each of those files may contain multiple "
                                      "volumes which will be interpreted as time steps, in lexicographic order. "
                                      "The volume files might contain time step meta information which do not need to "

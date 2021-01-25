@@ -31,26 +31,24 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/similaritymatrix.cpp
 
     #IO
+    ${MOD_DIR}/io/ensembledatasource.cpp
+    ${MOD_DIR}/io/parallelcoordinatessave.cpp
+    ${MOD_DIR}/io/parallelcoordinatessource.cpp
     ${MOD_DIR}/io/similaritymatrixsave.cpp
     ${MOD_DIR}/io/similaritymatrixsource.cpp
 
     #Processors
-    ${MOD_DIR}/processors/connectedcomponentselector.cpp
-    ${MOD_DIR}/processors/ensembledatasource.cpp
     ${MOD_DIR}/processors/ensemblefilter.cpp
+    ${MOD_DIR}/processors/ensemblemeancreator.cpp
     ${MOD_DIR}/processors/ensemblevolumeextractor.cpp
-    ${MOD_DIR}/processors/localsimilarityanalysis.cpp
+    ${MOD_DIR}/processors/ensemblevarianceanalysis.cpp
     ${MOD_DIR}/processors/metadataadder.cpp
     ${MOD_DIR}/processors/parallelcoordinatesaxescreator.cpp
-    ${MOD_DIR}/processors/parallelcoordinatessource.cpp
     ${MOD_DIR}/processors/parallelcoordinatesviewer.cpp
     ${MOD_DIR}/processors/parallelcoordinatesvoxelselection.cpp
-    ${MOD_DIR}/processors/referencevolumecreator.cpp
     ${MOD_DIR}/processors/similaritymatrixcombine.cpp
     ${MOD_DIR}/processors/similaritymatrixcreator.cpp
     ${MOD_DIR}/processors/similarityplot.cpp
-    ${MOD_DIR}/processors/volumelistmerger.cpp
-    ${MOD_DIR}/processors/volumemerger.cpp
 
     #Properties
     ${MOD_DIR}/properties/parallelcoordinatessectionsproperty.cpp
@@ -78,26 +76,24 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/similaritymatrix.h
 
     #IO
+    ${MOD_DIR}/io/ensembledatasource.h
+    ${MOD_DIR}/io/parallelcoordinatessave.h
+    ${MOD_DIR}/io/parallelcoordinatessource.h
     ${MOD_DIR}/io/similaritymatrixsave.h
     ${MOD_DIR}/io/similaritymatrixsource.h
 
     #Processors
-    ${MOD_DIR}/processors/connectedcomponentselector.h
-    ${MOD_DIR}/processors/ensembledatasource.h
     ${MOD_DIR}/processors/ensemblefilter.h
+    ${MOD_DIR}/processors/ensemblemeancreator.h
     ${MOD_DIR}/processors/ensemblevolumeextractor.h
-    ${MOD_DIR}/processors/localsimilarityanalysis.h
+    ${MOD_DIR}/processors/ensemblevarianceanalysis.h
     ${MOD_DIR}/processors/metadataadder.h
     ${MOD_DIR}/processors/parallelcoordinatesaxescreator.h
-    ${MOD_DIR}/processors/parallelcoordinatessource.h
     ${MOD_DIR}/processors/parallelcoordinatesviewer.h
     ${MOD_DIR}/processors/parallelcoordinatesvoxelselection.h
-    ${MOD_DIR}/processors/referencevolumecreator.h
     ${MOD_DIR}/processors/similaritymatrixcombine.h
     ${MOD_DIR}/processors/similaritymatrixcreator.h
     ${MOD_DIR}/processors/similarityplot.h
-    ${MOD_DIR}/processors/volumelistmerger.h
-    ${MOD_DIR}/processors/volumemerger.h
 
     #Properties
     ${MOD_DIR}/properties/parallelcoordinatessectionsproperty.h

@@ -36,7 +36,7 @@ SimilarityMatrix::SimilarityMatrix()
 }
 
 SimilarityMatrix::SimilarityMatrix(size_t size)
-    : data_(size*size, 0.0f)//((size+1) * size/2, 0.0f) // TODO: implement symmetric case.
+    : data_((size * (size+1))/2, 0.0f)
     , size_(size)
 {
 }
@@ -54,8 +54,11 @@ SimilarityMatrix::SimilarityMatrix(SimilarityMatrix&& other)
 }
 
 SimilarityMatrix& SimilarityMatrix::operator=(const SimilarityMatrix& other) {
-    data_ = other.data_;
-    size_ = other.size_;
+
+    if(&other != this) {
+        data_ = other.data_;
+        size_ = other.size_;
+    }
 
     return *this;
 }
@@ -80,6 +83,13 @@ float& SimilarityMatrix::operator() (size_t i, size_t j) {
 
 float SimilarityMatrix::operator() (size_t i, size_t j) const {
     return data_[index(i, j)];
+}
+
+size_t SimilarityMatrix::index(size_t i, size_t j) const {
+    if(i>j) std::swap(i, j);
+    size_t idx = j + (2*size_-i-1) * i/2;
+    tgtAssert(idx < data_.size(), "Index out of bounds");
+    return idx;
 }
 
 void SimilarityMatrix::serialize(Serializer& s) const {

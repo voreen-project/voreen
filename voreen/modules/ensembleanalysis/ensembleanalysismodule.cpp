@@ -25,25 +25,23 @@
 
 #include "ensembleanalysismodule.h"
 
+#include "io/ensembledatasource.h"
+#include "io/parallelcoordinatessave.h"
+#include "io/parallelcoordinatessource.h"
 #include "io/similaritymatrixsave.h"
 #include "io/similaritymatrixsource.h"
 
-#include "processors/connectedcomponentselector.h"
-#include "processors/ensembledatasource.h"
 #include "processors/ensemblefilter.h"
+#include "processors/ensemblemeancreator.h"
+#include "processors/ensemblevarianceanalysis.h"
 #include "processors/ensemblevolumeextractor.h"
-#include "processors/localsimilarityanalysis.h"
 #include "processors/metadataadder.h"
 #include "processors/parallelcoordinatesaxescreator.h"
-#include "processors/parallelcoordinatessource.h"
 #include "processors/parallelcoordinatesviewer.h"
 #include "processors/parallelcoordinatesvoxelselection.h"
-#include "processors/referencevolumecreator.h"
 #include "processors/similaritymatrixcombine.h"
 #include "processors/similaritymatrixcreator.h"
 #include "processors/similarityplot.h"
-#include "processors/volumelistmerger.h"
-#include "processors/volumemerger.h"
 
 #include "properties/parallelcoordinatessectionsproperty.h"
 
@@ -57,30 +55,28 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     setGuiName("Ensemble Analysis");
 
     // Processors
-    registerProcessor(new ConnectedComponentSelector());
     registerProcessor(new EnsembleDataSource());
     registerProcessor(new EnsembleFilter);
-    registerProcessor(new ReferenceVolumeCreator());
+    registerProcessor(new EnsembleMeanCreator());
 
     // Plotting
-    registerProcessor(new LocalSimilarityAnalysis());
+    registerProcessor(new EnsembleVarianceAnalysis());
     registerProcessor(new SimilarityMatrixCombine());
     registerProcessor(new ParallelCoordinatesAxesCreator());
-    registerProcessor(new ParallelCoordinatesSource());
     registerProcessor(new ParallelCoordinatesViewer());
     registerProcessor(new ParallelCoordinatesVoxelSelection());
     registerProcessor(new SimilarityMatrixCreator());
     registerProcessor(new SimilarityPlot());
 
     // IO
+    registerProcessor(new ParallelCoordinatesSave());
+    registerProcessor(new ParallelCoordinatesSource());
     registerProcessor(new SimilarityMatrixSave());
     registerProcessor(new SimilarityMatrixSource());
 
     // Misc
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new MetaDataAdder());
-    registerProcessor(new VolumeListMerger());
-    registerProcessor(new VolumeMerger());
 
     // Link evaluators
     registerSerializableType(new LinkEvaluatorParallelCoordinatesSectionsId());
