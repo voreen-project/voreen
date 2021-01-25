@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Landmark Registration Template Workspace&lt;/h4&gt; &lt;p&gt;This workspace demonstrates automatic volume registration using the VolumeLandmarkRegistration as well as the VolumePicking processor.&lt;/p&gt;&lt;p&gt;Landmarks can be placed using the mouse. The registration will be performed automatically.&lt;/p&gt;&lt;/font&gt;'>
+    <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Landmark Registration Template Workspace&lt;/h4&gt; &lt;p&gt;This workspace demonstrates automatic volume registration using the VolumeLandmarkRegistration as well as the VolumePicking processor.&lt;/p&gt;&lt;p&gt;Landmarks can be placed using the mouse (by holding Ctrl and clicking the left mouse button). The registration will be performed automatically.&lt;/p&gt;&lt;/font&gt;'>
         <ProcessorNetwork version="20">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
