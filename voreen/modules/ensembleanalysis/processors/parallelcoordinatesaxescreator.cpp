@@ -48,8 +48,6 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     , propertySampleRegion_("sampleRegion", "Sample Region")
     , propertySeedTime_("property_seed_time", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , propertyAggregateMembers_("property_aggregate_members", "Aggregate Members", false, Processor::VALID )
-    , propertyFileDialog_("property_file_dialog", "File Output", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::FileMode::SAVE_FILE, Processor::VALID )
-    , propertySaveButton_("property_save", "Save File", Processor::VALID )
 {
     // --- Initialize Ports --- //
     this->addPort(ensembleport_ );
@@ -68,12 +66,6 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     propertySampleRegion_.addOption("common", "Common Bounds");
     this->addProperty(propertySeedTime_);
     this->addProperty(propertyAggregateMembers_ );
-    this->addProperty(propertyFileDialog_ );
-    this->addProperty(propertySaveButton_ );
-    propertySaveButton_.onChange(LambdaFunctionCallback([this] {
-        if(axesport_.hasData() && !propertyFileDialog_.get().empty() )
-            axesport_.getData()->serialize(propertyFileDialog_.get() );
-    } ) );
 }
 
 Processor* ParallelCoordinatesAxesCreator::create() const {

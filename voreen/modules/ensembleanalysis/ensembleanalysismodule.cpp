@@ -25,12 +25,12 @@
 
 #include "ensembleanalysismodule.h"
 
+#include "io/ensembledatasource.h"
 #include "io/parallelcoordinatessave.h"
 #include "io/parallelcoordinatessource.h"
 #include "io/similaritymatrixsave.h"
 #include "io/similaritymatrixsource.h"
 
-#include "processors/ensembledatasource.h"
 #include "processors/ensemblefilter.h"
 #include "processors/ensemblemeancreator.h"
 #include "processors/ensemblevarianceanalysis.h"

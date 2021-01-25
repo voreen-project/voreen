@@ -16,7 +16,7 @@ Voreen Changelog
       o Add CorelineCreator and ParallelVectors processor to extract vortex corelines from 3-channel volumes (featured in feature-vortexcorelineextract workspace)
       o Add StreamlinePredicates processor to filter streamlines (featured in feature-streamlines)
       o Add EnsembleAnalysis module. This module provides visualization tools for multi-run multi-field spatio-temporal ensemble datasets such as multi-run similarity plots and parallel coordinates. All processors can operate on ensembles which exceed the size of main memory.
-      o Add vtk module. This module adds the vtk module to the voreen framework and provides additional volume readers (vti, netcdf) and writers (nifti)
+      o Add vtk module. This module adds the vtk module to the voreen framework and provides additional volume readers (netcdf, vti) and writers (nifti, vti)
       o Add Material and Material Dark design (change in Network Editor Settings), remove glossy highlights
 
     * Framework/API Changes:

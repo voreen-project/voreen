@@ -97,8 +97,6 @@ private:
     StringOptionProperty propertySampleRegion_;
     IntProperty propertySeedTime_;
     BoolProperty propertyAggregateMembers_;
-    FileDialogProperty propertyFileDialog_;
-    ButtonProperty propertySaveButton_;
 
     /// Hash value of last valid data.
     std::string hash_;

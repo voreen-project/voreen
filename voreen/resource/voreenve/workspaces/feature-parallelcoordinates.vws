@@ -391,7 +391,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="property_trans_func_field0" name="property_trans_func_field0" value="Magnitude">
+                        <Property mapKey="property_trans_func_field0" name="property_trans_func_field0" value="None">
                             <Options>
                                 <Option Key="None" Description="None" Value="-1">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -1080,7 +1080,7 @@
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="property_sections" name="property_sections" id="ref24" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 436 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -1603,7 +1603,7 @@
                         <Property mapKey="materialShininess" name="materialShininess" value="60" />
                         <Property mapKey="raycast.prg" name="raycast.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="-96" y="-112" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="-25" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -1796,7 +1796,7 @@
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
+                                <texDimensions x="4096" y="1" z="1" />
                                 <domain x="0" y="2570.014404297" />
                                 <threshold x="0" y="1" />
                                 <Keys />
@@ -1934,9 +1934,6 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_file_dialog" name="property_file_dialog" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
-                        </Property>
                         <Property mapKey="property_members" name="property_members">
                             <selectedRow>
                                 <item value="0" />
@@ -1988,11 +1985,10 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_save" name="property_save" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611525418" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 487 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 470 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>

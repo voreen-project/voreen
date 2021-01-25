@@ -31,13 +31,13 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/similaritymatrix.cpp
 
     #IO
+    ${MOD_DIR}/io/ensembledatasource.cpp
     ${MOD_DIR}/io/parallelcoordinatessave.cpp
     ${MOD_DIR}/io/parallelcoordinatessource.cpp
     ${MOD_DIR}/io/similaritymatrixsave.cpp
     ${MOD_DIR}/io/similaritymatrixsource.cpp
 
     #Processors
-    ${MOD_DIR}/processors/ensembledatasource.cpp
     ${MOD_DIR}/processors/ensemblefilter.cpp
     ${MOD_DIR}/processors/ensemblemeancreator.cpp
     ${MOD_DIR}/processors/ensemblevolumeextractor.cpp
@@ -76,13 +76,13 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/similaritymatrix.h
 
     #IO
+    ${MOD_DIR}/io/ensembledatasource.h
     ${MOD_DIR}/io/parallelcoordinatessave.h
     ${MOD_DIR}/io/parallelcoordinatessource.h
     ${MOD_DIR}/io/similaritymatrixsave.h
     ${MOD_DIR}/io/similaritymatrixsource.h
 
     #Processors
-    ${MOD_DIR}/processors/ensembledatasource.h
     ${MOD_DIR}/processors/ensemblefilter.h
     ${MOD_DIR}/processors/ensemblemeancreator.h
     ${MOD_DIR}/processors/ensemblevolumeextractor.h

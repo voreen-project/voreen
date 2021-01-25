@@ -167,9 +167,6 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_file_dialog" name="property_file_dialog" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
-                        </Property>
                         <Property mapKey="property_members" name="property_members">
                             <selectedRow>
                                 <item value="0" />
@@ -221,7 +218,6 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_save" name="property_save" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
@@ -311,9 +307,6 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_file_dialog" name="property_file_dialog" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
-                        </Property>
                         <Property mapKey="property_members" name="property_members">
                             <selectedRow>
                                 <item value="0" />
@@ -365,7 +358,6 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_save" name="property_save" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
