@@ -12,10 +12,15 @@
                         <item type="TextBoxMetaData" userType="65568" caption="Rendering" captionFontSize="9" x="596" y="-648" width="412" height="1091" baseColor="#dd7031" />
                     </values>
                 </MetaItem>
-                <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="392.875366211" y="-239.952362061" />
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeFilterList" ref="ref14" />
+                    </values>
                 </MetaItem>
-                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.804326296" />
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="99.533760071" y="86.934555054" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.793700516" />
             </MetaData>
             <Processors>
                 <Processor type="VolumeSource" name="Vessel Volume" id="ref0">
@@ -25,16 +30,18 @@
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
                         <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
-                            <urls protocol="">
+                            <urls protocol="hdf5">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../volumes/aneurysm_mask.vvd" />
-                                        <item value="resource/voreenve/volumes/aneurysm_mask.vvd" />
-                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/aneurysm_mask.vvd" />
+                                        <item value="../../../../../../home/dominik/segmentation.h5" />
+                                        <item value="../../../home/dominik/segmentation.h5" />
+                                        <item value="/home/dominik/segmentation.h5" />
                                     </paths>
                                 </path>
                                 <searchParameters>
-                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                    <value key="channel" value="0" />
+                                    <value key="path" value="/volume" />
+                                    <value key="preferredReader" value="HDF5VolumeReader" />
                                 </searchParameters>
                             </urls>
                         </Property>
@@ -65,10 +72,10 @@
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" guiName="Maximum Refinement Iterations" value="100" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 3.640 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="141.3 kB" />
+                        <Property mapKey="tmpStorageSizeInfo" name="tmpStorageSizeInfo" value="251.5 kB" />
                     </Properties>
                     <Inports>
                         <Port name="vesselgraphcreator.fixedForegroundPointInport" direction="1" portID="vesselgraphcreator.fixedForegroundPointInport" guiName="Fixed Foreground Points" allowMultipleConnections="false" invalidationLevel="1">
@@ -117,18 +124,18 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="10950.000976562" minValue="0.219000027" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="10993.80078125" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001401217">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="505.000061035" minValue="0.010100001" frustLeft="-0.006472087" frustRight="0.006472087" frustBottom="-0.006472087" frustTop="0.006472087" frustNear="0.015625" frustFar="507.020050049" fovy="45" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.02510825">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="26.189506531" y="93.796096802" z="53.203155518" />
-                            <focus x="22.199998856" y="27.299999237" z="27.600002289" />
-                            <upVector x="0.052931692" y="0.995639324" z="0.076816127" />
+                            <position x="-0.347838879" y="0.832086802" z="4.764026165" />
+                            <focus x="0.920000076" y="0.940000057" z="0.990000069" />
+                            <upVector x="-0.350522757" y="0.256373882" z="0.900780916" />
                             <trackball moveCenter="false">
-                                <center x="22.199998856" y="27.299999237" z="27.600002289" />
+                                <center x="0.920000076" y="0.940000057" z="0.990000069" />
                             </trackball>
-                            <sceneLLF x="3.900000095" y="15.900000572" z="5.700000286" />
-                            <sceneURB x="40.5" y="38.700000763" z="49.500003815" />
+                            <sceneLLF x="-0.010000001" y="0.070000008" z="0.110000007" />
+                            <sceneURB x="1.850000143" y="1.810000181" z="1.870000124" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -801,6 +808,138 @@
                         <item enabled="true">
                             <color x="0.06666667" y="1" z="0.125490203" w="1" />
                         </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0.392156869" z="0.078431375" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.980392158" y="0.784313738" z="0.588235319" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.588235319" y="0.784313738" z="0.980392158" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0.784313738" y="0.784313738" z="0.498039216" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="0" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="1" y="0" z="1" w="1" />
+                        </item>
+                        <item enabled="true">
+                            <color x="0" y="1" z="1" w="1" />
+                        </item>
                     </segments>
                 </Processor>
                 <Processor type="VolumeSource" name="Sample Mask" id="ref10">
@@ -849,15 +988,15 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/cb24efdd-07c6-4317-9277-131625b065ac.h5" />
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/cb24efdd-07c6-4317-9277-131625b065ac.h5" />
-                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/cb24efdd-07c6-4317-9277-131625b065ac.h5" />
+                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Cavity Removal)" />
                         <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 425 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 207 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -903,15 +1042,15 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bd065eaf-e495-4837-bdb3-129934de1fc7.h5" />
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bd065eaf-e495-4837-bdb3-129934de1fc7.h5" />
-                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/bd065eaf-e495-4837-bdb3-129934de1fc7.h5" />
+                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/08e2d62f-f99a-4268-8b33-617dfcc63e75.h5" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/08e2d62f-f99a-4268-8b33-617dfcc63e75.h5" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/08e2d62f-f99a-4268-8b33-617dfcc63e75.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Object Removal)" />
                         <Property mapKey="sortingMethod" name="sortingMethod" value="none" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 310 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 209 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="writeComponentStatFile" name="writeComponentStatFile" value="false" />
@@ -1029,7 +1168,7 @@
                 </Processor>
                 <Processor type="VolumeFilterList" name="Surface Smoothing" id="ref14">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="90" y="-567" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="88" y="-562" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="Binarization_threshold" name="Binarization_threshold" value="0.5" minValue="0" maxValue="1" tracking="false" />
@@ -1072,7 +1211,7 @@
                         <Property mapKey="Vorticity_gradientType" name="Vorticity_gradientType" value="centralDifferences" />
                         <Property mapKey="Vorticity_outsideVolumeValue" name="Vorticity_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" tracking="false" />
                         <Property mapKey="Vorticity_samplingStrategyType" name="Vorticity_samplingStrategyType" value="clamp" />
-                        <Property mapKey="enabled" name="enabled" guiName="Enable Surface Smoothing" value="false" />
+                        <Property mapKey="enabled" name="enabled" guiName="Enable Surface Smoothing" value="true" />
                         <Property mapKey="filterList" name="filterList">
                             <items>
                                 <item value="Binarization" />
@@ -1097,14 +1236,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e43dbe34-ed17-4e35-a5c7-2f1679b3c415.h5" />
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e43dbe34-ed17-4e35-a5c7-2f1679b3c415.h5" />
-                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/e43dbe34-ed17-4e35-a5c7-2f1679b3c415.h5" />
+                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/f6ee98b5-4773-4eeb-a825-33c1705abace.h5" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/f6ee98b5-4773-4eeb-a825-33c1705abace.h5" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/f6ee98b5-4773-4eeb-a825-33c1705abace.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Surface Smoothing)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 231 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="valueMap" name="valueMap" domainFittingStrategy="1" computeHistogram="true">
@@ -1185,8 +1324,8 @@
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="numEdges" name="numEdges" value="1" />
-                        <Property mapKey="numNodes" name="numNodes" value="2" />
+                        <Property mapKey="numEdges" name="numEdges" value="45" />
+                        <Property mapKey="numNodes" name="numNodes" value="47" />
                         <Property mapKey="segmentExportFilePath" name="segmentExportFilePath" guiName="Edge Data Export File" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
@@ -1209,7 +1348,7 @@
                 </Processor>
                 <Processor type="VolumeFilterList" name="VolumeFilterList" id="ref1">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="100" y="-649" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="99" y="-637" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="Binarization_threshold" name="Binarization_threshold" value="0.497799993" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" tracking="false" id="ref21" />
@@ -1277,14 +1416,14 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/19c56563-5fe3-442a-885b-418dbc2421eb.h5" />
-                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/19c56563-5fe3-442a-885b-418dbc2421eb.h5" />
-                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/19c56563-5fe3-442a-885b-418dbc2421eb.h5" />
+                                    <item value="../../../../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/b680b4a7-6cb0-40b5-a7ec-a02910a0daa4.h5" />
+                                    <item value="../../../data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/b680b4a7-6cb0-40b5-a7ec-a02910a0daa4.h5" />
+                                    <item value="/data/dominik/nosnapshot/tmp/voreen_tmp/5b96c1ad-46ba-4366-8241-fbc1cd0e9bbd/b680b4a7-6cb0-40b5-a7ec-a02910a0daa4.h5" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Thresholding)" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 234 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 205 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="valueMap" name="valueMap" domainFittingStrategy="1" computeHistogram="true">
@@ -1451,7 +1590,7 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="614.641357422">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="30.959329605">
                             <value x="2.299999952" y="1.5" z="1.5" w="1" />
                             <Center x="0" y="0" z="0" />
                             <LightPos x="0" y="0" z="1" w="1" />
@@ -1468,7 +1607,7 @@
                         </Property>
                         <Property mapKey="pointSize" name="pointSize" value="1" />
                         <Property mapKey="polygonMode" name="polygonMode" value="fill" />
-                        <Property mapKey="solidColor" name="solidColor">
+                        <Property mapKey="solidColor" name="solidColor" guiName="Surface Color">
                             <value x="0.149019614" y="0.760784328" z="0.792156875" w="0.392156869" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="REPLACE" />
@@ -1972,14 +2111,14 @@
             <![CDATA[A workspace demonstrating the functionality VesselGraphCreator of the VesselNetworkAnalysis module:
 <br>
 <br>
-The input volume should either already contain a binary foreground segmentation of vessel data, or should be able to be converted to one by using a simple treshold. The binary image can then be postprocessed using an optional surface smoothing step and removal of small foreground (adjustable by parameters) or background components.
+The input volume should either already contain a binary foreground segmentation of vessel data, or should be able to be converted to one by using a simple global treshold. The binary image can then be postprocessed using an optional surface smoothing step and removal of small foreground (adjustable by parameters) or background components.
 Then the <b>VesselGraphCreator</b> extracts a VesselGraph with centerlines which can be rendered, saved and exported  to csv files for further processing.
 <br>
 <br>
 The VesselGraphCreator implements the algorithm described in the article <b>Scalable Robust Graph and Feature Extraction for Arbitrary Vessel Networks in Large Volumetric Datasets</b> (Drees et al.), which you are kindly asked to cite if you find it useful in your research.
 <br>
 <br>
-<b>Note:</b> While the data processing processors are capable of handling volumes that exceed the main memory capacity, others that are used in this workspace (such as those handling the rendering of iso-surfaces) are not. To process such volumes it is necessary to use or build specialized workspaces using, for example, <OctreeRaycaster> for rendering of intermediate results.]]>
+<b>Note:</b> While the data processing processors are capable of handling volumes that exceed the main memory capacity, others that are used in this workspace (such as those handling the rendering of iso-surfaces) are not. To process such volumes it is necessary to use or build specialized workspaces using, for example, <b>SingleOctreeRaycaster</b> for rendering of intermediate results.]]>
         </GlobalDescription>
     </Workspace>
 </VoreenData>
