@@ -44,6 +44,7 @@ Voreen Changelog
       o Fix reading and writing of VolumeMinMax(Magnitude) for multi-channel volumes from and to HDF5 files
       o Enable camera interaction of GeometryProcessor per default
       o Fix VolumeListSpacing 'scale' option
+      o Split feature-vesselnessworkanalysis workspace into segmentation-vesselness and feature-vesselgraphextraction
 
 2020-01-17: Voreen 5.1.1
 ------------------------
