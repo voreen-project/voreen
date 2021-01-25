@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription="A basic workspace demonstrating usage of the &lt;b&gt;DynamicPythonProcessor&lt;/b&gt; to apply a simple dual threshold to an input volume.">
-        <ProcessorNetwork version="20">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -23,9 +23,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="46" y="122" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-1.181914806" y="0.2402125" z="2.292951107" />
+                            <position x="-1.801425576" y="-1.07920599" z="1.55973649" />
                             <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.498444378" y="-0.792162955" z="0.35218069" />
+                            <upVector x="0.548470378" y="-0.832365692" z="0.079671718" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -119,7 +119,7 @@
                                 <MetaItem name="FollowCamera" type="BoolMetaData" value="false" />
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
-                            <value x="0.070522666" y="-0.061748922" z="3.102844238" w="1" />
+                            <value x="-0.784454823" y="-1.698432326" z="2.507384777" w="1" />
                             <Center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             <LightPos x="-0.990817606" y="1.147262454" z="2.737164497" w="0" />
                         </Property>
@@ -446,13 +446,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-473" y="198" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="42" y="282" width="512" height="512" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1723" height="1189" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1501" y="1149" />
+                            <value x="1723" y="1189" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -463,7 +463,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="42" y="282" />
+                            <value x="1367" y="355" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="512" y="512" />
@@ -471,7 +471,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="512" y="512" />
+                            <value x="1723" y="1189" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -485,7 +485,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref9">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -551,9 +551,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../volumes/nucleon.vvd" />
+                                        <item value="../../volumes/nucleon.vvd" />
                                         <item value="resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -583,9 +583,9 @@
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                             </MetaData>
-                            <position x="-1.181914806" y="0.2402125" z="2.292951107" />
+                            <position x="-1.801425576" y="-1.07920599" z="1.55973649" />
                             <focus x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <upVector x="0.498444378" y="-0.792162955" z="0.35218069" />
+                            <upVector x="0.548470378" y="-0.832365692" z="0.079671718" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -608,7 +608,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref10">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -616,7 +616,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref11">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -648,7 +648,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-407" y="-181" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="clipRegion">
+                        <Property mapKey="clipRegion" tracking="true">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="40" y="40" z="40" />
                             <minValue x="0" y="0" z="0" />
@@ -827,7 +827,7 @@ voreen.setPortData("VolumePort-out (2)", volume);]]>
                     </PriorityProperty>
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-531" y="-284" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="false" x="614" y="255" width="911" height="487" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="698" y="374" width="911" height="487" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="enabled" name="enabled" value="true" />
@@ -838,10 +838,10 @@ voreen.setPortData("VolumePort-out (2)", volume);]]>
                                 <item value="RenderPort-in" />
                                 <item value="RenderPort-out" />
                             </items>
-                            <instancesExt>
+                            <instances>
                                 <item itemId="0" instanceId="1" active="true" name="VolumePort-in (1)" />
                                 <item itemId="1" instanceId="2" active="true" name="VolumePort-out (2)" />
-                            </instancesExt>
+                            </instances>
                         </Property>
                     </Properties>
                     <Inports>
@@ -919,7 +919,7 @@ voreen.setPortData("VolumePort-out (2)", volume);]]>
                         <Processor type="DynamicPythonProcessor" ref="ref4" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
-                        <Processor type="SingleVolumeRaycaster" ref="ref0" />
+                        <Processor type="OptimizedProxyGeometry" ref="ref6" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -927,7 +927,7 @@ voreen.setPortData("VolumePort-out (2)", volume);]]>
                         <Processor type="DynamicPythonProcessor" ref="ref4" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
-                        <Processor type="OptimizedProxyGeometry" ref="ref6" />
+                        <Processor type="SingleVolumeRaycaster" ref="ref0" />
                     </Inport>
                 </Connection>
             </Connections>
