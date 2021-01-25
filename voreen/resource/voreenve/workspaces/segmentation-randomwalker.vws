@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true">
-        <ProcessorNetwork version="20">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
@@ -25,13 +25,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref36">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-263" y="919" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1406" height="1149" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1401" height="1189" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1406" y="1149" />
+                            <value x="1401" y="1189" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -42,7 +42,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="65" y="535" />
+                            <value x="406" y="153" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1392" y="934" />
@@ -50,7 +50,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="1406" y="1149" />
+                            <value x="1401" y="1189" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -70,7 +70,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref119">
-                                    <value x="1406" y="1149" />
+                                    <value x="1401" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -99,28 +99,28 @@
                         <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref115">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref129">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin" id="ref121">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport4" direction="1" portID="inport4" guiName="Image4 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport4.renderSizeOrigin" name="inport4.renderSizeOrigin" id="ref123">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -130,7 +130,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref120">
-                                    <value x="1406" y="1149" />
+                                    <value x="1401" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -166,7 +166,7 @@
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
-                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
+                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1" tracking="true">
                             <value x="15" y="20" />
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
@@ -187,7 +187,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref117">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -197,7 +197,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref116">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -321,8 +321,8 @@
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref69">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.198606268" y="0" z="0" w="117.31010437" />
-                            <value.row2 x="0" y="0.198606268" z="0" w="-0.5" />
+                            <value.row1 x="-0.191919178" y="0" z="0" w="114.671714783" />
+                            <value.row2 x="0" y="0.191919193" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="renderLegend" name="renderLegend" value="false" />
@@ -424,7 +424,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref124">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -450,7 +450,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="beta" name="beta" value="11" tracking="false" />
-                        <Property mapKey="clipRegion">
+                        <Property mapKey="clipRegion" tracking="true">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="1" y="1" z="1" />
                             <minValue x="0" y="0" z="0" />
@@ -461,7 +461,6 @@
                         </Property>
                         <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasCL" />
                         <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="edgeWeightBalance" name="edgeWeightBalance" value="0.5" />
                         <Property mapKey="edgeWeightTransFunc" name="edgeWeightTransFunc" domainFittingStrategy="1" computeHistogram="true" id="ref81">
                             <MetaData>
@@ -487,6 +486,7 @@
                         <Property mapKey="enableTransFunc" name="enableTransFunc" value="false" />
                         <Property mapKey="errorThreshold" name="errorThreshold" value="1" tracking="false" />
                         <Property mapKey="foregroundThreshold" name="foregroundThreshold" value="0.5" tracking="false" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="lodBackgroundSeedThresh" name="lodBackgroundSeedThresh" value="0.050000001" />
                         <Property mapKey="lodForegroundSeedThresh" name="lodForegroundSeedThresh" value="0.949999988" />
                         <Property mapKey="lodMaxLevel" name="lodMaxLevel" value="2" />
@@ -500,12 +500,14 @@
                         <Property mapKey="lodSeedErosionKernelSize" name="lodSeedErosionKernelSize" value="3" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="5" tracking="false" />
+                        <Property mapKey="noiseModel" name="noiseModel" value="gaussian" />
                         <Property mapKey="preconditioner" name="preconditioner" value="jacobi" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resampleOutputVolumes" name="resampleOutputVolumes" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 791 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 21.062 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="useAdaptiveParameterSetting" name="useAdaptiveParameterSetting" value="false" />
                         <Property mapKey="usePrevProbAsInitialization" name="usePrevProbAsInitialization" value="false" />
                     </Properties>
                     <Inports>
@@ -584,6 +586,7 @@
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -609,8 +612,8 @@
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref71">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.198606268" y="0" z="0" w="117.31010437" />
-                            <value.row2 x="0" y="0.198606268" z="0" w="-0.5" />
+                            <value.row1 x="-0.191919178" y="0" z="0" w="114.671714783" />
+                            <value.row2 x="0" y="0.191919193" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -767,6 +770,7 @@
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -792,8 +796,8 @@
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref70">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.198606268" y="0" z="0" w="117.31010437" />
-                            <value.row2 x="0" y="0.198606268" z="0" w="-0.5" />
+                            <value.row1 x="-0.191919178" y="0" z="0" w="114.671714783" />
+                            <value.row2 x="0" y="0.191919193" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1224,9 +1228,9 @@ void main() {
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref72">
-                            <value.row0 x="0.198606282" y="0" z="0" w="-6.310106754" />
+                            <value.row0 x="0.191919193" y="0" z="0" w="-3.67171526" />
                             <value.row1 x="0" y="0" z="1" w="0" />
-                            <value.row2 x="0" y="0.198606268" z="0" w="-0.5" />
+                            <value.row2 x="0" y="0.191919193" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="renderLegend" name="renderLegend" value="false" />
@@ -1328,7 +1332,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref122">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1374,6 +1378,7 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -1398,9 +1403,9 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref73">
-                            <value.row0 x="0.198606282" y="0" z="0" w="-6.310106754" />
+                            <value.row0 x="0.191919193" y="0" z="0" w="-3.67171526" />
                             <value.row1 x="0" y="0" z="1" w="0" />
-                            <value.row2 x="0" y="0.198606268" z="0" w="-0.5" />
+                            <value.row2 x="0" y="0.191919193" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1611,7 +1616,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref128">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1657,6 +1662,7 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -1681,9 +1687,9 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref74">
-                            <value.row0 x="0.198606282" y="0" z="0" w="-6.310106754" />
+                            <value.row0 x="0.191919193" y="0" z="0" w="-3.67171526" />
                             <value.row1 x="0" y="0" z="1" w="0" />
-                            <value.row2 x="0" y="0.198606268" z="0" w="-0.5" />
+                            <value.row2 x="0" y="0.191919193" z="0" w="-0.5" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1913,7 +1919,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref127">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2330,8 +2336,8 @@ void main() {
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref75">
-                            <value.row0 x="0.182076812" y="0" z="0" w="-0.5" />
-                            <value.row1 x="0" y="-0.182076812" z="0" w="99.75604248" />
+                            <value.row0 x="0.182857141" y="0" z="0" w="-0.5" />
+                            <value.row1 x="0" y="-0.182857141" z="0" w="101.808570862" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -2348,7 +2354,7 @@ void main() {
                         <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (YZ)" value="59" id="ref66" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="8" y="24" z="59" />
+                            <value x="-1" y="-1" z="-1" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" guiName="Transfer Function (YZ)" domainFittingStrategy="1" computeHistogram="true" id="ref80">
@@ -2446,7 +2452,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref131">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2492,6 +2498,7 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -2516,8 +2523,8 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref76">
-                            <value.row0 x="0.182076812" y="0" z="0" w="-0.5" />
-                            <value.row1 x="0" y="-0.182076812" z="0" w="99.75604248" />
+                            <value.row0 x="0.182857141" y="0" z="0" w="-0.5" />
+                            <value.row1 x="0" y="-0.182857141" z="0" w="101.808570862" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -2651,6 +2658,7 @@ void main() {
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
                         <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="8" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
                         <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="true" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
                         <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
@@ -2675,8 +2683,8 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref77">
-                            <value.row0 x="0.182076812" y="0" z="0" w="-0.5" />
-                            <value.row1 x="0" y="-0.182076812" z="0" w="99.75604248" />
+                            <value.row0 x="0.182857141" y="0" z="0" w="-0.5" />
+                            <value.row1 x="0" y="-0.182857141" z="0" w="101.808570862" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -2962,7 +2970,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref130">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -3552,7 +3560,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref125">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -3560,7 +3568,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref126">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -4103,7 +4111,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref118">
-                                    <value x="703" y="574" />
+                                    <value x="700" y="594" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -4272,7 +4280,7 @@ void main() {
                                     <paths>
                                         <item value="../volumes/walnut.vvd" />
                                         <item value="resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -4298,7 +4306,7 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-793" y="96" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="clipRegion">
+                        <Property mapKey="clipRegion" tracking="true">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="127" y="95" z="113" />
                             <minValue x="0" y="0" z="0" />
@@ -5420,17 +5428,41 @@ void main() {
             <PropertyGroups>
                 <item value="Input" />
                 <item value="2D Rendering" />
-                <item value="Random Walker Parameters" />
+                <item value="Random Walker" />
                 <item value="Output" />
             </PropertyGroups>
             <GroupMembership>
                 <value key="RandomWalker.beta">
-                    <First value="Random Walker Parameters" />
+                    <First value="Random Walker" />
+                    <Second value="5" />
+                </value>
+                <value key="RandomWalker.manualUpdateButton_">
+                    <First value="Random Walker" />
                     <Second value="0" />
                 </value>
                 <value key="RandomWalker.minEdgeWeight">
-                    <First value="Random Walker Parameters" />
+                    <First value="Random Walker" />
+                    <Second value="6" />
+                </value>
+                <value key="RandomWalker.noiseModel">
+                    <First value="Random Walker" />
+                    <Second value="4" />
+                </value>
+                <value key="RandomWalker.progressDisplay">
+                    <First value="Random Walker" />
                     <Second value="1" />
+                </value>
+                <value key="RandomWalker.statusDisplay">
+                    <First value="Random Walker" />
+                    <Second value="2" />
+                </value>
+                <value key="RandomWalker.stopUpdateButton">
+                    <First value="Random Walker" />
+                    <Second value="0" />
+                </value>
+                <value key="RandomWalker.useAdaptiveParameterSetting">
+                    <First value="Random Walker" />
+                    <Second value="3" />
                 </value>
                 <value key="Slice2D (X).sliceIndex">
                     <First value="2D Rendering" />
