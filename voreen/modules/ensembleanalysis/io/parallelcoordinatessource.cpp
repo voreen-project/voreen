@@ -23,32 +23,29 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PARALLELCOORDINATESSOURCE_H
-#define VRN_PARALLELCOORDINATESSOURCE_H
-
-#include "../ports/parallelcoordinatesaxesport.h"
-#include "voreen/core/processors/processor.h"
-#include "voreen/core/properties/filedialogproperty.h"
+#include "parallelcoordinatessource.h"
 
 namespace voreen {
 
-class VRN_CORE_API ParallelCoordinatesSource : public Processor	{
-public:
-    ParallelCoordinatesSource();
-    virtual Processor* create() const;
+ParallelCoordinatesSource::ParallelCoordinatesSource()
+    : Processor()
+    , _outport( Port::OUTPORT, "outport", "Parallel Coordinates Axes" )
+    , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::OPEN_FILE )
+    , _propertyLoadButton( "property_load_button", "Load" )
+{
+    this->addPort( _outport );
 
-    virtual std::string getClassName() const;
-    virtual std::string getCategory() const;
-
-private:
-    virtual void process();
-
-    ParallelCoordinatesAxesPort _outport;
-
-    FileDialogProperty _propertyFileDialog;
-    ButtonProperty _propertyLoadButton;
-};
-
+    this->addProperty( _propertyFileDialog );
+    this->addProperty( _propertyLoadButton );
 }
 
-#endif // VRN_PARALLELCOORDINATESSOURCE_H
+Processor* ParallelCoordinatesSource::create() const {
+    return new ParallelCoordinatesSource();
+}
+
+void ParallelCoordinatesSource::process() {
+    if( !_propertyFileDialog.get().empty() )
+        _outport.setData( new ParallelCoordinatesAxes( _propertyFileDialog.get() ) );
+}
+
+}

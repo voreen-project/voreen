@@ -64,7 +64,7 @@ public:
 
     virtual std::string getClassName() const      { return "EnsembleVarianceAnalysis"; }
     virtual std::string getCategory() const       { return "Ensemble Processing";      }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL;    }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;         }
 
 protected:
 
@@ -72,7 +72,7 @@ protected:
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
-    void adjustPropertiesToInput();
+    void adjustToEnsemble();
 
 protected:
 

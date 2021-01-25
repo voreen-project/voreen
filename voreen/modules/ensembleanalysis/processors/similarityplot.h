@@ -78,10 +78,10 @@ public:
     virtual ~SimilarityPlot();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const        { return "SimilarityPlot"; }
-    virtual std::string getCategory() const         { return "Plotting";              }
-    virtual CodeState getCodeState() const          { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool usesExpensiveComputation() const   { return true;                    }
+    virtual std::string getClassName() const        { return "SimilarityPlot";   }
+    virtual std::string getCategory() const         { return "Plotting";         }
+    virtual CodeState getCodeState() const          { return CODE_STATE_TESTING; }
+    virtual bool usesExpensiveComputation() const   { return true;               }
 
 protected:
     virtual void initialize();

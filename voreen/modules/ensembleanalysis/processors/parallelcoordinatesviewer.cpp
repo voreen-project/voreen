@@ -400,10 +400,13 @@ void ParallelCoordinatesViewer::process()
     // Draw selected lines
     glBlendFuncSeparate( GL_DST_ALPHA, GL_ZERO, GL_ONE, GL_ONE );
     glUniform4f( glGetUniformLocation( _shaderProgram, "color" ), 0.922f, 0.251f, 0.204f, 0.8f / _propertyDensitySelectedSamples.get() );
-    for( size_t i = 0; i < axes->samples(); ++i )  if( _samplesVisiblity[i] && _samplesSelection[i] )
-    {
-        const auto baseVertex = _propertyVisualizationMode.getValue() ? static_cast<GLint>( _propertySelectedField.getValue() + i * axes->fields() ) : static_cast<GLint>( i * axes->fields() );
-        glDrawElementsBaseVertex( GL_LINE_STRIP, static_cast<GLsizei>( axisCount ), GL_UNSIGNED_INT, nullptr, baseVertex );
+    for( size_t i = 0; i < axes->samples(); ++i ) {
+        if (_samplesVisiblity[i] && _samplesSelection[i]) {
+            const auto baseVertex = _propertyVisualizationMode.getValue() ? static_cast<GLint>(
+                    _propertySelectedField.getValue() + i * axes->fields()) : static_cast<GLint>( i * axes->fields());
+            glDrawElementsBaseVertex(GL_LINE_STRIP, static_cast<GLsizei>( axisCount ), GL_UNSIGNED_INT, nullptr,
+                                     baseVertex);
+        }
     }
 
     glBindVertexArray( 0 );
@@ -678,7 +681,7 @@ void ParallelCoordinatesViewer::onHoverEvent( tgt::MouseEvent* event )
     if( current.axis != _hoveredScreenAxis )
     {
         _hoveredScreenAxis = current.axis;
-        this->process();
+        invalidate();
     }
 }
 void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )

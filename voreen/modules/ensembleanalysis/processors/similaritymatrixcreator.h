@@ -81,7 +81,7 @@ public:
     virtual Processor* create() const;
     virtual std::string getClassName() const        { return "SimilarityMatrixCreator"; }
     virtual std::string getCategory() const         { return "Plotting";                }
-    virtual CodeState getCodeState() const          { return CODE_STATE_EXPERIMENTAL;   }
+    virtual CodeState getCodeState() const          { return CODE_STATE_TESTING;   }
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;

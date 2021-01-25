@@ -25,6 +25,8 @@
 
 #include "ensembleanalysismodule.h"
 
+#include "io/parallelcoordinatessave.h"
+#include "io/parallelcoordinatessource.h"
 #include "io/similaritymatrixsave.h"
 #include "io/similaritymatrixsource.h"
 
@@ -35,7 +37,6 @@
 #include "processors/ensemblevolumeextractor.h"
 #include "processors/metadataadder.h"
 #include "processors/parallelcoordinatesaxescreator.h"
-#include "processors/parallelcoordinatessource.h"
 #include "processors/parallelcoordinatesviewer.h"
 #include "processors/parallelcoordinatesvoxelselection.h"
 #include "processors/similaritymatrixcombine.h"
@@ -62,13 +63,14 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new EnsembleVarianceAnalysis());
     registerProcessor(new SimilarityMatrixCombine());
     registerProcessor(new ParallelCoordinatesAxesCreator());
-    registerProcessor(new ParallelCoordinatesSource());
     registerProcessor(new ParallelCoordinatesViewer());
     registerProcessor(new ParallelCoordinatesVoxelSelection());
     registerProcessor(new SimilarityMatrixCreator());
     registerProcessor(new SimilarityPlot());
 
     // IO
+    registerProcessor(new ParallelCoordinatesSave());
+    registerProcessor(new ParallelCoordinatesSource());
     registerProcessor(new SimilarityMatrixSave());
     registerProcessor(new SimilarityMatrixSource());
 

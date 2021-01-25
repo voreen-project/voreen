@@ -60,7 +60,7 @@ public:
 
     virtual std::string getClassName() const      { return "EnsembleMeanCreator";   }
     virtual std::string getCategory() const       { return "Ensemble Processing";   }
-    virtual CodeState getCodeState() const        { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const        { return CODE_STATE_TESTING;      }
 
 protected:
 

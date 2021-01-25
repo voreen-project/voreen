@@ -23,48 +23,29 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYMATRIXSAVE_H
-#define VRN_SIMILARITYMATRIXSAVE_H
-
-#include "voreen/core/processors/processor.h"
-
-#include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/boolproperty.h"
-
-#include "../ports/similaritymatrixport.h"
+#include "parallelcoordinatessave.h"
 
 namespace voreen {
 
-class VRN_CORE_API SimilarityMatrixSave : public Processor {
-public:
-    SimilarityMatrixSave();
+ParallelCoordinatesSave::ParallelCoordinatesSave()
+        : Processor()
+        , _inport( Port::INPORT, "inport", "Parallel Coordinates Axes" )
+        , _propertyFileDialog( "property_file_dialog", "File Output", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::SAVE_FILE )
+        , _propertySaveButton( "property_save_button", "Save" )
+{
+    this->addPort( _inport );
 
-    virtual Processor* create() const         { return new SimilarityMatrixSave(); }
-    virtual std::string getClassName() const  { return "SimilarityMatrixSave"; }
-    virtual std::string getCategory() const   { return "Output"; }
-    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
-    virtual bool isEndProcessor() const       { return true; }
+    this->addProperty( _propertyFileDialog );
+    this->addProperty( _propertySaveButton );
+}
 
-protected:
+Processor* ParallelCoordinatesSave::create() const {
+    return new ParallelCoordinatesSave();
+}
 
-    virtual void process();
-    virtual void invalidate(int inv = 1);
+void ParallelCoordinatesSave::process() {
+    if( !_propertyFileDialog.get().empty() && _inport.hasData())
+        _inport.getData()->serialize(_propertyFileDialog.get());
+}
 
-private:
-
-    void saveSimilarityMatrix();
-
-    SimilarityMatrixPort inport_;
-
-    FileDialogProperty filenameProp_;               ///< determines the name of the saved file
-    ButtonProperty saveButton_;                     ///< triggers a save
-
-    bool saveSimilarityMatrix_;          ///< used to determine, if process should save or not
-
-    static const std::string loggerCat_;
-};
-
-}   //namespace
-
-#endif
+}

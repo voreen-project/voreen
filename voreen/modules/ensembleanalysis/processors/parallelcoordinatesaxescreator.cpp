@@ -145,7 +145,7 @@ void ParallelCoordinatesAxesCreator::adjustToSelection() {
             if(numChannels > 1) {
                 for(size_t channel=0; channel<numChannels; channel++) {
                     // We add the channel index to the field name (using 1-based counting) to identify the channels.
-                    std::string axisLabel = fieldName + " (" + std::to_string(channel + 1) + ')';
+                    std::string axisLabel = fieldName + "(" + std::to_string(channel + 1) + ')';
                     axesLabels_.emplace_back(axisLabel);
                     propertyFields_.addRow(axisLabel);
                 }
@@ -159,7 +159,7 @@ void ParallelCoordinatesAxesCreator::adjustToSelection() {
         propertyFields_.blockCallbacks(false);
         propertyFields_.invalidate();
 
-        propertyTemporalSampleCount_.setMaxValue(ensemble.getMaxNumTimeSteps());
+        propertyTemporalSampleCount_.setMaxValue(std::max<size_t>(1, ensemble.getMaxNumTimeSteps()));
         //propertyTemporalSampleCount_.set(ensemble.getMaxNumTimeSteps());
 
         fields_ = fields;
@@ -168,17 +168,17 @@ void ParallelCoordinatesAxesCreator::adjustToSelection() {
 
 ParallelCoordinatesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareComputeInput() {
 
-    const EnsembleDataset* ensemble = ensembleport_.getThreadSafeData();
-    if(!ensemble) {
+    const EnsembleDataset* inputEnsemble = ensembleport_.getThreadSafeData();
+    if(!inputEnsemble) {
         throw InvalidInputException("No input", InvalidInputException::S_ERROR);
     }
 
     tgt::Bounds bounds;
     if (propertySampleRegion_.get() == "bounds") {
-        bounds = ensemble->getBounds();
+        bounds = inputEnsemble->getBounds();
     }
     else if (propertySampleRegion_.get() == "common") {
-        bounds = ensemble->getCommonBounds();
+        bounds = inputEnsemble->getCommonBounds();
     }
     else {
         throw InvalidInputException("Unknown sample region", InvalidInputException::S_ERROR);
@@ -250,10 +250,10 @@ ParallelCoordinatesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareCompu
     // --- Gather values --- //
     std::unique_ptr<EnsembleDataset> selectedEnsemble(new EnsembleDataset());
     for( const auto member : propertyMembers_.get() )
-        selectedEnsemble->addMember(ensembleport_.getData()->getMembers()[member]);
+        selectedEnsemble->addMember(inputEnsemble->getMembers()[member]);
 
     const auto temporalSampleCount = propertyTemporalSampleCount_.get();
-    const auto& members = ensemble->getMembers();
+    const auto& members = selectedEnsemble->getMembers();
 
     if(members.empty()) {
         throw InvalidInputException("No members selected", InvalidInputException::S_ERROR);
@@ -274,7 +274,7 @@ ParallelCoordinatesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareCompu
     // --- Gather ranges --- //
     auto ranges = std::vector<tgt::vec2>( fields.size() );
     for( size_t i = 0; i < fields.size(); ++i ) {
-        ranges[i] = ensemble->getValueRange( fields[i].first );
+        ranges[i] = inputEnsemble->getValueRange(fields[i].first );
     }
 
     return ComputeInput {

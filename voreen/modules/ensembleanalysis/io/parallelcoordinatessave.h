@@ -23,36 +23,34 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "parallelcoordinatessource.h"
+#ifndef VRN_PARALLELCOORDINATESAFE_H
+#define VRN_PARALLELCOORDINATESAFE_H
+
+#include "../ports/parallelcoordinatesaxesport.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/properties/filedialogproperty.h"
 
 namespace voreen {
 
-ParallelCoordinatesSource::ParallelCoordinatesSource()
-    : Processor()
-    , _outport( Port::OUTPORT, "outport", "Parallel Coordinates Axes" )
-    , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::OPEN_FILE, Processor::VALID )
-    , _propertyLoadButton( "property_load_button", "Load" )
-{
-    this->addPort( _outport );
+class VRN_CORE_API ParallelCoordinatesSave : public Processor {
+public:
+    ParallelCoordinatesSave();
+    virtual Processor* create() const;
 
-    this->addProperty( _propertyFileDialog );
-    this->addProperty( _propertyLoadButton );
-}
+    virtual std::string getClassName() const  { return "ParallelCoordinatesSave"; }
+    virtual std::string getCategory() const   { return "Output"; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
+    virtual bool isEndProcessor() const       { return true; }
 
-Processor* ParallelCoordinatesSource::create() const {
-    return new ParallelCoordinatesSource();
-}
+private:
+    virtual void process();
 
-std::string ParallelCoordinatesSource::getClassName() const {
-    return "ParallelCoordinatesSource";
-}
-std::string ParallelCoordinatesSource::getCategory() const {
-    return "ParallelCoordinates";
-}
+    ParallelCoordinatesAxesPort _inport;
 
-void ParallelCoordinatesSource::process() {
-    if( !_propertyFileDialog.get().empty() )
-        _outport.setData( new ParallelCoordinatesAxes( _propertyFileDialog.get() ) );
-}
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertySaveButton;
+};
 
 }
+
+#endif // VRN_PARALLELCOORDINATESSAFE_H

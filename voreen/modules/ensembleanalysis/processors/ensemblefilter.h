@@ -43,10 +43,10 @@ public:
     virtual ~EnsembleFilter();
 
     virtual Processor* create() const;
-    virtual std::string getClassName() const { return "EnsembleFilter";        }
-    virtual std::string getCategory() const  { return "Filter";                }
-    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool isUtility() const           { return true;                    }
+    virtual std::string getClassName() const { return "EnsembleFilter";   }
+    virtual std::string getCategory() const  { return "Filter";           }
+    virtual CodeState getCodeState() const   { return CODE_STATE_TESTING; }
+    virtual bool isUtility() const           { return true;               }
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);

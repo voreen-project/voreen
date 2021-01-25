@@ -23,48 +23,33 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_SIMILARITYMATRIXSAVE_H
-#define VRN_SIMILARITYMATRIXSAVE_H
+#ifndef VRN_PARALLELCOORDINATESSOURCE_H
+#define VRN_PARALLELCOORDINATESSOURCE_H
 
+#include "../ports/parallelcoordinatesaxesport.h"
 #include "voreen/core/processors/processor.h"
-
 #include "voreen/core/properties/filedialogproperty.h"
-#include "voreen/core/properties/buttonproperty.h"
-#include "voreen/core/properties/boolproperty.h"
-
-#include "../ports/similaritymatrixport.h"
 
 namespace voreen {
 
-class VRN_CORE_API SimilarityMatrixSave : public Processor {
+class VRN_CORE_API ParallelCoordinatesSource : public Processor	{
 public:
-    SimilarityMatrixSave();
+    ParallelCoordinatesSource();
+    virtual Processor* create() const;
 
-    virtual Processor* create() const         { return new SimilarityMatrixSave(); }
-    virtual std::string getClassName() const  { return "SimilarityMatrixSave"; }
-    virtual std::string getCategory() const   { return "Output"; }
+    virtual std::string getClassName() const  { return "ParallelCoordinatesSource"; }
+    virtual std::string getCategory() const   { return "Input"; }
     virtual CodeState getCodeState() const    { return CODE_STATE_TESTING; }
-    virtual bool isEndProcessor() const       { return true; }
-
-protected:
-
-    virtual void process();
-    virtual void invalidate(int inv = 1);
 
 private:
+    virtual void process();
 
-    void saveSimilarityMatrix();
+    ParallelCoordinatesAxesPort _outport;
 
-    SimilarityMatrixPort inport_;
-
-    FileDialogProperty filenameProp_;               ///< determines the name of the saved file
-    ButtonProperty saveButton_;                     ///< triggers a save
-
-    bool saveSimilarityMatrix_;          ///< used to determine, if process should save or not
-
-    static const std::string loggerCat_;
+    FileDialogProperty _propertyFileDialog;
+    ButtonProperty _propertyLoadButton;
 };
 
-}   //namespace
+}
 
-#endif
+#endif // VRN_PARALLELCOORDINATESSOURCE_H

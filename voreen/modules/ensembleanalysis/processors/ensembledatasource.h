@@ -51,7 +51,7 @@ public:
 
     virtual std::string getClassName() const  { return "EnsembleDataSource";    }
     virtual std::string getCategory() const   { return "Input";                 }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const    { return CODE_STATE_TESTING;      }
     virtual bool usesExpensiveComputation() const { return true; }
 
 protected:

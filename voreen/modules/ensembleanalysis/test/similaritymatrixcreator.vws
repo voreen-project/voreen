@@ -1,0 +1,683 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="SimilarityMatrixSave" ref="ref9" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="0" y="0" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
+            </MetaData>
+            <Processors>
+                <Processor type="EnsembleDataSource" name="EnsembleDataSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-54" y="-447" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="colorMap" name="colorMap">
+                            <colors name="">
+                                <colors>
+                                    <item x="0" y="0" z="1" w="1" />
+                                    <item x="1" y="0" z="0" w="1" />
+                                    <item x="1" y="1" z="0" w="1" />
+                                </colors>
+                            </colors>
+                        </Property>
+                        <Property mapKey="ensemblepath" name="ensemblepath" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/ensemble/aneurysm" />
+                                    <item value="../test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="hash" name="hash" value="a5ab9131c2fdd9b9db12ae519fecad90" />
+                        <Property mapKey="loadDataset" name="loadDataset" />
+                        <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Name" />
+                                <item value="Num Time Steps" />
+                                <item value="Start Time" />
+                                <item value="End Time" />
+                                <item value="Duration" />
+                            </columnLabels>
+                            <values>
+                                <item>
+                                    <item value="sense_10" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_15" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_20" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_25" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_30" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_35" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_40" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_45" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                                <item>
+                                    <item value="sense_50" />
+                                    <item value="1" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                    <item value="0.000000" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="full" />
+                        <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideTime" name="overrideTime" value="false" />
+                        <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="timeStepProgress" name="timeStepProgress" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="ensembledataset" direction="0" portID="ensembledataset" guiName="EnsembleDataset Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixCreator" name="Generalized" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-352" y="-163" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="isoValue" name="isoValue" value="0.5" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="multiChannelSimilarityMeasure" name="multiChannelSimilarityMeasure" value="magnitude" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="8192" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="seedTime" name="seedTime" value="1611537598" />
+                        <Property mapKey="singleChannelSimilarityMeasure" name="singleChannelSimilarityMeasure" value="generalized" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="weight" name="weight" value="0.5" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="seedmask" direction="1" portID="seedmask" guiName="Seed Mask Input (optional)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Similarity Matrix Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixSave" name="SimilarityMatrixSave" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-375" y="-39" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/generalized_similarity.vsm" />
+                                    <item value="../test-data/voreen-testdata/output/generalized_similarity.vsm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/generalized_similarity.vsm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixSave" name="SimilarityMatrixSave 2" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-149" y="-38" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/magnitude_similarity.vsm" />
+                                    <item value="../test-data/voreen-testdata/output/magnitude_similarity.vsm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/magnitude_similarity.vsm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixCreator" name="Magnitude 2" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-123" y="-155" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="isoValue" name="isoValue" value="0.5" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="multiChannelSimilarityMeasure" name="multiChannelSimilarityMeasure" value="magnitude" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="8192" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="seedTime" name="seedTime" value="1611537598" />
+                        <Property mapKey="singleChannelSimilarityMeasure" name="singleChannelSimilarityMeasure" value="generalized" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="weight" name="weight" value="0.5" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="seedmask" direction="1" portID="seedmask" guiName="Seed Mask Input (optional)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Similarity Matrix Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="EnsembleFilter" name="Magnitude" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-343" y="-270" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="channel" name="channel" value="Magnitude">
+                            <Options>
+                                <Option Key="Magnitude" Description="Magnitude (*)" Value="Magnitude">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Velocity" Description="Velocity (*)" Value="Velocity">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                            </Options>
+                        </Property>
+                        <Property mapKey="enableRemoveFirstTimeStep" name="enableRemoveFirstTimeStep" value="false" />
+                        <Property mapKey="enableSelectLastTimeStep" name="enableSelectLastTimeStep" value="false" />
+                        <Property mapKey="keepIfOnlyTimeStep" name="keepIfOnlyTimeStep" value="true" />
+                        <Property mapKey="members" name="members">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="timeInterval" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
+                            <value x="0" y="0" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembledatastructurein" direction="1" portID="ensembledatastructurein" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="ensembledatastructureout" direction="0" portID="ensembledatastructureout" guiName="Ensemble Datastructure Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="EnsembleFilter" name="Velocity" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="-267" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="channel" name="channel" value="Velocity">
+                            <Options>
+                                <Option Key="Magnitude" Description="Magnitude (*)" Value="Magnitude">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                                <Option Key="Velocity" Description="Velocity (*)" Value="Velocity">
+                                    <GuiColor r="0" g="0" b="0" a="0" />
+                                </Option>
+                            </Options>
+                        </Property>
+                        <Property mapKey="enableRemoveFirstTimeStep" name="enableRemoveFirstTimeStep" value="false" />
+                        <Property mapKey="enableSelectLastTimeStep" name="enableSelectLastTimeStep" value="false" />
+                        <Property mapKey="keepIfOnlyTimeStep" name="keepIfOnlyTimeStep" value="true" />
+                        <Property mapKey="members" name="members">
+                            <selectedRow>
+                                <item value="0" />
+                                <item value="1" />
+                                <item value="2" />
+                                <item value="3" />
+                                <item value="4" />
+                                <item value="5" />
+                                <item value="6" />
+                                <item value="7" />
+                                <item value="8" />
+                            </selectedRow>
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="1" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0.222222224" y="0" z="0.777777791" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0.444444448" y="0" z="0.555555582" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0.666666687" y="0" z="0.333333313" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0.888888896" y="0" z="0.111111104" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="1" y="0.111111164" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="1" y="0.333333373" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="1" y="0.555555582" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="1" y="0.777777791" z="0" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="timeInterval" minValue="0" maxValue="0" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
+                            <value x="0" y="0" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="ensembledatastructurein" direction="1" portID="ensembledatastructurein" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="ensembledatastructureout" direction="0" portID="ensembledatastructureout" guiName="Ensemble Datastructure Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixCreator" name="Both" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="311" y="-160" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="isoValue" name="isoValue" value="0.5" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="multiChannelSimilarityMeasure" name="multiChannelSimilarityMeasure" value="euclidean_norm" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="8192" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="seedTime" name="seedTime" value="1611537598" />
+                        <Property mapKey="singleChannelSimilarityMeasure" name="singleChannelSimilarityMeasure" value="generalized" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="weight" name="weight" value="0.5" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="seedmask" direction="1" portID="seedmask" guiName="Seed Mask Input (optional)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Similarity Matrix Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixSave" name="SimilarityMatrixSave 3" id="ref9">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="286" y="-37" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/multiple_fields_similarity.vsm" />
+                                    <item value="../test-data/voreen-testdata/output/multiple_fields_similarity.vsm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/multiple_fields_similarity.vsm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixCreator" name="Angle" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="85" y="-157" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clearCache" name="clearCache" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="isoValue" name="isoValue" value="0.5" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="multiChannelSimilarityMeasure" name="multiChannelSimilarityMeasure" value="angleDifference" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="8192" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="seedTime" name="seedTime" value="1611537598" />
+                        <Property mapKey="singleChannelSimilarityMeasure" name="singleChannelSimilarityMeasure" value="generalized" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="weight" name="weight" value="0.5" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Ensemble Datastructure Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="seedmask" direction="1" portID="seedmask" guiName="Seed Mask Input (optional)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Similarity Matrix Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="SimilarityMatrixSave" name="SimilarityMatrixSave 4" id="ref10">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="60" y="-38" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="filenameprop" name="filenameprop" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/angle_similarity.vsm" />
+                                    <item value="../test-data/voreen-testdata/output/angle_similarity.vsm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/angle_similarity.vsm" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="saveButton" name="saveButton" />
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Similarity Matrix Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="EnsembleFilter" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="ensembledatastructurein">
+                        <Processor type="EnsembleFilter" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledataset">
+                        <Processor type="EnsembleDataSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref4" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixSave" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref6" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixSave" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledatastructureout">
+                        <Processor type="EnsembleFilter" ref="ref1" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledatastructureout">
+                        <Processor type="EnsembleFilter" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref6" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="ensembledatastructureout">
+                        <Processor type="EnsembleFilter" ref="ref2" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref8" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref3" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixSave" ref="ref9" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="SimilarityMatrixCreator" ref="ref8" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="SimilarityMatrixSave" ref="ref10" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

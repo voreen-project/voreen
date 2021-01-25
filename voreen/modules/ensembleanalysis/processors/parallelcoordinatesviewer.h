@@ -43,7 +43,7 @@ public:
     virtual Processor* create() const override { return new ParallelCoordinatesViewer(); }
     virtual std::string getClassName() const override { return "ParallelCoordinatesViewer"; }
     virtual std::string getCategory() const override { return "ParallelCoordinates"; }
-    virtual CodeState getCodeState() const override { return CODE_STATE_EXPERIMENTAL; }
+    virtual CodeState getCodeState() const override { return CODE_STATE_TESTING; }
 
 private:
     virtual void setDescriptions() {

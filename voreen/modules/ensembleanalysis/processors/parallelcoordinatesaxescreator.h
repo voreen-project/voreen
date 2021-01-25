@@ -58,7 +58,7 @@ public:
     Processor* create() const override;
     std::string getClassName() const override { return "ParallelCoordinatesAxesCreator"; }
     std::string getCategory() const override { return "ParallelCoordinates"; }
-    CodeState getCodeState() const override { return CODE_STATE_EXPERIMENTAL; }
+    CodeState getCodeState() const override { return CODE_STATE_TESTING; }
     bool isReady() const override;
 
     virtual void serialize(Serializer& s) const;

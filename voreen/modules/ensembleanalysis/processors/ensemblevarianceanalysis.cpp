@@ -44,6 +44,7 @@ EnsembleVarianceAnalysis::EnsembleVarianceAnalysis()
 {
     // Ports
     addPort(ensembleInport_);
+    ON_CHANGE(ensembleInport_, EnsembleVarianceAnalysis, adjustToEnsemble);
     addPort(ensembleMeanPort_);
     addPort(outport_);
 
@@ -219,7 +220,7 @@ void EnsembleVarianceAnalysis::processComputeOutput(EnsembleVarianceAnalysisOutp
 }
 
 
-void EnsembleVarianceAnalysis::adjustPropertiesToInput() {
+void EnsembleVarianceAnalysis::adjustToEnsemble() {
     if(!ensembleInport_.hasData()) return;
 
     const EnsembleDataset* ensemble = ensembleInport_.getData();

@@ -31,6 +31,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/datastructures/similaritymatrix.cpp
 
     #IO
+    ${MOD_DIR}/io/parallelcoordinatessave.cpp
+    ${MOD_DIR}/io/parallelcoordinatessource.cpp
     ${MOD_DIR}/io/similaritymatrixsave.cpp
     ${MOD_DIR}/io/similaritymatrixsource.cpp
 
@@ -42,7 +44,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/ensemblevarianceanalysis.cpp
     ${MOD_DIR}/processors/metadataadder.cpp
     ${MOD_DIR}/processors/parallelcoordinatesaxescreator.cpp
-    ${MOD_DIR}/processors/parallelcoordinatessource.cpp
     ${MOD_DIR}/processors/parallelcoordinatesviewer.cpp
     ${MOD_DIR}/processors/parallelcoordinatesvoxelselection.cpp
     ${MOD_DIR}/processors/similaritymatrixcombine.cpp
@@ -75,6 +76,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/datastructures/similaritymatrix.h
 
     #IO
+    ${MOD_DIR}/io/parallelcoordinatessave.h
+    ${MOD_DIR}/io/parallelcoordinatessource.h
     ${MOD_DIR}/io/similaritymatrixsave.h
     ${MOD_DIR}/io/similaritymatrixsource.h
 
@@ -86,7 +89,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/ensemblevarianceanalysis.h
     ${MOD_DIR}/processors/metadataadder.h
     ${MOD_DIR}/processors/parallelcoordinatesaxescreator.h
-    ${MOD_DIR}/processors/parallelcoordinatessource.h
     ${MOD_DIR}/processors/parallelcoordinatesviewer.h
     ${MOD_DIR}/processors/parallelcoordinatesvoxelselection.h
     ${MOD_DIR}/processors/similaritymatrixcombine.h
