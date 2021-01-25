@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription='&lt;font color=&quot;#808080&quot;&gt;&lt;h4&gt;Animation&lt;/h4&gt; &lt;p&gt;This workspace demonstrates a simple animation. A documentation of the animaton editor is available in the &quot;Help&quot; section of the menu bar.&lt;/p&gt;&lt;p&gt;Open the animation editor using the &quot;Tools&quot; section in the menu bar or the animation icon in the tool bar to open the animation editor to view, play, and edit the example animation.&lt;/p&gt;&lt;p&gt;Please note that the ffmpeg module has to be included in the Voreen build to enable the export of the animation as a video file.&lt;/p&gt;&lt;/font&gt;'>
-        <ProcessorNetwork version="19">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="OrientationOverlay" ref="ref1" />
+                    </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-249" y="23.5" />
@@ -15,13 +20,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref3">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-203" y="307" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="286" y="159" width="512" height="512" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1723" height="1189" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1920" y="0" />
+                            <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="942" y="1854" />
+                            <value x="1723" y="1189" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -32,7 +37,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="286" y="159" />
+                            <value x="638" y="213" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="512" y="512" />
@@ -40,7 +45,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="512" y="512" />
+                            <value x="1723" y="1189" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -54,7 +59,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref24">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -75,9 +80,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-3.164779186" y="1.88444376" z="2.348264933" />
-                            <focus x="-0.140609995" y="-0.205891997" z="0.00218" />
-                            <upVector x="0.355078846" y="0.877023757" z="-0.323648751" />
+                            <position x="-4.303573608" y="-0.071851805" z="-0.871716797" />
+                            <focus x="-0.032148205" y="-0.233953074" z="-0.062333576" />
+                            <upVector x="0.074097395" y="0.978213251" z="-0.193929166" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -94,7 +99,7 @@
                             </components>
                         </Property>
                         <Property mapKey="forceAdaptToScene" name="forceAdaptToScene" />
-                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1">
+                        <Property mapKey="maxFragmentsPerPixelAvgAbs" minValue="1" maxValue="50" minRange="0" maxRange="2147483647" stepping="1" tracking="true">
                             <value x="15" y="20" />
                         </Property>
                         <Property mapKey="oirAddImageShader" name="oirAddImageShader">
@@ -121,7 +126,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref16">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -131,7 +136,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref25">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -232,7 +237,7 @@
                         <Property mapKey="showLegend" name="showLegend" value="false" />
                     </Properties>
                     <Inports>
-                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="geometry" direction="1" portID="geometry" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                         <Port name="volume" direction="1" portID="volume" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -286,8 +291,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-465" y="41" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="clipRegion" id="ref20">
-                            <bounds.llf x="1" y="0" z="1" />
+                        <Property mapKey="clipRegion" tracking="true" id="ref20">
+                            <bounds.llf x="1" y="3" z="1" />
                             <bounds.urb x="39" y="40" z="39" />
                             <minValue x="0" y="0" z="0" />
                             <maxValue x="40" y="40" z="40" />
@@ -358,9 +363,9 @@
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="46" y="122" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-3.164779186" y="1.88444376" z="2.348264933" />
-                            <focus x="-0.140609995" y="-0.205891997" z="0.00218" />
-                            <upVector x="0.355078846" y="0.877023757" z="-0.323648751" />
+                            <position x="-4.303573608" y="-0.071851805" z="-0.871716797" />
+                            <focus x="-0.032148205" y="-0.233953074" z="-0.062333576" />
+                            <upVector x="0.074097395" y="0.978213251" z="-0.193929166" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -449,13 +454,13 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10" id="ref11">
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="34.641014099" id="ref11">
                             <MetaData>
                                 <MetaItem name="UseBackHemisphere" type="BoolMetaData" value="false" />
                             </MetaData>
                             <value x="-1.317707419" y="0.709034741" z="-0.97217226" w="1" />
                             <Center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
-                            <LightPos x="-1.524026871" y="0.490724891" z="0.738514423" w="1" />
+                            <LightPos x="-0.537119985" y="0.805745244" z="1.473481894" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -525,11 +530,14 @@
                         <Property mapKey="transFunc2D" name="transFunc2D" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc2DPropertyWidgetPainterZoom" type="Vec4MetaData">
+                                    <value x="0" y="249" z="0" w="1316.044067383" />
+                                </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensityGradient" alphaMode="1" filter="1" dataType="5126">
                                 <texDimensions x="256" y="256" z="1" />
                                 <gammaValues x="1" y="1" />
-                                <domains x="0" y="1" z="0" w="1" />
+                                <domains x="0" y="249" z="0" w="1316.044067383" />
                                 <thresholds x="0" y="1" z="0" w="1" />
                                 <Primitives />
                             </TransferFunction>
@@ -769,9 +777,9 @@
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="../volumes/nucleon.vvd" />
                                         <item value="resource/voreenve/volumes/nucleon.vvd" />
-                                        <item value="C:/voreen-development/voreen/resource/voreenve/volumes/nucleon.vvd" />
+                                        <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/nucleon.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -801,9 +809,9 @@
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="9" y="-17" />
                             </MetaData>
-                            <position x="-3.164779186" y="1.88444376" z="2.348264933" />
-                            <focus x="-0.140609995" y="-0.205891997" z="0.00218" />
-                            <upVector x="0.355078846" y="0.877023757" z="-0.323648751" />
+                            <position x="-4.303573608" y="-0.071851805" z="-0.871716797" />
+                            <focus x="-0.032148205" y="-0.233953074" z="-0.062333576" />
+                            <upVector x="0.074097395" y="0.978213251" z="-0.193929166" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -817,7 +825,7 @@
                         <Property mapKey="useCulling" name="useCulling" value="true" />
                     </Properties>
                     <Inports>
-                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="20">
+                        <Port name="proxgeometry.geometry" direction="1" portID="proxgeometry.geometry" guiName="Proxy Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties />
                         </Port>
                     </Inports>
@@ -826,7 +834,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref17">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -834,7 +842,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref18">
-                                    <value x="512" y="512" />
+                                    <value x="1723" y="1189" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -866,8 +874,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-204" y="-262" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="clipRegion" id="ref19">
-                            <bounds.llf x="1" y="0" z="1" />
+                        <Property mapKey="clipRegion" tracking="true" id="ref19">
+                            <bounds.llf x="1" y="3" z="1" />
                             <bounds.urb x="39" y="40" z="39" />
                             <minValue x="0" y="0" z="0" />
                             <maxValue x="40" y="40" z="40" />
@@ -966,7 +974,7 @@
                         </Port>
                     </Inports>
                     <Outports>
-                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="20">
+                        <Port name="proxygeometry.geometry" direction="0" portID="proxygeometry.geometry" guiName="Proxy Geometry Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                             </Properties>
@@ -987,9 +995,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-3.164779186" y="1.88444376" z="2.348264933" />
-                            <focus x="-0.140609995" y="-0.205891997" z="0.00218" />
-                            <upVector x="0.355078846" y="0.877023757" z="-0.323648751" />
+                            <position x="-4.303573608" y="-0.071851805" z="-0.871716797" />
+                            <focus x="-0.032148205" y="-0.233953074" z="-0.062333576" />
+                            <upVector x="0.074097395" y="0.978213251" z="-0.193929166" />
                             <trackball moveCenter="false">
                                 <center x="-0.024390221" y="-0.024390221" z="-0.024390221" />
                             </trackball>
@@ -1001,60 +1009,60 @@
                         <Property mapKey="filenameBack" name="filenameBack" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="../../voreencore/textures/coronal_b.png" />
                                     <item value="resource/voreencore/textures/coronal_b.png" />
-                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_b.png" />
+                                    <item value="/git/voreen-develop/voreen/resource/voreencore/textures/coronal_b.png" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="filenameBottom" name="filenameBottom" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
+                                    <item value="../../voreencore/textures/axial_b.png" />
                                     <item value="resource/voreencore/textures/axial_b.png" />
-                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_b.png" />
+                                    <item value="/git/voreen-develop/voreen/resource/voreencore/textures/axial_b.png" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="filenameFront" name="filenameFront" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="../../voreencore/textures/coronal_f.png" />
                                     <item value="resource/voreencore/textures/coronal_f.png" />
-                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/coronal_f.png" />
+                                    <item value="/git/voreen-develop/voreen/resource/voreencore/textures/coronal_f.png" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="filenameLeft" name="filenameLeft" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="../../voreencore/textures/sagittal_l.png" />
                                     <item value="resource/voreencore/textures/sagittal_l.png" />
-                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_l.png" />
+                                    <item value="/git/voreen-develop/voreen/resource/voreencore/textures/sagittal_l.png" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="filenameRight" name="filenameRight" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="../../voreencore/textures/sagittal_r.png" />
                                     <item value="resource/voreencore/textures/sagittal_r.png" />
-                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/sagittal_r.png" />
+                                    <item value="/git/voreen-develop/voreen/resource/voreencore/textures/sagittal_r.png" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="filenameTop" name="filenameTop" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
+                                    <item value="../../voreencore/textures/axial_t.png" />
                                     <item value="resource/voreencore/textures/axial_t.png" />
-                                    <item value="C:/voreen-development/voreen/resource/voreencore/textures/axial_t.png" />
+                                    <item value="/git/voreen-develop/voreen/resource/voreencore/textures/axial_t.png" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="geometry.prg" name="geometry.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="trianglemesh.vert" modified="false" />
@@ -1062,11 +1070,11 @@
                                 <item shaderType="1" originalFilename="trianglemesh.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="orientationTypeProp" name="orientationTypeProp" value="axis2d" />
+                        <Property mapKey="orientationTypeProp" name="orientationTypeProp" value="axis3d" />
                         <Property mapKey="renderAxesLabelsProp" name="renderAxesLabelsProp" value="true" />
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="700" height="700" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -1307,7 +1315,7 @@
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>
-        <Animation undoSteps="100" fps="25" duration="20" currentTime="0" isRendering="false">
+        <Animation undoSteps="100" fps="25" duration="20" currentTime="1.799999952" isRendering="false">
             <processors>
                 <Processor>
                     <processor type="Canvas" ref="ref3" />
