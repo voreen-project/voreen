@@ -1,13 +1,18 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="true" GlobalDescription="This workspace demonstrates how the &lt;b&gt;DynamicPythonProcessor&lt;/b&gt; can be used to generate Volumes e.g. for testing other functionality.">
-        <ProcessorNetwork version="20">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="DynamicPythonProcessor" ref="ref5" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-871.190795898" y="-73.290657043" />
+                    <value x="-316.670928955" y="459.10369873" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.723148167" />
             </MetaData>
@@ -18,7 +23,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12500" minValue="1" frustLeft="-0.414213598" frustRight="0.414213598" frustBottom="-0.414213598" frustTop="0.414213598" frustNear="1" frustFar="12550" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000782272" id="ref7">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12500" minValue="1" frustLeft="-0.414213598" frustRight="0.414213598" frustBottom="-0.414213598" frustTop="0.414213598" frustNear="1" frustFar="12550" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000782272" id="ref8">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="46" y="122" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -300,7 +305,7 @@
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncType" name="transFuncType" value="1D Keys Color Map" />
-                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref11">
+                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true" id="ref12">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="671" y="182" width="718" height="459" />
@@ -416,13 +421,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-473" y="197" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="487" y="350" width="512" height="512" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-2205" y="0" width="718" height="1853" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-1678" y="3" />
+                            <value x="-2205" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1305" y="980" />
+                            <value x="718" y="1853" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -433,7 +438,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="487" y="350" />
+                            <value x="344" y="696" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="512" y="512" />
@@ -441,7 +446,7 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="512" y="512" />
+                            <value x="718" y="1853" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -454,8 +459,8 @@
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref8">
-                                    <value x="512" y="512" />
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref9">
+                                    <value x="718" y="1853" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -516,7 +521,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-393" y="-91" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12500" minValue="1" frustLeft="-0.414213598" frustRight="0.414213598" frustBottom="-0.414213598" frustTop="0.414213598" frustNear="1" frustFar="12550" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000782272" id="ref6">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12500" minValue="1" frustLeft="-0.414213598" frustRight="0.414213598" frustBottom="-0.414213598" frustTop="0.414213598" frustNear="1" frustFar="12550" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000782272" id="ref7">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="721" y="372" />
                             </MetaData>
@@ -544,16 +549,16 @@
                         <Port name="image.entrypoints" direction="0" portID="image.entrypoints" guiName="Entry-points Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref9">
-                                    <value x="512" y="512" />
+                                <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref10">
+                                    <value x="718" y="1853" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="image.exitpoints" direction="0" portID="image.exitpoints" guiName="Exit-points Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref10">
-                                    <value x="512" y="512" />
+                                <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref11">
+                                    <value x="718" y="1853" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -585,7 +590,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-407" y="-181" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="clipRegion">
+                        <Property mapKey="clipRegion" tracking="true">
                             <bounds.llf x="0" y="0" z="0" />
                             <bounds.urb x="49" y="49" z="49" />
                             <minValue x="0" y="0" z="0" />
@@ -600,7 +605,7 @@
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
                         <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="5" />
                         <Property mapKey="threshold" name="threshold" value="1" />
-                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true" id="ref12">
+                        <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true" id="ref13">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
@@ -765,7 +770,7 @@ voreen.setPortData("VolumePort-out (1)", volume);]]>
                     </PriorityProperty>
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-514" y="-286" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="437" y="274" width="1087" height="632" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="56" y="636" width="1087" height="632" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="enabled" name="enabled" value="true" />
@@ -789,6 +794,33 @@ voreen.setPortData("VolumePort-out (1)", volume);]]>
                             </Properties>
                         </Port>
                     </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave" id="ref6">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-615" y="5" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
@@ -851,45 +883,68 @@ voreen.setPortData("VolumePort-out (1)", volume);]]>
                         <Processor type="SingleVolumeRaycaster" ref="ref0" />
                     </Inport>
                 </Connection>
+                <Connection>
+                    <Outport name="VolumePort-out (1)">
+                        <Processor type="DynamicPythonProcessor" ref="ref5" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref6" />
+                    </Inport>
+                </Connection>
             </Connections>
             <CoProcessorConnections />
             <PropertyLinks>
                 <PropertyLink>
-                    <SourceProperty type="CameraProperty" ref="ref6" />
+                    <SourceProperty type="CameraProperty" ref="ref7" />
+                    <DestinationProperty type="CameraProperty" ref="ref8" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref8" />
                     <DestinationProperty type="CameraProperty" ref="ref7" />
                     <Evaluator type="LinkEvaluatorCameraId" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty type="CameraProperty" ref="ref7" />
-                    <DestinationProperty type="CameraProperty" ref="ref6" />
-                    <Evaluator type="LinkEvaluatorCameraId" />
-                </PropertyLink>
-                <PropertyLink>
-                    <SourceProperty ref="ref8" />
-                    <DestinationProperty ref="ref9" />
-                    <Evaluator type="LinkEvaluatorRenderSize" />
-                </PropertyLink>
-                <PropertyLink>
-                    <SourceProperty ref="ref8" />
+                    <SourceProperty ref="ref9" />
                     <DestinationProperty ref="ref10" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
                 <PropertyLink>
-                    <SourceProperty type="TransFunc1DKeysProperty" ref="ref11" />
-                    <DestinationProperty type="TransFunc1DKeysProperty" ref="ref12" />
-                    <Evaluator type="LinkEvaluatorTransFunc1DKeysId" />
+                    <SourceProperty ref="ref9" />
+                    <DestinationProperty ref="ref11" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
                 <PropertyLink>
                     <SourceProperty type="TransFunc1DKeysProperty" ref="ref12" />
-                    <DestinationProperty type="TransFunc1DKeysProperty" ref="ref11" />
+                    <DestinationProperty type="TransFunc1DKeysProperty" ref="ref13" />
+                    <Evaluator type="LinkEvaluatorTransFunc1DKeysId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="TransFunc1DKeysProperty" ref="ref13" />
+                    <DestinationProperty type="TransFunc1DKeysProperty" ref="ref12" />
                     <Evaluator type="LinkEvaluatorTransFunc1DKeysId" />
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>
         <Animation />
         <ApplicationModeConfig MainCanvas="Canvas::Canvas">
-            <PropertyGroups />
-            <GroupMembership />
+            <PropertyGroups>
+                <item value="Output" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="VolumeSave.outputFilename">
+                    <First value="Output" />
+                    <Second value="0" />
+                </value>
+                <value key="VolumeSave.save">
+                    <First value="Output" />
+                    <Second value="1" />
+                </value>
+                <value key="VolumeSave.volumeInfo">
+                    <First value="Output" />
+                    <Second value="2" />
+                </value>
+            </GroupMembership>
             <MenuEntityVisibility>
                 <value key="General Settings..." value="true" />
                 <value key="Open Workspace..." value="true" />
