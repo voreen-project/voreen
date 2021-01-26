@@ -180,6 +180,7 @@ protected:
     IntProperty brickUploadTimeLimit_;
     BoolProperty keepInteractionBricks_;
     BoolProperty uploadBricksDuringInteraction_;
+    BoolProperty uploadBrickInParallel_;
 
     BoolProperty applyChannelShift_;
     FloatVec3Property channelShift0_;

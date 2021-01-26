@@ -51,6 +51,10 @@
 #include <queue>
 #include <stack>
 
+#ifdef VRN_MODULE_OPENMP
+#include <omp.h>
+#endif
+
 using tgt::ivec2;
 using tgt::ivec3;
 using tgt::ivec4;
@@ -301,6 +305,7 @@ SingleOctreeRaycasterCL::SingleOctreeRaycasterCL()
     , brickUploadTimeLimit_("brickUploadTimeLimit", "Brick Upload Time Limit (ms)", 250, 0, 1000)
     , keepInteractionBricks_("keepInteractionBricks", "Keep Interaction Level Bricks", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , uploadBricksDuringInteraction_("uploadBricksDuringInteracion", "Upload Bricks During Interaction", true, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
+    , uploadBrickInParallel_("uploadBrickInParallel", "Upload Bricks in Parallel", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , applyChannelShift_("applyChannelShift", "Apply Channel Shift", false, Processor::INVALID_PROGRAM, Property::LOD_ADVANCED)
     , channelShift0_("channelShift0", "Channel Shift 1", tgt::vec3(0.f), tgt::vec3(-50.f), tgt::vec3(50.f), Processor::INVALID_RESULT, NumericProperty<tgt::vec3>::STATIC, Property::LOD_ADVANCED)
     , channelShift1_("channelShift1", "Channel Shift 2", tgt::vec3(0.f), tgt::vec3(-50.f), tgt::vec3(50.f), Processor::INVALID_RESULT, NumericProperty<tgt::vec3>::STATIC, Property::LOD_ADVANCED)
@@ -441,6 +446,7 @@ SingleOctreeRaycasterCL::SingleOctreeRaycasterCL()
     addProperty(brickUploadTimeLimit_);
     addProperty(keepInteractionBricks_);
     addProperty(uploadBricksDuringInteraction_);
+    addProperty(uploadBrickInParallel_);
     useBricks_.setGroupID("bricking");
     textureFilterMode_.setGroupID("bricking");
     brickBufferSizeMB_.setGroupID("bricking");
@@ -448,6 +454,7 @@ SingleOctreeRaycasterCL::SingleOctreeRaycasterCL()
     brickBufferSizeMB_.setGroupID("bricking");
     brickUploadTimeLimit_.setGroupID("bricking");
     uploadBricksDuringInteraction_.setGroupID("bricking");
+    uploadBrickInParallel_.setGroupID("bricking");
     keepInteractionBricks_.setGroupID("bricking");
     setPropertyGroupGuiName("bricking", "Brick Handling");
 
@@ -1409,7 +1416,8 @@ void SingleOctreeRaycasterCL::updateBrickBuffer(int keepLevel, size_t& numUsedIn
     bool end_upload = false;
     //size_t lastRuntime = 0;
 #ifdef VRN_MODULE_OPENMP
-#pragma omp parallel for
+    int n_threads = uploadBrickInParallel_.get() ? omp_get_max_threads() : 1;
+#pragma omp parallel for num_threads(n_threads)
 #endif
     for (long i=0; i<static_cast<long>(numBricksToUpload); ++i) {
         if(end_upload) {
