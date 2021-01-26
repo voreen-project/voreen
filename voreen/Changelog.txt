@@ -18,6 +18,11 @@ Voreen Changelog
       o Add EnsembleAnalysis module. This module provides visualization tools for multi-run multi-field spatio-temporal ensemble datasets such as multi-run similarity plots and parallel coordinates. All processors can operate on ensembles which exceed the size of main memory.
       o Add vtk module. This module adds the vtk module to the voreen framework and provides additional volume readers (netcdf, vti) and writers (nifti, vti)
       o Add Material and Material Dark design (change in Network Editor Settings), remove glossy highlights
+      o Add OctreeWalker processor and workspace that can replace RandomWalker for operation on out-of-core Volumes (with some restrictions).
+      o Add optional automatic beta-parameter selection in RandomWalker
+      o Add (still experimental) mmap-based BrickPoolManager for volume octrees. This enables support for handling multiple volumes with octree representation in the same workspace.
+      o Allow construction rendering of octrees deeper than 8 levels, allowing for rendering of > 100GB volumes and beyond.
+      o Add support for min/max aggregation functions in octree construction.
 
     * Framework/API Changes:
       o VolumeHalfSample: The output dimensions are now always rounded up if the input dimensions are not divisible by 2. This change was made in order unify the behaviour with octree downsampling
@@ -35,12 +40,12 @@ Voreen Changelog
       o Fix crash when OpenGL vendor string couldn't be detected (e.g. on some virtual machines)
       o Fix splitter double-click event forwarding
       o Fix handling of kernel extent in MorphologyFilter of VolumeFilterList
-      o Improve OctreeCreator performance
       o Allow extent of 0 in VolumeFilterList filter properties
       o Removal of only remaining volume representation no longer possible
       o Remove GL -> RAM volume representation converter, which caused crashes in asynchronous processing
       o Remove Disk -> GL volume representation converter, which created an intermediate RAM representation. This is now handled by the memory manager and also supports Octree -> GL representation conversion.
       o Fix separate loading of channels from a HDF5 file volume
+      o Fix HDF5 compiatibility version issues (only possible for hdf5 library v1.10.2 or later)
       o Output data ranges of filters in VolumeFilterList now influence parameters of subsequent filters
       o GeometrySource will no longer discard uv coordinates of obj files if no material texture was found
       o Fix undesired shader rebuilds in GeometryRenderer
@@ -51,7 +56,20 @@ Voreen Changelog
       o Fix VolumeListSpacing 'scale' option
       o Fix arithmetic exceptions when adding POIStorage or POIRenderer2d to the network
       o Add uncompressed (de-)serialization options to VesselGraphSource and VesselGraphSave. Note: Compression is currently not supported on Windows.
-      o Split feature-vesselnessworkanalysis workspace into segmentation-vesselness and feature-vesselgraphextraction
+      o Split the overly complex feature-vesselnessworkanalysis workspace into segmentation-vesselness and feature-vesselgraphextraction
+      o Add VolumeAtomic::copy()
+      o Make VolumeComparison suitable for non-interactive use
+      o Add "cachepath" and "opencl" options to voreentool
+      o Fix bug related to overriding trackballCenterBehaviour when animating cameras
+      o Allow all (not only middle) mouse buttons for scroll-like interactions (i.e., holding a mouse button and moving mouse up/down)
+      o Make gui text of button properties editable
+      o Add start/enqueue invalidation behaviour for some processors (RandomWalker, OctreeWalker) which allows continuous update of (for example) labels while the processor is updating the intermediate result. In constrast to the start/restart behaviour, a change in inputs does not stop the current computation.
+      o Improve performance of the conjugate gradient solver used in RandomWalker and OctreeWalker.
+      o Support GeometrySequences in Random-/OctreeWalker
+      o Improve OctreeCreator usability and performance
+      o Greatly improve SliceViewer performance on large octree volumes
+      o Fix depth calculation and the interaction of compositing and refinement in SingleOctreeRaycaster
+      o Optionally parallelize reading of to-be-uploaded bricks in SingleOctreeRaycaster
 
 2020-01-17: Voreen 5.1.1
 ------------------------
