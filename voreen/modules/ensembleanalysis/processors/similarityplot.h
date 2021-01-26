@@ -129,10 +129,10 @@ protected:
         renderedMembers_.setDescription("Can be used to show all members at the same time or a subset thereof");
 
         firstSelectedMember_.setDescription("Use left-click to perform selection of a member. Link this with <br>EnsembleFilter</br>.");
-        firstSelectedTimeStep_.setDescription("Use left-click to perform selection of a time step. Link this with <br>EnsembleFilter</br>.");
+        firstSelectedTimeInterval_.setDescription("Use left-click to perform selection of a time step. Link this with <br>EnsembleFilter</br>.");
 
         secondSelectedMember_.setDescription("Use right-click to perform selection of another member. Link this with another <br>EnsembleFilter</br>.");
-        secondSelectedTimeStep_.setDescription("Use right-click to perform selection of another time step. Link this with another <br>EnsembleFilter</br>.");
+        secondSelectedTimeInterval_.setDescription("Use right-click to perform selection of another time step. Link this with another <br>EnsembleFilter</br>.");
     }
 
 private:
@@ -182,9 +182,9 @@ private:
     StringListProperty renderedMembers_;
 
     StringListProperty firstSelectedMember_;
-    FloatIntervalProperty firstSelectedTimeStep_;
+    FloatIntervalProperty firstSelectedTimeInterval_;
     StringListProperty secondSelectedMember_;
-    FloatIntervalProperty secondSelectedTimeStep_;
+    FloatIntervalProperty secondSelectedTimeInterval_;
 
     FileDialogProperty saveFileDialog_;
     ButtonProperty saveButton_;

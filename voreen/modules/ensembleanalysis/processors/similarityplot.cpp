@@ -56,6 +56,8 @@ static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3::one;
 static const tgt::vec3 MIN_DURATION_COLOR(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 MAX_DURATION_COLOR(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
+static const float SELECTED_LINE_WIDTH = 6.0f;
+static const float UNSELECTED_LINE_WIDTH = 3.0f;
 
 const std::string SimilarityPlot::fontName_("Vera.ttf");
 const std::string SimilarityPlot::loggerCat_("voreen.ensembleanalysis.SimilarityPlot");
@@ -97,9 +99,9 @@ SimilarityPlot::SimilarityPlot()
     , renderedField_("renderedChannel", "Field")
     , renderedMembers_("renderedMembers", "Rendered Members")
     , firstSelectedMember_("selectedMembers", "First selected Members")
-    , firstSelectedTimeStep_("selectedTimeSteps", "First selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
+    , firstSelectedTimeInterval_("selectedTimeSteps", "First selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , secondSelectedMember_("referenceMember", "Second selected Member")
-    , secondSelectedTimeStep_("referenceTimeStep", "Second selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
+    , secondSelectedTimeInterval_("referenceTimeStep", "Second selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , saveFileDialog_("saveFileDialog", "Export Embedding", "Select file...", VoreenApplication::app()->getUserDataPath(),
                       "Voreen MDS Embedding (*.vmds)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , saveButton_("saveButton", "Save")
@@ -158,7 +160,7 @@ SimilarityPlot::SimilarityPlot()
             }
 
             // We currently only allow for manual time range selection in 1D mode.
-            firstSelectedTimeStep_.setVisibleFlag(numDimensions_.get() == 1);
+            firstSelectedTimeInterval_.setVisibleFlag(numDimensions_.get() == 1);
         });
     addProperty(principleComponent_);
         principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
@@ -192,12 +194,12 @@ SimilarityPlot::SimilarityPlot()
     // Selection (Linking)
     addProperty(firstSelectedMember_);
         firstSelectedMember_.setGroupID("selection");
-    addProperty(firstSelectedTimeStep_);
-        firstSelectedTimeStep_.setGroupID("selection");
+    addProperty(firstSelectedTimeInterval_);
+        firstSelectedTimeInterval_.setGroupID("selection");
     addProperty(secondSelectedMember_);
         secondSelectedMember_.setGroupID("selection");
-    addProperty(secondSelectedTimeStep_);
-        secondSelectedTimeStep_.setGroupID("selection");
+    addProperty(secondSelectedTimeInterval_);
+        secondSelectedTimeInterval_.setGroupID("selection");
     setPropertyGroupGuiName("selection", "Selection");
     setPropertyGroupVisible("selection", false);
 
@@ -490,12 +492,12 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
 
     tgt::vec2 timeRange = tgt::vec2(dataset->getStartTime(), dataset->getEndTime());
     if(renderTimeSelection_.get()) {
-        timeRange = firstSelectedTimeStep_.get();
+        timeRange = firstSelectedTimeInterval_.get();
     }
 
     for(int memberIdx : renderingOrder_) {
 
-        glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
+        glLineWidth((subSelection_.count(memberIdx) != 0) ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
 
         const EnsembleMember& member = dataset->getMembers()[memberIdx];
         size_t numTimeSteps = member.getTimeSteps().size();
@@ -521,7 +523,7 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
             IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
             for (size_t j = 0; j < numTimeSteps; j++) {
                 float colorSaturation = 1.0f;
-                if(member.getTimeSteps()[j].getTime() < timeRange.x || member.getTimeSteps()[j].getTime() > timeRange.y) {
+                if(!picking && (member.getTimeSteps()[j].getTime() < timeRange.x || member.getTimeSteps()[j].getTime() > timeRange.y)) {
                     colorSaturation = 0.25f;
                 }
                 float t = mapRange(member.getTimeSteps()[j].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
@@ -530,18 +532,10 @@ void SimilarityPlot::renderEmbedding1D(bool picking) {
             }
             IMode.end();
         }
-
-        if(!picking) {
-            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeStep_.get().x);
-            float x = mapRange(member.getTimeSteps()[selectedTimeStep].getTime(), dataset->getStartTime(), dataset->getEndTime(), -1.0f, 1.0f);
-            tgt::vec3 position(x, vertices[selectedTimeStep][eigenValueIdx], 0.0f);
-            tgt::vec3 color = tgt::vec3::one; // in 1D-case the selection is always white.!
-            renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
-        }
     }
 
     if(!picking && renderTimeSelection_.get()) {
-        tgt::vec2 mappedTimeRange = mapRange(firstSelectedTimeStep_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
+        tgt::vec2 mappedTimeRange = mapRange(firstSelectedTimeInterval_.get(), tgt::vec2(dataset->getStartTime()), tgt::vec2(dataset->getEndTime()), -tgt::vec2::one, tgt::vec2::one);
 
         glLineWidth(3.0f);
         IMode.color(tgt::vec3::zero);
@@ -564,7 +558,7 @@ void SimilarityPlot::renderEmbedding2D(bool picking) {
 
     for (int memberIdx : renderingOrder_) {
 
-        glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
+        glLineWidth((subSelection_.count(memberIdx) != 0) ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
 
         size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
         const auto& vertices = embedding.nVectors_.at(memberIdx);
@@ -577,7 +571,7 @@ void SimilarityPlot::renderEmbedding2D(bool picking) {
         IMode.end();
 
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
-            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeStep_.get().x);
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
             tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
             renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
@@ -608,7 +602,7 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
 
     for (int memberIdx : renderingOrder_) {
 
-        glLineWidth((subSelection_.count(memberIdx) != 0) ? 7.0f : 5.0f);
+        glLineWidth((subSelection_.count(memberIdx) != 0) ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
 
         size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
         const auto& vertices = embedding.nVectors_.at(memberIdx);
@@ -621,7 +615,7 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
         IMode.end();
 
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
-            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeStep_.get().x);
+            size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
             tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
             renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
@@ -732,15 +726,33 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
         const EnsembleDataset* dataset = ensembleInport_.getData();
         if(y != e->y() && numDimensions_.get() == 1) {
+            float t0 = firstSelectedTimeInterval_.get().x;
+            float t1 = firstSelectedTimeInterval_.get().y;
+
             // Select a time interval outside of the axis
             if(e->action() == tgt::MouseEvent::PRESSED) {
-                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
-                firstSelectedTimeStep_.set(tgt::vec2(t, firstSelectedTimeStep_.get().y));
+                t0 = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
             }
             else if(e->action() == tgt::MouseEvent::RELEASED) {
-                float t = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
-                firstSelectedTimeStep_.set(tgt::vec2(firstSelectedTimeStep_.get().x, t));
+                t1 = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
+            } // We don't support MOTION atm., since it would invalidate too often and would trigger linked filters.
+            else {
+                return;
             }
+
+            // Fix range.
+            if(t0 > t1) {
+                std::swap(t0, t1);
+            }
+
+            // Add small offset, if necessary to include at least a single time step in the selected range.
+            if(t0 < t1 + dataset->getMinTimeStepDuration()) {
+                t1 += dataset->getMinTimeStepDuration();
+            }
+
+            // Apply selection for both ranges.
+            firstSelectedTimeInterval_.set(tgt::vec2(t0, t1));
+            secondSelectedTimeInterval_.set(tgt::vec2(t0, t1));
             return;
         }
 
@@ -790,11 +802,11 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
             float upper = std::ceil((timeStep.getTime() + timeStep.getDuration()) * 100.0f) / 100.0f;
             if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
                 firstSelectedMember_.setSelectedRowIndices(memberIndices);
-                firstSelectedTimeStep_.set(tgt::vec2(lower, upper));
+                firstSelectedTimeInterval_.set(tgt::vec2(lower, upper));
             }
             else if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
                 secondSelectedMember_.setSelectedRowIndices(memberIndices);
-                secondSelectedTimeStep_.set(tgt::vec2(lower, upper));
+                secondSelectedTimeInterval_.set(tgt::vec2(lower, upper));
             }
 
             return;
@@ -878,13 +890,13 @@ void SimilarityPlot::adjustToEnsemble() {
     firstSelectedMember_.setSelectedRowIndices(memberIndices);
     secondSelectedMember_.setSelectedRowIndices(memberIndices);
 
-    firstSelectedTimeStep_.setMinValue(dataset->getStartTime());
-    firstSelectedTimeStep_.setMaxValue(dataset->getEndTime());
-    firstSelectedTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+    firstSelectedTimeInterval_.setMinValue(dataset->getStartTime());
+    firstSelectedTimeInterval_.setMaxValue(dataset->getEndTime());
+    firstSelectedTimeInterval_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
-    secondSelectedTimeStep_.setMinValue(dataset->getStartTime());
-    secondSelectedTimeStep_.setMaxValue(dataset->getEndTime());
-    secondSelectedTimeStep_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
+    secondSelectedTimeInterval_.setMinValue(dataset->getStartTime());
+    secondSelectedTimeInterval_.setMaxValue(dataset->getEndTime());
+    secondSelectedTimeInterval_.set(tgt::vec2(dataset->getStartTime(), dataset->getEndTime()));
 
     // Try to load plot data, if already set.
     if(!loadFileDialog_.get().empty()) {
