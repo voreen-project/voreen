@@ -86,6 +86,8 @@ modules/core
 modules/deprecated
 modules/devil/*
 
+modules/ensembleanalysis
+
 modules/ffmpeg/*
 modules/ffmpeg/videoencoder
 modules/flowanalysis
@@ -136,6 +138,8 @@ modules/ultramicroscopydeployment
 
 modules/vesselnetworkanalysis
 modules/volumelabeling
+
+modules/vtk
 
 modules/zip/*
 modules/zip/io
