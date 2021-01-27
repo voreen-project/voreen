@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2020 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2021 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
@@ -22,6 +22,7 @@
  * contact the authors.                                                            *
  *                                                                                 *
  ***********************************************************************************/
+
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 #include "voreen/core/datastructures/geometry/geometry.h"
 #include "voreen/core/datastructures/geometry/geometrysequence.h"
