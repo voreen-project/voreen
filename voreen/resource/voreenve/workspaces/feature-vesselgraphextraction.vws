@@ -30,18 +30,14 @@
                     <Properties>
                         <Property mapKey="volumeInfo" name="volumeInfo" />
                         <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
-                            <urls protocol="hdf5">
+                            <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../home/dominik/segmentation.h5" />
-                                        <item value="../../../home/dominik/segmentation.h5" />
-                                        <item value="/home/dominik/segmentation.h5" />
+                                        <item value="resource/voreenve/volumes/vessel-tree-noisy.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
-                                    <value key="channel" value="0" />
-                                    <value key="path" value="/volume" />
-                                    <value key="preferredReader" value="HDF5VolumeReader" />
+                                    <value key="preferredReader" value="VvdVolumeReader" />
                                 </searchParameters>
                             </urls>
                         </Property>
@@ -1211,7 +1207,7 @@
                         <Property mapKey="Vorticity_gradientType" name="Vorticity_gradientType" value="centralDifferences" />
                         <Property mapKey="Vorticity_outsideVolumeValue" name="Vorticity_outsideVolumeValue" value="0" minValue="-340282346638528859811704183484516925440" maxValue="340282346638528859811704183484516925440" tracking="false" />
                         <Property mapKey="Vorticity_samplingStrategyType" name="Vorticity_samplingStrategyType" value="clamp" />
-                        <Property mapKey="enabled" name="enabled" guiName="Enable Surface Smoothing" value="true" />
+                        <Property mapKey="enabled" name="enabled" guiName="Enable Surface Smoothing" value="false" />
                         <Property mapKey="filterList" name="filterList">
                             <items>
                                 <item value="Binarization" />
