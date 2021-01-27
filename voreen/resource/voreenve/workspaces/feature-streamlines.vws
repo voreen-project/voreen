@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="true" GlobalDescription="">
+    <Workspace version="2" readonly="true">
         <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="Canvas" ref="ref12" />
+                        <item type="StreamlinePredicates" ref="ref7" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -65,7 +65,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="5000" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607446734" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 946 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 3.549 sec" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
@@ -153,7 +153,7 @@
                             <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="selectionModeProp" name="selectionModeProp" value="intersect" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 206 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 729 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="usedGeometryColorProp" name="usedGeometryColorProp" useActiveColor="true" id="ref16">
@@ -191,12 +191,12 @@
                         <Property mapKey="enableProp" name="enableProp" value="true" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="physicalLengthRange" minValue="0" maxValue="299.626617432" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
-                            <value x="0" y="299.626617432" />
+                        <Property mapKey="physicalLengthRange" minValue="0" maxValue="299.623352051" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="299.623352051" />
                         </Property>
                         <Property mapKey="predicateFiltering" name="predicateFiltering" value="intersection" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 195 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 200 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -235,7 +235,7 @@
                         <Property mapKey="minNumStreamlinesPerBundle" name="minNumStreamlinesPerBundle" value="5" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resampleSize" name="resampleSize" value="100" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 191 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 8.679 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -354,7 +354,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref12">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-157" y="711" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="442" y="176" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="594" y="171" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -364,7 +364,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="442" y="176" />
+                            <value x="594" y="171" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -452,9 +452,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="22.205041885" y="-72.880355835" z="-10.711334229" />
-                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
-                            <upVector x="0.01567818" y="0.700429559" z="-0.713549316" />
+                            <position x="22.440258026" y="-74.741470337" z="-5.180704117" />
+                            <focus x="24.266139984" y="24.199401855" z="26.183166504" />
+                            <upVector x="0.005902926" y="0.669109344" z="-0.743140519" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
@@ -548,9 +548,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="22.205041885" y="-72.880355835" z="-10.711334229" />
-                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
-                            <upVector x="0.01567818" y="0.700429559" z="-0.713549316" />
+                            <position x="22.440258026" y="-74.741470337" z="-5.180704117" />
+                            <focus x="24.266139984" y="24.199401855" z="26.183166504" />
+                            <upVector x="0.005902926" y="0.669109344" z="-0.743140519" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
                             </trackball>
@@ -741,7 +741,7 @@
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.566 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="9:09.234 min remaining" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -811,9 +811,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../../Voreen/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
-                                    <item value="../../../Voreen/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
-                                    <item value="/home/spider/Voreen/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/e68c5170-03c3-4a20-abd0-ad610c43d035.h5" />
+                                    <item value="../../../data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/b680b4a7-6cb0-40b5-a7ec-a02910a0daa4.h5" />
+                                    <item value="data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/b680b4a7-6cb0-40b5-a7ec-a02910a0daa4.h5" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/c58960d9-4cac-4036-ad2e-1aef26946dae/b680b4a7-6cb0-40b5-a7ec-a02910a0daa4.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1202,5 +1202,16 @@
             </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
+        <GlobalDescription>
+            <![CDATA[This workspace features several processors from the FlowAnalysis module, i.e. :<br>
+<strong>Streamlinecreator:</strong> traces streamlines on a velocity vector field<br><br>
+<strong>StreamlineSelector:</strong> uses a box to select a streamline subset<br><br>
+<strong>StreamlinePredicates:</strong> only passes streamlines that intersect with the input volume<br><br>
+<strong>StreamlineBundleCreator:</strong> applies the QuickBundles algorithm on the input streamlines.<br><br>
+<strong>StreamlineRenderer3D:</strong> renders the bundles using tubes (or lines)
+<br><br>
+The handles in the visualization can be used to change the box used for the <strong>StreamlineSelector</strong>. The input mask is optional and restricts the seed points for the streamline tracing.
+]]>
+        </GlobalDescription>
     </Workspace>
 </VoreenData>

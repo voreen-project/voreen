@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="false" GlobalDescription="">
+    <Workspace version="2" readonly="true">
         <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
@@ -21,7 +21,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="36" y="-234" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="328" y="218" width="1502" height="909" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="382" y="190" width="1502" height="909" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="-26" y="-25" />
@@ -31,7 +31,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="328" y="218" />
+                            <value x="382" y="190" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1502" y="909" />
@@ -194,9 +194,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-0.308551282" y="-2.920421839" z="-3.78343606" />
+                            <position x="1.809274673" y="-1.630882859" z="-4.123719692" />
                             <focus x="0" y="0" z="0" />
-                            <upVector x="0.383777261" y="-0.745864213" z="0.544427931" />
+                            <upVector x="0.133854911" y="-0.900064647" z="0.414688468" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -442,7 +442,7 @@
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1611535096" />
                         <Property mapKey="singleChannelSimilarityMeasure" name="singleChannelSimilarityMeasure" value="generalized" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 441 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 110 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="weight" name="weight" value="0.5" />
@@ -1439,5 +1439,13 @@
             </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
+        <GlobalDescription>
+            <![CDATA[This workspaces features several processors from the <strong>EnsembleAnalysis</strong> module to generate a so-called multi-run similarity plot which was created using a MDS embedding.
+Euclidian distances between points in the embedding represent the similairty in the low dimensional space, as defined by the <strong>SimilarityMatrixCreator</strong>.
+See and modify respective properties to achieve an embedding based on a different property of the data (magnitude, direction,..).
+<br>
+The user may interact with the plot by clicking (left mouse button) on a member which will select the respective member of the ensemble and the respective time step for further analysis.
+This example only features a spatio dataset, however, also spatio-temporal data is supported.]]>
+        </GlobalDescription>
     </Workspace>
 </VoreenData>

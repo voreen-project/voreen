@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
-    <Workspace version="2" readonly="false" GlobalDescription="">
+    <Workspace version="2" readonly="true">
         <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
@@ -240,7 +240,7 @@
                             <value x="0" y="2570.014404297" />
                         </Property>
                         <Property mapKey="property_section" name="property_section" id="ref23" />
-                        <Property mapKey="property_selected_field" name="property_selected_field" value="Magnitude">
+                        <Property mapKey="property_selected_field" name="property_selected_field" guiName="Adjust interval of Field:" value="Magnitude">
                             <Options>
                                 <Option Key="Magnitude" Description="Magnitude" Value="0">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -256,7 +256,7 @@
                                 </Option>
                             </Options>
                         </Property>
-                        <Property mapKey="property_selected_member" name="property_selected_member" value="sense_10">
+                        <Property mapKey="property_selected_member" name="property_selected_member" guiName="Rendered Member" value="sense_10">
                             <Options>
                                 <Option Key="sense_10" Description="sense_10" Value="0">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -391,7 +391,7 @@
                                 </Keys>
                             </TransferFunction>
                         </Property>
-                        <Property mapKey="property_trans_func_field0" name="property_trans_func_field0" value="None">
+                        <Property mapKey="property_trans_func_field0" name="property_trans_func_field0" guiName="Axis mapped to selected Field" value="Magnitude">
                             <Options>
                                 <Option Key="None" Description="None" Value="-1">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -679,17 +679,17 @@
                 <Processor type="Canvas" name="Canvas" id="ref12">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-74" y="314" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="504" y="45" width="1216" height="1197" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="527" y="83" width="1216" height="1197" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
-                            <value x="-96" y="-112" />
+                            <value x="0" y="-25" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
                             <value x="1967" y="1338" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="504" y="45" />
+                            <value x="527" y="83" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1216" y="1197" />
@@ -795,7 +795,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-134" y="-855" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="channel" name="channel" value="Magnitude">
+                        <Property mapKey="channel" name="channel" guiName="Selected Field for volume Rendering" value="Magnitude">
                             <Options>
                                 <Option Key="Magnitude" Description="Magnitude (*)" Value="Magnitude">
                                     <GuiColor r="0" g="0" b="0" a="0" />
@@ -1080,7 +1080,7 @@
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="property_sections" name="property_sections" id="ref24" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 125 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -1796,7 +1796,7 @@
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="4096" y="1" z="1" />
+                                <texDimensions x="1024" y="1" z="1" />
                                 <domain x="0" y="2570.014404297" />
                                 <threshold x="0" y="1" />
                                 <Keys />
@@ -1988,7 +1988,7 @@
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611525418" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 470 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 387 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
@@ -2708,5 +2708,9 @@
             </GroupMembership>
             <MenuEntityVisibility />
         </ApplicationModeConfig>
+        <GlobalDescription>
+            <![CDATA[This workspace demonstrates an interactive <strong>ParallelCoordinates</strong> provided by the <strong>EnsembleAnalysis</strong> module and other related processors, such as the <strong>ParallelCoordinatesVoxelSelection</strong> processor.
+The user can interactively swap axes and bruch on axis. Respective propertie should be used to define further behavior, e.g., interaction which what axis should be visualized in the frame titled "Magnitude Axis".]]>
+        </GlobalDescription>
     </Workspace>
 </VoreenData>

@@ -228,12 +228,12 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12600" minValue="0.252000004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="12650.400390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000993834" id="ref18">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12600" minValue="0.252000004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="12650.400390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000993771" id="ref18">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="26.84176445" y="-73.861495972" z="4.258965015" />
-                            <focus x="24.241043091" y="24.35931778" z="25.94695282" />
+                            <position x="26.84176445" y="-73.861495972" z="4.258964539" />
+                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
                             <upVector x="-0.007179831" y="0.506394088" z="-0.862272322" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
@@ -368,7 +368,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="649" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="365" y="183" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="554" y="177" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -378,7 +378,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="365" y="183" />
+                            <value x="554" y="177" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -623,12 +623,12 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-214" y="268" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12600" minValue="0.252000004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="12650.400390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000993834" id="ref19">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="12600" minValue="0.252000004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="12650.400390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000993771" id="ref19">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="26.84176445" y="-73.861495972" z="4.258965015" />
-                            <focus x="24.241043091" y="24.35931778" z="25.94695282" />
+                            <position x="26.84176445" y="-73.861495972" z="4.258964539" />
+                            <focus x="24.600002289" y="24.600002289" z="24.900001526" />
                             <upVector x="-0.007179831" y="0.506394088" z="-0.862272322" />
                             <trackball moveCenter="false">
                                 <center x="24.600002289" y="24.600002289" z="24.900001526" />
@@ -730,7 +730,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="200" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607445778" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 359 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 324 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
@@ -1107,6 +1107,7 @@
         </ApplicationModeConfig>
         <GlobalDescription>
             <![CDATA[This workspace demonstrates how to use the parallel vectors operator by Peikert and Roth using sujudi-haimes filtering for a vortex coreline extraction.
+In this example, streamlines (black) visualize the vector field and the coreline is rendered in red.
 The demo data was provided by and belongs to the research group lead by Verena Hoerr, Jena.]]>
         </GlobalDescription>
     </Workspace>
