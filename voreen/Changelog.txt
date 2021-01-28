@@ -64,8 +64,9 @@ Voreen Changelog
       o Allow all (not only middle) mouse buttons for scroll-like interactions (i.e., holding a mouse button and moving mouse up/down)
       o Make gui text of button properties editable
       o Add start/enqueue invalidation behaviour for some processors (RandomWalker, OctreeWalker) which allows continuous update of (for example) labels while the processor is updating the intermediate result. In contrast to the start/restart behaviour, a change in inputs does not stop the current computation.
-      o Improve performance of the conjugate gradient solver used in RandomWalker and OctreeWalker.
+      o Improve performance of the conjugate gradient solver used in RandomWalker and OctreeWalker
       o Support GeometrySequences in Random-/OctreeWalker
+      o Revamp interaction in segmentation-randomwalker template workspace
       o Improve OctreeCreator usability and performance
       o Greatly improve SliceViewer performance on large octree volumes
       o Fix depth calculation and the interaction of compositing and refinement in SingleOctreeRaycaster
