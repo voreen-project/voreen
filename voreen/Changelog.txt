@@ -1,7 +1,7 @@
 Voreen Changelog
 ----------------
 
-(UNRELEASED): Voreen 5.2.0
+2021-01-28: Voreen 5.2.0
 ------------------------
 
     * Features:
