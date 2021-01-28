@@ -85,7 +85,8 @@ ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepar
     // Collect Volumes.
     auto volumes = std::vector<std::pair<const VolumeBase*, int>>();
     for( const auto& field : sectionData.fields ) {
-        size_t timeStep = member->getTimeStep(sectionData.time);
+        float time = mapRange(sectionData.time, 0.0f, 1.0f, ensemble->getCommonTimeInterval().x, ensemble->getCommonTimeInterval().y);
+        size_t timeStep = member->getTimeStep(time);
         const VolumeBase* volume = member->getTimeSteps()[timeStep].getVolume(field.first);
         if(!volume) {
             std::string url = member->getTimeSteps()[timeStep].getURL(field.first).getURL();
@@ -93,6 +94,8 @@ ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepar
         }
         volumes.emplace_back(std::pair<const VolumeBase*, int>(volume, field.second));
     }
+
+    tgtAssert(volumes.size() == sectionData.sections.size(), "size mismatch");
 
     // Create output volume.
     tgt::ivec3 newDims = outputDimensions_.get();

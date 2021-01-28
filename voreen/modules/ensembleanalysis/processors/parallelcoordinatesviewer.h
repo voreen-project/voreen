@@ -121,6 +121,8 @@ private:
 
     // Constants
     static const float X_LIMIT, Y_LIMIT;
+
+    static const std::string loggerCat_;
 };
 
 }

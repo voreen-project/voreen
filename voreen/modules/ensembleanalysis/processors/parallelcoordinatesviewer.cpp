@@ -26,6 +26,8 @@
 #include "parallelcoordinatesviewer.h"
 #include "voreen/core/properties/fontproperty.h"
 
+#include "modules/ensembleanalysis/utils/utils.h"
+
 #include "tgt/immediatemode/immediatemode.h"
 
 namespace util {
@@ -44,6 +46,8 @@ tgt::ivec2 pointToScreen( tgt::vec2 point, tgt::ivec2 viewport ) {
 }
 
 namespace voreen {
+
+const std::string ParallelCoordinatesViewer::loggerCat_("voreen.ensembleanalysis.ParallelCoordinatesViewer");
 
 const float ParallelCoordinatesViewer::X_LIMIT = 0.95f;
 const float ParallelCoordinatesViewer::Y_LIMIT = 0.9f;
@@ -134,8 +138,14 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     _propertyVisualizationMode.onChange( LambdaFunctionCallback( [this]
     {
         if( !_axesport.hasData() ) return;
+        // TODO: Extend ParallelCoordinatesVoxelSelection for time visualization mode.
+        if (_propertyVisualizationMode.getValue() && !_propertySections.getLinks().empty()) {
+            LERROR("Currently, brushing on multiple axis and linking with ParallelCoordinatesVoxelSelection is not supported. "
+                   "Links will not be executed...");
+        }
         this->onNewInportData();
         this->invalidate();
+
     } ) );
     _propertySelectedTimestep.onChange( LambdaFunctionCallback( [this]
     {
@@ -898,7 +908,20 @@ void ParallelCoordinatesViewer::updateSampleStates()
     _propertySelectedSamples.set( _samplesSelection );
     _propertySelectedSamples.blockCallbacks( false );
 
-    _propertySections.set( ParallelCoordinatesSectionsPropertyData( axes->getEnsembleHash(), _propertySelectedMember.get(), static_cast<size_t>( _propertySelectedTimestep.get() ), axes->getFields(), _sections ) );
+    // Currently, linking multiple time steps is not supported.
+    if (_propertyVisualizationMode.getValue()) {
+        return;
+    }
+
+    // Map time to value between 0 to 1 since here we no longer have access to the ensemble.
+    // In the ParallelCoordinateVoxelSelection Processor, for example, the value can be mapped back to the actual time interval.
+    float time = 0.0f;
+    if (_propertySelectedTimestep.getMaxValue() != 0) {
+        time = mapRange(_propertySelectedTimestep.get(), 0, _propertySelectedTimestep.getMaxValue(), 0.0f, 1.0f);
+    }
+    
+    _propertySections.set( ParallelCoordinatesSectionsPropertyData( axes->getEnsembleHash(), _propertySelectedMember.get(), time, axes->getFields(), _sections ) );
+    
 }
 void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
 {
