@@ -27,6 +27,13 @@
 
 #include "voreen/core/io/serialization/jsonserializer.h"
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#if WIN32 // HACK: Needed due to bug #13164 (described boost bugtracker)
+#define BOOST_IOSTREAMS_DYN_LINK
+#endif
+#include <boost/iostreams/filter/gzip.hpp>
+
 namespace voreen {
 
 const std::string VesselGraphSave::loggerCat_("voreen.vesseltoplogy.vesselgraphsave");
@@ -66,18 +73,36 @@ void VesselGraphSave::saveCurrentGraph() {
     if(!input) {
         return;
     }
-
-    JsonSerializer serializer;
-    try {
-        serializer.serialize("graph", *input);
-    } catch(SerializationException& s) {
-        LERROR("Could not serialize graph: " << s.what());
-        return;
-    }
     try {
         std::fstream f(path, std::ios::out);
         bool compressed = tgt::FileSystem::fileExtension(path) == "gz";
-        serializer.write(f, prettyJson_.get(), compressed);
+        if(prettyJson_.get()) {
+            JsonSerializer serializer;
+            try {
+                serializer.serialize("graph", *input);
+            } catch(SerializationException& s) {
+                LERROR("Could not serialize graph: " << s.what());
+                return;
+            }
+            serializer.write(f, prettyJson_.get(), compressed);
+        } else {
+            // Faster and less memory intensive than rapidjson (i.e.,
+            // JsonSerializer), but does not support prettifying the json
+
+            using namespace boost::iostreams;
+            if(compressed) {
+                filtering_ostream compressingStream;
+                compressingStream.push(gzip_compressor(
+                            gzip_params(
+                                gzip::best_compression
+                                )
+                            ));
+                compressingStream.push(f);
+                input->serializeToJson(compressingStream);
+            } else {
+                input->serializeToJson(f);
+            }
+        }
     } catch(...) {
         LERROR("Could not save graph " << path);
         return;

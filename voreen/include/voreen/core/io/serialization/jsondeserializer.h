@@ -969,7 +969,7 @@ void JsonDeserializer::readUint(const rapidjson::Value& val, T& data) {
 
 template<class T>
 void JsonDeserializer::readFloat(const rapidjson::Value& val, T& data) {
-    if(!val.IsDouble()) {
+    if(!val.IsNumber()) {
         throw SerializationNoSuchDataException("Not a float");
     } else {
         data = static_cast<T>(val.GetDouble());

@@ -58,6 +58,8 @@ class VesselGraph;
 typedef boost::uuids::uuid VesselGraphEdgeUUID;
 typedef boost::uuids::uuid VesselGraphNodeUUID;
 
+typedef std::ostream SerializationOutputStream;
+
 // A single voxel in a branch in the vessel graph
 struct VesselSkeletonVoxel {
     VesselSkeletonVoxel(const tgt::vec3& pos, float minDistToSurface, float maxDistToSurface, float avgDistToSurface, uint32_t numSurfaceVoxels, float volume, bool nearOtherEdge);
@@ -87,6 +89,8 @@ struct VesselSkeletonVoxel {
     bool isInner() const;
     // .. or not
     bool isOuter() const;
+
+    void serializeToJson(SerializationOutputStream& stream) const;
 private:
     friend struct VesselSkeletonVoxelSerializable;
     VesselSkeletonVoxel();
@@ -190,6 +194,7 @@ struct VesselGraphNode {
     bool isAtSampleBorder_;
     float radius_;
 
+    void serializeToJson(SerializationOutputStream& stream) const;
 private:
     VesselGraph* graph_; // Will never be null
 
@@ -253,6 +258,8 @@ struct VesselGraphEdgePathProperties {
 
     static VesselGraphEdgePathProperties fromPath(const VesselGraphNode& begin, const VesselGraphNode& end, const DiskArray<VesselSkeletonVoxel>& path, size_t outerPathBeginIndex, size_t outerPathEndIndex);
     bool hasValidData() const;
+
+    void serializeToJson(SerializationOutputStream& stream) const;
 };
 
 #ifndef VRN_VESSELNETWORKANALYSIS_MINIMAL_VESSELGRAPH
@@ -337,6 +344,8 @@ struct VesselGraphEdge {
 
     bool isEndStanding() const;
     size_t getNumValidVoxels() const;
+
+    void serializeToJson(SerializationOutputStream& stream) const;
 
     size_t outerPathBeginIndex_;
     size_t outerPathEndIndex_;
@@ -435,6 +444,8 @@ public:
 
     // Get a bounding box that encompasses all nodes within the graph.
     const tgt::Bounds& getBounds() const;
+
+    void serializeToJson(SerializationOutputStream& stream) const;
 
 #ifndef VRN_VESSELNETWORKANALYSIS_MINIMAL_VESSELGRAPH
     virtual void serialize(Serializer& s) const;

@@ -79,6 +79,110 @@ float VesselSkeletonVoxel::roundness() const {
         return 1;
     }
 }
+
+template<typename V>
+static void serializeJsonValue(SerializationOutputStream& stream, const V& value) {
+    stream << value;
+}
+template<>
+void serializeJsonValue(SerializationOutputStream& stream, const tgt::vec3& value) {
+    stream << "[" << value.x << "," << value.y << "," << value.z << "]";
+}
+template<>
+void serializeJsonValue(SerializationOutputStream& stream, const bool& value) {
+    if(value) {
+        stream << "true";
+    } else {
+        stream << "false";
+    }
+}
+template<>
+void serializeJsonValue(SerializationOutputStream& stream, const VGEdgeID& value) {
+    serializeJsonValue(stream, value.raw());
+}
+template<>
+void serializeJsonValue(SerializationOutputStream& stream, const VGNodeID& value) {
+    serializeJsonValue(stream, value.raw());
+}
+template<>
+void serializeJsonValue(SerializationOutputStream& stream, const VesselSkeletonVoxel& value) {
+    value.serializeToJson(stream);
+}
+template<>
+void serializeJsonValue(SerializationOutputStream& stream, const VesselGraphNode& value) {
+    value.serializeToJson(stream);
+}
+void serializeJsonValue(SerializationOutputStream& stream, const VesselGraphEdge& value) {
+    value.serializeToJson(stream);
+}
+void serializeJsonValue(SerializationOutputStream& stream, const VesselGraphEdgePathProperties& value) {
+    value.serializeToJson(stream);
+}
+void serializeJsonValue(SerializationOutputStream& stream, const float& value) {
+    stream.precision(std::numeric_limits<float>::max_digits10);
+    if(std::isnan(value)) {
+        stream << "NaN";
+    } else if (!std::isfinite(value)) {
+        if(value < 0) {
+            stream << "-Infinity";
+        } else {
+            stream << "Infinity";
+        }
+    } else {
+        stream << value;
+    }
+}
+void serializeJsonValue(SerializationOutputStream& stream, const double& value) {
+    stream.precision(std::numeric_limits<double>::max_digits10);
+    if(std::isnan(value)) {
+        stream << "NaN";
+    } else if (!std::isfinite(value)) {
+        if(value < 0) {
+            stream << "-Infinity";
+        } else {
+            stream << "Infinity";
+        }
+    } else {
+        stream << value;
+    }
+}
+
+static void serializeJsonMemberName(SerializationOutputStream& stream, const std::string& name) {
+    stream << "\"" << name << "\":";
+}
+template<typename V>
+static void serializeJsonMember(SerializationOutputStream& stream, const std::string& name, const V& value) {
+    serializeJsonMemberName(stream, name);
+    serializeJsonValue(stream, value);
+}
+
+template<typename V>
+static void serializeJsonMemberIterable(SerializationOutputStream& s, const std::string& name, const V& iterable) {
+    s << "\"" << name << "\":[";
+    bool first = true;
+    for(const auto& elm : iterable) {
+        if(first) {
+            first = false;
+        } else {
+            s << ",";
+        }
+        serializeJsonValue(s, elm);
+    }
+    s << "]";
+}
+
+void VesselSkeletonVoxel::serializeToJson(SerializationOutputStream& s) const {
+    s << "{";
+    serializeJsonMember(s, "pos", pos_); s << ",";
+    serializeJsonMember(s, "minDistToSurface", minDistToSurface_); s << ",";
+    serializeJsonMember(s, "maxDistToSurface", maxDistToSurface_); s << ",";
+    serializeJsonMember(s, "avgDistToSurface", avgDistToSurface_); s << ",";
+    serializeJsonMember(s, "numSurfaceVoxels", numSurfaceVoxels_); s << ",";
+    serializeJsonMember(s, "volume", volume_); s << ",";
+    serializeJsonMember(s, "nearOtherEdge", nearOtherEdge_);
+    s << "}";
+}
+
 void VesselSkeletonVoxelSerializable::serialize(Serializer& s) const {
     s.serialize("pos", inner_.pos_);
     s.serialize("minDistToSurface", inner_.minDistToSurface_);
@@ -185,6 +289,18 @@ VGNodeID VesselGraphNode::getID() const {
 }
 float VesselGraphNode::getRadius() const {
     return radius_;
+}
+
+void VesselGraphNode::serializeToJson(SerializationOutputStream& s) const {
+    s << "{";
+    serializeJsonMember(s, "id", id_.raw()); s << ",";
+    serializeJsonMemberIterable(s, "edges", edges_); s << ",";
+    serializeJsonMember(s, "pos", pos_); s << ",";
+
+    serializeJsonMemberIterable(s, "voxels_", voxels_); s << ",";
+    serializeJsonMember(s, "radius", radius_); s << ",";
+    serializeJsonMember(s, "isAtSampleBorder", isAtSampleBorder_);
+    s << "}";
 }
 
 VesselGraphNodeSerializable::VesselGraphNodeSerializable(const VesselGraphNode& node)
@@ -401,6 +517,25 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
     tgtAssert(!std::isnan(output.length_), "Invalid length");
     return output;
 }
+void VesselGraphEdgePathProperties::serializeToJson(SerializationOutputStream& s) const {
+    s << "{";
+    serializeJsonMember(s, "length", length_); s << ",";
+    serializeJsonMember(s, "volume", volume_); s << ",";
+    serializeJsonMember(s, "minRadiusAvg", minRadiusAvg_); s << ",";
+    serializeJsonMember(s, "minRadiusStdDeviation", minRadiusStdDeviation_); s << ",";
+    serializeJsonMember(s, "maxRadiusAvg", maxRadiusAvg_); s << ",";
+    serializeJsonMember(s, "maxRadiusStdDeviation", maxRadiusStdDeviation_); s << ",";
+    serializeJsonMember(s, "avgRadiusAvg", avgRadiusAvg_); s << ",";
+    serializeJsonMember(s, "avgRadiusStdDeviation", avgRadiusStdDeviation_); s << ",";
+    serializeJsonMember(s, "roundnessAvg", roundnessAvg_); s << ",";
+    serializeJsonMember(s, "roundnessStdDeviation", roundnessStdDeviation_); s << ",";
+    serializeJsonMember(s, "innerLengthNode1", innerLengthNode1_); s << ",";
+    serializeJsonMember(s, "innerLengthNode2", innerLengthNode2_); s << ",";
+    serializeJsonMember(s, "tipRadiusNode1_", tipRadiusNode1_); s << ",";
+    serializeJsonMember(s, "tipRadiusNode2_", tipRadiusNode2_);
+    s << "}";
+}
+
 VesselGraphEdgePathPropertiesSerializable::VesselGraphEdgePathPropertiesSerializable()
     : inner_()
 {
@@ -775,6 +910,21 @@ size_t VesselGraphEdge::getNumValidVoxels() const {
             });
 }
 
+void VesselGraphEdge::serializeToJson(SerializationOutputStream& s) const {
+    s << "{";
+    serializeJsonMember(s, "id", id_.raw()); s << ",";
+    serializeJsonMember(s, "node1", node1_.raw()); s << ",";
+    serializeJsonMember(s, "node2", node2_.raw()); s << ",";
+    serializeJsonMember(s, "distance", distance_); s << ",";
+
+    if(voxels_.empty()) {
+        serializeJsonMember(s, "pathProperties", pathProps_);
+    } else {
+        serializeJsonMemberIterable(s, "skeletonVoxels", voxels_);
+    }
+    s << "}";
+}
+
 VesselGraphEdgeSerializable::VesselGraphEdgeSerializable(const VesselGraphEdge& e)
     : inner_(e)
 {
@@ -924,6 +1074,16 @@ void VesselGraph::getEdgePropertyStats(std::function<float(const VesselGraphEdge
 
 const tgt::Bounds& VesselGraph::getBounds() const {
     return bounds_;
+}
+
+void VesselGraph::serializeToJson(SerializationOutputStream& s) const {
+    s << "{\"graph\":{";
+    serializeJsonMemberIterable(s, "nodes", getNodes()); s << ",";
+    serializeJsonMemberIterable(s, "edges", getEdges()); s << ",";
+    s << "\"bounds\":{";
+    serializeJsonMember(s, "First", bounds_.getLLF()); s << ",";
+    serializeJsonMember(s, "Second", bounds_.getURB());
+    s << "}}}";
 }
 
 void VesselGraph::serialize(Serializer& s) const {
