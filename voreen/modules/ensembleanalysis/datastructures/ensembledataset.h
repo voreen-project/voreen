@@ -49,9 +49,9 @@ public:
 
     /**
      * TimeStep constructor.
-     * @param time Time point
-     * @param duration Time till succeeding time point
-     * @param volumes Volume data
+     * @param volumeData field names mapped to volume data
+     * @param time point in time
+     * @param duration optional duration (e.g. time to next captured time step)
      */
     TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
              float time, float duration = 0.0f);
@@ -155,7 +155,7 @@ public:
     /**
      * This utility function returns a time step index corresponding to the specified time.
      * If time is before the first time step, the first time step index is returned.
-     * If time is behind the last time step, the first time step index is returned.
+     * If time is behind the last time step, the last time step index is returned.
      * If the member contains no time step, -1 is returned.
      */
     size_t getTimeStep(float time) const;
@@ -267,7 +267,15 @@ public:
     size_t getNumChannels(const std::string& field) const;
 
     /**
+     * Returns true, if all volumes of the specified field have the same base type, false otherwise.
+     */
+    bool hasCommonBaseType(const std::string& field) const;
+
+    /**
      * Returns the base type of the specified field.
+     * Note: The base type is only correctly returned if it was the same for all volumes.
+     *       If it differs, the first occurrence is returned.
+     * @see hasCommonBaseType
      */
     const std::string& getBaseType(const std::string& field) const;
 
@@ -317,7 +325,6 @@ private:
         tgt::vec2 valueRange_;
         tgt::vec2 magnitudeRange_;
         size_t numChannels_;
-        std::string baseType_;
 
         FieldMetaData();
 

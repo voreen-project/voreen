@@ -50,22 +50,22 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     , propertyAggregateMembers_("property_aggregate_members", "Aggregate Members", false, Processor::VALID )
 {
     // --- Initialize Ports --- //
-    this->addPort(ensembleport_ );
+    addPort(ensembleport_ );
     ON_CHANGE(ensembleport_, ParallelCoordinatesAxesCreator, adjustToEnsemble);
-    this->addPort(seedMask_ );
-    this->addPort(axesport_ );
+    addPort(seedMask_ );
+    addPort(axesport_ );
 
     // --- Initialize Properties --- //
-    this->addProperty(propertyMembers_ );
+    addProperty(propertyMembers_ );
     ON_CHANGE(propertyMembers_, ParallelCoordinatesAxesCreator, adjustToSelection);
-    this->addProperty(propertyFields_ );
-    this->addProperty(propertySpatialSampleCount_);
-    this->addProperty(propertyTemporalSampleCount_ );
-    //this->addProperty(propertySampleRegion_); // Only allow ensemble bounds to sync with ParallelCoordinatesVoxelSelection
+    addProperty(propertyFields_ );
+    addProperty(propertySpatialSampleCount_);
+    addProperty(propertyTemporalSampleCount_ );
+    //addProperty(propertySampleRegion_); // Only allow ensemble bounds to sync with ParallelCoordinatesVoxelSelection
     propertySampleRegion_.addOption("bounds", "Ensemble Bounds"); // Will be selected.
     propertySampleRegion_.addOption("common", "Common Bounds");
-    this->addProperty(propertySeedTime_);
-    this->addProperty(propertyAggregateMembers_ );
+    addProperty(propertySeedTime_);
+    addProperty(propertyAggregateMembers_ );
 }
 
 Processor* ParallelCoordinatesAxesCreator::create() const {

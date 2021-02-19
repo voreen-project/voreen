@@ -248,21 +248,18 @@ EnsembleDataset::FieldMetaData::FieldMetaData()
     : valueRange_(tgt::vec2::zero)
     , magnitudeRange_(tgt::vec2::zero)
     , numChannels_(0)
-    , baseType_("")
 {}
 
 void EnsembleDataset::FieldMetaData::serialize(Serializer& s) const {
     s.serialize("valueRange", valueRange_);
     s.serialize("magnitudeRange", magnitudeRange_);
     s.serialize("numChannels", numChannels_);
-    s.serialize("baseType", baseType_);
 }
 
 void EnsembleDataset::FieldMetaData::deserialize(Deserializer& s) {
     s.deserialize("valueRange", valueRange_);
     s.deserialize("magnitudeRange", magnitudeRange_);
     s.deserialize("numChannels", numChannels_);
-    s.deserialize("baseType", baseType_);
 }
 
 //////////// EnsembleDataset
@@ -411,7 +408,6 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
                 fieldMetaData.valueRange_ = minMax;
                 fieldMetaData.magnitudeRange_ = minMaxMagnitude;
                 fieldMetaData.numChannels_ = volume->getNumChannels();
-                fieldMetaData.baseType_ = volume->getBaseType();
             }
             else {
                 fieldMetaData.valueRange_.x = std::min(fieldMetaData.valueRange_.x, minMax.x);
@@ -421,9 +417,6 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
                 if(fieldMetaData.numChannels_ != volume->getNumChannels()) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels differs per field, taking min.");
                     fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());
-                }
-                if(fieldMetaData.baseType_ != volume->getBaseType()) {
-                    LERRORC("voreen.EnsembleDataSet", "Base type differs per field, taking first.");
                 }
             }
 
@@ -547,11 +540,6 @@ const tgt::vec2& EnsembleDataset::getMagnitudeRange(const std::string& field) co
 size_t EnsembleDataset::getNumChannels(const std::string& field) const {
     tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
     return fieldMetaData_.at(field).numChannels_;
-}
-
-const std::string& EnsembleDataset::getBaseType(const std::string& field) const {
-    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
-    return fieldMetaData_.at(field).baseType_;
 }
 
 const std::vector<std::string>& EnsembleDataset::getUniqueFieldNames() const {

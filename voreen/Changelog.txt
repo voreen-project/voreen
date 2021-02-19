@@ -1,6 +1,12 @@
 Voreen Changelog
 ----------------
 
+(UNRELEASED): Voreen 5.2.1
+------------------------
+
+    * Framework/API Changes:
+      o EnsembleDatasets no longer care about volume base type
+
 2021-01-28: Voreen 5.2.0
 ------------------------
 

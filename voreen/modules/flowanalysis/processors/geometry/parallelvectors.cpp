@@ -47,17 +47,17 @@ ParallelVectors::ParallelVectors()
     , _out(Port::OUTPORT, "outport", "Parallel Vector Solution Points")
     , _sujudiHaimes("sujudiHaimes", "Use Sujudi-Haimes method for filtering", false)
 {
-    this->addPort(_inV);
+    addPort(_inV);
     _inV.addCondition(new PortConditionVolumeChannelCount(3));
-    this->addPort(_inW);
+    addPort(_inW);
     _inW.addCondition(new PortConditionVolumeChannelCount(3));
-    this->addPort(_inJacobian);
+    addPort(_inJacobian);
     _inJacobian.addCondition(new PortConditionVolumeType("Matrix3(float)", "Volume_Mat3Float"));
     ON_CHANGE(_inJacobian, ParallelVectors, onChangedJacobianData);
-    this->addPort(_inMask);
-    this->addPort(_out);
+    addPort(_inMask);
+    addPort(_out);
 
-    this->addProperty(_sujudiHaimes);
+    addProperty(_sujudiHaimes);
     _sujudiHaimes.setReadOnlyFlag(true);
 }
 

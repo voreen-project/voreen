@@ -68,7 +68,7 @@ EnsembleMeanCreatorInput EnsembleMeanCreator::prepareComputeInput() {
     // Get required information about mean volume format.
     tgt::ivec3 newDims = outputDimensions_.get();
     size_t numChannels = ensemble->getNumChannels(selectedField_.get());
-    const std::string& baseType = ensemble->getBaseType(selectedField_.get());
+    std::string baseType = "float"; // For float we don't need to find an appropriate real world mapping.
 
     // Create output volume.
     VolumeFactory factory;

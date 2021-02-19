@@ -305,9 +305,9 @@ CorelineCreator::CorelineCreator()
     , _out(Port::OUTPORT, "outport", "List of corelines")
     , _lengthThreshold("lengthThreshold", "Min. length of coreline", 20, 2, 1000)
 {
-    this->addPort(_in);
-    this->addPort(_out);
-    this->addProperty(_lengthThreshold);
+    addPort(_in);
+    addPort(_out);
+    addProperty(_lengthThreshold);
 }
 
 void CorelineCreator::Process( const ParallelVectorSolutions& solutions, int lengthThreshold, std::vector<std::vector<tgt::vec3>>& corelines )
