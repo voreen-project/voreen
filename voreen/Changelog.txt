@@ -7,6 +7,9 @@ Voreen Changelog
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
 
+    * Bug Fixes/Minor Changes:
+      o Handle real world mapping properly for EnsembleMean and EnsembleVariance
+
 2021-01-28: Voreen 5.2.0
 ------------------------
 

@@ -112,6 +112,7 @@ EnsembleMeanCreatorOutput EnsembleMeanCreator::compute(EnsembleMeanCreatorInput 
     for (size_t r = 0; r < numMembers; r++) {
         size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
         const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
+        RealWorldMapping rwm = vol->getRealWorldMapping();
         VolumeRAMRepresentationLock lock(vol);
         tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
 
@@ -133,7 +134,7 @@ EnsembleMeanCreatorOutput EnsembleMeanCreator::compute(EnsembleMeanCreatorInput 
 
                     for (size_t channel = 0; channel < numChannels; channel++) {
                         float oldValue = output->getVoxelNormalized(pos, channel);
-                        float newValue = lock->getVoxelNormalized(sampleInVoxelSpace, channel) / numMembers;
+                        float newValue = rwm.normalizedToRealWorld(lock->getVoxelNormalized(sampleInVoxelSpace, channel)) / numMembers;
                         output->setVoxelNormalized(oldValue + newValue, pos, channel);
                     }
                 }

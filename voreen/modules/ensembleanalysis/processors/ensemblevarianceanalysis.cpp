@@ -99,6 +99,7 @@ EnsembleVarianceAnalysisInput EnsembleVarianceAnalysis::prepareComputeInput() {
         throw InvalidInputException("Only up to 4 channels supported", InvalidInputException::S_ERROR);
     }
 
+    // We output float so there is no need to find a proper real world mapping.
     std::unique_ptr<VolumeRAM_Float> outputVolume(new VolumeRAM_Float(meanVolume->getDimensions()));
     outputVolume->clear();
 
@@ -123,11 +124,13 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
     const tgt::svec3 dims = output->getDimensions();
 
     VolumeRAMRepresentationLock meanVolume(input.meanVolume);
+    RealWorldMapping rwmMean = input.meanVolume->getRealWorldMapping();
     tgt::mat4 meanVoxelToWorld = input.meanVolume->getVoxelToWorldMatrix();
 
     for (size_t r = 0; r < numMembers; r++) {
         size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
         const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
+        RealWorldMapping rwmCurr = vol->getRealWorldMapping();
         VolumeRAMRepresentationLock lock(vol);
         tgt::Bounds bounds = vol->getBoundingBox().getBoundingBox();
         tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
@@ -151,7 +154,8 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
                     if(numChannels == 1 || input.vectorComponent == BOTH) {
                         float length = 0.0f;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            float value = lock->getVoxelNormalized(sample, channel) - meanVolume->getVoxelNormalized(pos, channel);
+                            float value = rwmCurr.normalizedToRealWorld(lock->getVoxelNormalized(sample, channel));
+                                        - rwmMean.normalizedToRealWorld(meanVolume->getVoxelNormalized(pos, channel));
                             length += value * value;
                         }
 
@@ -161,10 +165,10 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
                         float lengthSqCurrent = 0.0f;
                         float lengthSqMean = 0.0f;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            float value = lock->getVoxelNormalized(sample, channel);
+                            float value = rwmCurr.normalizedToRealWorld(lock->getVoxelNormalized(sample, channel));
                             lengthSqCurrent += value * value;
 
-                            value = meanVolume->getVoxelNormalized(sample, channel);
+                            value = rwmMean.normalizedToRealWorld(meanVolume->getVoxelNormalized(sample, channel));
                             lengthSqMean += value * value;
                         }
                         float magnitude = std::abs(std::sqrt(lengthSqCurrent) - std::sqrt(lengthSqMean));
@@ -174,8 +178,8 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
                         tgt::vec4 v1 = tgt::vec4::zero;
                         tgt::vec4 v2 = tgt::vec4::zero;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            v1[channel] = lock->getVoxelNormalized(sample, channel);
-                            v2[channel] = meanVolume->getVoxelNormalized(sample, channel);
+                            v1[channel] = rwmCurr.normalizedToRealWorld(lock->getVoxelNormalized(sample, channel));
+                            v2[channel] = rwmMean.normalizedToRealWorld(meanVolume->getVoxelNormalized(sample, channel));
                         }
 
                         // Test if any magnitude of both vectors is too small to be considered for direction calculation.
