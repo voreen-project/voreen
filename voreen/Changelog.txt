@@ -9,6 +9,7 @@ Voreen Changelog
 
     * Bug Fixes/Minor Changes:
       o Handle real world mapping properly for EnsembleMean and EnsembleVariance
+      o Shaders of GeometryRenderer now get recompiled directly when shaders where saved in the shader editor
 
 2021-01-28: Voreen 5.2.0
 ------------------------

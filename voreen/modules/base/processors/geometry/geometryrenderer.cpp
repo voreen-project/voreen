@@ -177,8 +177,8 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
     // check, if a shader is needed
     bool isTriangleMeshShaderNeeded = false;
     bool solidColorNeeded = isUsingSolidColor();
-    const TriangleMeshGeometryBase* tmgb = 0;
-    const GlMeshGeometryBase* glmgb = 0;
+    const TriangleMeshGeometryBase* tmgb = nullptr;
+    const GlMeshGeometryBase* glmgb = nullptr;
     if((tmgb = dynamic_cast<const TriangleMeshGeometryBase*>(inport_.getData()))) {
         isTriangleMeshShaderNeeded = true;
     }
@@ -194,7 +194,7 @@ void GeometryRenderer::render(ShaderProperty& shaderProp) {
         lastShaderConfiguration_ = -1;
     }
 
-    bool shaderUpdateNeeded = false;
+    bool shaderUpdateNeeded = shaderProp.requiresRebuild();
 
     if(isTriangleMeshShaderNeeded && texPort_.hasChanged()) {
         shaderUpdateNeeded = true;
