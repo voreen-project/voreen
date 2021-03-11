@@ -97,7 +97,7 @@ end_full:
 };
 }
 
-VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<float>& img) {
+VolumeAtomic<float> meanFilter3x3x3(const VolumeAtomic<float>& img) {
     const tgt::ivec3 start(0);
     const tgt::ivec3 end(img.getDimensions());
     const size_t numVoxels = tgt::hmul(img.getDimensions());
@@ -106,8 +106,6 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
     const int N=2*k+1;
     const tgt::ivec3 neighborhoodSize(k);
 
-    clock_t tbegin = clock();
-#ifdef VRN_RANDOMWALKER_MEAN_NOT_MEDIAN
     // mean
     auto conv = [&] (const VolumeAtomic<float>& input, VolumeAtomic<float>& output, int dim) {
         VRN_FOR_EACH_VOXEL(center, start, end) {
@@ -131,13 +129,26 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
     conv(img, tmp2, 0);
     conv(tmp2, tmp, 1);
     conv(tmp, tmp2, 2);
-#else
+
+    return tmp2;
+}
+
+VolumeAtomic<float> medianFilter3x3x3(const VolumeAtomic<float>& img) {
+    const tgt::ivec3 start(0);
+    const tgt::ivec3 end(img.getDimensions());
+    const size_t numVoxels = tgt::hmul(img.getDimensions());
+
+    const int k = 1;
+    const int N=2*k+1;
+    const tgt::ivec3 neighborhoodSize(k);
+
     // median
     tgt::ivec3 last = end - tgt::ivec3(1);
     const size_t HEAP_SIZE = N*N*N/2+1;
     tgtAssert(HEAP_SIZE == 14, "Invalid neighborhood size");
     NSmallestHeap14 heap;
 
+    VolumeAtomic<float> res(img.getDimensions());
     VRN_FOR_EACH_VOXEL(center, start, end) {
         const tgt::ivec3 neighborhoodStart = center - neighborhoodSize;
         const tgt::ivec3 neighborhoodEnd = center + neighborhoodSize + tgt::ivec3(1);
@@ -150,9 +161,22 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
             float val = img.voxel(p);
             heap.push(val);
         }
-        tmp2.voxel(center) = heap.top();
+        res.voxel(center) = heap.top();
     }
-#endif
+
+    return res;
+}
+
+float estimateVariance3x3x3(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean) {
+    const tgt::ivec3 start(0);
+    const tgt::ivec3 end(img.getDimensions());
+    const size_t numVoxels = tgt::hmul(img.getDimensions());
+
+    tgtAssert(img.getDimensions() == mean.getDimensions(), "Dimension mismatch");
+
+    const int k = 1;
+    const int N=2*k+1;
+    const tgt::ivec3 neighborhoodSize(k);
 
     float sumOfDifferences = 0.0f;
     VRN_FOR_EACH_VOXEL(center, start, end) {
@@ -161,7 +185,7 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
 
         const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
 
-        float estimation = tmp2.voxel(center);
+        float estimation = mean.voxel(center);
         float val = img.voxel(center);
         float diff = estimation - val;
 
@@ -173,38 +197,42 @@ VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<flo
         }
 
         sumOfDifferences += neighborhoodFactor * diff * diff;
-
-        tmp2.voxel(center) = estimation;
     }
 
     float varianceEstimation = sumOfDifferences/numVoxels;
-    float stdEstimationInv;
-    if(varianceEstimation > 0) {
-        stdEstimationInv = 1.0f/std::sqrt(varianceEstimation);
-    } else {
-        stdEstimationInv = 1.0f;
-    }
 
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        tmp2.voxel(center) = img.voxel(center) * stdEstimationInv;
-    }
-
-    return tmp2;
+    return varianceEstimation;
 }
 
-VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeRAM& img) {
+VolumeAtomic<float> toVolumeAtomicFloat(const VolumeRAM& img) {
     tgtAssert(img.getNumChannels() == 1, "Only volumes with one channel expected");
-    if(const VolumeAtomic<float>* floatImg = dynamic_cast<const VolumeAtomic<float>*>(&img)) {
-        return preprocessForAdaptiveParameterSetting(*floatImg);
-    } else {
-        size_t voxels = img.getNumVoxels();
-        tgt::svec3 dim = img.getDimensions();
-        VolumeAtomic<float> converted(dim);
-        for(size_t i=0; i<voxels; ++i) {
-            converted.voxel(i) = img.getVoxelNormalized(i);
-        }
-        return preprocessForAdaptiveParameterSetting(converted);
+    size_t voxels = img.getNumVoxels();
+    tgt::svec3 dim = img.getDimensions();
+    VolumeAtomic<float> converted(dim);
+    for(size_t i=0; i<voxels; ++i) {
+        converted.voxel(i) = img.getVoxelNormalized(i);
     }
+    return converted;
+}
+
+VolumeAtomic<float> applyRWM(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+    tgtAssert(vol.getNumChannels() == 1, "Only volumes with one channel expected");
+    size_t voxels = vol.getNumVoxels();
+    VolumeAtomic<float> converted(vol.getDimensions());
+    for(size_t i=0; i<voxels; ++i) {
+        converted.voxel(i) = rwm.normalizedToRealWorld(vol.voxel(i));
+    }
+    return converted;
+}
+
+VolumeAtomic<float> applyRWM(const VolumeRAM& vol, RealWorldMapping rwm) {
+    tgtAssert(vol.getNumChannels() == 1, "Only volumes with one channel expected");
+    size_t voxels = vol.getNumVoxels();
+    VolumeAtomic<float> converted(vol.getDimensions());
+    for(size_t i=0; i<voxels; ++i) {
+        converted.voxel(i) = rwm.normalizedToRealWorld(vol.getVoxelNormalized(i));
+    }
+    return converted;
 }
 
 }

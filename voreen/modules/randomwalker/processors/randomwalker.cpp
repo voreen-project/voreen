@@ -56,13 +56,11 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromPropertiesAdaptive
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minEdgeWeight_));
     RWNoiseModel noiseModel = input.noiseModel_;
 
-    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<NoiseModel>(minWeight));
-
     auto rwm = input.inputHandle_->getRealWorldMapping();
-    auto rwInput = NoiseModel::preprocess(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor(new RandomWalkerVoxelAccessorVolumeAtomic(std::move(rwInput), RealWorldMapping(1.0f, 0.0f, "") /* already handled in preprocessing step */));
+    auto model = NoiseModel::prepare(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);
+    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<NoiseModel>(std::move(model), minWeight));
 
-    return tgt::make_unique<RandomWalkerWeights>(std::move(voxelAccessor), std::move(edgeWeightFun), input.inputHandle_->getDimensions());
+    return tgt::make_unique<RandomWalkerWeights>(std::move(edgeWeightFun), input.inputHandle_->getDimensions());
 }
 
 static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const RandomWalkerInput& input) {
@@ -71,6 +69,8 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
         switch(input.noiseModel_) {
             case RW_NOISE_GAUSSIAN:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussian>(input);
+            case RW_NOISE_GAUSSIAN_BIAN:
+                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBian>(input);
             case RW_NOISE_POISSON:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelPoisson>(input);
             default:
@@ -84,15 +84,15 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
     auto vmm = input.inputHandle_->getDerivedData<VolumeMinMax>();
     tgt::vec2 intensityRange(vmm->getMin(), vmm->getMax());
     std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun;
-    if (input.enableTransFunc_) {
-        edgeWeightFun.reset(new RandomWalkerEdgeWeightTransfunc(input.edgeWeightTransFunc_, intensityRange, beta, input.tfBlendFactor_, minWeight));
-    } else {
-        edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(intensityRange, beta, minWeight));
-    }
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelAccessor;
-    voxelAccessor.reset(new RandomWalkerVoxelAccessorVolume(*input.inputHandle_));
 
-    return tgt::make_unique<RandomWalkerWeights>(std::move(voxelAccessor), std::move(edgeWeightFun), input.inputHandle_->getDimensions());
+    auto rwm = input.inputHandle_->getRealWorldMapping();
+    auto vol = applyRWM(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);
+    if (input.enableTransFunc_) {
+        edgeWeightFun.reset(new RandomWalkerEdgeWeightTransfunc(std::move(vol), input.edgeWeightTransFunc_, intensityRange, beta, input.tfBlendFactor_, minWeight));
+    } else {
+        edgeWeightFun.reset(new RandomWalkerEdgeWeightIntensity(std::move(vol), intensityRange, beta, minWeight));
+    }
+    return tgt::make_unique<RandomWalkerWeights>(std::move(edgeWeightFun), input.inputHandle_->getDimensions());
 }
 
 const std::string RandomWalker::loggerCat_("voreen.RandomWalker.RandomWalker");
@@ -157,8 +157,9 @@ RandomWalker::RandomWalker()
     addProperty(useAdaptiveParameterSetting_);
     useAdaptiveParameterSetting_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
     addProperty(noiseModel_);
+    noiseModel_.addOption("gaussian_bian", "Gaussian (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN);
     noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
-    noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
+    noiseModel_.addOption("shot", "Poisson", RW_NOISE_POISSON);
     noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
     addProperty(beta_);
     addProperty(minEdgeWeight_);

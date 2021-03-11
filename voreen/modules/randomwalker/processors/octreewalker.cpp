@@ -175,6 +175,7 @@ OctreeWalker::OctreeWalker()
 
     // random walker properties
     addProperty(noiseModel_);
+        noiseModel_.addOption("gaussian_bian", "Gaussian (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN);
         noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
         noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
@@ -876,11 +877,11 @@ private:
 };
 
 template<typename NoiseModel>
-static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RandomWalkerVoxelAccessorBrick& voxelFun, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
+static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, NoiseModel& model, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
 
     float minSpacing = tgt::min(spacing);
-    auto edgeWeight = [minWeight, betaBias] (float voxelIntensity, float neighborIntensity, int dim) {
-        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, betaBias);
+    auto edgeWeight = [&] (tgt::vec3 voxel, tgt::vec3 neighbor) {
+        float weight = model.getEdgeWeight(voxel, neighbor, betaBias);
         weight = std::max(weight, minWeight);
 
         return weight;
@@ -892,7 +893,7 @@ static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatr
 
         size_t index = volumeCoordsToIndex(voxel, volDim);
 
-        float curIntensity = voxelFun.voxel(voxel);
+        //float curIntensity = voxelFun.voxel(voxel);
 
         float weightSum = 0;
 
@@ -904,9 +905,9 @@ static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatr
                 neighbor[dim] -= 1;
 
                 size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim);
-                float neighborIntensity = voxelFun.voxel(neighbor);
+                //float neighborIntensity = voxelFun.voxel(neighbor);
 
-                float weight = edgeWeight(curIntensity, neighborIntensity, dim);
+                float weight = edgeWeight(voxel, neighbor);
 
                 if(seeds.isSeedPoint(neighbor)) {
                     if(!currentIsSeedpoint) {
@@ -1070,14 +1071,13 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     auto rwm = input.volume_.getRealWorldMapping();
 
-    auto rwInput = NoiseModel::preprocess(inputNeighborhood.data_, rwm);
-    RandomWalkerVoxelAccessorBrick voxelAccessor(rwInput);
+    auto model = NoiseModel::prepare(inputNeighborhood.data_, rwm);
 
     auto vec = std::vector<float>(systemSize, 0.0f);
 
     tgt::vec3 spacing = input.volume_.getSpacing();
 
-    processVoxelWeights<NoiseModel>(seeds, mat, vec.data(), volIndexToRow.data(), voxelAccessor, walkerBlockDim, minWeight, betaBias, spacing);
+    processVoxelWeights<NoiseModel>(seeds, mat, vec.data(), volIndexToRow.data(), model, walkerBlockDim, minWeight, betaBias, spacing);
 
     for(int i=0; i<10; ++i) {
         int iterations;
@@ -1300,6 +1300,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 switch (input.noiseModel_) {
                     case RW_NOISE_GAUSSIAN:
                         newBrickAddr = processOctreeBrick<RWNoiseModelGaussian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                        break;
+                    case RW_NOISE_GAUSSIAN_BIAN:
+                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
                     case RW_NOISE_POISSON:
                         newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);

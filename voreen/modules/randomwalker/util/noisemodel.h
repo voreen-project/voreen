@@ -34,17 +34,74 @@ namespace voreen {
 enum RWNoiseModel {
     RW_NOISE_GAUSSIAN,
     RW_NOISE_POISSON,
+    RW_NOISE_GAUSSIAN_BIAN,
+};
+
+// Parameter estimation according to
+//
+// A. Bian, X Jiang: Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation
+// https://link.springer.com/chapter/10.1007%2F978-3-319-48680-2_61
+struct RWNoiseModelGaussianBian {
+    VolumeAtomic<float> mean;
+    float diff_variance_inv;
+
+    RWNoiseModelGaussianBian(RWNoiseModelGaussianBian&&) = default;
+
+    static RWNoiseModelGaussianBian prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+        VolumeAtomic<float> mean = meanFilter3x3x3(vol);
+        float variance = estimateVariance3x3x3(vol, mean);
+
+        // Careful: This is _only_ valid for the mean filter as an estimator!!
+        const int k = 1;
+        const int N=2*k+1;
+        const int N4=N*N*N*N;
+        float correction_factor = 2.0f/N4;
+
+        float diff_variance = variance * correction_factor;
+        diff_variance = std::max(diff_variance, std::numeric_limits<float>::min());
+
+        return RWNoiseModelGaussianBian {
+            std::move(mean),
+            1.0f/diff_variance,
+        };
+    }
+    static RWNoiseModelGaussianBian prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return RWNoiseModelGaussianBian::prepare(toVolumeAtomicFloat(vol), rwm);
+    }
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+        float voxelIntensity = mean.voxel(voxel);
+        float neighborIntensity = mean.voxel(neighbor);
+        float beta = 2.0f * betaBias * diff_variance_inv;
+        float intDiff = (voxelIntensity - neighborIntensity);
+        float intDiffSqr = intDiff*intDiff;
+        float weight = exp(-beta * intDiffSqr);
+        return weight;
+    }
 };
 
 struct RWNoiseModelGaussian {
-    static VolumeAtomic<float> preprocess(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-        return preprocessForAdaptiveParameterSetting(vol);
+    VolumeAtomic<float> values;
+    float variance_inv;
+
+    RWNoiseModelGaussian(RWNoiseModelGaussian&&) = default;
+
+    static RWNoiseModelGaussian prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+        VolumeAtomic<float> mean = meanFilter3x3x3(vol);
+        float variance = estimateVariance3x3x3(vol, mean);
+
+        return RWNoiseModelGaussian {
+            vol.copy(),
+            1.0f/variance,
+        };
     }
-    static VolumeAtomic<float> preprocess(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return preprocessForAdaptiveParameterSetting(vol);
+    static RWNoiseModelGaussian prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return RWNoiseModelGaussian::prepare(toVolumeAtomicFloat(vol), rwm);
     }
-    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float betaBias) {
-        float beta = 0.125f * betaBias;
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+        float voxelIntensity = values.voxel(voxel);
+        float neighborIntensity = values.voxel(neighbor);
+
+        float beta = 0.125f * betaBias * variance_inv;
         float intDiff = (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
@@ -52,25 +109,24 @@ struct RWNoiseModelGaussian {
     }
 };
 struct RWNoiseModelPoisson {
-    static VolumeAtomic<float> preprocess(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-        tgtAssert(vol.getNumChannels() == 1, "Only volumes with one channel expected");
-        size_t voxels = vol.getNumVoxels();
-        VolumeAtomic<float> converted(vol.getDimensions());
-        for(size_t i=0; i<voxels; ++i) {
-            converted.voxel(i) = rwm.normalizedToRealWorld(vol.voxel(i));
-        }
-        return converted;
+    VolumeAtomic<float> values;
+
+    RWNoiseModelPoisson(RWNoiseModelPoisson&&) = default;
+
+    static RWNoiseModelPoisson prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+        return RWNoiseModelPoisson {
+            applyRWM(vol, rwm),
+        };
     }
-    static VolumeAtomic<float> preprocess(const VolumeRAM& vol, RealWorldMapping rwm) {
-        tgtAssert(vol.getNumChannels() == 1, "Only volumes with one channel expected");
-        size_t voxels = vol.getNumVoxels();
-        VolumeAtomic<float> converted(vol.getDimensions());
-        for(size_t i=0; i<voxels; ++i) {
-            converted.voxel(i) = rwm.normalizedToRealWorld(vol.getVoxelNormalized(i));
-        }
-        return converted;
+    static RWNoiseModelPoisson prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return RWNoiseModelPoisson {
+            applyRWM(vol, rwm),
+        };
     }
-    static float getEdgeWeight(float voxelIntensity, float neighborIntensity, float betaBias) {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+        float voxelIntensity = values.voxel(voxel);
+        float neighborIntensity = values.voxel(neighbor);
+
         float beta = 0.5f * betaBias;
         float weight;
 

@@ -30,12 +30,12 @@
 
 namespace voreen {
 
-// Normalize image values according to
-//
-// A. Bian, X Jiang: Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation
-// https://link.springer.com/chapter/10.1007%2F978-3-319-48680-2_61
-VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeRAM& img);
-VolumeAtomic<float> preprocessForAdaptiveParameterSetting(const VolumeAtomic<float>& img);
+VolumeAtomic<float> meanFilter3x3x3(const VolumeAtomic<float>& img);
+VolumeAtomic<float> medianFilter3x3x3(const VolumeAtomic<float>& img);
+float estimateVariance3x3x3(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean);
+VolumeAtomic<float> toVolumeAtomicFloat(const VolumeRAM& img);
+VolumeAtomic<float> applyRWM(const VolumeAtomic<float>& vol, RealWorldMapping rwm);
+VolumeAtomic<float> applyRWM(const VolumeRAM& vol, RealWorldMapping rwm);
 
 }
 

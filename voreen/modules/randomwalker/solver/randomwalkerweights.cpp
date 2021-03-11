@@ -48,9 +48,8 @@ namespace voreen {
 
 const std::string RandomWalkerWeights::loggerCat_("voreen.RandomWalker.RandomWalkerWeights");
 
-RandomWalkerWeights::RandomWalkerWeights(std::unique_ptr<RandomWalkerVoxelAccessor> voxelFun, std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim)
-    : voxelFun_(std::move(voxelFun))
-    , weightFun_(std::move(weightFun))
+RandomWalkerWeights::RandomWalkerWeights(std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim)
+    : weightFun_(std::move(weightFun))
     , volDim_(volDim)
 {
 }
@@ -71,7 +70,7 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
 
     size_t curRow = volumeIndexToRowTable[index];
 
-    float curIntensity = voxelFun_->voxel(voxel);
+    //float curIntensity = voxelFun_->voxel(voxel);
 
     float weightSum = 0;
 
@@ -80,8 +79,8 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x-1, y, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = voxelFun_->voxel(neighbor);
-        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        //float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor);
 
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
@@ -98,8 +97,8 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x+1, y, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = voxelFun_->voxel(neighbor);
-        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        //float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor);
 
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
@@ -118,8 +117,8 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y-1, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = voxelFun_->voxel(neighbor);
-        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        //float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor);
 
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
@@ -136,8 +135,8 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y+1, z);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = voxelFun_->voxel(neighbor);
-        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        //float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor);
 
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
@@ -156,8 +155,8 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y, z-1);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = voxelFun_->voxel(neighbor);
-        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        //float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor);
 
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
@@ -174,8 +173,8 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         tgt::ivec3 neighbor(x, y, z+1);
 
         size_t neighborIndex = volumeCoordsToIndex(neighbor, volDim_);
-        float neighborIntensity = voxelFun_->voxel(neighbor);
-        float weight = weightFun_->edgeWeight(voxel, neighbor, curIntensity, neighborIntensity);
+        //float neighborIntensity = voxelFun_->voxel(neighbor);
+        float weight = weightFun_->edgeWeight(voxel, neighbor);
 
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
@@ -213,8 +212,9 @@ float RandomWalkerVoxelAccessorVolumeAtomic::voxel(const tgt::svec3& voxel) {
 }
 
 //---------------------------------------------------------------------------------------
-RandomWalkerEdgeWeightTransfunc::RandomWalkerEdgeWeightTransfunc(const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta, float blendFactor, float minWeight, float maxWeight)
-    : transFunc(transFunc)
+RandomWalkerEdgeWeightTransfunc::RandomWalkerEdgeWeightTransfunc(VolumeAtomic<float> vol, const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta, float blendFactor, float minWeight, float maxWeight)
+    : vol(std::move(vol))
+    , transFunc(transFunc)
     , beta(beta)
     , blendFactor(blendFactor)
     , minWeight(minWeight)
@@ -245,7 +245,10 @@ RandomWalkerEdgeWeightTransfunc::RandomWalkerEdgeWeightTransfunc(const TransFunc
     }
 }
 
-float RandomWalkerEdgeWeightTransfunc::edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) {
+float RandomWalkerEdgeWeightTransfunc::edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor) {
+    float voxelIntensity = vol.voxel(voxel);
+    float neighborIntensity = vol.voxel(neighbor);
+
     // intensity difference
     float intDiff = (voxelIntensity - neighborIntensity) * intensityScale;
     float intDiffSqr = intDiff*intDiff;
@@ -276,8 +279,9 @@ float RandomWalkerEdgeWeightTransfunc::edgeWeight(const tgt::ivec3& voxel, const
 
 //---------------------------------------------------------------------------------------
 
-RandomWalkerEdgeWeightIntensity::RandomWalkerEdgeWeightIntensity(tgt::vec2 intensityRange, float beta, float minWeight, float maxWeight)
-    : beta(beta)
+RandomWalkerEdgeWeightIntensity::RandomWalkerEdgeWeightIntensity(VolumeAtomic<float> vol, tgt::vec2 intensityRange, float beta, float minWeight, float maxWeight)
+    : vol(std::move(vol))
+    , beta(beta)
     , minWeight(minWeight)
     , maxWeight(maxWeight)
     , intensityScale(1.f / (intensityRange.y - intensityRange.x))
@@ -288,7 +292,10 @@ RandomWalkerEdgeWeightIntensity::RandomWalkerEdgeWeightIntensity(tgt::vec2 inten
 }
 
 
-float RandomWalkerEdgeWeightIntensity::edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) {
+float RandomWalkerEdgeWeightIntensity::edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor) {
+    float voxelIntensity = vol.voxel(voxel);
+    float neighborIntensity = vol.voxel(neighbor);
+
     float intDiff = (voxelIntensity - neighborIntensity) * intensityScale;
     float intDiffSqr = intDiff*intDiff;
     float weight = exp(-beta * intDiffSqr);

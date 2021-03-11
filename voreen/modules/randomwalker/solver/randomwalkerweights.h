@@ -60,7 +60,7 @@ private:
 
 struct RandomWalkerEdgeWeight {
     virtual ~RandomWalkerEdgeWeight() {}
-    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) = 0;
+    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor) = 0;
 };
 
 /**
@@ -70,9 +70,10 @@ struct RandomWalkerEdgeWeight {
  * The weights are clamped to the range [minWeight, maxWeight].
  */
 struct RandomWalkerEdgeWeightIntensity : public RandomWalkerEdgeWeight {
-    RandomWalkerEdgeWeightIntensity(tgt::vec2 intensityRange, float beta = 4000.f, float minWeight = 1e-6f, float maxWeight = 1.f);
-    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity);
+    RandomWalkerEdgeWeightIntensity(VolumeAtomic<float> vol, tgt::vec2 intensityRange, float beta = 4000.f, float minWeight = 1e-6f, float maxWeight = 1.f);
+    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor);
 private:
+    VolumeAtomic<float> vol;
     float beta;
     float minWeight;
     float maxWeight;
@@ -81,16 +82,17 @@ private:
 
 template<typename NoiseModel>
 struct RandomWalkerEdgeWeightAdaptive: public RandomWalkerEdgeWeight {
-    RandomWalkerEdgeWeightAdaptive(float minWeight)
-        : minWeight_(minWeight)
+    RandomWalkerEdgeWeightAdaptive(NoiseModel model, float minWeight)
+        : model_(std::move(model))
+        , minWeight_(minWeight)
     {
     }
-    float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity) {
-        float weight = NoiseModel::getEdgeWeight(voxelIntensity, neighborIntensity, 1.0f);
+    float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor) {
+        float weight = model_.getEdgeWeight(voxel, neighbor, 1.0f);
         return std::max(minWeight_, weight);
     }
 private:
-    tgt::vec3 spacing_;
+    NoiseModel model_;
     float minWeight_;
 };
 
@@ -104,9 +106,10 @@ private:
  * The weights are clamped to the range [minWeight, maxWeight].
  */
 struct RandomWalkerEdgeWeightTransfunc : public RandomWalkerEdgeWeight {
-    RandomWalkerEdgeWeightTransfunc(const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta = 4000.f, float blendFactor = 0.5f, float minWeight = 1e-6f, float maxWeight = 1.f);
-    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor, float voxelIntensity, float neighborIntensity);
+    RandomWalkerEdgeWeightTransfunc(VolumeAtomic<float> vol, const TransFunc1D* transFunc, tgt::vec2 intensityRange, float beta = 4000.f, float blendFactor = 0.5f, float minWeight = 1e-6f, float maxWeight = 1.f);
+    virtual float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor);
 private:
+    VolumeAtomic<float> vol;
     const TransFunc1D* transFunc;
     float beta;
     float blendFactor;
@@ -123,13 +126,12 @@ private:
 class RandomWalkerWeights {
 
 public:
-    RandomWalkerWeights(std::unique_ptr<RandomWalkerVoxelAccessor> voxelFun, std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim);
+    RandomWalkerWeights(std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim);
     virtual ~RandomWalkerWeights() {}
 
     virtual void processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable);
 
 protected:
-    std::unique_ptr<RandomWalkerVoxelAccessor> voxelFun_;
     std::unique_ptr<RandomWalkerEdgeWeight> weightFun_;
     tgt::ivec3 volDim_;
 
