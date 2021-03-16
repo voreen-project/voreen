@@ -176,6 +176,7 @@ OctreeWalker::OctreeWalker()
     // random walker properties
     addProperty(noiseModel_);
         noiseModel_.addOption("gaussian_bian", "Gaussian (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN);
+        noiseModel_.addOption("ttest", "TTest", RW_NOISE_TTEST);
         noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
         noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
@@ -1303,6 +1304,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                         break;
                     case RW_NOISE_GAUSSIAN_BIAN:
                         newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                        break;
+                    case RW_NOISE_TTEST:
+                        newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
                     case RW_NOISE_POISSON:
                         newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);

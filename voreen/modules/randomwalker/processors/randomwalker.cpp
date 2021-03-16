@@ -71,6 +71,8 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussian>(input);
             case RW_NOISE_GAUSSIAN_BIAN:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBian>(input);
+            case RW_NOISE_TTEST:
+                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
             case RW_NOISE_POISSON:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelPoisson>(input);
             default:
@@ -158,6 +160,7 @@ RandomWalker::RandomWalker()
     useAdaptiveParameterSetting_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
     addProperty(noiseModel_);
     noiseModel_.addOption("gaussian_bian", "Gaussian (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN);
+    noiseModel_.addOption("ttest", "TTest", RW_NOISE_TTEST);
     noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
     noiseModel_.addOption("shot", "Poisson", RW_NOISE_POISSON);
     noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
