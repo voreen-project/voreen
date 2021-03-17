@@ -128,8 +128,20 @@ struct RWNoiseModelTTest {
         return RWNoiseModelTTest::prepare(toVolumeAtomicFloat(vol), rwm);
     }
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
-        tgt::ivec3 p1 = voxel;
-        tgt::ivec3 p2 = neighbor;
+        tgt::ivec3 p1, p2;
+
+        // Force weight function to be symmetric. If we don't explicitly do
+        // this, there may be small differences due to numerical inaccuracies,
+        // which will make the matrix asymmetric, which will 1. trigger an
+        // assertion in the solver and 2. lead to undesired results from the
+        // solver (values running away from the [0,1] range).
+        if(cmp_linear(voxel, neighbor)) {
+            p1 = voxel;
+            p2 = neighbor;
+        } else {
+            p1 = neighbor;
+            p2 = voxel;
+        }
 
         const tgt::ivec3 dim(image.getDimensions());
 
