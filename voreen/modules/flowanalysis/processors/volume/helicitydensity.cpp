@@ -110,7 +110,7 @@ void HelicityDensity::process() {
     if(normalize_.get()) {
         for(size_t i=0; i<volume->getNumVoxels(); i++) {
             if(volume->voxel(i) < 0.0f) {
-                volume->voxel(i) /= min;
+                volume->voxel(i) /= -min;
             }
             else {
                 volume->voxel(i) /= max;
