@@ -287,8 +287,10 @@ void PythonPlugin::saveScript() {
         // the code in the property's script.
         PythonScript script;
         script.setSource(codeEdit_->toPlainText().toStdString());
+        property_->blockCallbacks(true);
         property_->set(script);
-        // Invalidate, even if the value didn't change. This forces script execution.
+        property_->blockCallbacks(false);
+        // Invalidate, even if the value didn't change. This forces script execution exactly once.
         property_->invalidate();
 
         // Now, we no longer need the script!

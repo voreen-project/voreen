@@ -50,6 +50,8 @@ DynamicPythonProcessor::DynamicPythonProcessor()
 
     // Add properties.
     addProperty(portList_);
+    portList_.setItemLabel("Available Port Types");
+    portList_.setInstanceLabel("Added Port Instances");
     ON_CHANGE(portList_, DynamicPythonProcessor, onPortListChange);
 
     addProperty(enabled_);
@@ -59,7 +61,7 @@ DynamicPythonProcessor::DynamicPythonProcessor()
 }
 
 DynamicPythonProcessor::~DynamicPythonProcessor() {
-    portList_.clear(); // Will trigger onPortListChange an delete remaining ports.
+    portList_.clear(); // Will trigger onPortListChange and delete remaining ports.
 }
 
 Processor* DynamicPythonProcessor::create() const {
@@ -175,13 +177,24 @@ void DynamicPythonProcessor::onScriptChange() {
     // Copy script to keep its ID.
     pythonScript_ = pythonProperty_.get();
 
-    // Parse script and search for global modifications.
+    // Parse script and search for global network modifications.
     std::string source = pythonScript_.getSource();
 
-    const std::regex getPortDataRegex(R"(getPortData\(\s*(\"[^\"]*\")\s*\))");
+    // There are some calls that will not work as intended when used from within a DynamicPythonProcessor.
+    // Since the processor's script is executed during network evaluation, e.g. voreen.render() will
+    // NOT trigger another network evaluation in the moment it's being called.
+    const char* problematicCalls[] = {"voreenqt.", "voreen.render()", "voreen.setProperty"};
+    for(const char* call : problematicCalls) {
+        if(source.find(call) != std::string::npos) {
+            LWARNING("Using '" << call << "' from within a DynamicPythonProcessor (" << getGuiName() << ") "
+                     "will not work as expected. Remove respective calls and use the global python script instead.");
+        }
+    }
+
+    const std::regex getPortDataRegex(R"(getPortData\(\s*([\"'}[^\"']*[\"'])\s*\))");
     source = std::regex_replace(source, getPortDataRegex, "getPortData(\"" + getGuiName() + "\", $1)");
 
-    const std::regex setPortDataRegex(R"(setPortData\(\s*(\"[^\"]*\"\s*,\s*[a-zA-Z0-9]+\s*)\))");
+    const std::regex setPortDataRegex(R"(setPortData\(\s*([\"'][^\"']*[\"']\s*,\s*[a-zA-Z0-9]+\s*)\))");
     source = std::regex_replace(source, setPortDataRegex, "setPortData(\"" + getGuiName() + "\", $1)");
 
     // Apply modification and compile.

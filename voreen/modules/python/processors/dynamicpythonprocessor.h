@@ -55,6 +55,11 @@ public:
 
 protected:
 
+    virtual void setDescriptions() {
+        setDescription("This processor allows to make use of a python script to process incoming data. ");
+        portList_.setDescription("Add and remove ports (using drag and drop) to be accessible from within the python script");
+    }
+
     virtual void process();
     virtual void initialize();
     virtual void deinitialize();
