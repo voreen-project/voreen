@@ -245,7 +245,7 @@ public:
 
     /**
      * Returns the common time interval of all runs.
-     * If non exist, tgt::vec2::zero is returned.
+     * If none exists, tgt::vec2::zero is returned.
      */
     const tgt::vec2& getCommonTimeInterval() const;
 
@@ -265,19 +265,6 @@ public:
      * Returns the number of channels used by the specified field.
      */
     size_t getNumChannels(const std::string& field) const;
-
-    /**
-     * Returns true, if all volumes of the specified field have the same base type, false otherwise.
-     */
-    bool hasCommonBaseType(const std::string& field) const;
-
-    /**
-     * Returns the base type of the specified field.
-     * Note: The base type is only correctly returned if it was the same for all volumes.
-     *       If it differs, the first occurrence is returned.
-     * @see hasCommonBaseType
-     */
-    const std::string& getBaseType(const std::string& field) const;
 
     /**
      * Returns the enclosing bounds of all time steps of all runs in world coordinates.

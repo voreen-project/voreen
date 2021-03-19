@@ -4,6 +4,9 @@ Voreen Changelog
 (UNRELEASED): Voreen 5.2.1
 ------------------------
 
+    * Features:
+      o EnsembleInformation processor that outputs ensemble meta data
+
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
 

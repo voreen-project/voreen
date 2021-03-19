@@ -32,6 +32,7 @@
 #include "io/similaritymatrixsource.h"
 
 #include "processors/ensemblefilter.h"
+#include "processors/ensembleinformation.h"
 #include "processors/ensemblemeancreator.h"
 #include "processors/ensemblevarianceanalysis.h"
 #include "processors/ensemblevolumeextractor.h"
@@ -75,6 +76,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     registerProcessor(new SimilarityMatrixSource());
 
     // Misc
+    registerProcessor(new EnsembleInformation());
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new MetaDataAdder());
 
