@@ -91,6 +91,12 @@ void VesselGraphSave::saveCurrentGraph() {
 
             using namespace boost::iostreams;
             if(compressed) {
+#ifdef WIN32
+                // TODO: Using compression produces linker errors in boost.
+                // This does, however, not happen in json(de)serializer.cpp.
+                // Instead, there the compressed stream is corrupted.
+                tgtAssert(false, "Compression currently not supported on windows");
+#else
                 filtering_ostream compressingStream;
                 compressingStream.push(gzip_compressor(
                             gzip_params(
@@ -99,6 +105,7 @@ void VesselGraphSave::saveCurrentGraph() {
                             ));
                 compressingStream.push(f);
                 input->serializeToJson(compressingStream);
+#endif
             } else {
                 input->serializeToJson(f);
             }

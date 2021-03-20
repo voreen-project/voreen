@@ -40,6 +40,9 @@ namespace voreen {
 
 vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume) {
     VolumeRAMRepresentationLock representation(volume);
+    if (!*representation) {
+        throw VoreenException("Could not acquire RAM representation");
+    }
 
     // Setup image data object.
     vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
