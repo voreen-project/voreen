@@ -165,7 +165,6 @@ void EnsembleMeanCreator::adjustToEnsemble() {
 
     const EnsembleDataset* ensemble = inport_.getData();
 
-    selectedField_.reset();
     selectedField_.setOptions(std::deque<Option<std::string>>());
     for(const std::string& field : ensemble->getCommonFieldNames()) {
         selectedField_.addOption(field, field);

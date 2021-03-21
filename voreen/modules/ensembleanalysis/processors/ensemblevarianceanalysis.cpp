@@ -154,7 +154,7 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
                     if(numChannels == 1 || input.vectorComponent == BOTH) {
                         float length = 0.0f;
                         for (size_t channel = 0; channel < numChannels; channel++) {
-                            float value = rwmCurr.normalizedToRealWorld(lock->getVoxelNormalized(sample, channel));
+                            float value = rwmCurr.normalizedToRealWorld(lock->getVoxelNormalized(sample, channel))
                                         - rwmMean.normalizedToRealWorld(meanVolume->getVoxelNormalized(pos, channel));
                             length += value * value;
                         }
@@ -229,7 +229,6 @@ void EnsembleVarianceAnalysis::adjustToEnsemble() {
 
     const EnsembleDataset* ensemble = ensembleInport_.getData();
 
-    selectedField_.reset();
     selectedField_.setOptions(std::deque<Option<std::string>>());
     for(const std::string& field : ensemble->getCommonFieldNames()) {
         selectedField_.addOption(field, field);
