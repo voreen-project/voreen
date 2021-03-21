@@ -41,9 +41,10 @@ ShaderPropertyWidget::ShaderPropertyWidget(ShaderProperty* prop, QWidget* parent
     , editBt_(new QPushButton(tr("edit")))
 {
 
-    if (isToolWindowVisibleOnStartup())
+    if (isToolWindowVisibleOnStartup()) {
         tgtAssert(property_->get().numComponents() > 0, "No shader souce components");
         createToolWindow(Qt::LeftDockWidgetArea, QString::fromStdString(" (original source: " + property_->get()[0].getCurrentFileName() + ")"), 700, 700);
+    }
 
     addWidget(editBt_);
 
