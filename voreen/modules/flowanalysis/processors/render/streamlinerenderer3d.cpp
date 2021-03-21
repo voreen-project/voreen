@@ -234,8 +234,9 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     timeWindowStart_.setReadOnlyFlag(timeWindowEmpty);
     timeWindowSize_.setReadOnlyFlag(timeWindowEmpty);
 
-    bool timeWindowChanged = streamlines->getTemporalRange().x != timeWindowStart_.getMinValue() || (streamlines->getTemporalRange().y - streamlines->getTemporalRange().x) != timeWindowSize_.getMaxValue();
-    if(!timeWindowEmpty && timeWindowChanged) {
+    bool timeWindowChanged = streamlines->getTemporalRange().x != timeWindowStart_.getMinValue()
+            || (streamlines->getTemporalRange().y - streamlines->getTemporalRange().x) != timeWindowSize_.getMaxValue();
+    if(timeWindowChanged) {
         timeWindowStart_.setMinValue(streamlines->getTemporalRange().x);
         timeWindowStart_.setMaxValue(streamlines->getTemporalRange().y);
         timeWindowStart_.set(timeWindowStart_.getMinValue()); // default: Start at front.
