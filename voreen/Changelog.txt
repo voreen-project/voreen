@@ -16,6 +16,7 @@ Voreen Changelog
       o Shaders of GeometryRenderer now get recompiled directly when shaders where saved in the shader editor
       o Fix normalization of HelicityDensity
       o Fix error in EnsembleVariance calculation
+      o Writing VVD files no longer enforces derived data calculation
 
 2021-01-28: Voreen 5.2.0
 ------------------------

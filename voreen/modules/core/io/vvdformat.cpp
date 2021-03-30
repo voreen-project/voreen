@@ -208,27 +208,20 @@ VvdObject::VvdObject(const VolumeBase* vb, std::string absRAWPath, bool useExter
     // Be careful to avoid adding nullptr elements in case any of the derived data computations fail
     // (e.g., if the required volume representation is not available).
     //derivedData_.insert(vb->getDerivedData<VolumeHash>());
-    auto vmm = vb->getDerivedData<VolumeMinMax>();
-    if(vmm) {
-        derivedData_.insert(vmm);
+    if(auto derived = vb->hasDerivedData<VolumeMinMax>()) {
+        derivedData_.insert(derived);
     }
-    auto vmmm = vb->getDerivedData<VolumeMinMaxMagnitude>();
-    if(vmmm) {
-        derivedData_.insert(vmmm);
+    if(auto derived = vb->hasDerivedData<VolumeMinMaxMagnitude>()) {
+        derivedData_.insert(derived);
     }
-    auto vp = vb->getDerivedData<VolumePreview>();
-    if(vp) {
-        derivedData_.insert(vp);
+    if(auto derived = vb->hasDerivedData<VolumePreview>()) {
+        derivedData_.insert(derived);
     }
-    auto vhi = vb->getDerivedData<VolumeHistogramIntensity>();
-    if(vhi) {
-        derivedData_.insert(vhi);
+    if(auto derived = vb->hasDerivedData<VolumeHistogramIntensity>()) {
+        derivedData_.insert(derived);
     }
-
-    if(vb->hasDerivedData<VolumeHistogramIntensityGradient>()) {
-        auto vhig = vb->getDerivedData<VolumeHistogramIntensityGradient>();
-        tgtAssert(vhig, "No vhig");
-        derivedData_.insert(vhig);
+    if(auto derived = vb->hasDerivedData<VolumeHistogramIntensityGradient>()) {
+        derivedData_.insert(derived);
     }
     //TODO: removed hard-coded classes
 }

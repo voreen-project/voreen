@@ -122,7 +122,6 @@ void VvdVolumeWriter::write(const std::string& filename, const VolumeBase* volum
         const VolumeDisk* volumeDisk = volumeHandle->getRepresentation<VolumeDisk>();
         tgtAssert(volumeDisk, "no disk volume");
 
-        // compute min/max values slice-wise
         size_t numSlices = volumeHandle->getDimensions().z;
         tgtAssert(numSlices > 0, "empty volume");
         for (size_t slice=0; slice<numSlices; slice++) {
