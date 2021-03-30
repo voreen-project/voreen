@@ -27,6 +27,7 @@
 #include "vvdformat.h"
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volume.h"
 
 #include "tgt/filesystem.h"
@@ -42,9 +43,9 @@ VvdVolumeWriter::VvdVolumeWriter() {
 
 void VvdVolumeWriter::write(const std::string& filename, const VolumeBase* volumeHandle) {
     tgtAssert(volumeHandle, "No volume");
-    const VolumeRAM* volume = volumeHandle->getRepresentation<VolumeRAM>();
-    if (!volume) {
-        LWARNING("No volume");
+
+    if(!volumeHandle->hasRepresentation<VolumeDisk>() && !volumeHandle->hasRepresentation<VolumeRAM>()) {
+        LWARNING("Neither volume disk nor RAM representation available");
         return;
     }
 
@@ -105,10 +106,37 @@ void VvdVolumeWriter::write(const std::string& filename, const VolumeBase* volum
         throw tgt::IOException();
 
     // RAW: ---------------------------
-    const char* data = static_cast<const char*>(volume->getData());
-    size_t numbytes = volume->getNumVoxels() * volume->getBytesPerVoxel();
 
-    rawout.write(data, numbytes);
+    auto writeToDisk = [&rawout] (const VolumeRAM* volume) {
+        const char* data = static_cast<const char*>(volume->getData());
+        size_t numbytes = volume->getNumVoxels() * volume->getBytesPerVoxel();
+        rawout.write(data, numbytes);
+    };
+
+    if (volumeHandle->hasRepresentation<VolumeRAM>()) {
+        VolumeRAMRepresentationLock v(volumeHandle);
+        tgtAssert(*v, "no volume");
+        writeToDisk(*v);
+    }
+    else if (volumeHandle->hasRepresentation<VolumeDisk>()) {
+        const VolumeDisk* volumeDisk = volumeHandle->getRepresentation<VolumeDisk>();
+        tgtAssert(volumeDisk, "no disk volume");
+
+        // compute min/max values slice-wise
+        size_t numSlices = volumeHandle->getDimensions().z;
+        tgtAssert(numSlices > 0, "empty volume");
+        for (size_t slice=0; slice<numSlices; slice++) {
+            try {
+                std::unique_ptr<VolumeRAM> sliceVolume(volumeDisk->loadSlices(slice, slice));
+                writeToDisk(sliceVolume.get());
+            }
+            catch (tgt::Exception& e) {
+                LWARNING("Error writing slice to disk: failed to load slice from disk volume: " << e.what());
+                break;
+            }
+        }
+    }
+
     if (rawout.bad())
         throw tgt::IOException("Failed to write volume data to file (bad stream)");
 

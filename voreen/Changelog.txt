@@ -6,6 +6,7 @@ Voreen Changelog
 
     * Features:
       o EnsembleInformation processor that outputs ensemble meta data
+      o Enable writing of out-of-core datasets to VVD files
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
