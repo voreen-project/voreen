@@ -40,13 +40,13 @@ ParallelCoordinatesVoxelSelection::ParallelCoordinatesVoxelSelection()
     , outputDimensions_("outputDimensions", "Output Dimensions", tgt::ivec3(200), tgt::ivec3(2), tgt::ivec3(1000))
 {
     // --- Initialize Ports --- //
-    this->addPort(ensembleport_ );
-    this->addPort(volumeport_ );
+    addPort(ensembleport_ );
+    addPort(volumeport_ );
 
     // --- Initialize Properties --- //
-    this->addProperty(propertySections_ );
+    addProperty(propertySections_ );
     propertySections_.setVisibleFlag(false );
-    this->addProperty(outputDimensions_);
+    addProperty(outputDimensions_);
 }
 
 ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepareComputeInput() {
@@ -151,7 +151,13 @@ ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compu
 
         const auto& sections = sectionData.sections[i];
 
+        // Progress shall be displayed in detail.
+        SubtaskProgressReporter voxelProgress(progress, tgt::vec2(i, i+1) / tgt::vec2(volumes.size()));
+        size_t numProcessedVoxels = 0;
+        size_t numVoxels = voxels.size();
+
         for(auto iter = voxels.begin(); iter != voxels.end();) {
+            voxelProgress.setProgress(static_cast<float>(numProcessedVoxels++) / static_cast<float>(numVoxels));
 
             // Map sample position to world space.
             tgt::vec3 pos = mapRange(tgt::vec3(*iter), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
@@ -178,15 +184,11 @@ ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compu
             else {
                 iter++;
             }
-
-            interruptionPoint();
         }
 
         if(voxels.empty()) {
             break;
         }
-
-        progress.setProgress((i+1.0f) / volumes.size());
     }
 
     // Enable remaining voxels.
