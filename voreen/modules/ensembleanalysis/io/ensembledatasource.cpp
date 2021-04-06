@@ -64,7 +64,7 @@ EnsembleDataSource::EnsembleDataSource()
     addProperty(loadingStrategy_);
     loadingStrategy_.addOption("manual", "Manual");
     loadingStrategy_.addOption("full", "Full");
-    loadingStrategy_.addOption("lazy", "Lazy");
+    loadingStrategy_.addOption("cached", "Cached");
     addProperty(loadDatasetButton_);
     ON_CHANGE(loadDatasetButton_, EnsembleDataSource, loadEnsembleDataset);
     addProperty(memberProgress_);
@@ -133,9 +133,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
     // Delete old data.
     clearEnsembleDataset();
-
-    if(ensemblePath_.get().empty())
-        return;
 
     std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset());
 
@@ -242,27 +239,12 @@ void EnsembleDataSource::buildEnsembleDataset() {
             timeStepProgress_.setProgress(std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f));
         }
 
-
         auto timeStepCompare = [] (const TimeStep& t1, const TimeStep& t2) {
             return t1.getTime() < t2.getTime();
         };
         std::stable_sort(timeSteps.begin(), timeSteps.end(), timeStepCompare);
 
-        // Update overview table.
-        std::vector<std::string> row(5);
-        row[0] = member; // Name
-        row[1] = std::to_string(timeSteps.size()); // Num Time Steps
-        if (!timeSteps.empty()) {
-            row[2] = std::to_string(timeSteps.front().getTime()); // Start time
-            row[3] = std::to_string(timeSteps.back().getTime()); // End time
-            row[4] = std::to_string(timeSteps.back().getTime() - timeSteps.front().getTime()); // Duration
-        }
-        else {
-            row[2] = row[3] = row[4] = "N/A";
-        }
-        loadedMembers_.addRow(row);
-
-        // Update dataset.
+        // Set color.
         tgt::Color color = *colorIter;
         dataset->addMember({member, color.xyz(), timeSteps});
         ++colorIter;
@@ -273,17 +255,18 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
     hash_.set(EnsembleHash(*dataset).getHash());
     output_ = std::move(dataset);
+    updateTable();
 
-    if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
+    if(loadingStrategy_.get() == "cached" && VoreenApplication::app()->useCaching()) {
         tgt::FileSystem::createDirectoryRecursive(getCachePath());
-        std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
 
         std::ofstream outFile;
-        outFile.open(filename);
+        outFile.open(getEnsembleCachePath());
         if(outFile.good()) {
             try {
                 JsonSerializer s;
                 Serializer serializer(s);
+                serializer.serialize("hash", hash_.get());
                 serializer.serialize("ensemble", *output_);
                 s.write(outFile, false, true);
             }
@@ -303,29 +286,40 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
 void EnsembleDataSource::loadEnsembleDataset() {
 
-    if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
+    if(ensemblePath_.get().empty()) {
+        LWARNING("No path specified");
+        return;
+    }
 
-        std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
+    if(loadingStrategy_.get() == "cached" && VoreenApplication::app()->useCaching()) {
 
         std::ifstream inFile;
-        inFile.open(filename);
+        inFile.open(getEnsembleCachePath());
 
         if(inFile.good()) {
+
             std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset);
             try {
+                std::string hash;
+
                 JsonDeserializer d;
                 d.read(inFile, true);
                 Deserializer deserializer(d);
+                deserializer.deserialize("hash", hash);
                 deserializer.deserialize("ensemble", *ensemble);
 
-                std::string hash = hash_.get();
                 clearEnsembleDataset();
-                tgtAssert(hash == EnsembleHash(*ensemble).getHash(), "hash mismatch");
-                hash_.set(hash);
+                if(hash == EnsembleHash(*ensemble).getHash()) {
+                    hash_.set(hash);
 
-                output_ = std::move(ensemble);
-                setProgress(1.0f);
-                return; // Done.
+                    output_ = std::move(ensemble);
+                    updateTable();
+                    setProgress(1.0f);
+                    timeStepProgress_.setProgress(1.0f);
+                    return; // Done.
+                }
+
+                LWARNING("Hash mismatch, rebuilding cache...");
             }
             catch (tgt::Exception& e) {
                 LWARNING("Loading ensemble from cache failed, rebuilding cache...");
@@ -352,6 +346,32 @@ void EnsembleDataSource::printEnsembleDataset() {
     if (!file.good()) {
         LERROR("Could not write " << printEnsemble_.get() << " file");
     }
+}
+
+void EnsembleDataSource::updateTable() {
+    loadedMembers_.reset();
+
+    if(!output_) {
+        return;
+    }
+
+    for(const EnsembleMember& member : output_->getMembers()) {
+        std::vector<std::string> row(5);
+        row[0] = member.getName(); // Name
+        row[1] = std::to_string(member.getTimeSteps().size()); // Num Time Steps
+        if (!member.getTimeSteps().empty()) {
+            row[2] = std::to_string(member.getTimeSteps().front().getTime()); // Start time
+            row[3] = std::to_string(member.getTimeSteps().back().getTime()); // End time
+            row[4] = std::to_string(member.getTimeSteps().back().getTime() - member.getTimeSteps().front().getTime()); // Duration
+        } else {
+            row[2] = row[3] = row[4] = "N/A";
+        }
+        loadedMembers_.addRow(row);
+    }
+}
+
+std::string EnsembleDataSource::getEnsembleCachePath() const {
+    return getCachePath() + "/" + VoreenHash::getHash(ensemblePath_.get()) + ".ensemble";
 }
 
 } // namespace

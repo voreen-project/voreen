@@ -163,7 +163,7 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="lazy" />
+                        <Property mapKey="loadingStrategy" name="loadingStrategy" value="cached" />
                         <Property mapKey="memberProgress" name="memberProgress" />
                         <Property mapKey="overrideTime" name="overrideTime" value="false" />
                         <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">

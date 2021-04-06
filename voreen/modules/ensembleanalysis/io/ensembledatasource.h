@@ -66,8 +66,8 @@ protected:
         loadingStrategy_.setDescription("Loading strategy has three options:<br>"
                                         "<strong>Manual</strong>: The ensemble is only loaded when pressing the load button.<br>"
                                         "<strong>Full</strong>: The entire ensemble is loaded fully from disk when the workspace is loaded<br>"
-                                        "<strong>Lazy</strong>: The entire ensemble needs to be loaded once an all required meta data will be "
-                                        "safed to and loaded from disk the next time the workspace is loaded");
+                                        "<strong>Cached</strong>: The entire ensemble needs to be loaded once an all required meta data will be "
+                                        "cached. Succeeding loading attempts will be faster");
         loadDatasetButton_.setDescription("Loads the dataset from the specified path");
         printEnsemble_.setDescription("Creates a HTML overview sheet for the currently loaded ensemble");
         colorMap_.setDescription("Color map from which a unique color for each member is derived sequentially.");
@@ -83,6 +83,9 @@ protected:
     void buildEnsembleDataset();
     void loadEnsembleDataset();
     void printEnsembleDataset();
+    void updateTable();
+
+    std::string getEnsembleCachePath() const;
 
     std::vector<std::unique_ptr<const VolumeBase>> volumes_;
     std::unique_ptr<EnsembleDataset> output_;
