@@ -81,6 +81,7 @@ protected:
 
     void clearEnsembleDataset();
     void buildEnsembleDataset();
+    void loadEnsembleDataset();
     void printEnsembleDataset();
 
     std::vector<std::unique_ptr<const VolumeBase>> volumes_;

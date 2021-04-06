@@ -66,7 +66,7 @@ EnsembleDataSource::EnsembleDataSource()
     loadingStrategy_.addOption("full", "Full");
     loadingStrategy_.addOption("lazy", "Lazy");
     addProperty(loadDatasetButton_);
-    ON_CHANGE(loadDatasetButton_, EnsembleDataSource, buildEnsembleDataset);
+    ON_CHANGE(loadDatasetButton_, EnsembleDataSource, loadEnsembleDataset);
     addProperty(memberProgress_);
     addProgressBar(&memberProgress_);
     addProperty(timeStepProgress_);
@@ -114,36 +114,8 @@ void EnsembleDataSource::deinitialize() {
 
 void EnsembleDataSource::deserialize(Deserializer& s) {
     Processor::deserialize(s);
-
-    if (loadingStrategy_.get() == "full") {
-        buildEnsembleDataset();
-    }
-    else if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
-
-        std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
-
-        std::ifstream inFile;
-        inFile.open(filename);
-
-        if(inFile.good()) {
-            output_.reset(new EnsembleDataset());
-            try {
-                JsonDeserializer d;
-                d.read(inFile, true);
-                Deserializer deserializer(d);
-                deserializer.deserialize("ensemble", *output_);
-                setProgress(1.0f);
-            }
-            catch (tgt::Exception& e) {
-                LWARNING("Loading ensemble from cache failed: " << e.what());
-                output_.reset();
-            }
-            inFile.close();
-        }
-        else if(!ensemblePath_.get().empty()) {
-            LWARNING("Could not read cache file, rebuilding cache...");
-            buildEnsembleDataset();
-        }
+    if(loadingStrategy_.get() != "manual") {
+        loadEnsembleDataset();
     }
 }
 
@@ -154,7 +126,7 @@ void EnsembleDataSource::clearEnsembleDataset() {
     setProgress(0.0f);
     timeStepProgress_.setProgress(0.0f);
     loadedMembers_.reset();
-    hash_.reset();
+    hash_.set("");
 }
 
 void EnsembleDataSource::buildEnsembleDataset() {
@@ -327,6 +299,45 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
     timeStepProgress_.setProgress(1.0f);
     setProgress(1.0f);
+}
+
+void EnsembleDataSource::loadEnsembleDataset() {
+
+    if(loadingStrategy_.get() == "lazy" && VoreenApplication::app()->useCaching()) {
+
+        std::string filename = getCachePath() + "/" + hash_.get() + ".ensemble";
+
+        std::ifstream inFile;
+        inFile.open(filename);
+
+        if(inFile.good()) {
+            std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset);
+            try {
+                JsonDeserializer d;
+                d.read(inFile, true);
+                Deserializer deserializer(d);
+                deserializer.deserialize("ensemble", *ensemble);
+
+                std::string hash = hash_.get();
+                clearEnsembleDataset();
+                tgtAssert(hash == EnsembleHash(*ensemble).getHash(), "hash mismatch");
+                hash_.set(hash);
+
+                output_ = std::move(ensemble);
+                setProgress(1.0f);
+                return; // Done.
+            }
+            catch (tgt::Exception& e) {
+                LWARNING("Loading ensemble from cache failed, rebuilding cache...");
+            }
+        }
+        else if(!ensemblePath_.get().empty()) {
+            LWARNING("Could not read cache file, rebuilding cache...");
+        }
+    }
+
+    // Rebuild ensemble as fallback.
+    buildEnsembleDataset();
 }
 
 void EnsembleDataSource::printEnsembleDataset() {

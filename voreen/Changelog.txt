@@ -17,6 +17,7 @@ Voreen Changelog
       o Fix normalization of HelicityDensity
       o Fix error in EnsembleVariance calculation
       o Writing VVD files no longer enforces derived data calculation
+      o Fix manual loading of cached ensembles
 
 2021-01-28: Voreen 5.2.0
 ------------------------
