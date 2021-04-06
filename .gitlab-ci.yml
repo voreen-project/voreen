@@ -1,5 +1,8 @@
 stages:
+  - pack
   - build
+  - test
+  - deploy
 
 image: voreen/ci-ubuntu-16.04:v3
 
@@ -34,8 +37,88 @@ before_script:
   - export PATH="/usr/local/Qt-5.12.4/bin:$PATH"               # Find qmake in docker image
 
 ######################################################################
+# Pack stack
+######################################################################
+
+src_snapshot_unix:
+  stage: pack
+  only:
+    - schedules
+  script:
+    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
+    - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME_UNIX} --force
+  artifacts:
+    paths:
+    - "voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
+    expire_in: 1 day
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+src_snapshot_win32:
+  stage: pack
+  only:
+    - schedules
+  script:
+    - cd ${TOOLS_DIR}/.. # Apparently make-snapshot.sh requires us to be exactly here
+    - tools/snapshot/make-snapshot.sh win32 ${SNAPSHOT_NAME_WIN} --force
+  artifacts:
+    paths:
+    - "voreen/$SNAPSHOT_NAME_WIN.zip"
+    expire_in: 1 day
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+######################################################################
 # Build stage
 ######################################################################
+build_deploy: #Builds from source snapshot!
+  stage: build
+  script:
+    - export SRC_DIR=$(mktemp -d)
+    - export BUILD_DIR=$(realpath $(mktemp -d))
+    - tar -xf "voreen/$SNAPSHOT_NAME_UNIX.tar.gz" --directory $SRC_DIR
+    - ls $SRC_DIR
+    - ls $SRC_DIR/$SNAPSHOT_NAME_UNIX
+    - ci/build_deploy.sh $BUILD_DIR $DEPLOY_INSTALL_DIR $SRC_DIR/$SNAPSHOT_NAME_UNIX
+    - ${TOOLS_DIR}/snapshot/deployment-linux/linuxdeployment.sh ${DEPLOY_INSTALL_DIR} ${TOOLS_DIR}/snapshot/deployment-linux/
+  artifacts:
+    paths:
+    - "${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
+    expire_in: 1 day
+  only:
+  - schedules
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+build_deploy_special:
+  stage: build
+  script:
+    - export BUILD_DIR=$(mktemp -d)
+    - ci/build_deploy.sh ${BUILD_DIR} ${SPECIAL_DEPLOY_INSTALL_DIR}
+    - ${TOOLS_DIR}/snapshot/deployment-linux/linuxdeployment.sh ${SPECIAL_DEPLOY_INSTALL_DIR} ${TOOLS_DIR}/snapshot/deployment-linux/
+  artifacts:
+    paths:
+    - "${SPECIAL_DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz"
+    expire_in: 1 day
+  only:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+build_compatprofile:
+  stage: build
+  script:
+    - ci/build_compatibilityprofile.sh ${COMPATPROFILE_BUILD_DIR}
+  artifacts:
+    paths:
+    - "${COMPATPROFILE_BUILD_DIR}/bin/*"
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
 
 build_coreprofile:
   stage: build
@@ -48,4 +131,243 @@ build_coreprofile:
   except:
     variables:
       - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+build_default:
+  stage: build
+  script:
+    - ci/build_default.sh $(mktemp -d)
+  only:
+    - schedules
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+build_no_modules:
+  stage: build
+  script:
+    - ci/build_no_modules.sh $(mktemp -d)
+  only:
+    - schedules
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+build_release:
+  stage: build
+  script:
+    - ci/build_release.sh $(mktemp -d)
+  only:
+    - schedules
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+######################################################################
+# Test Stage
+######################################################################
+serializertest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/serializertest --logLevel=debug --logFile=serializer-log.html
+  artifacts:
+    paths:
+    - serializer-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+descriptiontest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/descriptiontest --logLevel=debug --logFile=descriptiontest-log.html
+  artifacts:
+    paths:
+    - descriptiontest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+processorcreatetest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest --logLevel=debug --logFile=processorcreatetest-log.html
+  artifacts:
+    paths:
+    - processorcreatetest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+processorinittest_coreprofile:
+  stage: test
+  script:
+    - xvfb-run --server-args="${XVFB_SERVER_ARGS}" -- ${COREPROFILE_BUILD_DIR}/bin/processorinittest --logLevel=info --logFile=processorinittest-log.html
+  artifacts:
+    paths:
+    - processorinittest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+# octreetest, networkevaluatortest, processornetworktest and volumeorigintest are boost tests and need a "--"
+# before specifying application options, but only for newer boost versions...
+octreetest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/octreetest --logLevel=debug --datadir=${TEST_DATA_DIR} --logFile=octreetest-log.html
+  artifacts:
+    paths:
+    - octreetest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+networkevaluatortest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/networkevaluatortest -- --logLevel=debug --logFile=networkevaluatortest-log.html
+  artifacts:
+    paths:
+    - networkevaluatortest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+processornetworktest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/processornetworktest -- --logLevel=debug --logFile=processornetworktest-log.html
+  artifacts:
+    paths:
+    - processornetworktest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+volumeorigintest_coreprofile:
+  stage: test
+  script:
+    - ${COREPROFILE_BUILD_DIR}/bin/volumeorigintest -- --logLevel=debug --logFile=volumeorigintest-log.html
+  artifacts:
+    paths:
+    - volumeorigintest-log.html
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+#only available with opencl
+#blastest_coreprofile:
+#  stage: test
+#  script:
+#    - ${COREPROFILE_BUILD_DIR}/bin/voreenblastest --quickmode --errorThreshold 5e-4 --matrixSeed 1509551691
+
+valgrind_memcheck_processorcreate_coreprofile:
+  stage: test
+  script:
+    - valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/voreen.supp ${COREPROFILE_BUILD_DIR}/bin/processorcreatetest
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+valgrind_memcheck_processorinit_coreprofile:
+  stage: test
+  script:
+    - xvfb-run --server-args="${XVFB_SERVER_ARGS}" -- valgrind --leak-check=full --error-exitcode=1 --suppressions=ci/voreen.supp ${COREPROFILE_BUILD_DIR}/bin/processorinittest
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+regressiontest_coreprofile:
+  stage: test
+  script:
+    - mkdir -p ${IDENTIFIER_COREPROFILE}
+    - xvfb-run --server-args="${XVFB_SERVER_ARGS}" -- ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COREPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COREPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 600 --noglclsharing || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COREPROFILE} regressiontest_reports/${IDENTIFIER_COREPROFILE}
+    - mv ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COREPROFILE variable!
+    - $(exit $EXITCODE) #propagate regressiontest exit code
+  artifacts:
+    reports:
+      junit: regressiontest-junit.xml
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+regressiontest_compatprofile:
+  stage: test
+  script:
+    - mkdir -p ${IDENTIFIER_COMPATPROFILE}
+    - export MESA_GL_VERSION_OVERRIDE=3.3COMPAT #required for compatibilityprofile with mesa
+    - xvfb-run --server-args="${XVFB_SERVER_ARGS}" ${COMPATPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COMPATPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COMPATPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 600 --noglclsharing || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COMPATPROFILE} regressiontest_reports/${IDENTIFIER_COMPATPROFILE}
+    - mv ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COMPATPROFILE variable!
+    - $(exit $EXITCODE) #propagate regressiontest exit code
+  artifacts:
+    reports:
+      junit: regressiontest-junit.xml
+    expire_in: 1 day
+  except:
+    variables:
+      - $DEPLOY_ONLY
+      - $SPECIAL_DEPLOY_ONLY
+
+######################################################################
+# Deployment Stage: Upload results to sciebo
+######################################################################
+deploy_src_unix:
+  stage: deploy
+  only:
+    - schedules
+  script:
+    - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-unix-nightly.tar.gz
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+deploy_src_win:
+  stage: deploy
+  only:
+    - schedules
+  script:
+    - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_WIN.zip"
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-win32-nightly.zip
+  except:
+    variables:
+      - $SPECIAL_DEPLOY_ONLY
+
+appimage:
+  stage: deploy
+  only:
+    - schedules
+  script:
+    - ls ${DEPLOY_INSTALL_DIR}
+    - export DEPLOY_FILE=${DEPLOY_INSTALL_DIR}/VoreenVE.tar.gz
+    - ls ${DEPLOY_FILE}
+    - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${DEPLOY_FILE} VoreenVE-nightly.tar.gz
+  except:
+    variables:
       - $SPECIAL_DEPLOY_ONLY
