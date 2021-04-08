@@ -223,7 +223,7 @@ uint64_t OctreeBrickPoolManagerMmap::allocateBrick() {
         // Start time copy (assuming no modifications in the meantime)
         currentListHeadAddr = freeListHead_;
 
-        if(freeListHead_ == NO_BRICK_ADDRESS)  {
+        if(currentListHeadAddr == NO_BRICK_ADDRESS)  {
             // No blocks in free list: allocate completely new block
             return nextNewBrickAddr_.fetch_add(1);
         }
