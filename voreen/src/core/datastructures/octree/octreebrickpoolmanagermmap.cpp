@@ -64,6 +64,7 @@ OctreeBrickPoolManagerMmap::OctreeBrickPoolManagerMmap(const std::string& brickP
     , bufferFilePrefix_(bufferFilePrefix)
     , storage_()
     , freeListHead_(NO_BRICK_ADDRESS)
+    , freeListMutex_()
     , nextNewBrickAddr_(1)
 {
     brickPoolPath_ = tgt::FileSystem::absolutePath(brickPoolPath);
@@ -216,30 +217,38 @@ void OctreeBrickPoolManagerMmap::releaseBrick(uint64_t virtualMemoryAddress, Acc
 }
 
 uint64_t OctreeBrickPoolManagerMmap::allocateBrick() {
-    uint64_t currentListHeadAddr;
-    uint64_t newListHeadAddr;
 
-    do {
-        // Start time copy (assuming no modifications in the meantime)
-        currentListHeadAddr = freeListHead_;
+    // Fast path: Check if free list is empty. If this is the case we just
+    // allocate a new brick. It doesn't matter if we miss an update to the free
+    // list here: Some later allocation will get the brick from the list.
+    if(freeListHead_.load() == NO_BRICK_ADDRESS)  {
+        // No blocks in free list: allocate completely new block
+        return nextNewBrickAddr_.fetch_add(1);
+    }
 
-        if(currentListHeadAddr == NO_BRICK_ADDRESS)  {
-            // No blocks in free list: allocate completely new block
-            return nextNewBrickAddr_.fetch_add(1);
-        }
+    // Ok, we now know that we probably need to modify the free list.
+    boost::unique_lock<boost::mutex> wlock(freeListMutex_);
 
-        // Read addr block after head in list from header block itself
-        const uint16_t* currentListHead = getBrick(currentListHeadAddr);
-        std::array<uint16_t, 4> newListHeadAddrPacked;
-        std::copy_n(currentListHead, newListHeadAddrPacked.size(), newListHeadAddrPacked.begin());
-        newListHeadAddr = unpackAddr(newListHeadAddrPacked);
+    // Check again, now that we have exclusive access (there may have been
+    // concurrent accesses in the meantime!)
+    uint64_t currentListHeadAddr = freeListHead_.load();
+    if(currentListHeadAddr == NO_BRICK_ADDRESS)  {
+        // No blocks in free list: allocate completely new block
+        return nextNewBrickAddr_.fetch_add(1);
+    }
+    // Now that we know that there is definitely a brick that the freeListHead_
+    // points to, we can remove it from the free list:
 
-        // Store this after-head-block addr as new head addr
-        // Repeat if actual value has changed compared to start time copy
-    } while(!freeListHead_.compare_exchange_strong(currentListHeadAddr, newListHeadAddr));
+    // Read addr block after head in list from header block itself
+    const uint16_t* currentListHead = getBrick(currentListHeadAddr);
+    std::array<uint16_t, 4> newListHeadAddrPacked;
+    std::copy_n(currentListHead, newListHeadAddrPacked.size(), newListHeadAddrPacked.begin());
 
-    //LINFO("Reusing block from free list" << currentListHeadAddr);
+    // This next element in the free list is the new head, and we return the
+    // old head (now removed from the list)
+    freeListHead_.store(unpackAddr(newListHeadAddrPacked));
     return currentListHeadAddr;
+    //LINFO("Reusing block from free list" << currentListHeadAddr);
 }
 
 void OctreeBrickPoolManagerMmap::deleteBrick(uint64_t virtualMemoryAddress) {
@@ -248,19 +257,14 @@ void OctreeBrickPoolManagerMmap::deleteBrick(uint64_t virtualMemoryAddress) {
 
     uint16_t* newListHead = getWritableBrick(virtualMemoryAddress);
 
-    uint64_t currentListHeadAddr;
-    uint64_t newListHeadAddr;
-    do {
-        // Save the current list header addr as data in the deleted block
-        currentListHeadAddr = freeListHead_;
-        auto currentListHeadAddrPacked = packAddr(currentListHeadAddr);
-        std::copy(currentListHeadAddrPacked.begin(), currentListHeadAddrPacked.end(), newListHead);
+    boost::unique_lock<boost::mutex> wlock(freeListMutex_);
 
-        // Make the deleted block address the new free list header
-        newListHeadAddr = virtualMemoryAddress;
+    // Save the current list header addr as data in the deleted block
+    auto currentListHeadAddrPacked = packAddr(freeListHead_.load());
+    std::copy(currentListHeadAddrPacked.begin(), currentListHeadAddrPacked.end(), newListHead);
 
-        // Repeat this as long as another thread has changed freeListHead_ in the mean time
-    } while(!freeListHead_.compare_exchange_strong(currentListHeadAddr, newListHeadAddr));
+    // Make the deleted block address the new free list header
+    freeListHead_.store(virtualMemoryAddress);
 }
 
 void OctreeBrickPoolManagerMmap::flushPoolToDisk(ProgressReporter* progressReporter /*= 0*/) {

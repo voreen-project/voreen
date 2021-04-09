@@ -95,8 +95,10 @@ private:
     std::string brickPoolPath_;                 //< directory where the buffer files are stored
     std::string bufferFilePrefix_;              //< filename prefix of the buffer files (may be empty)
 
-    std::atomic<uint64_t> freeListHead_;      // Next reusable previously deleted block. This block contains the address to the next block in the list.
     std::atomic<uint64_t> nextNewBrickAddr_; // Addr (index) of the next (entirely new) brick that can be allocated
+
+    std::atomic<uint64_t> freeListHead_; // Next reusable previously deleted block. This block contains the address to the next block in the list.
+    mutable boost::mutex freeListMutex_; // R/RW for storage_, i.e,. either: read (shared) or modify (exclusive)
 
     mutable boost::shared_mutex storageMutex_; // R/RW for storage_, i.e,. either: read (shared) or modify (exclusive)
     mutable std::vector<boost::iostreams::mapped_file> storage_;
