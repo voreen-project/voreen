@@ -121,8 +121,8 @@ void RandomWalkerSolver::setupEquationSystem(ProgressReporter& progress) {
     // iterate over volume and compute edge weights for each voxel
     ThreadedTaskProgressReporter parallelProgress(progress, volDim_.z);
     bool aborted = false;
-    std::mutex mat_mutex;
-    std::mutex vec_mutex;
+    boost::mutex mat_mutex;
+    boost::mutex vec_mutex;
     #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
     #endif

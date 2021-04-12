@@ -30,6 +30,9 @@
 #include "randomwalkerseeds.h"
 #include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
+
 #include <string>
 
 namespace voreen {
@@ -129,7 +132,7 @@ public:
     RandomWalkerWeights(std::unique_ptr<RandomWalkerEdgeWeight> weightFun, tgt::ivec3 volDim);
     virtual ~RandomWalkerWeights() {}
 
-    virtual void processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, const size_t* volumeIndexToRowTable, std::mutex& mat_mutex, std::mutex& vec_mutex);
+    virtual void processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, const size_t* volumeIndexToRowTable, boost::mutex& mat_mutex, boost::mutex& vec_mutex);
 
 protected:
     std::unique_ptr<RandomWalkerEdgeWeight> weightFun_;
