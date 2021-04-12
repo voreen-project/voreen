@@ -54,7 +54,7 @@ RandomWalkerWeights::RandomWalkerWeights(std::unique_ptr<RandomWalkerEdgeWeight>
 {
 }
 
-void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable)
+void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalkerSeeds* seeds, EllpackMatrix<float>& mat, float* vec, const size_t* volumeIndexToRowTable, std::mutex& mat_mutex, std::mutex& vec_mutex)
 {
     tgtAssert(seeds, "no seed definer passed");
     tgtAssert(volumeIndexToRowTable, "no volumeIndexToRowTable passed");
@@ -85,9 +85,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+            std::unique_lock<std::mutex> lock(mat_mutex);
             mat.setValue(curRow, nRow, -weight);
         }
         else {
+            std::unique_lock<std::mutex> lock(vec_mutex);
             vec[curRow] += weight * seeds->getSeedValue(neighbor);
         }
 
@@ -103,9 +105,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+            std::unique_lock<std::mutex> lock(mat_mutex);
             mat.setValue(curRow, nRow, -weight);
         }
         else {
+            std::unique_lock<std::mutex> lock(vec_mutex);
             vec[curRow] += weight * seeds->getSeedValue(neighbor);
         }
 
@@ -123,9 +127,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+            std::unique_lock<std::mutex> lock(mat_mutex);
             mat.setValue(curRow, nRow, -weight);
         }
         else {
+            std::unique_lock<std::mutex> lock(vec_mutex);
             vec[curRow] += weight * seeds->getSeedValue(neighbor);
         }
 
@@ -141,9 +147,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+            std::unique_lock<std::mutex> lock(mat_mutex);
             mat.setValue(curRow, nRow, -weight);
         }
         else {
+            std::unique_lock<std::mutex> lock(vec_mutex);
             vec[curRow] += weight * seeds->getSeedValue(neighbor);
         }
 
@@ -161,9 +169,11 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+            std::unique_lock<std::mutex> lock(mat_mutex);
             mat.setValue(curRow, nRow, -weight);
         }
         else {
+            std::unique_lock<std::mutex> lock(vec_mutex);
             vec[curRow] += weight * seeds->getSeedValue(neighbor);
         }
 
@@ -179,15 +189,18 @@ void RandomWalkerWeights::processVoxel(const tgt::ivec3& voxel, const RandomWalk
         if (!seeds->isSeedPoint(neighbor)) {
             size_t nRow = volumeIndexToRowTable[neighborIndex];
             //tgtAssert(nRow >= 0 && nRow < numUnseeded_, "Invalid row");
+            std::unique_lock<std::mutex> lock(mat_mutex);
             mat.setValue(curRow, nRow, -weight);
         }
         else {
+            std::unique_lock<std::mutex> lock(vec_mutex);
             vec[curRow] += weight * seeds->getSeedValue(neighbor);
         }
 
         weightSum += weight;
     }
 
+    std::unique_lock<std::mutex> lock(mat_mutex);
     mat.setValue(curRow, curRow, weightSum);
 }
 

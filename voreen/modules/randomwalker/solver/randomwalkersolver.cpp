@@ -121,6 +121,8 @@ void RandomWalkerSolver::setupEquationSystem(ProgressReporter& progress) {
     // iterate over volume and compute edge weights for each voxel
     ThreadedTaskProgressReporter parallelProgress(progress, volDim_.z);
     bool aborted = false;
+    std::mutex mat_mutex;
+    std::mutex vec_mutex;
     #ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
     #endif
@@ -130,7 +132,7 @@ void RandomWalkerSolver::setupEquationSystem(ProgressReporter& progress) {
         }
         for (int y=0; y<volDim_.y; y++) {
             for (int x=0; x<volDim_.x; x++) {
-                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, volIndexToRow_);
+                edgeWeights_.processVoxel(tgt::ivec3(x, y, z), seeds_, mat_, vec_, volIndexToRow_, mat_mutex, vec_mutex);
             }
         }
         if(parallelProgress.reportStepDone()) {
