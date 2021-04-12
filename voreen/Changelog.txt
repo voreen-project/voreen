@@ -18,6 +18,7 @@ Voreen Changelog
       o Fix error in EnsembleVariance calculation
       o Writing VVD files no longer enforces derived data calculation
       o Fix manual loading of cached ensembles
+      o Fix synchronization issue in BrickPoolManagerMmap. This could cause the creation of sparse octrees using a homogenity threshold to hang.
 
 2021-01-28: Voreen 5.2.0
 ------------------------
