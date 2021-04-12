@@ -783,8 +783,7 @@ float VesselGraphEdge::getDistance() const {
 
 float VesselGraphEdge::getCurveness() const {
     if(getDistance() == 0) {
-        // This can happen in loops... Symbolicly set it to curveness to 0.
-        return 0.0f;
+        return std::numeric_limits<float>::infinity();
     } else {
         float curveness =  getLength()/getDistance();
         return curveness;
