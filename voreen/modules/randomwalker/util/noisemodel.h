@@ -123,10 +123,14 @@ inline float variance_of(const float* begin, const float* end, float mean) {
 // https://link.springer.com/chapter/10.1007%2F978-3-319-54427-4_41
 template<int filter_extent>
 struct RWNoiseModelTTest {
+    struct MeanMulAdd {
+        float mean;
+        float mul;
+        float add;
+    };
+
     VolumeAtomic<float> image;
-    VolumeAtomic<float> mean;
-    VolumeAtomic<float> add_const;
-    VolumeAtomic<float> mul_const;
+    std::vector<MeanMulAdd> mean_mul_add;
 
     RWNoiseModelTTest(RWNoiseModelTTest&&) = default;
 
@@ -136,21 +140,22 @@ struct RWNoiseModelTTest {
         VolumeAtomic<float> mean = meanFilter<filter_extent>(image);
         VolumeAtomic<float> variance = variances<filter_extent>(image, mean);
 
-        VolumeAtomic<float> add_const(image.getDimensions());
-        VolumeAtomic<float> mul_const(image.getDimensions());
-
+        std::vector<MeanMulAdd> mean_mul_add;
         size_t n = mean.getNumVoxels();
+        mean_mul_add.reserve(n);
+
         for(int i = 0; i<n; ++i) {
+            MeanMulAdd mma;
+            mma.mean = mean.voxel(i);
             float var = std::max(variance.voxel(i), 0.000001f);
-            add_const.voxel(i) = 0.5*std::log(var);
-            mul_const.voxel(i) = 0.5/var;
+            mma.add = 0.5*std::log(var);
+            mma.mul = 0.5/var;
+            mean_mul_add.push_back(mma);
         }
 
         return RWNoiseModelTTest {
             std::move(image),
-            std::move(mean),
-            std::move(add_const),
-            std::move(mul_const),
+            std::move(mean_mul_add),
         };
     }
     static RWNoiseModelTTest prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
@@ -205,7 +210,8 @@ struct RWNoiseModelTTest {
                         //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
                         // Instead of evaluating and maximizing the gaussian pdf (which
                         // is expensive) we minimize the log instead.
-                        float val = square(f-mean.voxel(l)) * mul_const.voxel(l) + add_const.voxel(l);
+                        const auto& mma = mean_mul_add[l];
+                        float val = square(f-mma.mean) * mma.mul + mma.add;
                         tgtAssert(std::isfinite(val) && !std::isnan(val), "invalid val");
                         if(min > val) {
                             min = val;
@@ -253,17 +259,17 @@ struct RWNoiseModelTTest {
         {
             size_t zBegin = begin1.z*sliceSize;
             size_t zEnd = end1.z*sliceSize;
-            for (int z = begin1.z; z < end1.z; ++z) {
+            for (size_t z = begin1.z; z < static_cast<int>(end1.z); ++z) {
 
                 size_t zIndex = sliceSize * z;
                 bool zIn = overlap_begin.z <= z && z < overlap_end.z;
 
-                for (int y = begin1.y; y < end1.y; ++y) {
+                for (size_t y = begin1.y; y < static_cast<int>(end1.y); ++y) {
 
                     size_t yIndex = zIndex + lineSize * y;
                     bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
 
-                    for (int x = begin1.x; x < end1.x; ++x) {
+                    for (size_t x = begin1.x; x < static_cast<int>(end1.x); ++x) {
                         bool xIn = yIn && overlap_begin.x <= x && x < overlap_end.x;
 
                         size_t i = yIndex + x;
@@ -288,12 +294,12 @@ struct RWNoiseModelTTest {
         {
             size_t zBegin = begin2.z*sliceSize;
             size_t zEnd = end2.z*sliceSize;
-            for (int z = begin2.z; z < end2.z; ++z) {
+            for (size_t z = begin2.z; z < static_cast<int>(end2.z); ++z) {
 
                 size_t zIndex = sliceSize * z;
                 bool zIn = overlap_begin.z <= z && z < overlap_end.z;
 
-                for (int y = begin2.y; y < end2.y; ++y) {
+                for (size_t y = begin2.y; y < static_cast<int>(end2.y); ++y) {
 
                     size_t yIndex = zIndex + lineSize * y;
                     bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
@@ -303,7 +309,7 @@ struct RWNoiseModelTTest {
 
                     size_t overlap_i_begin = yIndex + overlap_begin.x;
                     size_t overlap_i_end = yIndex + overlap_end.x;
-                    for (int i = iBegin; i < iEnd; ++i) {
+                    for (size_t i = iBegin; i < iEnd; ++i) {
                         bool xIn = yIn && overlap_i_begin <= i && i < overlap_i_end;
 
                         if(!xIn) {
@@ -318,13 +324,16 @@ struct RWNoiseModelTTest {
         }
 
 
-        std::sort(o_begin, o_cur, [&](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
-                return o1.second < o2.second;
-                });
-
         auto o1begin = o_begin;
         auto o1end = o_begin+std::distance(o_begin, o_cur)/2;
         auto o2end = o_cur;
+
+        //TODO: why doesn't nth element work here?
+        //std::nth_element(o1begin, o1end, o2end, [](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
+        std::sort(o1begin, o2end, [](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
+                return o1.second < o2.second;
+                });
+
 
         auto o = o1begin;
         for(; o!=o1end; ++o) {
