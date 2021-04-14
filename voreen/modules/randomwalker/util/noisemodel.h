@@ -104,13 +104,14 @@ inline float square(float s) {
 inline float variance_of(const float* begin, const float* end, float mean) {
 
     float sq_sum = 0.0f;
+    size_t n = std::distance(begin, end);
 #ifdef VRN_MODULE_OPENMP
 #pragma omp simd
 #endif
-    for(auto i = begin; i != end; ++i) {
-        sq_sum += square(mean-*i);
+    for(size_t i = 0; i<n; ++i) {
+        sq_sum += square(mean-begin[i]);
     }
-    float variance = sq_sum/(std::distance(begin, end)-1);
+    float variance = sq_sum/(n-1);
 
     return variance;
 };
@@ -140,7 +141,7 @@ struct RWNoiseModelTTest {
 
         size_t n = mean.getNumVoxels();
         for(int i = 0; i<n; ++i) {
-            float var = variance.voxel(i);
+            float var = std::max(variance.voxel(i), 0.000001f);
             add_const.voxel(i) = 0.5*std::log(var);
             mul_const.voxel(i) = 0.5/var;
         }
@@ -205,6 +206,7 @@ struct RWNoiseModelTTest {
                         // Instead of evaluating and maximizing the gaussian pdf (which
                         // is expensive) we minimize the log instead.
                         float val = square(f-mean.voxel(l)) * mul_const.voxel(l) + add_const.voxel(l);
+                        tgtAssert(std::isfinite(val) && !std::isnan(val), "invalid val");
                         if(min > val) {
                             min = val;
                             argmin_index = l;
@@ -213,8 +215,8 @@ struct RWNoiseModelTTest {
                 }
             }
             tgt::ivec3 argmin = linearCoordToCubic(argmin_index, dim);
+            tgtAssert(tgt::max(tgt::abs(p - argmin)) <= filter_extent, "invalid pos");
 
-            tgtAssert(min >= 0, "invalid probability");
             return argmin;
         };
 
@@ -228,7 +230,7 @@ struct RWNoiseModelTTest {
         tgt::ivec3 end2 = tgt::min(dim, best_center2 + tgt::ivec3::one + extent);
 
         tgt::ivec3 overlap_begin = tgt::max(begin1, begin2);
-        tgt::ivec3 overlap_end = tgt::min(end1, end2);
+        tgt::ivec3 overlap_end = tgt::max(tgt::min(end1, end2), overlap_begin);
 
         float sum1 = 0.0f;
         std::vector<float> n1final;
@@ -251,17 +253,17 @@ struct RWNoiseModelTTest {
         {
             size_t zBegin = begin1.z*sliceSize;
             size_t zEnd = end1.z*sliceSize;
-            for (size_t z = begin1.z; z < end1.z; ++z) {
+            for (int z = begin1.z; z < end1.z; ++z) {
 
                 size_t zIndex = sliceSize * z;
                 bool zIn = overlap_begin.z <= z && z < overlap_end.z;
 
-                for (size_t y = begin1.y; y < end1.y; ++y) {
+                for (int y = begin1.y; y < end1.y; ++y) {
 
                     size_t yIndex = zIndex + lineSize * y;
                     bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
 
-                    for (size_t x = begin1.x; x < end1.x; ++x) {
+                    for (int x = begin1.x; x < end1.x; ++x) {
                         bool xIn = yIn && overlap_begin.x <= x && x < overlap_end.x;
 
                         size_t i = yIndex + x;
@@ -286,12 +288,12 @@ struct RWNoiseModelTTest {
         {
             size_t zBegin = begin2.z*sliceSize;
             size_t zEnd = end2.z*sliceSize;
-            for (size_t z = begin2.z; z < end2.z; ++z) {
+            for (int z = begin2.z; z < end2.z; ++z) {
 
                 size_t zIndex = sliceSize * z;
                 bool zIn = overlap_begin.z <= z && z < overlap_end.z;
 
-                for (size_t y = begin2.y; y < end2.y; ++y) {
+                for (int y = begin2.y; y < end2.y; ++y) {
 
                     size_t yIndex = zIndex + lineSize * y;
                     bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
@@ -301,7 +303,7 @@ struct RWNoiseModelTTest {
 
                     size_t overlap_i_begin = yIndex + overlap_begin.x;
                     size_t overlap_i_end = yIndex + overlap_end.x;
-                    for (size_t i = iBegin; i < iEnd; ++i) {
+                    for (int i = iBegin; i < iEnd; ++i) {
                         bool xIn = yIn && overlap_i_begin <= i && i < overlap_i_end;
 
                         if(!xIn) {
