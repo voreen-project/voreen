@@ -1066,7 +1066,7 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
         // Don't continue calculating when eigenvalues get too small in relation to biggest eigenvalue.
         if(i >= static_cast<size_t>(numDimensions_.get()) && // We do have calculated at least as many PCs as we want to display.
         (eigenValue <= std::numeric_limits<float>::epsilon() || // Eigenvalue is de-facto zero.
-        (i > 0 && eigenValue < embedding.eigenvalues_[i - 1]))) // EV must not be smaller than predecessor.
+        (i > 0 && eigenValue > embedding.eigenvalues_[i - 1]))) // EV must be smaller than predecessor.
             break;
 
         EMVector.col(0) = eigenVector;
