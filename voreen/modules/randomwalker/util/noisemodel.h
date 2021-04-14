@@ -108,7 +108,8 @@ template<int filter_extent>
 struct RWNoiseModelTTest {
     VolumeAtomic<float> image;
     VolumeAtomic<float> mean;
-    VolumeAtomic<float> variance;
+    VolumeAtomic<float> add_const;
+    VolumeAtomic<float> mul_const;
 
     RWNoiseModelTTest(RWNoiseModelTTest&&) = default;
 
@@ -118,10 +119,21 @@ struct RWNoiseModelTTest {
         VolumeAtomic<float> mean = meanFilter<filter_extent>(image);
         VolumeAtomic<float> variance = variances<filter_extent>(image, mean);
 
+        VolumeAtomic<float> add_const(image.getDimensions());
+        VolumeAtomic<float> mul_const(image.getDimensions());
+
+        size_t n = mean.getNumVoxels();
+        for(int i = 0; i<n; ++i) {
+            float var = variance.voxel(i);
+            add_const.voxel(i) = 0.5*std::log(var);
+            mul_const.voxel(i) = 0.5/var;
+        }
+
         return RWNoiseModelTTest {
             std::move(image),
             std::move(mean),
-            std::move(variance),
+            std::move(add_const),
+            std::move(mul_const),
         };
     }
     static RWNoiseModelTTest prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
@@ -143,6 +155,9 @@ struct RWNoiseModelTTest {
             p2 = voxel;
         }
 
+        const int filter_size=2*filter_extent+1;
+        const int num_voxels_max = filter_size*filter_size*filter_size;
+
         const tgt::ivec3 dim(image.getDimensions());
 
         const tgt::ivec3 extent(filter_extent);
@@ -153,28 +168,20 @@ struct RWNoiseModelTTest {
             tgt::ivec3 begin = tgt::max(tgt::ivec3::zero, p - extent);
             tgt::ivec3 end = tgt::min(dim, p + tgt::ivec3::one + extent);
 
-            float best = 0.0f;
-            auto best_p = p;
+            float min = std::numeric_limits<float>::infinity();
+            auto argmin = p;
             VRN_FOR_EACH_VOXEL(n, begin, end) {
-                float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
-                if(best < pdf_val) {
-                    best = pdf_val;
-                    best_p = n;
+                //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
+                // Instead of evaluating and maximizing the gaussian pdf (which
+                // is expensive) we minimize the log instead.
+                float val = square(f-mean.voxel(n)) * mul_const.voxel(n) + add_const.voxel(n);
+                if(min > val) {
+                    min = val;
+                    argmin = n;
                 }
             }
-            tgtAssert(best > 0, "invalid probability");
-            return best_p;
-        };
-
-        auto neighborhood = [&] (tgt::ivec3 p) -> std::vector<tgt::ivec3> {
-            tgt::ivec3 begin = tgt::max(tgt::ivec3::zero, p - extent);
-            tgt::ivec3 end = tgt::min(dim, p + tgt::ivec3::one + extent);
-
-            std::vector<tgt::ivec3> out;
-            VRN_FOR_EACH_VOXEL(n, begin, end) {
-                out.push_back(n);
-            }
-            return out;
+            tgtAssert(min >= 0, "invalid probability");
+            return argmin;
         };
 
         auto mean_and_var = [&] (const std::vector<tgt::ivec3>& vals) -> std::pair<float, float> {
@@ -197,18 +204,36 @@ struct RWNoiseModelTTest {
         auto best_center1 = best_neighborhood(p1);
         auto best_center2 = best_neighborhood(p2);
 
-        auto neighborhood1 = neighborhood(best_center1);
-        auto neighborhood2 = neighborhood(best_center2);
+        tgt::ivec3 begin1 = tgt::max(tgt::ivec3::zero, best_center1 - extent);
+        tgt::ivec3 end1 = tgt::min(dim, best_center1 + tgt::ivec3::one + extent);
 
-        // Not required due to inherent order of values
-        //std::sort(neighborhood1.begin(), neighborhood1.end(), cmp_linear);
-        //std::sort(neighborhood2.begin(), neighborhood2.end(), cmp_linear);
+        tgt::ivec3 begin2 = tgt::max(tgt::ivec3::zero, best_center2 - extent);
+        tgt::ivec3 end2 = tgt::min(dim, best_center2 + tgt::ivec3::one + extent);
 
+        tgt::ivec3 overlap_begin = tgt::max(begin1, begin2);
+        tgt::ivec3 overlap_end = tgt::min(end1, end2);
+
+        std::vector<tgt::ivec3> n1final;
+        n1final.reserve(num_voxels_max);
+        std::vector<tgt::ivec3> n2final;
+        n2final.reserve(num_voxels_max);
         std::vector<tgt::ivec3> overlap;
-        std::set_intersection (
-                neighborhood1.begin(), neighborhood1.end(),
-                neighborhood2.begin(), neighborhood2.end(),
-                std::back_inserter(overlap), cmp_linear);
+        overlap.reserve(num_voxels_max);
+
+        VRN_FOR_EACH_VOXEL(n, begin1, end1) {
+            if(tgt::hand(tgt::greaterThanEqual(n, overlap_begin)) && tgt::hand(tgt::lessThan(n, overlap_end))) {
+                overlap.push_back(n);
+            } else {
+                n1final.push_back(n);
+            }
+        }
+
+        VRN_FOR_EACH_VOXEL(n, begin2, end2) {
+            if(!(tgt::hand(tgt::greaterThanEqual(n, overlap_begin)) && tgt::hand(tgt::lessThan(n, overlap_end)))) {
+                n2final.push_back(n);
+            }
+        }
+
 
         std::sort(overlap.begin(), overlap.end(), [&](const tgt::ivec3& o1, const tgt::ivec3& o2) {
                 return (tgt::distanceSq(p1, o1)-tgt::distanceSq(p2,o1)) < (tgt::distanceSq(p1, o2)-tgt::distanceSq(p2,o2));
@@ -218,19 +243,15 @@ struct RWNoiseModelTTest {
 
         auto o1begin = overlap.begin();
         auto o1end = overlap.begin()+overlap.size()/2;
-        auto o2begin = o1end;
         auto o2end = overlap.end();
 
-        std::vector<tgt::ivec3> o1(o1begin, o1end);
-        std::vector<tgt::ivec3> o2(o2begin, o2end);
-        std::sort(o1.begin(), o1.end(), cmp_linear);
-        std::sort(o2.begin(), o2.end(), cmp_linear);
-
-        std::vector<tgt::ivec3> n1final;
-        std::vector<tgt::ivec3> n2final;
-
-        std::set_difference(neighborhood1.begin(), neighborhood1.end(), o2.begin(), o2.end(), std::back_inserter(n1final), cmp_linear);
-        std::set_difference(neighborhood2.begin(), neighborhood2.end(), o1.begin(), o1.end(), std::back_inserter(n2final), cmp_linear);
+        auto o = o1begin;
+        for(; o!=o1end; ++o) {
+            n1final.push_back(*o);
+        }
+        for(; o!=o2end; ++o) {
+            n2final.push_back(*o);
+        }
 
         auto mv1 = mean_and_var(n1final);
         auto mv2 = mean_and_var(n2final);
