@@ -79,6 +79,8 @@ void SimilarityMatrixSource::loadSimilarityMatrix() {
         std::unique_ptr<SimilarityMatrixList> similarityMatrices(new SimilarityMatrixList());
 
         std::ifstream stream(filenameProp_.get());
+        if(!stream)
+            throw tgt::CorruptedFileException("Could not read file: " + filenameProp_.get());
         JsonDeserializer json;
         json.read(stream, false);
         Deserializer s(json);
