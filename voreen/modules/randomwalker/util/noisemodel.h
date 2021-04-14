@@ -28,6 +28,7 @@
 
 #include "tgt/assert.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/octree/octreeutils.h" // for index/position helper functions
 #include "preprocessing.h"
 #include <boost/math/special_functions/beta.hpp>
 
@@ -92,13 +93,28 @@ inline float square(float s) {
     return s*s;
 }
 
-inline float gaussian_pdf_exp(float val, float mean, float variance) {
-    return std::exp(-0.5f/variance * square(val-mean));
-}
+//inline float gaussian_pdf_exp(float val, float mean, float variance) {
+//    return std::exp(-0.5f/variance * square(val-mean));
+//}
+//
+//inline float gaussian_pdf(float val, float mean, float variance) {
+//    return gaussian_pdf_exp(val, mean, variance)/std::sqrt(2.0f * 3.141592654f* variance);
+//}
 
-inline float gaussian_pdf(float val, float mean, float variance) {
-    return gaussian_pdf_exp(val, mean, variance)/std::sqrt(2.0f * 3.141592654f* variance);
-}
+inline float variance_of(const float* begin, const float* end, float mean) {
+
+    float sq_sum = 0.0f;
+#ifdef VRN_MODULE_OPENMP
+#pragma omp simd
+#endif
+    for(auto i = begin; i != end; ++i) {
+        sq_sum += square(mean-*i);
+    }
+    float variance = sq_sum/(std::distance(begin, end)-1);
+
+    return variance;
+};
+
 
 // Parameter estimation according to
 //
@@ -160,6 +176,9 @@ struct RWNoiseModelTTest {
 
         const tgt::ivec3 dim(image.getDimensions());
 
+        const size_t sliceSize = dim.y*dim.x;
+        const size_t lineSize = dim.x;
+
         const tgt::ivec3 extent(filter_extent);
 
         auto best_neighborhood = [&] (tgt::ivec3 p) -> tgt::ivec3 {
@@ -169,36 +188,34 @@ struct RWNoiseModelTTest {
             tgt::ivec3 end = tgt::min(dim, p + tgt::ivec3::one + extent);
 
             float min = std::numeric_limits<float>::infinity();
-            auto argmin = p;
-            VRN_FOR_EACH_VOXEL(n, begin, end) {
-                //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
-                // Instead of evaluating and maximizing the gaussian pdf (which
-                // is expensive) we minimize the log instead.
-                float val = square(f-mean.voxel(n)) * mul_const.voxel(n) + add_const.voxel(n);
-                if(min > val) {
-                    min = val;
-                    argmin = n;
+            size_t argmin_index = 0;
+
+            size_t zBegin = begin.z*sliceSize;
+            size_t zEnd = end.z*sliceSize;
+            for (size_t z = zBegin; z < zEnd; z += sliceSize) {
+
+                size_t yBegin = z + begin.y*lineSize;
+                size_t yEnd = z + end.y*lineSize;
+                for (size_t y = yBegin; y < yEnd; y += lineSize) {
+
+                    size_t linearCoordBegin = y + begin.x;
+                    size_t linearCoordEnd = y + end.x;
+                    for (size_t l = linearCoordBegin; l < linearCoordEnd; ++l) {
+                        //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
+                        // Instead of evaluating and maximizing the gaussian pdf (which
+                        // is expensive) we minimize the log instead.
+                        float val = square(f-mean.voxel(l)) * mul_const.voxel(l) + add_const.voxel(l);
+                        if(min > val) {
+                            min = val;
+                            argmin_index = l;
+                        }
+                    }
                 }
             }
+            tgt::ivec3 argmin = linearCoordToCubic(argmin_index, dim);
+
             tgtAssert(min >= 0, "invalid probability");
             return argmin;
-        };
-
-        auto mean_and_var = [&] (const std::vector<tgt::ivec3>& vals) -> std::pair<float, float> {
-
-            float sum = 0.0f;
-            for(const auto& p : vals) {
-                sum += image.voxel(p);
-            }
-            float mean = sum/vals.size();
-
-            float sq_sum = 0.0f;
-            for(const auto& p : vals) {
-                sq_sum += square(mean-image.voxel(p));
-            }
-            float variance = sq_sum/(vals.size()-1);
-
-            return {mean, variance};
         };
 
         auto best_center1 = best_neighborhood(p1);
@@ -213,56 +230,120 @@ struct RWNoiseModelTTest {
         tgt::ivec3 overlap_begin = tgt::max(begin1, begin2);
         tgt::ivec3 overlap_end = tgt::min(end1, end2);
 
-        std::vector<tgt::ivec3> n1final;
+        float sum1 = 0.0f;
+        std::vector<float> n1final;
         n1final.reserve(num_voxels_max);
-        std::vector<tgt::ivec3> n2final;
+        float* n1_begin = n1final.data();
+        float* n1_cur = n1_begin;
+
+        float sum2 = 0.0f;
+        std::vector<float> n2final;
         n2final.reserve(num_voxels_max);
-        std::vector<tgt::ivec3> overlap;
-        overlap.reserve(num_voxels_max);
+        float* n2_begin = n2final.data();
+        float* n2_cur = n2_begin;
 
-        VRN_FOR_EACH_VOXEL(n, begin1, end1) {
-            if(tgt::hand(tgt::greaterThanEqual(n, overlap_begin)) && tgt::hand(tgt::lessThan(n, overlap_end))) {
-                overlap.push_back(n);
-            } else {
-                n1final.push_back(n);
+        size_t overlap_size = tgt::hmul(overlap_end - overlap_begin);
+        std::vector<std::pair<float, int>> overlap;
+        overlap.reserve(overlap_size);
+        auto* o_begin = overlap.data();
+        auto* o_cur = o_begin;
+
+        {
+            size_t zBegin = begin1.z*sliceSize;
+            size_t zEnd = end1.z*sliceSize;
+            for (size_t z = begin1.z; z < end1.z; ++z) {
+
+                size_t zIndex = sliceSize * z;
+                bool zIn = overlap_begin.z <= z && z < overlap_end.z;
+
+                for (size_t y = begin1.y; y < end1.y; ++y) {
+
+                    size_t yIndex = zIndex + lineSize * y;
+                    bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
+
+                    for (size_t x = begin1.x; x < end1.x; ++x) {
+                        bool xIn = yIn && overlap_begin.x <= x && x < overlap_end.x;
+
+                        size_t i = yIndex + x;
+                        float val = image.voxel(i);
+
+                        if(xIn) {
+                            tgt::ivec3 n(x,y,z);
+                            int weighted_dist = tgt::distanceSq(p1, n)-tgt::distanceSq(p2, n);
+                            //int weighted_dist = tgt::distanceSq(p1, n);
+                            *o_cur = std::make_pair(val,weighted_dist);
+                            ++o_cur;
+                        } else {
+                            *n1_cur = val;
+                            ++n1_cur;
+                            sum1 += val;
+                        }
+                    }
+                }
             }
         }
 
-        VRN_FOR_EACH_VOXEL(n, begin2, end2) {
-            if(!(tgt::hand(tgt::greaterThanEqual(n, overlap_begin)) && tgt::hand(tgt::lessThan(n, overlap_end)))) {
-                n2final.push_back(n);
+        {
+            size_t zBegin = begin2.z*sliceSize;
+            size_t zEnd = end2.z*sliceSize;
+            for (size_t z = begin2.z; z < end2.z; ++z) {
+
+                size_t zIndex = sliceSize * z;
+                bool zIn = overlap_begin.z <= z && z < overlap_end.z;
+
+                for (size_t y = begin2.y; y < end2.y; ++y) {
+
+                    size_t yIndex = zIndex + lineSize * y;
+                    bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
+
+                    size_t iBegin = yIndex + begin2.x;
+                    size_t iEnd = yIndex + end2.x;
+
+                    size_t overlap_i_begin = yIndex + overlap_begin.x;
+                    size_t overlap_i_end = yIndex + overlap_end.x;
+                    for (size_t i = iBegin; i < iEnd; ++i) {
+                        bool xIn = yIn && overlap_i_begin <= i && i < overlap_i_end;
+
+                        if(!xIn) {
+                            float val = image.voxel(i);
+                            *n2_cur = val;
+                            ++n2_cur;
+                            sum2 += val;
+                        }
+                    }
+                }
             }
         }
 
 
-        std::sort(overlap.begin(), overlap.end(), [&](const tgt::ivec3& o1, const tgt::ivec3& o2) {
-                return (tgt::distanceSq(p1, o1)-tgt::distanceSq(p2,o1)) < (tgt::distanceSq(p1, o2)-tgt::distanceSq(p2,o2));
-                //return tgt::distanceSq(p1, o1) < tgt::distanceSq(p1, o2);
-                //return dist_sq(p2, o1) > dist_sq(p2, o2);
+        std::sort(o_begin, o_cur, [&](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
+                return o1.second < o2.second;
                 });
 
-        auto o1begin = overlap.begin();
-        auto o1end = overlap.begin()+overlap.size()/2;
-        auto o2end = overlap.end();
+        auto o1begin = o_begin;
+        auto o1end = o_begin+std::distance(o_begin, o_cur)/2;
+        auto o2end = o_cur;
 
         auto o = o1begin;
         for(; o!=o1end; ++o) {
-            n1final.push_back(*o);
+            sum1 += o->first;
+            *n1_cur = o->first;
+            ++n1_cur;
         }
         for(; o!=o2end; ++o) {
-            n2final.push_back(*o);
+            sum2 += o->first;
+            *n2_cur = o->first;
+            ++n2_cur;
         }
+        float n1 = std::distance(n1_begin, n1_cur);
+        float n2 = std::distance(n2_begin, n2_cur);
 
-        auto mv1 = mean_and_var(n1final);
-        auto mv2 = mean_and_var(n2final);
-        float mean1 = mv1.first;
-        float mean2 = mv2.first;
+        float mean1 = sum1/n1;
+        float mean2 = sum2/n2;
+
         float min_variance = 0.000001;
-        float var1 = std::max(min_variance, mv1.second);
-        float var2 = std::max(min_variance, mv2.second);
-
-        float n1 = n1final.size();
-        float n2 = n2final.size();
+        float var1 = std::max(min_variance, variance_of(n1_begin, n1_cur, mean1));
+        float var2 = std::max(min_variance, variance_of(n2_begin, n2_cur, mean2));
 
         float sn1 = var1/n1;
         float sn2 = var2/n2;
