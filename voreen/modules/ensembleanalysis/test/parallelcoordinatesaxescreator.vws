@@ -32,7 +32,7 @@
                                 <paths>
                                     <item value="input/ensemble/aneurysm" />
                                     <item value="../test-data/voreen-testdata/input/ensemble/aneurysm" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/ensemble/aneurysm" />
                                 </paths>
                             </paths>
                         </Property>
@@ -114,10 +114,12 @@
                         </Property>
                         <Property mapKey="loadingStrategy" name="loadingStrategy" value="full" />
                         <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideFieldName" name="overrideFieldName" value="false" />
                         <Property mapKey="overrideTime" name="overrideTime" value="false" />
                         <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
+                        <Property mapKey="showProgressDialog" name="showProgressDialog" value="true" />
                         <Property mapKey="timeStepProgress" name="timeStepProgress" />
                     </Properties>
                     <Inports />
@@ -218,9 +220,11 @@
                                 </item>
                             </values>
                         </Property>
+                        <Property mapKey="property_required_memory" name="property_required_memory" value="4.5 MB" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
+                        <Property mapKey="sampleRegion" name="sampleRegion" value="common" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -358,9 +362,11 @@
                                 </item>
                             </values>
                         </Property>
+                        <Property mapKey="property_required_memory" name="property_required_memory" value="4.5 MB" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
+                        <Property mapKey="sampleRegion" name="sampleRegion" value="common" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
@@ -422,7 +428,7 @@
                                 <paths>
                                     <item value="output/parallelcoordinates.vpc" />
                                     <item value="../test-data/voreen-testdata/output/parallelcoordinates.vpc" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates.vpc" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/parallelcoordinates.vpc" />
                                 </paths>
                             </paths>
                         </Property>
@@ -448,7 +454,7 @@
                                 <paths>
                                     <item value="output/parallelcoordinates_aggregated.vpc" />
                                     <item value="../test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
                                 </paths>
                             </paths>
                         </Property>

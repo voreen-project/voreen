@@ -74,7 +74,7 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath )
         s.deserialize("fields", fields_);
         s.deserialize("axesLabels", axesLabels_);
         s.deserialize("timesteps", timesteps_);
-        s.deserialize("bounds", bounds_);
+        s.optionalDeserialize("bounds", bounds_, tgt::Bounds()); // Have been added later.
         s.deserialize("samples", samples_);
         s.deserialize("ranges", ranges_);
         try {

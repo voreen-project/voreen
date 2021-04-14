@@ -97,6 +97,12 @@ ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepar
 
     tgtAssert(volumes.size() == sectionData.sections.size(), "size mismatch");
 
+    // Bounds have been added later but old behavior was using common bounds.
+    tgt::Bounds bounds = sectionData.bounds;
+    if(!bounds.isDefined()) {
+        bounds = ensemble->getCommonBounds();
+    }
+
     // Create output volume.
     tgt::ivec3 newDims = outputDimensions_.get();
     std::unique_ptr<VolumeRAM_UInt8> outputVolume(new VolumeRAM_UInt8(newDims));
@@ -107,7 +113,7 @@ ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepar
 
     return ParallelCoordinatesVoxelSelectionInput{
             std::move(ensemble),
-            sectionData.bounds,
+            bounds,
             std::move(sectionData),
             std::move(volumes),
             std::move(outputVolume)
@@ -117,6 +123,7 @@ ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepar
 ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compute(ParallelCoordinatesVoxelSelectionInput input, ProgressReporter& progress) const {
 
     auto ensemble = std::move(input.ensemble);
+    auto ensembleBounds = input.bounds;
     auto sectionData = std::move(input.sectionData);
     auto volumes = std::move(input.inputVolumes);
 
@@ -134,10 +141,6 @@ ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compu
             }
         }
     }
-
-    // Define the bounds within the mask is sampled.
-    // Note: Must match bounds selected in ParallelCoordinateAxisCreator!
-    tgt::Bounds ensembleBounds = input.bounds;
 
     // In favor of memory caching, we iterate volumes first.
     for(size_t i=0; i<volumes.size(); i++) {
