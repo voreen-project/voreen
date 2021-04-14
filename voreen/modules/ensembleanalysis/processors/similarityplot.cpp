@@ -58,6 +58,7 @@ static const tgt::vec3 MAX_DURATION_COLOR(0.0f, 0.0f, 1.0f);
 static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
 static const float SELECTED_LINE_WIDTH = 6.0f;
 static const float UNSELECTED_LINE_WIDTH = 3.0f;
+static const float PICKING_LINE_WIDTH = SELECTED_LINE_WIDTH;
 
 const std::string SimilarityPlot::fontName_("Vera.ttf");
 const std::string SimilarityPlot::loggerCat_("voreen.ensembleanalysis.SimilarityPlot");
@@ -258,7 +259,7 @@ void SimilarityPlot::process() {
     // Render picking pass.
     pickingBuffer_.activateTarget();
     pickingBuffer_.clearTarget();
-    glLineWidth(7.0f);
+    glLineWidth(PICKING_LINE_WIDTH);
     renderingPass(true);
     pickingBuffer_.deactivateTarget();
 
@@ -558,7 +559,8 @@ void SimilarityPlot::renderEmbedding2D(bool picking) {
 
     for (int memberIdx : renderingOrder_) {
 
-        glLineWidth((subSelection_.count(memberIdx) != 0) ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
+        bool selected = (subSelection_.count(memberIdx) != 0);
+        glLineWidth(selected ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
 
         size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
         const auto& vertices = embedding.nVectors_.at(memberIdx);
@@ -574,7 +576,7 @@ void SimilarityPlot::renderEmbedding2D(bool picking) {
             size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
             tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
-            renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
+            renderSphere(position, color, selected);
         }
     }
 }
@@ -602,7 +604,8 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
 
     for (int memberIdx : renderingOrder_) {
 
-        glLineWidth((subSelection_.count(memberIdx) != 0) ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
+        bool selected = (subSelection_.count(memberIdx) != 0);
+        glLineWidth(selected ? SELECTED_LINE_WIDTH : UNSELECTED_LINE_WIDTH);
 
         size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
         const auto& vertices = embedding.nVectors_.at(memberIdx);
@@ -618,7 +621,7 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
             size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
             tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
-            renderTimeStepSelection(memberIdx, selectedTimeStep, position, color);
+            renderSphere(position, color, selected);
         }
     }
 
@@ -629,36 +632,27 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
     MatStack.loadIdentity();
 }
 
-void SimilarityPlot::renderTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const {
+void SimilarityPlot::renderSphere(const tgt::vec3& position, const tgt::vec3& color, bool drawBorder) const {
 
     // Skip rendering, if not visible anyways.
     if(sphereRadius_.get() <= std::numeric_limits<float>::epsilon())
         return;
 
+    // TODO: Draw using fragment shader!
+
     MatStack.pushMatrix();
     MatStack.translate(position);
     MatStack.scale(tgt::vec3(sphereRadius_.get()));
-
-    const EnsembleDataset* dataset = ensembleInport_.getData();
-    size_t numTimeSteps = dataset->getMembers()[memberIdx].getTimeSteps().size();
-
-    bool timeStepAvailable = timeStepIdx < numTimeSteps;
-    if(!timeStepAvailable) {
-        IMode.color(tgt::vec4(color, 0.5f));
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_BLEND);
+    /*
+    // TODO: currently not working.
+    if(drawBorder) {
+        IMode.color(tgt::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        sphere_.render(GL_TRIANGLES);
+        MatStack.scale(tgt::vec3(0.9f));
     }
-    else {
-        IMode.color(tgt::vec4(color, 1.0f));
-    }
-
+    */
+    IMode.color(tgt::vec4(color, 1.0f));
     sphere_.render(GL_TRIANGLES);
-
-    if(!timeStepAvailable) {
-        glDisable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ZERO);
-    }
-
     MatStack.popMatrix();
 }
 
@@ -837,9 +831,13 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 }
 
 void SimilarityPlot::onEvent(tgt::Event* e) {
-    tgt::MouseEvent* event = dynamic_cast<tgt::MouseEvent*>(e);
-    if (event) {
-        mouseEvent(event);
+
+    // Events will be triggered for RenderProcessors, even if the processor is not ready it seems.
+    if (isReady()) {
+        tgt::MouseEvent* event = dynamic_cast<tgt::MouseEvent*>(e);
+        if(event) {
+            mouseEvent(event);
+        }
     }
 
     RenderProcessor::onEvent(e);
@@ -905,7 +903,7 @@ void SimilarityPlot::adjustToEnsemble() {
 
     calculateButton_.setReadOnlyFlag(false);
 
-    if (autoCalculate_.get()) {
+    if (embeddings_.empty() && autoCalculate_.get()) {
         createEmbeddings();
     }
 }
@@ -930,28 +928,34 @@ void SimilarityPlot::createEmbeddings() {
         names.push_back(member.getName());
     }
 
-    calculateButton_.setReadOnlyFlag(true);
-    ensembleHash_.clear();
-    embeddings_.clear();
-
     const SimilarityMatrixList* matrices = similarityMatrixInport_.getData();
     std::vector<std::string> fieldNames = matrices->getFieldNames();
 
+    calculateButton_.setReadOnlyFlag(true);
+    ensembleHash_.clear();
+    embeddings_.resize(fieldNames.size());
+
     setProgress(0.0f);
-    for (size_t i=0; i<fieldNames.size(); i++) {
-        SubtaskProgressReporter progressReporter(*this, tgt::vec2(i, i+1) / tgt::vec2(fieldNames.size()));
+    ThreadedTaskProgressReporter progressReporter(*this, fieldNames.size());
+
+#ifdef VRN_MODULE_OPENMP
+    #pragma omp parallel for
+#endif
+    for (long i=0; i<static_cast<long>(fieldNames.size()); i++) {
 
         // Get distance matrix for current field.
         const SimilarityMatrix& distanceMatrix = matrices->getSimilarityMatrix(fieldNames[i]);
 
         // Compute Principal components and corresponding eigenvectors.
-        Embedding embedding = createEmbedding(distanceMatrix, progressReporter);
+        Embedding embedding = createEmbedding(distanceMatrix);
 
         // Add member name.
         embedding.names_ = names;
 
         // Add the result.
-        embeddings_.emplace_back(std::move(embedding));
+        embeddings_[i] = std::move(embedding);
+
+        progressReporter.reportStepDone();
     }
 
     // Finally, output eigen values to allow an eigen value analysis.
@@ -970,21 +974,20 @@ void SimilarityPlot::createEmbeddings() {
     invalidate();
 }
 
-SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix& distanceMatrix, ProgressReporter& progressReporter, float epsilon) const {
+SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix& distanceMatrix, float epsilon) const {
     using namespace Eigen;
-
-    progressReporter.setProgress(0.1f);
 
     const std::vector<EnsembleMember>& members = ensembleInport_.getData()->getMembers();
 
     const size_t numDimensions = numEigenvalues_.get();
     const int numIterations = numIterations_.get();
     const size_t numMembers = members.size();
+    const std::set<int> selection(subSelection_); // Copy selection for thread safety.
 
     Embedding embedding;
 
     size_t numPoints = 0;
-    for(int memberIdx : subSelection_) {
+    for(int memberIdx : selection) {
         size_t numTimeSteps = members[memberIdx].getTimeSteps().size();
         numPoints += numTimeSteps;
         embedding.nVectors_[memberIdx] = std::vector<std::vector<float>>(numTimeSteps, std::vector<float>(numDimensions, 0.0f));
@@ -1003,11 +1006,11 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
         size_t offsetB = 0;
         size_t positionB = 0;
         size_t numTimeStepsA = members[memberIdxA].getTimeSteps().size();
-        if(subSelection_.count(memberIdxA) != 0) { // Do we consider member A?
+        if(selection.count(memberIdxA) != 0) { // Do we consider member A?
             // Again iterate each member, call it B. Now looking at pairs of member A and B.
             for(size_t memberIdxB=0; memberIdxB<=memberIdxA; memberIdxB++) {
                 size_t numTimeStepsB = members[memberIdxB].getTimeSteps().size();
-                if (subSelection_.count(memberIdxB) != 0) { // Do we consider member B?
+                if (selection.count(memberIdxB) != 0) { // Do we consider member B?
                     // Iterate time steps of member A.
                     for (size_t i = 0; i < numTimeStepsA; i++) {
                         // Iterate time steps of member B.
@@ -1032,7 +1035,6 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
 
     VectorXf* eigenVectors = new VectorXf[numDimensions];
 
-    progressReporter.setProgress(0.1f);
     for(size_t i=0; i < numDimensions; i++) {
 
         VectorXf& eigenVector = eigenVectors[i];
@@ -1071,8 +1073,6 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
         result.col(i) = eigenVector;
         EigSq(i, i) = std::sqrt(eigenValue);
         embedding.eigenvalues_.push_back(eigenValue);
-
-        progressReporter.setProgress(0.1f + 0.8f * i / numDimensions);
     }
     delete [] eigenVectors;
 
@@ -1093,7 +1093,7 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
 
         // Interpret as member and time steps.
         size_t j=0;
-        for (int memberIdx : subSelection_) {
+        for (int memberIdx : selection) {
             for(size_t t=0; t<members[memberIdx].getTimeSteps().size(); t++) {
                 float value = mapRange(result(j, i), minValue, maxValue, -1.0f, 1.0f);
                 embedding.nVectors_[memberIdx][t][i] = value;
@@ -1101,8 +1101,6 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
             }
         }
     }
-
-    progressReporter.setProgress(1.0f);
 
     return embedding;
 }

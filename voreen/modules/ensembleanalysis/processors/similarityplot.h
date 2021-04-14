@@ -153,11 +153,11 @@ private:
     void renderEmbedding3D(bool picking);
     void renderAxes();
     void renderTooltip() const;
-    void renderTimeStepSelection(size_t memberIdx, size_t timeStepIdx, const tgt::vec3& position, const tgt::vec3& color) const;
+    void renderSphere(const tgt::vec3& position, const tgt::vec3& color, bool drawBorder) const;
     tgt::vec3 getColor(size_t memberIdx, size_t timeStepIdx, bool picking) const;
 
     void createEmbeddings();
-    Embedding createEmbedding(const SimilarityMatrix& distanceMatrix, ProgressReporter& progressReporter, float epsilon = 0.0f) const;
+    Embedding createEmbedding(const SimilarityMatrix& distanceMatrix, float epsilon = 0.0f) const;
 
     void outputEigenValues();
     void renderedMembersChanged();
