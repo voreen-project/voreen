@@ -72,6 +72,9 @@ protected:
         printEnsemble_.setDescription("Creates a HTML overview sheet for the currently loaded ensemble");
         colorMap_.setDescription("Color map from which a unique color for each member is derived sequentially.");
         overrideTime_.setDescription("This will assign sequential integer time steps to the ensemble members");
+        overrideFieldName_.setDescription("This will enumerate the field name for each file. "
+                                          "Enable this feature if your fields don't have names/modalities assigned however "
+                                          "the order of fields between files must be identical to work as expected");
     }
 
     void process();
@@ -99,6 +102,8 @@ protected:
     FileDialogProperty printEnsemble_;
     ColorMapProperty colorMap_;
     BoolProperty overrideTime_;
+    BoolProperty overrideFieldName_;
+    BoolProperty showProgressDialog_;
     StringProperty hash_;
     ButtonProperty clearCache_;
 

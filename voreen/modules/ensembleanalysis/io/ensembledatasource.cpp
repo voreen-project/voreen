@@ -48,9 +48,11 @@ EnsembleDataSource::EnsembleDataSource()
     , memberProgress_("memberProgress", "Members loaded")
     , timeStepProgress_("timeStepProgress", "Time Steps loaded")
     , loadedMembers_("loadedMembers", "Loaded Members", 5)
-    , printEnsemble_("printEnsemble", "Print Ensemble", "Print Ensemble", "", "HTML (*.html)", FileDialogProperty::SAVE_FILE)
-    , colorMap_("colorMap", "Color Map")
+    , printEnsemble_("printEnsemble", "Print Ensemble", "Print Ensemble", "", "HTML (*.html)", FileDialogProperty::SAVE_FILE, Processor::VALID)
+    , colorMap_("colorMap", "Color Map", ColorMap::createPET(), Processor::VALID)
     , overrideTime_("overrideTime", "Override Time", false, Processor::VALID, Property::LOD_ADVANCED)
+    , overrideFieldName_("overrideFieldName", "Override Field Name", false, Processor::VALID, Property::LOD_ADVANCED)
+    , showProgressDialog_("showProgressDialog", "Show Progress Dialog", true, Processor::VALID, Property::LOD_DEBUG)
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
     , clearCache_("clearCache", "Clear Cache", Processor::VALID, Property::LOD_ADVANCED)
 {
@@ -83,12 +85,20 @@ EnsembleDataSource::EnsembleDataSource()
 
     addProperty(colorMap_);
     std::vector<tgt::Color> colors;
-    colors.push_back(tgt::Color(0.0f, 0.0f, 1.0f, 1.0f));
-    colors.push_back(tgt::Color(1.0f, 0.0f, 0.0f, 1.0f));
-    colors.push_back(tgt::Color(1.0f, 1.0f, 0.0f, 1.0f));
+    // This is an alternative color map used for the deep water asteroid impact ensemble.
+    colors.emplace_back(tgt::Color(230,  25,  75, 255)/255.0f);
+    colors.emplace_back(tgt::Color( 60, 180,  75, 255)/255.0f);
+    colors.emplace_back(tgt::Color(255, 225,  25, 255)/255.0f);
+    colors.emplace_back(tgt::Color(  0, 130, 200, 255)/255.0f);
+    colors.emplace_back(tgt::Color(245, 130,  48, 255)/255.0f);
+    colors.emplace_back(tgt::Color(145,  30, 180, 255)/255.0f);
+    colors.emplace_back(tgt::Color( 70, 240, 240, 255)/255.0f);
+    colors.emplace_back(tgt::Color( 0, 0, 0, 255)/255.0f); // Needs to be added since colormap iterators are implemented weirdly.
     colorMap_.set(ColorMap::createFromVector(colors));
 
     addProperty(overrideTime_);
+    addProperty(overrideFieldName_);
+    addProperty(showProgressDialog_);
     addProperty(hash_);
     hash_.setEditable(false);
 
@@ -142,7 +152,22 @@ void EnsembleDataSource::buildEnsembleDataset() {
     EnsembleVolumeReaderPopulator populator;
     ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(members.size());
 
-    for(const std::string& member : members) {
+    for(size_t i=0; i<members.size(); i++) {
+
+        const std::string& member = members[i];
+
+        std::unique_ptr<ProgressBar> progressDialog;
+        if (showProgressDialog_.get() && VoreenApplication::app()) {
+            progressDialog.reset(VoreenApplication::app()->createProgressDialog());
+        }
+        if (progressDialog) {
+            progressDialog->setTitle("Loading Member " + std::to_string(i+1) + "/" + std::to_string(members.size()));
+            progressDialog->setProgressMessage("Loading " + member + " ...");
+            progressDialog->show();
+            progressDialog->setProgress(0.f);
+            progressDialog->forceUpdate();
+        }
+
         std::string memberPath = ensemblePath_.get() + "/" + member;
         std::vector<std::string> fileNames = tgt::FileSystem::readDirectory(memberPath, true, false);
 
@@ -172,7 +197,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
             bool timeIsSet = false;
 
             std::vector<VolumeURL> subURLs = reader->listVolumes(url);
-            for(const VolumeURL& subURL : subURLs) {
+            for(size_t k = 0; k<subURLs.size(); k++) {
+                const VolumeURL& subURL = subURLs[k];
+
                 std::unique_ptr<VolumeBase> volumeHandle;
                 try {
                     volumeHandle.reset(reader->read(subURL));
@@ -194,7 +221,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     }
                     else {
                         currentTime = 1.0f * timeSteps.size();
-                        LWARNING("Actual time information not found for time step " << timeSteps.size() << " of member " << member);
+                        LWARNING("No time step information found for time step " << timeSteps.size() << " of member " << member);
                     }
                 }
                 else {
@@ -206,18 +233,24 @@ void EnsembleDataSource::buildEnsembleDataset() {
                     timeIsSet = true;
                 }
                 else if (currentTime != time) {
-                    LWARNING("Time stamp not equal channel-wise for t=" << timeSteps.size() << " of member " << member);
+                    LWARNING("Time stamp not equal field-wise for " << subURL.getURL());
                 }
 
                 std::string fieldName;
-                if(volumeHandle->hasMetaData(NAME_FIELD_NAME)) { // deprecated
-                    fieldName = volumeHandle->getMetaData(NAME_FIELD_NAME)->toString();
-                }
-                else if(volumeHandle->hasMetaData(SCALAR_FIELD_NAME)) { // deprecated
-                    fieldName = volumeHandle->getMetaData(SCALAR_FIELD_NAME)->toString();
+                if(!overrideFieldName_.get()) {
+                    if (volumeHandle->hasMetaData(NAME_FIELD_NAME)) { // deprecated
+                        fieldName = volumeHandle->getMetaData(NAME_FIELD_NAME)->toString();
+                    } else if (volumeHandle->hasMetaData(SCALAR_FIELD_NAME)) { // deprecated
+                        fieldName = volumeHandle->getMetaData(SCALAR_FIELD_NAME)->toString();
+                    } else if (volumeHandle->hasMetaData(VolumeBase::META_DATA_NAME_MODALITY)) {
+                        fieldName = volumeHandle->getModality().getName();
+                    } else {
+                        fieldName = "field_" + std::to_string(k);
+                        LWARNING("No field name information found for field " << k << " in " << subURL.getURL());
+                    }
                 }
                 else {
-                    fieldName = volumeHandle->getModality().getName();
+                    fieldName = "field_" + std::to_string(k);
                 }
 
                 volumeData[fieldName] = volumeHandle.get();
@@ -236,7 +269,11 @@ void EnsembleDataSource::buildEnsembleDataset() {
             timeSteps.emplace_back(TimeStep{volumeData, time, duration});
 
             // Update progress bar.
-            timeStepProgress_.setProgress(std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f));
+            float progress = std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f);
+            timeStepProgress_.setProgress(progress);
+            if(progressDialog) {
+                progressDialog->setProgress(progress);
+            }
         }
 
         auto timeStepCompare = [] (const TimeStep& t1, const TimeStep& t2) {
@@ -251,6 +288,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
         // Update progress bar.
         setProgress(getProgress() + progressPerMember);
+        if(progressDialog) {
+            progressDialog->hide();
+        }
     }
 
     hash_.set(EnsembleHash(*dataset).getHash());
