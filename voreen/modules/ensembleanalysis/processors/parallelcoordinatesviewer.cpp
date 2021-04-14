@@ -1026,26 +1026,21 @@ void ParallelCoordinatesViewer::updateTransferFunction( size_t index )
 void ParallelCoordinatesViewer::serialize(Serializer& s) const {
     RenderProcessor::serialize(s);
 
+/*
     s.serialize("uniformBufferVec", _uniformBufferVec);
-//    std::vector<std::vector<tgt::vec2>> sections;
-//    for(const auto& vec : _sections) {
-//        sections.emplace_back(std::vector<tgt::vec2>(vec.begin(), vec.end()));
-//    }
     s.serialize("sections", _sections);
-    s.serialize("samplesVisiblity", _samplesVisiblity);
+    s.serialize("samplesVisiblity", _samplesVisiblity); // Does not compile, why?
     s.serialize("samplesSelection", _samplesSelection);
+*/
 }
 void ParallelCoordinatesViewer::deserialize(Deserializer& s) {
     RenderProcessor::deserialize(s);
-
+/*
     s.deserialize("uniformBufferVec", _uniformBufferVec);
-//    std::vector<std::vector<tgt::vec2>> sections;
     s.deserialize("sections", _sections);
-//    for(const auto& vec : sections) {
-//        _sections.emplace_back(std::list<tgt::vec2>(vec.begin(), vec.end()));
-//    }
-    s.deserialize("samplesVisiblity", _samplesVisiblity);
+    s.deserialize("samplesVisiblity", _samplesVisiblity); // Does not compile, why?
     s.deserialize("samplesSelection", _samplesSelection);
+*/
 }
 
 float ParallelCoordinatesViewer::screenAxisToCoordinate( size_t axis ) const
