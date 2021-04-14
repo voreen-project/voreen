@@ -9,6 +9,7 @@ Voreen Changelog
       o Enable writing of out-of-core datasets to VVD files
       o Add (opt-out) progress dialog to EnsembleDataSource
       o Enable loading of ensembles with multiple unnamed fields by assigning trivial unique names
+      o Add EnsembleTimeStepLinker allowing to link time between ParallelCoordinatesViewer and EnsembleFilter
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type

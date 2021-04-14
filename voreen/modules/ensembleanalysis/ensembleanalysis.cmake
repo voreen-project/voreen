@@ -41,6 +41,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/ensemblefilter.cpp
     ${MOD_DIR}/processors/ensembleinformation.cpp
     ${MOD_DIR}/processors/ensemblemeancreator.cpp
+    ${MOD_DIR}/processors/ensembletimesteplinker.cpp
     ${MOD_DIR}/processors/ensemblevolumeextractor.cpp
     ${MOD_DIR}/processors/ensemblevarianceanalysis.cpp
     ${MOD_DIR}/processors/metadataadder.cpp
@@ -87,6 +88,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/ensemblefilter.h
     ${MOD_DIR}/processors/ensembleinformation.h
     ${MOD_DIR}/processors/ensemblemeancreator.h
+    ${MOD_DIR}/processors/ensembletimesteplinker.h
     ${MOD_DIR}/processors/ensemblevolumeextractor.h
     ${MOD_DIR}/processors/ensemblevarianceanalysis.h
     ${MOD_DIR}/processors/metadataadder.h

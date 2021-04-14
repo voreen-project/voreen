@@ -34,6 +34,7 @@
 #include "processors/ensemblefilter.h"
 #include "processors/ensembleinformation.h"
 #include "processors/ensemblemeancreator.h"
+#include "processors/ensembletimesteplinker.h"
 #include "processors/ensemblevarianceanalysis.h"
 #include "processors/ensemblevolumeextractor.h"
 #include "processors/metadataadder.h"
@@ -77,6 +78,7 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
 
     // Misc
     registerProcessor(new EnsembleInformation());
+    registerProcessor(new EnsembleTimeStepLinker());
     registerProcessor(new EnsembleVolumeExtractor());
     registerProcessor(new MetaDataAdder());
 
