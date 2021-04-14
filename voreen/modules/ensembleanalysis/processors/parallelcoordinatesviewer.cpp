@@ -64,6 +64,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
         static_cast<tgt::MouseEvent::MouseButtons>( tgt::MouseEvent::MOUSE_BUTTON_LEFT | tgt::MouseEvent::MOUSE_BUTTON_RIGHT ),
         tgt::MouseEvent::ACTION_ALL, tgt::Event::MODIFIER_NONE, false, true ) )
     , _propertySelectedMember( "property_selected_member", "Member", Processor::VALID, true )
+    , _propertySelectedMemberIntern( "property_selected_member_intern", "Selected Member (Linking)", Processor::VALID )
     , _propertyVisualizationMode( "property_visualization_mode", "Visualization", Processor::VALID, true )
     , _propertySelectedTimestep( "property_selected_timestep", "Timestep", 0, 0, std::numeric_limits<int>::max(), Processor::VALID )
     , _propertySelectedField( "property_selected_field", "Field", Processor::VALID, true )
@@ -83,41 +84,43 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     , _indexBuffer(0)
 {
     // --- Initialize Ports --- //
-    this->addPort( _axesport );
-    this->addPort( _renderport );
+    addPort( _axesport );
+    addPort( _renderport );
 
     // --- Initialize Event Properties --- //
-    this->addEventProperty( _eventPropertyHover.get() );
-    this->addEventProperty( _eventPropertyMouse.get() );
+    addEventProperty( _eventPropertyHover.get() );
+    addEventProperty( _eventPropertyMouse.get() );
 
     // --- Add Properties --- //
-    this->addProperty( _propertySelectedMember );
-    this->addProperty( _propertyVisualizationMode );
+    addProperty( _propertySelectedMember );
+    addProperty(_propertySelectedMemberIntern);
+    addProperty( _propertyVisualizationMode );
 
-    this->addProperty( _propertySelectedTimestep );
-    this->addProperty( _propertySelectedField );
-    this->addProperty( _propertyFieldInterval );
+    addProperty( _propertySelectedTimestep );
+    addProperty( _propertySelectedField );
+    addProperty( _propertyFieldInterval );
 
-    this->addProperty( _propertyDensityBlending );
-    this->addProperty( _propertyDensityVisibleSamples );
-    this->addProperty( _propertyDensitySelectedSamples );
+    addProperty( _propertyDensityBlending );
+    addProperty( _propertyDensityVisibleSamples );
+    addProperty( _propertyDensitySelectedSamples );
 
     for( size_t i = 0; i < _propertyTransFuncField.size(); ++i )
     {
         // _propertyTransFuncField[i] = IntOptionProperty( "property_trans_func_field" + std::to_string( i ), "Transfer Function Field", Processor::VALID );
-        this->addProperty( _propertyTransFuncField[i] );
+        addProperty( _propertyTransFuncField[i] );
 
         _propertyTransFunc[i] = TransFunc1DKeysProperty( "property_trans_func" + std::to_string( i ), "Transfer Function", Processor::VALID );
-        this->addProperty( _propertyTransFunc[i] );
+        addProperty( _propertyTransFunc[i] );
 
         _propertyTransFuncIntern[i] = TransFunc1DKeysProperty( "property_trans_func_intern" + std::to_string( i ), "Transfer Function (Linking)", Processor::VALID );
-        this->addProperty( _propertyTransFuncIntern[i] );
+        addProperty( _propertyTransFuncIntern[i] );
     }
 
-    this->addProperty( _propertySelectedSamples );
-    this->addProperty( _propertySections );
+    addProperty( _propertySelectedSamples );
+    addProperty( _propertySections );
 
     // --- Initialize Properties --- //
+    _propertySelectedMemberIntern.setVisibleFlag(false);
     _propertyVisualizationMode.setOptions( std::deque<Option<int>> {
         Option<int>( "fields", "Single Time Step", 0 ),
         Option<int>( "timesteps", "All Time Steps", 1 )
@@ -132,26 +135,28 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
     _propertySelectedMember.onChange( LambdaFunctionCallback( [this]
     {
         if( !_axesport.hasData() ) return;
-        this->updateSampleStates();
-        this->invalidate();
+
+        _propertySelectedMemberIntern.setSelectedRowIndices(std::vector<int>{_propertySelectedMember.getValue()});
+        updateSampleStates();
+        invalidate();
     } ) );
     _propertyVisualizationMode.onChange( LambdaFunctionCallback( [this]
     {
         if( !_axesport.hasData() ) return;
         // TODO: Extend ParallelCoordinatesVoxelSelection for time visualization mode.
         if (_propertyVisualizationMode.getValue() && !_propertySections.getLinks().empty()) {
-            LERROR("Currently, brushing on multiple axis and linking with ParallelCoordinatesVoxelSelection is not supported. "
+            LWARNING("Currently, brushing on multiple axis and linking with ParallelCoordinatesVoxelSelection is not supported. "
                    "Links will not be executed...");
         }
-        this->onNewInportData();
-        this->invalidate();
+        onNewInportData();
+        invalidate();
 
     } ) );
     _propertySelectedTimestep.onChange( LambdaFunctionCallback( [this]
     {
         if( !_axesport.hasData() ) return;
-        this->updateSampleStates();
-        this->invalidate();
+        updateSampleStates();
+        invalidate();
     } ) );
     _propertySelectedField.onChange( LambdaFunctionCallback( [this]
     {
@@ -182,9 +187,9 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
             glUseProgram( 0 );
 
             for( auto& sections : _sections ) sections.clear();
-            this->updateSampleStates();
+            updateSampleStates();
 
-            this->invalidate();
+            invalidate();
         }
         else
         {
@@ -218,7 +223,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
 
             for( size_t i = 0; i < _propertyTransFuncField.size(); ++i )
                 if( _propertyTransFuncField[i].getValue() == axisIndex )
-                    this->updateTransferFunction( i );
+                    updateTransferFunction( i );
         }
 
         // Update uniform buffer
@@ -226,12 +231,12 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
         glUniform3fv( glGetUniformLocation( _shaderProgram, "axes" ), static_cast<GLsizei>( _uniformBufferVec.size() ), reinterpret_cast<const GLfloat*>( _uniformBufferVec.data() ) );
         glUseProgram( 0 );
 
-        this->updateSampleStates();
-        this->invalidate();
+        updateSampleStates();
+        invalidate();
     } ) );
-    _propertyDensityBlending.onChange( LambdaFunctionCallback( [this] { if( _axesport.hasData() ) this->invalidate(); } ) );
-    _propertyDensityVisibleSamples.onChange( LambdaFunctionCallback( [this] { if( _axesport.hasData() ) this->invalidate(); } ) );
-    _propertyDensitySelectedSamples.onChange( LambdaFunctionCallback( [this] { if( _axesport.hasData() ) this->invalidate(); } ) );
+    _propertyDensityBlending.onChange( LambdaFunctionCallback( [this] { if( _axesport.hasData() ) invalidate(); } ) );
+    _propertyDensityVisibleSamples.onChange( LambdaFunctionCallback( [this] { if( _axesport.hasData() ) invalidate(); } ) );
+    _propertyDensitySelectedSamples.onChange( LambdaFunctionCallback( [this] { if( _axesport.hasData() ) invalidate(); } ) );
     for( size_t i = 0; i < _propertyTransFuncField.size(); ++i )
     {
         _propertyTransFuncField[i].onChange( LambdaFunctionCallback( [this, i]
@@ -239,7 +244,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
             if( !_axesport.hasData() ) return;
             if( _propertyTransFuncField[i].getValue() >= 0 )
             {
-                this->updateTransferFunction( i );
+                updateTransferFunction( i );
             }
             else
             {
@@ -254,7 +259,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
         _propertyTransFunc[i].onChange( LambdaFunctionCallback( [this, i]
         {
             if( !_axesport.hasData() ) return;
-            this->updateTransferFunction( i );
+            updateTransferFunction( i );
         } ) );
     }
     _propertySelectedSamples.onChange( LambdaFunctionCallback( [this]
@@ -266,7 +271,7 @@ ParallelCoordinatesViewer::ParallelCoordinatesViewer()
 
         _samplesSelection = values;
         for( auto& sections : _sections ) sections.clear();
-        this->invalidate();
+        invalidate();
     } ) );
 }
 
@@ -360,7 +365,8 @@ void ParallelCoordinatesViewer::deinitialize()
 void ParallelCoordinatesViewer::process()
 {
     const auto axes = _axesport.getData();
-    const auto axisCount = _propertyVisualizationMode.getValue() ? axes->timesteps() : axes->fields();
+    const bool axesAreTimeSteps = _propertyVisualizationMode.getValue() != 0;
+    const auto axisCount = axesAreTimeSteps ? axes->timesteps() : axes->fields();
 
     // --- Clear Background --- //
     _renderport.activateTarget();
@@ -372,7 +378,7 @@ void ParallelCoordinatesViewer::process()
     glDisable( GL_DEPTH_TEST );
     glEnable( GL_BLEND );
 
-    const auto offset = _propertyVisualizationMode.getValue() ? reinterpret_cast<const void*>( _propertySelectedMember.getValue() * axes->getStrideMember() ) : reinterpret_cast<const void*>( _propertySelectedMember.getValue() * axes->getStrideMember() + _propertySelectedTimestep.get() * axes->getStrideTimestep() );
+    const auto offset = axesAreTimeSteps ? reinterpret_cast<const void*>( _propertySelectedMember.getValue() * axes->getStrideMember() ) : reinterpret_cast<const void*>( _propertySelectedMember.getValue() * axes->getStrideMember() + _propertySelectedTimestep.get() * axes->getStrideTimestep() );
     glBindVertexArray( _vertexArray );
     glEnableVertexAttribArray( 0 );
     glBindBuffer( GL_ARRAY_BUFFER, axes->getVertexBuffer() );
@@ -383,7 +389,7 @@ void ParallelCoordinatesViewer::process()
     glUniform4f( glGetUniformLocation( _shaderProgram, "color" ), 0.259f, 0.529f, 0.961f, 0.8f / _propertyDensityVisibleSamples.get() );
     for( size_t i = 0; i < axes->samples(); ++i )  if( _samplesVisiblity[i] && !_samplesSelection[i] )
     {
-        const auto baseVertex = _propertyVisualizationMode.getValue() ? static_cast<GLint>( _propertySelectedField.getValue() + i * axes->fields() ) : static_cast<GLint>( i * axes->fields() );
+        const auto baseVertex = axesAreTimeSteps ? static_cast<GLint>( _propertySelectedField.getValue() + i * axes->fields() ) : static_cast<GLint>( i * axes->fields() );
         glDrawElementsBaseVertex( GL_LINE_STRIP, static_cast<GLsizei>( axisCount ), GL_UNSIGNED_INT, nullptr, baseVertex );
     }
 
@@ -412,7 +418,7 @@ void ParallelCoordinatesViewer::process()
     glUniform4f( glGetUniformLocation( _shaderProgram, "color" ), 0.922f, 0.251f, 0.204f, 0.8f / _propertyDensitySelectedSamples.get() );
     for( size_t i = 0; i < axes->samples(); ++i ) {
         if (_samplesVisiblity[i] && _samplesSelection[i]) {
-            const auto baseVertex = _propertyVisualizationMode.getValue() ? static_cast<GLint>(
+            const auto baseVertex = axesAreTimeSteps ? static_cast<GLint>(
                     _propertySelectedField.getValue() + i * axes->fields()) : static_cast<GLint>( i * axes->fields());
             glDrawElementsBaseVertex(GL_LINE_STRIP, static_cast<GLsizei>( axisCount ), GL_UNSIGNED_INT, nullptr,
                                      baseVertex);
@@ -426,9 +432,18 @@ void ParallelCoordinatesViewer::process()
     // --- Draw Axes & Top Boundary --- //
     IMode.begin( tgt::ImmediateMode::LINES );
     glEnable( GL_LINE_SMOOTH );
-    glLineWidth( 3.0f );
 
-    IMode.color( 0.0f, 0.0f, 0.0f, 1.0f );
+    glLineWidth(3.0f);
+    IMode.vertex(-1.0f, Y_LIMIT );
+    IMode.vertex(1.0f, Y_LIMIT );
+
+    if(axesAreTimeSteps) {
+        glLineWidth( 1.0f );
+        IMode.color( 0.0f, 0.0f, 0.0f, 0.5f );
+    }
+    else {
+        IMode.color(0.0f, 0.0f, 0.0f, 1.0f);
+    }
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto x = _uniformBufferVec[i].x;
@@ -465,8 +480,8 @@ void ParallelCoordinatesViewer::process()
     // --- Draw active section --- //
     if( _interaction == Interaction::eSelection && _hoveredScreenAxis != ~0u )
     {
-        const auto index = _propertyVisualizationMode.getValue() ? _hoveredScreenAxis : _indexBufferVec[_hoveredScreenAxis];
-        const auto x = this->screenAxisToCoordinate( _hoveredScreenAxis );
+        const auto index = axesAreTimeSteps ? _hoveredScreenAxis : _indexBufferVec[_hoveredScreenAxis];
+        const auto x = screenAxisToCoordinate( _hoveredScreenAxis );
         const auto uniform = _uniformBufferVec[index];
 
         IMode.color( 0.741f, 0.547f, 0.009f, 1.0f );
@@ -493,20 +508,24 @@ void ParallelCoordinatesViewer::process()
     glLineWidth( 1.0f );
 
     // --- Draw axes names --- //
-    if( _propertyVisualizationMode.getValue() ) font.setFontSize( 16 );
+    if( axesAreTimeSteps ) {
+        font.setFontSize( 16 );
+    }
+    else { // Currently, we won't draw indices of time steps, they are just too cluttered.
+        for (size_t i = 0; i < axisCount; ++i) {
+            const auto text = axesAreTimeSteps ? std::to_string(i) : axes->getAxesLabels()[i];
+            const auto x = util::pointToScreen(tgt::vec2(_uniformBufferVec[i].x, 0.0f), _renderport.getSize()).x;
+            const auto textWidth = font.getSize(tgt::vec3(512.0f, 512.0f, 0.0f), text, _renderport.getSize()).x;
 
-    for( size_t i = 0; i < axisCount; ++i )
-    {
-        const auto text = _propertyVisualizationMode.getValue() ? std::to_string( i ) : axes->getAxesLabels()[i];
-        const auto x = util::pointToScreen( tgt::vec2( _uniformBufferVec[i].x, 0.0f ), _renderport.getSize() ).x;
-        const auto textWidth = font.getSize( tgt::vec3( 512.0f, 512.0f, 0.0f ), text, _renderport.getSize() ).x;
+            auto offset = textWidth / 2;
+            if (x - offset < 10) offset += 10 - (x - offset);
+            else if (x + offset > _renderport.getSize().x - 10) offset -= (x + offset) - (_renderport.getSize().x - 10);
 
-        auto offset = textWidth / 2;
-        if( x - offset < 10 ) offset += 10 - ( x - offset );
-        else if( x + offset > _renderport.getSize().x - 10 ) offset -= ( x + offset ) - ( _renderport.getSize().x - 10 );
-
-        font.setFontColor( _hoveredScreenAxis != ~0u && i == ( _propertyVisualizationMode.getValue() ? _hoveredScreenAxis : _indexBufferVec[_hoveredScreenAxis] ) ? tgt::vec4( 0.3f, 0.3f, 0.3f, 1.0f ) : tgt::vec4( 0.05f, 0.05f, 0.05f, 1.0f ) );
-        font.render( tgt::vec3( x + offset, static_cast<float>( axisNamesY ), 0.0f ), text, _renderport.getSize() );
+            font.setFontColor(_hoveredScreenAxis != ~0u &&
+                              i == (axesAreTimeSteps ? _hoveredScreenAxis : _indexBufferVec[_hoveredScreenAxis])
+                              ? tgt::vec4(0.3f, 0.3f, 0.3f, 1.0f) : tgt::vec4(0.05f, 0.05f, 0.05f, 1.0f));
+            font.render(tgt::vec3(x + offset, static_cast<float>( axisNamesY ), 0.0f), text, _renderport.getSize());
+        }
     }
 
     // --- Draw axes intervals --- //
@@ -525,7 +544,7 @@ void ParallelCoordinatesViewer::process()
             tgt::Font::TopLeft, tgt::Font::TopRight, tgt::Font::BottomLeft, tgt::Font::BottomRight
         };
 
-        for( size_t i = 0; i < ( _propertyVisualizationMode.getValue() ? 1 : axisCount ); ++i )
+        for( size_t i = 0; i < ( axesAreTimeSteps ? 1 : axisCount ); ++i )
         {
             const auto uniform = _uniformBufferVec[i];
             const auto x = util::pointToScreen( tgt::vec2( uniform.x, 0.0f ), _renderport.getSize() ).x;
@@ -568,11 +587,13 @@ void ParallelCoordinatesViewer::onNewInportData()
     const auto axes = _axesport.getData();
     const auto axisCount = _propertyVisualizationMode.getValue() ? axes->timesteps() : axes->fields();
 
+    _propertySelectedMemberIntern.reset();
     auto memberOptions = std::deque<Option<int>>();
     for( size_t i = 0; i < axes->members(); ++i )
     {
         const auto name = axes->getMemberName( i );
         memberOptions.emplace_back( Option<int>( name, name, static_cast<int>( i ) ) );
+        _propertySelectedMemberIntern.addRow(name);
     }
 
     // Selected member
@@ -656,7 +677,7 @@ void ParallelCoordinatesViewer::onNewInportData()
     for( size_t i = 0; i < axisCount; ++i )
     {
         const auto range = axes->getRange( _propertyVisualizationMode.getValue() ? _propertySelectedField.getValue() : i );
-        _uniformBufferVec[i] = tgt::vec3( this->screenAxisToCoordinate( i ), range.x, range.y );
+        _uniformBufferVec[i] = tgt::vec3( screenAxisToCoordinate( i ), range.x, range.y );
     }
     glUseProgram( _shaderProgram );
     glUniform1i( glGetUniformLocation( _shaderProgram, "operator" ), _propertyVisualizationMode.getValue() ? 1 : 0 );
@@ -683,7 +704,7 @@ void ParallelCoordinatesViewer::onHoverEvent( tgt::MouseEvent* event )
     struct { size_t axis; int distance; } current { ~0u, point.y > Y_LIMIT ? 50 : 10 };
     for( size_t i = 0; i < axisCount; ++i )
     {
-        const auto screen = util::pointToScreen( tgt::vec2( this->screenAxisToCoordinate( i ), 0.0f ), event->viewport() );
+        const auto screen = util::pointToScreen( tgt::vec2( screenAxisToCoordinate( i ), 0.0f ), event->viewport() );
         const auto distance = std::abs( screen.x - event->x() );
         if( distance < current.distance ) current = { i, distance };
     }
@@ -724,7 +745,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
     {
         if( _interaction == Interaction::eMoving ) // Only occurs in visualization mode 'fields'
         {
-            _uniformBufferVec[axisIndex].x = this->screenAxisToCoordinate( _hoveredScreenAxis );
+            _uniformBufferVec[axisIndex].x = screenAxisToCoordinate( _hoveredScreenAxis );
             updateUniformBuffer = render = true;
         }
         else if( _interaction == Interaction::eSelection )
@@ -789,11 +810,11 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
                 }
             }
 
-            this->updateSampleStates();
+            updateSampleStates();
             if( !_propertyVisualizationMode.getValue() )
                 for( size_t i = 0; i < _propertyTransFuncField.size(); ++i )
                     if( static_cast<size_t>(_propertyTransFuncField[i].getValue()) == axisIndex )
-                        this->updateTransferFunction( i );
+                        updateTransferFunction( i );
 
 
             _activeSection = tgt::vec2( 0.0f, 0.0f );
@@ -807,8 +828,8 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         if( _interaction == Interaction::eMoving ) // Only occurs in visualization mode 'fields'
         {
             const auto x = std::max(-X_LIMIT - 0.01f, std::min(X_LIMIT + 0.01f, point.x ) );
-            const auto prevx = this->screenAxisToCoordinate( _hoveredScreenAxis - 1 );
-            const auto nextx = this->screenAxisToCoordinate( _hoveredScreenAxis + 1 );
+            const auto prevx = screenAxisToCoordinate( _hoveredScreenAxis - 1 );
+            const auto nextx = screenAxisToCoordinate( _hoveredScreenAxis + 1 );
 
             // Check if axes have to be swapped
             size_t swap = ~0u;
@@ -817,7 +838,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
 
             if( swap != ~0u )
             {
-                _uniformBufferVec[_indexBufferVec[_hoveredScreenAxis]].x = this->screenAxisToCoordinate( _hoveredScreenAxis );
+                _uniformBufferVec[_indexBufferVec[_hoveredScreenAxis]].x = screenAxisToCoordinate( _hoveredScreenAxis );
                 std::swap( _indexBufferVec[_hoveredScreenAxis], _indexBufferVec[swap] );
                 std::swap( _uniformBufferVec[_indexBufferVec[_hoveredScreenAxis]].x, _uniformBufferVec[_indexBufferVec[swap]].x );
 
@@ -847,7 +868,7 @@ void ParallelCoordinatesViewer::onMouseEvent( tgt::MouseEvent* event )
         glUseProgram( 0 );
     }
     if( render ) {
-        this->invalidate();
+        invalidate();
     }
 }
 
@@ -920,7 +941,7 @@ void ParallelCoordinatesViewer::updateSampleStates()
         time = mapRange(_propertySelectedTimestep.get(), 0, _propertySelectedTimestep.getMaxValue(), 0.0f, 1.0f);
     }
     
-    _propertySections.set( ParallelCoordinatesSectionsPropertyData( axes->getEnsembleHash(), _propertySelectedMember.get(), time, axes->getFields(), _sections ) );
+    _propertySections.set( ParallelCoordinatesSectionsPropertyData( axes->getEnsembleHash(), axes->getBounds(), _propertySelectedMember.get(), time, axes->getFields(), _sections ) );
     
 }
 void ParallelCoordinatesViewer::updateTransferFunction( size_t index )

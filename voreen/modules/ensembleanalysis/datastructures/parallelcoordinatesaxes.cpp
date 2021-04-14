@@ -41,16 +41,18 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( std::string ensembleHash,
                                                   std::vector<std::string> axesLabels,
                                                   std::vector<tgt::vec2> ranges,
                                                   std::vector<float> values,
+                                                  tgt::Bounds bounds,
                                                   size_t numTimesteps,
                                                   size_t numSamples )
-    : timesteps_(numTimesteps )
-    , samples_(numSamples )
+    : timesteps_(numTimesteps)
+    , samples_(numSamples)
     , ensembleHash_(std::move(ensembleHash))
-    , members_(std::move(members ) )
-    , fields_(std::move(fields ) )
+    , members_(std::move(members))
+    , fields_(std::move(fields))
     , axesLabels_(std::move(axesLabels))
-    , ranges_(std::move(ranges ) )
-    , values_(std::move(values ) )
+    , ranges_(std::move(ranges))
+    , values_(std::move(values))
+    , bounds_(bounds)
     , vertexBuffer_(0)
 {}
 
@@ -72,6 +74,7 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath )
         s.deserialize("fields", fields_);
         s.deserialize("axesLabels", axesLabels_);
         s.deserialize("timesteps", timesteps_);
+        s.deserialize("bounds", bounds_);
         s.deserialize("samples", samples_);
         s.deserialize("ranges", ranges_);
         s.deserialize("values", values_);
@@ -100,6 +103,7 @@ void ParallelCoordinatesAxes::serialize( const std::string& filepath ) const {
         s.serialize("fields", fields_);
         s.serialize("axesLabels", axesLabels_);
         s.serialize("timesteps", timesteps_);
+        s.serialize("bounds", bounds_);
         s.serialize("samples", samples_);
         s.serialize("ranges", ranges_);
         s.serialize("values", values_);
@@ -159,6 +163,10 @@ float ParallelCoordinatesAxes::getValue( size_t field, size_t sample, size_t tim
 }
 const std::vector<float>& ParallelCoordinatesAxes::getValues() const noexcept {
     return values_;
+}
+
+const tgt::Bounds& ParallelCoordinatesAxes::getBounds() const {
+    return bounds_;
 }
 
 size_t ParallelCoordinatesAxes::getStrideMember() const noexcept {

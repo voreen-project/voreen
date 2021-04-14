@@ -26,6 +26,7 @@
 #ifndef VRN_PARALLELCOORDINATESAXES_H
 #define VRN_PARALLELCOORDINATESAXES_H
 
+#include "tgt/bounds.h"
 #include "tgt/tgt_gl.h"
 #include "tgt/vector.h"
 
@@ -37,7 +38,15 @@ namespace voreen {
 class ParallelCoordinatesAxes {
 public:
 
-    ParallelCoordinatesAxes(std::string ensembleHash, std::vector<std::string> members, std::vector<std::pair<std::string, int>> fields, std::vector<std::string> axesLabels, std::vector<tgt::vec2> ranges, std::vector<float> values, size_t numTimesteps, size_t numSamples );
+    ParallelCoordinatesAxes(std::string ensembleHash,
+                            std::vector<std::string> members,
+                            std::vector<std::pair<std::string, int>> fields,
+                            std::vector<std::string> axesLabels,
+                            std::vector<tgt::vec2> ranges,
+                            std::vector<float> values,
+                            tgt::Bounds bounds,
+                            size_t numTimesteps,
+                            size_t numSamples );
     ParallelCoordinatesAxes( const std::string& filepath );
     ~ParallelCoordinatesAxes();
 
@@ -64,6 +73,8 @@ public:
     float getValue( size_t field, size_t sample, size_t timestep = 0, size_t member = 0 ) const;
     const std::vector<float>& getValues() const noexcept;
 
+    const tgt::Bounds& getBounds() const;
+
     size_t getStrideMember() const noexcept;
     size_t getStrideTimestep() const noexcept;
     size_t memorySize() const noexcept;
@@ -83,6 +94,7 @@ private:
     std::vector<std::string> axesLabels_;
     std::vector<tgt::vec2> ranges_;
     std::vector<float> values_;
+    tgt::Bounds bounds_;
     mutable GLuint vertexBuffer_;
 };
 }

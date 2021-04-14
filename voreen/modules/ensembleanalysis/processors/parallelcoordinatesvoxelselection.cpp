@@ -107,6 +107,7 @@ ParallelCoordinatesVoxelSelectionInput ParallelCoordinatesVoxelSelection::prepar
 
     return ParallelCoordinatesVoxelSelectionInput{
             std::move(ensemble),
+            sectionData.bounds,
             std::move(sectionData),
             std::move(volumes),
             std::move(outputVolume)
@@ -136,7 +137,7 @@ ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compu
 
     // Define the bounds within the mask is sampled.
     // Note: Must match bounds selected in ParallelCoordinateAxisCreator!
-    tgt::Bounds ensembleBounds = ensemble->getBounds();
+    tgt::Bounds ensembleBounds = input.bounds;
 
     // In favor of memory caching, we iterate volumes first.
     for(size_t i=0; i<volumes.size(); i++) {
@@ -144,7 +145,7 @@ ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compu
         const VolumeBase* volumeHandle = volumes[i].first;
         int channel = volumes[i].second;
 
-        tgt::Bounds bounds = volumeHandle->getBoundingBox().getBoundingBox();
+        tgt::Bounds volumeBounds = volumeHandle->getBoundingBox().getBoundingBox();
         RealWorldMapping rwm = volumeHandle->getRealWorldMapping();
         tgt::mat4 worldToVoxel = volumeHandle->getWorldToVoxelMatrix();
         VolumeRAMRepresentationLock volume(volumeHandle);
@@ -160,10 +161,10 @@ ParallelCoordinatesVoxelSelectionOutput ParallelCoordinatesVoxelSelection::compu
             voxelProgress.setProgress(static_cast<float>(numProcessedVoxels++) / static_cast<float>(numVoxels));
 
             // Map sample position to world space.
-            tgt::vec3 pos = mapRange(tgt::vec3(*iter), tgt::vec3::zero, tgt::vec3(newDims), bounds.getLLF(), bounds.getURB());
+            tgt::vec3 pos = mapRange(tgt::vec3(*iter), tgt::vec3::zero, tgt::vec3(newDims), ensembleBounds.getLLF(), ensembleBounds.getURB());
 
             // Convert voxel to world pos.
-            if(!bounds.containsPoint(pos)) {
+            if(!volumeBounds.containsPoint(pos)) {
                 iter++; // The voxel is not contained in this volume but might in another.
                 continue;
             }

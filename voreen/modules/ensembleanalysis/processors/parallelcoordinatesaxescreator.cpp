@@ -43,9 +43,10 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     , axesport_(Port::OUTPORT, "port_axes", "Parallel Coordinates Axes" )
     , propertyMembers_("property_members", "Selected Members", Processor::VALID )
     , propertyFields_("property_fields", "Selected Fields", Processor::VALID )
+    , propertySampleRegion_("sampleRegion", "Sample Region")
     , propertySpatialSampleCount_("property_spatial_sample_count", "Spatial Sample Count", 32768, 1, 4194304, Processor::VALID )
     , propertyTemporalSampleCount_("property_temporal_sample_count", "Temporal Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
-    , propertySampleRegion_("sampleRegion", "Sample Region")
+    , propertyRequiredMemory_("property_required_memory", "Required Memory", "NA", Processor::VALID)
     , propertySeedTime_("property_seed_time", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , propertyAggregateMembers_("property_aggregate_members", "Aggregate Members", false, Processor::VALID )
 {
@@ -55,17 +56,31 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     addPort(seedMask_ );
     addPort(axesport_ );
 
+    auto memoryRequirementsChanged = [this] {
+        uint64_t numBytes = 4; // Bytes per Voxel.
+        numBytes *= propertyMembers_.get().size();
+        numBytes *= propertySpatialSampleCount_.get();
+        numBytes *= propertyTemporalSampleCount_.get();
+        numBytes *= propertyFields_.get().size();
+        propertyRequiredMemory_.set(formatMemorySize(numBytes));
+    };
+
     // --- Initialize Properties --- //
     addProperty(propertyMembers_ );
     ON_CHANGE(propertyMembers_, ParallelCoordinatesAxesCreator, adjustToSelection);
     addProperty(propertyFields_ );
-    addProperty(propertySpatialSampleCount_);
-    addProperty(propertyTemporalSampleCount_ );
-    //addProperty(propertySampleRegion_); // Only allow ensemble bounds to sync with ParallelCoordinatesVoxelSelection
+    ON_CHANGE_LAMBDA(propertyFields_, memoryRequirementsChanged);
+    addProperty(propertySampleRegion_);
     propertySampleRegion_.addOption("bounds", "Ensemble Bounds"); // Will be selected.
     propertySampleRegion_.addOption("common", "Common Bounds");
-    addProperty(propertySeedTime_);
+    addProperty(propertySpatialSampleCount_);
+    ON_CHANGE_LAMBDA(propertySpatialSampleCount_, memoryRequirementsChanged);
+    addProperty(propertyTemporalSampleCount_ );
+    ON_CHANGE_LAMBDA(propertyTemporalSampleCount_, memoryRequirementsChanged);
     addProperty(propertyAggregateMembers_ );
+    addProperty(propertyRequiredMemory_);
+    propertyRequiredMemory_.setEditable(false);
+    addProperty(propertySeedTime_);
 }
 
 Processor* ParallelCoordinatesAxesCreator::create() const {
@@ -272,6 +287,7 @@ ParallelCoordinatesAxesCreatorInput ParallelCoordinatesAxesCreator::prepareCompu
     return ComputeInput {
         std::move(selectedEnsemble),
         EnsembleHash(*ensembleport_.getData()).getHash(), // Original hash.
+        bounds,
         temporalSampleCount,
         propertyAggregateMembers_.get(),
         std::move(seedPoints),
@@ -309,8 +325,6 @@ ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Com
                     const auto& fieldName = fields[j].first;
                     const auto& channel = fields[j].second;
 
-                    LDEBUG("[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << member.getName() << ", Timestep=" << j << ", Field=" << fieldName);
-
                     const auto* volumeHandle = timestep.getVolume(fieldName);
                     tgt::Bounds bounds = volumeHandle->getBoundingBox().getBoundingBox();
                     tgt::mat4 worldToVoxel = volumeHandle->getWorldToVoxelMatrix();
@@ -341,6 +355,7 @@ ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Com
                             std::move(axesLabels),
                             std::move(ranges),
                             std::move(values),
+                            input.bounds,
                             temporalSampleCount,
                             seedPoints.size() * members.size()
                         )
@@ -366,7 +381,6 @@ ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Com
                 {
                     const auto& fieldName = fields[k].first;
                     const auto& channel = fields[k].second;
-                    LDEBUG("[ParallelCoordinatesAxesCreator] Collecting voxels: Member=" << member.getName() << ", Timestep=" << j << ", Field=" << fieldName);
 
                     const auto* volumeHandle = timestep.getVolume(fieldName);
                     tgt::Bounds bounds = volumeHandle->getBoundingBox().getBoundingBox();
@@ -399,6 +413,7 @@ ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Com
                             std::move(axesLabels),
                             std::move(ranges),
                             std::move(values),
+                            input.bounds,
                             temporalSampleCount,
                             seedPoints.size()
                         )

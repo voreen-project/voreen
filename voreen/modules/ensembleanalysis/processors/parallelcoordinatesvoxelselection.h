@@ -36,6 +36,7 @@ namespace voreen {
 
 struct ParallelCoordinatesVoxelSelectionInput {
     PortDataPointer<EnsembleDataset> ensemble;
+    tgt::Bounds bounds;
     ParallelCoordinatesSectionsPropertyData sectionData;
     std::vector<std::pair<const VolumeBase*, int>> inputVolumes;
     std::unique_ptr<VolumeRAM_UInt8> outputVolume;

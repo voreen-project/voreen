@@ -39,6 +39,7 @@ namespace voreen {
 struct ParallelCoordinatesAxesCreatorInput {
     std::unique_ptr<EnsembleDataset> ensemble;
     std::string ensembleHash;
+    tgt::Bounds bounds;
     int temporalSampleCount;
     bool aggregate;
     std::vector<tgt::vec3> seedPoints;
@@ -92,9 +93,10 @@ private:
 
     StringListProperty propertyMembers_;
     StringListProperty propertyFields_;
+    StringOptionProperty propertySampleRegion_;
     IntProperty propertySpatialSampleCount_;
     IntProperty propertyTemporalSampleCount_;
-    StringOptionProperty propertySampleRegion_;
+    StringProperty propertyRequiredMemory_;
     IntProperty propertySeedTime_;
     BoolProperty propertyAggregateMembers_;
 

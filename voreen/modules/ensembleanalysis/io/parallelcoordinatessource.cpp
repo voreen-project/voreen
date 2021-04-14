@@ -33,10 +33,10 @@ ParallelCoordinatesSource::ParallelCoordinatesSource()
     , _propertyFileDialog( "property_file_dialog", "File Input", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::OPEN_FILE )
     , _propertyLoadButton( "property_load_button", "Load" )
 {
-    this->addPort( _outport );
+    addPort( _outport );
 
-    this->addProperty( _propertyFileDialog );
-    this->addProperty( _propertyLoadButton );
+    addProperty( _propertyFileDialog );
+    addProperty( _propertyLoadButton );
 }
 
 Processor* ParallelCoordinatesSource::create() const {
@@ -44,8 +44,14 @@ Processor* ParallelCoordinatesSource::create() const {
 }
 
 void ParallelCoordinatesSource::process() {
-    if( !_propertyFileDialog.get().empty() )
-        _outport.setData( new ParallelCoordinatesAxes( _propertyFileDialog.get() ) );
+    if( !_propertyFileDialog.get().empty() ) {
+        std::unique_ptr<ParallelCoordinatesAxes> pc(new ParallelCoordinatesAxes(_propertyFileDialog.get()));
+        if (pc->members() == 0 || pc->fields() == 0) {
+            _propertyFileDialog.set("");
+        } else {
+            _outport.setData(pc.release(), true);
+        }
+    }
 }
 
 }

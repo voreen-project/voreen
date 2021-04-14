@@ -33,6 +33,7 @@ namespace voreen {
 
 struct ParallelCoordinatesSectionsPropertyData {
     std::string ensembleHash;
+    tgt::Bounds bounds;
     std::string member;
     float time; // Time has a value between 0 and 1 that maps linearly to the common time domain of the ensemble.
     std::vector<std::pair<std::string, int>> fields;
@@ -40,19 +41,21 @@ struct ParallelCoordinatesSectionsPropertyData {
 
     ParallelCoordinatesSectionsPropertyData() = default;
     ParallelCoordinatesSectionsPropertyData( std::string ensembleHash,
+                                             tgt::Bounds bounds,
                                              std::string member,
                                              float time,
                                              std::vector<std::pair<std::string, int>> fields,
                                              std::vector<std::list<tgt::vec2>> sections )
-         : ensembleHash(std::move(ensembleHash))
-         , member( std::move( member ) )
-         , time( time )
-         , fields( std::move( fields ) )
-         , sections( std::move( sections ) )
+        : ensembleHash(std::move(ensembleHash))
+        , bounds(bounds)
+        , member(std::move(member) )
+        , time( time )
+        , fields( std::move( fields ) )
+        , sections( std::move( sections ) )
     {}
 
     bool operator!=( const ParallelCoordinatesSectionsPropertyData& other ) const {
-        return (ensembleHash != other.ensembleHash) || ( member != other.member ) || ( time != other.time ) || ( fields != other.fields ) || ( sections != other.sections );
+        return (ensembleHash != other.ensembleHash) || (bounds != other.bounds) || ( member != other.member ) || ( time != other.time ) || ( fields != other.fields ) || ( sections != other.sections );
     }
 };
 

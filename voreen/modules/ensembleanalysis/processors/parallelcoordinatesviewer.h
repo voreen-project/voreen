@@ -33,6 +33,7 @@
 #include "voreen/core/processors/renderprocessor.h"
 #include "voreen/core/properties/eventproperty.h"
 #include "voreen/core/properties/numeric/intervalproperty.h"
+#include "voreen/core/properties/string/stringlistproperty.h"
 #include "voreen/core/properties/transfunc/1d/1dkeys/transfunc1dkeysproperty.h"
 
 namespace voreen {
@@ -89,6 +90,7 @@ private:
 
     // Properties
     IntOptionProperty _propertySelectedMember;
+    StringListProperty _propertySelectedMemberIntern;
     IntOptionProperty _propertyVisualizationMode;
 
     IntProperty _propertySelectedTimestep;
