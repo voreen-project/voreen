@@ -142,6 +142,7 @@ public:
     static ColorMap createCandleLight();
     static ColorMap createSandyShades();
     static ColorMap createGermany();
+    static ColorMap createPET();
 
     // returns names of all predefined colormaps
     static std::vector<std::string> getColorMapLabels();

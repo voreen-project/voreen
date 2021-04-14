@@ -182,6 +182,16 @@ ColorMap ColorMap::createGermany() {
     return cm;
 }
 
+ColorMap ColorMap::createPET() {
+    ColorMap cm;
+    cm.colors_.clear();
+    cm.addColorLast(tgt::Color(0.f, 0.f, 1.f, 1.f));
+    cm.addColorLast(tgt::Color(1.f, 0.f, 0.f, 1.f));
+    cm.addColorLast(tgt::Color(1.f, 1.f, 0.f, 1.f));
+    cm.setName("PET");
+    return cm;
+}
+
 ColorMap ColorMap::createSequential(const tgt::Color& base) {
     ColorMap cm;
     cm.colors_.clear();
@@ -207,6 +217,7 @@ std::vector<std::string> ColorMap::getColorMapLabels() {
     strings.push_back(ColorMap::createCandleLight().toString());
     strings.push_back(ColorMap::createSandyShades().toString());
     strings.push_back(ColorMap::createGermany().toString());
+    strings.push_back(ColorMap::createPET().toString());
     return strings;
 }
 
@@ -228,6 +239,8 @@ ColorMap ColorMap::createColorMap(int index) {
             return ColorMap::createSandyShades();
         case 7:
             return ColorMap::createGermany();
+        case 8:
+            return ColorMap::createPET();
         default:
             return ColorMap::createSpectral();
     }
