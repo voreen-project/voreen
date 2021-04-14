@@ -77,7 +77,12 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath )
         s.deserialize("bounds", bounds_);
         s.deserialize("samples", samples_);
         s.deserialize("ranges", ranges_);
-        s.deserialize("values", values_);
+        try {
+            s.deserialize("values", values_);
+        } catch (SerializationException& e) {
+            s.removeLastError();
+            s.deserializeBinaryBlob("values_binary", values_);
+        }
         LINFOC("voreen.ParallelCoordinateAxes", "Loaded successfully");
     } catch(tgt::Exception& e) {
         LERRORC("voreen.ParallelCoordinateAxes", e.what());
@@ -87,7 +92,7 @@ ParallelCoordinatesAxes::~ParallelCoordinatesAxes() {
     if( vertexBuffer_ ) glDeleteBuffers(1, &vertexBuffer_ );
 }
 
-void ParallelCoordinatesAxes::serialize( const std::string& filepath ) const {
+void ParallelCoordinatesAxes::serialize( const std::string& filepath, bool binary) const {
 
     auto stream = std::ofstream( filepath );
     if( !stream ) {
@@ -106,7 +111,12 @@ void ParallelCoordinatesAxes::serialize( const std::string& filepath ) const {
         s.serialize("bounds", bounds_);
         s.serialize("samples", samples_);
         s.serialize("ranges", ranges_);
-        s.serialize("values", values_);
+        if (!binary) {
+            s.serialize("values", values_);
+        }
+        else {
+            s.serializeBinaryBlob("values_binary", values_);
+        }
         json.write(stream, true, false);
         LINFOC("voreen.ParallelCoordinateAxes", "Saved successfully");
     } catch(tgt::Exception& e) {

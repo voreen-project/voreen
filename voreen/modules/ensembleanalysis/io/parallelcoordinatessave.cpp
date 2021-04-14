@@ -45,7 +45,7 @@ Processor* ParallelCoordinatesSave::create() const {
 
 void ParallelCoordinatesSave::process() {
     if( !_propertyFileDialog.get().empty() && _inport.hasData())
-        _inport.getData()->serialize(_propertyFileDialog.get());
+        _inport.getData()->serialize(_propertyFileDialog.get(), true);
 }
 
 }

@@ -50,7 +50,7 @@ public:
     ParallelCoordinatesAxes( const std::string& filepath );
     ~ParallelCoordinatesAxes();
 
-    void serialize( const std::string& filepath ) const;
+    void serialize( const std::string& filepath, bool binary = false ) const;
 
     size_t members() const noexcept;
     size_t fields() const noexcept;
