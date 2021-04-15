@@ -244,6 +244,8 @@ struct RWNoiseModelTTest {
         float* n1_begin = n1final.data();
         float* n1_cur = n1_begin;
 
+        tgt::ivec3 from_b1_to_b2 = best_center2-best_center1;
+
         float sum2 = 0.0f;
         std::vector<float> n2final;
         n2final.reserve(num_voxels_max);
@@ -256,6 +258,7 @@ struct RWNoiseModelTTest {
         auto* o_begin = overlap.data();
         auto* o_cur = o_begin;
 
+        size_t neighborhood_counter = 0;
         {
             size_t zBegin = begin1.z*sliceSize;
             size_t zEnd = end1.z*sliceSize;
@@ -277,10 +280,11 @@ struct RWNoiseModelTTest {
 
                         if(xIn) {
                             tgt::ivec3 n(x,y,z);
-                            int weighted_dist = tgt::distanceSq(p1, n)-tgt::distanceSq(p2, n);
-                            //int weighted_dist = tgt::distanceSq(p1, n);
-                            *o_cur = std::make_pair(val,weighted_dist);
+                            int along_axis = tgt::dot(n, from_b1_to_b2);
+                            along_axis = (along_axis << 16) + neighborhood_counter;
+                            *o_cur = std::make_pair(val,along_axis);
                             ++o_cur;
+                            ++neighborhood_counter;
                         } else {
                             *n1_cur = val;
                             ++n1_cur;
@@ -328,9 +332,7 @@ struct RWNoiseModelTTest {
         auto o1end = o_begin+std::distance(o_begin, o_cur)/2;
         auto o2end = o_cur;
 
-        //TODO: why doesn't nth element work here?
-        //std::nth_element(o1begin, o1end, o2end, [](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
-        std::sort(o1begin, o2end, [](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
+        std::nth_element(o1begin, o1end, o2end, [](const std::pair<float,int>& o1, const std::pair<float,int>& o2) {
                 return o1.second < o2.second;
                 });
 
