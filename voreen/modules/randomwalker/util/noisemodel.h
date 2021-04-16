@@ -116,6 +116,78 @@ inline float variance_of(const float* begin, const float* end, float mean) {
     return variance;
 };
 
+#define VRN_FOR_EACH_VOXEL_INDEX(INDEX, BEGIN, END, SIZE, BODY) \
+    size_t vrn_fevi_z_slice_size = (SIZE).x*(SIZE).y;\
+    size_t vrn_fevi_z_begin = (BEGIN).z*vrn_fevi_z_slice_size;\
+    size_t vrn_fevi_z_end = (END).z*vrn_fevi_z_slice_size;\
+    for (size_t vrn_fevi_z = vrn_fevi_z_begin; vrn_fevi_z < vrn_fevi_z_end ; vrn_fevi_z += vrn_fevi_z_slice_size) {\
+        size_t vrn_fevi_y_begin = vrn_fevi_z + (BEGIN).y*(SIZE).x;\
+        size_t vrn_fevi_y_end = vrn_fevi_z + (END).y*(SIZE).x;\
+        for (size_t vrn_fevi_y = vrn_fevi_y_begin; vrn_fevi_y < vrn_fevi_y_end ; vrn_fevi_y += (SIZE).x){\
+            size_t vrn_fevi_x_begin = vrn_fevi_y + (BEGIN).x;\
+            size_t vrn_fevi_x_end = vrn_fevi_y + (END).x;\
+            for (size_t INDEX = vrn_fevi_x_begin; INDEX < vrn_fevi_x_end; ++INDEX){\
+                BODY\
+            }\
+        }\
+    }\
+
+inline void process_non_overlap_single(const float* image, tgt::ivec3 imagedim, tgt::ivec3 begin, tgt::ivec3 end, tgt::ivec3 overlap_begin, tgt::ivec3 overlap_end, float*& output_cur, float& sum) {
+#if 0
+    for(int dim = 2; dim >= 0; --dim) {
+        tgt::ivec3 part_begin = begin;
+        tgt::ivec3 part_end = end;
+        if(begin[dim] == overlap_begin[dim]) {
+            part_begin[dim] = overlap_end[dim];
+        }
+        if(end[dim] == overlap_end[dim]) {
+            part_end[dim] = overlap_begin[dim];
+        }
+
+        VRN_FOR_EACH_VOXEL_INDEX(l, part_begin, part_end, imagedim, {
+            float val = image[l];
+            *output_cur = val;
+            ++output_cur;
+            sum += val;
+        })
+
+        begin[dim] = overlap_begin[dim];
+        end[dim] = overlap_end[dim];
+    }
+#else
+        {
+            size_t sliceSize = imagedim.y * imagedim.x;
+            size_t lineSize = imagedim.x;
+            for (size_t z = begin.z; z < static_cast<int>(end.z); ++z) {
+
+                size_t zIndex = sliceSize * z;
+                bool zIn = overlap_begin.z <= z && z < overlap_end.z;
+
+                for (size_t y = begin.y; y < static_cast<int>(end.y); ++y) {
+
+                    size_t yIndex = zIndex + lineSize * y;
+                    bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
+
+                    size_t iBegin = yIndex + begin.x;
+                    size_t iEnd = yIndex + end.x;
+
+                    size_t overlap_i_begin = yIndex + overlap_begin.x;
+                    size_t overlap_i_end = yIndex + overlap_end.x;
+                    for (size_t i = iBegin; i < iEnd; ++i) {
+                        bool xIn = yIn && overlap_i_begin <= i && i < overlap_i_end;
+
+                        if(!xIn) {
+                            float val = image[i];
+                            *output_cur = val;
+                            ++output_cur;
+                            sum += val;
+                        }
+                    }
+                }
+            }
+        }
+#endif
+}
 
 // Parameter estimation according to
 //
@@ -196,30 +268,19 @@ struct RWNoiseModelTTest {
             float min = std::numeric_limits<float>::infinity();
             size_t argmin_index = 0;
 
-            size_t zBegin = begin.z*sliceSize;
-            size_t zEnd = end.z*sliceSize;
-            for (size_t z = zBegin; z < zEnd; z += sliceSize) {
-
-                size_t yBegin = z + begin.y*lineSize;
-                size_t yEnd = z + end.y*lineSize;
-                for (size_t y = yBegin; y < yEnd; y += lineSize) {
-
-                    size_t linearCoordBegin = y + begin.x;
-                    size_t linearCoordEnd = y + end.x;
-                    for (size_t l = linearCoordBegin; l < linearCoordEnd; ++l) {
-                        //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
-                        // Instead of evaluating and maximizing the gaussian pdf (which
-                        // is expensive) we minimize the log instead.
-                        const auto& mma = mean_mul_add[l];
-                        float val = square(f-mma.mean) * mma.mul + mma.add;
-                        tgtAssert(std::isfinite(val) && !std::isnan(val), "invalid val");
-                        if(min > val) {
-                            min = val;
-                            argmin_index = l;
-                        }
-                    }
+            VRN_FOR_EACH_VOXEL_INDEX(l, begin, end, dim, {
+                //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
+                // Instead of evaluating and maximizing the gaussian pdf (which
+                // is expensive) we minimize the log instead.
+                const auto& mma = mean_mul_add[l];
+                float val = square(f-mma.mean) * mma.mul + mma.add;
+                tgtAssert(std::isfinite(val) && !std::isnan(val), "invalid val");
+                if(min > val) {
+                    min = val;
+                    argmin_index = l;
                 }
-            }
+            })
+
             tgt::ivec3 argmin = linearCoordToCubic(argmin_index, dim);
             tgtAssert(tgt::max(tgt::abs(p - argmin)) <= filter_extent, "invalid pos");
 
@@ -258,75 +319,79 @@ struct RWNoiseModelTTest {
         auto* o_begin = overlap.data();
         auto* o_cur = o_begin;
 
-        size_t neighborhood_counter = 0;
-        {
-            size_t zBegin = begin1.z*sliceSize;
-            size_t zEnd = end1.z*sliceSize;
-            for (size_t z = begin1.z; z < static_cast<int>(end1.z); ++z) {
+        if(end1-begin1 == end2-begin2) {
+            size_t b1index = cubicCoordToLinear(begin1, dim);
+            size_t e2index = cubicCoordToLinear(end2-tgt::ivec3::one, dim);
+            size_t i2base = b1index + e2index;
+            size_t neighborhood_counter = 0;
+            {
+                size_t zBegin = begin1.z*sliceSize;
+                size_t zEnd = end1.z*sliceSize;
+                for (size_t z = begin1.z; z < static_cast<int>(end1.z); ++z) {
+
+                    size_t zIndex = sliceSize * z;
+                    bool zIn = overlap_begin.z <= z && z < overlap_end.z;
+
+                    for (size_t y = begin1.y; y < static_cast<int>(end1.y); ++y) {
+
+                        size_t yIndex = zIndex + lineSize * y;
+                        bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
+
+                        for (size_t x = begin1.x; x < static_cast<int>(end1.x); ++x) {
+                            bool xIn = yIn && overlap_begin.x <= x && x < overlap_end.x;
+
+                            size_t i = yIndex + x;
+                            float val1 = image.voxel(i);
+
+                            if(xIn) {
+                                tgt::ivec3 n(x,y,z);
+                                int along_axis = tgt::dot(n, from_b1_to_b2);
+                                along_axis = (along_axis << 16) + neighborhood_counter;
+                                *o_cur = std::make_pair(val1,along_axis);
+                                ++o_cur;
+                                ++neighborhood_counter;
+                            } else {
+                                *n1_cur = val1;
+                                ++n1_cur;
+                                sum1 += val1;
+
+                                size_t i2 = i2base - i;
+                                tgtAssert(i2 < tgt::hmul(dim) ,"invalid index");
+                                float val2 = image.voxel(i2);
+                                *n2_cur = val2;
+                                ++n2_cur;
+                                sum2 += val2;
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            process_non_overlap_single(image.voxel(), dim, begin1, end1, overlap_begin, overlap_end, n1_cur, sum1);
+            process_non_overlap_single(image.voxel(), dim, begin2, end2, overlap_begin, overlap_end, n2_cur, sum2);
+            size_t neighborhood_counter = 0;
+            for (size_t z = overlap_begin.z; z < static_cast<int>(overlap_end.z); ++z) {
 
                 size_t zIndex = sliceSize * z;
-                bool zIn = overlap_begin.z <= z && z < overlap_end.z;
 
-                for (size_t y = begin1.y; y < static_cast<int>(end1.y); ++y) {
+                for (size_t y = overlap_begin.y; y < static_cast<int>(overlap_end.y); ++y) {
 
                     size_t yIndex = zIndex + lineSize * y;
-                    bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
 
-                    for (size_t x = begin1.x; x < static_cast<int>(end1.x); ++x) {
-                        bool xIn = yIn && overlap_begin.x <= x && x < overlap_end.x;
-
+                    for (size_t x = overlap_begin.x; x < static_cast<int>(overlap_end.x); ++x) {
                         size_t i = yIndex + x;
                         float val = image.voxel(i);
 
-                        if(xIn) {
-                            tgt::ivec3 n(x,y,z);
-                            int along_axis = tgt::dot(n, from_b1_to_b2);
-                            along_axis = (along_axis << 16) + neighborhood_counter;
-                            *o_cur = std::make_pair(val,along_axis);
-                            ++o_cur;
-                            ++neighborhood_counter;
-                        } else {
-                            *n1_cur = val;
-                            ++n1_cur;
-                            sum1 += val;
-                        }
+                        tgt::ivec3 n(x,y,z);
+                        int along_axis = tgt::dot(n, from_b1_to_b2);
+                        along_axis = (along_axis << 16) + neighborhood_counter;
+                        *o_cur = std::make_pair(val,along_axis);
+                        ++o_cur;
+                        ++neighborhood_counter;
                     }
                 }
             }
         }
-
-        {
-            size_t zBegin = begin2.z*sliceSize;
-            size_t zEnd = end2.z*sliceSize;
-            for (size_t z = begin2.z; z < static_cast<int>(end2.z); ++z) {
-
-                size_t zIndex = sliceSize * z;
-                bool zIn = overlap_begin.z <= z && z < overlap_end.z;
-
-                for (size_t y = begin2.y; y < static_cast<int>(end2.y); ++y) {
-
-                    size_t yIndex = zIndex + lineSize * y;
-                    bool yIn = zIn && overlap_begin.y <= y && y < overlap_end.y;
-
-                    size_t iBegin = yIndex + begin2.x;
-                    size_t iEnd = yIndex + end2.x;
-
-                    size_t overlap_i_begin = yIndex + overlap_begin.x;
-                    size_t overlap_i_end = yIndex + overlap_end.x;
-                    for (size_t i = iBegin; i < iEnd; ++i) {
-                        bool xIn = yIn && overlap_i_begin <= i && i < overlap_i_end;
-
-                        if(!xIn) {
-                            float val = image.voxel(i);
-                            *n2_cur = val;
-                            ++n2_cur;
-                            sum2 += val;
-                        }
-                    }
-                }
-            }
-        }
-
 
         auto o1begin = o_begin;
         auto o1end = o_begin+std::distance(o_begin, o_cur)/2;
