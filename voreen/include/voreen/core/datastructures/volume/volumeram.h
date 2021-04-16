@@ -291,6 +291,31 @@ for (size_t i = 0; i \< numVoxels_; ++i)
         for (INDEX.y = (POS).y; INDEX.y < (SIZE).y; ++INDEX.y)\
             for (INDEX.x = (POS).x; INDEX.x < (SIZE).x; ++INDEX.x)
 
+
+/**
+ * As an alternative to VRN_FOR_EACH_VOXEL, but don't need the voxel position
+ * you can use VRN_FOR_EACH_VOXEL_INDEX, which is typically faster. This index
+ * can be used for example with the voxel()-method of VolumeRAM.
+ * In constrast tot VRN_FOR_EACH_VOXEL, you will have to provide the size of
+ * the whole volume AND the body as a parameters to the macro.
+*/
+#define VRN_FOR_EACH_VOXEL_INDEX(INDEX, BEGIN, END, SIZE, BODY) \
+    size_t vrn_fevi_z_slice_size = (SIZE).x*(SIZE).y;\
+    size_t vrn_fevi_z_begin = (BEGIN).z*vrn_fevi_z_slice_size;\
+    size_t vrn_fevi_z_end = (END).z*vrn_fevi_z_slice_size;\
+    for (size_t vrn_fevi_z = vrn_fevi_z_begin; vrn_fevi_z < vrn_fevi_z_end ; vrn_fevi_z += vrn_fevi_z_slice_size) {\
+        size_t vrn_fevi_y_begin = vrn_fevi_z + (BEGIN).y*(SIZE).x;\
+        size_t vrn_fevi_y_end = vrn_fevi_z + (END).y*(SIZE).x;\
+        for (size_t vrn_fevi_y = vrn_fevi_y_begin; vrn_fevi_y < vrn_fevi_y_end ; vrn_fevi_y += (SIZE).x){\
+            size_t vrn_fevi_x_begin = vrn_fevi_y + (BEGIN).x;\
+            size_t vrn_fevi_x_end = vrn_fevi_y + (END).x;\
+            for (size_t INDEX = vrn_fevi_x_begin; INDEX < vrn_fevi_x_end; ++INDEX){\
+                BODY\
+            }\
+        }\
+    }\
+
+
 } // namespace voreen
 
 #endif // VRN_VOLUMERAM_H
