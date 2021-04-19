@@ -1,7 +1,8 @@
 
 # Enable OpenMP
 if(WIN32)
-    LIST(APPEND MOD_DEFINITIONS /openmp)
+    #LIST(APPEND MOD_DEFINITIONS /openmp)
+    LIST(APPEND MOD_DEFINITIONS /openmp:experimental) # required for omp simd
 ELSEIF(UNIX)
     FIND_PACKAGE(OpenMP)
     IF(OpenMP_FOUND OR OpenMP_CXX_FOUND)
