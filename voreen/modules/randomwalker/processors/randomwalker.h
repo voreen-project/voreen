@@ -83,6 +83,7 @@ struct RandomWalkerInput {
     RWNoiseModel noiseModel_;
     int beta_;
     int minEdgeWeight_;
+    int parameterEstimationNeighborhoodExtent_;
     float tfBlendFactor_;
     bool enableTransFunc_;
     const TransFunc1D* edgeWeightTransFunc_;
@@ -164,6 +165,7 @@ private:
     OptionProperty<RWNoiseModel> noiseModel_;
     IntProperty beta_;
     IntProperty minEdgeWeight_;
+    IntProperty parameterEstimationNeighborhoodExtent_;
     StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;
     IntProperty maxIterations_;

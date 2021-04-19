@@ -71,8 +71,16 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussian>(input);
             case RW_NOISE_GAUSSIAN_BIAN:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBian>(input);
-            case RW_NOISE_TTEST:
-                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
+            case RW_NOISE_TTEST: {
+                switch(input.parameterEstimationNeighborhoodExtent_) {
+                    case 1: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
+                    case 2: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<2>>(input);
+                    case 3: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<3>>(input);
+                    default:
+                            LERRORC("voreen.RandomWalker.RandomWalker", "Invalid ttest extent: " << input.parameterEstimationNeighborhoodExtent_);
+                            return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
+                }
+            }
             case RW_NOISE_POISSON:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelPoisson>(input);
             default:
@@ -119,6 +127,7 @@ RandomWalker::RandomWalker()
     noiseModel_("noiseModel", "Noise Model"),
     beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
+    parameterEstimationNeighborhoodExtent_("parameterEstimationNeighborhoodExtent", "Extent", 1, 1, 3),
     preconditioner_("preconditioner", "Preconditioner"),
     errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10),
     maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000),
@@ -164,13 +173,16 @@ RandomWalker::RandomWalker()
     noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
     noiseModel_.addOption("shot", "Poisson", RW_NOISE_POISSON);
     noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
+    noiseModel_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
     addProperty(beta_);
     addProperty(minEdgeWeight_);
+    addProperty(parameterEstimationNeighborhoodExtent_);
 
     useAdaptiveParameterSetting_.setGroupID("rwparam");
     noiseModel_.setGroupID("rwparam");
     beta_.setGroupID("rwparam");
     minEdgeWeight_.setGroupID("rwparam");
+    parameterEstimationNeighborhoodExtent_.setGroupID("rwparam");
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
 
     // level of detail
@@ -416,6 +428,7 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         noiseModel_.getValue(),
         beta_.get(),
         minEdgeWeight_.get(),
+        parameterEstimationNeighborhoodExtent_.get(),
         edgeWeightBalance_.get(),
         enableTransFunc_.get(),
         edgeWeightTransFunc_.get(),
@@ -972,6 +985,7 @@ void RandomWalker::updateGuiState() {
     bool adaptiveEnabled = useAdaptiveParameterSetting_.get();
     beta_.setVisibleFlag(!adaptiveEnabled);
     noiseModel_.setVisibleFlag(adaptiveEnabled);
+    parameterEstimationNeighborhoodExtent_.setVisibleFlag(adaptiveEnabled && noiseModel_.getValue() == RW_NOISE_TTEST);
     enableTransFunc_.setVisibleFlag(!adaptiveEnabled);
     if(adaptiveEnabled) {
         enableTransFunc_.set(false);

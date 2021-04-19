@@ -155,6 +155,7 @@ OctreeWalker::OctreeWalker()
     , noiseModel_("noiseModel", "Noise Model")
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
     , betaBias_("betaBias", "Beta Bias: 2^v", 0, -10, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , parameterEstimationNeighborhoodExtent_("parameterEstimationNeighborhoodExtent", "Extent", 1, 1, 3)
     , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
@@ -181,12 +182,20 @@ OctreeWalker::OctreeWalker()
         noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
         noiseModel_.setGroupID("rwparam");
+    ON_CHANGE_LAMBDA(noiseModel_, [this] () {
+        RWNoiseModel m = noiseModel_.getValue();
+        betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_GAUSSIAN_BIAN || m == RW_NOISE_POISSON);
+        parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST);
+    });
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
         minEdgeWeight_.setTracking(false);
     addProperty(betaBias_);
         betaBias_.setGroupID("rwparam");
         betaBias_.setTracking(false);
+    addProperty(parameterEstimationNeighborhoodExtent_);
+        parameterEstimationNeighborhoodExtent_.setGroupID("rwparam");
+        parameterEstimationNeighborhoodExtent_.setTracking(false);
     addProperty(homogeneityThreshold_);
         homogeneityThreshold_.setGroupID("rwparam");
         homogeneityThreshold_.adaptDecimalsToRange(5);
@@ -419,6 +428,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         inportBackgroundSeeds_.getThreadSafeAllData(),
         minEdgeWeight_.get(),
         betaBias_.get(),
+        parameterEstimationNeighborhoodExtent_.get(),
         voreenBlas,
         precond,
         errorThresh,
@@ -1305,9 +1315,23 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     case RW_NOISE_GAUSSIAN_BIAN:
                         newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
-                    case RW_NOISE_TTEST:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
-                        break;
+                    case RW_NOISE_TTEST: {
+                        switch(input.parameterEstimationNeighborhoodExtent_) {
+                            case 1:
+                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                                break;
+                            case 2:
+                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<2>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                                break;
+                            case 3:
+                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<3>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                                break;
+                            default:
+                                LERRORC("voreen.RandomWalker.OctreeWalker", "Invalid ttest extent: " << input.parameterEstimationNeighborhoodExtent_);
+                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                                break;
+                        }
+                    }
                     case RW_NOISE_POISSON:
                         newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
