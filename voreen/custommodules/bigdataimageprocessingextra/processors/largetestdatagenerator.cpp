@@ -404,6 +404,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
     SubtaskProgressReporterCollection<2> progressSteps(progress, {0.5, 0.5});
 
     const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
+    float avgDim = tgt::hadd(dim)/3.0f;
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
 
@@ -516,11 +517,6 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
             cylinders.add(seed.begin, end, seed.radius);
             remainingVolume -= vol;
 
-            std::vector<tgt::vec3> segment;
-            segment.push_back(p1);
-            segment.push_back(p2);
-            foregroundLabels.push_back(segment);
-
             if(remainingVolume < 0) {
                 break;
             }
@@ -594,58 +590,54 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
         //return cylinders.inside(p) || balls.inside(p) || !volumeBounds.containsPoint(p);
     };
 
-    int max_tries = 10;
-    int tries = max_tries;
     size_t numElements = cylinders.size();
-    for(int i=0; i<numElements && tries > 0;) {
+    for(int i=0; i<numElements; ++i) {
         progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
         auto s = cylinders.start(i);
         auto e = cylinders.end(i);
         float radius = cylinders.radius(i);
 
-        int bgSeedsPerCyliinder = std::ceil(tgt::distance(s, e)); //TODO: choose fixed?
+        int seedsAlongLine = 2;
+        int seedsPerPointFg = 1;
+        int seedsPerPointBg = 4;
+
+        int max_tries = 10;
+        int tries = max_tries;
 
         tgt::vec3 axis = e - s;
         tgt::vec3 orth = tgt::normalize(findOrthogonal(axis));
-        for(int j=0; j<bgSeedsPerCyliinder; ++j) {
-            float alpha = static_cast<float>(j)/(bgSeedsPerCyliinder-1);
-            tgt::vec3 p = alpha * s + (1.0f - alpha) * e;
+        for(int j=0; j<seedsAlongLine; ++j) {
+            float alpha = static_cast<float>(j+1)/(seedsAlongLine+1);
 
-            float rotationAngle = std::uniform_real_distribution<>(0.0, 2 * tgt::PIf)(input.randomEngine);
-            tgt::vec3 offset = 2.0f * radius * tgt::Quaternion<float>::rotate(orth, rotationAngle, axis);
+            const tgt::vec3 p = alpha * s + (1.0f - alpha) * e;
 
-            p += offset;
-
-            if(invalid(p)) {
-                continue;
+            for(int j=0; j<seedsPerPointFg; ++j) {
+                std::vector<tgt::vec3> segmentFg;
+                segmentFg.push_back(p);
+                segmentFg.push_back(tgt::vec3(p)+tgt::vec3(0.001));
+                foregroundLabels.push_back(segmentFg);
             }
 
-            std::vector<tgt::vec3> segment;
-            segment.push_back(p);
-            segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-            backgroundLabels.push_back(segment);
-        }
+            for(int j=0; j<seedsPerPointBg; ++j) {
+                for(int tr=0; tr<max_tries; ++tr) {
 
-        for (int wallDim : std::array<int, 3> {0, 1, 2}) {
-            tgt::vec3 wall = e;
+                    float rotationAngle = std::uniform_real_distribution<>(0.0, 2 * tgt::PIf)(input.randomEngine);
+                    tgt::vec3 offset = 2.0f * radius * tgt::Quaternion<float>::rotate(orth, rotationAngle, axis);
 
-            if(e[wallDim] < dim[wallDim]/2) {
-                wall[wallDim] = 0;
-            } else {
-                wall[wallDim] = dim[wallDim];
-            }
+                    tgt::vec3 po = p + offset;
 
-            tgt::ivec3 p2 = (e + wall)*0.5f;
-            if(!invalid(p2)) {
-                std::vector<tgt::vec3> segment;
-                segment.push_back(p2);
-                segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
-                backgroundLabels.push_back(segment);
+                    if(invalid(po)) {
+                        continue;
+                    }
+
+                    std::vector<tgt::vec3> segmentBg;
+                    segmentBg.push_back(po);
+                    segmentBg.push_back(tgt::vec3(po)+tgt::vec3(0.001));
+                    backgroundLabels.push_back(segmentBg);
+                    break;
+                }
             }
         }
-
-        tries = max_tries;
-        ++i;
     }
 }
 
@@ -696,62 +688,59 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     }
     auto& hierarchy = *maybeHierarchy;
 
+    auto inside = [&] (tgt::ivec3 p) {
+        auto indices = hierarchy.findBounds(p);
+        for(auto i : indices) {
+            if(balls.insideSingle(p, i)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     int max_tries = 10;
-    int tries = max_tries;
-    std::uniform_int_distribution<> indexDistr(0, balls.size()-1);
-    int i=0;
-    for(;i<numElements && tries > 0;) {
+    std::uniform_real_distribution<float> dirDistr(-1.0f, 1.0f);
+
+    size_t failures = 0;
+    for(int i=0; i<numElements; ++i) {
         progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
-        auto b1 = balls.center(indexDistr(input.randomEngine));
-        auto b2 = balls.center(indexDistr(input.randomEngine));
+        tgt::vec3 p = balls.center(i);
+        float radius = balls.radius(i);
 
-        auto inside = [&] (tgt::ivec3 p) {
-            auto indices = hierarchy.findBounds(p);
-            for(auto i : indices) {
-                if(balls.insideSingle(p, i)) {
-                    return true;
+        int seedsPerCell = 2;
+
+        for(int j=0; j<seedsPerCell; ++j) {
+            int tr;
+            for(tr=0; tr<max_tries; ++tr) {
+                tgt::vec3 dir(
+                        dirDistr(input.randomEngine),
+                        dirDistr(input.randomEngine),
+                        dirDistr(input.randomEngine)
+                        );
+                if(tgt::lengthSq(dir) == 0) {
+                    continue;
                 }
+                dir = tgt::normalize(dir);
+                tgt::vec3 offset = 2.0f * radius * dir;
+
+                p += offset;
+
+                if(inside(p)) {
+                    continue;
+                }
+
+                std::vector<tgt::vec3> segmentBg;
+                segmentBg.push_back(p);
+                segmentBg.push_back(tgt::vec3(p)+tgt::vec3(0.001));
+                backgroundLabels.push_back(segmentBg);
+                break;
             }
-            return false;
-        };
-
-        tgt::ivec3 p = (b1 + b2)/2;
-        if(inside(p)) {
-            p = tgt::ivec3(xDistr(input.randomEngine), yDistr(input.randomEngine), zDistr(input.randomEngine));
-        }
-        if(inside(p)) {
-            tries--;
-            continue;
-        }
-
-        std::vector<tgt::vec3> segment;
-        segment.push_back(p);
-        segment.push_back(tgt::vec3(p)+tgt::vec3(0.001));
-        backgroundLabels.push_back(segment);
-
-        for (int wallDim : std::array<int, 3> {0, 1, 2}) {
-            tgt::ivec3 wall = b1;
-
-            if(b1[wallDim] < dim[wallDim]/2) {
-                wall[wallDim] = 0;
-            } else {
-                wall[wallDim] = dim[wallDim];
-            }
-
-            tgt::ivec3 p2 = (b1 + wall)/2;
-            if(!inside(p2)) {
-                std::vector<tgt::vec3> segment;
-                segment.push_back(p2);
-                segment.push_back(tgt::vec3(p2)+tgt::vec3(0.001));
-                backgroundLabels.push_back(segment);
+            if(tr == max_tries) {
+                ++failures;
             }
         }
-
-        tries = max_tries;
-        ++i;
     }
 
-    size_t failures = numElements - i;
     if(failures > 0) {
         LWARNINGC(LargeTestDataGenerator::loggerCat_, "Failed to position " << failures << "background seeds");
     }
