@@ -137,38 +137,28 @@ VolumeAtomic<float> medianFilter3x3x3(const VolumeAtomic<float>& img) {
 }
 
 float estimateVariance3x3x3(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean) {
-    const tgt::ivec3 start(0);
-    const tgt::ivec3 end(img.getDimensions());
+    const int k = 1;
+    const tgt::ivec3 extent(k);
+    const tgt::ivec3 start(extent);
+    const tgt::ivec3 end(tgt::ivec3(img.getDimensions()) - extent);
     const size_t numVoxels = tgt::hmul(img.getDimensions());
 
     tgtAssert(img.getDimensions() == mean.getDimensions(), "Dimension mismatch");
 
-    const int k = 1;
     const int N=2*k+1;
-    const tgt::ivec3 neighborhoodSize(k);
+    const int numNeighborhoodVoxels = N*N*N;
 
     float sumOfDifferences = 0.0f;
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
-        const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
-
-        const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
-
-        float estimation = mean.voxel(center);
-        float val = img.voxel(center);
+    VRN_FOR_EACH_VOXEL(v, start, end) {
+        float estimation = mean.voxel(v);
+        float val = img.voxel(v);
         float diff = estimation - val;
 
-        float neighborhoodFactor;
-        if(numNeighborhoodVoxels > 1) {
-            neighborhoodFactor = static_cast<float>(numNeighborhoodVoxels)/static_cast<float>(numNeighborhoodVoxels-1);
-        } else {
-            neighborhoodFactor = 1.0f;
-        }
-
-        sumOfDifferences += neighborhoodFactor * diff * diff;
+        sumOfDifferences += diff * diff;
     }
+    float neighborhoodFactor = static_cast<float>(numNeighborhoodVoxels)/static_cast<float>(numNeighborhoodVoxels-1);
 
-    float varianceEstimation = sumOfDifferences/numVoxels;
+    float varianceEstimation = sumOfDifferences/numVoxels * neighborhoodFactor;
 
     return varianceEstimation;
 }
