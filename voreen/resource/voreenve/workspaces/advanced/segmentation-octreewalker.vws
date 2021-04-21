@@ -4585,7 +4585,7 @@ void main() {
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
                             <stepping x="1" y="1" z="1" />
                         </Property>
-                        <Property mapKey="modeString" name="modeString" value="volumeoctree" />
+                        <Property mapKey="modeString" name="modeString" value="boundingbox" />
                         <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
                         <Property mapKey="resolution" name="resolution" value="32" />
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
