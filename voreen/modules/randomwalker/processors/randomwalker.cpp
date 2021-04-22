@@ -69,8 +69,10 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
         switch(input.noiseModel_) {
             case RW_NOISE_GAUSSIAN:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussian>(input);
-            case RW_NOISE_GAUSSIAN_BIAN:
-                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBian>(input);
+            case RW_NOISE_GAUSSIAN_BIAN_MEAN:
+                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBianMean>(input);
+            case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
+                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBianMedian>(input);
             case RW_NOISE_TTEST: {
                 switch(input.parameterEstimationNeighborhoodExtent_) {
                     case 1: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
@@ -168,8 +170,9 @@ RandomWalker::RandomWalker()
     addProperty(useAdaptiveParameterSetting_);
     useAdaptiveParameterSetting_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
     addProperty(noiseModel_);
-    noiseModel_.addOption("gaussian_bian", "Gaussian (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN);
-    noiseModel_.addOption("ttest", "TTest", RW_NOISE_TTEST);
+    noiseModel_.addOption("gaussian_bian", "Gaussian with mean filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEAN);
+    noiseModel_.addOption("gaussian_bian_median", "Gaussian with median filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
+    noiseModel_.addOption("ttest", "T-Test (Bian 2016)", RW_NOISE_TTEST);
     noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
     noiseModel_.addOption("shot", "Poisson", RW_NOISE_POISSON);
     noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);

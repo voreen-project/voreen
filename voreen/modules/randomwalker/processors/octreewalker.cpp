@@ -176,15 +176,16 @@ OctreeWalker::OctreeWalker()
 
     // random walker properties
     addProperty(noiseModel_);
-        noiseModel_.addOption("gaussian_bian", "Gaussian (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN);
-        noiseModel_.addOption("ttest", "TTest", RW_NOISE_TTEST);
+        noiseModel_.addOption("gaussian_bian", "Gaussian with mean filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEAN);
+        noiseModel_.addOption("gaussian_bian_median", "Gaussian with median filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
+        noiseModel_.addOption("ttest", "T-Test (Bian 2016)", RW_NOISE_TTEST);
         noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
         noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
         noiseModel_.setGroupID("rwparam");
     ON_CHANGE_LAMBDA(noiseModel_, [this] () {
         RWNoiseModel m = noiseModel_.getValue();
-        betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_GAUSSIAN_BIAN || m == RW_NOISE_POISSON);
+        betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_GAUSSIAN_BIAN_MEAN || m == RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
         parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST);
     });
     addProperty(minEdgeWeight_);
@@ -1312,8 +1313,11 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     case RW_NOISE_GAUSSIAN:
                         newBrickAddr = processOctreeBrick<RWNoiseModelGaussian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
-                    case RW_NOISE_GAUSSIAN_BIAN:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                    case RW_NOISE_GAUSSIAN_BIAN_MEAN:
+                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBianMean>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
+                        break;
+                    case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
+                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBianMedian>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                         break;
                     case RW_NOISE_TTEST: {
                         switch(input.parameterEstimationNeighborhoodExtent_) {
