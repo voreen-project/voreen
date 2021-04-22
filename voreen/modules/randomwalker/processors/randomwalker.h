@@ -120,8 +120,12 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Performs a semi-automatic volume segmentation using the 3D random walker algorithm. "
-                       "<p>See: <a href=\"http://voreen.uni-muenster.de/?q=random-walker\" >voreen.uni-muenster.de/?q=random-walker</a></p>");
+        setDescription(
+                "Performs a semi-automatic volume segmentation using the 3D random walker algorithm. "
+                "<p>See: <a href=\"http://voreen.uni-muenster.de/?q=random-walker\" >voreen.uni-muenster.de/?q=random-walker</a></p>"
+                "<br><br>"
+                "More details on the automatic parameter setting methods (Gaussian and T-Test based) can be found in <b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b> (Bian and Jiang) and <b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b> (Bian and Jiang)"
+                );
     }
 
     virtual ComputeInput prepareComputeInput();
