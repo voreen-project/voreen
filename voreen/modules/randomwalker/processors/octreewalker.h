@@ -138,7 +138,7 @@ protected:
                 "<br><br>"
                 "This processor implements the algorithm described in the article <b>Hierarchical Random Walker Segmentation for Large Volumetric Biomedical Data</b> (Drees et al.), which you are kindly asked to cite if you find it useful in your research."
                 "<br><br>"
-                "More details about the automatic parameter setting methods (Gaussian and T-Test based) can be found in <b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b> (Bian and Jiang) and <b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b> (Bian and Jiang)"
+                "More details on the automatic parameter setting methods (Gaussian and T-Test based) can be found in <b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b> (Bian and Jiang) and <b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b> (Bian and Jiang)"
                 );
     }
 
