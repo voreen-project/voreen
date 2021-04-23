@@ -599,7 +599,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
 
         int seedsAlongLine = 2;
         int seedsPerPointFg = 1;
-        int seedsPerPointBg = 4;
+        int seedsPerPointBg = 1;
 
         int max_tries = 10;
         int tries = max_tries;
@@ -707,7 +707,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
         tgt::vec3 p = balls.center(i);
         float radius = balls.radius(i);
 
-        int seedsPerCell = 2;
+        int seedsPerCell = 1;
 
         for(int j=0; j<seedsPerCell; ++j) {
             int tr;
