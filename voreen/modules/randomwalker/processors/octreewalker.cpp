@@ -1335,6 +1335,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                                 newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
                                 break;
                         }
+                        break;
                     }
                     case RW_NOISE_POISSON:
                         newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, node.parentHadSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex);
