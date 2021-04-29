@@ -37,6 +37,8 @@
 #include "tgt/exception.h"
 #include "tgt/assert.h"
 
+#include <string.h>
+
 namespace voreen {
 
 const std::string NetworkConfigurator::loggerCat_("voreentool.NetworkConfigurator");
@@ -319,18 +321,17 @@ void NetworkConfigurator::parsePropertyName(const std::string& inputStr, std::st
 void NetworkConfigurator::parsePropertyAssignment(const std::string& inputStr, std::string& processorName, std::string& propertyName, std::string& value) {
     const std::string expectedFormat = "ProcessorName.PropertyName=value";
 
-    std::vector<std::string> tokens = strSplit(inputStr, '=');
-    if (tokens.size() != 2)
-        throw VoreenException("invalid property value assignment (expected format: " + expectedFormat + ")");
+    size_t splitPos = inputStr.find("=");
+    auto name = inputStr.substr(0, splitPos);
+    value = inputStr.substr(splitPos+1);
 
     try {
-        parsePropertyName(tokens.at(0), processorName, propertyName);
+        parsePropertyName(name, processorName, propertyName);
     }
     catch (const VoreenException& /*e*/) {
         throw VoreenException("invalid property value assignment (expected format: " + expectedFormat + ")");
     }
 
-    value = tokens.at(1);
     if (value.empty())
         throw VoreenException("invalid property value assignment (expected format: " + expectedFormat + ")");
 }
