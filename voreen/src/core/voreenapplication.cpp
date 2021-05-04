@@ -1263,21 +1263,21 @@ void VoreenApplication::tempDataPathChanged() {
     // But DO release the lock.
     tempDataPathLock_.reset(nullptr);
 
-    // Use property value, if possible.
-    std::string tempBasePath;
-    if (!tempDataPath_.get().empty()) {
-        tempBasePath = tempDataPath_.get();
-        if (!tgt::FileSystem::dirExists(tempBasePath)) {
+    // Ensure property has a good value:
+    std::string tempBasePath = tempDataPath_.get();
+    if (!tgt::FileSystem::dirExists(tempBasePath)) {
+        if(!tempBasePath.empty()) {
             LWARNING("Temporary path does not exist: " << tempBasePath << ". Switching to user data path: " << getUserDataPath("tmp"));
-            tempBasePath = "";
         }
-    }
-    // Otherwise use user data path.
-    if (tempBasePath.empty())
-        tempBasePath = getUserDataPath("tmp");
 
-    // Update property.
-    tempDataPath_.set(tempBasePath);
+        // We need a valid temp data path, so we take the user data path now.
+        // Changing the property here will recursively call this callback
+        // again, so ...
+        tempDataPath_.set(getUserDataPath("tmp"));
+        // ... when we return here all the work is done already.
+        return;
+    }
+    // We now know that tempBasePath is valid (i.e., it exists and is not empty).
 
     // Set temporary data path for this instance.
     tempDataPathInstance_ = getUniqueFilePath(tempBasePath);
