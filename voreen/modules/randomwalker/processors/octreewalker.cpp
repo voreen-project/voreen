@@ -393,23 +393,23 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     const size_t maxLevel = octree.getNumLevels()-1;
     size_t brickSizeInBytes = brickSize * sizeof(uint16_t);
 
-    // Check if the previous result is compatible with the current input
     if(previousResult_) {
         auto& oldTree = previousResult_->octree();
-        if(   oldTree.getDimensions() != volumeDim
-           || oldTree.getBrickDim() != brickDim
-           || oldTree.getNumLevels() != octree.getNumLevels()
-           || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes) {
-
-            // If not, clear previous results
+        if (incrementalSimilarityThreshold_.get() == 0.0f) {
+            LINFO("Not reusing previous solution due to incremental similarity threshold of 0");
             clearPreviousResults();
-       }
+        } else if(oldTree.getDimensions() != volumeDim
+               || oldTree.getBrickDim() != brickDim
+               || oldTree.getNumLevels() != octree.getNumLevels()
+               || brickPoolManager_->getBrickMemorySizeInByte() != brickSizeInBytes) {
+
+            LINFO("Not reusing previous solution for incompatible input volume");
+            clearPreviousResults();
+        }
     }
 
     if(previousResult_) {
         LINFO("Reusing previous solution for compatible input volume");
-    } else {
-        LINFO("Not reusing previous solution for incompatible input volume");
     }
 
     // Create a new brickpool if we need a new one
