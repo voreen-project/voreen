@@ -138,7 +138,7 @@ void VolumeOctreeLevelExtractor::adjustPropertiesToInput() {
     else {
         //size_t maxVolumeEdge = tgt::max(octree->getVolumeDim());
         size_t s = 512;
-        size_t maxLevel = std::min(maxLevel, static_cast<size_t>(tgt::ilog2(static_cast<int>(s) / static_cast<int>(brickEdge))));
+        maxLevel = std::min(maxLevel, static_cast<size_t>(tgt::ilog2(static_cast<int>(s) / static_cast<int>(brickEdge))));
     }
 
     // set the level property max value
