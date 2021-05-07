@@ -27,6 +27,7 @@
 
 #include "tgt/tgt_math.h"
 #include <sstream>
+#include <chrono>
 
 #include "tgt/gpucapabilities.h"
 #include "tgt/glmath.h"
@@ -39,6 +40,8 @@
 #include "voreen/core/voreenapplication.h"
 #include "voreen/core/utils/glsl.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
+#include "voreen/core/datastructures/octree/volumeoctree.h"
+#include "voreen/core/datastructures/octree/octreeutils.h"
 
 #include "voreen/core/datastructures/octree/volumeoctreebase.h"
 #include "voreen/core/datastructures/volume/volumedisk.h"
@@ -47,6 +50,47 @@
 using tgt::TextureUnit;
 
 namespace voreen {
+
+OctreeSliceTexture::OctreeSliceTexture()
+    : buf_()
+    , texture_(tgt::svec3(2,2,1), GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, tgt::Texture::LINEAR, tgt::Texture::CLAMP_TO_EDGE, nullptr, false)
+{
+}
+
+void OctreeSliceTexture::updateDimensions(tgt::svec2 dim) {
+    if(dim != tgt::svec2(texture_.getDimensions().xy())) {
+        texture_.setCpuTextureData(nullptr, false);
+        texture_.updateDimensions(tgt::ivec3(dim.x, dim.y, 1), false);
+
+        buf_.resize(tgt::hmul(dim), OctreeSliceTexture::Pixel(0));
+        texture_.setCpuTextureData(reinterpret_cast<GLubyte*>(buf_.data()), false);
+        LGL_ERROR;
+    }
+}
+
+void OctreeSliceTexture::uploadTexture() {
+    texture_.uploadTexture();
+    LGL_ERROR;
+}
+
+void OctreeSliceTexture::bindTexture() {
+    texture_.bind();
+    LGL_ERROR;
+}
+OctreeSliceTexture::Pixel* OctreeSliceTexture::buf() {
+    return buf_.data();
+}
+tgt::ivec2 OctreeSliceTexture::dimensions() {
+    return texture_.getDimensions().xy();
+}
+void OctreeSliceTexture::clear() {
+    std::fill(buf_.begin(), buf_.end(), OctreeSliceTexture::Pixel(0));
+}
+OctreeSliceViewProgress::OctreeSliceViewProgress()
+    : nextSlice_(0)
+    , nextTileX_(0)
+    , nextTileY_(0)
+{}
 
 const std::string SliceViewer::loggerCat_("voreen.base.SliceViewer");
 const std::string SliceViewer::fontName_("Vera.ttf");
@@ -92,6 +136,7 @@ SliceViewer::SliceViewer()
     , mwheelCycleHandler_("mouseWheelHandler", "Slice Cycling", &sliceIndex_)
     , mwheelZoomHandler_("zoomHandler", "Slice Zoom", &zoomFactor_, tgt::MouseEvent::CTRL)
     , sliceShader_(0)
+    , copyImageShader_(0)
     , sliceCache_(this, 10)
     , voxelPosPermutation_(0, 1, 2)
     , sliceLowerLeft_(1.f)
@@ -100,17 +145,23 @@ SliceViewer::SliceViewer()
     , mouseIsPressed_(false)
     , lastPickingPosition_(-1, -1, -1)
     , sliceComplete_(true)
+    , octreeTexture_(nullptr)
+    , octreeRenderProgress_()
 {
     // texture mode (2D/3D)
     texMode_.addOption("2d-texture", "2D Textures", TEXTURE_2D);
     texMode_.addOption("3d-texture", "3D Texture", TEXTURE_3D);
+    texMode_.addOption("octree", "Octree", OCTREE);
     texMode_.selectByKey("3d-texture");
     addProperty(texMode_);
+    ON_CHANGE(texMode_, SliceViewer, invalidateOctreeTexture);
     texMode_.onChange(MemberFunctionCallback<SliceViewer>(this, &SliceViewer::updatePropertyConfiguration));
     //texMode_.onChange(MemberFunctionCallback<SliceViewer>(this, &SliceViewer::rebuildShader()));  // does not work because of return value
     texMode_.setGroupID(inport_.getID());
     sliceLevelOfDetail_.setGroupID(inport_.getID());
+    ON_CHANGE(sliceLevelOfDetail_, SliceViewer, invalidateOctreeTexture);
     addProperty(sliceLevelOfDetail_);
+    ON_CHANGE(interactionLevelOfDetail_, SliceViewer, invalidateOctreeTexture);
     interactionLevelOfDetail_.setGroupID(inport_.getID());
     addProperty(interactionLevelOfDetail_);
     sliceExtractionTimeLimit_.setGroupID(inport_.getID());
@@ -122,6 +173,7 @@ SliceViewer::SliceViewer()
     inport_.addCondition(new PortConditionVolumeTypeGL());
     inport_.showTextureAccessProperties(true);
     addPort(inport_);
+    outport_.onSizeReceiveChange<SliceViewer>(this, &SliceViewer::invalidateOctreeTexture);
     addPort(outport_);
 
     setPropertyGroupGuiName(inport_.getID(), "Slice Technical Properties");
@@ -152,9 +204,13 @@ SliceViewer::SliceViewer()
     addInteractionHandler(mwheelZoomHandler_);
 
     addProperty(transferFunc1_);
+    ON_CHANGE(transferFunc1_, SliceViewer, invalidateOctreeTexture);
     addProperty(transferFunc2_);
+    ON_CHANGE(transferFunc2_, SliceViewer, invalidateOctreeTexture);
     addProperty(transferFunc3_);
+    ON_CHANGE(transferFunc3_, SliceViewer, invalidateOctreeTexture);
     addProperty(transferFunc4_);
+    ON_CHANGE(transferFunc4_, SliceViewer, invalidateOctreeTexture);
 
     // slice arrangement
     sliceAlignment_.addOption("xy-plane", "XY-Plane (axial)", XY_PLANE);
@@ -162,11 +218,15 @@ SliceViewer::SliceViewer()
     sliceAlignment_.addOption("yz-plane", "YZ-Plane (sagittal)", YZ_PLANE);
     sliceAlignment_.onChange(
         MemberFunctionCallback<SliceViewer>(this, &SliceViewer::onSliceAlignmentChange) );
+    ON_CHANGE(sliceAlignment_, SliceViewer, invalidateOctreeTexture);
     addProperty(sliceAlignment_);
 
     addProperty(sliceIndex_);
+    ON_CHANGE(sliceIndex_, SliceViewer, invalidateOctreeTexture);
     addProperty(numGridRows_);
+    ON_CHANGE(numGridRows_, SliceViewer, invalidateOctreeTexture);
     addProperty(numGridCols_);
+    ON_CHANGE(numGridCols_, SliceViewer, invalidateOctreeTexture);
     addProperty(selectCenterSliceOnInputChange_);
 
     addProperty(renderSliceBoundaries_);
@@ -223,8 +283,10 @@ SliceViewer::SliceViewer()
 
     // zooming
     addProperty(voxelOffset_);
+    ON_CHANGE(voxelOffset_, SliceViewer, invalidateOctreeTexture);
     zoomFactor_.setStepping(0.01f);
     addProperty(zoomFactor_);
+    ON_CHANGE(zoomFactor_, SliceViewer, invalidateOctreeTexture);
     addProperty(resetViewButton_);
     pickingMatrix_.setReadOnlyFlag(true);
     addProperty(pickingMatrix_);
@@ -240,10 +302,15 @@ SliceViewer::SliceViewer()
 
     // channel shift
     addProperty(applyChannelShift_);
+    ON_CHANGE(applyChannelShift_, SliceViewer, invalidateOctreeTexture);
     addProperty(channelShift1_);
+    ON_CHANGE(channelShift1_, SliceViewer, invalidateOctreeTexture);
     addProperty(channelShift2_);
+    ON_CHANGE(channelShift2_, SliceViewer, invalidateOctreeTexture);
     addProperty(channelShift3_);
+    ON_CHANGE(channelShift3_, SliceViewer, invalidateOctreeTexture);
     addProperty(channelShift4_);
+    ON_CHANGE(channelShift4_, SliceViewer, invalidateOctreeTexture);
     addProperty(resetChannelShift_);
     resetChannelShift_.onClick(MemberFunctionCallback<SliceViewer>(this, &SliceViewer::resetChannelShift));
     applyChannelShift_.onChange(MemberFunctionCallback<SliceViewer>(this, &SliceViewer::updatePropertyConfiguration));
@@ -273,8 +340,12 @@ Processor* SliceViewer::create() const {
 void SliceViewer::initialize() {
     VolumeRenderer::initialize();
 
-    sliceShader_ = ShdrMgr.load("sl_base", generateHeader(), false);
+    copyImageShader_ = ShdrMgr.load("passthrough", RenderProcessor::generateHeader(), false);
     LGL_ERROR;
+    sliceShader_ = ShdrMgr.load("sl_base", generateSliceShaderHeader(), false);
+    LGL_ERROR;
+
+    octreeTexture_.reset(new OctreeSliceTexture());
 
     QualityMode.addObserver(this);
 
@@ -284,6 +355,10 @@ void SliceViewer::initialize() {
 void SliceViewer::deinitialize() {
     ShdrMgr.dispose(sliceShader_);
     sliceShader_ = 0;
+    ShdrMgr.dispose(copyImageShader_);
+    copyImageShader_ = 0;
+
+    octreeTexture_.reset();
 
     sliceCache_.clear();
 
@@ -302,6 +377,14 @@ void SliceViewer::adjustPropertiesToInput() {
             int centerSlice = (int)inputVolume->getDimensions()[alignmentIndex] / 2;
             sliceIndex_.set(centerSlice);
         }
+    }
+}
+
+void SliceViewer::invalidateOctreeTexture() {
+    if(texMode_.getValue() == OCTREE && octreeTexture_) {
+        octreeTexture_->clear();
+        octreeRenderProgress_ = OctreeSliceViewProgress();
+        invalidate();
     }
 }
 
@@ -333,8 +416,9 @@ void SliceViewer::afterProcess() {
     if(QualityMode.isInteractionMode())
         processedInInteraction_ = true;
 
-    if (!sliceComplete_)
+    if (!sliceComplete_) {
         invalidate();
+    }
 }
 
 void SliceViewer::qualityModeChanged() {
@@ -347,11 +431,13 @@ void SliceViewer::qualityModeChanged() {
 void SliceViewer::updatePropertyConfiguration() {
 
     // properties not depending on the input volume
-    bool sliceMode2D = texMode_.isSelected("2d-texture");
-    sliceLevelOfDetail_.setReadOnlyFlag(!sliceMode2D);
-    interactionLevelOfDetail_.setReadOnlyFlag(!sliceMode2D);
-    sliceExtractionTimeLimit_.setReadOnlyFlag(!sliceMode2D);
-    sliceCacheSize_.setReadOnlyFlag(!sliceMode2D);
+    bool mode2d = texMode_.isSelected("2d-texture");
+    bool mode3d = texMode_.isSelected("3d-texture");
+    bool modeoctree = texMode_.isSelected("octree");
+    sliceLevelOfDetail_.setReadOnlyFlag(!(mode2d || modeoctree));
+    interactionLevelOfDetail_.setReadOnlyFlag(!(mode2d || modeoctree));
+    sliceExtractionTimeLimit_.setReadOnlyFlag(!(mode2d || modeoctree));
+    sliceCacheSize_.setReadOnlyFlag(!mode2d);
 
     if (static_cast<size_t>(sliceCacheSize_.get()) != sliceCache_.getCacheSize())
         sliceCache_.setCacheSize(static_cast<size_t>(sliceCacheSize_.get()));
@@ -417,6 +503,465 @@ void SliceViewer::resetChannelShift() {
     channelShift4_.set(tgt::vec3::zero);
 }
 
+static std::vector<tgt::Vector4<uint8_t>> extractLUT(const TransFunc1DKeys& tf) {
+    tgt::Texture* texture = tf.getTexture();
+
+    texture->downloadTexture();
+    const int mapDim = texture->getDimensions().x;
+
+    std::vector<tgt::Vector4<uint8_t>> valueMap;
+    valueMap.reserve(mapDim);
+    for(size_t i=0; i<mapDim; ++i) {
+        valueMap.push_back(texture->texel<tgt::Vector4<uint8_t>>(i));
+    }
+    return valueMap;
+}
+
+struct TransferFuncCPU {
+    std::vector<tgt::Vector4<uint8_t>> lut_;
+    RealWorldMapping inputToLut_;
+
+    TransferFuncCPU(TransFunc1DKeys* tf, RealWorldMapping volumeRwm)
+        : lut_()
+        , inputToLut_()
+    {
+        std::vector<uint8_t> valueMap;
+        RealWorldMapping tfRwm;
+
+        if(tf) {
+            lut_ = extractLUT(*tf);
+            tfRwm = RealWorldMapping(tf->getDomain(), "");
+        } else {
+            lut_ = extractLUT(TransFunc1DKeys());
+            tfRwm = RealWorldMapping(tgt::vec2(0.0, 1.0), "");
+        }
+
+        inputToLut_ = RealWorldMapping::combine(volumeRwm, tfRwm.getInverseMapping());
+    }
+
+    tgt::Vector4<uint8_t> lookUp(float val) const {
+        float lutVal = inputToLut_.normalizedToRealWorld(val);
+        size_t size = lut_.size();
+        size_t index = tgt::clamp<size_t>(tgt::round(lutVal * (size-1)), 0, size-1);
+        return lut_[index];
+    }
+};
+
+typedef std::chrono::steady_clock Clock;
+typedef std::chrono::time_point<Clock> TimePoint;
+
+enum class DeadlineResult {
+    Succeeded,
+    TimedOut,
+};
+
+static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxel, size_t level, const TransferFuncCPU tfs[4], OctreeSliceViewProgress& progress, TimePoint deadline) {
+    int rowSize = texture.dimensions().x;
+    auto* pixels = texture.buf();
+
+    tgt::mat4 voxelToPixel;
+    bool success = pixelToVoxel.invert(voxelToPixel);
+    tgtAssert(success, "Failed to invert pixelToVoxel matrix");
+
+    tgt::ivec3 volDim = octree.getDimensions();
+    LocatedVolumeOctreeNodeConst root = octree.getLocatedRootNode();
+    const OctreeBrickPoolManagerBase& brickPoolManager = *octree.getBrickPoolManager();
+    const tgt::svec3 brickDataSize = octree.getBrickDim();
+    const size_t numChannels = octree.getNumChannels();
+
+    // Try to hit the same brick as many times as possible by choosing a tile
+    // size that corresponds to one (or slightly less than one) brick...
+    const tgt::svec3 brickSizeInVoxels = brickDataSize * (1UL << level);
+    const tgt::ivec2 tileSizeRaw = tgt::abs(voxelToPixel*tgt::vec3::zero-voxelToPixel*tgt::vec3(brickSizeInVoxels)).xy();
+    // ... but a tile size of one or smaller doesn't make sense either.
+    const tgt::ivec2 tileSize = tgt::max(tgt::ivec2::two,tileSizeRaw);
+
+    const tgt::ivec2 begin = tgt::max(pixBegin, tgt::ivec2::zero);
+    const tgt::ivec2 end = tgt::min(pixEnd, texture.dimensions());
+    for(int ty=begin.y + progress.nextTileY_*tileSize.y; ty<end.y; ty+=tileSize.y) {
+        for(int tx=begin.x + progress.nextTileX_*tileSize.x; tx<end.x; tx+=tileSize.x) {
+            if(Clock::now() > deadline) {
+                return DeadlineResult::TimedOut;
+            }
+
+            const tgt::ivec2 tileBegin(tx,ty);
+            const tgt::ivec2 tileEnd = tgt::min(tileBegin + tileSize, end);
+
+            if(numChannels != 1) {
+                for(int py=tileBegin.y; py<tileEnd.y; ++py) {
+                    for(int px=tileBegin.x; px<tileEnd.x; ++px) {
+                        int index = px + py*rowSize;
+                        pixels[index] = OctreeSliceTexture::Pixel(0);
+                    }
+                }
+            }
+            for(size_t channel = 0; channel < numChannels; ++channel) {
+                const TransferFuncCPU& tf = tfs[channel];
+                for(int py=tileBegin.y; py<tileEnd.y; ++py) {
+                    for(int px=tileBegin.x; px<tileEnd.x; ++px) {
+                        tgt::vec4 pixelPos = tgt::vec4(px, py, 0.0, 1.0);
+                        tgt::vec3 pos = (pixelToVoxel*pixelPos).xyz();
+
+                        tgt::ivec3 posi = tgt::round(pos);
+                        tgtAssert(tgt::hand(tgt::greaterThanEqual(posi, tgt::ivec3::zero)) && tgt::hand(tgt::lessThan(posi, volDim)), "invalid pos");
+
+                        LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level);
+                        tgt::mat4 voxelToBrick = node.location().voxelToBrick();
+                        tgt::svec3 brickPos = tgt::round(voxelToBrick * pos);
+
+                        const uint16_t* brickData = brickPoolManager.getBrick(node.node().getBrickAddress());
+                        size_t brickIndex = channel+numChannels*cubicCoordToLinear(brickPos, brickDataSize);
+
+                        uint16_t rawVal = brickData[brickIndex];
+                        const float factor = 1.0f/0xffff;
+                        float voxelValue = static_cast<float>(rawVal) * factor;
+
+                        OctreeSliceTexture::Pixel np = tf.lookUp(voxelValue);
+
+                        // Compositing:
+                        int index = px + py*rowSize;
+                        OctreeSliceTexture::Pixel& p = pixels[index];
+                        // Looking at sl_base frag: For some reason the compositing
+                        // premultiplies alpha for multi channel, but not for
+                        // single? I guess we mirror that here...
+                        if(numChannels == 1) {
+                            p = np;
+                        } else {
+                            tgt::Vector3<uint8_t> multiplied = (tgt::Vector3<uint16_t>(np.xyz()) * static_cast<uint16_t>(np.a)) / static_cast<uint16_t>(256);
+                            p.xyz() += multiplied;
+                            p.a = std::max(np.a, p.a);
+                        }
+                    }
+                }
+            }
+            progress.nextTileX_ += 1;
+        }
+        progress.nextTileX_ = 0;
+        progress.nextTileY_ += 1;
+    }
+    return DeadlineResult::Succeeded;
+}
+
+void SliceViewer::renderFromOctree() {
+    octreeTexture_->updateDimensions(outport_.getSize());
+
+
+    // First update texture buffer (on cpu)
+    const VolumeBase* volume = inport_.getData();
+    tgtAssert(volume, "No volume");
+    tgtAssert(volume->hasRepresentation<VolumeOctree>(), "No octree");
+    const VolumeOctree& octree = *volume->getRepresentation<VolumeOctree>();
+    tgt::ivec3 volDim = volume->getDimensions();
+
+    const SliceAlignment alignment = sliceAlignment_.getValue();
+    int numSlices = volDim[alignment];
+    const size_t sliceIndex = static_cast<size_t>(sliceIndex_.get());
+    int numSlicesCol = numGridCols_.get();
+    int numSlicesRow = numGridRows_.get();
+
+    TransferFuncCPU tfs[4] = {
+        {transferFunc1_.get(), volume->getRealWorldMapping()},
+        {transferFunc2_.get(), volume->getRealWorldMapping()},
+        {transferFunc3_.get(), volume->getRealWorldMapping()},
+        {transferFunc4_.get(), volume->getRealWorldMapping()},
+    };
+
+    TimePoint deadline = Clock::now();
+    size_t renderTimeMs = sliceExtractionTimeLimit_.get();
+    if(QualityMode.getQuality() == VoreenQualityMode::RQ_HIGH || renderTimeMs == 0) {
+        deadline += std::chrono::hours(999);
+    } else {
+        deadline += std::chrono::milliseconds(renderTimeMs);
+    }
+
+    tgt::ivec2 ll = tgt::round(sliceLowerLeft_);
+    tgt::ivec2 sliceSize = tgt::round(sliceSize_); //TODO check rounding here is correct
+
+    sliceComplete_ = true; // Will be reset if we encounter a timeout
+
+    for (int pos = octreeRenderProgress_.nextSlice_; pos < (numSlicesCol * numSlicesRow); ++pos) {
+        int x = pos % numSlicesCol;
+        int y = pos / numSlicesCol;
+
+        int sliceNumber = (pos + static_cast<const int>(sliceIndex));
+        if (sliceNumber >= numSlices)
+            break;
+
+        tgt::ivec2 begin(ll.x + x*sliceSize.x, ll.y + ((numSlicesRow - (y + 1)) * sliceSize.y));
+        tgt::ivec2 end = begin+sliceSize;
+        tgt::vec3 dimInv = tgt::vec3(1.0)/tgt::max(tgt::vec3(1.0f),tgt::vec3(end-begin, numSlices));
+        tgt::vec3 offset = tgt::vec3(-begin, sliceNumber) + tgt::vec3(0.5);
+        tgt::mat4 pixelToScreenNorm = tgt::mat4::createScale(dimInv) * tgt::mat4::createTranslation(offset);
+        tgt::mat4 screenNormToTexture = textureMatrix_;
+        tgt::mat4 textureToVoxel = volume->getTextureToVoxelMatrix();
+
+        tgt::mat4 pixelToVoxel = textureToVoxel * screenNormToTexture * pixelToScreenNorm;
+
+        float pixelDistX = tgt::distance(pixelToVoxel*tgt::vec3::zero, pixelToVoxel*tgt::vec3(1,0,0));
+        float pixelDistY = tgt::distance(pixelToVoxel*tgt::vec3::zero, pixelToVoxel*tgt::vec3(0,1,0));
+        int baseLevel = std::floor(std::log2(std::min(pixelDistX, pixelDistY)));
+
+        int rawLevel = baseLevel;
+        switch(QualityMode.getQuality()) {
+            case VoreenQualityMode::RQ_INTERACTIVE:
+                rawLevel += interactionLevelOfDetail_.get();
+                break;
+            case VoreenQualityMode::RQ_DEFAULT:
+                rawLevel += sliceLevelOfDetail_.get();
+                break;
+            case VoreenQualityMode::RQ_HIGH:
+                //no time limit, octree level 0
+                rawLevel = 0;
+                break;
+            default:
+                tgtAssert(false,"unknown rendering quality");
+        }
+
+        size_t level = tgt::clamp(rawLevel, 0, static_cast<int>(octree.getNumLevels()-1));
+
+        if(renderOctreeSlice(*octreeTexture_, octree, begin, end, pixelToVoxel, level, tfs, octreeRenderProgress_, deadline) == DeadlineResult::Succeeded) {
+            octreeRenderProgress_.nextSlice_ += 1;
+            octreeRenderProgress_.nextTileY_ = 0;
+            octreeRenderProgress_.nextTileX_ = 0;
+        } else {
+            sliceComplete_ = false;
+            break;
+        }
+    }
+
+
+    // Update and render texture
+    octreeTexture_->uploadTexture();
+
+    tgt::TextureUnit unit;
+    unit.activate();
+    octreeTexture_->bindTexture();
+
+    copyImageShader_->activate();
+    copyImageShader_->setUniform("colorTex_", unit.getUnitNumber());
+    renderQuad();
+    copyImageShader_->deactivate();
+    LGL_ERROR;
+}
+
+void SliceViewer::renderFromVolumeTexture(tgt::mat4 toSliceCoordMatrix) {
+    const VolumeBase* volume = inport_.getData();
+    tgt::ivec3 volDim = volume->getDimensions();
+    const SliceAlignment alignment = sliceAlignment_.getValue();
+    int numSlices = volDim[alignment];
+    float canvasWidth = static_cast<float>(outport_.getSize().x);
+    float canvasHeight = static_cast<float>(outport_.getSize().y);
+    // setup matrices
+    LGL_ERROR;
+
+    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+    MatStack.pushMatrix();
+    MatStack.loadIdentity();
+    MatStack.multMatrix(tgt::mat4::createOrtho(0.0f, canvasWidth, 0.f, canvasHeight, -1.0f, 1.0f));
+
+    LGL_ERROR;
+
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    MatStack.pushMatrix();
+    MatStack.loadIdentity();
+
+    LGL_ERROR;
+
+    // setup shader
+    sliceShader_->activate();
+    LGL_ERROR;
+
+    // bind volume/slice texture
+    bool setupSuccessful = true;
+    TextureUnit texUnit;
+    if (texMode_.isSelected("3d-texture")) { // 3D texture
+        // bind volume
+        std::vector<VolumeStruct> volumeTextures;
+        volumeTextures.push_back(VolumeStruct(
+            volume,
+            &texUnit,
+            "volume_","volumeParams_",
+            inport_.getTextureClampModeProperty().getValue(),
+            tgt::vec4(inport_.getTextureBorderIntensityProperty().get()),
+            inport_.getTextureFilterModeProperty().getValue())
+        );
+        setupSuccessful = bindVolumes(sliceShader_, volumeTextures, 0, lightPosition_.get());
+        LGL_ERROR;
+    }
+    else if (!texMode_.isSelected("2d-texture")){
+        LERROR("unknown texture mode: " << texMode_.get());
+        setupSuccessful = false;
+    }
+    if (!setupSuccessful) {
+        MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+        MatStack.popMatrix();
+        MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+        MatStack.popMatrix();
+        outport_.deactivateTarget();
+        return;
+    }
+
+    // bind transfer functions
+    TextureUnit transferUnit1, transferUnit2, transferUnit3, transferUnit4;
+    transferUnit1.activate();
+    transferFunc1_.get()->getTexture()->bind();
+    transferFunc1_.get()->setUniform(sliceShader_, "transFuncParams_", "transFuncTex_", transferUnit1.getUnitNumber());
+    LGL_ERROR;
+    if (volume->getNumChannels() > 1) {
+        transferUnit2.activate();
+        transferFunc2_.get()->getTexture()->bind();
+        transferFunc2_.get()->setUniform(sliceShader_, "transFuncParams2_", "transFuncTex2_", transferUnit2.getUnitNumber());
+        LGL_ERROR;
+    }
+    if (volume->getNumChannels() > 2) {
+        transferUnit3.activate();
+        transferFunc3_.get()->getTexture()->bind();
+        transferFunc3_.get()->setUniform(sliceShader_, "transFuncParams3_", "transFuncTex3_", transferUnit3.getUnitNumber());
+        LGL_ERROR;
+    }
+    if (volume->getNumChannels() > 3) {
+        transferUnit4.activate();
+        transferFunc4_.get()->getTexture()->bind();
+        transferFunc4_.get()->setUniform(sliceShader_, "transFuncParams4_", "transFuncTex4_", transferUnit4.getUnitNumber());
+        LGL_ERROR;
+    }
+
+    // channel shift
+    if (applyChannelShift_.get()) {
+
+        sliceShader_->setUniform("channelShift_", channelShift1_.get() / tgt::vec3(volDim));
+        if (volume->getNumChannels() > 1) {
+            sliceShader_->setUniform("channelShift2_", channelShift2_.get() / tgt::vec3(volDim));
+        }
+        if (volume->getNumChannels() > 2) {
+            sliceShader_->setUniform("channelShift3_", channelShift3_.get() / tgt::vec3(volDim));
+        }
+        if (volume->getNumChannels() > 3) {
+            sliceShader_->setUniform("channelShift4_", channelShift4_.get() / tgt::vec3(volDim));
+        }
+    }
+    int numSlicesCol = numGridCols_.get();
+    int numSlicesRow = numGridRows_.get();
+
+    // render slice(s) as textured quads
+    float depth = 0.0f;
+    const size_t sliceIndex = static_cast<size_t>(sliceIndex_.get());
+    for (int pos = 0, x = 0, y = 0; pos < (numSlicesCol * numSlicesRow);
+        ++pos, x = pos % numSlicesCol, y = pos / numSlicesCol)
+    {
+        int sliceNumber = (pos + static_cast<const int>(sliceIndex));
+        if (sliceNumber >= numSlices)
+            break;
+
+        // compute depth in texture coordinates and check if it is not below the first or above the last slice
+        depth = (static_cast<float>(sliceNumber) + 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
+        float minDepth = 0.5f / static_cast<float>(volume->getDimensions()[alignment]);
+        float maxDepth = (static_cast<float>(volume->getDimensions()[alignment]) - 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
+        if ((depth < minDepth) || depth > maxDepth)
+            continue;
+
+        MatStack.loadIdentity();
+        MatStack.translate(sliceLowerLeft_.x + (x * sliceSize_.x),
+            sliceLowerLeft_.y + ((numSlicesRow - (y + 1)) * sliceSize_.y), 0.0f);
+        MatStack.scale(sliceSize_.x, sliceSize_.y, 1.0f);
+
+        if(!sliceShader_->isActivated())
+            sliceShader_->activate();
+
+        setGlobalShaderParameters(sliceShader_);
+
+        // extract 2D slice
+        if (texMode_.isSelected("2d-texture")) {
+
+            const size_t sliceID = tgt::iround(depth * volume->getDimensions()[alignment] - 0.5f);
+
+            bool singleSliceComplete = true;
+            SliceTexture* slice = 0;
+            int* shiftArray = 0;
+            if(applyChannelShift_.get()) {
+                //create shift array
+                shiftArray = new int[volume->getNumChannels()];
+                switch(volume->getNumChannels()) {
+                case 4:
+                    shiftArray[3] = channelShift4_.get()[alignment];
+                    //no break;
+                case 3:
+                    shiftArray[2] = channelShift3_.get()[alignment];
+                    //no break;
+                case 2:
+                    shiftArray[1] = channelShift2_.get()[alignment];
+                    //no break;
+                case 1:
+                    shiftArray[0] = channelShift1_.get()[alignment];
+                    break;
+                default:
+                    tgtAssert(false,"unsupported channel count!");
+                }
+            }
+            switch(QualityMode.getQuality()) {
+            case VoreenQualityMode::RQ_INTERACTIVE:
+                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, interactionLevelOfDetail_.get(),
+                    static_cast<clock_t>(sliceExtractionTimeLimit_.get()), &singleSliceComplete, false);
+            break;
+            case VoreenQualityMode::RQ_DEFAULT:
+                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, sliceLevelOfDetail_.get(),
+                    static_cast<clock_t>(sliceExtractionTimeLimit_.get()), &singleSliceComplete, false);
+            break;
+            case VoreenQualityMode::RQ_HIGH:
+                //no time limit, octree level 0
+                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, 0,
+                    static_cast<clock_t>(0), &singleSliceComplete, false);
+            break;
+            default:
+                tgtAssert(false,"unknown rendering quality");
+            }
+
+            delete[] shiftArray;
+
+            sliceComplete_ &= singleSliceComplete;
+
+            if (!slice)
+                continue;
+
+            // bind slice texture
+            GLint texFilterMode = inport_.getTextureFilterModeProperty().getValue();
+            GLint texClampMode = inport_.getTextureClampModeProperty().getValue();
+            tgt::vec4 borderColor = tgt::vec4(inport_.getTextureBorderIntensityProperty().get());
+            if (!GLSL::bindSliceTexture(slice, &texUnit, texFilterMode, texClampMode, borderColor))
+                continue;
+
+            // pass slice uniforms to shader
+            sliceShader_->setIgnoreUniformLocationError(true);
+            GLSL::setUniform(sliceShader_, "sliceTex_", "sliceTexParams_", slice, &texUnit);
+            sliceShader_->setIgnoreUniformLocationError(false);
+
+
+            sliceShader_->setUniform("toSliceCoordMatrix", toSliceCoordMatrix);
+
+            LGL_ERROR;
+        }
+
+        sliceShader_->setUniform("textureMatrix_", textureMatrix_);
+        LGL_ERROR;
+        tgt::vec2 texLowerLeft = tgt::vec2(0.f);
+        tgt::vec2 texUpperRight = tgt::vec2(1.f);
+        renderSliceGeometry(tgt::vec4(texLowerLeft.x, texLowerLeft.y, depth, 1.f),
+            tgt::vec4(texUpperRight.x, texLowerLeft.y, depth, 1.f),
+            tgt::vec4(texUpperRight.x, texUpperRight.y, depth, 1.f),
+            tgt::vec4(texLowerLeft.x, texUpperRight.y, depth, 1.f));
+
+    }   // textured slices
+
+    tgtAssert(sliceShader_, "no slice shader");
+    sliceShader_->deactivate();
+
+    MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
+    MatStack.popMatrix();
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    MatStack.popMatrix();
+    LGL_ERROR;
+}
+
 void SliceViewer::process() {
     const VolumeBase* volume = inport_.getData();
 
@@ -424,6 +969,15 @@ void SliceViewer::process() {
     if (texMode_.isSelected("3d-texture")) {
         if (!volume->getRepresentation<VolumeGL>()) {
             LERROR("3D texture could not be created. Falling back to 2D texture mode.");
+            texMode_.select("2d-texture");
+            rebuildShader();
+            return;
+        }
+    }
+    // ... and octree is available for octree mode
+    if (texMode_.isSelected("octree")) {
+        if (!volume->hasRepresentation<VolumeOctree>()) {
+            LERROR("Octree representation is not available. Falling back to 2D texture mode.");
             texMode_.select("2d-texture");
             rebuildShader();
             return;
@@ -543,6 +1097,14 @@ void SliceViewer::process() {
         sliceLowerLeft_.y += zoomOffset.y + focusOffset.y;
     }
 
+    if (texMode_.isSelected("3d-texture") || texMode_.isSelected("2d-texture")) {
+        renderFromVolumeTexture(toSliceCoordMatrix);
+    } else if (texMode_.isSelected("octree")) {
+        renderFromOctree();
+    } else {
+        LWARNING("Unknown texture mode: " << texMode_.get());
+    }
+
     // setup matrices
     LGL_ERROR;
 
@@ -556,193 +1118,6 @@ void SliceViewer::process() {
     MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
     MatStack.pushMatrix();
     MatStack.loadIdentity();
-
-    LGL_ERROR;
-
-    // setup shader
-    sliceShader_->activate();
-    LGL_ERROR;
-
-    // bind volume/slice texture
-    bool setupSuccessful = true;
-    TextureUnit texUnit;
-    if (texMode_.isSelected("3d-texture")) { // 3D texture
-        // bind volume
-        std::vector<VolumeStruct> volumeTextures;
-        volumeTextures.push_back(VolumeStruct(
-            volume,
-            &texUnit,
-            "volume_","volumeParams_",
-            inport_.getTextureClampModeProperty().getValue(),
-            tgt::vec4(inport_.getTextureBorderIntensityProperty().get()),
-            inport_.getTextureFilterModeProperty().getValue())
-        );
-        setupSuccessful = bindVolumes(sliceShader_, volumeTextures, 0, lightPosition_.get());
-        LGL_ERROR;
-    }
-    else if (!texMode_.isSelected("2d-texture")){
-        LERROR("unknown texture mode: " << texMode_.get());
-        setupSuccessful = false;
-    }
-    if (!setupSuccessful) {
-        MatStack.matrixMode(tgt::MatrixStack::PROJECTION);
-        MatStack.popMatrix();
-        MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
-        MatStack.popMatrix();
-        outport_.deactivateTarget();
-        return;
-    }
-
-    // bind transfer functions
-    TextureUnit transferUnit1, transferUnit2, transferUnit3, transferUnit4;
-    transferUnit1.activate();
-    transferFunc1_.get()->getTexture()->bind();
-    transferFunc1_.get()->setUniform(sliceShader_, "transFuncParams_", "transFuncTex_", transferUnit1.getUnitNumber());
-    LGL_ERROR;
-    if (volume->getNumChannels() > 1) {
-        transferUnit2.activate();
-        transferFunc2_.get()->getTexture()->bind();
-        transferFunc2_.get()->setUniform(sliceShader_, "transFuncParams2_", "transFuncTex2_", transferUnit2.getUnitNumber());
-        LGL_ERROR;
-    }
-    if (volume->getNumChannels() > 2) {
-        transferUnit3.activate();
-        transferFunc3_.get()->getTexture()->bind();
-        transferFunc3_.get()->setUniform(sliceShader_, "transFuncParams3_", "transFuncTex3_", transferUnit3.getUnitNumber());
-        LGL_ERROR;
-    }
-    if (volume->getNumChannels() > 3) {
-        transferUnit4.activate();
-        transferFunc4_.get()->getTexture()->bind();
-        transferFunc4_.get()->setUniform(sliceShader_, "transFuncParams4_", "transFuncTex4_", transferUnit4.getUnitNumber());
-        LGL_ERROR;
-    }
-
-    // channel shift
-    if (applyChannelShift_.get()) {
-
-        sliceShader_->setUniform("channelShift_", channelShift1_.get() / tgt::vec3(volDim));
-        if (volume->getNumChannels() > 1) {
-            sliceShader_->setUniform("channelShift2_", channelShift2_.get() / tgt::vec3(volDim));
-        }
-        if (volume->getNumChannels() > 2) {
-            sliceShader_->setUniform("channelShift3_", channelShift3_.get() / tgt::vec3(volDim));
-        }
-        if (volume->getNumChannels() > 3) {
-            sliceShader_->setUniform("channelShift4_", channelShift4_.get() / tgt::vec3(volDim));
-        }
-    }
-
-    // render slice(s) as textured quads
-    float depth = 0.0f;
-    const size_t sliceIndex = static_cast<size_t>(sliceIndex_.get());
-    for (int pos = 0, x = 0, y = 0; pos < (numSlicesCol * numSlicesRow);
-        ++pos, x = pos % numSlicesCol, y = pos / numSlicesCol)
-    {
-        int sliceNumber = (pos + static_cast<const int>(sliceIndex));
-        if (sliceNumber >= numSlices)
-            break;
-
-        // compute depth in texture coordinates and check if it is not below the first or above the last slice
-        depth = (static_cast<float>(sliceNumber) + 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
-        float minDepth = 0.5f / static_cast<float>(volume->getDimensions()[alignment]);
-        float maxDepth = (static_cast<float>(volume->getDimensions()[alignment]) - 0.5f) / static_cast<float>(volume->getDimensions()[alignment]);
-        if ((depth < minDepth) || depth > maxDepth)
-            continue;
-
-        MatStack.loadIdentity();
-        MatStack.translate(sliceLowerLeft_.x + (x * sliceSize_.x),
-            sliceLowerLeft_.y + ((numSlicesRow - (y + 1)) * sliceSize_.y), 0.0f);
-        MatStack.scale(sliceSize_.x, sliceSize_.y, 1.0f);
-
-        if(!sliceShader_->isActivated())
-            sliceShader_->activate();
-
-        setGlobalShaderParameters(sliceShader_);
-
-        // extract 2D slice
-        if (texMode_.isSelected("2d-texture")) {
-
-            const size_t sliceID = tgt::iround(depth * volume->getDimensions()[alignment] - 0.5f);
-
-            bool singleSliceComplete = true;
-            SliceTexture* slice = 0;
-            int* shiftArray = 0;
-            if(applyChannelShift_.get()) {
-                //create shift array
-                shiftArray = new int[volume->getNumChannels()];
-                switch(volume->getNumChannels()) {
-                case 4:
-                    shiftArray[3] = channelShift4_.get()[alignment];
-                    //no break;
-                case 3:
-                    shiftArray[2] = channelShift3_.get()[alignment];
-                    //no break;
-                case 2:
-                    shiftArray[1] = channelShift2_.get()[alignment];
-                    //no break;
-                case 1:
-                    shiftArray[0] = channelShift1_.get()[alignment];
-                    break;
-                default:
-                    tgtAssert(false,"unsupported channel count!");
-                }
-            }
-            switch(QualityMode.getQuality()) {
-            case VoreenQualityMode::RQ_INTERACTIVE:
-                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, interactionLevelOfDetail_.get(),
-                    static_cast<clock_t>(sliceExtractionTimeLimit_.get()), &singleSliceComplete, false);
-            break;
-            case VoreenQualityMode::RQ_DEFAULT:
-                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, sliceLevelOfDetail_.get(),
-                    static_cast<clock_t>(sliceExtractionTimeLimit_.get()), &singleSliceComplete, false);
-            break;
-            case VoreenQualityMode::RQ_HIGH:
-                //no time limit, octree level 0
-                slice = sliceCache_.getVolumeSlice(volume, alignment, sliceID, shiftArray, 0,
-                    static_cast<clock_t>(0), &singleSliceComplete, false);
-            break;
-            default:
-                tgtAssert(false,"unknown rendering quality");
-            }
-
-            delete[] shiftArray;
-
-            sliceComplete_ &= singleSliceComplete;
-
-            if (!slice)
-                continue;
-
-            // bind slice texture
-            GLint texFilterMode = inport_.getTextureFilterModeProperty().getValue();
-            GLint texClampMode = inport_.getTextureClampModeProperty().getValue();
-            tgt::vec4 borderColor = tgt::vec4(inport_.getTextureBorderIntensityProperty().get());
-            if (!GLSL::bindSliceTexture(slice, &texUnit, texFilterMode, texClampMode, borderColor))
-                continue;
-
-            // pass slice uniforms to shader
-            sliceShader_->setIgnoreUniformLocationError(true);
-            GLSL::setUniform(sliceShader_, "sliceTex_", "sliceTexParams_", slice, &texUnit);
-            sliceShader_->setIgnoreUniformLocationError(false);
-
-
-            sliceShader_->setUniform("toSliceCoordMatrix", toSliceCoordMatrix);
-
-            LGL_ERROR;
-        }
-
-        sliceShader_->setUniform("textureMatrix_", textureMatrix_);
-        tgt::vec2 texLowerLeft = tgt::vec2(0.f);
-        tgt::vec2 texUpperRight = tgt::vec2(1.f);
-        renderSliceGeometry(tgt::vec4(texLowerLeft.x, texLowerLeft.y, depth, 1.f),
-            tgt::vec4(texUpperRight.x, texLowerLeft.y, depth, 1.f),
-            tgt::vec4(texUpperRight.x, texUpperRight.y, depth, 1.f),
-            tgt::vec4(texLowerLeft.x, texUpperRight.y, depth, 1.f));
-
-    }   // textured slices
-
-    tgtAssert(sliceShader_, "no slice shader");
-    sliceShader_->deactivate();
 
     // render a border around each slice's boundaries if desired
     //
@@ -812,12 +1187,12 @@ void SliceViewer::renderSliceGeometry(const tgt::vec4& t0, const tgt::vec4& t1, 
     glDeleteVertexArrays(1, &vao);
 }
 
-std::string SliceViewer::generateHeader(const tgt::GpuCapabilities::GlVersion* version) {
+std::string SliceViewer::generateSliceShaderHeader(const tgt::GpuCapabilities::GlVersion* version) {
     std::string header = VolumeRenderer::generateHeader();
 
     if (texMode_.isSelected("2d-texture"))
         header += "#define SLICE_TEXTURE_MODE_2D \n";
-    else if (texMode_.isSelected("3d-texture"))
+    else if (texMode_.isSelected("3d-texture") || texMode_.isSelected("octree"))
         header += "#define SLICE_TEXTURE_MODE_3D \n";
     else {
         LWARNING("Unknown texture mode: " << texMode_.get());
@@ -838,8 +1213,12 @@ bool SliceViewer::rebuildShader() {
     if (!isInitialized() || !sliceShader_)
         return false;
 
-    sliceShader_->setHeaders(generateHeader());
-    return sliceShader_->rebuild();
+    if(texMode_.isSelected("3d-texture") || texMode_.isSelected("2d-texture")) {
+        sliceShader_->setHeaders(generateSliceShaderHeader());
+        return sliceShader_->rebuild();
+    } else {
+        return true;
+    }
 }
 
 void SliceViewer::renderLegend() {

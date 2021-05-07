@@ -41,6 +41,28 @@
 
 namespace voreen {
 
+class OctreeSliceTexture {
+public:
+    typedef tgt::Vector4<uint8_t> Pixel;
+    OctreeSliceTexture();
+    void updateDimensions(tgt::svec2);
+    void uploadTexture();
+    void bindTexture();
+    Pixel* buf();
+    tgt::ivec2 dimensions();
+    void clear();
+private:
+    std::vector<Pixel> buf_;
+    tgt::Texture texture_;
+};
+
+struct OctreeSliceViewProgress {
+    OctreeSliceViewProgress();
+    size_t nextSlice_;
+    size_t nextTileX_;
+    size_t nextTileY_;
+};
+
 /**
  * Performs slice rendering of a single or multiple slices
  * along one of the three main axis of the volume.
@@ -75,8 +97,13 @@ protected:
 
     virtual void adjustPropertiesToInput();
 
+    void invalidateOctreeTexture();
+
+    void renderFromVolumeTexture(tgt::mat4 toSliceCoordMatrix);
+    void renderFromOctree();
+
     /// Generates the header for the shader depending on the choice of features to be used.
-    virtual std::string generateHeader(const tgt::GpuCapabilities::GlVersion* version = 0);
+    std::string generateSliceShaderHeader(const tgt::GpuCapabilities::GlVersion* version = 0);
 
     /// Recompiles the shader.
     bool rebuildShader();
@@ -158,7 +185,8 @@ protected:
 protected:
     enum TextureMode {
         TEXTURE_2D,
-        TEXTURE_3D
+        TEXTURE_3D,
+        OCTREE,
     };
 
     enum InfoAlignment {
@@ -236,6 +264,7 @@ protected:
     MWheelNumPropInteractionHandler<float> mwheelZoomHandler_;
 
     tgt::Shader* sliceShader_;
+    tgt::Shader* copyImageShader_;
 
     SliceCache sliceCache_;       ///< Cache for slices created in 2D texture mode.
 
@@ -257,6 +286,8 @@ private:
     mutable bool mouseIsPressed_;               ///< Is a mouse button currently pressed?
     mutable tgt::ivec3 lastPickingPosition_;    ///< Mouse position during previous interaction
 
+    std::unique_ptr<OctreeSliceTexture> octreeTexture_;
+    OctreeSliceViewProgress octreeRenderProgress_;
 };
 
 } // namespace
