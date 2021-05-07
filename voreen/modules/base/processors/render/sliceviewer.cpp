@@ -555,12 +555,12 @@ enum class DeadlineResult {
     TimedOut,
 };
 
-static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxel, size_t level, const TransferFuncCPU tfs[4], OctreeSliceViewProgress& progress, TimePoint deadline) {
+static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxelMats[4], size_t level, const TransferFuncCPU tfs[4], OctreeSliceViewProgress& progress, TimePoint deadline) {
     int rowSize = texture.dimensions().x;
     auto* pixels = texture.buf();
 
     tgt::mat4 voxelToPixel;
-    bool success = pixelToVoxel.invert(voxelToPixel);
+    bool success = pixelToVoxelMats[0].invert(voxelToPixel);
     tgtAssert(success, "Failed to invert pixelToVoxel matrix");
 
     tgt::ivec3 volDim = octree.getDimensions();
@@ -592,8 +592,9 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
     int nextOut = 0;
 
     //TODO:
-    // slice-shift
     // linear sampling
+    // multithreading?
+    // screen reduction?
 
     for(int ty=begin.y + progress.nextTileY_*tileSize.y; ty<end.y; ty+=tileSize.y) {
         for(int tx=begin.x + progress.nextTileX_*tileSize.x; tx<end.x; tx+=tileSize.x) {
@@ -613,6 +614,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                 }
             }
             for(size_t channel = 0; channel < numChannels; ++channel) {
+                const tgt::mat4 pixelToVoxel = pixelToVoxelMats[channel];
                 const TransferFuncCPU& tf = tfs[channel];
                 for(int py=tileBegin.y; py<tileEnd.y; ++py) {
                     for(int px=tileBegin.x; px<tileEnd.x; ++px) {
@@ -620,7 +622,18 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                         tgt::vec3 pos = (pixelToVoxel*pixelPos).xyz();
 
                         tgt::ivec3 posi = tgt::round(pos);
-                        tgtAssert(tgt::hand(tgt::greaterThanEqual(posi, tgt::ivec3::zero)) && tgt::hand(tgt::lessThan(posi, volDim)), "invalid pos");
+
+                        int index = px + py*rowSize;
+                        OctreeSliceTexture::Pixel& p = pixels[index];
+
+                        if(tgt::hor(tgt::lessThan(posi, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(posi, volDim))) {
+                            // This can happen due to channel shift
+
+                            if(numChannels == 1) {
+                                p = OctreeSliceTexture::Pixel(0);
+                            }
+                            continue;
+                        }
 
                         int cacheEntry = -1;
                         for(int i = 0; i<cacheSize; ++i) {
@@ -658,8 +671,6 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                         OctreeSliceTexture::Pixel np = tf.lookUp(voxelValue);
 
                         // Compositing:
-                        int index = px + py*rowSize;
-                        OctreeSliceTexture::Pixel& p = pixels[index];
                         // Looking at sl_base frag: For some reason the compositing
                         // premultiplies alpha for multi channel, but not for
                         // single? I guess we mirror that here...
@@ -742,6 +753,13 @@ void SliceViewer::renderFromOctree() {
 
         tgt::mat4 pixelToVoxel = textureToVoxel * screenNormToTexture * pixelToScreenNorm;
 
+        tgt::mat4 pixelToVoxelMats[4] {
+            applyChannelShift_.get() ? tgt::mat4::createTranslation(channelShift1_.get()) * pixelToVoxel : pixelToVoxel,
+            applyChannelShift_.get() ? tgt::mat4::createTranslation(channelShift2_.get()) * pixelToVoxel : pixelToVoxel,
+            applyChannelShift_.get() ? tgt::mat4::createTranslation(channelShift3_.get()) * pixelToVoxel : pixelToVoxel,
+            applyChannelShift_.get() ? tgt::mat4::createTranslation(channelShift4_.get()) * pixelToVoxel : pixelToVoxel,
+        };
+
         float pixelDistX = tgt::distance(pixelToVoxel*tgt::vec3::zero, pixelToVoxel*tgt::vec3(1,0,0));
         float pixelDistY = tgt::distance(pixelToVoxel*tgt::vec3::zero, pixelToVoxel*tgt::vec3(0,1,0));
         int baseLevel = std::floor(std::log2(std::min(pixelDistX, pixelDistY)));
@@ -764,7 +782,7 @@ void SliceViewer::renderFromOctree() {
 
         size_t level = tgt::clamp(rawLevel, 0, static_cast<int>(octree.getNumLevels()-1));
 
-        if(renderOctreeSlice(*octreeTexture_, octree, begin, end, pixelToVoxel, level, tfs, octreeRenderProgress_, deadline) == DeadlineResult::Succeeded) {
+        if(renderOctreeSlice(*octreeTexture_, octree, begin, end, pixelToVoxelMats, level, tfs, octreeRenderProgress_, deadline) == DeadlineResult::Succeeded) {
             octreeRenderProgress_.nextSlice_ += 1;
             octreeRenderProgress_.nextTileY_ = 0;
             octreeRenderProgress_.nextTileX_ = 0;
