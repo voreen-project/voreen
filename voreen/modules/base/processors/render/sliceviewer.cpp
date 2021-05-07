@@ -578,6 +578,23 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
 
     const tgt::ivec2 begin = tgt::max(pixBegin, tgt::ivec2::zero);
     const tgt::ivec2 end = tgt::min(pixEnd, texture.dimensions());
+
+    struct CacheData {
+        tgt::mat4 voxelToBrick_;
+        uint64_t addr_;
+        const uint16_t* data_;
+    };
+
+    const size_t cacheSize = 8;
+    std::array<tgt::ivec3, cacheSize> cacheLlf { tgt::ivec3( 0) };
+    std::array<tgt::ivec3, cacheSize> cacheUrb { tgt::ivec3(-1) };
+    std::array<CacheData,  cacheSize> cacheData { CacheData { tgt::mat4::identity, 0, nullptr } };
+    int nextOut = 0;
+
+    //TODO:
+    // slice-shift
+    // linear sampling
+
     for(int ty=begin.y + progress.nextTileY_*tileSize.y; ty<end.y; ty+=tileSize.y) {
         for(int tx=begin.x + progress.nextTileX_*tileSize.x; tx<end.x; tx+=tileSize.x) {
             if(Clock::now() > deadline) {
@@ -605,14 +622,36 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                         tgt::ivec3 posi = tgt::round(pos);
                         tgtAssert(tgt::hand(tgt::greaterThanEqual(posi, tgt::ivec3::zero)) && tgt::hand(tgt::lessThan(posi, volDim)), "invalid pos");
 
-                        LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level);
-                        tgt::mat4 voxelToBrick = node.location().voxelToBrick();
-                        tgt::svec3 brickPos = tgt::round(voxelToBrick * pos);
+                        int cacheEntry = -1;
+                        for(int i = 0; i<cacheSize; ++i) {
+                            if(tgt::hand(tgt::greaterThanEqual(posi, cacheLlf[i])) && tgt::hand(tgt::lessThan(posi, cacheUrb[i]))) {
+                                cacheEntry = i;
+                            }
+                        }
 
-                        const uint16_t* brickData = brickPoolManager.getBrick(node.node().getBrickAddress());
+                        if(cacheEntry == -1) {
+                            cacheEntry = nextOut;
+                            nextOut = (nextOut+1)%cacheSize;
+                            auto& d = cacheData[cacheEntry];
+                            if(d.data_) {
+                                brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
+                            }
+
+                            LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level);
+                            auto& location = node.location();
+                            d.voxelToBrick_ = location.voxelToBrick();
+                            d.addr_ = node.node().getBrickAddress();
+                            d.data_ = brickPoolManager.getBrick(d.addr_);
+                            cacheLlf[cacheEntry] = location.voxelLLF();
+                            cacheUrb[cacheEntry] = location.voxelURB();
+                        }
+                        auto& d = cacheData[cacheEntry];
+
+                        tgt::svec3 brickPos = tgt::round(d.voxelToBrick_ * pos);
+
                         size_t brickIndex = channel+numChannels*cubicCoordToLinear(brickPos, brickDataSize);
 
-                        uint16_t rawVal = brickData[brickIndex];
+                        uint16_t rawVal = d.data_[brickIndex];
                         const float factor = 1.0f/0xffff;
                         float voxelValue = static_cast<float>(rawVal) * factor;
 
@@ -639,6 +678,12 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
         progress.nextTileX_ = 0;
         progress.nextTileY_ += 1;
     }
+    for(auto d : cacheData) {
+        if(d.data_) {
+            brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
+        }
+    }
+
     return DeadlineResult::Succeeded;
 }
 
