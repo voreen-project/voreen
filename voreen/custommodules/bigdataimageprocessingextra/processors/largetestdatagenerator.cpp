@@ -595,6 +595,10 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
         progressSteps.get<1>().setProgress(static_cast<float>(i)/numElements);
         auto s = cylinders.start(i);
         auto e = cylinders.end(i);
+
+        bool clipSuccess = clipLineToBB(volumeBounds, s, e);
+        tgtAssert(clipSuccess, "clip must have already been successful earlier");
+
         float radius = cylinders.radius(i);
 
         int seedsAlongLine = 2;
@@ -688,7 +692,12 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
     }
     auto& hierarchy = *maybeHierarchy;
 
-    auto inside = [&] (tgt::ivec3 p) {
+    tgt::Bounds volumeBounds(tgt::vec3(-0.5), tgt::vec3(dim) - tgt::vec3(0.5));
+
+    auto invalid = [&] (tgt::ivec3 p) {
+        if(!volumeBounds.containsPoint(p)) {
+            return true;
+        }
         auto indices = hierarchy.findBounds(p);
         for(auto i : indices) {
             if(balls.insideSingle(p, i)) {
@@ -725,7 +734,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
 
                 p += offset;
 
-                if(inside(p)) {
+                if(invalid(p)) {
                     continue;
                 }
 
