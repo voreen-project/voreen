@@ -56,7 +56,7 @@ struct LargeTestDataGeneratorInput {
         GAUSSIAN,
         POISSON,
     };
-    typedef std::minstd_rand random_engine_type;
+    typedef std::mt19937 random_engine_type;
 
     Scenario scenario;
     std::unique_ptr<HDF5FileVolume> outputVolumeNoisy;
