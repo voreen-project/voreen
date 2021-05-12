@@ -716,7 +716,7 @@ static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinder
         tgt::vec3 p = balls.center(i);
         float radius = balls.radius(i);
 
-        int seedsPerCell = 1;
+        int seedsPerCell = 2;
 
         for(int j=0; j<seedsPerCell; ++j) {
             int tr;
