@@ -252,7 +252,16 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     , initialized_(false)
     , initializedGL_(false)
     , networkEvaluationRequired_(false)
-    , uuidGenerator_()
+    , uuidGenerator_([] {
+            boost::mt19937 ran;
+            // This is definitely not cryptographically secure, but good enough
+            // to generate temporary directories.  Unfortunately, the default
+            // initialization of random generators in boost reads unitialized
+            // memory which makes valgrind less than happy...
+            ran.seed(time(NULL));
+            boost::uuids::basic_random_generator<boost::mt19937> gen(&ran);
+            return gen;
+            }())
 {
     id_ = guiName;
     guiName_ = guiName;
