@@ -591,7 +591,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
     const size_t cacheSize = 8;
     std::array<tgt::ivec3, cacheSize> cacheLlf { tgt::ivec3( 0) };
     std::array<tgt::ivec3, cacheSize> cacheUrb { tgt::ivec3(-1) };
-    std::array<CacheData,  cacheSize> cacheData { CacheData { tgt::mat4::identity, 0, nullptr } };
+    std::array<CacheData,  cacheSize> cacheData { CacheData { tgt::mat4::identity, OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, nullptr } };
     int nextOut = 0;
 
     //TODO:
