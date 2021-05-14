@@ -49,6 +49,7 @@ static inline uint64_t unpackAddr(std::array<uint16_t, 4> packed) {
 
 OctreeBrickPoolManagerMmapStorageIndex::OctreeBrickPoolManagerMmapStorageIndex(uint64_t brickAddr) {
     tgtAssert(brickAddr != 0, "Invalid brick addr");
+    tgtAssert(brickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, "Invalid brick addr");
 
     fileIndex_ = 0;
     while((brickAddr >> (fileIndex_+1)) != 0) {

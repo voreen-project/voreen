@@ -582,7 +582,10 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
     struct CacheData {
         tgt::mat4 voxelToBrick_;
         uint64_t addr_;
-        const uint16_t* data_;
+        union {
+            const uint16_t* data_;
+            uint16_t mean_;
+        };
     };
 
     const size_t cacheSize = 8;
@@ -646,7 +649,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                             cacheEntry = nextOut;
                             nextOut = (nextOut+1)%cacheSize;
                             auto& d = cacheData[cacheEntry];
-                            if(d.data_) {
+                            if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
                                 brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
                             }
 
@@ -654,7 +657,11 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                             auto& location = node.location();
                             d.voxelToBrick_ = location.voxelToBrick();
                             d.addr_ = node.node().getBrickAddress();
-                            d.data_ = brickPoolManager.getBrick(d.addr_);
+                            if(d.addr_ == OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+                                d.mean_ = node.node().getAvgValues()[channel];
+                            } else {
+                                d.data_ = brickPoolManager.getBrick(d.addr_);
+                            }
                             cacheLlf[cacheEntry] = location.voxelLLF();
                             cacheUrb[cacheEntry] = location.voxelURB();
                         }
@@ -662,9 +669,14 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
 
                         tgt::svec3 brickPos = tgt::round(d.voxelToBrick_ * pos);
 
-                        size_t brickIndex = channel+numChannels*cubicCoordToLinear(brickPos, brickDataSize);
+                        uint16_t rawVal;
+                        if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+                            size_t brickIndex = channel+numChannels*cubicCoordToLinear(brickPos, brickDataSize);
 
-                        uint16_t rawVal = d.data_[brickIndex];
+                            rawVal = d.data_[brickIndex];
+                        } else {
+                            rawVal = d.mean_;
+                        }
                         const float factor = 1.0f/0xffff;
                         float voxelValue = static_cast<float>(rawVal) * factor;
 
@@ -690,7 +702,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
         progress.nextTileY_ += 1;
     }
     for(auto d : cacheData) {
-        if(d.data_) {
+        if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
             brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
         }
     }
