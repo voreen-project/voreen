@@ -547,7 +547,7 @@ struct BrickNeighborhood {
 
             tgt::mat4 bufferToVoxel = brickToVoxel * bufferToBrick;
             tgt::svec3 samplePoint = tgt::fastround(bufferToVoxel.transform(blockBegin));
-            auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel);
+            auto node = root.findChildNode(samplePoint, brickBaseSize, sampleLevel, true);
             if(node.node().hasBrick()) {
                 tgt::mat4 bufferToSampleBrick = node.location().voxelToBrick() * bufferToVoxel;
                 tgt::ivec3 maxpos = node.location().brickDimensions() - tgt::svec3(1);
@@ -1362,9 +1362,10 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             // in this branch due to conflicts.
             // If this is the case: Take branch from old octree.
             if(childrenToProcess && prevRoot && !hasNewSeedsConflicts) {
-                auto prevNode = prevRoot->findChildNode(node.llf, brickDim, level);
+                auto prevNode = prevRoot->findChildNode(node.llf, brickDim, level, false);
 
                 if(prevNode.node().hasBrick()
+                    && prevNode.location().level() == level
                     && absdiffRel(prevNode.node().getMinValue(), min) < input.incrementalSimilarityThreshold_
                     && absdiffRel(prevNode.node().getMaxValue(), max) < input.incrementalSimilarityThreshold_
                     && absdiffRel(prevNode.node().getAvgValue(), avg) < input.incrementalSimilarityThreshold_

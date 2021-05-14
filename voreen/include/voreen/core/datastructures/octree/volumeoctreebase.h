@@ -143,7 +143,7 @@ struct LocatedVolumeOctreeNodeConst;
 struct LocatedVolumeOctreeNode {
     LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
 
-    LocatedVolumeOctreeNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel);
+    LocatedVolumeOctreeNode findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel, bool preferParentsOfHomogeneous);
 
     VolumeOctreeNode& node();
     const VolumeOctreeNode& node() const;
@@ -160,7 +160,7 @@ struct LocatedVolumeOctreeNodeConst {
     LocatedVolumeOctreeNodeConst(const VolumeOctreeNode* node, size_t level, tgt::svec3 llf, tgt::svec3 urb);
     LocatedVolumeOctreeNodeConst(LocatedVolumeOctreeNode node);
 
-    LocatedVolumeOctreeNodeConst findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const;
+    LocatedVolumeOctreeNodeConst findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel, bool preferParentsOfHomogeneous) const;
 
     const VolumeOctreeNode& node() const;
     VolumeOctreeNodeLocation& location();

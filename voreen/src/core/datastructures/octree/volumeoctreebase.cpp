@@ -209,7 +209,7 @@ tgt::svec3 VolumeOctreeNodeLocation::voxelURB() const {
 
 // Helper for traversing octree node trees with geometry.
 namespace {
-static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf, tgt::svec3& urb, size_t& level, const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) {
+static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf, tgt::svec3& urb, size_t& level, const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel, bool preferParentsOfHomogeneous) {
     // Note: We do NOT check for point < urb, because at the even though all
     // bounding boxes of bricks in _voxel_ space are within these bounds, when
     // transforming a position in _brick_ space at the upper right border of
@@ -252,14 +252,14 @@ static VolumeOctreeNode* findLeafNodeFor(VolumeOctreeNode* root, tgt::svec3& llf
     VolumeOctreeNode* child = root->children_[index];
     tgtAssert(child, "No child in non leaf node");
 
-    if(child->isHomogeneous()) {
+    if(preferParentsOfHomogeneous && child->isHomogeneous()) {
         // Parent has better resolution
         return root;
     }
     level = newLevel;
     urb = newUrb;
     llf = newLlf;
-    return findLeafNodeFor(child, llf, urb, level, point, brickDataSize, targetLevel);
+    return findLeafNodeFor(child, llf, urb, level, point, brickDataSize, targetLevel, preferParentsOfHomogeneous);
 }
 }
 
@@ -270,14 +270,14 @@ LocatedVolumeOctreeNode::LocatedVolumeOctreeNode(VolumeOctreeNode* node, size_t 
     , geometry_(level, llf, urb)
 {
 }
-LocatedVolumeOctreeNode LocatedVolumeOctreeNode::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) {
+LocatedVolumeOctreeNode LocatedVolumeOctreeNode::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel, bool preferParentsOfHomogeneous) {
     size_t level = geometry_.level();
     tgt::svec3 llf = geometry_.voxelLLF();
     tgt::svec3 urb = geometry_.voxelURB();
 
     tgtAssert(level >= targetLevel, "Invalid target level");
 
-    VolumeOctreeNode* node = findLeafNodeFor(node_, llf, urb, level, point, brickDataSize, targetLevel);
+    VolumeOctreeNode* node = findLeafNodeFor(node_, llf, urb, level, point, brickDataSize, targetLevel, preferParentsOfHomogeneous);
     return LocatedVolumeOctreeNode(node, level, llf, urb);
 }
 
@@ -304,8 +304,8 @@ LocatedVolumeOctreeNodeConst::LocatedVolumeOctreeNodeConst(LocatedVolumeOctreeNo
     : inner_(node)
 {
 }
-LocatedVolumeOctreeNodeConst LocatedVolumeOctreeNodeConst::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel) const {
-    return const_cast<LocatedVolumeOctreeNode&>(inner_).findChildNode(point, brickDataSize, targetLevel);
+LocatedVolumeOctreeNodeConst LocatedVolumeOctreeNodeConst::findChildNode(const tgt::svec3& point, const tgt::svec3& brickDataSize, size_t targetLevel, bool preferParentsOfHomogeneous) const {
+    return const_cast<LocatedVolumeOctreeNode&>(inner_).findChildNode(point, brickDataSize, targetLevel, preferParentsOfHomogeneous);
 }
 const VolumeOctreeNode& LocatedVolumeOctreeNodeConst::node() const {
   return inner_.node();
@@ -322,7 +322,7 @@ const VolumeOctreeNodeLocation& LocatedVolumeOctreeNodeConst::location() const {
 
 const std::string VolumeOctreeBase::loggerCat_("voreen.VolumeOctreeBase");
 
-VolumeOctreeBase::VolumeOctreeBase(const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels) 
+VolumeOctreeBase::VolumeOctreeBase(const tgt::svec3& brickDim, const tgt::svec3& volumeDim, size_t numChannels)
     : VolumeRepresentation(volumeDim)
     , numChannels_(numChannels)
     , brickDim_(brickDim)

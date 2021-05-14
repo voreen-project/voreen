@@ -653,7 +653,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                                 brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
                             }
 
-                            LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level);
+                            LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level, false);
                             auto& location = node.location();
                             d.voxelToBrick_ = location.voxelToBrick();
                             d.addr_ = node.node().getBrickAddress();

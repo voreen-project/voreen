@@ -1467,7 +1467,7 @@ void InteractiveProjectionLabeling::updateProjection() {
                             }
                         }
                         if(cacheEntry == nullptr) {
-                            brickCache.emplace_back(root.findChildNode(pVoxel, brickDataSize, level), brickDataSize, *octree->getBrickPoolManager());
+                            brickCache.emplace_back(root.findChildNode(pVoxel, brickDataSize, level, false), brickDataSize, *octree->getBrickPoolManager());
                             if(brickCache.size() > BRICK_CACHE_SIZE) {
                                 brickCache.pop_front();
                             }
