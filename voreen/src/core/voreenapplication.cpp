@@ -1275,16 +1275,24 @@ void VoreenApplication::tempDataPathChanged() {
     // Ensure property has a good value:
     std::string tempBasePath = tempDataPath_.get();
     if (!tgt::FileSystem::dirExists(tempBasePath)) {
-        if(!tempBasePath.empty()) {
-            LWARNING("Temporary path does not exist: " << tempBasePath << ". Switching to user data path: " << getUserDataPath("tmp"));
-        }
+        std::string userDataPathTmp = getUserDataPath("tmp");
 
-        // We need a valid temp data path, so we take the user data path now.
-        // Changing the property here will recursively call this callback
-        // again, so ...
-        tempDataPath_.set(getUserDataPath("tmp"));
-        // ... when we return here all the work is done already.
-        return;
+        if(userDataPathTmp == tempBasePath) {
+            // The user data tmp path is already selected, but does not exist, so we will create it.
+            if (!tgt::FileSystem::createDirectoryRecursive(userDataPathTmp)) {
+                throw VoreenException("Failed to create temporary directory");
+            }
+        } else {
+            // We are switching to the user data temp path here.
+            if(!tempBasePath.empty()) {
+                LWARNING("Temporary path does not exist: " << tempBasePath << ". Switching to user data path: " << userDataPathTmp);
+            }
+            // Changing the property here will recursively call this callback
+            // again, so ...
+            tempDataPath_.set(userDataPathTmp);
+            // ... when we return here all the work is done already.
+            return;
+        }
     }
     // We now know that tempBasePath is valid (i.e., it exists and is not empty).
 
