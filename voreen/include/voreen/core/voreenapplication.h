@@ -765,7 +765,7 @@ private:
     BoolProperty showStartupWizard_; //< if true, shows the startup wizard, else creates an empty workspace
 
     // Generator for uuids (mutable, since ()-operator is non-const)
-    mutable boost::uuids::basic_random_generator<boost::mt19937> uuidGenerator_;
+    mutable boost::uuids::random_generator uuidGenerator_;
 
     // The tempDataPath for this particular instance of Voreen
     std::string tempDataPathInstance_;
