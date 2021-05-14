@@ -74,6 +74,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/random/random_device.hpp>
 
 #ifdef WIN32
     #include <shlobj.h>
@@ -252,7 +253,7 @@ VoreenApplication::VoreenApplication(const std::string& binaryName, const std::s
     , initialized_(false)
     , initializedGL_(false)
     , networkEvaluationRequired_(false)
-    , mersenneTwister_()
+    , mersenneTwister_(boost::random_device()())
     , uuidGenerator_(mersenneTwister_)
 {
     id_ = guiName;
