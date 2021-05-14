@@ -764,8 +764,10 @@ private:
     //BoolProperty loadLastWorkspaceOnStartup_;   //< if true, the last loaded workspace should be restored
     BoolProperty showStartupWizard_; //< if true, shows the startup wizard, else creates an empty workspace
 
+    // Mersenne twister pseudo-random number generator for initialization of uuidGenerator to avoid valgrind uninitialized value messages
+    boost::mt19937 mersenneTwister_;
     // Generator for uuids (mutable, since ()-operator is non-const)
-    mutable boost::uuids::random_generator uuidGenerator_;
+    mutable boost::uuids::basic_random_generator<boost::mt19937> uuidGenerator_;
 
     // The tempDataPath for this particular instance of Voreen
     std::string tempDataPathInstance_;
