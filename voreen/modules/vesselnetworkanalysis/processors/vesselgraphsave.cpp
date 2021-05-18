@@ -42,11 +42,13 @@ const std::string VesselGraphSave::loggerCat_("voreen.vesseltoplogy.vesselgraphs
 VesselGraphSave::VesselGraphSave()
     : Processor()
     , inport_(Port::INPORT, "graph.input", "Graph Input", false, Processor::INVALID_RESULT)
-#ifdef WIN32
-    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "uncompressed (*.vvg)", FileDialogProperty::SAVE_FILE)
-#else
-    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "", "compressed (*.vvg.gz);;uncompressed (*.vvg)", FileDialogProperty::SAVE_FILE)
+    , graphFilePath_("graphFilePath", "Voreen Vessel Graph File", "Voreen Vessel Graph File", "",
+            "Voreen Vessel Graph File, uncompressed json (*.vvg);;"
+#ifndef WIN32 // Compression does not work on windows, see below
+            "Voreen Vessel Graph File, compressed json (*.vvg.gz);;"
 #endif
+            "Wavefront OBJ, centerlines only (*.obj)",
+            FileDialogProperty::SAVE_FILE)
     , saveButton_("save", "Save")
     , continousSave_("continousSave", "Save on inport change", false)
     , prettyJson_("prettyJson", "Prettify Json", false)
@@ -64,6 +66,71 @@ VesselGraphSave::VesselGraphSave()
 VesselGraphSave::~VesselGraphSave() {
 }
 
+static size_t writeVertex(std::ostream& s, size_t& counter, const tgt::vec3& v) {
+    s << "v " << v.x << " " << v.y << " " << v.z << "\n";
+    size_t id = counter;
+    ++counter;
+    return id;
+}
+
+static void saveAsWavefrontObj(std::ostream& s, const VesselGraph& g) {
+    size_t vertexCounter = 1;
+    for(auto& node : g.getNodes()) {
+        s << "#Node " << node.getID().raw() << "\n";
+        size_t id = writeVertex(s, vertexCounter, node.pos_);
+        s << "p " << id << "\n";
+    }
+
+    for(auto& edge : g.getEdges()) {
+        s << "#Edge " << edge.getID().raw() << "\n";
+        size_t centerlineBegin = vertexCounter;
+        for(auto& voxel : edge.getVoxels()) {
+            writeVertex(s, vertexCounter, voxel.pos_);
+        }
+        size_t centerlineEnd = vertexCounter;
+
+        // We use the fact that nodes above are iterated over in id order.
+        // However, VesselGraphNode ids start at 0 while OBJ vertex ids start
+        // at 1.
+        s << "l " << edge.getNodeID1().raw() + 1;
+        for(int i = centerlineBegin; i < centerlineEnd; ++i) {
+            s << " " << i;
+        }
+        s << " " << edge.getNodeID2().raw() + 1 << "\n";
+    }
+}
+static void saveAsJson(std::ostream& f, const VesselGraph& g, bool pretty, bool compressed) {
+    if(pretty) {
+        JsonSerializer serializer;
+        serializer.serialize("graph", g);
+        serializer.write(f, pretty, compressed);
+    } else {
+        // Faster and less memory intensive than rapidjson (i.e.,
+        // JsonSerializer), but does not support prettifying the json
+
+        using namespace boost::iostreams;
+        if(compressed) {
+#ifdef WIN32
+            // TODO: Using compression produces linker errors in boost.
+            // This does, however, not happen in json(de)serializer.cpp.
+            // Instead, there the compressed stream is corrupted.
+            tgtAssert(false, "Compression currently not supported on windows");
+#else
+            filtering_ostream compressingStream;
+            compressingStream.push(gzip_compressor(
+                        gzip_params(
+                            gzip::best_compression
+                            )
+                        ));
+            compressingStream.push(f);
+            g.serializeToJson(compressingStream);
+#endif
+        } else {
+            g.serializeToJson(f);
+        }
+    }
+}
+
 void VesselGraphSave::saveCurrentGraph() {
     const std::string path = graphFilePath_.get();
     if(path.empty()) {
@@ -75,40 +142,12 @@ void VesselGraphSave::saveCurrentGraph() {
     }
     try {
         std::fstream f(path, std::ios::out);
-        bool compressed = tgt::FileSystem::fileExtension(path) == "gz";
-        if(prettyJson_.get()) {
-            JsonSerializer serializer;
-            try {
-                serializer.serialize("graph", *input);
-            } catch(SerializationException& s) {
-                LERROR("Could not serialize graph: " << s.what());
-                return;
-            }
-            serializer.write(f, prettyJson_.get(), compressed);
-        } else {
-            // Faster and less memory intensive than rapidjson (i.e.,
-            // JsonSerializer), but does not support prettifying the json
-
-            using namespace boost::iostreams;
-            if(compressed) {
-#ifdef WIN32
-                // TODO: Using compression produces linker errors in boost.
-                // This does, however, not happen in json(de)serializer.cpp.
-                // Instead, there the compressed stream is corrupted.
-                tgtAssert(false, "Compression currently not supported on windows");
-#else
-                filtering_ostream compressingStream;
-                compressingStream.push(gzip_compressor(
-                            gzip_params(
-                                gzip::best_compression
-                                )
-                            ));
-                compressingStream.push(f);
-                input->serializeToJson(compressingStream);
-#endif
-            } else {
-                input->serializeToJson(f);
-            }
+        if(endsWith(path, ".vvg.gz")) {
+            saveAsJson(f, *input, prettyJson_.get(), true);
+        } else if(endsWith(path, ".vvg")) {
+            saveAsJson(f, *input, prettyJson_.get(), false);
+        } else if(endsWith(path, ".obj")) {
+            saveAsWavefrontObj(f, *input);
         }
     } catch(...) {
         LERROR("Could not save graph " << path);

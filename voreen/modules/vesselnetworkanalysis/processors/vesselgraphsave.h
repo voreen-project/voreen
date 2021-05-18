@@ -47,9 +47,13 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor can be used to save vessel graphs as files that can be later reloaded using VesselGraphSource. "
-                "Vesselgraphs are serialized in a custom (but simple) json format that is gzip-compressed before writing it to disk.");
-        graphFilePath_.setDescription("Location on disk where the serialized version of the graph will be written to.");
+        setDescription("Save the Vessel Graph to a file for further processing or for reloading back into Voreen later."
+                "Supported file formats are .vvg, .vvg.gz (not on windows currently), and .obj.<br><br> "
+                "<i>Voreen Vessel Graph</i> files (.vvg and .vvg.gz) are (optionally compressed) json files that include the full information present in the Vessel Graph structure and can be loaded back into Voreen using a VesselGraphSource processor. <br><br>"
+                "<i>Wavefront OBJ</i> (.obj) is a common format for geometries. "
+                "Here, only the node and centerline information is saved! "
+                "This export method is mainly provided for convenience and compatibility with other tools without requiring an additional intermediate processing step.");
+        graphFilePath_.setDescription( "Location on disk where the serialized version of the graph will be written to. ");
         continousSave_.setDescription("Automatically overwrite specified file when the input VesselGraph changes. If not enabled, the export can be triggered manually using the 'Save'-Button.");
         prettyJson_.setDescription("Generate json with human-friendly newlines and identation. If not specified, no superfluous space characters will be written.");
     }
