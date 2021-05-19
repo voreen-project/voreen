@@ -571,7 +571,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
 
     // Try to hit the same brick as many times as possible by choosing a tile
     // size that corresponds to one (or slightly less than one) brick...
-    const tgt::svec3 brickSizeInVoxels = brickDataSize * (1UL << level);
+    const tgt::svec3 brickSizeInVoxels = brickDataSize * (size_t(1) << level);
     const tgt::ivec2 tileSizeRaw = tgt::abs(voxelToPixel*tgt::vec3::zero-voxelToPixel*tgt::vec3(brickSizeInVoxels)).xy();
     // ... but a tile size of one or smaller doesn't make sense either.
     const tgt::ivec2 tileSize = tgt::max(tgt::ivec2::two,tileSizeRaw);
