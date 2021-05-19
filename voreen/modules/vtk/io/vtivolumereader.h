@@ -51,6 +51,8 @@ public:
     virtual VolumeList* read(const std::string& url);
     virtual VolumeBase* read(const VolumeURL& origin);
 
+    virtual bool canSupportFileWatching() const;
+
 private:
 
     static const std::string loggerCat_;

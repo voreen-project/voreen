@@ -128,4 +128,8 @@ VolumeReader* NetCDFVolumeReader::create(ProgressBar* progress) const {
     return new NetCDFVolumeReader(progress);
 }
 
+bool NetCDFVolumeReader::canSupportFileWatching() const {
+    return true;
+}
+
 } // namespace voreen
