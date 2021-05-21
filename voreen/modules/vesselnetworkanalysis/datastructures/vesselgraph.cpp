@@ -469,8 +469,10 @@ VesselGraphEdgePathProperties VesselGraphEdgePathProperties::fromPath(const Vess
             distToFirstOuter += endDist;
         }
 
-        output.tipRadiusNode1_ = path.front().minDistToSurface_;
-        output.tipRadiusNode2_ = path.back().minDistToSurface_;
+        auto& frontVoxel = path.front();
+        auto& backVoxel = path.back();
+        output.tipRadiusNode1_ = frontVoxel.hasValidData() ? frontVoxel.minDistToSurface_ : 0.0f;
+        output.tipRadiusNode2_ = backVoxel.hasValidData() ? backVoxel.minDistToSurface_ : 0.0f;
     }
 
     output.innerLengthNode1_ = distToFirstOuter;

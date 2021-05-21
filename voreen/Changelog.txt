@@ -26,6 +26,7 @@ Voreen Changelog
       o Samples of Parallel Coordinates are now written in binary since writing ASCII produced too large files
       o VTIVolumeReader now properly displays names of point arrays
       o Enable file watching for vti and netcdf files
+      o Fix corner case where spurious branches would not be deleted in VesselGraphCreator and VesselGraphRefiner under some conditions
 
 2021-01-28: Voreen 5.2.0
 ------------------------
