@@ -42,7 +42,6 @@ public:
     virtual std::string getClassName() const { return "GeometryInsideTest"; }
     virtual std::string getCategory() const  { return "Geometry";               }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
-    virtual bool usesExpensiveComputation() const { return true; }
 
 protected:
 
