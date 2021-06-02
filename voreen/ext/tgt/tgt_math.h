@@ -26,7 +26,7 @@
 
 #include "tgt/types.h"
 
-#include <cfloat> // TODO: replace by "climits" or "limits"
+#include <limits>
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
