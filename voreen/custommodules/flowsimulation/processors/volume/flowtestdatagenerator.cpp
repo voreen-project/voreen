@@ -82,7 +82,7 @@ tgt::vec3 poiseuilleFlow(size_t diameter, size_t length, const tgt::svec3& pos, 
     float d = getR(diameter, pos);
 
     if(d <= 1.0f)
-        return tgt::vec3(0.0f, 0.0f, (1.0f - d) * (1.0f - d));
+        return tgt::vec3(0.0f, 0.0f, 1.0f - d*d);
     else
         return tgt::vec3::zero;
 }
