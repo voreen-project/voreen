@@ -40,7 +40,7 @@ const std::string RoiAnalysis::loggerCat_("voreen.flowsimulation.RoiAnalysis");
 RoiAnalysis::RoiAnalysis()
     : AsyncComputeProcessor()
     , volumeListPort_(Port::INPORT, "input.volumelist", "Volume List Port")
-    , maskPort_(Port::INPORT, "input.parameter", "Parameter Port")
+    , maskPort_(Port::INPORT, "input.parameter", "Mask Port")
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
     , outputQuantity_("outputQuantity", "Output Quantity")
 {
@@ -57,17 +57,32 @@ RoiAnalysis::RoiAnalysis()
     outputQuantity_.setGroupID("output");
 }
 
+bool RoiAnalysis::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized");
+        return false;
+    }
+
+    if(!volumeListPort_.isReady()) {
+        setNotReadyErrorMessage("No volume list");
+        return false;
+    }
+
+    // Note: mask is optional
+
+    return true;
+}
+
 RoiAnalysisInput RoiAnalysis::prepareComputeInput() {
 
     auto volumes = volumeListPort_.getThreadSafeData();
     if(!volumes || volumes->empty()) {
         throw InvalidInputException("No volumes", InvalidInputException::S_IGNORE);
     }
-    auto maskVolume = maskPort_.getData();
-    if(!maskVolume) {
-        throw InvalidInputException("No mask", InvalidInputException::S_IGNORE);
-    }
 
+    const VolumeBase* reference = volumes->first();
+
+    auto maskVolume = maskPort_.hasData() ? maskPort_.getData() : reference;
     VolumeRAMRepresentationLock mask(maskVolume);
     tgt::svec3 dim = mask->getDimensions();
     tgt::mat4 voxelToWorldMatrix = maskVolume->getVoxelToWorldMatrix();
@@ -81,7 +96,6 @@ RoiAnalysisInput RoiAnalysis::prepareComputeInput() {
         }
     }
 
-    const VolumeBase* reference = volumes->first();
     const size_t numChannels = reference->getNumChannels();
     if(numChannels != 1 && numChannels != 3) {
         throw InvalidInputException("Only 1 and 3 channel volumes supported", InvalidInputException::S_ERROR);

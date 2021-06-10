@@ -55,6 +55,8 @@ public:
     virtual std::string getClassName() const { return "RoiAnalysis"; }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
 
+    virtual bool isReady() const;
+
 protected:
 
     virtual void setDescriptions() override {
