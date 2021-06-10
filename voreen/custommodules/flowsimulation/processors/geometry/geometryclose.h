@@ -34,8 +34,6 @@
 
 namespace voreen {
 
-class GlMeshGeometryUInt32Normal;
-
 /**
  * Closes all holes of the input geometry.
  */

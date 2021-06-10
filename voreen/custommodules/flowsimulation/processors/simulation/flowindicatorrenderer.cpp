@@ -87,8 +87,6 @@ tgt::Bounds FlowIndicatorRenderer::getBoundingBox() const {
     return bounds;
 }
 
-void FlowIndicatorRenderer::process() {}
-
 void FlowIndicatorRenderer::render() {
     if (!inport_.isReady() || !enable_.get())
         return;

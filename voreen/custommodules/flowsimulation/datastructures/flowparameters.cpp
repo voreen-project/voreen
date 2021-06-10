@@ -208,7 +208,6 @@ FlowIndicator::FlowIndicator()
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
     , flowProfile_(FP_NONE)
-    , selected_(false)
 {
 }
 

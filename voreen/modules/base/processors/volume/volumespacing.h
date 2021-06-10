@@ -35,8 +35,6 @@
 
 namespace voreen {
 
-class Volume;
-
 class VRN_CORE_API VolumeSpacing : public VolumeProcessor {
 public:
     VolumeSpacing();

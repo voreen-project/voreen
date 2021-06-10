@@ -56,8 +56,6 @@ protected:
         setDescription("Used to render in and out flow locations.");
     }
 
-    void process();
-
     virtual void initialize();
     virtual void deinitialize();
 

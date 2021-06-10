@@ -53,7 +53,6 @@
 
 namespace tgt {
     class EventHandler;
-    class GLCanvas;
 }
 
 namespace voreen {

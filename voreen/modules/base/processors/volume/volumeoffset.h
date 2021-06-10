@@ -32,8 +32,6 @@
 
 namespace voreen {
 
-class Volume;
-
 class VRN_CORE_API VolumeOffset : public VolumeProcessor {
 public:
     VolumeOffset();

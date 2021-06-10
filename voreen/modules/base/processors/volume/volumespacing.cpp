@@ -34,17 +34,17 @@ namespace voreen {
 const std::string VolumeSpacing::loggerCat_("voreen.base.VolumeSpacing");
 
 VolumeSpacing::VolumeSpacing()
-    : VolumeProcessor(),
-    inport_(Port::INPORT, "volumehandle.input", "Volume Input"),
-    outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false),
-    enableProcessing_("enabled", "Enable", false),
-    mode_("mode", "Mode"),
-    uniformSpacing_("uniformSpacing", "Uniform Spacing", false),
-    spacingX_("spacingX", "Spacing X (mm)", 1.f, 0.000001f, 1000.f),
-    spacingY_("spacingY", "Spacing Y (mm)", 1.f, 0.000001f, 1000.f),
-    spacingZ_("spacingZ", "Spacing Z (mm)", 1.f, 0.000001f, 1000.f),
-    reset_("reset", "Reset Spacing"),
-    spacingDisplay_("spacingDisplay", "Resulting Spacing (mm)", tgt::vec3(1.0f), tgt::vec3(0.0f), tgt::vec3(1000.f))
+    : VolumeProcessor()
+    , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
+    , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
+    , enableProcessing_("enabled", "Enable", false)
+    , mode_("mode", "Mode")
+    , uniformSpacing_("uniformSpacing", "Uniform Spacing", false)
+    , spacingX_("spacingX", "Spacing X (mm)", 1.f, 0.000001f, 1000.f)
+    , spacingY_("spacingY", "Spacing Y (mm)", 1.f, 0.000001f, 1000.f)
+    , spacingZ_("spacingZ", "Spacing Z (mm)", 1.f, 0.000001f, 1000.f)
+    , reset_("reset", "Reset Spacing")
+    , spacingDisplay_("spacingDisplay", "Resulting Spacing (mm)", tgt::vec3(1.0f), tgt::vec3(0.0f), tgt::vec3(1000.f))
 {
     addPort(inport_);
     addPort(outport_);

@@ -34,8 +34,6 @@
 
 namespace voreen {
 
-class GlMeshGeometryUInt32Normal;
-
 /**
  * Calculates and sets smooth normals for the input geometry.
  */

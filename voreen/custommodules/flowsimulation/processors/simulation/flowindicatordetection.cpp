@@ -296,7 +296,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     if(validSelection) {
         triggertBySelection_ = true;
 
-        size_t index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+        auto index = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
         const FlowIndicator& indicator = flowIndicators_.at(index);
         const FlowIndicatorSettings& settings = flowIndicatorSettings_.at(index);
 
@@ -357,7 +357,8 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
     if(triggertBySelection_)
         return;
 
-    size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+    // Handle selection.
+    auto indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
     if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
 
         FlowIndicatorSettings& settings = flowIndicatorSettings_[indicatorIdx];
@@ -376,12 +377,12 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         indicator.name_ = indicatorName_.get();
 
         if(needReinitialization) {
+            // Backup id, type and name.
             FlowIndicatorType type = indicator.type_;
             int id = indicator.id_;
             std::string name = indicator.name_;
-            indicator = initializeIndicator(settings);
 
-            // Restore config.
+            indicator = initializeIndicator(settings);
             indicator.type_ = type;
             indicator.id_ = id;
             indicator.name_ = name;

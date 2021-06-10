@@ -33,10 +33,10 @@ ParallelCoordinatesSave::ParallelCoordinatesSave()
         , _propertyFileDialog( "property_file_dialog", "File Output", "Select File...", "", "Voreen Parallel Coordinates (*.vpc)", FileDialogProperty::SAVE_FILE )
         , _propertySaveButton( "property_save_button", "Save" )
 {
-    this->addPort( _inport );
+    addPort( _inport );
 
-    this->addProperty( _propertyFileDialog );
-    this->addProperty( _propertySaveButton );
+    addProperty( _propertyFileDialog );
+    addProperty( _propertySaveButton );
 }
 
 Processor* ParallelCoordinatesSave::create() const {

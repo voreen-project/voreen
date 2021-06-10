@@ -37,15 +37,18 @@ VolumeOffset::VolumeOffset()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output", false)
     , enableProcessing_("enabled", "Enable", false)
-    , offset_("offset", "Set Offset", tgt::vec3(0.0f), tgt::vec3(-100.0), tgt::vec3(100.0))
+    , offset_("offset", "Set Offset", tgt::vec3(0.0f), tgt::vec3(-10000000.0), tgt::vec3(10000000.0))
     , reset_("reset", "Reset Offset")
-    , offsetDisplay_("offsetDisplay", "Resulting Offset", tgt::vec3(0.0f), tgt::vec3(-100.0), tgt::vec3(100.0))
+    , offsetDisplay_("offsetDisplay", "Resulting Offset", tgt::vec3(0.0f), tgt::vec3(-10000000.0), tgt::vec3(10000000.0))
 {
     addPort(inport_);
     addPort(outport_);
 
     addProperty(enableProcessing_);
         ON_CHANGE(enableProcessing_, VolumeOffset, adjustPropertyVisibility);
+
+    offset_.setNumDecimals(6);
+    offset_.setStepping(tgt::vec3(0.001f));
     addProperty(offset_);
 
     addProperty(reset_);

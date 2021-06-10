@@ -105,8 +105,6 @@ struct VRN_CORE_API FlowIndicator : public Serializable {
     FlowProfile         flowProfile_;    ///< Flow profile, @see FlowProfile.
     VelocityCurve       velocityCurve_;  ///< Velocity curve mapping time points to velocities.
 
-    bool                selected_;       ///< Used to indicate the currently selected indicator in UI.
-
     FlowIndicator();
 
     virtual void serialize(Serializer& s) const;
