@@ -191,10 +191,10 @@ void DynamicPythonProcessor::onScriptChange() {
         }
     }
 
-    const std::regex getPortDataRegex(R"(getPortData\(\s*([\"'}[^\"']*[\"'])\s*\))");
+    const std::regex getPortDataRegex(R"(getPortData\(\s*([\"'}[^\"'].*[\"'])\s*\))");
     source = std::regex_replace(source, getPortDataRegex, "getPortData(\"" + getGuiName() + "\", $1)");
 
-    const std::regex setPortDataRegex(R"(setPortData\(\s*([\"'][^\"']*[\"']\s*,\s*[a-zA-Z0-9]+\s*)\))");
+    const std::regex setPortDataRegex(R"(setPortData\(\s*([\"'][^\"'].*[\"']\s*,\s*[a-zA-Z0-9]+\s*)\))");
     source = std::regex_replace(source, setPortDataRegex, "setPortData(\"" + getGuiName() + "\", $1)");
 
     // Apply modification and compile.
