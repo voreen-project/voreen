@@ -44,7 +44,7 @@ VolumeListAggregate::VolumeListAggregate()
     aggregationFunction_.addOption("min", "Min", MIN);
     aggregationFunction_.addOption("max", "Max", MAX);
     aggregationFunction_.addOption("variance", "Variance", VARIANCE);
-    aggregationFunction_.addOption("sumOfSquares", "Sum of Squares", SUM_OF_SQUARES);
+    aggregationFunction_.addOption("l2norm", "L2 Norm", L2_NORM);
 }
 
 VolumeListAggregate::~VolumeListAggregate() {}
@@ -72,7 +72,7 @@ void VolumeListAggregate::process() {
         AggregationFunction aggregationFunction = aggregationFunction_.getValue();
         switch(aggregationFunction) {
         case MEAN:
-        case SUM_OF_SQUARES:
+        case L2_NORM:
             combinedRepresentation->clear();
             break;
         case MIN:
@@ -120,7 +120,7 @@ void VolumeListAggregate::process() {
                                 }
                                 break;
                             }
-                            case SUM_OF_SQUARES:
+                            case L2_NORM:
                                 aggregatedValue += currentValue * currentValue;
                                 break;
                             default:
@@ -130,6 +130,15 @@ void VolumeListAggregate::process() {
                             combinedRepresentation->setVoxelNormalized(aggregatedValue, x, y, z, channel);
                         }
                     }
+                }
+            }
+        }
+
+        if(aggregationFunction == L2_NORM) {
+            for(size_t i=0; i<combinedRepresentation->getNumVoxels(); i++) {
+                for(size_t channel = 0; channel < combinedRepresentation->getNumChannels(); channel++) {
+                    float value = combinedRepresentation->getVoxelNormalized(i, channel);
+                    combinedRepresentation->setVoxelNormalized(std::sqrt(value), i);
                 }
             }
         }
