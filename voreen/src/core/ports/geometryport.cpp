@@ -159,7 +159,13 @@ std::string GeometryPort::getContentDescription() const {
     strstr << Port::getContentDescription();
     if(hasData()) {
         strstr << std::endl << "Geometry Type: " << getData()->getClassName();
-        strstr << std::endl << "Bounding Box: " << getData()->getBoundingBox().getLLF() << " x " << getData()->getBoundingBox().getURB();
+        strstr << std::endl << "Bounding Box: ";
+        if(getData()->getBoundingBox().isDefined()) {
+            strstr << getData()->getBoundingBox().getLLF() << " x " << getData()->getBoundingBox().getURB();
+        }
+        else {
+            strstr << "undefined";
+        }
     }
     return strstr.str();
 }
@@ -169,7 +175,13 @@ std::string GeometryPort::getContentDescriptionHTML() const {
     strstr << Port::getContentDescriptionHTML();
     if(hasData()) {
         strstr << "<br>" << "Geometry Type: " << getData()->getClassName();
-        strstr << "<br>" << "Bounding Box: " << getData()->getBoundingBox().getLLF() << " x " << getData()->getBoundingBox().getURB();
+        strstr << "<br>" << "Bounding Box: ";
+        if(getData()->getBoundingBox().isDefined()) {
+            strstr << getData()->getBoundingBox().getLLF() << " x " << getData()->getBoundingBox().getURB();
+        }
+        else {
+            strstr << "undefined";
+        }
     }
     return strstr.str();
 }
