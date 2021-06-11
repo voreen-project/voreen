@@ -58,10 +58,10 @@ Volume::Volume(VolumeRepresentation* const volume, const tgt::vec3& spacing, con
     setOffset(offset);
     setPhysicalToWorldMatrix(transformation);
 
+    addRepresentation(volume);
+
     if (VolumeMemoryManager::isInited())
         VolumeMemoryManager::getRef().registerVolume(this);
-
-    addRepresentation(volume);
 }
 
 Volume::Volume(VolumeRepresentation* const volume, const VolumeBase* vh)
@@ -78,10 +78,10 @@ Volume::Volume(VolumeRepresentation* const volume, const VolumeBase* vh)
         }
     }
 
+    addRepresentation(volume);
+
     if (VolumeMemoryManager::isInited())
         VolumeMemoryManager::getRef().registerVolume(this);
-
-    addRepresentation(volume);
 }
 
 Volume::Volume(VolumeRepresentation* const volume, const MetaDataContainer* mdc) {
@@ -98,10 +98,10 @@ Volume::Volume(VolumeRepresentation* const volume, const MetaDataContainer* mdc)
         }
     }
 
+    addRepresentation(volume);
+
     if (VolumeMemoryManager::isInited())
         VolumeMemoryManager::getRef().registerVolume(this);
-
-    addRepresentation(volume);
 }
 
 Volume::Volume(VolumeRepresentation* const volume, const MetaDataContainer* mdc, const std::set<VolumeDerivedData*>& derivedData) {
@@ -121,10 +121,10 @@ Volume::Volume(VolumeRepresentation* const volume, const MetaDataContainer* mdc,
     for(std::set<VolumeDerivedData*>::const_iterator i = derivedData.begin(); i != derivedData.end(); i++)
        addDerivedData(*i);
 
+    addRepresentation(volume);
+
     if (VolumeMemoryManager::isInited())
         VolumeMemoryManager::getRef().registerVolume(this);
-
-    addRepresentation(volume);
 }
 
 Volume::~Volume() {
