@@ -62,7 +62,17 @@ void VolumeMemoryManager::registerVolume(VolumeBase* v) {
         LERROR("Cannot register volume, volume has already been registered!");
         return;
     }
-    
+
+    // We first ensure that the volume fits into memory.
+    // At this point, however, the memory has already been allocated, so it technically fits into main memory
+    // but might still exceed the user-defined memory limitation. Hence, we notify the user about this issue.
+    // Another useful side-effect is, that main memory is freed in an attempt to fulfill the memory request,
+    // as VolumeReaders for example do not free memory on their own.
+    if(!requestMainMemory(v)) {
+        LWARNING("Registered a volume that exceeds the main memory limitation");
+    }
+
+    // Now, we add the representation.
     registeredVolumes_.push_front(v);
 
     updateMainMemory();
