@@ -42,8 +42,8 @@ public:
 
     /**
      * Enables or disables forcing a disk representation of loaded volumes, even
-     * if they have no native one. If enabled, a hdf5 disk representation will be used.
-     * Default: enabled
+     * if they have no native one.
+     * Default: disabled
      */
     void setForceDiskRepresentation(bool enabled);
 

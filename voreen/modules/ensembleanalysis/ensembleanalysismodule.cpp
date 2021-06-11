@@ -60,9 +60,6 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
 
     instance_ = this;
     addProperty(forceDiskRepresentation_);
-#ifndef VRN_MODULE_HDF5
-    forceDiskRepresentation_.setVisibleFlag(false);
-#endif
 
     // Processors
     registerProcessor(new EnsembleDataSource());
@@ -99,11 +96,7 @@ void EnsembleAnalysisModule::setForceDiskRepresentation(bool enabled) {
 }
 
 bool EnsembleAnalysisModule::getForceDiskRepresentation() const {
-#ifndef VRN_MODULE_HDF5
-    return false;
-#else
     return forceDiskRepresentation_.get();
-#endif
 }
 
 EnsembleAnalysisModule* EnsembleAnalysisModule::getInstance() {
