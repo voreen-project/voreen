@@ -68,6 +68,8 @@ std::vector<VolumeURL> VTMVolumeReader::listVolumes(const std::string& url) cons
         vtkCompositeDataIterator* iter = blockData->NewIterator();
         for (iter->InitTraversal(); !iter->IsDoneWithTraversal(); iter->GoToNextItem()) {
             vtkImageData* block = vtkImageData::SafeDownCast(iter->GetCurrentDataObject());
+            if(!block) // We only can handle image data.
+                continue;
 
             std::string blockIdxString = std::to_string(blockIdx);
             if(!filterBlock.empty() && filterBlock != blockIdxString)

@@ -27,11 +27,10 @@
 #define VRN_VTKMODULE_H
 
 #include "voreen/core/voreenmodule.h"
-#include "voreen/core/properties/boolproperty.h"
 
 namespace voreen {
 
-class VTKModule: public VoreenModule {
+class VTKModule : public VoreenModule {
 
 public:
     VTKModule(const std::string& modulePath);
@@ -39,32 +38,6 @@ public:
     virtual std::string getDescription() const {
         return "Enables use of VTK library and adds support for additional volume formats such as vti and NetCDF";
     }
-
-    /**
-     * Enables or disables forcing a disk representation of loaded volumes, even
-     * if they have no native one. If enabled, a hdf5 disk representation will be used.
-     * Default: enabled
-     */
-    void setForceDiskRepresentation(bool enabled);
-
-    /**
-     * Returns whether disk representations are forced.
-     */
-    bool getForceDiskRepresentation() const;
-
-    /**
-     * Returns the global instance of this class.
-     *
-     * @note Does not create the instance. If the module class has not been
-     *       instantiated yet, the null pointer is returned.
-     */
-    static VTKModule* getInstance();
-
-private:
-
-    static VTKModule* instance_;
-
-    BoolProperty forceDiskRepresentation_;
 };
 
 } // namespace

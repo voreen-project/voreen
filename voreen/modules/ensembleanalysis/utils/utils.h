@@ -33,6 +33,8 @@
 
 namespace voreen {
 
+class VolumeBase;
+
 /**
  * Simple helper class for loading volumes as part of an ensemble.
  * Basically wraps a VolumeSerializerPopulator and allows to incorporate custom readers.
@@ -41,7 +43,15 @@ class EnsembleVolumeReaderPopulator {
 public:
 
     /**
-     * Returns a volume reader for the given url or nullptr, if no suitable reader was found.
+     * Constructor.
+     *
+     * @param progressBar Optional progress bar to assign to the volume readers and writers.
+     *          Is <emph>not</emph> deleted by the populator's destructor.
+     */
+    EnsembleVolumeReaderPopulator(ProgressBar* progressBar = nullptr);
+
+    /**
+     * Returns a volume reader for the given path or nullptr, if no suitable reader was found.
      * This function can be used to incorporate custom readers, if desired.
      * E.g. multi-channel volumes stored in HDF5 files will not be split into multiple volumes using this function.
      * @note EnsembleVolumeReaderPopulator own the returned reader!
@@ -52,6 +62,17 @@ public:
 
 private:
     VolumeSerializerPopulator volumeSerializerPopulator_;
+};
+
+/**
+ * If a volume reader (or file format) does not support a disk representation, a Swap disk can be added.
+ * If a RAM representation is requested on a volume with a swap representation, it will be loaded from disk
+ * on demand, which typically takes longer than just loading a disk representation, but serves as
+ * (experimental) workaround for missing disk representations.
+ */
+class VolumeRAMSwap {
+public:
+    static bool tryAddVolumeSwap(VolumeBase* volumeBase);
 };
 
 

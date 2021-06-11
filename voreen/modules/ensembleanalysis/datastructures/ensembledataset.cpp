@@ -25,6 +25,7 @@
 
 #include "ensembledataset.h"
 
+#include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/io/volumereader.h"
@@ -88,11 +89,13 @@ const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
         return nullptr;
     }
 
-    const VolumeBase* volume = reader->read(url);
+    VolumeBase* volume = reader->read(url);
     if(!volume) {
         LERRORC("voreen.ensembleanalysis.VolumeCache", "Could not read volume " << url.getURL());
         return nullptr;
     }
+
+    VolumeRAMSwap::tryAddVolumeSwap(volume);
 
     // Cache result.
     cacheEntries_.insert(std::make_pair(urlString, VolumeCacheEntry{volume, true}));

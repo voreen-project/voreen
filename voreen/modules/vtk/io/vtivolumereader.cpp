@@ -25,8 +25,6 @@
 
 #include "vtivolumereader.h"
 
-#include "../vtkmodule.h"
-
 #include <vtkAbstractArray.h>
 #include <vtkCellData.h>
 #include <vtkDataArray.h>
@@ -45,93 +43,10 @@
 #include "voreen/core/datastructures/meta/realworldmappingmetadata.h"
 #include "voreen/core/datastructures/meta/templatemetadata.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 
-#ifdef VRN_MODULE_HDF5
-#include "modules/hdf5/io/hdf5volumereader.h"
-#include "modules/hdf5/io/hdf5volumewriter.h"
-#include "modules/hdf5/io/hdf5filevolume.h"
-#endif
-
 namespace voreen {
-
-#ifdef VRN_MODULE_HDF5
-class VolumeRAMSwap : public VolumeDisk {
-public:
-
-    static bool trySetVolumeSwapDisk(Volume* volume) {
-        if(!volume) {
-            return false;
-        }
-
-        std::unique_ptr<VolumeRAMSwap> swap;
-        try {
-            swap.reset(new VolumeRAMSwap(volume));
-        } catch(tgt::IOException&) {
-            return false;
-        }
-
-        volume->addRepresentation(swap.release());
-        volume->removeRepresentation<VolumeRAM>();
-
-        return true;
-    }
-
-    VolumeRAMSwap(Volume* volume)
-        : VolumeDisk(volume->getFormat(), volume->getDimensions())
-        , hash_(volume->getHash())
-    {
-        // Shorthands.
-        const tgt::svec3 dim = volume->getDimensions();
-        const std::string baseType = volume->getBaseType();
-        const size_t numChannels = volume->getNumChannels();
-
-        // File settings.
-        const tgt::svec3 chunkSize(dim.xy(), 1);
-        const int compressionLevel = 5;
-        const bool shuffleEnabled = true;
-        const std::string location = "swap";
-
-        // Retrieve tmp name.
-        std::string filename = VoreenApplication::app()->getUniqueTmpFilePath(".h5");
-
-        // Write.
-        fileVolume_ = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(filename, location, baseType, dim, numChannels, true, compressionLevel, chunkSize, shuffleEnabled));
-        fileVolume_->writeVolume(volume->getRepresentation<VolumeRAM>());
-        fileVolume_->writeSpacing(volume->getSpacing());
-        fileVolume_->writeOffset(volume->getOffset());
-        fileVolume_->writePhysicalToWorldTransformation(volume->getPhysicalToWorldMatrix());
-        if(volume->hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
-            fileVolume_->writeRealWorldMapping(volume->getRealWorldMapping());
-        }
-        fileVolume_->writeDerivedData(volume);
-        fileVolume_->writeMetaData(volume);
-    }
-
-    std::string getHash() const {
-        return hash_;
-    }
-
-    VolumeRAM* loadVolume() const {
-        return fileVolume_->loadVolume(0, getNumChannels());
-    }
-
-    VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
-        return fileVolume_->loadSlices(firstZSlice, lastZSlice, 0, getNumChannels());
-    }
-
-    VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-        return fileVolume_->loadBrick(offset, dimensions, 0, getNumChannels());
-    }
-
-private:
-
-    std::unique_ptr<HDF5FileVolume> fileVolume_;
-    std::string hash_;
-};
-#endif
 
 Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vtkImageData> imageData) {
     tgtAssert(imageData, "ImageData null");
@@ -248,13 +163,6 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
         volume->getMetaDataContainer().addMetaData(array->GetName(), metaData);
     }
 
-#ifdef VRN_MODULE_HDF5
-    // Add swap disk representation.
-    if(VTKModule::getInstance() && VTKModule::getInstance()->getForceDiskRepresentation()) {
-        VolumeRAMSwap::trySetVolumeSwapDisk(volume);
-    }
-#endif
-
     return volume;
 }
 
@@ -318,6 +226,17 @@ VolumeBase* VTIVolumeReader::read(const VolumeURL& origin) {
     }
 
     reader->SetFileName(fileName.c_str());
+    reader->UpdateInformation();
+    for(int i = 0; i < reader->GetNumberOfCellArrays(); i++) {
+        const char* name = reader->GetCellArrayName(i);
+        int status = name == origin.getSearchParameter("name") ? 1 : 0;
+        reader->SetCellArrayStatus(name, status);
+    }
+    for(int i = 0; i < reader->GetNumberOfPointArrays(); i++) {
+        const char* name = reader->GetPointArrayName(i);
+        int status = name == origin.getSearchParameter("name") ? 1 : 0;
+        reader->SetPointArrayStatus(name, status);
+    }
     reader->Update();
 
     return createVolumeFromVtkImageData(origin, reader->GetOutput());

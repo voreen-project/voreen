@@ -33,42 +33,17 @@
 
 namespace voreen {
 
-VTKModule* VTKModule::instance_ = nullptr;
-
 VTKModule::VTKModule(const std::string& modulePath)
     : VoreenModule(modulePath)
-    , forceDiskRepresentation_("forceDiskRepresentation", "Force Disk Representation", false)
 {
     setID("VTK");
     setGuiName("VTK");
-
-    instance_ = this;
-    addProperty(forceDiskRepresentation_);
-#ifndef VRN_MODULE_HDF5
-    forceDiskRepresentation_.setVisibleFlag(false);
-#endif
 
     registerVolumeReader(new NetCDFVolumeReader());
     registerVolumeReader(new VTIVolumeReader());
     registerVolumeReader(new VTMVolumeReader());
     registerVolumeWriter(new NiftiVolumeWriter());
     registerVolumeWriter(new VTIVolumeWriter());
-}
-
-void VTKModule::setForceDiskRepresentation(bool enabled) {
-    forceDiskRepresentation_.set(enabled);
-}
-
-bool VTKModule::getForceDiskRepresentation() const {
-#ifndef VRN_MODULE_HDF5
-    return false;
-#else
-    return forceDiskRepresentation_.get();
-#endif
-}
-
-VTKModule* VTKModule::getInstance() {
-    return instance_;
 }
 
 } // namespace
