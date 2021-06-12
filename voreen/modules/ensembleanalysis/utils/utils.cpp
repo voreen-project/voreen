@@ -29,6 +29,7 @@
 
 #include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volumeurl.h"
+#include "voreen/core/io/volumereader.h"
 
 #include "../ensembleanalysismodule.h"
 
@@ -83,7 +84,6 @@ public:
 
     VolumeRAM* loadVolume() const {
         // The Disk -> RAM converter calls this function, hence we directly return the representation.
-        LINFOC("VolumeRAMSwap", "Requesting entire volume...");
         return loadFromDisk();
     }
 
@@ -92,8 +92,6 @@ public:
                          tgt::svec3(getDimensions().xy(), lastZSlice-firstZSlice+1));
     }
     VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-        LINFOC("VolumeRAMSwap", "Requesting Brick...");
-
         // This function is typically called by derived data threads, after the checked for a VolumeRAM representation
         // to be present. Since the RAM representation was not present, but we don't want to read the entire volume
         // again and again, we add the representation here manually to the owner.
@@ -155,7 +153,6 @@ bool VolumeRAMSwap::tryAddVolumeSwap(VolumeBase* volumeBase) {
     }
 
     volume->addRepresentation(swap.release());
-    volume->removeRepresentation<VolumeRAM>(); // TODO: Why is this necessary?
 
     LDEBUGC("VolumeRAMSwap", "Added Swap Disk for " << volume->getOrigin().getURL());
     return true;
