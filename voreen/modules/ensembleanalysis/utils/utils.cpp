@@ -25,11 +25,14 @@
 
 #include "utils.h"
 
+#include <memory>
+
 #include "voreen/core/io/volumeserializer.h"
 
 #include "voreen/core/datastructures/volume/volumedisk.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/datastructures/volume/volumeurl.h"
-#include "voreen/core/io/volumereader.h"
 
 #include "../ensembleanalysismodule.h"
 
@@ -39,12 +42,137 @@
 
 namespace voreen {
 
-EnsembleVolumeReaderPopulator::EnsembleVolumeReaderPopulator(ProgressBar* progressBar)
+/**
+ * If a volume reader (or file format) does not support a disk representation, a Swap disk can be added.
+ * If a RAM representation is requested on a volume with a swap representation, it will be loaded from disk
+ * on demand, which typically takes longer than just loading a disk representation, but serves as
+ * (experimental) workaround for missing disk representations.
+ */
+class VolumeRAMSwap : public VolumeDisk {
+public:
+
+    static bool TryAddVolumeSwap(VolumeBase* volume) {
+        // If the memory manager is not initialized, we would not benefit from a swap disk..
+        if(!VolumeMemoryManager::isInited()) {
+            return false;
+        }
+
+        if(!volume || volume->hasRepresentation<VolumeDisk>()) {
+            return false;
+        }
+
+        if(volume->getOrigin().getURL().empty()) {
+            return false;
+        }
+
+        std::unique_ptr<VolumeRAMSwap> swap;
+        try {
+            swap.reset(new VolumeRAMSwap(volume));
+        } catch(tgt::IOException&) {
+            return false;
+        }
+
+        volume->addRepresentation(swap.release());
+
+        LDEBUG("Added Swap Disk for " << volume->getOrigin().getURL());
+        return true;
+    }
+
+
+    VolumeRAMSwap(VolumeBase* volume)
+        : VolumeDisk(volume->getFormat(), volume->getDimensions())
+        , hash_(volume->getHash())
+        , url_(volume->getOrigin())
+        , owner_(volume)
+    {
+    }
+
+    virtual std::string getHash() const {
+        return hash_;
+    }
+
+    VolumeRAM* loadVolume() const {
+        // The Disk -> RAM conversion calls this function, hence we directly return the representation.
+        return loadFromDisk();
+    }
+
+    VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
+        return loadBrick(tgt::svec3(0, 0, firstZSlice),
+                         tgt::svec3(getDimensions().xy(), lastZSlice-firstZSlice+1));
+    }
+    VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
+
+        tgtAssert(VolumeMemoryManager::isInited(), "Volume Memory Manager not initialized");
+        boost::lock_guard<boost::recursive_mutex> guard(*VolumeMemoryManager::getRef().getMutex());
+
+        // This function is typically called by derived data threads, after the checked for a VolumeRAM representation
+        // to be present. Since the RAM representation was not present, but we don't want to read the entire volume
+        // again and again, we add the representation here manually to the owner.
+
+        if(!owner_->hasRepresentation<VolumeRAM>()) {
+            owner_->addRepresentation(loadFromDisk());
+        }
+
+        VolumeRAMRepresentationLock ram(owner_);
+        return ram->getSubVolume(dimensions, offset);
+    }
+
+protected:
+
+    VolumeRAM* loadFromDisk() const {
+        LINFO("Reloading volume " << url_.getURL() << ". This may take a while...");
+
+        tgtAssert(VolumeMemoryManager::isInited(), "Volume Memory Manager not initialized");
+        auto& vmm = VolumeMemoryManager::getRef();
+        boost::lock_guard<boost::recursive_mutex> guard(*vmm.getMutex());
+
+        // Try to free memory before loading into RAM.
+        if(!vmm.requestMainMemory(owner_)) {
+            // We will potentially run out of memory...
+            LWARNING("Memory requirement not met, try to increase available CPU memory in the settings");
+        }
+
+        std::unique_ptr<Volume> volume(dynamic_cast<Volume*>(EnsembleVolumeReader().getVolumeReader(url_.getPath())->read(url_)));
+        tgtAssert(volume, "volume expected");
+        tgtAssert(volume->getNumRepresentations() == 1, "Single RAM representation expected");
+
+        VolumeRAMRepresentationLock lock(volume.get());
+        VolumeRAM* ramRepresentation = volume->getWritableRepresentation<VolumeRAM>();
+        volume->releaseAllRepresentations(); // Give away ownership.
+        return ramRepresentation;
+    }
+
+private:
+
+    VolumeBase* owner_;
+    std::string hash_;
+    VolumeURL url_;
+
+    static const std::string loggerCat_;
+};
+
+const std::string VolumeRAMSwap::loggerCat_ = "VolumeRAMSwap";
+
+
+/////////////////////////////////////////////////////////////////////
+// EnsembleVolumeReader
+/////////////////////////////////////////////////////////////////////
+
+EnsembleVolumeReader::EnsembleVolumeReader(ProgressBar* progressBar)
     : volumeSerializerPopulator_(progressBar)
 {
+    extensions_ = volumeSerializerPopulator_.getSupportedReadExtensions();
 }
 
-VolumeReader* EnsembleVolumeReaderPopulator::getVolumeReader(const std::string& path) const {
+VolumeReader* EnsembleVolumeReader::create(ProgressBar* progressBar) const {
+    return new EnsembleVolumeReader(progressBar);
+}
+
+bool EnsembleVolumeReader::canRead(const std::string& path) {
+    return getVolumeReader(path) != nullptr;
+}
+
+VolumeReader* EnsembleVolumeReader::getVolumeReader(const std::string& path) const {
 
 #ifdef VRN_MODULE_HDF5
     // For HDF5 files we first try to use the multi-channel reader.
@@ -66,96 +194,62 @@ VolumeReader* EnsembleVolumeReaderPopulator::getVolumeReader(const std::string& 
     return nullptr;
 }
 
+VolumeList* EnsembleVolumeReader::read(const std::string& url) {
+    VolumeReader* reader = getVolumeReader(url);
+    if(!reader) {
+        return nullptr;
+    }
+    return reader->read(url);
+}
 
-class VolumeRAMSwapDisk : public VolumeDisk {
-public:
+std::vector<VolumeURL> EnsembleVolumeReader::listVolumes(const std::string& url) const {
+    VolumeReader* reader = getVolumeReader(url);
+    if(!reader) {
+        return std::vector<VolumeURL>();
+    }
+    return reader->listVolumes(url);
+}
 
-    VolumeRAMSwapDisk(Volume* volume)
-        : VolumeDisk(volume->getFormat(), volume->getDimensions())
-        , hash_(volume->getHash())
-        , url_(volume->getOrigin())
-        , owner_(volume)
-    {
+VolumeBase* EnsembleVolumeReader::read(const VolumeURL& url) {
+    VolumeReader* reader = getVolumeReader(url.getPath());
+    if (!reader) {
+        LERRORC("voreen.EnsembleVolumeReader", "No suitable reader found for " << url.getURL());
+        return nullptr;
     }
 
-    virtual std::string getHash() const {
-        return hash_;
-    }
-
-    VolumeRAM* loadVolume() const {
-        // The Disk -> RAM converter calls this function, hence we directly return the representation.
-        return loadFromDisk();
-    }
-
-    VolumeRAM* loadSlices(const size_t firstZSlice, const size_t lastZSlice) const {
-        return loadBrick(tgt::svec3(0, 0, firstZSlice),
-                         tgt::svec3(getDimensions().xy(), lastZSlice-firstZSlice+1));
-    }
-    VolumeRAM* loadBrick(const tgt::svec3& offset, const tgt::svec3& dimensions) const {
-        // This function is typically called by derived data threads, after the checked for a VolumeRAM representation
-        // to be present. Since the RAM representation was not present, but we don't want to read the entire volume
-        // again and again, we add the representation here manually to the owner.
-
-        if(!owner_->hasRepresentation<VolumeRAM>()) {
-            owner_->addRepresentation(loadFromDisk());
-        }
-
-        VolumeRAMRepresentationLock ram(owner_);
-        return ram->getSubVolume(dimensions, offset);
-    }
-
-protected:
-
-    VolumeRAM* loadFromDisk() const {
-        LINFOC("VolumeRAMSwap", "Reloading volume " << url_.getURL() << ". This may take a while...");
-
-        EnsembleVolumeReaderPopulator populator;
-        VolumeReader* reader = populator.getVolumeReader(url_.getPath());
-
-        std::unique_ptr<Volume> volume(dynamic_cast<Volume*>(reader->read(url_)));
-        tgtAssert(volume, "volume expected");
-        tgtAssert(volume->getNumRepresentations() == 1, "Single RAM representation expected");
-
-        VolumeRAMRepresentationLock lock(volume.get()); // Required to trigger memory manager to clean up.
-        VolumeRAM* ramRepresentation = volume->getWritableRepresentation<VolumeRAM>();
-        volume->releaseAllRepresentations(); // Give away ownership.
-        return ramRepresentation;
-    }
-
-private:
-
-    mutable Volume* owner_;
-    std::string hash_;
-    VolumeURL url_;
-};
-
-
-bool VolumeRAMSwap::tryAddVolumeSwap(VolumeBase* volumeBase) {
-    EnsembleAnalysisModule* instance = EnsembleAnalysisModule::getInstance();
-    if(!instance || !instance->getForceDiskRepresentation()) {
-        return false;
-    }
-
-    if(!volumeBase || volumeBase->hasRepresentation<VolumeDisk>()) {
-        return false;
-    }
-
-    Volume* volume = dynamic_cast<Volume*>(volumeBase);
-    if(!volume || volume->getOrigin().getURL().empty()) {
-        return false;
-    }
-
-    std::unique_ptr<VolumeRAMSwapDisk> swap;
+    VolumeBase* volume = nullptr;
     try {
-        swap.reset(new VolumeRAMSwapDisk(volume));
-    } catch(tgt::IOException&) {
-        return false;
+        volume = reader->read(url);
+    } catch (tgt::FileException& e) {
     }
 
-    volume->addRepresentation(swap.release());
+    if (!volume) {
+        LERRORC("voreen.EnsembleVolumeReader", "Could not read volume " << url.getURL());
+        return nullptr;
+    }
 
-    LDEBUGC("VolumeRAMSwap", "Added Swap Disk for " << volume->getOrigin().getURL());
-    return true;
+    // Add swap disk, if required.
+    EnsembleAnalysisModule* instance = EnsembleAnalysisModule::getInstance();
+    if(instance && instance->getForceDiskRepresentation()) {
+        bool success = VolumeRAMSwap::TryAddVolumeSwap(volume);
+        if(success) {
+
+            // Enforce derived data calculation right before we add a swap disk.
+            // The reason for this is that otherwise the volume has possibly to be loaded twice when added to an
+            // ensemble at a later point, because we delete the RAM representation below.
+            // The latter we need to do, because loading a volume with a volume reader will not request
+            // memory from the memory manager.
+            LDEBUGC("voreen.EnsembleVolumeReader", "Calculating derived data...");
+            volume->getDerivedData<VolumeMinMax>();
+            if(volume->getNumChannels() > 1) {
+                volume->getDerivedData<VolumeMinMaxMagnitude>();
+            }
+
+            volume->removeRepresentation<VolumeRAM>();
+        }
+    }
+
+    return volume;
 }
 
 

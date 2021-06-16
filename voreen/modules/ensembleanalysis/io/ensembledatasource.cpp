@@ -152,7 +152,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
     std::vector<std::string> members = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
     float progressPerMember = 1.0f / members.size();
 
-    EnsembleVolumeReaderPopulator populator;
+    EnsembleVolumeReader reader;
     ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(members.size());
 
     for(size_t i=0; i<members.size(); i++) {
@@ -188,8 +188,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
             std::string url = memberPath + "/" + fileName;
 
-            VolumeReader* reader = populator.getVolumeReader(url);
-            if (!reader) {
+            if (!reader.canRead(url)) {
                 LERROR("No suitable reader found for " << fileName);
                 continue;
             }
@@ -199,13 +198,13 @@ void EnsembleDataSource::buildEnsembleDataset() {
             float duration = 0.0f;
             bool timeIsSet = false;
 
-            std::vector<VolumeURL> subURLs = reader->listVolumes(url);
+            std::vector<VolumeURL> subURLs = reader.listVolumes(url);
             for(size_t k = 0; k<subURLs.size(); k++) {
                 const VolumeURL& subURL = subURLs[k];
 
                 std::unique_ptr<VolumeBase> volumeHandle;
                 try {
-                    volumeHandle.reset(reader->read(subURL));
+                    volumeHandle.reset(reader.read(subURL));
                 }
                 catch (tgt::IOException& e) {
                     LERROR("Error reading " << subURL.getURL() << ": " << e.what());
@@ -213,9 +212,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
                 if(!volumeHandle)
                     break;
-
-                // Try to add disk representation.
-                VolumeRAMSwap::tryAddVolumeSwap(volumeHandle.get());
 
                 float currentTime = 0.0f;
                 if(!overrideTime_.get()) {

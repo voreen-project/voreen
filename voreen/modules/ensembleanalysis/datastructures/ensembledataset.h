@@ -91,8 +91,8 @@ public:
      */
     VolumeURL getURL(const std::string& fieldName) const;
 
-    virtual void serialize(Serializer& s) const override;
-    virtual void deserialize(Deserializer& s) override;
+    void serialize(Serializer& s) const override;
+    void deserialize(Deserializer& s) override;
 
 private:
 

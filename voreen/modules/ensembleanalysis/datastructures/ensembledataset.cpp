@@ -58,6 +58,8 @@ TimeStep::VolumeCache::~VolumeCache() {
 }
 
 void TimeStep::VolumeCache::volumeDelete(const VolumeBase* source) {
+    boost::lock_guard<boost::mutex> lockGuard(volumeDataMutex_);
+
     // If the volume gets deleted by the owner, we remove it from the cache.
     // Otherwise, we would have a dangling pointer.
     for(auto iter = cacheEntries_.begin(); iter != cacheEntries_.end(); iter++) {
@@ -82,20 +84,10 @@ const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
     }
 
     // If not available, load it using the stored url.
-    EnsembleVolumeReaderPopulator populator;
-    VolumeReader* reader = populator.getVolumeReader(url.getPath());
-    if (!reader) {
-        LERRORC("voreen.ensembleanalysis.VolumeCache", "No reader found for " << url.getURL());
-        return nullptr;
-    }
-
-    VolumeBase* volume = reader->read(url);
+    VolumeBase* volume = EnsembleVolumeReader().read(url);
     if(!volume) {
-        LERRORC("voreen.ensembleanalysis.VolumeCache", "Could not read volume " << url.getURL());
         return nullptr;
     }
-
-    VolumeRAMSwap::tryAddVolumeSwap(volume);
 
     // Cache result.
     cacheEntries_.insert(std::make_pair(urlString, VolumeCacheEntry{volume, true}));

@@ -80,6 +80,11 @@ protected:
     // Needs to call notify*-methods
     friend class VolumeRAMRepresentationLock;
 
+#ifdef VRN_MODULE_ENSEMBLEANALYSIS
+    // Needs to acquire the lock and request memory.
+    friend class VolumeRAMSwap;
+#endif
+
     /**
      * Register volume for memory management (called by VolumeBase constructor).
      */

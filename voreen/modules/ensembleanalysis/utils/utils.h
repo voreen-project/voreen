@@ -27,6 +27,7 @@
 #define VRN_ENSEMBLE_UTILS_H
 
 #include "voreen/core/voreencoreapi.h"
+#include "voreen/core/io/volumereader.h"
 #include "voreen/core/io/volumeserializerpopulator.h"
 
 #include "tgt/vector.h"
@@ -34,12 +35,17 @@
 namespace voreen {
 
 class VolumeBase;
+class VolumeURL;
+
 
 /**
  * Simple helper class for loading volumes as part of an ensemble.
- * Basically wraps a VolumeSerializerPopulator and allows to incorporate custom readers.
+ * This class can be used to incorporate custom readers, if desired.
+ * E.g. multi-channel volumes stored in HDF5 files will not be split into multiple volumes using this function.
+ * This class can be used as other volume readers, however, this is currently not the intended way.
+ * Hence, the reader is not registered by the module.
  */
-class EnsembleVolumeReaderPopulator {
+class EnsembleVolumeReader : public VolumeReader {
 public:
 
     /**
@@ -48,33 +54,39 @@ public:
      * @param progressBar Optional progress bar to assign to the volume readers and writers.
      *          Is <emph>not</emph> deleted by the populator's destructor.
      */
-    EnsembleVolumeReaderPopulator(ProgressBar* progressBar = nullptr);
+    EnsembleVolumeReader(ProgressBar* progressBar = nullptr);
+    VolumeReader* create(ProgressBar* progressBar = nullptr) const;
+
+    virtual std::string getClassName() const { return "EnsembleVolumeReader"; }
+    virtual std::string getFormatDescription() const { return "Voreen ensemble volume reader"; }
 
     /**
-     * Returns a volume reader for the given path or nullptr, if no suitable reader was found.
-     * This function can be used to incorporate custom readers, if desired.
-     * E.g. multi-channel volumes stored in HDF5 files will not be split into multiple volumes using this function.
-     * @note EnsembleVolumeReaderPopulator own the returned reader!
-     * @see TimeStep
-     * @see EnsembleDataSource
+     * Returns true if a suitable reader is available for the given path, false otherwise.
+     */
+    bool canRead(const std::string& path);
+
+    //! @see VolumeReader
+    VolumeList* read(const std::string& url);
+    std::vector<VolumeURL> listVolumes(const std::string& url) const;
+
+    /**
+     * Reads the volume at the given URL.
+     * In contrast to the VolumeReader specification, this implementation is more forgiving and
+     * will return a nullptr instead of throwing an exception if the volume could not be loaded.
+     */
+    VolumeBase* read(const VolumeURL& origin);
+
+    /**
+     * Tries to find an appropriate reader for the given path.
+     * @param path path to the volume file
+     * @return a volume reader, if one was found or nullptr otherwise
      */
     VolumeReader* getVolumeReader(const std::string& path) const;
 
 private:
+
     VolumeSerializerPopulator volumeSerializerPopulator_;
 };
-
-/**
- * If a volume reader (or file format) does not support a disk representation, a Swap disk can be added.
- * If a RAM representation is requested on a volume with a swap representation, it will be loaded from disk
- * on demand, which typically takes longer than just loading a disk representation, but serves as
- * (experimental) workaround for missing disk representations.
- */
-class VolumeRAMSwap {
-public:
-    static bool tryAddVolumeSwap(VolumeBase* volumeBase);
-};
-
 
 /**
  * Utility function mapping a value within range A to the equivalent value in range B.
