@@ -52,7 +52,6 @@ Communicator2D<T>::Communicator2D(SuperStructure2D<T>& superStructure):_superStr
 template<typename T>
 void Communicator2D<T>::init_nh()
 {
-
   _nC = _superStructure.getCuboidGeometry().getNc();
 
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
@@ -64,14 +63,12 @@ void Communicator2D<T>::init_nh()
 template<typename T>
 void Communicator2D<T>::add_cell(int iCloc, int iX, int iY)
 {
-
   _nh[iCloc].add_inCell(iX,iY);
 }
 
 template<typename T>
 void Communicator2D<T>::add_cells(int overlap)
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].add_inCells(overlap);
   }
@@ -80,7 +77,6 @@ void Communicator2D<T>::add_cells(int overlap)
 template<typename T>
 void Communicator2D<T>::init()
 {
-
   reset();
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].init_inCN();
@@ -93,7 +89,7 @@ void Communicator2D<T>::init()
         Cell2D<T> temp;
         temp.physR[0] = _nh[iC].get_inCell(i).physR[0];
         temp.physR[1] = _nh[iC].get_inCell(i).physR[1];
-        _superStructure.getCuboidGeometry().getLatticeR(temp.physR, temp.latticeR);
+        _superStructure.getCuboidGeometry().getLatticeR(temp.latticeR, temp.physR);
         temp.latticeR[0]    = _superStructure.getLoadBalancer().glob(iC);
         _nh[_superStructure.getLoadBalancer().loc(ID)].add_outCell(temp);
       }
@@ -105,17 +101,18 @@ void Communicator2D<T>::init()
   }
 
 #ifdef PARALLEL_MODE_MPI
+  std::vector<singleton::MpiNonBlockingHelper> helper(_superStructure.getLoadBalancer().size());
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].finish_comm();
   }
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
-    _nh[iC].bufSend_inCells();
+    _nh[iC].bufSend_inCells(helper[iC]);
   }
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].recWrite_outCells();
   }
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
-    _nh[iC].finish_comm();
+    singleton::mpi().waitAll(helper[iC]);
   }
 #endif
 }
@@ -123,7 +120,6 @@ void Communicator2D<T>::init()
 template<typename T>
 void Communicator2D<T>::reset()
 {
-
   if (_initDone) {
     for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
       _nh[iC].reset();
@@ -135,7 +131,6 @@ void Communicator2D<T>::reset()
 template<typename T>
 void Communicator2D<T>::send()
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].buffer_outData();
 #ifdef PARALLEL_MODE_MPI
@@ -147,7 +142,6 @@ void Communicator2D<T>::send()
 template<typename T>
 void Communicator2D<T>::receive()
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
 #ifdef PARALLEL_MODE_MPI
     _nh[iC].receive_inData();
@@ -168,7 +162,6 @@ void Communicator2D<T>::receive()
 template<typename T>
 void Communicator2D<T>::write()
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].write_inData();
   }

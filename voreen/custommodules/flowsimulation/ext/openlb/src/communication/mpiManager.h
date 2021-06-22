@@ -28,6 +28,7 @@
 #ifdef PARALLEL_MODE_MPI
 #include "mpi.h"
 #include <vector>
+#include <memory>
 #endif
 #include <string>
 #include "io/ostreamManager.h"
@@ -53,30 +54,32 @@ private:
   /// Size of the vector _mpiRequest/_mpiStatus
   unsigned _size;
   /// vector of MPI_Request
-  MPI_Request *_mpiRequest;
+  std::unique_ptr<MPI_Request[]> _mpiRequest;
   /// vector of MPI_Status
-  MPI_Status *_mpiStatus;
+  std::unique_ptr<MPI_Status[]> _mpiStatus;
 public:
-  /// Constructor
   MpiNonBlockingHelper();
-  /// Copy construction
-  MpiNonBlockingHelper(MpiNonBlockingHelper const& rhs);
-  /// Copy assignment
-  MpiNonBlockingHelper operator=(MpiNonBlockingHelper rhs);
-  /// Destructor
-  ~MpiNonBlockingHelper();
+  MpiNonBlockingHelper(MpiNonBlockingHelper&& rhs);
+
+  MpiNonBlockingHelper(const MpiNonBlockingHelper&) = delete;
+  MpiNonBlockingHelper& operator=(const MpiNonBlockingHelper&) = delete;
 
   /// Allocates memory
   void allocate(unsigned i);
-  /// Frees memory
+  /// Reset
   void free();
 
   /// Returns the size of the vector _mpiRequest/_mpiStatus
-  unsigned const& get_size() const;
-  /// Read and write access _mpiRequest
-  MPI_Request* get_mpiRequest() const;
-  /// Read and write access _mpiStatus
-  MPI_Status* get_mpiStatus() const;
+  unsigned get_size() const;
+
+  /// Get the specified request object
+  MPI_Request* get_mpiRequest(int i=0) const;
+  /// Get the specified status object
+  MPI_Status* get_mpiStatus(int i=0) const;
+
+  void start(int i);
+  void wait(int i);
+  bool isDone(int i);
 
   /// Swap method
   void swap(MpiNonBlockingHelper& rhs);
@@ -87,7 +90,7 @@ public:
 class MpiManager {
 public:
   /// Initializes the mpi manager
-  void init(int *argc, char ***argv);
+  void init(int *argc, char ***argv, bool verbose=true);
   /// Returns the number of processes
   int getSize() const;
   /// Returns the process ID
@@ -109,6 +112,13 @@ public:
   template <typename T,unsigned DIM> void send(ADf<T,DIM> *buf, int count, int dest, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
 #endif
 
+  /// Initialize persistent non-blocking send
+  template <typename T>
+  void sendInit(T *buf, int count, int dest, MPI_Request* request, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
+#ifdef ADT
+  template <typename T,unsigned DIM> void sendInit(ADf<T,DIM> *buf, int count, int dest, MPI_Request* request, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
+#endif
+
   /// Sends data at *buf, non blocking
   template <typename T>
   void iSend(T *buf, int count, int dest, MPI_Request* request, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
@@ -127,11 +137,20 @@ public:
   template <typename T>
   void iSendRequestFree(T *buf, int count, int dest, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
 
+  std::size_t probeReceiveSize(int source, MPI_Datatype type, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
+
   /// Receives data at *buf, blocking
   template <typename T>
   void receive(T *buf, int count, int source, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
 #ifdef ADT
   template <typename T,unsigned DIM> void receive(ADf<T,DIM> *buf, int count, int source, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
+#endif
+
+  /// Initialize persistent non-blocking receive
+  template <typename T>
+  void recvInit(T *buf, int count, int dest, MPI_Request* request, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
+#ifdef ADT
+  template <typename T,unsigned DIM> void recvInit(ADf<T,DIM> *buf, int count, int dest, MPI_Request* request, int tag = 0, MPI_Comm comm = MPI_COMM_WORLD);
 #endif
 
   /// Receives data at *buf, non blocking

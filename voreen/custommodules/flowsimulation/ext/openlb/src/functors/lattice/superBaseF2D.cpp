@@ -37,8 +37,8 @@ template class SuperIdentity2D<double,double>;
 template class SuperIdentity2D<double,int>;
 template class SuperIdentity2D<double,bool>;
 
-template class SuperLatticeF2D<double,descriptors::D2Q9Descriptor>;
-template class SuperLatticePhysF2D<double,descriptors::D2Q9Descriptor>;
+template class SuperLatticeF2D<double,descriptors::D2Q9<>>;
+template class SuperLatticePhysF2D<double,descriptors::D2Q9<>>;
 
 }
 

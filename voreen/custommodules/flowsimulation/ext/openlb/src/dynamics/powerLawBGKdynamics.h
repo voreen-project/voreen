@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2012, 2015 Mathias J. Krause, Vojtech Cvrcek
+ *  Copyright (C) 2012, 2015 Mathias J. Krause, Vojtech Cvrcek, Davide Dapelo
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -35,78 +35,63 @@
 
 namespace olb {
 
+/// Implementation of Power-Law Dynamics
+template<typename T, typename DESCRIPTOR>
+class PowerLawDynamics {
+public:
+  /// Constructor
+  PowerLawDynamics(T m=0.1, T n=.5, T nuMin=T(2.9686e-3), T nuMax=T(3.1667));
+  /// Set _omegaMin and _omegaMax
+  void setViscoLimits(T nuMin, T nuMax);
+  /// Set m parameter
+  void setM(T m);
+  /// Set n parameter
+  void setN(T n);
+  /// Return m parameter
+  T getM();
+  /// Return n parameter
+  T getN();
+  /// Return minimum viscosity
+  T getNuMin();
+  /// Return maximum viscosity
+  T getNuMax();
+
+protected:
+  /// Computes the local power-Law relaxation parameter
+  T computeOmegaPL ( Cell<T,DESCRIPTOR>& cell, T omega0,
+           T rho, T pi[util::TensorVal<DESCRIPTOR >::n] );
+
+protected:
+  T _m;
+  T _n;
+  T _omegaMin;
+  T _omegaMax;
+};
+
 /// Implementation of the BGK collision step
-template<typename T, template<typename U> class Lattice>
-class PowerLawBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class PowerLawBGKdynamics : public BGKdynamics<T,DESCRIPTOR>, public PowerLawDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  /// m,n...parameter in the power law model, dt...the explizit typed time step from LBM model
-  PowerLawBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_, T m_=0.1, T n_=.5, T dt_=T(0.0016));
+  /// m,n...parameter in the power law model
+  PowerLawBGKdynamics(T omega, Momenta<T,DESCRIPTOR>& momenta, T m=0.1, T n=.5, T nuMin=T(2.9686e-3), T nuMax=T(3.1667));
 
   /// Collision step
-  void collide(Cell<T,Lattice>& cell,
-                       LatticeStatistics<T>& statistics_) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_) override;
-
-  /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
-
-  /// Get local powerLaw relaxation parameter of the dynamics
-  virtual T getPowerLawOmega(Cell<T,Lattice>& cell_);
-
-private:
-  /// Computes a constant prefactor in order to speed up the computation
-  T computePreFactor(T omega_, T smagoConst_);
-
-  /// Computes the local powerLaw relaxation parameter
-  T computeOmega(T omega0_, T preFactor_, T rho_, T pi_[util::TensorVal<Lattice<T> >::n] );
-
-private:
-  T smagoConst;  ///< PowerLaw constant
-  T preFactor; ///< Precomputed constant which speeeds up the computation
-  T m;
-  T n;
-  T dt;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
 };
 
-template<typename T, template<typename U> class Lattice>
-class PowerLawForcedBGKdynamics : public BGKdynamics<T,Lattice> {
+/// Implementation of the forced BGK collision step
+template<typename T, typename DESCRIPTOR>
+class PowerLawForcedBGKdynamics : public ForcedBGKdynamics<T,DESCRIPTOR>, public PowerLawDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  /// m,n...parameter in the power law model, dt...the explizit typed time step from LBM model
-  PowerLawForcedBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_, T m_=0.1, T n_=.5, T dt_=T(0.0016));
+  /// m,n...parameter in the power law model
+  PowerLawForcedBGKdynamics(T omega, Momenta<T,DESCRIPTOR>& momenta, T m=0.1, T n=.5, T nuMin=T(2.9686e-3), T nuMax=T(3.1667));
 
   /// Collision step
-  virtual void collide(Cell<T,Lattice>& cell,
-                       LatticeStatistics<T>& statistics_);
-  /// Collide with fixed velocity
-  virtual void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_);
-
-  /// Set local relaxation parameter of the dynamics
-  virtual void setOmega(T omega_);
-
-  /// Get local powerLaw relaxation parameter of the dynamics
-  virtual T getPowerLawOmega(Cell<T,Lattice>& cell_);
-
-private:
-  /// Computes a constant prefactor in order to speed up the computation
-  T computePreFactor(T omega_, T smagoConst_);
-
-  /// Computes the local powerLaw relaxation parameter
-  T computeOmega(T omega0_, T preFactor_, T rho_, T pi_[util::TensorVal<Lattice<T> >::n] );
-
-private:
-  T smagoConst;  ///< PowerLaw constant
-  T preFactor; ///< Precomputed constant which speeeds up the computation
-  T m;
-  T n;
-  T dt;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
 };
+
 }
 
 #endif

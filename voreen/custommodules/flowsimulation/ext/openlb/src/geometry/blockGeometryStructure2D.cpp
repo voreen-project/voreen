@@ -26,7 +26,7 @@
  */
 
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 #include "blockGeometryStructure2D.h"
 #include "blockGeometryStructure2D.hh"
 
@@ -34,6 +34,7 @@ namespace olb {
 
 template class BlockGeometryStructure2D<double>;
 
-template bool BlockGeometryStructure2D<double>::findStreamDirections<double,descriptors::D2Q9Descriptor>(int iX, int iY, int material, std::list<int> bulkMaterials, bool streamDirections[]);
+template bool BlockGeometryStructure2D<double>::findStreamDirections<double,descriptors::D2Q9<>>(int iX, int iY, BlockIndicatorF2D<double>& boundaryIndicator, BlockIndicatorF2D<double>& bulkIndicator, bool streamDirections[]);
+template bool BlockGeometryStructure2D<double>::findStreamDirections<double,descriptors::D2Q9<>>(int iX, int iY, int material, std::list<int> bulkMaterials, bool streamDirections[]);
 
 }

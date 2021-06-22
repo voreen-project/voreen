@@ -31,7 +31,8 @@
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/frameChangeF2D.h"
 #include "superBaseF3D.h"
-#include "superLatticeLocalF3D.h"
+#include "latticePhysVelocity3D.h"
+#include "latticeDensity3D.h"
 
 /** To enable simulations in a rotating frame, the axis is set in the
   * constructor with axisPoint and axisDirection. The axisPoint can be the
@@ -47,7 +48,7 @@
 namespace olb {
 
 
-template<typename T, template<typename U> class Lattice> class SuperLatticeF3D;
+template<typename T, typename DESCRIPTOR> class SuperLatticeF3D;
 
 /**
   * This functor gives a parabolic profile for a given point x as it computes
@@ -61,7 +62,7 @@ template<typename T, template<typename U> class Lattice> class SuperLatticeF3D;
      The boolean terms enable to choose having centrifugue or coriolis forces too or not.
 */
 /// Functor for the rotation of forces.
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class RotatingForceField3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
 protected:
   SuperGeometry3D<T>& sg;
@@ -83,6 +84,43 @@ public:
                        T w_,
                        bool centrifugeForceOn_ = true,
                        bool coriolisForceOn_ = true);
+
+  bool operator() (T output[], const int x[]) override;
+};
+
+template<typename T, typename DESCRIPTOR> class SuperLatticeF3D;
+
+/**
+  * This functor gives a parabolic profile for a given point x as it computes
+  * the distance between x and the axis.
+
+    The forces set are the fake forces caused by a non-Galilean frame, here harmonic oscillation around an axis.
+    Oscillation is determined by an amplitude and a frequency
+
+*/
+/// Functor for the rotation of forces.
+template <typename T, typename DESCRIPTOR>
+class HarmonicOscillatingRotatingForceField3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
+protected:
+  SuperGeometry3D<T>& sg;
+  const UnitConverter<T,DESCRIPTOR>& converter;
+  std::vector<T> axisPoint;
+  std::vector<T> axisDirection;
+  T amplitude;
+  T resonanceFrequency;
+  T w;
+  T dwdt;
+  SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity;
+
+public:
+  HarmonicOscillatingRotatingForceField3D(SuperLattice3D<T,DESCRIPTOR>& sLattice_,
+                                          SuperGeometry3D<T>& superGeometry_,
+                                          const UnitConverter<T,DESCRIPTOR>& converter_,
+                                          std::vector<T> axisPoint_,
+                                          std::vector<T> axisDirection_,
+                                          T amplitude_,
+                                          T frequency_);
+  void updateTimeStep(int iT);
 
   bool operator() (T output[], const int x[]) override;
 };

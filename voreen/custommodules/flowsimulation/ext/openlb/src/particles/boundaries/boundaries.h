@@ -28,3 +28,9 @@
 
 #include "boundary3D.h"
 #include "materialBoundary3D.h"
+#include "periodicBoundary3D.h"
+#include "wireBoundaryForMagP3D.h"
+#include "boundarySimpleReflection3D.h"
+
+
+

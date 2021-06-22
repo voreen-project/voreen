@@ -33,34 +33,35 @@
 
 namespace olb {
 
-using namespace descriptors;
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::InamuroNewtonRaphsonDynamics (
-  T omega, Momenta<T,Lattice>& momenta )
-  : BasicDynamics<T,Lattice>(momenta),
+
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::InamuroNewtonRaphsonDynamics (
+  T omega, Momenta<T,DESCRIPTOR>& momenta )
+  : BasicDynamics<T,DESCRIPTOR>(momenta),
     _boundaryDynamics(omega, momenta),
     clout(std::cout,"InamuroNewtonRaphsonDynamics")
 {
+  this->getName() = "InamuroNewtonRaphsonDynamics";
   _xi[0] = (T)1;
-  for (int iDim = 1; iDim < Lattice<T>::d; ++iDim) {
+  for (int iDim = 1; iDim < DESCRIPTOR::d; ++iDim) {
     _xi[iDim] = T();
   }
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-T InamuroNewtonRaphsonDynamics<T,Lattice, Dynamics, direction, orientation>::
-computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR, Dynamics, direction, orientation>::
+computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
   return _boundaryDynamics.computeEquilibrium(iPop, rho, u, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T rho, u[L::d];
   this->_momenta.computeRhoU(cell,rho,u);
@@ -103,17 +104,17 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::col
       clout << "Failed to converge...." << std::endl;
       clout << "Error = " << error << std::endl;
       clout << "u = (" << rho*u[0];
-      for (int iD=1; iD<Lattice<T>::d; ++iD) {
+      for (int iD=1; iD<DESCRIPTOR::d; ++iD) {
         clout << ", " << rho*u[iD];
       }
       clout << ")" << std::endl;
       clout << "uApprox = (" << approxMomentum[0];
-      for (int iD=1; iD<Lattice<T>::d; ++iD) {
+      for (int iD=1; iD<DESCRIPTOR::d; ++iD) {
         clout << ", " << approxMomentum[iD];
       }
       clout << ")" << std::endl;
       clout << "xi = (" << _xi[0];
-      for (int iD=1; iD<Lattice<T>::d; ++iD) {
+      for (int iD=1; iD<DESCRIPTOR::d; ++iD) {
         clout << ", " << _xi[iD];
       }
       clout << ")" << std::endl;
@@ -132,7 +133,8 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::col
     if (direction == iDim) {
       ++counterDim;
       uCs[iDim] = u[iDim];
-    } else {
+    }
+    else {
       uCs[iDim] = u[iDim] + _xi[iDim+1-counterDim];
     }
   }
@@ -146,117 +148,25 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::col
   _boundaryDynamics.collide(cell, statistics);
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef Lattice<T> L;
-
-  T rho = this->_momenta.computeRho(cell);
-
-  std::vector<int> missingIndexes = util::subIndexOutgoing<L,direction,orientation>();
-  std::vector<int> knownIndexes;
-  bool test[L::q];
-  for (int iPop = 0; iPop < L::q; ++iPop) {
-    test[iPop] = true;
-  }
-
-  for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-    test[missingIndexes[iPop]] = false;
-  }
-  for (int iPop = 0; iPop < L::q; ++iPop) {
-    if (test[iPop]) {
-      knownIndexes.push_back(iPop);
-    }
-  }
-
-  T approxMomentum[L::d];
-
-  computeApproxMomentum(approxMomentum,cell,rho,u,_xi,knownIndexes,missingIndexes);
-
-  T error = computeError(rho, u,approxMomentum);
-  int counter = 0;
-
-  while (error > 1.0e-15) {
-    ++counter;
-
-    T gradError[L::d], gradGradError[L::d][L::d];
-    computeGradGradError(gradGradError,gradError,rho,u,_xi,approxMomentum,missingIndexes);
-
-    bool everythingWentFine = newtonRaphson(_xi,gradError,gradGradError);
-    if ((counter > 100000) || everythingWentFine == false) {
-      // if we need more that 100000 iterations or
-      // if we have a problem with the inversion of the
-      // jacobian matrix, we stop the program and
-      // print this error message on the screen.
-      clout << "Failed to converge...." << std::endl;
-      clout << "Error = " << error << std::endl;
-      clout << "u = (" << rho*u[0];
-      for (int iD=1; iD<Lattice<T>::d; ++iD) {
-        clout << ", " << rho*u[iD];
-      }
-      clout << ")" << std::endl;
-      clout << "uApprox = (" << approxMomentum[0];
-      for (int iD=1; iD<Lattice<T>::d; ++iD) {
-        clout << ", " << approxMomentum[iD];
-      }
-      clout << ")" << std::endl;
-      clout << "xi = (" << _xi[0];
-      for (int iD=1; iD<Lattice<T>::d; ++iD) {
-        clout << ", " << _xi[iD];
-      }
-      clout << ")" << std::endl;
-
-      exit(1);
-    }
-
-    computeApproxMomentum(approxMomentum,cell,rho,u,_xi,knownIndexes,missingIndexes);
-    error = computeError(rho, u,approxMomentum);
-
-  }
-
-  T uCs[L::d];
-  int counterDim = 0;
-  for (int iDim = 0; iDim < L::d; ++iDim) {
-    if (direction == iDim) {
-      ++counterDim;
-      uCs[iDim] = u[iDim];
-    } else {
-      uCs[iDim] = u[iDim] + _xi[iDim+1-counterDim];
-    }
-  }
-
-  T uCsSqr = util::normSqr<T,L::d>(uCs);
-
-  for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-    cell[missingIndexes[iPop]] = computeEquilibrium(missingIndexes[iPop],_xi[0],uCs,uCsSqr);
-  }
-
-  _boundaryDynamics.staticCollide(cell, u, statistics);
-
-}
-
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-T InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::getOmega() const
 {
   return _boundaryDynamics.getOmega();
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::setOmega(T omega)
 {
   _boundaryDynamics.setOmega(omega);
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::
-computeApproxMomentum(T approxMomentum[Lattice<T>::d],const Cell<T,Lattice> &cell,
-                      const T &rho, const T u[Lattice<T>::d], const T xi[Lattice<T>::d],
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+computeApproxMomentum(T approxMomentum[DESCRIPTOR::d], ConstCell<T,DESCRIPTOR>& cell,
+                      const T &rho, const T u[DESCRIPTOR::d], const T xi[DESCRIPTOR::d],
                       const std::vector<int> knownIndexes,const std::vector<int> missingIndexes)
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T csVel[L::d];
   int counter = 0;
@@ -264,7 +174,8 @@ computeApproxMomentum(T approxMomentum[Lattice<T>::d],const Cell<T,Lattice> &cel
     if (direction == iDim) {
       ++counter;
       csVel[iDim] = u[iDim];
-    } else {
+    }
+    else {
       csVel[iDim] = u[iDim] + xi[iDim+1-counter];
     }
   }
@@ -274,21 +185,21 @@ computeApproxMomentum(T approxMomentum[Lattice<T>::d],const Cell<T,Lattice> &cel
   for (int iDim = 0; iDim < L::d; ++iDim) {
     approxMomentum[iDim] = T();
     for (unsigned iPop = 0; iPop < knownIndexes.size(); ++iPop) {
-      approxMomentum[iDim] += L::c[knownIndexes[iPop]][iDim] *
+      approxMomentum[iDim] += descriptors::c<L>(knownIndexes[iPop],iDim) *
                               cell[knownIndexes[iPop]];
     }
     for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-      approxMomentum[iDim] += L::c[missingIndexes[iPop]][iDim] *
+      approxMomentum[iDim] += descriptors::c<L>(missingIndexes[iPop],iDim) *
                               computeEquilibrium(missingIndexes[iPop],xi[0],csVel,csVelSqr);
     }
   }
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-T InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::
-computeError(const T &rho, const T u[Lattice<T>::d], const T approxMomentum[Lattice<T>::d])
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+computeError(const T &rho, const T u[DESCRIPTOR::d], const T approxMomentum[DESCRIPTOR::d])
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T err = T();
   for (int iDim = 0; iDim < L::d; ++iDim) {
@@ -297,14 +208,14 @@ computeError(const T &rho, const T u[Lattice<T>::d], const T approxMomentum[Latt
   return sqrt(err);
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::computeGradGradError(
-  T gradGradError[Lattice<T>::d][Lattice<T>::d],T gradError[Lattice<T>::d],
-  const T &rho, const T u[Lattice<T>::d],const T xi[Lattice<T>::d],
-  const T approxMomentum[Lattice<T>::d],
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::computeGradGradError(
+  T gradGradError[DESCRIPTOR::d][DESCRIPTOR::d],T gradError[DESCRIPTOR::d],
+  const T &rho, const T u[DESCRIPTOR::d],const T xi[DESCRIPTOR::d],
+  const T approxMomentum[DESCRIPTOR::d],
   const std::vector<int> missingIndexes)
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T csVel[L::d];
   int counter = 0;
@@ -312,7 +223,8 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
     if (direction == iDim) {
       ++counter;
       csVel[iDim] = u[iDim];
-    } else {
+    }
+    else {
       csVel[iDim] = u[iDim] + xi[iDim+1-counter];
     }
   }
@@ -331,29 +243,30 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
   for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
     T cu = T();
     for (int iDim = 0; iDim < L::d; ++iDim) {
-      cu += L::c[missingIndexes[iPop]][iDim] * csVel[iDim];
+      cu += descriptors::c<L>(missingIndexes[iPop],iDim) * csVel[iDim];
     }
-    df[0][iPop] = L::t[missingIndexes[iPop]]
-                  * ((T)1+L::invCs2*cu
-                     + 0.5 * L::invCs2 * L::invCs2 * cu * cu
-                     - 0.5 * L::invCs2 * csVelSqr);
+    df[0][iPop] = descriptors::t<T,L>(missingIndexes[iPop])
+                  * ((T)1+descriptors::invCs2<T,L>()*cu
+                     + 0.5 * descriptors::invCs2<T,L>() * descriptors::invCs2<T,L>() * cu * cu
+                     - 0.5 * descriptors::invCs2<T,L>() * csVelSqr);
   }
 
   counter = 0;
   for (int iDim = 0; iDim < L::d; ++iDim) {
     if (direction == iDim) {
       ++counter;
-    } else {
+    }
+    else {
       for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
         T temp = T();
         for (int jDim = 0; jDim < L::d; ++jDim) {
-          temp += L::c[missingIndexes[iPop]][jDim] * csVel[jDim];
+          temp += descriptors::c<L>(missingIndexes[iPop],jDim) * csVel[jDim];
         }
 
-        df[iDim+1-counter][iPop] = xi[0]*L::t[missingIndexes[iPop]] *
-                                   (L::invCs2*L::c[missingIndexes[iPop]][iDim]
-                                    + L::invCs2*L::invCs2*L::c[missingIndexes[iPop]][iDim]*temp
-                                    - L::invCs2*csVel[iDim]);
+        df[iDim+1-counter][iPop] = xi[0]*descriptors::t<T,L>(missingIndexes[iPop]) *
+                                   (descriptors::invCs2<T,L>()*descriptors::c<L>(missingIndexes[iPop],iDim)
+                                    + descriptors::invCs2<T,L>()*descriptors::invCs2<T,L>()*descriptors::c<L>(missingIndexes[iPop],iDim)*temp
+                                    - descriptors::invCs2<T,L>()*csVel[iDim]);
       }
     }
   }
@@ -374,17 +287,18 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
   for (int iDim = 0; iDim < L::d; ++iDim) {
     if (direction == iDim) {
       ++counter;
-    } else {
+    }
+    else {
       for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
         T temp = T();
         for (int jDim = 0; jDim < L::d; ++jDim) {
-          temp += L::c[missingIndexes[iPop]][jDim] * csVel[jDim];
+          temp += descriptors::c<L>(missingIndexes[iPop],jDim) * csVel[jDim];
         }
 
-        T d_rho_sa = L::t[missingIndexes[iPop]] *
-                     (L::invCs2*L::c[missingIndexes[iPop]][iDim]
-                      + L::invCs2*L::invCs2*L::c[missingIndexes[iPop]][iDim]*temp
-                      - L::invCs2*csVel[iDim]);
+        T d_rho_sa = descriptors::t<T,L>(missingIndexes[iPop]) *
+                     (descriptors::invCs2<T,L>()*descriptors::c<L>(missingIndexes[iPop],iDim)
+                      + descriptors::invCs2<T,L>()*descriptors::invCs2<T,L>()*descriptors::c<L>(missingIndexes[iPop],iDim)*temp
+                      - descriptors::invCs2<T,L>()*csVel[iDim]);
 
         ddf[iDim+1-counter][0][iPop] = d_rho_sa;
         ddf[0][iDim+1-counter][iPop] = d_rho_sa;
@@ -395,10 +309,10 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
   for (int iAlpha = 1; iAlpha < L::d; ++iAlpha) {
     for (int iBeta = 1; iBeta < L::d; ++iBeta) {
       for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-        ddf[iAlpha][iBeta][iPop] = L::t[missingIndexes[iPop]]*xi[0] *
-                                   L::invCs2*L::invCs2*L::c[missingIndexes[iPop]][iAlpha]*L::c[missingIndexes[iPop]][iBeta];
+        ddf[iAlpha][iBeta][iPop] = descriptors::t<T,L>(missingIndexes[iPop])*xi[0] *
+                                   descriptors::invCs2<T,L>()*descriptors::invCs2<T,L>()*descriptors::c<L>(missingIndexes[iPop],iAlpha)*descriptors::c<L>(missingIndexes[iPop],iBeta);
         if (iAlpha == iBeta) {
-          ddf[iAlpha][iBeta][iPop] -= L::t[missingIndexes[iPop]]*xi[0] * L::invCs2;
+          ddf[iAlpha][iBeta][iPop] -= descriptors::t<T,L>(missingIndexes[iPop])*xi[0] * descriptors::invCs2<T,L>();
         }
       }
     }
@@ -412,7 +326,7 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
     for (int jDim = 0; jDim < L::d; ++jDim) {
       du[jDim] = T();
       for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-        du[jDim] += L::c[missingIndexes[iPop]][jDim] * df[iDim][iPop];
+        du[jDim] += descriptors::c<L>(missingIndexes[iPop],jDim) * df[iDim][iPop];
       }
       gradError[iDim] += (approxMomentum[jDim]- rho * u[jDim]) * du[jDim];
     }
@@ -431,13 +345,13 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
         duBeta[iDim] = T();
         ddu[iDim] = T();
         for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-          duAlpha[iDim] += L::c[missingIndexes[iPop]][iDim]
+          duAlpha[iDim] += descriptors::c<L>(missingIndexes[iPop],iDim)
                            * df[iAlpha][iPop];
 
-          duBeta[iDim] += L::c[missingIndexes[iPop]][iDim]
+          duBeta[iDim] += descriptors::c<L>(missingIndexes[iPop],iDim)
                           * df[iBeta][iPop];
 
-          ddu[iDim] += L::c[missingIndexes[iPop]][iDim]
+          ddu[iDim] += descriptors::c<L>(missingIndexes[iPop],iDim)
                        * ddf[iAlpha][iBeta][iPop];
         }
         gradGradError[iAlpha][iBeta] += duAlpha[iDim] * duBeta[iDim]
@@ -450,13 +364,13 @@ void InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::com
   }
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-bool InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::
-newtonRaphson(T xi[Lattice<T>::d],
-              const T gradError[Lattice<T>::d],
-              const T gradGradError[Lattice<T>::d][Lattice<T>::d])
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+newtonRaphson(T xi[DESCRIPTOR::d],
+              const T gradError[DESCRIPTOR::d],
+              const T gradGradError[DESCRIPTOR::d][DESCRIPTOR::d])
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T invGradGradError[L::d][L::d];
   bool inversion = invert(gradGradError,invGradGradError);
@@ -473,8 +387,8 @@ newtonRaphson(T xi[Lattice<T>::d],
   return inversion;
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-bool InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
 invert(const T a[2][2],T invA[2][2])
 {
   T detA = a[0][0]*a[1][1] - a[0][1]*a[1][0];
@@ -488,7 +402,8 @@ invert(const T a[2][2],T invA[2][2])
       clout << std::endl;
     }
     return false;
-  } else {
+  }
+  else {
     invA[0][0] = a[1][1];
     invA[1][1] = a[0][0];
 
@@ -504,8 +419,8 @@ invert(const T a[2][2],T invA[2][2])
   }
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-bool InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::invert(const T a[3][3],T invA[3][3])
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::invert(const T a[3][3],T invA[3][3])
 {
   T detA = a[0][0]*a[1][1]*a[2][2] + a[1][0]*a[2][1]*a[0][2] + a[2][0]*a[0][1]*a[1][2]
            - a[0][0]*a[2][1]*a[1][2] - a[2][0]*a[1][1]*a[0][2] - a[1][0]*a[0][1]*a[2][2];
@@ -520,7 +435,8 @@ bool InamuroNewtonRaphsonDynamics<T,Lattice,Dynamics,direction,orientation>::inv
       clout << std::endl;
     }
     return false;
-  } else {
+  }
+  else {
     invA[0][0] = a[1][1]*a[2][2]-a[1][2]*a[2][1];
     invA[0][1] = a[0][2]*a[2][1]-a[0][1]*a[2][2];
     invA[0][2] = a[0][1]*a[1][2]-a[0][2]*a[1][1];

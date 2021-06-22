@@ -35,7 +35,7 @@ public:
   int size;
   int rank;
 public:
-  void init();
+  void init(bool verbose=true);
   int get_size() const;
   int get_rank() const;
   void set_dynamic(int dynamicThreads);

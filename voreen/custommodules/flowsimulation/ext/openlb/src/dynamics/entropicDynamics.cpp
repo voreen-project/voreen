@@ -28,14 +28,14 @@
 #include "entropicDynamics.h"
 #include "entropicDynamics.hh"
 #include "latticeDescriptors.h"
-#include "latticeDescriptors.hh"
+
 
 namespace olb {
 
-template class EntropicEqDynamics<double, descriptors::D2Q9Descriptor>;
-template class EntropicEqDynamics<double, descriptors::D3Q19Descriptor>;
+template class EntropicEqDynamics<double, descriptors::D2Q9<>>;
+template class EntropicEqDynamics<double, descriptors::D3Q19<>>;
 
-template class EntropicDynamics<double, descriptors::D2Q9Descriptor>;
-template class EntropicDynamics<double, descriptors::D3Q19Descriptor>;
+template class EntropicDynamics<double, descriptors::D2Q9<>>;
+template class EntropicDynamics<double, descriptors::D3Q19<>>;
 
 }

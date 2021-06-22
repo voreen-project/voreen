@@ -31,60 +31,40 @@
 
 namespace olb {
 
-using namespace descriptors;
+ 
 
-// Efficient specialization for D2Q9 lattice
+// Efficient specialization for D3Q19 lattice
 template<typename T>
-struct mrtHelpers<T, descriptors::MRTD3Q19Descriptor> {
+struct mrtHelpers<T, descriptors::D3Q19<descriptors::tag::MRT>> {
 
   /// Computation of all equilibrium distribution (in momenta space)
   static void computeEquilibrium( T momentaEq[19],
                                   T rho, const T u[3],
                                   const T uSqr )
   {
-    OstreamManager clout(std::cout,"collision");
-
+        // momentaEq[0] = rho;
     momentaEq[1] = rho*(-(T)11 + (T)19*uSqr);
-
-    //Use this one for higher stability ...
-    momentaEq[2] = rho*(-(T)475/(T)63 * uSqr);
-
-    //... and this one for the original MRT version ...
-    // !!!!!!!!!! if you use this one do not forget to uncomment the ';//' in line "101"  !!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //momentaEq[2] = /*rho*/((T)3 - (T)11/(T)2 * uSqr);
-
+    momentaEq[2] = rho*((T)3 - (T)11/(T)2 * uSqr);
+        // momentaEq[3] = rho*u[0];
     momentaEq[4] = -(T)2/(T)3*rho*u[0];
+        // momentaEq[5] = rho*u[1];
     momentaEq[6] = -(T)2/(T)3*rho*u[1];
+        // momentaEq[7] = rho*u[2];
     momentaEq[8] = -(T)2/(T)3*rho*u[2];
-
-    momentaEq[4] = -(T)2/(T)3*u[0];
-    momentaEq[6] = -(T)2/(T)3*u[1];
-    momentaEq[8] = -(T)2/(T)3*u[2];
-
-    momentaEq[9] = rho*((T)2*u[0]*u[0] - u[1]*u[1]-u[2]*u[2]);
-
-    //Use this one for higher stability ...
-    momentaEq[10] = 0.0;
-    //... and this one for the original MRT version ...
-    // momentaEq[10] = -momentaEq[9]/(T)2;
-
+    momentaEq[9] = rho*((T)2*u[0]*u[0] - u[1]*u[1]- u[2]*u[2]);
+    momentaEq[10] = rho*(-u[0]*u[0] + 0.5*u[1]*u[1] + 0.5*u[2]*u[2]);
     momentaEq[11] = rho*(u[1]*u[1]-u[2]*u[2]);
-
-    //Use this one for higher stability ...
-    momentaEq[12] = 0.0;//
-    //... and this one for the original MRT version ...
-    //momentaEq[12] = -momentaEq[11]/(T)2;
-
-
+    momentaEq[12] = rho*(-0.5*u[1]*u[1] + 0.5*u[2]*u[2]);
     momentaEq[13] = rho*u[0]*u[1];
     momentaEq[14] = rho*u[1]*u[2];
     momentaEq[15] = rho*u[0]*u[2];
-
-
+        // momentaEq[16] = T();
+        // momentaEq[17] = T();
+        // momentaEq[18] = T();
   }
 
   /// Computation of all momenta (specialized for d3q19)
-  static void computeMomenta(T momenta[19], Cell<T,MRTD3Q19Descriptor> &cell)
+  static void computeMomenta(T momenta[19], Cell<T,descriptors::D3Q19<descriptors::tag::MRT>> &cell)
   {
     momenta[1] =
       -(T)30*cell[0]-(T)11*cell[1]-(T)11*cell[2]-(T)11*cell[3]
@@ -97,7 +77,7 @@ struct mrtHelpers<T, descriptors::MRTD3Q19Descriptor> {
       (T)12*cell[0]-(T)4*cell[1]-(T)4*cell[2]-(T)4*cell[3]
       +cell[4]+cell[5]+cell[6]+cell[7]+cell[8]+cell[9]
       -(T)4*cell[10]-(T)4*cell[11]-(T)4*cell[12]+cell[13]
-      +cell[14]+cell[15]+cell[16]+cell[17]+cell[18];// + (T)3;
+      +cell[14]+cell[15]+cell[16]+cell[17]+cell[18] + (T)3;
 
     momenta[4] =
       (T)4*cell[1]-cell[4]-cell[5]-cell[6]-cell[7]
@@ -153,7 +133,7 @@ struct mrtHelpers<T, descriptors::MRTD3Q19Descriptor> {
   }
 
   /// MRT collision step
-  static T mrtCollision( Cell<T,MRTD3Q19Descriptor>& cell,
+  static T mrtCollision( Cell<T,descriptors::D3Q19<descriptors::tag::MRT>>& cell,
                          T rho, const T u[3],
                          T invM_S[19][19] )
   {
@@ -370,7 +350,7 @@ struct mrtHelpers<T, descriptors::MRTD3Q19Descriptor> {
     return uSqr;
   }
   /// MRT collision step
-  static T mrtSGSCollision( Cell<T,MRTD3Q19Descriptor>& cell,
+  static T mrtSGSCollision( Cell<T,descriptors::D3Q19<descriptors::tag::MRT>>& cell,
                             T rho, const T u[3], T omega,
                             T invM_S_SGS[19][19] )
   {

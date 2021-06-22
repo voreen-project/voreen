@@ -51,25 +51,18 @@ template<typename T> class BlockGeometryStatistics2D;
 template<typename T> class BlockGeometryStructure2D;
 
 template<typename T>
-class BlockGeometryView2D final : public BlockGeometryStructure2D<T>, public BlockStructure2D {
-
+class BlockGeometryView2D final : public BlockGeometryStructure2D<T> {
 private:
   // Points to the structure where this view class is viewing at
   BlockGeometryStructure2D<T>* _originalBlockGeometry;
   // Offset of the data field with respect to the data of the original geometry
   int _x0, _y0;
-  // Dimension of the view cuboid
-  int _nx, _ny;
 
 public:
   /// Constructor
   BlockGeometryView2D(BlockGeometryStructure2D<T>& originalBlockGeometry, int x0, int x1, int y0, int y1);
-  /// Copy constructor
-  BlockGeometryView2D(BlockGeometryView2D const& rhs);
-  /// Copy assignment
-  BlockGeometryView2D& operator=(BlockGeometryView2D const& rhs);
   /// Destructor
-  ~BlockGeometryView2D();
+  ~BlockGeometryView2D() override;
 
   /// Write access to the associated block statistic
   BlockGeometryStatistics2D<T>& getStatistics(bool verbose=true) override;
@@ -79,11 +72,7 @@ public:
   /// Read only access to the origin position given in SI units (meter)
   Vector<T,2> getOrigin() const override;
   /// Read only access to the voxel size given in SI units (meter)
-  const T getDeltaR() const override;
-  /// Returns the extend (number of voxels) in X-direction
-  int getNx() const override;
-  /// Returns the extend (number of voxels) in Y-direction
-  int getNy() const override;
+  T getDeltaR() const override;
 
   /// Write access to a material number
   int& get(int iX, int iY) override;

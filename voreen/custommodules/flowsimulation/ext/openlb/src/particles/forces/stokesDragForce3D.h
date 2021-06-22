@@ -31,23 +31,29 @@
 #ifndef STOKESDRAGFORCE_3D_H
 #define STOKESDRAGFORCE_3D_H
 
-#include "functors/lattice/superLatticeLocalF3D.h"
+#include "functors/lattice/latticeInterpPhysVelocity3D.h"
 #include "particles/particleSystem3D.h"
 #include "force3D.h"
 
 namespace olb {
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE>
+class ParticleSystem3D;
+
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 class StokesDragForce3D : public Force3D<T, PARTICLETYPE> {
+  
 public:
   /// Constructor, FluidVelocity, physicalTimeStep, physicalDynamicViscosity
   StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, T dT, T mu);
   /// Constructor using values from converter
-  StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, UnitConverter<T,DESCRIPTOR> const& converter);
+  StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, UnitConverter<T, DESCRIPTOR> const& converter);
+  /// Constructor using values from converter
+  StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, UnitConverter<T, DESCRIPTOR> const& converter, T scaleFactor);
   /// Destructor
   ~StokesDragForce3D() override {}
   void applyForce(typename std::deque<PARTICLETYPE<T> >::iterator p,
-                          int pInt, ParticleSystem3D<T, PARTICLETYPE>& psSys) override;
+                  int pInt, ParticleSystem3D<T, PARTICLETYPE>& psSys) override;
 
   /// Compute Force for subgrid scale particles
   void computeForce(int pInt, ParticleSystem3D<T, PARTICLETYPE>* psSys,
@@ -57,6 +63,7 @@ private:
   T _C1; // helperVariable
   T _mu; // dynamic viscosity
   T _dTinv; // inverse timestep
+  T _scaleFactor;
 };
 
 }

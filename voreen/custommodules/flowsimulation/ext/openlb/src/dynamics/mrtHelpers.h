@@ -35,66 +35,70 @@
 
 namespace olb {
 
-using namespace descriptors;
+ 
 
 /// All helper functions are inside this structure
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 struct mrtHelpers {
+  static_assert(
+    std::is_same<typename DESCRIPTOR::category_tag, descriptors::tag::MRT>::value,
+    "DESCRIPTOR is tagged as MRT");
+
   /// Computation of equilibrium distribution (in momenta space)
-  static T equilibrium( int iPop, T rho, const T u[Lattice<T>::d],
+  static T equilibrium( int iPop, T rho, const T u[DESCRIPTOR::d],
                         const T uSqr )
   {
     T equ = T();
-    for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
-      equ += Lattice<T>::M[iPop][jPop] *
-             (lbHelpers<T,Lattice>::equilibrium(jPop,rho,u,uSqr) +
-              Lattice<T>::t[jPop]);
+    for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
+      equ += descriptors::m<T,DESCRIPTOR>(iPop,jPop) *
+             (lbHelpers<T,DESCRIPTOR>::equilibrium(jPop,rho,u,uSqr) +
+              descriptors::t<T,DESCRIPTOR>(jPop));
     }
 
     return equ;
   }
 
   /// Computation of all equilibrium distribution (in momenta space)
-  static void computeEquilibrium( T momentaEq[Lattice<T>::q],
-                                  T rho, const T u[Lattice<T>::d],
+  static void computeEquilibrium( T momentaEq[DESCRIPTOR::q],
+                                  T rho, const T u[DESCRIPTOR::d],
                                   const T uSqr )
   {
-    for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
+    for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
       momentaEq[iPop] = T();
-      for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
-        momentaEq[iPop] += Lattice<T>::M[iPop][jPop] *
-                           (lbHelpers<T,Lattice>::equilibrium(jPop,rho,u,uSqr) +
-                            Lattice<T>::t[jPop]);
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
+        momentaEq[iPop] += descriptors::m<T,DESCRIPTOR>(iPop,jPop) *
+                           (lbHelpers<T,DESCRIPTOR>::equilibrium(jPop,rho,u,uSqr) +
+                            descriptors::t<T,DESCRIPTOR>(jPop));
       }
     }
   }
 
-  static void computeMomenta(T momenta[Lattice<T>::q], Cell<T,Lattice> &cell)
+  static void computeMomenta(T momenta[DESCRIPTOR::q], Cell<T,DESCRIPTOR>& cell)
   {
-    for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
+    for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
       momenta[iPop] = T();
-      for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
-        momenta[iPop] += Lattice<T>::M[iPop][jPop] *
-                         (cell[jPop] + Lattice<T>::t[jPop]);
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
+        momenta[iPop] += descriptors::m<T,DESCRIPTOR>(iPop,jPop) *
+                         (cell[jPop] + descriptors::t<T,DESCRIPTOR>(jPop));
       }
     }
   }
 
   /// MRT collision step
-  static T mrtCollision( Cell<T,Lattice>& cell,
-                         T rho, const T u[Lattice<T>::d],
-                         T invM_S[Lattice<T>::q][Lattice<T>::q])
+  static T mrtCollision( Cell<T,DESCRIPTOR>& cell,
+                         T rho, const T u[DESCRIPTOR::d],
+                         T invM_S[DESCRIPTOR::q][DESCRIPTOR::q])
   {
-    T uSqr = util::normSqr<T,Lattice<T>::d>(u);
-    T momenta[Lattice<T>::q];
-    T momentaEq[Lattice<T>::q];
+    T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    T momenta[DESCRIPTOR::q];
+    T momentaEq[DESCRIPTOR::q];
 
     computeMomenta(momenta,cell);
     computeEquilibrium(momentaEq,rho,u,uSqr);
 
-    for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       T collisionTerm = T();
-      for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
         collisionTerm += invM_S[iPop][jPop] *
                          (momenta[jPop] - momentaEq[jPop]);
       }
@@ -105,41 +109,24 @@ struct mrtHelpers {
   }
 
   /// MRT SGS collision step
-  static T mrtSGSCollision( Cell<T,Lattice>& cell,
-                            T rho, const T u[Lattice<T>::d],
+  static T mrtSGSCollision( Cell<T,DESCRIPTOR>& cell,
+                            T rho, const T u[DESCRIPTOR::d],
                             T omega,
-                            T invM_S_SGS[Lattice<T>::q][Lattice<T>::q])
+                            T invM_S_SGS[DESCRIPTOR::q][DESCRIPTOR::q])
   {
-    T uSqr = util::normSqr<T,Lattice<T>::d>(u);
-    T momenta[Lattice<T>::q];
-    T momentaEq[Lattice<T>::q];
+    T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    T momenta[DESCRIPTOR::q];
+    T momentaEq[DESCRIPTOR::q];
 
 
     computeMomenta(momenta,cell);
     computeEquilibrium(momentaEq,rho,u,uSqr);
 
-    for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       T collisionTerm = T();
-      for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
-
-        // cout << "wert_in helpers"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< endl;
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
         collisionTerm += invM_S_SGS[iPop][jPop] *
                          (momenta[jPop] - momentaEq[jPop]);
-
-
-
-        //      if (iPop==jPop && (iPop==Lattice<T>::shearViscIndexes[iPop]))
-        //      {
-        //        collisionTerm += invM_S_SGS[iPop][jPop] /(invM_S_SGS[iPop][jPop])*omega*(Lattice<T>::invM[iPop][jPop])*
-        //                                 (momenta[jPop] - momentaEq[jPop]);
-        //        cout << "omege: " << omega<< endl;
-        //      }
-        //      else
-        //      {
-        //        collisionTerm += invM_S_SGS[iPop][jPop] *
-        //                                 (momenta[jPop] - momentaEq[jPop]);
-        //      }
-
       }
       cell[iPop] -= collisionTerm;
     }
@@ -149,32 +136,31 @@ struct mrtHelpers {
 
 
   /// Ladd-Verberg-I body force model for MRT
-  /// A.Ladd, R. Verberg, Lattice-Boltzmann simulations of particle-fluid suspensions, Journal of Statistical Physics 104(2001)
-  static void addExternalForce( Cell<T,Lattice>& cell,
+  /// A.Ladd, R. Verberg, DESCRIPTOR-Boltzmann simulations of particle-fluid suspensions, Journal of Statistical Physics 104(2001)
+  static void addExternalForce( Cell<T,DESCRIPTOR>& cell,
                                 T rho,
-                                const T u[Lattice<T>::d],
-                                T invM_S[Lattice<T>::q][Lattice<T>::q])
+                                const T u[DESCRIPTOR::d],
+                                T invM_S[DESCRIPTOR::q][DESCRIPTOR::q])
   {
-    static const int forceBeginsAt = Lattice<T>::ExternalField::forceBeginsAt;
-    T* force = cell.getExternal(forceBeginsAt);
+    auto force = cell.template getFieldPointer<descriptors::FORCE>();
     T f_u = T();
-    for (int iD=0; iD < Lattice<T>::d; ++iD) {
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       f_u += force[iD]*u[iD];
     }
 
-    for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       T c_u = T();
       T c_f = T();
-      for (int iD=0; iD < Lattice<T>::d; ++iD) {
-        c_u += Lattice<T>::c[iPop][iD]*u[iD];
-        c_f += Lattice<T>::c[iPop][iD]*force[iD];
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
+        c_f += descriptors::c<DESCRIPTOR>(iPop,iD)*force[iD];
       }
-      T f1 = Lattice<T>::t[iPop]*rho*c_f*Lattice<T>::invCs2;
-      T f2 = Lattice<T>::t[iPop]*rho*(c_u*c_f*Lattice<T>::invCs2-f_u)*Lattice<T>::invCs2;
+      T f1 = descriptors::t<T,DESCRIPTOR>(iPop)*rho*c_f*descriptors::invCs2<T,DESCRIPTOR>();
+      T f2 = descriptors::t<T,DESCRIPTOR>(iPop)*rho*(c_u*c_f*descriptors::invCs2<T,DESCRIPTOR>()-f_u)*descriptors::invCs2<T,DESCRIPTOR>();
 
       T invMsM = T();
-      for (int jPop=0; jPop < Lattice<T>::q; ++jPop) {
-        invMsM += invM_S[iPop][jPop]*Lattice<T>::M[jPop][iPop];
+      for (int jPop=0; jPop < DESCRIPTOR::q; ++jPop) {
+        invMsM += invM_S[iPop][jPop]*descriptors::m<T,DESCRIPTOR>(jPop,iPop);
       }
       cell[iPop] += f1 + f2 - invMsM*f2/2.;
     }

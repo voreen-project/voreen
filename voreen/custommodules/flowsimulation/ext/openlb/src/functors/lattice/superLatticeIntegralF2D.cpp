@@ -30,13 +30,12 @@ namespace olb {
 template class SuperMax2D<double>;
 template class SuperMin2D<double>;
 template class SuperSum2D<double>;
-template class SuperSumIndicator2D<double>;
 template class SuperIntegral2D<double>;
 
 template class SuperGeometryFaces2D<double>;
-template class SuperGeometryFacesIndicator2D<double>;
-template class SuperLatticePhysDrag2D<double,descriptors::D2Q9Descriptor>;
-template class SuperLatticePhysCorrDrag2D<double,descriptors::D2Q9Descriptor>;
+template class SuperGeometryFacesIndicator2D<double,false>;
+template class SuperLatticePhysDrag2D<double,descriptors::D2Q9<>>;
+template class SuperLatticePhysCorrDrag2D<double,descriptors::D2Q9<>>;
 
 } // end namespace olb
 

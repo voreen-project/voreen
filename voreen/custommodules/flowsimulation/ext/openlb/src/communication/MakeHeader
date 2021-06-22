@@ -35,4 +35,6 @@ precompiled    := blockLoadBalancer \
                   mpiManager \
                   ompManager \
                   superStructure2D \
-                  superStructure3D
+                  superStructure3D \
+                  superPropagation \
+                  blockPropagation

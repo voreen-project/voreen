@@ -49,27 +49,27 @@ namespace olb {
 
 
 
-template<typename T, template<typename U> class Lattice>
-SmagorinskyMRTdynamics<T,Lattice>::SmagorinskyMRTdynamics (
-  T omega_, Momenta<T,Lattice>& momenta_, T smagoConst_, T dx_, T dt_ )
-  : MRTdynamics<T,Lattice>(omega_, momenta_/*, smagoConst_*/),
+template<typename T, typename DESCRIPTOR>
+SmagorinskyMRTdynamics<T,DESCRIPTOR>::SmagorinskyMRTdynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_, T smagoConst_, T dx_, T dt_ )
+  : MRTdynamics<T,DESCRIPTOR>(omega_, momenta_/*, smagoConst_*/),
     smagoConst(smagoConst_),
     preFactor(computePreFactor(omega_,smagoConst_) )
 {
 
-  T rtSGS[Lattice<T>::q]; // relaxation times vector for SGS approach.
-  for (int iPop  = 0; iPop < Lattice<T>::q; ++iPop) {
-    rtSGS[iPop] = Lattice<T>::S[iPop];
+  T rtSGS[DESCRIPTOR::q]; // relaxation times vector for SGS approach.
+  for (int iPop  = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    rtSGS[iPop] = DESCRIPTOR::S[iPop];
   }
-  for (int iPop  = 0; iPop < Lattice<T>::shearIndexes; ++iPop) {
-    rtSGS[Lattice<T>::shearViscIndexes[iPop]] = omega;
+  for (int iPop  = 0; iPop < DESCRIPTOR::shearIndexes; ++iPop) {
+    rtSGS[DESCRIPTOR::shearViscIndexes[iPop]] = omega;
   }
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
       invM_S_SGS[iPop][jPop] = T();
-      for (int kPop = 0; kPop < Lattice<T>::q; ++kPop) {
+      for (int kPop = 0; kPop < DESCRIPTOR::q; ++kPop) {
         if (kPop == jPop) {
-          invM_S_SGS[iPop][jPop] += Lattice<T>::invM[iPop][kPop] * rtSGS[kPop];
+          invM_S_SGS[iPop][jPop] += DESCRIPTOR::invM[iPop][kPop] * rtSGS[kPop];
         }
       }
     }
@@ -77,72 +77,52 @@ SmagorinskyMRTdynamics<T,Lattice>::SmagorinskyMRTdynamics (
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyMRTdynamics<T,Lattice>::collide(
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyMRTdynamics<T,DESCRIPTOR>::collide(
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  T rho, u[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
   this->_momenta.computeAllMomenta(cell, rho, u, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::shearIndexes; ++jPop) {
-      invM_S_SGS[iPop][Lattice<T>::shearViscIndexes[jPop]] = Lattice<T>::invM[iPop][Lattice<T>::shearViscIndexes[jPop]] * newOmega;
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    for (int jPop = 0; jPop < DESCRIPTOR::shearIndexes; ++jPop) {
+      invM_S_SGS[iPop][DESCRIPTOR::shearViscIndexes[jPop]] = DESCRIPTOR::invM[iPop][DESCRIPTOR::shearViscIndexes[jPop]] * newOmega;
     }
   }
 
-  T uSqr = mrtHelpers<T,Lattice>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
+  T uSqr = mrtHelpers<T,DESCRIPTOR>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
   statistics.incrementStats(rho, uSqr);
 }
 
-
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyMRTdynamics<T,Lattice>::staticCollide(
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  T rho, uTemp[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
-  this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
-  T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::shearIndexes; ++jPop) {
-      invM_S_SGS[iPop][Lattice<T>::shearViscIndexes[jPop]] = Lattice<T>::invM[iPop][Lattice<T>::shearViscIndexes[jPop]] * newOmega;
-    }
-  }
-
-  T uSqr = mrtHelpers<T,Lattice>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyMRTdynamics<T,Lattice>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyMRTdynamics<T,DESCRIPTOR>::setOmega(T omega)
 {
   this->setOmega(omega);
   preFactor = computePreFactor(omega, smagoConst);
 }
 
-template<typename T, template<typename U> class Lattice>
-T SmagorinskyMRTdynamics<T,Lattice>::getSmagorinskyOmega(Cell<T,Lattice>& cell )
+template<typename T, typename DESCRIPTOR>
+T SmagorinskyMRTdynamics<T,DESCRIPTOR>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell )
 {
-  T rho, uTemp[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, uTemp[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
   this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
   return newOmega;
 }
 
-template<typename T, template<typename U> class Lattice>
-T SmagorinskyMRTdynamics<T,Lattice>::computePreFactor(T omega, T smagoConst)
+template<typename T, typename DESCRIPTOR>
+T SmagorinskyMRTdynamics<T,DESCRIPTOR>::computePreFactor(T omega, T smagoConst)
 {
-  return (T)smagoConst*smagoConst*Lattice<T>::invCs2*Lattice<T>::invCs2*2*sqrt(2);
+  return (T)smagoConst*smagoConst*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*sqrt(2);
 }
 
-template<typename T, template<typename U> class Lattice>
-T SmagorinskyMRTdynamics<T,Lattice>::computeOmega(T omega0, T preFactor, T rho, T pi[util::TensorVal<Lattice<T> >::n] )
+template<typename T, typename DESCRIPTOR>
+T SmagorinskyMRTdynamics<T,DESCRIPTOR>::computeOmega(T omega0, T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n] )
 {
 
   T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
-  if (util::TensorVal<Lattice<T> >::n == 6) {
+  if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
   T PiNeqNorm    = sqrt(PiNeqNormSqr);
@@ -158,23 +138,23 @@ T SmagorinskyMRTdynamics<T,Lattice>::computeOmega(T omega0, T preFactor, T rho, 
 
 
 
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyForcedMRTdynamics<T,Lattice>::collide(
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyForcedMRTdynamics<T,DESCRIPTOR>::collide(
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  T rho, u[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
   this->_momenta.computeAllMomenta(cell, rho, u, pi);
   T newOmega = computeOmega(this->getOmega(), this->preFactor, rho, pi);
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::shearIndexes; ++jPop) {
-      this->invM_S_SGS[iPop][Lattice<T>::shearViscIndexes[jPop]] = Lattice<T>::invM[iPop][Lattice<T>::shearViscIndexes[jPop]] * newOmega;
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    for (int jPop = 0; jPop < DESCRIPTOR::shearIndexes; ++jPop) {
+      this->invM_S_SGS[iPop][DESCRIPTOR::shearViscIndexes[jPop]] = DESCRIPTOR::invM[iPop][DESCRIPTOR::shearViscIndexes[jPop]] * newOmega;
     }
   }
 
-  T uSqr = mrtHelpers<T,Lattice>::mrtSGSCollision(cell, rho, u, newOmega, this->invM_S_SGS);
+  T uSqr = mrtHelpers<T,DESCRIPTOR>::mrtSGSCollision(cell, rho, u, newOmega, this->invM_S_SGS);
 
-  mrtHelpers<T,Lattice>::addExternalForce(cell, rho, u, this->invM_S_SGS);
+  mrtHelpers<T,DESCRIPTOR>::addExternalForce(cell, rho, u, this->invM_S_SGS);
 
   statistics.incrementStats(rho, uSqr);
 }

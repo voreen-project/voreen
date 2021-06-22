@@ -60,7 +60,7 @@ private:
   /// Write VTK Preamble and PostScript
   static void writePreamble(std::string& fullName, Cuboid3D<T> const& cuboid);
   static void writePreamble(std::string& fullName, int nx, int ny, int nz,
-                            T originX, T originY, T originZ, T delta);
+                            T delta, T originX, T originY, T originZ);
   static void writePostScript(std::string& fullName);
   /// Write BlockData3D - Used for single BlockData as well as SuperData
   static void writeBlockData(std::string& fullName, std::string const& fieldName, BlockData3D<T,BaseType> const& blockData,

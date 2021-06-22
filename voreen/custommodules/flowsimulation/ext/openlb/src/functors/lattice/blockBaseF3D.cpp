@@ -34,11 +34,14 @@ template class BlockF3D<bool>;
 template class BlockF3D<double>;
 
 template class BlockDataF3D<double,double>;
+template class BlockDataViewF3D<double,double>;
 
 template class BlockIdentity3D<int>;
+template class BlockIdentity3D<bool>;
 template class BlockIdentity3D<double>;
 
-template class BlockLatticeF3D<double,descriptors::D3Q19Descriptor>;
-template class BlockLatticePhysF3D<double,descriptors::D3Q19Descriptor>;
-}
+template class BlockLatticeF3D<double,descriptors::D3Q19<>>;
+template class BlockLatticeIdentity3D<double,descriptors::D3Q19<>>;
+template class BlockLatticePhysF3D<double,descriptors::D3Q19<>>;
 
+}

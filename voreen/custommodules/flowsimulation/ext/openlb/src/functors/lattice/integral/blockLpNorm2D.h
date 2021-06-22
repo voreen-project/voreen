@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -39,14 +39,12 @@ class BlockLpNorm2D final : public BlockF2D<W> {
 protected:
   BlockF2D<W>&          _f;
   BlockIndicatorF2D<T>& _indicatorF;
-  Cuboid2D<T>&          _cuboid;
 public:
   /**
    * \param f          data functor
    * \param indicatorF indicator functor describing the subset to be integrated
-   * \param cuboid     relevant cuboid instance, required to determine the weight
    **/
-  BlockLpNorm2D(BlockF2D<W>& f, BlockIndicatorF2D<T>& indicatorF, Cuboid2D<T>& cuboid);
+  BlockLpNorm2D(BlockF2D<W>& f, BlockIndicatorF2D<T>& indicatorF);
   bool operator() (W output[], const int input[]) override;
 };
 

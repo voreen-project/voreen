@@ -63,7 +63,8 @@ struct plotParam
  * Available colour schemes are "grey", "pm3d", "blackbody" and "rainbow"
  */
 template <typename T>
-void write(BlockReduction3D2D<T>& blockReduction, int iT, const plotParam<T> param = {});
+void write(BlockReduction3D2D<T>& blockReduction, int iT, const plotParam<T> param = {},
+	   const std::vector<T>& valueArea = std::vector<T>());
 
 /** This function is used to plot heat maps as jpeg files.
  * minValue and maxValue set a defined scalar range.
@@ -73,7 +74,8 @@ void write(BlockReduction3D2D<T>& blockReduction, int iT, const plotParam<T> par
  * Available colour schemes are "grey", "pm3d", "blackbody" and "rainbow"
  */
 template <typename T>
-void write(BlockReduction2D2D<T>& blockReduction, int iT, const plotParam<T> param = {});
+void write(BlockReduction2D2D<T>& blockReduction, int iT, const plotParam<T> param = {},
+	   const std::vector<T>& valueArea = std::vector<T>());
 
 
 
@@ -82,7 +84,7 @@ namespace detail {
 
 template <typename T>
 void genericHeatMapInterface(const HyperplaneLattice3D<T>& hyperPlane, BlockF2D<T>& blockData, int iT,
-                             const plotParam<T>& param);
+                             const std::vector<T>& valueArea, const plotParam<T>& param);
 
 
 
@@ -113,7 +115,7 @@ template <typename T>
 void writeHeatMapDataFile(detailParam<T>& param);
 
 template <typename T>
-void writeHeatMapPlotFile(detailParam<T>& param);
+void writeHeatMapPlotFile(detailParam<T>& param, const std::vector<T>& valueArea);
 
 template< typename T >
 void executeGnuplot(detailParam<T>& param);

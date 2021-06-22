@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -33,55 +33,195 @@ namespace olb {
 
 template <typename T>
 BlockIndicatorFfromIndicatorF3D<T>::BlockIndicatorFfromIndicatorF3D(
-  IndicatorF3D<T>&    indicatorF,
-  BlockGeometry3D<T>& blockGeometry,
-  Cuboid3D<T>&        cuboid)
+  IndicatorF3D<T>& indicatorF, BlockGeometryStructure3D<T>& blockGeometry)
   : BlockIndicatorF3D<T>(blockGeometry),
-    _indicatorF(indicatorF),
-    _cuboid(cuboid)
-{};
+    _indicatorF(indicatorF)
+{ }
 
 template <typename T>
 bool BlockIndicatorFfromIndicatorF3D<T>::operator() (bool output[], const int input[])
 {
-  T physR[3] = {};
-  _cuboid.getPhysR(physR,input);
+  T physR[3];
+  this->_blockGeometryStructure.getPhysR(physR,input);
   return _indicatorF(output,physR);
+}
+
+template <typename T>
+Vector<int,3> BlockIndicatorFfromIndicatorF3D<T>::getMin()
+{
+  const Vector<T,3> min = _indicatorF.getMin();
+  return Vector<int,3> {
+    static_cast<int>(floor(min[0])),
+    static_cast<int>(floor(min[1])),
+    static_cast<int>(floor(min[2]))
+  };
+}
+
+template <typename T>
+Vector<int,3> BlockIndicatorFfromIndicatorF3D<T>::getMax()
+{
+  const Vector<T,3> max = _indicatorF.getMax();
+  return Vector<int,3> {
+    static_cast<int>(ceil(max[0])),
+    static_cast<int>(ceil(max[1])),
+    static_cast<int>(ceil(max[2]))
+  };
+}
+
+
+template <typename T, bool HLBM>
+BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>::BlockIndicatorFfromSmoothIndicatorF3D(
+  SmoothIndicatorF3D<T,T,HLBM>& indicatorF, BlockGeometryStructure3D<T>& blockGeometry)
+  : BlockIndicatorF3D<T>(blockGeometry),
+    _indicatorF(indicatorF)
+{ }
+
+template <typename T, bool HLBM>
+bool BlockIndicatorFfromSmoothIndicatorF3D<T,HLBM>::operator() (bool output[], const int input[])
+{
+  T physR[3];
+  T inside[1];
+  this->_blockGeometryStructure.getPhysR(physR,input);
+  _indicatorF(inside, physR);
+  return !util::nearZero(inside[0]);
+}
+
+template <typename T, bool HLBM>
+Vector<int,3> BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>::getMin()
+{
+  const T min = -_indicatorF.getCircumRadius();
+  return Vector<int,3> {
+    static_cast<int>(floor(min)),
+    static_cast<int>(floor(min)),
+    static_cast<int>(floor(min))
+  };
+}
+
+template <typename T, bool HLBM>
+Vector<int,3> BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>::getMax()
+{
+  const T max = _indicatorF.getCircumRadius();
+  return Vector<int,3> {
+    static_cast<int>(ceil(max)),
+    static_cast<int>(ceil(max)),
+    static_cast<int>(ceil(max))
+  };
 }
 
 
 template <typename T>
 BlockIndicatorMaterial3D<T>::BlockIndicatorMaterial3D(
-  BlockGeometry3D<T>& blockGeometry, int overlap, const std::vector<int>* materials)
+  BlockGeometryStructure3D<T>& blockGeometry, std::vector<int> materials)
   : BlockIndicatorF3D<T>(blockGeometry),
-    _overlap(overlap),
-    _materialNumbers(materials)
-{};
+    _materials(materials)
+{ }
+
+template <typename T>
+BlockIndicatorMaterial3D<T>::BlockIndicatorMaterial3D(
+  BlockGeometryStructure3D<T>& blockGeometry, std::list<int> materials)
+  : BlockIndicatorMaterial3D(blockGeometry,
+                             std::vector<int>(materials.begin(), materials.end()))
+{ }
+
+template <typename T>
+BlockIndicatorMaterial3D<T>::BlockIndicatorMaterial3D(
+  BlockGeometryStructure3D<T>& blockGeometry, int material)
+  : BlockIndicatorMaterial3D(blockGeometry, std::vector<int>(1,material))
+{ }
 
 template <typename T>
 bool BlockIndicatorMaterial3D<T>::operator() (bool output[], const int input[])
 {
-  const int blockInput[3] = {
-    input[0] + _overlap,
-    input[1] + _overlap,
-    input[2] + _overlap,
-  };
+  // read material number explicitly using the const version
+  // of BlockGeometry3D<T>::get to avoid resetting geometry
+  // statistics:
+  const BlockGeometryStructure3D<T>& blockGeometry = this->_blockGeometryStructure;
+  const int current = blockGeometry.getMaterial(input[0], input[1], input[2]);
+  output[0] = std::any_of(_materials.cbegin(),
+                          _materials.cend(),
+                          [current](int material) { return current == material; });
 
-  OLB_PRECONDITION(blockInput[0] < this->_blockGeometry.getNx());
-  OLB_PRECONDITION(blockInput[1] < this->_blockGeometry.getNy());
-  OLB_PRECONDITION(blockInput[2] < this->_blockGeometry.getNz());
-
-  output[0] = std::find(_materialNumbers->cbegin(),
-                        _materialNumbers->cend(),
-                        // read material number explicitly using the const version
-                        // of BlockGeometry3D<T>::get to avoid resetting geometry
-                        // statistics:
-                        const_cast<const BlockGeometry3D<T>&>(this->_blockGeometry).get(blockInput[0], blockInput[1], blockInput[2]))
-              != _materialNumbers->cend();
-
-  return output[0];
+  return true;
 }
 
+template <typename T>
+bool BlockIndicatorMaterial3D<T>::isEmpty()
+{
+  auto& statistics = this->getBlockGeometryStructure().getStatistics();
+
+  return std::none_of(_materials.cbegin(), _materials.cend(),
+  [&statistics](int material) -> bool {
+    return statistics.getNvoxel(material) > 0;
+  });
+}
+
+template <typename T>
+Vector<int,3> BlockIndicatorMaterial3D<T>::getMin()
+{
+  auto& blockGeometry = this->getBlockGeometryStructure();
+  auto& statistics    = blockGeometry.getStatistics();
+
+  Vector<int,3> globalMin{
+    blockGeometry.getNx()-1,
+    blockGeometry.getNy()-1,
+    blockGeometry.getNz()-1,
+  };
+
+  for ( int material : _materials ) {
+    if ( statistics.getNvoxel(material) > 0 ) {
+      const Vector<int,3> localMin = statistics.getMinLatticeR(material);
+      for ( int d = 0; d < 3; ++d ) {
+        globalMin[d] = localMin[d] < globalMin[d] ? localMin[d] : globalMin[d];
+      }
+    }
+  }
+
+  return globalMin;
+}
+
+template <typename T>
+Vector<int,3> BlockIndicatorMaterial3D<T>::getMax()
+{
+  auto& statistics = this->getBlockGeometryStructure().getStatistics();
+
+  Vector<int,3> globalMax{ 0, 0, 0 };
+
+  for ( int material : _materials ) {
+    if ( statistics.getNvoxel(material) > 0 ) {
+      const Vector<int,3> localMax = statistics.getMaxLatticeR(material);
+      for ( int d = 0; d < 3; ++d ) {
+        globalMax[d] = localMax[d] > globalMax[d] ? localMax[d] : globalMax[d];
+      }
+    }
+  }
+
+  return globalMax;
+}
+
+
+template <typename T>
+BlockIndicatorIdentity3D<T>::BlockIndicatorIdentity3D(BlockIndicatorF3D<T>& indicatorF)
+  : BlockIndicatorF3D<T>(indicatorF.getBlockGeometryStructure()),
+    _indicatorF(indicatorF)
+{ }
+
+template <typename T>
+bool BlockIndicatorIdentity3D<T>::operator() (bool output[], const int input[])
+{
+  return _indicatorF(output, input);
+}
+
+template <typename T>
+Vector<int,3> BlockIndicatorIdentity3D<T>::getMin()
+{
+  return _indicatorF.getMin();
+}
+
+template <typename T>
+Vector<int,3> BlockIndicatorIdentity3D<T>::getMax()
+{
+  return _indicatorF.getMax();
+}
 
 } // namespace olb
 

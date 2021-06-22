@@ -28,6 +28,8 @@
 namespace olb {
 
 template class SuperIndicatorFfromIndicatorF3D<double>;
+template class SuperIndicatorFfromSmoothIndicatorF3D<double,false>;
 template class SuperIndicatorMaterial3D<double>;
+template class SuperIndicatorIdentity3D<double>;
 
 }

@@ -28,7 +28,6 @@
 #include "core/postProcessing.h"
 #include "momentaOnBoundaries.h"
 #include "core/blockLattice2D.h"
-#include "boundaryCondition2D.h"
 
 
 namespace olb {
@@ -40,8 +39,8 @@ namespace olb {
 * Jonas Latt, "Hydrodynamic limit of lattice Boltzmann equations",
 * University of Geneva, (2007).
 */
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-class ExtendedStraightFdBoundaryPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+class ExtendedStraightFdBoundaryPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   ExtendedStraightFdBoundaryPostProcessor2D(int x0_, int x1_, int y0_, int y1_);
   int extent() const override
@@ -52,35 +51,28 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   template<int deriveDirection>
-  void interpolateGradients(BlockLattice2D<T,Lattice> const& blockLattice,
-                            T velDeriv[Lattice<T>::d], int iX, int iY) const;
+  void interpolateGradients(BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                            T velDeriv[DESCRIPTOR::d], int iX, int iY) const;
   template<int deriveDirection>
   void interpolateGradients (
-    BlockLattice2D<T,Lattice> const& blockLattice,T& rhoDeriv,
+    BlockLattice2D<T,DESCRIPTOR> const& blockLattice,T& rhoDeriv,
     int iX, int iY ) const;
 private:
   int x0, x1, y0, y1;
 };
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-class ExtendedStraightFdBoundaryProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+class ExtendedStraightFdBoundaryProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   ExtendedStraightFdBoundaryProcessorGenerator2D(int x0_, int x1_, int y0_, int y1_);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 };
-
-
-////////// Factory function for Extended Finite Difference BC ///////////////////////////////
-
-template<typename T, template<typename U> class Lattice, typename MixinDynamics=BGKdynamics<T,Lattice> >
-OnLatticeBoundaryCondition2D<T,Lattice>*
-createExtendedFdBoundaryCondition2D(BlockLatticeStructure2D<T,Lattice>& block);
 
 }  // namespace olb
 

@@ -108,6 +108,13 @@ void SuperStructure3D<T>::communicate(bool verbose)
   }
 }
 
+template<typename T>
+void SuperStructure3D<T>::initCommunication()
+{
+  _communicator.init_nh();
+  _communicator.init();
+}
+
 } // namespace olb
 
 #endif

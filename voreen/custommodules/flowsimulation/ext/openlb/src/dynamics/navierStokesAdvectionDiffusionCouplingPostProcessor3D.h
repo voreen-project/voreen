@@ -34,7 +34,7 @@
 
 namespace olb {
 
-using namespace descriptors;
+
 
 /**
 * Multiphysics class for coupling between different lattices.
@@ -42,9 +42,9 @@ using namespace descriptors;
 //======================================================================
 // ========Regularized NSDiffusion Coupling 3D ====================//
 //======================================================================
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class NavierStokesAdvectionDiffusionCouplingPostProcessor3D :
-  public LocalPostProcessor3D<T,Lattice> {
+  public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   NavierStokesAdvectionDiffusionCouplingPostProcessor3D(
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
@@ -58,52 +58,46 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_) override;
 private:
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
   int x0, x1, y0, y1, z0, z1;
   T gravity, T0, deltaTemp;
   std::vector<T> dir;
   T forcePrefactor[L::d];
 
   std::vector<SpatiallyExtendedObject3D*> partners;
-  BlockLattice3D<T,AdvectionDiffusionD3Q7Descriptor> *tPartner;
-  enum {
-    velOffset = AdvectionDiffusionD3Q7Descriptor<T>::ExternalField::velocityBeginsAt,
-    forceOffset = Lattice<T>::ExternalField::forceBeginsAt
-  };
+  BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY>> *tPartner;
 };
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class NavierStokesAdvectionDiffusionCouplingGenerator3D :
-  public LatticeCouplingGenerator3D<T,Lattice> {
+  public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
 public:
   NavierStokesAdvectionDiffusionCouplingGenerator3D(
     int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_,
     T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_);
-  PostProcessor3D<T,Lattice>* generate(
+  PostProcessor3D<T,DESCRIPTOR>* generate(
     std::vector<SpatiallyExtendedObject3D* > partners) const override;
-  LatticeCouplingGenerator3D<T,Lattice>* clone() const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 
 private:
   T gravity, T0, deltaTemp;
   std::vector<T> dir;
 };
 
-//==================================================================================================
-// ========Coupling 3D of Navier-Stokes on Advection-Diffusion with Stokes drag====================//
-//==================================================================================================
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice=descriptors::ParticleAdvectionDiffusionD3Q7Descriptor>
-class AdvectionDiffusionParticleCouplingPostProcessor3D :
-  public LocalPostProcessor3D<T,Lattice> {
+
+//======================================================================
+// ======== Total enthalpy coupling with Boussinesq bouancy 3D and phase change====================//
+//======================================================================
+template<typename T, typename DESCRIPTOR>
+class TotalEnthalpyPhaseChangeCouplingPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
-  AdvectionDiffusionParticleCouplingPostProcessor3D(
-    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, int iC_, int offset_,
-    std::vector<SpatiallyExtendedObject3D* > partners_,
-    std::vector<std::reference_wrapper<advectionDiffusionForce3D<T, Lattice,ADLattice> > > forces_);
+  TotalEnthalpyPhaseChangeCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+      T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_,
+      std::vector<SpatiallyExtendedObject3D* > partners_);
   int extent() const override
   {
     return 1;
@@ -112,38 +106,298 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
-  int x0, x1, y0, y1, z0, z1, iC;
-  T dragCoeff;
-  int offset;
-  T *vel, *vel_new, *velXp, *velXn, *velYp, *velYn, *velZp, *velZn;
-  bool par = true;
-  Cell<T,ADLattice> *adCell;
-  Cell<T,Lattice> *nsCell;
+  typedef DESCRIPTOR L;
+  int x0, x1, y0, y1, z0, z1;
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+  BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TEMPERATURE>> *tPartner;
+  T forcePrefactor[L::d];
 
-protected:
-  std::vector<std::reference_wrapper<advectionDiffusionForce3D<T, Lattice, ADLattice> > > forces;
+  std::vector<SpatiallyExtendedObject3D*> partners;
 };
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice=descriptors::ParticleAdvectionDiffusionD3Q7Descriptor>
-class AdvectionDiffusionParticleCouplingGenerator3D :
-  public LatticeCouplingGenerator3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class TotalEnthalpyPhaseChangeCouplingGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
 public:
-  AdvectionDiffusionParticleCouplingGenerator3D(int offset_);
-  PostProcessor3D<T,Lattice>* generate(
-    std::vector<SpatiallyExtendedObject3D* > partners) const override;
-  LatticeCouplingGenerator3D<T,Lattice>* clone() const override;
-  void addForce(advectionDiffusionForce3D<T,Lattice,ADLattice> &force);
+  TotalEnthalpyPhaseChangeCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+      T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_);
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D* > partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 
 private:
-  int offset;
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+};
+
+
+//======================================================================
+// ======== Phase field coupling without bouancy 3D ====================//
+//======================================================================
+template<typename T, typename DESCRIPTOR>
+class PhaseFieldCouplingPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
+public:
+  PhaseFieldCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                                    T rho_L, T rho_H, T mu_L, T mu_H, T surface_tension, T interface_thickness,
+                                    std::vector<SpatiallyExtendedObject3D* > partners_);
+  int extent() const override
+  {
+    return 0;
+  }
+  int extent(int whichDirection) const override
+  {
+    return 0;
+  }
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
+private:
+  using L = DESCRIPTOR;
+  using PHI_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<1,0,0>;
+  
+  int x0, x1, y0, y1, z0, z1;
+
+  T _rho_L, _rho_H, _delta_rho;
+  T _mu_L, _mu_H;
+  T _surface_tension, _interface_thickness;
+  T _beta, _kappa;
+
+  BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::INTERPHASE_NORMAL>> *tPartner;
+
+  std::vector<SpatiallyExtendedObject3D*> partners;
+};
+
+template<typename T, typename DESCRIPTOR>
+class PhaseFieldCouplingGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
+public:
+  PhaseFieldCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                                T rho_L, T rho_H, T mu_L, T mu_H, T surface_tension, T interface_thickness);
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D* > partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
+
+private:
+  T _rho_L, _rho_H, _delta_rho;
+  T _mu_L, _mu_H;
+  T _surface_tension, _interface_thickness;
+};
+
+
+//======================================================================
+// =============  SmagorinskyBoussinesqCoupling 3D ===================//
+//======================================================================
+template<typename T, typename DESCRIPTOR>
+class SmagorinskyBoussinesqCouplingPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
+public:
+  SmagorinskyBoussinesqCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+      T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_, T smagoPrefactor_,
+      std::vector<SpatiallyExtendedObject3D* > partners_);
+  int extent() const override
+  {
+    return 0;
+  }
+  int extent(int whichDirection) const override
+  {
+    return 0;
+  }
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
+private:
+  typedef DESCRIPTOR L;
+  int x0, x1, y0, y1, z0, z1;
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+  T PrTurb;
+  BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TAU_EFF>> *tPartner;
+  T forcePrefactor[L::d];
+  T tauTurbADPrefactor;
+  T smagoPrefactor;
+
+  std::vector<SpatiallyExtendedObject3D*> partners;
+};
+
+template<typename T, typename DESCRIPTOR>
+class SmagorinskyBoussinesqCouplingGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
+public:
+  SmagorinskyBoussinesqCouplingGenerator3D(
+    int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_, T smagoPrefactor_);
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D* > partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
+
+private:
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+  T PrTurb;
+  T smagoPrefactor;
+};
+
+//==================================================================================================
+// ========Coupling 3D of Navier-Stokes on Advection-Diffusion====================//
+//==================================================================================================
+template<
+  typename T,
+  typename DESCRIPTOR,
+  typename ADLattice,
+  typename FIELD_A,
+  typename FIELD_B
+  >
+class AdvectionDiffusionParticleCouplingPostProcessor3D :
+  public LocalPostProcessor3D<T,DESCRIPTOR> {
+public:
+  AdvectionDiffusionParticleCouplingPostProcessor3D(
+    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, int iC_,
+    std::vector<SpatiallyExtendedObject3D* > partners_,
+    std::vector<std::reference_wrapper<AdvectionDiffusionForce3D<T, DESCRIPTOR,ADLattice> > > forces_);
+  int extent() const override
+  {
+    return 1;
+  }
+  int extent(int whichDirection) const override
+  {
+    return 1;
+  }
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_) override;
 
 protected:
-  std::vector<std::reference_wrapper<advectionDiffusionForce3D<T, Lattice, ADLattice> > > ADforces;
+  std::vector<std::reference_wrapper<AdvectionDiffusionForce3D<T, DESCRIPTOR, ADLattice> > > _forces;
+
+private:
+
+  int x0, x1, y0, y1, z0, z1, iC;
+
+  BlockLattice3D<T,ADLattice>* _partnerLattice;
+
+  T dragCoeff;
+  Cell<T,ADLattice> _cell;
+  Cell<T,ADLattice> _cellXp;
+  Cell<T,ADLattice> _cellXn;
+  Cell<T,ADLattice> _cellYp;
+  Cell<T,ADLattice> _cellYn;
+  Cell<T,ADLattice> _cellZp;
+  Cell<T,ADLattice> _cellZn;
+
+  bool par = true;
+};
+
+template<
+  typename T,
+  typename DESCRIPTOR,
+  typename ADLattice,
+  typename FIELD_A,
+  typename FIELD_B
+  >
+class AdvectionDiffusionParticleCouplingGenerator3D :
+  public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
+public:
+  AdvectionDiffusionParticleCouplingGenerator3D();
+  PostProcessor3D<T,DESCRIPTOR>* generate(
+    std::vector<SpatiallyExtendedObject3D* > partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
+  void addForce(AdvectionDiffusionForce3D<T,DESCRIPTOR,ADLattice> &force);
+
+protected:
+  std::vector<std::reference_wrapper<AdvectionDiffusionForce3D<T, DESCRIPTOR, ADLattice> > > ADforces;
+};
+
+
+//======================================================================
+// ======== Porous Regularized NSDiffusion Coupling 3D =================//
+//======================================================================
+template<typename T, typename DESCRIPTOR>
+class PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D :
+  public LocalPostProcessor3D<T,DESCRIPTOR> {
+public:
+  PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D(
+    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_,
+    std::vector<SpatiallyExtendedObject3D* > partners_);
+  int extent() const override
+  {
+    return 1;
+  }
+  int extent(int whichDirection) const override
+  {
+    return 1;
+  }
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_) override;
+private:
+  int x0, x1, y0, y1, z0, z1;
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+
+  std::vector<SpatiallyExtendedObject3D*> partners;
+};
+
+template<typename T, typename DESCRIPTOR>
+class PorousNavierStokesAdvectionDiffusionCouplingGenerator3D :
+  public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
+public:
+  PorousNavierStokesAdvectionDiffusionCouplingGenerator3D(
+    int x0_, int x1_, int y0_, int y1_,  int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_);
+  PostProcessor3D<T,DESCRIPTOR>* generate(
+    std::vector<SpatiallyExtendedObject3D* > partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
+
+private:
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+};
+
+//=====================================================================================
+//==============  MixedScaleBoussinesqCouplingPostProcessor3D ===============
+//=====================================================================================
+template<typename T, typename DESCRIPTOR>
+class MixedScaleBoussinesqCouplingPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
+public:
+  MixedScaleBoussinesqCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+      T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_,
+      std::vector<SpatiallyExtendedObject3D* > partners_);
+  int extent() const override
+  {
+    return 0;
+  }
+  int extent(int whichDirection) const override
+  {
+    return 0;
+  }
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
+private:
+  typedef DESCRIPTOR L;
+  using HEAT_FLUX_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<1, 0, 0>;
+  int x0, x1, y0, y1, z0, z1;
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+  T PrTurb;
+  BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TAU_EFF,descriptors::CUTOFF_HEAT_FLUX>> *tPartner;
+  Vector<T,L::d> forcePrefactor;
+  T tauTurbADPrefactor;
+
+  std::vector<SpatiallyExtendedObject3D*> partners;
+};
+
+template<typename T, typename DESCRIPTOR>
+class MixedScaleBoussinesqCouplingGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
+public:
+  MixedScaleBoussinesqCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                                          T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_);
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D* > partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
+
+private:
+  T gravity, T0, deltaTemp;
+  std::vector<T> dir;
+  T PrTurb;
 };
 
 }

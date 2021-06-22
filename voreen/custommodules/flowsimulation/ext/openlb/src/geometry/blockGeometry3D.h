@@ -30,7 +30,8 @@
 
 #include <vector>
 #include <list>
-#include "core/blockData3D.h"
+
+#include "core/columnVector.h"
 #include "geometry/blockGeometryStatistics3D.h"
 #include "geometry/blockGeometryStructure3D.h"
 #include "geometry/cuboid3D.h"
@@ -39,19 +40,19 @@
 namespace olb {
 
 /// Representation of a block geometry
-/** This class is derived from block geometry structure. It
+/**
+ * This class is derived from block geometry structure. It
  * holds the actual data with the materials. It stores pointers
  * to all dependent block geometry views.
  * It presents a volume of voxels where different types are
  * given by material numbers which is important e.g. to work
  * with different boundaries (like for inflow/output regions).
- *
- * This class is not intended to be derived from.
  */
 template<typename T>
-class BlockGeometry3D final : public BlockData3D<T,int>, public BlockGeometryStructure3D<T> {
-
+class BlockGeometry3D final : public BlockGeometryStructure3D<T> {
 private:
+  ColumnVector<int,1> _data;
+
   /// Cuboid which charaterizes the block geometry
   Cuboid3D<T> _cuboid;
   /// List to all depending statistic status objects
@@ -62,10 +63,6 @@ public:
   BlockGeometry3D(T x0, T y0, T z0, T h, int nX, int nY, int nZ, int iCglob=-1);
   /// Constructor
   BlockGeometry3D(Cuboid3D<T>& cuboid, int iCglob=-1);
-  /// Copy constructor
-  BlockGeometry3D(BlockGeometry3D const& rhs);
-  /// Copy assignment
-  BlockGeometry3D& operator=(BlockGeometry3D const& rhs);
 
   /// Write access to the associated block statistic
   BlockGeometryStatistics3D<T>& getStatistics(bool verbose=true) override;
@@ -75,17 +72,15 @@ public:
   /// Read only access to the origin position given in SI units (meter)
   Vector<T,3> getOrigin() const override;
   /// Read only access to the voxel size given in SI units (meter)
-  const T getDeltaR() const override;
-  /// Returns the extend (number of voxels) in X-direction
-  int getNx() const override;
-  /// Returns the extend (number of voxels) in Y-direction
-  int getNy() const override;
-  /// Returns the extend (number of voxels) in Z-direction
-  int getNz() const override;
+  T getDeltaR() const override;
+
+  using BlockGeometryStructure3D<T>::get;
   /// Write access to a material number
   int& get(int iX, int iY, int iZ) override;  // override BlockGeometryStructure3D::get() by linking to BlockData3D<T,int>::get()
+  int& get(std::size_t iCell);
   /// Read only access to a material number
   int const& get(int iX, int iY, int iZ) const override;  // override BlockGeometryStructure3D::get() by linking to BlockData3D<T,int>::get()
+  int const& get(std::size_t iCell) const;
   /// returns the (iX,iY,iZ) entry in the 3D scalar field
   int getMaterial(int iX, int iY, int iZ) const override; // TODO old
 

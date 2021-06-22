@@ -28,5 +28,9 @@ precompiled    := force3D \
                   weightForce3D \
                   buoyancyForce3D \
                   hertzMindlinDeresiewicz3D \
-                  transferExternalForce3D
+                  transferExternalForce3D \
+                  magneticForceFromHField3D \
+                  linearDampingForceForMagDipoleMoment3D \
+                  magneticForceForMagP3D \
+                  interpMagForceForMagP3D
                   

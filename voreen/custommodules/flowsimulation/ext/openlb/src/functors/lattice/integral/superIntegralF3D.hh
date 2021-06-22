@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -29,7 +29,7 @@
 
 #include "superIntegralF3D.h"
 #include "blockIntegralF3D.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.hh"
+#include "functors/analytical/indicator/indicatorBaseF3D.hh"
 #include "utilities/functorPtr.hh"
 
 namespace olb {
@@ -44,16 +44,14 @@ SuperSum3D<T,W>::SuperSum3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 {
   this->getName() = "Sum("+_f->getName()+")";
 
-  LoadBalancer<T>&     load   = _f->getSuperStructure().getLoadBalancer();
-  CuboidGeometry3D<T>& cuboid = _f->getSuperStructure().getCuboidGeometry();
+  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
 
   if ( _f->getBlockFSize()          == load.size() &&
        _indicatorF->getBlockFSize() == load.size() ) {
     for (int iC = 0; iC < load.size(); ++iC) {
       this->_blockF.emplace_back(
         new BlockSum3D<T,W>(_f->getBlockF(iC),
-                            _indicatorF->getBlockIndicatorF(iC),
-                            cuboid.get(load.glob(iC)))
+                            _indicatorF->getBlockIndicatorF(iC))
       );
     }
   }
@@ -65,10 +63,7 @@ SuperSum3D<T,W>::SuperSum3D(FunctorPtr<SuperF3D<T,W>>&& f,
                             const int material)
   : SuperSum3D(
       std::forward<decltype(f)>(f),
-      std::unique_ptr<SuperIndicatorF3D<T>>(
-        new SuperIndicatorMaterial3D<T>(superGeometry,
-                                        std::vector<int>(1, material))
-      ))
+      superGeometry.getMaterialIndicator(material))
 { }
 
 template <typename T, typename W>
@@ -130,16 +125,14 @@ SuperIntegral3D<T,W>::SuperIntegral3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 {
   this->getName() = "Integral("+_f->getName()+")";
 
-  LoadBalancer<T>&     load   = _f->getSuperStructure().getLoadBalancer();
-  CuboidGeometry3D<T>& cuboid = _f->getSuperStructure().getCuboidGeometry();
+  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
 
   if ( _f->getBlockFSize()          == load.size() &&
        _indicatorF->getBlockFSize() == load.size() ) {
     for (int iC = 0; iC < load.size(); ++iC) {
       this->_blockF.emplace_back(
         new BlockIntegral3D<T,W>(_f->getBlockF(iC),
-                                 _indicatorF->getBlockIndicatorF(iC),
-                                 cuboid.get(load.glob(iC)))
+                                 _indicatorF->getBlockIndicatorF(iC))
       );
     }
   }
@@ -151,10 +144,7 @@ SuperIntegral3D<T,W>::SuperIntegral3D(FunctorPtr<SuperF3D<T,W>>&& f,
                                       const int material)
   : SuperIntegral3D(
       std::forward<decltype(f)>(f),
-      std::unique_ptr<SuperIndicatorF3D<T>>(
-        new SuperIndicatorMaterial3D<T>(superGeometry,
-                                        std::vector<int>(1, material))
-      ))
+      superGeometry.getMaterialIndicator(material))
 { }
 
 template <typename T, typename W>

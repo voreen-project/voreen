@@ -39,389 +39,403 @@ namespace olb {
 
 
 // Forward declarations
-template<typename T, class Descriptor> struct lbDynamicsHelpers;
-template<typename T, template<typename U> class Lattice> struct lbExternalHelpers;
-template<typename T, template<typename U> class Lattice> struct lbLatticeHelpers;
+template<typename T, typename DESCRIPTOR> struct lbDynamicsHelpers;
+template<typename T, typename DESCRIPTOR> struct lbExternalHelpers;
+template<typename T, typename DESCRIPTOR> struct lbLatticeHelpers;
 
 /// This structure forwards the calls to the appropriate helper class
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 struct lbHelpers {
 
-  static T equilibrium(int iPop, T rho, const T u[Lattice<T>::d], const T uSqr)
+  static T equilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], const T uSqr)
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
-           ::equilibrium(iPop, rho, u, uSqr);
+    return lbDynamicsHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
   }
 
-  static T equilibriumFirstOrder(int iPop, T rho, const T u[Lattice<T>::d])
+  static T equilibriumFirstOrder(int iPop, T rho, const T u[DESCRIPTOR::d])
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T,DESCRIPTOR>
            ::equilibriumFirstOrder(iPop, rho, u);
   }
 
-  static T incEquilibrium(int iPop, const T j[Lattice<T>::d], const T jSqr, const T pressure)
+  static T incEquilibrium(int iPop, const T j[DESCRIPTOR::d], const T jSqr, const T pressure)
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T,DESCRIPTOR>
            ::incEquilibrium(iPop, j, jSqr, pressure);
   }
 
-  static void computeFneq ( Cell<T,Lattice> const& cell,
-                            T fNeq[Lattice<T>::q], T rho, const T u[Lattice<T>::d] )
+  static T equilibriumP1(int iPop, T rho, std::array<T,DESCRIPTOR::d>& u)
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>::computeFneq(cell, fNeq, rho, u);
+    return lbDynamicsHelpers<T,DESCRIPTOR>::equilibriumP1(iPop, rho, u);
   }
 
-  static T bgkCollision(Cell<T,Lattice>& cell, T const& rho, const T u[Lattice<T>::d], T const& omega)
+  static void computeFneq ( ConstCell<T,DESCRIPTOR>& cell,
+                            T fNeq[DESCRIPTOR::q], T rho, const T u[DESCRIPTOR::d] )
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    lbDynamicsHelpers<T,DESCRIPTOR>::computeFneq(cell, fNeq, rho, u);
+  }
+
+  static T bgkCollision(Cell<T,DESCRIPTOR>& cell, T const& rho, const T u[DESCRIPTOR::d], T const& omega)
+  {
+    return lbDynamicsHelpers<T,DESCRIPTOR>
            ::bgkCollision(cell, rho, u, omega);
   }
 
-  static T bgkCollision(Cell<T,Lattice>& cell, T const& rho, const T u[Lattice<T>::d], const T omega[Lattice<T>::q])
+  static T bgkCollision(Cell<T,DESCRIPTOR>& cell, T const& rho, const T u[DESCRIPTOR::d], const T omega[DESCRIPTOR::q])
   {
-    const T uSqr = util::normSqr<T,Lattice<T>::d>(u);
-    for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+    const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       cell[iPop] *= (T)1-omega[iPop];
-      cell[iPop] += omega[iPop] * lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>::equilibrium (iPop, rho, u, uSqr );
+      cell[iPop] += omega[iPop] * lbDynamicsHelpers<T,DESCRIPTOR>::equilibrium (iPop, rho, u, uSqr );
     }
     return uSqr;
   }
 
-  //====================================
-  /*
-   * Helpers included from the adLbDynamicsHelpers
-   */
-  static T rlbCollision( Cell<T, Lattice>& cell, T rho, const T u[Lattice<T>::d], T omega )
+  static T rlbCollision( Cell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d], T omega )
   {
-    return lbDynamicsHelpers<T, typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T, DESCRIPTOR>
            ::rlbCollision( cell, rho, u, omega );
   }
 
-  static T sinkCollision( Cell<T, Lattice>& cell, T intensity, T omega, T sink )
+  static T mrtCollision( Cell<T,DESCRIPTOR>& cell, T const& rho, const T u[DESCRIPTOR::d], T invM_S[DESCRIPTOR::q][DESCRIPTOR::q] )
   {
-    return lbDynamicsHelpers<T, typename Lattice<T>::BaseDescriptor>
-           ::sinkCollision( cell, intensity, omega, sink );
-  }
 
-  static T anisoCollision( Cell<T, Lattice>& cell, T intensity, T absorption, T scattering )
-  {
-    return lbDynamicsHelpers<T, typename Lattice<T>::BaseDescriptor>
-           ::anisoCollision( cell, intensity, absorption, scattering );
-  }
-
-  //====================================
-  /*
-   * Helpers included from the advectionDiffusionMRTlbHelpers
-   */
-  static T mrtCollision( Cell<T, Lattice>& cell, T const& rho, const T u[Lattice<T>::d], T invM_S[Lattice<T>::q][Lattice<T>::q] ) {
-
-    return lbDynamicsHelpers<T, typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T, DESCRIPTOR>
            ::mrtCollision(cell, rho, u, invM_S );
   }
-  //====================================
 
-  static T incBgkCollision(Cell<T,Lattice>& cell, T pressure, const T j[Lattice<T>::d], T omega)
+  static T incBgkCollision(Cell<T,DESCRIPTOR>& cell, T pressure, const T j[DESCRIPTOR::d], T omega)
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T,DESCRIPTOR>
            ::incBgkCollision(cell, pressure, j, omega);
   }
 
-  static T constRhoBgkCollision(Cell<T,Lattice>& cell,
-                                T rho, const T u[Lattice<T>::d], T ratioRho, T omega)
+  static T constRhoBgkCollision(Cell<T,DESCRIPTOR>& cell,
+                                T rho, const T u[DESCRIPTOR::d], T ratioRho, T omega)
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T,DESCRIPTOR>
            ::constRhoBgkCollision(cell, rho, u, ratioRho, omega);
   }
 
-  static T computeRho(Cell<T,Lattice> const& cell)
+  static T computeRho(ConstCell<T,DESCRIPTOR>& cell)
   {
-    return lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    return lbDynamicsHelpers<T,DESCRIPTOR>
            ::computeRho(cell);
   }
 
-  static void computeJ(Cell<T,Lattice> const& cell, T j[Lattice<T>::d] )
+  static void computeJ(ConstCell<T,DESCRIPTOR>& cell, T j[DESCRIPTOR::d] )
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    lbDynamicsHelpers<T,DESCRIPTOR>
     ::computeJ(cell, j);
   }
 
-  static void computeRhoU(Cell<T,Lattice> const& cell, T& rho, T u[Lattice<T>::d])
+  static void computeRhoU(ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d])
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    lbDynamicsHelpers<T,DESCRIPTOR>
     ::computeRhoU(cell, rho, u);
   }
 
-  static void computeRhoJ(Cell<T,Lattice> const& cell, T& rho, T j[Lattice<T>::d])
+  static void computeFeq(ConstCell<T,DESCRIPTOR>& cell, T fEq[DESCRIPTOR::q])
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
-    ::computeRhoJ(cell, rho, j);
+    T rho{};
+    T u[2] {};
+    computeRhoU(cell, rho, u);
+    const T uSqr = u[0]*u[0] + u[1]*u[1];
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+      fEq[iPop] = equilibrium(iPop, rho, u, uSqr);
+    }
   }
 
-  static void computeStress(Cell<T,Lattice> const& cell, T rho, const T u[Lattice<T>::d],
-                            T pi[util::TensorVal<Lattice<T> >::n] )
+  static void computeFneq(ConstCell<T,DESCRIPTOR>& cell, T fNeq[DESCRIPTOR::q])
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
-    ::computeStress(cell, rho, u, pi);
+    T rho{};
+    T u[2] {};
+    computeRhoU(cell, rho, u);
+    computeFneq(cell, fNeq, rho, u);
   }
 
-  static void computeAllMomenta(Cell<T,Lattice> const& cell, T& rho, T u[Lattice<T>::d],
-                                T pi[util::TensorVal<Lattice<T> >::n] )
+  static void computeRhoJ(ConstCell<T,DESCRIPTOR>& cell, T& rho, T j[DESCRIPTOR::d])
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
-    ::computeAllMomenta(cell, rho, u, pi);
+    lbDynamicsHelpers<T,DESCRIPTOR>::computeRhoJ(cell, rho, j);
   }
 
-  static void modifyVelocity(Cell<T,Lattice>& cell, const T newU[Lattice<T>::d])
+  static void computeStress(ConstCell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d],
+                            T pi[util::TensorVal<DESCRIPTOR >::n] )
   {
-    lbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+    lbDynamicsHelpers<T,DESCRIPTOR>::computeStress(cell, rho, u, pi);
+  }
+
+  static void computeAllMomenta(ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d],
+                                T pi[util::TensorVal<DESCRIPTOR >::n] )
+  {
+    lbDynamicsHelpers<T,DESCRIPTOR>::computeAllMomenta(cell, rho, u, pi);
+  }
+
+  /// Computes squared norm of non-equilibrium part of 2nd momentum for standard (non-forced) dynamics
+  template <typename X = DESCRIPTOR>
+  static std::enable_if_t<!X::template provides<descriptors::FORCE>(), T>
+  computePiNeqNormSqr(ConstCell<T,DESCRIPTOR>& cell)
+  {
+    //return lbDynamicsHelpers<T,DESCRIPTOR>
+    //::computePiNeqNormSqr(cell);
+    T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
+    computeAllMomenta(cell, rho, u, pi);
+    T PiNeqNormSqr = pi[0]*pi[0] + 2.*pi[1]*pi[1] + pi[2]*pi[2];
+    if (util::TensorVal<DESCRIPTOR >::n == 6) {
+      PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2.*pi[4]*pi[4] +pi[5]*pi[5];
+    }
+    return PiNeqNormSqr;
+  }
+
+  /// Computes squared norm of non-equilibrium part of 2nd momentum for forced dynamics
+  template <typename X = DESCRIPTOR>
+  static std::enable_if_t<X::template provides<descriptors::FORCE>(), T>
+  computePiNeqNormSqr(ConstCell<T,DESCRIPTOR>& cell)
+  {
+    //return lbDynamicsHelpers<T,DESCRIPTOR>
+    //::computeForcedPiNeqNormSqr(cell);
+    T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
+    computeAllMomenta(cell, rho, u, pi);
+    //Creation of body force tensor (rho/2.)*(G_alpha*U_beta + U_alpha*G_Beta)
+    T ForceTensor[util::TensorVal<DESCRIPTOR >::n];
+    int iPi = 0;
+    auto force = cell.template getField<descriptors::FORCE>();
+    for (int Alpha=0; Alpha<DESCRIPTOR::d; ++Alpha) {
+      for (int Beta=Alpha; Beta<DESCRIPTOR::d; ++Beta) {
+        ForceTensor[iPi] = rho/2.*(force[Alpha]*u[Beta] + u[Alpha]*force[Beta]);
+        ++iPi;
+      }
+    }
+    // Creation of second-order moment off-equilibrium tensor
+    for (int iPi=0; iPi < util::TensorVal<DESCRIPTOR >::n; ++iPi) {
+      pi[iPi] += ForceTensor[iPi];
+    }
+    T PiNeqNormSqr = pi[0]*pi[0] + 2.*pi[1]*pi[1] + pi[2]*pi[2];
+    if (util::TensorVal<DESCRIPTOR >::n == 6) {
+      PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2.*pi[4]*pi[4] +pi[5]*pi[5];
+    }
+    return PiNeqNormSqr;
+  }
+
+  static void modifyVelocity(Cell<T,DESCRIPTOR>& cell, const T newU[DESCRIPTOR::d])
+  {
+    lbDynamicsHelpers<T,DESCRIPTOR>
     ::modifyVelocity(cell, newU);
   }
 
-  static void addExternalForce(Cell<T,Lattice>& cell, const T u[Lattice<T>::d], T omega, T amplitude=(T)1)
+  static void addExternalForce(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d], T omega, T amplitude=(T)1)
   {
-    lbExternalHelpers<T,Lattice>::addExternalForce(cell, u, omega, amplitude);
+    lbExternalHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, omega, amplitude);
   }
 
-  static void swapAndStream2D(Cell<T,Lattice> **grid, int iX, int iY)
+  static void swapAndStream2D(BlockLattice2D<T,DESCRIPTOR>& lattice, int iX, int iY)
   {
-    lbLatticeHelpers<T,Lattice>::swapAndStream2D(grid, iX, iY);
+    lbLatticeHelpers<T,DESCRIPTOR>::swapAndStream2D(lattice, iX, iY);
   }
 
-  static void swapAndStream3D(Cell<T,Lattice> ***grid, int iX, int iY, int iZ)
+  static void swapAndStream3D(BlockLattice3D<T,DESCRIPTOR>& lattice, int iX, int iY, int iZ)
   {
-    lbLatticeHelpers<T,Lattice>::swapAndStream3D(grid, iX, iY, iZ);
+    lbLatticeHelpers<T,DESCRIPTOR>::swapAndStream3D(lattice, iX, iY, iZ);
   }
 
 };  // struct lbHelpers
 
 
 /// All helper functions are inside this structure
-template<typename T, class Descriptor>
+template<typename T, typename DESCRIPTOR>
 struct lbDynamicsHelpers {
-  /// Computation of equilibrium distribution
-  static T equilibrium(int iPop, T rho, const T u[Descriptor::d], const T uSqr)
+  /// Computation of equilibrium distribution, second order in u
+  static T equilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], const T uSqr)
   {
     T c_u = T();
-    for (int iD=0; iD < Descriptor::d; ++iD) {
-      c_u += Descriptor::c[iPop][iD]*u[iD];
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
     }
-    return rho * Descriptor::t[iPop] * ( (T)1 + Descriptor::invCs2 * c_u
-                                              + Descriptor::invCs2 * Descriptor::invCs2 * (T)0.5 * c_u *c_u
-                                              - Descriptor::invCs2 * (T)0.5 * uSqr )
-                                              - Descriptor::t[iPop];
+    return rho
+           * descriptors::t<T,DESCRIPTOR>(iPop)
+           * ( T{1}
+               + descriptors::invCs2<T,DESCRIPTOR>() * c_u
+               + descriptors::invCs2<T,DESCRIPTOR>() * descriptors::invCs2<T,DESCRIPTOR>() * T{0.5} * c_u *c_u
+               - descriptors::invCs2<T,DESCRIPTOR>() * T{0.5} * uSqr )
+           - descriptors::t<T,DESCRIPTOR>(iPop);
   }
 
-  /// First order computation of equilibrium distribution
-  // TODO AP: check if this equilibrium function is the needed one
-  // -> 12.09.2017: the implementation is taken from advectionDiffusionLbHelpers.h
-  static T equilibriumFirstOrder(int iPop, T rho, const T u[Descriptor::d])
+  /// Computation of equilibrium distribution, first order in u
+  static T equilibriumFirstOrder(int iPop, T rho, const T u[DESCRIPTOR::d])
   {
     T c_u = T();
-    for (int iD=0; iD < Descriptor::d; ++iD) {
-      c_u += Descriptor::c[iPop][iD]*u[iD];
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
     }
-    return rho * Descriptor::t[iPop] * ( (T)1 + c_u * Descriptor::invCs2 ) - Descriptor::t[iPop];
+    return rho
+           * descriptors::t<T,DESCRIPTOR>(iPop)
+           * ( T{1} + c_u * descriptors::invCs2<T,DESCRIPTOR>() )
+           - descriptors::t<T,DESCRIPTOR>(iPop);
   }
 
-  static T incEquilibrium( int iPop, const T j[Descriptor::d],
+  // compute equilibrium f^eq_i eq. (5.32) from DOI:10.1002/9780470177013
+  static T equilibriumP1(int iPop, T rho, std::array<T,DESCRIPTOR::d>& u)
+  {
+    T c_u = T();
+    // compute scalar product of c[iPop]*u
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
+    }
+    return descriptors::t<T,DESCRIPTOR>(iPop) * (rho + c_u)
+           - descriptors::t<T,DESCRIPTOR>(iPop);
+  }
+
+  static T incEquilibrium( int iPop, const T j[DESCRIPTOR::d],
                            const T jSqr, const T pressure )
   {
     T c_j = T();
-    for (int iD=0; iD < Descriptor::d; ++iD) {
-      c_j += Descriptor::c[iPop][iD]*j[iD];
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      c_j += descriptors::c<DESCRIPTOR>(iPop,iD)*j[iD];
     }
-    T rho = (T)1 + pressure*Descriptor::invCs2;
 
-    return Descriptor::t[iPop] * ( Descriptor::invCs2 * pressure +
-                                   Descriptor::invCs2 * c_j +
-                                   Descriptor::invCs2 * Descriptor::invCs2/(T)2 * c_j*c_j -
-                                   Descriptor::invCs2/(T)2 * jSqr
-                                 ) - Descriptor::t[iPop];
+    return descriptors::t<T,DESCRIPTOR>(iPop)
+           * ( descriptors::invCs2<T,DESCRIPTOR>() * pressure
+               + descriptors::invCs2<T,DESCRIPTOR>() * c_j
+               + descriptors::invCs2<T,DESCRIPTOR>() * descriptors::invCs2<T,DESCRIPTOR>()/T{2} * c_j*c_j
+               - descriptors::invCs2<T,DESCRIPTOR>()/T{2} * jSqr )
+           - descriptors::t<T,DESCRIPTOR>(iPop);
   }
 
-  static void computeFneq(CellBase<T,Descriptor> const& cell, T fNeq[Descriptor::q], T rho, const T u[Descriptor::d])
+  /// Computation of non-equilibrium distribution
+  static void computeFneq(ConstCell<T,DESCRIPTOR>& cell, T fNeq[DESCRIPTOR::q], T rho, const T u[DESCRIPTOR::d])
   {
-    const T uSqr = util::normSqr<T,Descriptor::d>(u);
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+    const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       fNeq[iPop] = cell[iPop] - equilibrium(iPop, rho, u, uSqr);
     }
   }
 
   /// BGK collision step
-  static T bgkCollision(CellBase<T,Descriptor>& cell, T const& rho, const T u[Descriptor::d], T const& omega)
+  static T bgkCollision(Cell<T,DESCRIPTOR>& cell, T const& rho, const T u[DESCRIPTOR::d], T const& omega)
   {
-    const T uSqr = util::normSqr<T,Descriptor::d>(u);
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+    const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       cell[iPop] *= (T)1-omega;
-      cell[iPop] += omega * lbDynamicsHelpers<T,Descriptor>::equilibrium(iPop, rho, u, uSqr );
+      cell[iPop] += omega * lbDynamicsHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr );
     }
     return uSqr;
   }
 
   /// Incompressible BGK collision step
-  static T incBgkCollision(CellBase<T,Descriptor>& cell, T pressure, const T j[Descriptor::d], T omega)
+  static T incBgkCollision(Cell<T,DESCRIPTOR>& cell, T pressure, const T j[DESCRIPTOR::d], T omega)
   {
-    const T jSqr = util::normSqr<T,Descriptor::d>(j);
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+    const T jSqr = util::normSqr<T,DESCRIPTOR::d>(j);
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       cell[iPop] *= (T)1-omega;
-      cell[iPop] += omega * lbDynamicsHelpers<T,Descriptor>::incEquilibrium (
-                      iPop, j, jSqr, pressure );
+      cell[iPop] += omega * lbDynamicsHelpers<T,DESCRIPTOR>::incEquilibrium(iPop, j, jSqr, pressure);
     }
     return jSqr;
   }
 
   /// BGK collision step with density correction
-  static T constRhoBgkCollision(CellBase<T,Descriptor>& cell, T rho, const T u[Descriptor::d], T ratioRho, T omega)
+  static T constRhoBgkCollision(Cell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d], T ratioRho, T omega)
   {
-    const T uSqr = util::normSqr<T,Descriptor::d>(u);
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
-      T feq = lbDynamicsHelpers<T,Descriptor>::equilibrium(iPop, rho, u, uSqr );
+    const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+      T feq = lbDynamicsHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr );
       cell[iPop] =
-        ratioRho*(feq+Descriptor::t[iPop])-Descriptor::t[iPop] +
+        ratioRho*(feq+descriptors::t<T,DESCRIPTOR>(iPop))-descriptors::t<T,DESCRIPTOR>(iPop) +
         ((T)1-omega)*(cell[iPop]-feq);
     }
     return uSqr;
   }
 
-  //========================================
-
   /// RLB advection diffusion collision step
-  static T rlbCollision(CellBase<T, Descriptor>& cell, T rho, const T u[Descriptor::d], T omega )
+  static T rlbCollision(Cell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d], T omega )
   {
-    const T uSqr = util::normSqr<T, Descriptor::d>( u );
+    const T uSqr = util::normSqr<T, DESCRIPTOR::d>( u );
     // First-order moment for the regularization
-    T j1[Descriptor::d];
-    for ( int iD = 0; iD < Descriptor::d; ++iD ) {
+    T j1[DESCRIPTOR::d];
+    for ( int iD = 0; iD < DESCRIPTOR::d; ++iD ) {
       j1[iD] = T();
     }
 
-    T fEq[Descriptor::q];
-    for ( int iPop = 0; iPop < Descriptor::q; ++iPop ) {
-      fEq[iPop] = lbDynamicsHelpers<T, Descriptor>::equilibriumFirstOrder( iPop, rho, u );
-      for ( int iD = 0; iD < Descriptor::d; ++iD ) {
-        j1[iD] += Descriptor::c[iPop][iD] * ( cell[iPop] - fEq[iPop] );
+    T fEq[DESCRIPTOR::q];
+    for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
+      fEq[iPop] = lbDynamicsHelpers<T, DESCRIPTOR>::equilibriumFirstOrder( iPop, rho, u );
+      for ( int iD = 0; iD < DESCRIPTOR::d; ++iD ) {
+        j1[iD] += descriptors::c<DESCRIPTOR>(iPop,iD) * ( cell[iPop] - fEq[iPop] );
       }
     }
 
     // Collision step
-    for ( int iPop = 0; iPop < Descriptor::q; ++iPop ) {
+    for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
       T fNeq = T();
-      for ( int iD = 0; iD < Descriptor::d; ++iD ) {
-        fNeq += Descriptor::c[iPop][iD] * j1[iD];
+      for ( int iD = 0; iD < DESCRIPTOR::d; ++iD ) {
+        fNeq += descriptors::c<DESCRIPTOR>(iPop,iD) * j1[iD];
       }
-      fNeq *= Descriptor::t[iPop] * Descriptor::invCs2;
+      fNeq *= descriptors::t<T,DESCRIPTOR>(iPop) * descriptors::invCs2<T,DESCRIPTOR>();
       cell[iPop] = fEq[iPop] + ( (T)1 - omega ) * fNeq;
     }
     return uSqr;
   }
 
-  /// Paper: Mink et al. 2016 DOI: 10.1016/j.jocs.2016.03.014
-  static T sinkCollision(CellBase<T, Descriptor>& cell, T intensity, T omega, T sink){
-    // collision step only valid for D3Q7 lattices
-    // spezialisation implemented in lbHelpersD3Q7.h
-    for ( int iPop = 0; iPop < Descriptor::q; ++iPop ) {
-      cell[iPop] = (1 - omega) * (cell[iPop] + Descriptor::t[iPop])
-                    + omega * Descriptor::t[iPop] * intensity
-                    - sink*(cell[iPop] + Descriptor::t[iPop]) - Descriptor::t[iPop];
-    }
-    return T(0);
-  }
 
-  static T anisoCollision(CellBase<T, Descriptor>& cell, T intensity, T absorption, T scattering)
-  {
-    //    T rho[Descriptor::q];
-    //    for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
-    //      rho[iPop] = T(0);
-    //    }
-    //
-    //    for (int iPop = 0; iPop < Descriptor::q; iPop++) {
-    //      for ( int jPop = 0; jPop < Descriptor::q; ++jPop ) {
-    //        rho[iPop] += (cell[jPop] + Descriptor::t[jPop]); // * Descriptor::henyeyPhaseFunction[jPop][iPop];
-    //      }
-    //    }
-
-    //    double feq = adLbDynamicsHelpers<T, Descriptor>::equilibriumFirstOrder(iPop, rhoBGK, 0.0);
-    //    for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
-    //      cell[iPop] = (cell[iPop] + Descriptor::t[iPop])
-    //                   - ( cell[iPop] + Descriptor::t[iPop] - intensity * Descriptor::t[iPop] )
-    //                   - absorption/scattering * scaling * ( cell[iPop] + Descriptor::t[iPop] )
-    //                   - Descriptor::t[iPop];
-    //    }
-
-    for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
-      cell[iPop] = (cell[iPop] + Descriptor::t[iPop])
-                  - scattering * ( cell[iPop] + Descriptor::t[iPop] - intensity * Descriptor::t[iPop] )
-                  - absorption * ( cell[iPop] + Descriptor::t[iPop] )
-                  - Descriptor::t[iPop];
-    }
-    return T(0);
-  }
-
-  //====================================
-  /*
-   * Helpers included from the advectionDiffusionMRTlbHelpers
-   */
 ///// Computation of all equilibrium distribution (in momenta space)
-  static void computeMomentaEquilibrium( T momentaEq[Descriptor::q], T rho, const T u[Descriptor::d], T uSqr )
+  static void computeMomentaEquilibrium( T momentaEq[DESCRIPTOR::q], T rho, const T u[DESCRIPTOR::d], T uSqr )
   {
-    for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
+    for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
       momentaEq[iPop] = T();
-      for (int jPop = 0; jPop < Descriptor::q; ++jPop) {
-        momentaEq[iPop] += Descriptor::M[iPop][jPop] *
-                (lbDynamicsHelpers<T, Descriptor>::equilibrium(jPop,rho,u,uSqr) + Descriptor::t[jPop]);
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
+        momentaEq[iPop] += DESCRIPTOR::M[iPop][jPop] *
+                           (lbDynamicsHelpers<T, DESCRIPTOR>::equilibrium(jPop,rho,u,uSqr) + DESCRIPTOR::t[jPop]);
       }
     }
   }
 
-  static void computeMomenta(T momenta[Descriptor::q], CellBase<T, Descriptor>& cell)
+  static void computeMomenta(T momenta[DESCRIPTOR::q], Cell<T,DESCRIPTOR>& cell)
   {
-    for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
+    for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
       momenta[iPop] = T();
-      for (int jPop = 0; jPop < Descriptor::q; ++jPop) {
-        momenta[iPop] += Descriptor::M[iPop][jPop] *
-                         (cell[jPop] + Descriptor::t[jPop]);
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
+        momenta[iPop] += DESCRIPTOR::M[iPop][jPop] *
+                         (cell[jPop] + DESCRIPTOR::t[jPop]);
       }
     }
   }
 
-  static T mrtCollision( CellBase<T,Descriptor>& cell, T const& rho, const T u[Descriptor::d], T invM_S[Descriptor::q][Descriptor::q] )
+  static T mrtCollision( Cell<T,DESCRIPTOR>& cell, T const& rho, const T u[DESCRIPTOR::d], T invM_S[DESCRIPTOR::q][DESCRIPTOR::q] )
   {
     //// Implemented in advectionDiffusionMRTlbHelpers2D.h and advectionDiffusionMRTlbHelpers3D.h
-    T uSqr = util::normSqr<T, Descriptor::d>(u);
-    T momenta[Descriptor::q];
-    T momentaEq[Descriptor::q];
+    T uSqr = util::normSqr<T, DESCRIPTOR::d>(u);
+    T momenta[DESCRIPTOR::q];
+    T momentaEq[DESCRIPTOR::q];
 
     computeMomenta(momenta, cell);
     computeMomentaEquilibrium(momentaEq, rho, u, uSqr);
 
 //    std::cout << "momenta = ";
-//    for (int i=0; i < Descriptor::q; ++i) {
+//    for (int i=0; i < DESCRIPTOR::q; ++i) {
 //        std::cout << momenta[i] << ", ";
 //    }
 //    std::cout << std::endl;
 
 //    std::cout << "momentaEq = ";
-//    for (int i=0; i < Descriptor::q; ++i) {
+//    for (int i=0; i < DESCRIPTOR::q; ++i) {
 //        std::cout << momentaEq[i] << ", ";
 //    }
 //    std::cout << std::endl;
 
-    for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
+    for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
       T collisionTerm = T();
-      for (int jPop = 0; jPop < Descriptor::q; ++jPop) {
+      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
         collisionTerm += invM_S[iPop][jPop] * (momenta[jPop] - momentaEq[jPop]);
       }
       cell[iPop] -= collisionTerm;
     }
     return uSqr;
   }
-  //========================================
 
   /// Computation of density
-  static T computeRho(CellBase<T,Descriptor> const& cell)
+  static T computeRho(ConstCell<T,DESCRIPTOR>& cell)
   {
     T rho = T();
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       rho += cell[iPop];
     }
     rho += (T)1;
@@ -429,69 +443,70 @@ struct lbDynamicsHelpers {
   }
 
   /// Computation of momentum
-  static void computeJ(CellBase<T,Descriptor> const& cell, T j[Descriptor::d])
+  static void computeJ(ConstCell<T,DESCRIPTOR>& cell, T j[DESCRIPTOR::d])
   {
-    for (int iD=0; iD < Descriptor::d; ++iD) {
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       j[iD] = T();
     }
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
-      for (int iD=0; iD < Descriptor::d; ++iD) {
-        j[iD] += cell[iPop]*Descriptor::c[iPop][iD];
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        j[iD] += cell[iPop]*descriptors::c<DESCRIPTOR>(iPop,iD);
       }
     }
   }
 
   /// Computation of hydrodynamic variables
-  static void computeRhoU(CellBase<T,Descriptor> const& cell, T& rho, T u[Descriptor::d])
+  static void computeRhoU(ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d])
   {
     rho = T();
-    for (int iD=0; iD < Descriptor::d; ++iD) {
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       u[iD] = T();
     }
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       rho += cell[iPop];
-      for (int iD=0; iD < Descriptor::d; ++iD) {
-        u[iD] += cell[iPop]*Descriptor::c[iPop][iD];
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        u[iD] += cell[iPop]*descriptors::c<DESCRIPTOR>(iPop,iD);
       }
     }
     rho += (T)1;
-    for (int iD=0; iD < Descriptor::d; ++iD) {
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       u[iD] /= rho;
     }
   }
 
   /// Computation of hydrodynamic variables
-  static void computeRhoJ(CellBase<T,Descriptor> const& cell, T& rho, T j[Descriptor::d])
+  static void computeRhoJ(ConstCell<T,DESCRIPTOR>& cell, T& rho, T j[DESCRIPTOR::d])
   {
     rho = T();
-    for (int iD=0; iD < Descriptor::d; ++iD) {
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       j[iD] = T();
     }
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       rho += cell[iPop];
-      for (int iD=0; iD < Descriptor::d; ++iD) {
-        j[iD] += cell[iPop]*Descriptor::c[iPop][iD];
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        j[iD] += cell[iPop]*descriptors::c<DESCRIPTOR>(iPop,iD);
       }
     }
     rho += (T)1;
   }
 
   /// Computation of stress tensor
-  static void computeStress(CellBase<T,Descriptor> const& cell, T rho, const T u[Descriptor::d],
-                            T pi[util::TensorVal<Descriptor>::n] )
+  static void computeStress(ConstCell<T,DESCRIPTOR>& cell,
+                            T rho, const T u[DESCRIPTOR::d],
+                            T pi[util::TensorVal<DESCRIPTOR>::n] )
   {
     int iPi = 0;
-    for (int iAlpha=0; iAlpha < Descriptor::d; ++iAlpha) {
-      for (int iBeta=iAlpha; iBeta < Descriptor::d; ++iBeta) {
+    for (int iAlpha=0; iAlpha < DESCRIPTOR::d; ++iAlpha) {
+      for (int iBeta=iAlpha; iBeta < DESCRIPTOR::d; ++iBeta) {
         pi[iPi] = T();
-        for (int iPop=0; iPop < Descriptor::q; ++iPop) {
-          pi[iPi] += Descriptor::c[iPop][iAlpha]*
-                     Descriptor::c[iPop][iBeta] * cell[iPop];
+        for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+          pi[iPi] += descriptors::c<DESCRIPTOR>(iPop,iAlpha)*
+                     descriptors::c<DESCRIPTOR>(iPop,iBeta) * cell[iPop];
         }
         // stripe off equilibrium contribution
         pi[iPi] -= rho*u[iAlpha]*u[iBeta];
         if (iAlpha==iBeta) {
-          pi[iPi] -= 1./Descriptor::invCs2*(rho-(T)1);
+          pi[iPi] -= 1./descriptors::invCs2<T,DESCRIPTOR>()*(rho-(T)1);
         }
         ++iPi;
       }
@@ -499,20 +514,59 @@ struct lbDynamicsHelpers {
   }
 
   /// Computation of all hydrodynamic variables
-  static void computeAllMomenta(CellBase<T,Descriptor> const& cell, T& rho, T u[Descriptor::d],
-                                T pi[util::TensorVal<Descriptor>::n] )
+  static void computeAllMomenta(ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d],
+                                T pi[util::TensorVal<DESCRIPTOR>::n] )
   {
     computeRhoU(cell, rho, u);
     computeStress(cell, rho, u, pi);
   }
 
-  static void modifyVelocity(CellBase<T,Descriptor>& cell, const T newU[Descriptor::d])
+  /*
+  /// Computes squared norm of non-equilibrium part of 2nd momentum
+  static T computePiNeqNormSqr(ConstCell<T,DESCRIPTOR>& cell)
   {
-    T rho, oldU[Descriptor::d];
+    T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
+    computeAllMomenta(cell, rho, u, pi);
+    T PiNeqNormSqr = pi[0]*pi[0] + 2.*pi[1]*pi[1] + pi[2]*pi[2];
+    if (util::TensorVal<DESCRIPTOR >::n == 6) {
+      PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2.*pi[4]*pi[4] +pi[5]*pi[5];
+    }
+    return PiNeqNormSqr;
+  }
+
+  /// Computes squared norm of forced non-equilibrium part of 2nd momentum
+  static T computeForcedPiNeqNormSqr(ConstCell<T,DESCRIPTOR>& cell)
+  {
+    T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
+    computeAllMomenta(cell, rho, u, pi);
+    //Creation of body force tensor (rho/2.)*(G_alpha*U_beta + U_alpha*G_Beta)
+    T ForceTensor[util::TensorVal<DESCRIPTOR >::n];
+    int iPi = 0;
+    for (int Alpha=0; Alpha<DESCRIPTOR::d; ++Alpha) {
+      for (int Beta=Alpha; Beta<DESCRIPTOR::d; ++Beta) {
+        ForceTensor[iPi] = rho/2.*(cell[DESCRIPTOR::template index<descriptors::FORCE>()][Alpha]*u[Beta] + u[Alpha]*cell[DESCRIPTOR::template index<descriptors::FORCE>()][Beta]);
+        ++iPi;
+      }
+    }
+    // Creation of second-order moment off-equilibrium tensor
+    for (int iPi=0; iPi < util::TensorVal<DESCRIPTOR >::n; ++iPi){
+      pi[iPi] += ForceTensor[iPi];
+    }
+    T PiNeqNormSqr = pi[0]*pi[0] + 2.*pi[1]*pi[1] + pi[2]*pi[2];
+    if (util::TensorVal<DESCRIPTOR >::n == 6) {
+      PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2.*pi[4]*pi[4] +pi[5]*pi[5];
+    }
+    return PiNeqNormSqr;
+  }
+  */
+
+  static void modifyVelocity(Cell<T,DESCRIPTOR>& cell, const T newU[DESCRIPTOR::d])
+  {
+    T rho, oldU[DESCRIPTOR::d];
     computeRhoU(cell, rho, oldU);
-    const T oldUSqr = util::normSqr<T,Descriptor::d>(oldU);
-    const T newUSqr = util::normSqr<T,Descriptor::d>(newU);
-    for (int iPop=0; iPop<Descriptor::q; ++iPop) {
+    const T oldUSqr = util::normSqr<T,DESCRIPTOR::d>(oldU);
+    const T newUSqr = util::normSqr<T,DESCRIPTOR::d>(newU);
+    for (int iPop=0; iPop<DESCRIPTOR::q; ++iPop) {
       cell[iPop] = cell[iPop]
                    - equilibrium(iPop, rho, oldU, oldUSqr)
                    + equilibrium(iPop, rho, newU, newUSqr);
@@ -522,28 +576,27 @@ struct lbDynamicsHelpers {
 };  // struct lbDynamicsHelpers
 
 /// Helper functions for dynamics that access external field
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 struct lbExternalHelpers {
   /// Add a force term after BGK collision
-  static void addExternalForce(Cell<T,Lattice>& cell, const T u[Lattice<T>::d], T omega, T amplitude)
+  static void addExternalForce(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d], T omega, T amplitude)
   {
-    static const int forceBeginsAt = Lattice<T>::ExternalField::forceBeginsAt;
-    T* force = cell.getExternal(forceBeginsAt);
-    for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+    const auto force = cell.template getField<descriptors::FORCE>();
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       T c_u = T();
-      for (int iD=0; iD < Lattice<T>::d; ++iD) {
-        c_u += Lattice<T>::c[iPop][iD]*u[iD];
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
       }
-      c_u *= Lattice<T>::invCs2*Lattice<T>::invCs2;
+      c_u *= descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>();
       T forceTerm = T();
-      for (int iD=0; iD < Lattice<T>::d; ++iD) {
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
         forceTerm +=
-          (   ((T)Lattice<T>::c[iPop][iD]-u[iD]) * Lattice<T>::invCs2
-              + c_u * Lattice<T>::c[iPop][iD]
+          (   ((T)descriptors::c<DESCRIPTOR>(iPop,iD)-u[iD]) * descriptors::invCs2<T,DESCRIPTOR>()
+              + c_u * descriptors::c<DESCRIPTOR>(iPop,iD)
           )
           * force[iD];
       }
-      forceTerm *= Lattice<T>::t[iPop];
+      forceTerm *= descriptors::t<T,DESCRIPTOR>(iPop);
       forceTerm *= T(1) - omega/T(2);
       forceTerm *= amplitude;
       cell[iPop] += forceTerm;
@@ -552,68 +605,73 @@ struct lbExternalHelpers {
 };  // struct externalFieldHelpers
 
 /// Helper functions with full-lattice access
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 struct lbLatticeHelpers {
   /// Swap ("bounce-back") values of a cell (2D), and apply streaming step
-  static void swapAndStream2D(Cell<T,Lattice> **grid, int iX, int iY)
+  static void swapAndStream2D(BlockLattice2D<T,DESCRIPTOR>& lattice, int iX, int iY)
   {
-    const int half = Lattice<T>::q/2;
+    const int half = DESCRIPTOR::q/2;
     for (int iPop=1; iPop<=half; ++iPop) {
-      int nextX = iX + Lattice<T>::c[iPop][0];
-      int nextY = iY + Lattice<T>::c[iPop][1];
-      T fTmp                   = grid[iX][iY][iPop];
-      grid[iX][iY][iPop]       = grid[iX][iY][iPop+half];
-      grid[iX][iY][iPop+half]  = grid[nextX][nextY][iPop];
-      grid[nextX][nextY][iPop] = fTmp;
+      const int jX = iX + descriptors::c<DESCRIPTOR>(iPop,0);
+      const int jY = iY + descriptors::c<DESCRIPTOR>(iPop,1);
+      auto iCell = lattice.get(iX,iY);
+      auto jCell = lattice.get(jX,jY);
+      T fTmp            = iCell[iPop];
+      iCell[iPop]       = iCell[iPop+half];
+      iCell[iPop+half]  = jCell[iPop];
+      jCell[iPop]       = fTmp;
     }
   }
 
   /// Swap ("bounce-back") values of a cell (3D), and apply streaming step
-  static void swapAndStream3D(Cell<T,Lattice> ***grid,
+  static void swapAndStream3D(BlockLattice3D<T,DESCRIPTOR>& lattice,
                               int iX, int iY, int iZ)
   {
-    const int half = Lattice<T>::q/2;
+    const int half = DESCRIPTOR::q/2;
     for (int iPop=1; iPop<=half; ++iPop) {
-      int nextX = iX + Lattice<T>::c[iPop][0];
-      int nextY = iY + Lattice<T>::c[iPop][1];
-      int nextZ = iZ + Lattice<T>::c[iPop][2];
-      T fTmp                          = grid[iX][iY][iZ][iPop];
-      grid[iX][iY][iZ][iPop]          = grid[iX][iY][iZ][iPop+half];
-      grid[iX][iY][iZ][iPop+half]     = grid[nextX][nextY][nextZ][iPop];
-      grid[nextX][nextY][nextZ][iPop] = fTmp;
+      const int jX = iX + descriptors::c<DESCRIPTOR>(iPop,0);
+      const int jY = iY + descriptors::c<DESCRIPTOR>(iPop,1);
+      const int jZ = iZ + descriptors::c<DESCRIPTOR>(iPop,2);
+      auto iCell = lattice.get(iX,iY,iZ);
+      auto jCell = lattice.get(jX,jY,jZ);
+      T fTmp           = iCell[iPop];
+      iCell[iPop]      = iCell[iPop+half];
+      iCell[iPop+half] = jCell[iPop];
+      jCell[iPop]      = fTmp;
     }
   }
 };
 
 /// All boundary helper functions are inside this structure
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
 struct BoundaryHelpers {
   static void computeStress (
-    Cell<T,Lattice> const& cell, T rho, const T u[Lattice<T>::d],
-    T pi[util::TensorVal<Lattice<T> >::n] )
+    ConstCell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d],
+    T pi[util::TensorVal<DESCRIPTOR >::n] )
   {
-    typedef Lattice<T> L;
+    typedef DESCRIPTOR L;
     const T uSqr = util::normSqr<T,L::d>(u);
 
     std::vector<int> const& onWallIndices = util::subIndex<L, direction, 0>();
     std::vector<int> const& normalIndices = util::subIndex<L, direction, orientation>();
 
-    T fNeq[Lattice<T>::q];
+    T fNeq[DESCRIPTOR::q];
     for (unsigned fIndex=0; fIndex<onWallIndices.size(); ++fIndex) {
       int iPop = onWallIndices[fIndex];
-      fNeq[iPop] =
-        cell[iPop] -
-        lbHelpers<T,Lattice>::equilibrium(iPop, rho, u, uSqr);
+      if (iPop == 0) {
+        fNeq[0] = T();  // fNeq[0] will not be used anyway
+      }
+      else {
+        fNeq[iPop] =
+          cell[iPop] -
+          lbHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
+      }
     }
     for (unsigned fIndex=0; fIndex<normalIndices.size(); ++fIndex) {
       int iPop = normalIndices[fIndex];
-      if (iPop == 0) {
-        fNeq[iPop] = T();  // fNeq[0] will not be used anyway
-      } else {
-        fNeq[iPop] =
-          cell[iPop] -
-          lbHelpers<T,Lattice>::equilibrium(iPop, rho, u, uSqr);
-      }
+      fNeq[iPop] =
+        cell[iPop] -
+        lbHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
     }
 
     int iPi = 0;
@@ -623,11 +681,11 @@ struct BoundaryHelpers {
         for (unsigned fIndex=0; fIndex<onWallIndices.size(); ++fIndex) {
           const int iPop = onWallIndices[fIndex];
           pi[iPi] +=
-            L::c[iPop][iAlpha]*L::c[iPop][iBeta]*fNeq[iPop];
+            descriptors::c<L>(iPop,iAlpha)*descriptors::c<L>(iPop,iBeta)*fNeq[iPop];
         }
         for (unsigned fIndex=0; fIndex<normalIndices.size(); ++fIndex) {
           const int iPop = normalIndices[fIndex];
-          pi[iPi] += (T)2 * L::c[iPop][iAlpha]*L::c[iPop][iBeta]*
+          pi[iPi] += (T)2 * descriptors::c<L>(iPop,iAlpha)*descriptors::c<L>(iPop,iBeta)*
                      fNeq[iPop];
         }
         ++iPi;

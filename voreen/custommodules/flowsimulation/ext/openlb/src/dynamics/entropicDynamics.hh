@@ -42,65 +42,48 @@ namespace olb {
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, template<typename U> class Lattice>
-EntropicEqDynamics<T,Lattice>::EntropicEqDynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
+template<typename T, typename DESCRIPTOR>
+EntropicEqDynamics<T,DESCRIPTOR>::EntropicEqDynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
     omega(omega_)
-{ }
-
-template<typename T, template<typename U> class Lattice>
-T EntropicEqDynamics<T,Lattice>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
 {
-  return entropicLbHelpers<T,Lattice>::equilibrium(iPop,rho,u);
+  this->getName() = "EntropicEqDynamics";  
 }
 
-template<typename T, template<typename U> class Lattice>
-void EntropicEqDynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+T EntropicEqDynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return entropicLbHelpers<T,DESCRIPTOR>::equilibrium(iPop,rho,u);
+}
+
+template<typename T, typename DESCRIPTOR>
+void EntropicEqDynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
+  typedef DESCRIPTOR L;
+  typedef entropicLbHelpers<T,DESCRIPTOR> eLbH;
 
-  T rho, u[Lattice<T>::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
   T uSqr = util::normSqr<T,L::d>(u);
 
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
     cell[iPop] += omega * (eLbH::equilibrium(iPop,rho,u) - cell[iPop]);
   }
 
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void EntropicEqDynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
-
-  T rho = this->_momenta.computeRho(cell);
-  T uSqr = util::normSqr<T,L::d>(u);
-
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] += omega * (eLbH::equilibrium(iPop,rho,u) - cell[iPop]);
-  }
-
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T EntropicEqDynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T EntropicEqDynamics<T,DESCRIPTOR>::getOmega() const
 {
   return omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-void EntropicEqDynamics<T,Lattice>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR>
+void EntropicEqDynamics<T,DESCRIPTOR>::setOmega(T omega_)
 {
   omega = omega_;
 }
@@ -112,75 +95,56 @@ void EntropicEqDynamics<T,Lattice>::setOmega(T omega_)
 
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  */
-template<typename T, template<typename U> class Lattice>
-ForcedEntropicEqDynamics<T,Lattice>::ForcedEntropicEqDynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
+template<typename T, typename DESCRIPTOR>
+ForcedEntropicEqDynamics<T,DESCRIPTOR>::ForcedEntropicEqDynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
     omega(omega_)
-{ }
-
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicEqDynamics<T,Lattice>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
 {
-  return entropicLbHelpers<T,Lattice>::equilibrium(iPop,rho,u);
+  this->getName() = "ForcedEntropicEqDynamics";  
+}
+
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicEqDynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return entropicLbHelpers<T,DESCRIPTOR>::equilibrium(iPop,rho,u);
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void ForcedEntropicEqDynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void ForcedEntropicEqDynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
+  typedef DESCRIPTOR L;
+  typedef entropicLbHelpers<T,DESCRIPTOR> eLbH;
 
-  T rho, u[Lattice<T>::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
 
-  T* force = cell.getExternal(forceBeginsAt);
-  for (int iDim=0; iDim<Lattice<T>::d; ++iDim) {
+  T* force = cell.template getFieldPointer<descriptors::FORCE>();
+  for (int iDim=0; iDim<DESCRIPTOR::d; ++iDim) {
     u[iDim] += force[iDim] / (T)2.;
   }
   T uSqr = util::normSqr<T,L::d>(u);
 
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
     cell[iPop] += omega * (eLbH::equilibrium(iPop,rho,u) - cell[iPop]);
   }
 
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, omega);
+  lbHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, omega);
 
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void ForcedEntropicEqDynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
-
-  T rho = this->_momenta.computeRho(cell);
-  T uSqr = util::normSqr<T,L::d>(u);
-
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] += omega * (eLbH::equilibrium(iPop,rho,u) - cell[iPop]);
-  }
-
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, omega);
-
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicEqDynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicEqDynamics<T,DESCRIPTOR>::getOmega() const
 {
   return omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-void ForcedEntropicEqDynamics<T,Lattice>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR>
+void ForcedEntropicEqDynamics<T,DESCRIPTOR>::setOmega(T omega_)
 {
   omega = omega_;
 }
@@ -192,28 +156,30 @@ void ForcedEntropicEqDynamics<T,Lattice>::setOmega(T omega_)
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, template<typename U> class Lattice>
-EntropicDynamics<T,Lattice>::EntropicDynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
+template<typename T, typename DESCRIPTOR>
+EntropicDynamics<T,DESCRIPTOR>::EntropicDynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
     omega(omega_)
-{ }
-
-template<typename T, template<typename U> class Lattice>
-T EntropicDynamics<T,Lattice>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
 {
-  return entropicLbHelpers<T,Lattice>::equilibrium(iPop,rho,u);
+  this->getName() = "EntropicDynamics";  
 }
 
-template<typename T, template<typename U> class Lattice>
-void EntropicDynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+T EntropicDynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return entropicLbHelpers<T,DESCRIPTOR>::equilibrium(iPop,rho,u);
+}
+
+template<typename T, typename DESCRIPTOR>
+void EntropicDynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
+  typedef DESCRIPTOR L;
+  typedef entropicLbHelpers<T,DESCRIPTOR> eLbH;
 
-  T rho, u[Lattice<T>::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
   T uSqr = util::normSqr<T,L::d>(u);
 
@@ -221,8 +187,8 @@ void EntropicDynamics<T,Lattice>::collide (
   for (int iPop = 0; iPop < L::q; ++iPop) {
     fEq[iPop]  = eLbH::equilibrium(iPop,rho,u);
     fNeq[iPop] = cell[iPop] - fEq[iPop];
-    f[iPop]    = cell[iPop] + L::t[iPop];
-    fEq[iPop] += L::t[iPop];
+    f[iPop]    = cell[iPop] + descriptors::t<T,L>(iPop);
+    fEq[iPop] += descriptors::t<T,L>(iPop);
   }
   //==============================================================================//
   //============= Evaluation of alpha using a Newton Raphson algorithm ===========//
@@ -238,84 +204,43 @@ void EntropicDynamics<T,Lattice>::collide (
   OLB_ASSERT(converged,"Entropy growth failed to converge!");
 
   T omegaTot = omega / 2.0 * alpha;
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
     cell[iPop] *= (T)1-omegaTot;
-    cell[iPop] += omegaTot * (fEq[iPop]-L::t[iPop]);
+    cell[iPop] += omegaTot * (fEq[iPop]-descriptors::t<T,L>(iPop));
   }
 
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void EntropicDynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
-
-  T rho = this->_momenta.computeRho(cell);
-  T uSqr = util::normSqr<T,L::d>(u);
-
-  T f[L::q], fEq[L::q], fNeq[L::q];
-  for (int iPop = 0; iPop < L::q; ++iPop) {
-    fEq[iPop]  = eLbH::equilibrium(iPop,rho,u);
-    fNeq[iPop] = cell[iPop] - fEq[iPop];
-    f[iPop]    = cell[iPop] + L::t[iPop];
-    fEq[iPop] += L::t[iPop];
-  }
-  //==============================================================================//
-  //============= Evaluation of alpha using a Newton Raphson algorithm ===========//
-  //==============================================================================//
-
-  T alpha = 2.0;
-  bool converged = getAlpha(alpha,f,fNeq);
-  if (!converged) {
-    std::cout << "Newton-Raphson failed to converge.\n";
-    exit(1);
-  }
-
-  OLB_ASSERT(converged,"Entropy growth failed to converge!");
-
-  T omegaTot = omega / 2.0 * alpha;
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] *= (T)1-omegaTot;
-    cell[iPop] += omegaTot * (fEq[iPop]-L::t[iPop]);
-  }
-
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T EntropicDynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T EntropicDynamics<T,DESCRIPTOR>::getOmega() const
 {
   return omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-void EntropicDynamics<T,Lattice>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR>
+void EntropicDynamics<T,DESCRIPTOR>::setOmega(T omega_)
 {
   omega = omega_;
 }
 
-template<typename T, template<typename U> class Lattice>
-T EntropicDynamics<T,Lattice>::computeEntropy(const T f[])
+template<typename T, typename DESCRIPTOR>
+T EntropicDynamics<T,DESCRIPTOR>::computeEntropy(const T f[])
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
   T entropy = T();
   for (int iPop = 0; iPop < L::q; ++iPop) {
     OLB_ASSERT(f[iPop] > T(), "f[iPop] <= 0");
-    entropy += f[iPop]*log(f[iPop]/L::t[iPop]);
+    entropy += f[iPop]*log(f[iPop]/descriptors::t<T,L>(iPop));
   }
 
   return entropy;
 }
 
-template<typename T, template<typename U> class Lattice>
-T EntropicDynamics<T,Lattice>::computeEntropyGrowth(const T f[], const T fNeq[], const T &alpha)
+template<typename T, typename DESCRIPTOR>
+T EntropicDynamics<T,DESCRIPTOR>::computeEntropyGrowth(const T f[], const T fNeq[], const T &alpha)
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T fAlphaFneq[L::q];
   for (int iPop = 0; iPop < L::q; ++iPop) {
@@ -325,23 +250,23 @@ T EntropicDynamics<T,Lattice>::computeEntropyGrowth(const T f[], const T fNeq[],
   return computeEntropy(f) - computeEntropy(fAlphaFneq);
 }
 
-template<typename T, template<typename U> class Lattice>
-T EntropicDynamics<T,Lattice>::computeEntropyGrowthDerivative(const T f[], const T fNeq[], const T &alpha)
+template<typename T, typename DESCRIPTOR>
+T EntropicDynamics<T,DESCRIPTOR>::computeEntropyGrowthDerivative(const T f[], const T fNeq[], const T &alpha)
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T entropyGrowthDerivative = T();
   for (int iPop = 0; iPop < L::q; ++iPop) {
     T tmp = f[iPop] - alpha*fNeq[iPop];
     OLB_ASSERT(tmp > T(), "f[iPop] - alpha*fNeq[iPop] <= 0");
-    entropyGrowthDerivative += fNeq[iPop]*(log(tmp/L::t[iPop]));
+    entropyGrowthDerivative += fNeq[iPop]*(log(tmp/descriptors::t<T,L>(iPop)));
   }
 
   return entropyGrowthDerivative;
 }
 
-template<typename T, template<typename U> class Lattice>
-bool EntropicDynamics<T,Lattice>::getAlpha(T &alpha, const T f[], const T fNeq[])
+template<typename T, typename DESCRIPTOR>
+bool EntropicDynamics<T,DESCRIPTOR>::getAlpha(T &alpha, const T f[], const T fNeq[])
 {
   const T epsilon = std::numeric_limits<T>::epsilon();
 
@@ -370,29 +295,31 @@ bool EntropicDynamics<T,Lattice>::getAlpha(T &alpha, const T f[], const T fNeq[]
 
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  */
-template<typename T, template<typename U> class Lattice>
-ForcedEntropicDynamics<T,Lattice>::ForcedEntropicDynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
+template<typename T, typename DESCRIPTOR>
+ForcedEntropicDynamics<T,DESCRIPTOR>::ForcedEntropicDynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
     omega(omega_)
-{ }
-
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicDynamics<T,Lattice>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
 {
-  return entropicLbHelpers<T,Lattice>::equilibrium(iPop,rho,u);
+  this->getName() = "ForcedEntropicDynamics";  
+}
+
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicDynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return entropicLbHelpers<T,DESCRIPTOR>::equilibrium(iPop,rho,u);
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void ForcedEntropicDynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void ForcedEntropicDynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
+  typedef DESCRIPTOR L;
+  typedef entropicLbHelpers<T,DESCRIPTOR> eLbH;
 
-  T rho, u[Lattice<T>::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
   T uSqr = util::normSqr<T,L::d>(u);
 
@@ -400,8 +327,8 @@ void ForcedEntropicDynamics<T,Lattice>::collide (
   for (int iPop = 0; iPop < L::q; ++iPop) {
     fEq[iPop]  = eLbH::equilibrium(iPop,rho,u);
     fNeq[iPop] = cell[iPop] - fEq[iPop];
-    f[iPop]    = cell[iPop] + L::t[iPop];
-    fEq[iPop] += L::t[iPop];
+    f[iPop]    = cell[iPop] + descriptors::t<T,L>(iPop);
+    fEq[iPop] += descriptors::t<T,L>(iPop);
   }
   //==============================================================================//
   //============= Evaluation of alpha using a Newton Raphson algorithm ===========//
@@ -416,93 +343,50 @@ void ForcedEntropicDynamics<T,Lattice>::collide (
 
   OLB_ASSERT(converged,"Entropy growth failed to converge!");
 
-  T* force = cell.getExternal(forceBeginsAt);
-  for (int iDim=0; iDim<Lattice<T>::d; ++iDim) {
+  T* force = cell.template getFieldPointer<descriptors::FORCE>();
+  for (int iDim=0; iDim<DESCRIPTOR::d; ++iDim) {
     u[iDim] += force[iDim] / (T)2.;
   }
   uSqr = util::normSqr<T,L::d>(u);
   T omegaTot = omega / 2.0 * alpha;
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
     cell[iPop] *= (T)1-omegaTot;
     cell[iPop] += omegaTot * eLbH::equilibrium(iPop,rho,u);
   }
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, omegaTot);
+  lbHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, omegaTot);
 
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void ForcedEntropicDynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef Lattice<T> L;
-  typedef entropicLbHelpers<T,Lattice> eLbH;
-
-  T rho;
-  rho = this->_momenta.computeRho(cell);
-  T uSqr = util::normSqr<T,L::d>(u);
-
-  T f[L::q], fEq[L::q], fNeq[L::q];
-  for (int iPop = 0; iPop < L::q; ++iPop) {
-    fEq[iPop]  = eLbH::equilibrium(iPop,rho,u);
-    fNeq[iPop] = cell[iPop] - fEq[iPop];
-    f[iPop]    = cell[iPop] + L::t[iPop];
-    fEq[iPop] += L::t[iPop];
-  }
-  //==============================================================================//
-  //============= Evaluation of alpha using a Newton Raphson algorithm ===========//
-  //==============================================================================//
-
-  T alpha = 2.0;
-  bool converged = getAlpha(alpha,f,fNeq);
-  if (!converged) {
-    std::cout << "Newton-Raphson failed to converge.\n";
-    exit(1);
-  }
-
-  OLB_ASSERT(converged,"Entropy growth failed to converge!");
-
-  T omegaTot = omega / 2.0 * alpha;
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] *= (T)1-omegaTot;
-    cell[iPop] += omegaTot * (fEq[iPop]-L::t[iPop]);
-  }
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, omegaTot);
-
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicDynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicDynamics<T,DESCRIPTOR>::getOmega() const
 {
   return omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-void ForcedEntropicDynamics<T,Lattice>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR>
+void ForcedEntropicDynamics<T,DESCRIPTOR>::setOmega(T omega_)
 {
   omega = omega_;
 }
 
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicDynamics<T,Lattice>::computeEntropy(const T f[])
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicDynamics<T,DESCRIPTOR>::computeEntropy(const T f[])
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
   T entropy = T();
   for (int iPop = 0; iPop < L::q; ++iPop) {
     OLB_ASSERT(f[iPop] > T(), "f[iPop] <= 0");
-    entropy += f[iPop]*log(f[iPop]/L::t[iPop]);
+    entropy += f[iPop]*log(f[iPop]/descriptors::t<T,L>(iPop));
   }
 
   return entropy;
 }
 
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicDynamics<T,Lattice>::computeEntropyGrowth(const T f[], const T fNeq[], const T &alpha)
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicDynamics<T,DESCRIPTOR>::computeEntropyGrowth(const T f[], const T fNeq[], const T &alpha)
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T fAlphaFneq[L::q];
   for (int iPop = 0; iPop < L::q; ++iPop) {
@@ -512,23 +396,23 @@ T ForcedEntropicDynamics<T,Lattice>::computeEntropyGrowth(const T f[], const T f
   return computeEntropy(f) - computeEntropy(fAlphaFneq);
 }
 
-template<typename T, template<typename U> class Lattice>
-T ForcedEntropicDynamics<T,Lattice>::computeEntropyGrowthDerivative(const T f[], const T fNeq[], const T &alpha)
+template<typename T, typename DESCRIPTOR>
+T ForcedEntropicDynamics<T,DESCRIPTOR>::computeEntropyGrowthDerivative(const T f[], const T fNeq[], const T &alpha)
 {
-  typedef Lattice<T> L;
+  typedef DESCRIPTOR L;
 
   T entropyGrowthDerivative = T();
   for (int iPop = 0; iPop < L::q; ++iPop) {
     T tmp = f[iPop] - alpha*fNeq[iPop];
     OLB_ASSERT(tmp > T(), "f[iPop] - alpha*fNeq[iPop] <= 0");
-    entropyGrowthDerivative += fNeq[iPop]*log(tmp/L::t[iPop]);
+    entropyGrowthDerivative += fNeq[iPop]*log(tmp/descriptors::t<T,L>(iPop));
   }
 
   return entropyGrowthDerivative;
 }
 
-template<typename T, template<typename U> class Lattice>
-bool ForcedEntropicDynamics<T,Lattice>::getAlpha(T &alpha, const T f[], const T fNeq[])
+template<typename T, typename DESCRIPTOR>
+bool ForcedEntropicDynamics<T,DESCRIPTOR>::getAlpha(T &alpha, const T f[], const T fNeq[])
 {
   const T epsilon = std::numeric_limits<T>::epsilon();
 

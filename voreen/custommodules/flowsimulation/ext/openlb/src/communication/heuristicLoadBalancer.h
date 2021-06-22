@@ -64,13 +64,13 @@ public:
 
   ~HeuristicLoadBalancer() override;
 
-  HeuristicLoadBalancer(CuboidGeometry3D<T>& cGeometry3d, const double ratioFullEmpty=3.7, const double weightEmpty=.0);
+  HeuristicLoadBalancer(CuboidGeometry3D<T>& cGeometry3d, const double ratioFullEmpty=1., const double weightEmpty=.0);
 
-  HeuristicLoadBalancer(CuboidGeometry2D<T>& cGeometry2d, const double ratioFullEmpty=3.7, const double weightEmpty=.0);
+  HeuristicLoadBalancer(CuboidGeometry2D<T>& cGeometry2d, const double ratioFullEmpty=1., const double weightEmpty=.0);
 
-  void reInit(CuboidGeometry3D<T>& cGeometry3d, const double ratioFullEmpty=3.7, const double weightEmpty=.0) override;
+  void reInit(CuboidGeometry3D<T>& cGeometry3d, const double ratioFullEmpty=1., const double weightEmpty=.0) override;
 
-  void reInit(CuboidGeometry2D<T>& cGeometry2d, const double ratioFullEmpty=3.7, const double weightEmpty=.0) override;
+  void reInit(CuboidGeometry2D<T>& cGeometry2d, const double ratioFullEmpty=1., const double weightEmpty=.0) override;
 
   /// Swap method
   void swap(HeuristicLoadBalancer<T>& loadBalancer);

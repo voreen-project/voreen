@@ -31,7 +31,9 @@ namespace olb {
 template class STLreader<double>;
 
 // smoothIndicator functors
-template class SmoothIndicatorCuboid2D<double,double>;
-template class SmoothIndicatorCircle2D<double,double>;
+template class SmoothIndicatorCuboid2D<double,double,false>;
+template class SmoothIndicatorCircle2D<double,double,false>;
+template class SmoothIndicatorTriangle2D<double,double,false>;
+//template class SmoothIndicatorCustom2D<double,double,descriptors::D2Q9<>,false>;
 
 }

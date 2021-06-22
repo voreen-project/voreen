@@ -36,8 +36,8 @@
 
 #include "communication/loadBalancer.h"
 #include "geometry/cuboidGeometry3D.h"
-#include "functors/lattice/indicator/indicatorF3D.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorF3D.h"
+#include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "utilities/vectorHelpers.h"
 #include "octree.h"
 #include "core/vector.h"
@@ -130,7 +130,7 @@ class STLmesh {
   /// Computes distance squared betwenn p1 and p2
   T distPoints(STLpoint<T>& p1, STLpoint<T>& p2);
   /// Filename
-  const std::string& _fName;
+  const std::string _fName;
   /// Vector of Triangles
   std::vector<STLtriangle<T> > _triangles;
   /// Min and Max points of axis aligned bounding box coordinate in SI units
@@ -147,6 +147,13 @@ public:
    * \param stlSize - Conversion factor for STL (e.g. STL in mm stlSize=10^-3)
    */
   STLmesh(std::string, T stlSize = 1.);
+
+  /**
+   * Constructs a new STLmesh from a file
+   * \param Filename - Filename
+   * \param stlSize - Conversion factor for STL (e.g. STL in mm stlSize=10^-3)
+   */
+  STLmesh(const std::vector<std::vector<T>> meshPoints, T stlSize = 1.);
 
   /// Returns reference to a triangle
   inline STLtriangle<T>& getTri(unsigned int i)
@@ -196,6 +203,22 @@ private:
    *  Define ray in Z-direction for each Voxel in XY-layer. Indicate all nodes on the fly.
    */
   void indicate2();
+  /*
+  *  New indicate function (faster, less stable)
+  *  Define ray in X-direction for each Voxel in YZ-layer. Indicate all nodes on the fly.
+  */
+  void indicate2_Xray();
+  /*
+  *  New indicate function (faster, less stable)
+  *  Define ray in Y-direction for each Voxel in XZ-layer. Indicate all nodes on the fly.
+  */
+  void indicate2_Yray(); 
+  /*
+   *  Double ray approach: two times (X-, Y-, Z-direction) for each leaf.
+   *  Could be use to deal with double layer triangles and face intersections.
+   */
+  
+  void indicate3();
   /// Size of the smallest voxel
   T _voxelSize;
   /// Factor to get Si unit (m), i.e. "0.001" means mm
@@ -224,7 +247,20 @@ public:
    *               1: slow, more stable (for untight STLs)
    * \param verbose Get additional information.
    */
+
   STLreader(const std::string fName, T voxelSize, T stlSize=1, unsigned short int method=2,
+            bool verbose = false, T overlap=0., T max=0.);
+  /**
+   * Constructs a new STLreader from a file
+   * \param fName The STL file name
+   * \param voxelSize Voxelsize in SI units
+   * \param stlSize Conversion factor for STL (e.g. STL in mm stlSize=10^-3)
+   * \param method Choose indication method
+   *               0: fast, less stable
+   *               1: slow, more stable (for untight STLs)
+   * \param verbose Get additional information.
+   */
+  STLreader(const std::vector<std::vector<T>> meshPoints, T voxelSize, T stlSize=1, unsigned short int method=2,
             bool verbose = false, T overlap=0., T max=0.);
 
   ~STLreader() override;
@@ -238,7 +274,7 @@ public:
   void print();
 
   /// Writes STL mesh in Si units
-  void writeSTL();
+  void writeSTL(std::string stlName="");
 
   /// Writes Octree
   void writeOctree();

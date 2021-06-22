@@ -28,16 +28,18 @@
 #include<vector>
 
 #include "blockLatticeIntegralF2D.h"
-#include "blockLatticeLocalF2D.h"
 #include "blockCalcF2D.h" // for IdentityF
 #include "utilities/vectorHelpers.h"
 #include "indicator/blockIndicatorBaseF2D.h"
+#include "latticePhysBoundaryForce2D.h"
+#include "latticePhysCorrBoundaryForce2D.h"
+#include "latticeIndicatorSmoothIndicatorIntersection2D.h"
 
 
 namespace olb {
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockMax2D<T,DESCRIPTOR>::BlockMax2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
                                      BlockGeometry2D<T>& blockGeometry, int material)
   : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlockLattice(), f.getTargetDim()),
@@ -46,7 +48,7 @@ BlockMax2D<T,DESCRIPTOR>::BlockMax2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
   this->getName() = "Max("+_f.getName()+")";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockMax2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
 
@@ -84,7 +86,7 @@ bool BlockMax2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockSum2D<T,DESCRIPTOR>::BlockSum2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
                                      BlockGeometry2D<T>& blockGeometry, int material)
   : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
@@ -93,7 +95,7 @@ BlockSum2D<T,DESCRIPTOR>::BlockSum2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
   this->getName() = "Sum("+_f.getName()+")";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockSum2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   BlockIdentity2D<T> ff(_f); // exists only to prevent f from being deleted
@@ -117,7 +119,7 @@ bool BlockSum2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockIntegral2D<T,DESCRIPTOR>::BlockIntegral2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
     BlockGeometry2D<T>& blockGeometry, int material)
   : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
@@ -126,7 +128,7 @@ BlockIntegral2D<T,DESCRIPTOR>::BlockIntegral2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
   this->getName() = "Integral("+_f.getName()+")";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockIntegral2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
 
@@ -162,7 +164,7 @@ bool BlockIntegral2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockL1Norm2D<T,DESCRIPTOR>::BlockL1Norm2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
     BlockGeometry2D<T>& blockGeometry, int material)
   : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
@@ -171,7 +173,7 @@ BlockL1Norm2D<T,DESCRIPTOR>::BlockL1Norm2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
   this->getName() = "L1("+_f.getName()+")";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockL1Norm2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
 
@@ -212,7 +214,7 @@ bool BlockL1Norm2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockL222D<T,DESCRIPTOR>::BlockL222D(BlockLatticeF2D<T,DESCRIPTOR>& f,
                                      BlockGeometry2D<T>& blockGeometry, int material)
   : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
@@ -221,7 +223,7 @@ BlockL222D<T,DESCRIPTOR>::BlockL222D(BlockLatticeF2D<T,DESCRIPTOR>& f,
   this->getName() = "L22("+_f.getName()+")";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockL222D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
 
@@ -259,7 +261,7 @@ bool BlockL222D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 
 
 template <typename T>
-template<template<typename U> class DESCRIPTOR>
+template<typename DESCRIPTOR>
 BlockGeometryFaces2D<T>::BlockGeometryFaces2D(BlockGeometryStructure2D<T>& blockGeometry, int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : GenericF<T,int>(7,4), _blockGeometry(blockGeometry), _material(material), _latticeL(converter.getConversionFactorLength())
 {
@@ -322,26 +324,17 @@ bool BlockGeometryFaces2D<T>::operator() (T output[], const int input[])
 }
 
 
-
-template <typename T>
-template<template<typename U> class DESCRIPTOR>
-BlockGeometryFacesIndicator2D<T>::BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorCircle2D<T,T>& indicator, int material, const UnitConverter<T,DESCRIPTOR>& converter)
-  : GenericF<T,int>(7,0), _blockGeometry(blockGeometry), _indicator(indicator), _material(material), _latticeL(converter.getConversionFactorLength())
+template <typename T, bool HLBM>
+BlockGeometryFacesIndicator2D<T,HLBM>::BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorF2D<T,T,HLBM>& indicator, int material, T latticeL)
+  : GenericF<T,int>(5,0), _blockGeometry(blockGeometry), _indicator(indicator), _material(material), _latticeL(latticeL)
 {
-  this->getName() = "facesInd";
+  this->getName() = "facesSmoothInd";
 }
 
-template <typename T>
-BlockGeometryFacesIndicator2D<T>::BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorCircle2D<T,T>& indicator, int material, T latticeL)
-  : GenericF<T,int>(7,0), _blockGeometry(blockGeometry), _indicator(indicator), _material(material), _latticeL(latticeL)
+template <typename T, bool HLBM>
+bool BlockGeometryFacesIndicator2D<T,HLBM>::operator() (T output[], const int input[])
 {
-  this->getName() = "facesInd";
-}
-
-template <typename T>
-bool BlockGeometryFacesIndicator2D<T>::operator() (T output[], const int input[])
-{
-  int counter[7] = {0,0,0,0,0,0,0};
+  int counter[4] = {0,0,0,0};
   T inside[1];
   T physR[2];
   if (_blockGeometry.getStatistics().getNvoxel(_material)!=0) {
@@ -359,37 +352,37 @@ bool BlockGeometryFacesIndicator2D<T>::operator() (T output[], const int input[]
         if ( !util::nearZero(inside[0]) ) {
           _blockGeometry.getPhysR(physR, iX-1, iY);
           _indicator(inside, physR);
-          if ( !util::nearZero(inside[0]) ) {
+          if ( util::nearZero(inside[0]) ) {
             counter[0]++;
           }
           _blockGeometry.getPhysR(physR, iX, iY-1);
           _indicator(inside, physR);
-          if ( !util::nearZero(inside[0]) ) {
+          if ( util::nearZero(inside[0]) ) {
             counter[1]++;
           }
           _blockGeometry.getPhysR(physR, iX+1, iY);
           _indicator(inside, physR);
-          if ( !util::nearZero(inside[0]) ) {
-            counter[3]++;
+          if ( util::nearZero(inside[0]) ) {
+            counter[2]++;
           }
           _blockGeometry.getPhysR(physR, iX, iY+1);
           _indicator(inside, physR);
-          if ( !util::nearZero(inside[0]) ) {
-            counter[4]++;
+          if ( util::nearZero(inside[0]) ) {
+            counter[3]++;
           }
         }
       }
     }
 
     T total = T();
-    for (int i=0; i<6; ++i) {
-      output[i]=(T) counter[i] * _latticeL;
-      total+=(T) counter[i] * _latticeL;
+    for (int i=0; i<4; ++i) {
+      output[i]= ((T) counter[i]) * _latticeL;
+      total+= ((T) counter[i]) * _latticeL;
     }
-    output[6]=total;
+    output[4]=total;
     return true;
   } else {
-    for (int i=0; i<7; ++i) {
+    for (int i=0; i<5; ++i) {
       output[i]=T();
     }
     return true;
@@ -398,7 +391,7 @@ bool BlockGeometryFacesIndicator2D<T>::operator() (T output[], const int input[]
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysDrag2D<T,DESCRIPTOR>::BlockLatticePhysDrag2D
 (BlockLattice2D<T,DESCRIPTOR>& blockLattice, BlockGeometry2D<T>& blockGeometry,
  int material, const UnitConverter<T,DESCRIPTOR>& converter)
@@ -408,12 +401,12 @@ BlockLatticePhysDrag2D<T,DESCRIPTOR>::BlockLatticePhysDrag2D
   this->getName() = "physDrag";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysDrag2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   BlockGeometryFaces2D<T> faces(_blockGeometry, _material, this->_converter);
-  BlockLatticePhysBoundaryForce2D<T,DESCRIPTOR> fTemp(this->_blockLattice, _blockGeometry,
-      _material, this->_converter);
+  BlockIndicatorMaterial2D<T> indicator(_blockGeometry, _material);
+  BlockLatticePhysBoundaryForce2D<T,DESCRIPTOR> fTemp(this->_blockLattice, indicator, this->_converter);
   BlockSum2D<T,DESCRIPTOR> sumF(fTemp, _blockGeometry, _material);
 
   T factor = 2. / (this->_converter.getPhysDensity() * this->_converter.getCharPhysVelocity() * this->_converter.getCharPhysVelocity());
@@ -430,7 +423,7 @@ bool BlockLatticePhysDrag2D<T,DESCRIPTOR>::operator() (T output[], const int inp
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysCorrDrag2D<T,DESCRIPTOR>::BlockLatticePhysCorrDrag2D
 (BlockLattice2D<T,DESCRIPTOR>& blockLattice, BlockGeometry2D<T>& blockGeometry,
  int material, const UnitConverter<T,DESCRIPTOR>& converter)
@@ -440,7 +433,7 @@ BlockLatticePhysCorrDrag2D<T,DESCRIPTOR>::BlockLatticePhysCorrDrag2D
   this->getName() = "physCorrDrag";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysCorrDrag2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   BlockGeometryFaces2D<T> faces(_blockGeometry, _material, this->_converter);

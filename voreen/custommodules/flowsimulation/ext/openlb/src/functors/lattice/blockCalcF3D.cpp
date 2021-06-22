@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Mathias J. Krause,
- *                          Albert Mink, Adrian Kummerländer
+ *                          Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -27,20 +27,24 @@
 
 namespace olb {
 
-template class BlockCalc3D<int,util::plus>;
-template class BlockCalc3D<double,util::plus>;
-template class BlockCalc3D<bool,util::plus>;
+template class BlockCalcF3D<int,util::plus>;
+template class BlockCalcF3D<double,util::plus>;
+template class BlockCalcF3D<bool,util::plus>;
 
-template class BlockCalc3D<int,util::minus>;
-template class BlockCalc3D<double,util::minus>;
-template class BlockCalc3D<bool,util::minus>;
+template class BlockCalcF3D<int,util::minus>;
+template class BlockCalcF3D<double,util::minus>;
+template class BlockCalcF3D<bool,util::minus>;
 
-template class BlockCalc3D<int,util::multiplies>;
-template class BlockCalc3D<double,util::multiplies>;
-template class BlockCalc3D<bool,util::multiplies>;
+template class BlockCalcF3D<int,util::multiplies>;
+template class BlockCalcF3D<double,util::multiplies>;
+template class BlockCalcF3D<bool,util::multiplies>;
 
-template class BlockCalc3D<int,util::divides>;
-template class BlockCalc3D<double,util::divides>;
-template class BlockCalc3D<bool,util::divides>;
+template class BlockCalcF3D<int,util::divides>;
+template class BlockCalcF3D<double,util::divides>;
+template class BlockCalcF3D<bool,util::divides>;
+
+template class BlockCalcF3D<int,util::power>;
+template class BlockCalcF3D<double,util::power>;
+template class BlockCalcF3D<bool,util::power>;
 
 } // end namespace olb

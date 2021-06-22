@@ -28,13 +28,15 @@
 #include "communication/ompManager.h"
 #include "io/ostreamManager.h"
 
-void ompManager::init()
+void ompManager::init(bool verbose)
 {
   set_dynamic(0);
   size = omp_get_max_threads();
   rank = omp_get_thread_num();
-  olb::OstreamManager clout(std::cout,"OmpManager");
-  clout << "Sucessfully initialized, numThreads=" << get_size() << std::endl;
+  if (verbose) {
+    olb::OstreamManager clout(std::cout,"OmpManager");
+    clout << "Sucessfully initialized, numThreads=" << get_size() << std::endl;
+  }
 }
 
 int ompManager::get_size() const

@@ -30,30 +30,42 @@ namespace olb {
 
 namespace fd {
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int direction, int orientation, int deriveDirection,
          bool orthogonal>
 struct DirectedGradients3D {
-  static void interpolateVector( T velDeriv[Lattice<T>::d],
-                                 BlockLattice3D<T,Lattice> const& blockLattice,
+  static void interpolateVector( T velDeriv[DESCRIPTOR::d],
+                                 BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                                  int iX, int iY, int iZ );
   static void interpolateScalar( T& rhoDeriv,
-                                 BlockLattice3D<T,Lattice> const& blockLattice,
+                                 BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                                  int iX, int iY, int iZ );
 };
 
 // Implementation for orthogonal==true; i.e. the derivative is along the boundary normal.
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int direction, int orientation, int deriveDirection>
-struct DirectedGradients3D<T, Lattice, direction, orientation,
+struct DirectedGradients3D<T, DESCRIPTOR, direction, orientation,
          deriveDirection, true> {
-  static void interpolateVector(T velDeriv[Lattice<T>::d],
-                                BlockLattice3D<T,Lattice> const& blockLattice,
+  static bool canInterpolateVector(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
+                                   int iX, int iY, int iZ)
+  {
+    return blockLattice.isInside(iX,iY,iZ)
+        && blockLattice.isInside(iX+(direction==0 ? (-orientation):0),
+                                 iY+(direction==1 ? (-orientation):0),
+                                 iZ+(direction==2 ? (-orientation):0))
+        && blockLattice.isInside(iX+(direction==0 ? (-2*orientation):0),
+                                 iY+(direction==1 ? (-2*orientation):0),
+                                 iZ+(direction==2 ? (-2*orientation):0));
+  }
+
+  static void interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY, int iZ)
   {
     using namespace fd;
 
-    T u0[Lattice<T>::d], u1[Lattice<T>::d], u2[Lattice<T>::d];
+    T u0[DESCRIPTOR::d], u1[DESCRIPTOR::d], u2[DESCRIPTOR::d];
 
     blockLattice.get(iX,iY,iZ).computeU(u0);
     blockLattice.get (
@@ -65,13 +77,13 @@ struct DirectedGradients3D<T, Lattice, direction, orientation,
       iY+(direction==1 ? (-2*orientation):0),
       iZ+(direction==2 ? (-2*orientation):0) ).computeU(u2);
 
-    for (int iD=0; iD<Lattice<T>::d; ++iD) {
+    for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
       velDeriv[iD] = -orientation * boundaryGradient(u0[iD], u1[iD], u2[iD]);
     }
   }
 
   static void interpolateScalar(T& rhoDeriv,
-                                BlockLattice3D<T,Lattice> const& blockLattice,
+                                BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY, int iZ)
   {
     using namespace fd;
@@ -92,17 +104,28 @@ struct DirectedGradients3D<T, Lattice, direction, orientation,
 };
 
 // Implementation for orthogonal==false; i.e. the derivative is aligned with the boundary.
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int direction, int orientation, int deriveDirection>
-struct DirectedGradients3D<T, Lattice, direction, orientation,
+struct DirectedGradients3D<T, DESCRIPTOR, direction, orientation,
          deriveDirection, false> {
-  static void  interpolateVector(T velDeriv[Lattice<T>::d],
-                                 BlockLattice3D<T,Lattice> const& blockLattice,
+  static bool canInterpolateVector(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
+                                   int iX, int iY, int iZ)
+  {
+    return blockLattice.isInside(iX+(deriveDirection==0 ? 1:0),
+                                 iY+(deriveDirection==1 ? 1:0),
+                                 iZ+(deriveDirection==2 ? 1:0))
+        && blockLattice.isInside(iX+(deriveDirection==0 ? (-1):0),
+                                 iY+(deriveDirection==1 ? (-1):0),
+                                 iZ+(deriveDirection==2 ? (-1):0));
+  }
+
+  static void  interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                 BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                                  int iX, int iY, int iZ)
   {
     using namespace fd;
 
-    T u_p1[Lattice<T>::d], u_m1[Lattice<T>::d];
+    T u_p1[DESCRIPTOR::d], u_m1[DESCRIPTOR::d];
 
     blockLattice.get (
       iX+(deriveDirection==0 ? 1:0),
@@ -114,13 +137,13 @@ struct DirectedGradients3D<T, Lattice, direction, orientation,
       iY+(deriveDirection==1 ? (-1):0),
       iZ+(deriveDirection==2 ? (-1):0) ).computeU(u_m1);
 
-    for (int iD=0; iD<Lattice<T>::d; ++iD) {
+    for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
       velDeriv[iD] = centralGradient(u_p1[iD],u_m1[iD]);
     }
   }
 
   static void  interpolateScalar(T& rhoDeriv,
-                                 BlockLattice3D<T,Lattice> const& blockLattice,
+                                 BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                                  int iX, int iY, int iZ)
   {
     using namespace fd;

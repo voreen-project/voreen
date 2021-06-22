@@ -53,7 +53,7 @@
 #include "geometry/blockGeometryView2D.h"
 #include "communication/superStructure2D.h"
 #include "communication/loadBalancer.h"
-#include "functors/lattice/indicator/indicatorF2D.h"
+#include "functors/analytical/indicator/indicatorF2D.h"
 #include "io/ostreamManager.h"
 
 
@@ -85,13 +85,10 @@ public:
   /// Constructor
   SuperGeometry2D(CuboidGeometry2D<T>& cuboidGeometry,
                   LoadBalancer<T>& lb, int overlap = 2);
-  /// Copy constructor
-  SuperGeometry2D(SuperGeometry2D const& rhs);
-  /// Copy assignment
-  SuperGeometry2D& operator=(SuperGeometry2D const& rhs);
 
   /// Interface for the communicator class: Write access to the memory of the data of the super structure
-  bool* operator() (int iCloc, int iX, int iY, int iData) override;
+  std::uint8_t* operator() (int iCloc, int iX, int iY, int iData) override;
+  std::uint8_t* operator() (int iCloc, std::size_t, int iData) override;
   /// Interface for the communicator class: Read only access to the dim of the data of the super structure
   int getDataSize() const override;
   /// Interface for the communicator class: Read only access to the data type dim of the data of the super structure
@@ -107,6 +104,7 @@ public:
   int& set(std::vector<int> latticeR); //TODO to be removed set->get, problem: with get calling wrong function
   /// Read only access to the material numbers, error handling: returns 0 if data is not available
   int const& get(std::vector<int> latticeR) const;
+
   /// Read only access to the material numbers with global communication to all ranks
   int getAndCommunicate(std::vector<int> latticeR) const;
 
@@ -146,6 +144,9 @@ public:
   int innerClean(int material, bool verbose=true);
   /// check for errors (searches for all outer voxels (=0) with an inner voxel (=1) as a direct neighbour)
   bool checkForErrors(bool verbose=true);
+
+  /// reset all cell materials inside of a domain to 0
+  void reset(IndicatorF2D<T>& domain);
 
   /// replace one material with another
   void rename(int fromM, int toM);

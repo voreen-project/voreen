@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -47,13 +47,6 @@ class SuperLpNorm3D : public SuperF3D<T,W> {
 private:
   FunctorPtr<SuperF3D<T,W>>        _f;
   FunctorPtr<SuperIndicatorF3D<T>> _indicatorF;
-
-  /// old _block agnostic_ operator logic
-  /**
-   * To be removed as soon as all functors are blockified.
-   **/
-  bool _block_agnostic_operator(W output[], const int input[]);
-
 public:
   /**
    * \param f          (non-)owning pointer or reference to SuperF3D<T,W>

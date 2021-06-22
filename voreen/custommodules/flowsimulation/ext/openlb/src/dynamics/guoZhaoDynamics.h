@@ -28,37 +28,34 @@
 #ifndef LB_GUOZHAO_DYNAMICS_H
 #define LB_GUOZHAO_DYNAMICS_H
 
-#include "dynamics/guoZhaoLatticeDescriptors.h"
+#include "dynamics/descriptorAlias.h"
 #include "core/util.h"
 #include "core/postProcessing.h"
 #include "core/latticeStatistics.h"
+#include "dynamics/dynamics.h"
 
 namespace olb {
 
 /// Implementation of the BGK collision step with porous force according to
 /// Guo and Zhao (2012), described as an external force
-template<typename T, template<typename U> class Lattice>
-class GuoZhaoBGKdynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class GuoZhaoBGKdynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  GuoZhaoBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  GuoZhaoBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   ///  Compute fluid velocity on the cell.
   void computeU (
-    Cell<T,Lattice> const& cell,
-    T u[Lattice<T>::d] ) const override;
+    ConstCell<T,DESCRIPTOR>& cell,
+    T u[DESCRIPTOR::d] ) const override;
   /// Compute fluid velocity and particle density on the cell.
   void computeRhoU (
-    Cell<T,Lattice> const& cell,
-    T& rho, T u[Lattice<T>::d]) const override;
+    ConstCell<T,DESCRIPTOR>& cell,
+    T& rho, T u[DESCRIPTOR::d]) const override;
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell,
+  void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -67,12 +64,9 @@ public:
   T getEpsilon();
 protected:
   /// Copies epsilon from external to member variable to provide access to computeEquilibrium.
-  void updateEpsilon(Cell<T,Lattice>& cell);
+  void updateEpsilon(Cell<T,DESCRIPTOR>& cell);
   T _omega;  ///< relaxation parameter
   T _epsilon; ///< porosity. Must be re-declared as a member variable to allow
-  // access for computeEquilibrium method.
-  static const int forceBeginsAt = Lattice<T>::ExternalField::forceBeginsAt;
-  static const int sizeOfForce   = Lattice<T>::ExternalField::sizeOfForce;
 };
 
 }

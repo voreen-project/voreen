@@ -28,119 +28,117 @@
 #ifndef ADVECTION_DIFFUSION_MOMENTA_HH
 #define ADVECTION_DIFFUSION_MOMENTA_HH
 
-#include <algorithm>
-#include <limits>
-#include "dynamics/dynamics.h"
-#include "core/cell.h"
+#include "advectionDiffusionMomenta.h"
 #include "lbHelpers.h"
 
 namespace olb {
 
 ////////////////////// Class AdvectionDiffusionBulkMomenta //////////////////////////
 
-template<typename T, template<typename U> class Lattice>
-T AdvectionDiffusionBulkMomenta<T,Lattice>::computeRho(Cell<T,Lattice> const& cell) const
+template<typename T, typename DESCRIPTOR>
+T AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::computeRho(ConstCell<T,DESCRIPTOR>& cell) const
 {
-  return lbHelpers<T,Lattice>::computeRho(cell);
+  return lbHelpers<T,DESCRIPTOR>::computeRho(cell);
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::computeU(Cell<T,Lattice> const& cell, T u[Lattice<T>::d]) const
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::computeU(ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d]) const
 {
-  const T *u_ = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iD = 0; iD < Lattice<T>::d; ++iD) {
+  auto u_ = cell.template getFieldPointer<descriptors::VELOCITY>();
+  for (int iD = 0; iD < DESCRIPTOR::d; ++iD) {
     u[iD] = u_[iD];
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::computeJ(Cell<T,Lattice> const& cell, T j[Lattice<T>::d]) const
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::computeJ(ConstCell<T,DESCRIPTOR>& cell, T j[DESCRIPTOR::d]) const
+{
+  lbHelpers<T,DESCRIPTOR>::computeJ(cell, j);
+}
+
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::computeStress (
+  ConstCell<T,DESCRIPTOR>& cell,
+  T rho, const T u[DESCRIPTOR::d],
+  T pi[util::TensorVal<DESCRIPTOR >::n] ) const
 {
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::computeStress (
-  Cell<T,Lattice> const& cell,
-  T rho, const T u[Lattice<T>::d],
-  T pi[util::TensorVal<Lattice<T> >::n] ) const
-{
-}
-
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::computeRhoU (
-  Cell<T,Lattice> const& cell,
-  T& rho, T u[Lattice<T>::d] ) const
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::computeRhoU (
+  ConstCell<T,DESCRIPTOR>& cell,
+  T& rho, T u[DESCRIPTOR::d] ) const
 {
   rho = cell.computeRho();
-  const T *u_ = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iD = 0; iD < Lattice<T>::d; ++iD) {
+  auto u_ = cell.template getFieldPointer<descriptors::VELOCITY>();
+  for (int iD = 0; iD < DESCRIPTOR::d; ++iD) {
     u[iD] = u_[iD];
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::computeAllMomenta (
-  Cell<T,Lattice> const& cell,
-  T& rho, T u[Lattice<T>::d],
-  T pi[util::TensorVal<Lattice<T> >::n] ) const
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::computeAllMomenta (
+  ConstCell<T,DESCRIPTOR>& cell,
+  T& rho, T u[DESCRIPTOR::d],
+  T pi[util::TensorVal<DESCRIPTOR >::n] ) const
 {
   rho = cell.computeRho();
-  const T *u_ = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iD = 0; iD < Lattice<T>::d; ++iD) {
+  auto u_ = cell.template getFieldPointer<descriptors::VELOCITY>();
+  for (int iD = 0; iD < DESCRIPTOR::d; ++iD) {
     u[iD] = u_[iD];
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::defineRho(Cell<T,Lattice>& cell, T rho)
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::defineRho(Cell<T,DESCRIPTOR>& cell, T rho)
 {
-  T *u = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] = lbHelpers<T, Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  auto u = cell.template getField<descriptors::VELOCITY>();
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = lbHelpers<T, DESCRIPTOR>::equilibriumFirstOrder( iPop, rho, u.data() );
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::defineU (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d])
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::defineU (
+  Cell<T,DESCRIPTOR>& cell,
+  const T u[DESCRIPTOR::d])
 {
   T rho = cell.computeRho();
-  T *u_ = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iD = 0; iD < Lattice<T>::d; ++iD) {
+  auto u_ = cell.template getFieldPointer<descriptors::VELOCITY>();
+  for (int iD = 0; iD < DESCRIPTOR::d; ++iD) {
     u_[iD] = u[iD];
   }
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] = lbHelpers<T, Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = lbHelpers<T, DESCRIPTOR>::equilibriumFirstOrder( iPop, rho, u );
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::defineRhoU (
-  Cell<T,Lattice>& cell,
-  T rho, const T u[Lattice<T>::d])
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::defineRhoU (
+  Cell<T,DESCRIPTOR>& cell,
+  T rho, const T u[DESCRIPTOR::d])
 {
-  T *u_ = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iD = 0; iD < Lattice<T>::d; ++iD) {
+  auto u_ = cell.template getFieldPointer<descriptors::VELOCITY>();
+  for (int iD = 0; iD < DESCRIPTOR::d; ++iD) {
     u_[iD] = u[iD];
   }
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] = lbHelpers<T, Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = lbHelpers<T, DESCRIPTOR>::equilibriumFirstOrder( iPop, rho, u );
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void AdvectionDiffusionBulkMomenta<T,Lattice>::defineAllMomenta (
-  Cell<T,Lattice>& cell,
-  T rho, const T u[Lattice<T>::d],
-  const T pi[util::TensorVal<Lattice<T> >::n] )
+template<typename T, typename DESCRIPTOR>
+void AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>::defineAllMomenta (
+  Cell<T,DESCRIPTOR>& cell,
+  T rho, const T u[DESCRIPTOR::d],
+  const T pi[util::TensorVal<DESCRIPTOR >::n] )
 {
-  T *u_ = cell.getExternal(Lattice<T>::ExternalField::velocityBeginsAt);
-  for (int iD = 0; iD < Lattice<T>::d; ++iD) {
+  auto u_ = cell.template getFieldPointer<descriptors::VELOCITY>();
+  for (int iD = 0; iD < DESCRIPTOR::d; ++iD) {
     u_[iD] = u[iD];
   }
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    cell[iPop] = lbHelpers<T, Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = lbHelpers<T, DESCRIPTOR>::equilibriumFirstOrder( iPop, rho, u );
   }
 }
 
@@ -148,10 +146,10 @@ void AdvectionDiffusionBulkMomenta<T,Lattice>::defineAllMomenta (
 
 namespace instances {
 
-template<typename T, template<typename U> class Lattice>
-AdvectionDiffusionBulkMomenta<T,Lattice>& getAdvectionDiffusionBulkMomenta()
+template<typename T, typename DESCRIPTOR>
+AdvectionDiffusionBulkMomenta<T,DESCRIPTOR>& getAdvectionDiffusionBulkMomenta()
 {
-  static AdvectionDiffusionBulkMomenta<T,Lattice> bulkMomentaSingleton;
+  static AdvectionDiffusionBulkMomenta<T,DESCRIPTOR> bulkMomentaSingleton;
   return bulkMomentaSingleton;
 }
 }

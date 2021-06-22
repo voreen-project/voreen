@@ -142,8 +142,7 @@ int main()
       TiXmlDocument doc( "demotest.xml" );
       doc.Parse( demoStart );
 
-      if ( doc.Error() )
-      {
+      if ( doc.Error() ) {
         printf( "Error in %s: %s\n", doc.Value(), doc.ErrorDesc() );
         exit( 1 );
       }
@@ -153,8 +152,7 @@ int main()
     TiXmlDocument doc( "demotest.xml" );
     bool loadOkay = doc.LoadFile();
 
-    if ( !loadOkay )
-    {
+    if ( !loadOkay ) {
       printf( "Could not load test file 'demotest.xml'. Error='%s'. Exiting.\n", doc.ErrorDesc() );
       exit( 1 );
     }
@@ -303,19 +301,17 @@ int main()
 
     // Walk all the top level nodes of the document.
     count = 0;
-    for( node = doc.FirstChild();
-         node;
-         node = node->NextSibling() )
-    {
+    for ( node = doc.FirstChild();
+          node;
+          node = node->NextSibling() ) {
       count++;
     }
     XmlTest( "Top level nodes, using First / Next.", 3, count );
 
     count = 0;
-    for( node = doc.LastChild();
-         node;
-         node = node->PreviousSibling() )
-    {
+    for ( node = doc.LastChild();
+          node;
+          node = node->PreviousSibling() ) {
       count++;
     }
     XmlTest( "Top level nodes, using Last / Previous.", 3, count );
@@ -323,20 +319,18 @@ int main()
     // Walk all the top level nodes of the document,
     // using a different syntax.
     count = 0;
-    for( node = doc.IterateChildren( 0 );
-         node;
-         node = doc.IterateChildren( node ) )
-    {
+    for ( node = doc.IterateChildren( 0 );
+          node;
+          node = doc.IterateChildren( node ) ) {
       count++;
     }
     XmlTest( "Top level nodes, using IterateChildren.", 3, count );
 
     // Walk all the elements in a node.
     count = 0;
-    for( element = todoElement->FirstChildElement();
-         element;
-         element = element->NextSiblingElement() )
-    {
+    for ( element = todoElement->FirstChildElement();
+          element;
+          element = element->NextSiblingElement() ) {
       count++;
     }
     XmlTest( "Children of the 'ToDo' element, using First / Next.",
@@ -344,19 +338,17 @@ int main()
 
     // Walk all the elements in a node by value.
     count = 0;
-    for( node = todoElement->FirstChild( "Item" );
-         node;
-         node = node->NextSibling( "Item" ) )
-    {
+    for ( node = todoElement->FirstChild( "Item" );
+          node;
+          node = node->NextSibling( "Item" ) ) {
       count++;
     }
     XmlTest( "'Item' children of the 'ToDo' element, using First/Next.", 3, count );
 
     count = 0;
-    for( node = todoElement->LastChild( "Item" );
-         node;
-         node = node->PreviousSibling( "Item" ) )
-    {
+    for ( node = todoElement->LastChild( "Item" );
+          node;
+          node = node->PreviousSibling( "Item" ) ) {
       count++;
     }
     XmlTest( "'Item' children of the 'ToDo' element, using Last/Previous.", 3, count );
@@ -559,8 +551,7 @@ int main()
               "(Are you running the test from the wrong directory?)\n"
               "Could not test UTF-8 functionality.\n" );
     }
-    else
-    {
+    else {
       TiXmlHandle docH( &doc );
       // Get the attribute "value" from the "Russian" element and check it.
       TiXmlElement* element = docH.FirstChildElement( "document" ).FirstChildElement( "Russian" ).Element();
@@ -601,13 +592,10 @@ int main()
 
       FILE* saved  = fopen( "utf8testout.xml", "r" );
       FILE* verify = fopen( "utf8testverify.xml", "r" );
-      if ( saved && verify )
-      {
-        while ( fgets( verifyBuf, 256, verify ) )
-        {
+      if ( saved && verify ) {
+        while ( fgets( verifyBuf, 256, verify ) ) {
           fgets( savedBuf, 256, saved );
-          if ( strcmp( verifyBuf, savedBuf ) )
-          {
+          if ( strcmp( verifyBuf, savedBuf ) ) {
             okay = 0;
             break;
           }
@@ -790,7 +778,7 @@ int main()
     // [ 1482728 ] Wrong wide char parsing
     char buf[256];
     buf[255] = 0;
-    for( int i=0; i<255; ++i ) {
+    for ( int i=0; i<255; ++i ) {
       buf[i] = (char)((i>=32) ? i : 32);
     }
     TIXML_STRING str( "<xmlElement><![CDATA[" );
@@ -863,8 +851,7 @@ int main()
 
   // The only goal is not to crash on bad input.
   int len = (int) strlen( demoStart );
-  for( int i=0; i<FUZZ_ITERATION; ++i )
-  {
+  for ( int i=0; i<FUZZ_ITERATION; ++i ) {
     char* demoCopy = new char[ len+1 ];
     strcpy( demoCopy, demoStart );
 
@@ -960,15 +947,13 @@ int main()
     XmlTest( "Entity transformation: read. ", expected, context, true );
 
     FILE* textfile = fopen( "textfile.txt", "w" );
-    if ( textfile )
-    {
+    if ( textfile ) {
       psg->Print( textfile, 0 );
       fclose( textfile );
     }
     textfile = fopen( "textfile.txt", "r" );
     assert( textfile );
-    if ( textfile )
-    {
+    if ( textfile ) {
       char buf[ 1024 ];
       fgets( buf, 1024, textfile );
       XmlTest( "Entity transformation: write. ",
@@ -982,8 +967,7 @@ int main()
 
   {
     FILE* textfile = fopen( "test5.xml", "w" );
-    if ( textfile )
-    {
+    if ( textfile ) {
       fputs("<?xml version='1.0'?><a.elem xmi.version='2.0'/>", textfile);
       fclose(textfile);
 
@@ -995,8 +979,7 @@ int main()
 
   {
     FILE* textfile = fopen( "test6.xml", "w" );
-    if ( textfile )
-    {
+    if ( textfile ) {
       fputs("<element><Name>1.1 Start easy ignore fin thickness&#xA;</Name></element>", textfile );
       fclose(textfile);
 

@@ -33,9 +33,9 @@ namespace olb {
 class Serializer;
 
 /// processes data from a serializer to a given ostr, always in parallel
-inline void serializer2ostr(Serializer& serializer, std::ostream& ostr, bool enforceUint=false);
+void serializer2ostr(Serializer& serializer, std::ostream& ostr, bool enforceUint=false);
 /// processes an istr to a serializer, always in parallel
-inline void istr2serializer(Serializer& serializer, std::istream& istr, bool enforceUint=false);
+void istr2serializer(Serializer& serializer, std::istream& istr, bool enforceUint=false);
 
 } // namespace olb
 

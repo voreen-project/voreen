@@ -68,7 +68,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , progress_("progress", "Progress")
 {
     addPort(geometryDataPort_);
-    addPort(measuredDataPort_); // Currently ignored
+    //addPort(measuredDataPort_); // Currently ignored.
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);

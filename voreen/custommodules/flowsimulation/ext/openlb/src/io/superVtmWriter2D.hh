@@ -86,7 +86,7 @@ void SuperVTMwriter2D<T,W>::write(int iT)
       closeVTM(pathVTM);
     }
     // VTI, each process writes his cuboids
-    int originLatticeR[4] = {int()};
+    int originLatticeR[3] = {int()};
     for (int iCloc = 0; iCloc < load.size(); iCloc++) {
       int nx = cGeometry.get(load.glob(iCloc)).getNx();
       int ny = cGeometry.get(load.glob(iCloc)).getNy();
@@ -99,7 +99,7 @@ void SuperVTMwriter2D<T,W>::write(int iT)
 
       // get dimension/extent for each cuboid
       originLatticeR[0] = load.glob(iCloc);
-      T originPhysR[3] = {T()};
+      T originPhysR[2] = {T()};
       cGeometry.getPhysR(originPhysR,originLatticeR);
 
       preambleVTI(fullNameVTI, -1,-1,nx,ny, originPhysR[0],originPhysR[1], delta);
@@ -113,8 +113,6 @@ void SuperVTMwriter2D<T,W>::write(int iT)
       closePiece(fullNameVTI);
       closeVTI(fullNameVTI);
     }
-    // empty std::vector of functors
-    clearAddedFunctors();
   }
 }
 
@@ -148,7 +146,6 @@ void SuperVTMwriter2D<T,W>::write(SuperF2D<T,W>& f, int iT)
     closeVTM(pathVTM);
   } // master only
 
-  int originLatticeR[4] = {int()};
   for (int iCloc = 0; iCloc < load.size(); iCloc++) {
     // cuboid
     int nx = cGeometry.get(load.glob(iCloc)).getNx();
@@ -160,8 +157,8 @@ void SuperVTMwriter2D<T,W>::write(SuperF2D<T,W>& f, int iT)
                               + createFileName( f.getName(), iT, load.glob(iCloc) ) + ".vti";
 
     // get dimension/extent for each cuboid
-    originLatticeR[0] = load.glob(iCloc);
-    T originPhysR[3] = {T()};
+    int const originLatticeR[3] = {load.glob(iCloc),0,0};
+    T originPhysR[2] = {T()};
     cGeometry.getPhysR(originPhysR,originLatticeR);
 
     preambleVTI(fullNameVTI, -1,-1, nx,ny, originPhysR[0],originPhysR[1], delta);
@@ -173,6 +170,12 @@ void SuperVTMwriter2D<T,W>::write(SuperF2D<T,W>& f, int iT)
     closePiece(fullNameVTI);
     closeVTI(fullNameVTI);
   } // cuboid
+}
+
+template<typename T, typename W>
+void SuperVTMwriter2D<T,W>::write(std::shared_ptr<SuperF2D<T,W>> ptr_f, int iT)
+{
+  write(*ptr_f, iT);
 }
 
 template<typename T, typename W>
@@ -346,13 +349,8 @@ void SuperVTMwriter2D<T,W>::dataArray(const std::string& fullName,
   }
 
   fout << "<DataArray " ;
-  if (f.getTargetDim() == 1) {
-    fout << "type=\"Float32\" Name=\"" << f.getName() <<"\">\n";
-  }
-  if (f.getTargetDim() != 1) {
-    fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
-         << "NumberOfComponents=\"" << f.getTargetDim() <<"\">\n";
-  }
+  fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
+       << "NumberOfComponents=\"" << f.getTargetDim() <<"\">\n";
 
   int i[3] = {iC, 0, 0};
   W evaluated[f.getTargetDim()];
@@ -385,14 +383,9 @@ void SuperVTMwriter2D<T,W>::dataArrayBinary(const std::string& fullName,
   }
 
   fout << "<DataArray ";
-  if (f.getTargetDim() == 1) {
-    fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
-         << "format=\"binary\" encoding=\"base64\">\n";
-  } else {
-    fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
-         << "format=\"binary\" encoding=\"base64\" "
-         << "NumberOfComponents=\"" << f.getTargetDim() <<"\">\n";
-  }
+  fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
+       << "format=\"binary\" encoding=\"base64\" "
+       << "NumberOfComponents=\"" << f.getTargetDim() <<"\">\n";
   fout.close();
 
   std::ofstream ofstr( fullName, std::ios::out | std::ios::app | std::ios::binary );
@@ -409,13 +402,13 @@ void SuperVTMwriter2D<T,W>::dataArrayBinary(const std::string& fullName,
   //  write numbers from functor
   Base64Encoder<float>* dataEncoder = new Base64Encoder<float>( ofstr, fullSize );
 
-  int i[4] = {iC, 0, 0, 0};
+  int i[3] = {iC, 0, 0};
   W evaluated[f.getTargetDim()];
   for (int iDim = 0; iDim < f.getTargetDim(); ++iDim) {
     evaluated[iDim] = W();
   }
   int itter = 0;
-  float bufferFloat[fullSize];
+  std::unique_ptr<float[]> bufferFloat(new float[fullSize]);
   for (i[2] = -1; i[2] < ny+1; ++i[2]) {
     for (i[1] = -1; i[1] < nx+1; ++i[1]) {
       f(evaluated,i);

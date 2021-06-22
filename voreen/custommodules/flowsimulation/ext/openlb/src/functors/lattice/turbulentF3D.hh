@@ -28,7 +28,6 @@
 #include<cmath>
 
 #include "turbulentF3D.h"
-#include "blockLatticeLocalF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "core/superLattice3D.h"
 #include "core/finiteDifference.h"
@@ -41,7 +40,7 @@ namespace olb {
 
 
 ///////////////////////////// SuperLatticeYplus3D //////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeYplus3D<T,DESCRIPTOR>::SuperLatticeYplus3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
     const UnitConverter<T,DESCRIPTOR>& converter, SuperGeometry3D<T>& superGeometry,
     IndicatorF3D<T>& indicator, const int material )
@@ -51,7 +50,7 @@ SuperLatticeYplus3D<T,DESCRIPTOR>::SuperLatticeYplus3D(SuperLattice3D<T,DESCRIPT
   this->getName() = "yPlus";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool SuperLatticeYplus3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   int globIC = input[0];
@@ -66,15 +65,15 @@ bool SuperLatticeYplus3D<T,DESCRIPTOR>::operator() (T output[], const int input[
     T counter = T();
     T distance = T();
     if (_superGeometry.get(input) == 1) {
-      for (int iPop = 1; iPop < DESCRIPTOR<T>::q; ++iPop) {
+      for (int iPop = 1; iPop < DESCRIPTOR::q; ++iPop) {
         if (_superGeometry.get(input[0],
-                               input[1] + DESCRIPTOR<T>::c[iPop][0],
-                               input[2] + DESCRIPTOR<T>::c[iPop][1],
-                               input[3] + DESCRIPTOR<T>::c[iPop][2]) == _material) {
+                               input[1] + descriptors::c<DESCRIPTOR>(iPop,0),
+                               input[2] + descriptors::c<DESCRIPTOR>(iPop,1),
+                               input[3] + descriptors::c<DESCRIPTOR>(iPop,2)) == _material) {
           counter++;
-          normalTemp[0] += DESCRIPTOR<T>::c[iPop][0];
-          normalTemp[1] += DESCRIPTOR<T>::c[iPop][1];
-          normalTemp[2] += DESCRIPTOR<T>::c[iPop][2];
+          normalTemp[0] += descriptors::c<DESCRIPTOR>(iPop,0);
+          normalTemp[1] += descriptors::c<DESCRIPTOR>(iPop,1);
+          normalTemp[2] += descriptors::c<DESCRIPTOR>(iPop,2);
         }
       }
       if ( !util::nearZero(counter) ) {
@@ -104,7 +103,7 @@ bool SuperLatticeYplus3D<T,DESCRIPTOR>::operator() (T output[], const int input[
           // Compute phys stress tau = mu*du/dx
           T omega = 1. / this->_converter.getLatticeRelaxationTime();
           T dt = this->_converter.getConversionFactorTime();
-          T physFactor = -omega*DESCRIPTOR<T>::invCs2/rho/2./dt*this->_converter.getPhysDensity(rho)*this->_converter.getPhysViscosity();
+          T physFactor = -omega*descriptors::invCs2<T,DESCRIPTOR>()/rho/2./dt*this->_converter.getPhysDensity(rho)*this->_converter.getPhysViscosity();
 
           //  Totel Stress projected from cell in normal direction on obstacle
           T Rx = pi[0]*physFactor*normal[0] + pi[1]*physFactor*normal[1] + pi[2]*physFactor*normal[2];
@@ -131,7 +130,7 @@ bool SuperLatticeYplus3D<T,DESCRIPTOR>::operator() (T output[], const int input[
   return true;
 }
 
-/*template <typename T, template <typename U> class DESCRIPTOR>
+/*template <typename T, typename DESCRIPTOR>
 BlockLatticeADM3D<T,DESCRIPTOR>::BlockLatticeADM3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, T sigma, int order, bool adaptive, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice,5), _sigma(sigma), _order(order), _adaptive(adaptive), _converter(converter)
@@ -139,7 +138,7 @@ BlockLatticeADM3D<T,DESCRIPTOR>::BlockLatticeADM3D
   this->getName() = "ADMfilter";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   // Declaration of all variables needed for filtering
@@ -198,7 +197,7 @@ bool BlockLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 
     // std::cout << "diss: "<< diss << std::endl;
 
-  //  T* avDiss = this-> _blockLattice.get(globX, globY , globZ).getExternal(localAvDissBeginsAt);
+  //  T* avDiss = this-> _blockLattice.get(globX, globY , globZ)[localAvDissBeginsAt];
 
     // // std::cout <<"avDiss:" << *avDiss << std::endl;
 
@@ -208,7 +207,7 @@ bool BlockLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 
    //  T TKE = 0.5*(velocity(u_000)[0]*velocity(u_000)[0]+velocity(u_000)[1]*velocity(u_000)[1]+velocity(u_000)[2]+velocity(u_000)[2]);
 
-   //  T* avTKE = this-> _blockLattice.get(globX, globY , globZ).getExternal(localAvTKEBeginsAt);
+   //  T* avTKE = this-> _blockLattice.get(globX, globY , globZ)[localAvTKEBeginsAt];
 
    //  *avTKE = (*avTKE * this->_blockLattice.getStatistics().getTime() + TKE) / (this->_blockLattice.getStatistics().getTime() + (int) 1 );
 
@@ -250,7 +249,7 @@ bool BlockLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
     T norm = sqrt(  (wx*uz + vx*uy + ux*ux) + (wy*vz + vy*vy + uy*vx) + (wz*wz + vz*wy + uz*wx) ) ;
 
 
-    T* avNorm = this-> _blockLattice.get(globX, globY , globZ).getExternal(_localAvDissBeginsAt);
+    T* avNorm = this-> _blockLattice.get(globX, globY , globZ)[_localAvDissBeginsAt];
 
     *avNorm = (*avNorm * this->_blockLattice.getStatistics().getTime() + norm) / (this->_blockLattice.getStatistics().getTime() + (int) 1 );
 
@@ -330,19 +329,19 @@ bool BlockLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
   return true;
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 void BlockLatticeADM3D<T,DESCRIPTOR>::execute(const int input[])
 {
   T output[5] = {T(),T(),T(),T(),T()};
   this->operator()(output,input);
-  this-> _blockLattice.get(input[0],input[1],input[2]).defineExternalField( DESCRIPTOR<T>::ExternalField::filRhoIsAt, 1, &output[0] );
-  this-> _blockLattice.get(input[0],input[1],input[2]).defineExternalField( DESCRIPTOR<T>::ExternalField::localFilVelXBeginsAt, 1, &output[1]);
-  this-> _blockLattice.get(input[0],input[1],input[2]).defineExternalField( DESCRIPTOR<T>::ExternalField::localFilVelYBeginsAt, 1, &output[2]);
-  this-> _blockLattice.get(input[0],input[1],input[2]).defineExternalField( DESCRIPTOR<T>::ExternalField::localFilVelZBeginsAt, 1, &output[3]);
-  this-> _blockLattice.get(input[0],input[1],input[2]).defineExternalField( DESCRIPTOR<T>::ExternalField::localSigmaADMBeginsAt, 1, &output[4]);
+  this-> _blockLattice.get(input[0],input[1],input[2]).defineField<descriptors::FIL_RHO>( &output[0] );
+  this-> _blockLattice.get(input[0],input[1],input[2]).defineField<descriptors::LOCAL_FIL_VEL_X>( &output[1]);
+  this-> _blockLattice.get(input[0],input[1],input[2]).defineField<descriptors::LOCAL_FIL_VEL_Y>( &output[2]);
+  this-> _blockLattice.get(input[0],input[1],input[2]).defineField<descriptors::LOCAL_FIL_VEL_Z>( &output[3]);
+  this-> _blockLattice.get(input[0],input[1],input[2]).defineField<descriptors::LOCAL_SIGMA_ADM>( &output[4]);
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 void BlockLatticeADM3D<T,DESCRIPTOR>::execute()
 {
   int nX = this-> _blockLattice.getNx();
@@ -359,7 +358,7 @@ void BlockLatticeADM3D<T,DESCRIPTOR>::execute()
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeADM3D<T,DESCRIPTOR>::SuperLatticeADM3D
 (SuperLattice3D<T,DESCRIPTOR>& sLattice, T sigma, int order, bool adaptive, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,5), _sigma(sigma), _order(order), _adaptive(adaptive), _converter(converter)
@@ -367,7 +366,7 @@ SuperLatticeADM3D<T,DESCRIPTOR>::SuperLatticeADM3D
   this->getName() = "ADMfilter";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool SuperLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   int globIC = input[0];
@@ -387,7 +386,7 @@ bool SuperLatticeADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 void SuperLatticeADM3D<T,DESCRIPTOR>::execute(SuperGeometry3D<T>& superGeometry, const int material)
 {
   this->_sLattice.communicate();
@@ -605,8 +604,6 @@ bool BlockFiniteDifference3D<T>::operator() (T output[], const int input[])
   return true;
 }
 
-
-
 ////////////////////////SuperFiniteDifference3D//////////////////////////////////
 template <typename T>
 SuperFiniteDifference3D<T>::SuperFiniteDifference3D
@@ -621,18 +618,8 @@ SuperFiniteDifference3D<T>::SuperFiniteDifference3D
   }
 }
 
-template <typename T>
-bool SuperFiniteDifference3D<T>::operator() (T output[], const int input[])
-{
-  if (this->_superStructure.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_superStructure.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockPhysFiniteDifference3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockPhysFiniteDifference3D<T,DESCRIPTOR>::BlockPhysFiniteDifference3D
 (BlockF3D<T>& blockFinDiff, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockF3D<T>(blockFinDiff.getBlockStructure(), 3*blockFinDiff.getTargetDim()), _blockFinDiff(blockFinDiff), _converter(converter)
@@ -642,7 +629,7 @@ BlockPhysFiniteDifference3D<T,DESCRIPTOR>::BlockPhysFiniteDifference3D
 
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockPhysFiniteDifference3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   _blockFinDiff(output,input);
@@ -652,10 +639,8 @@ bool BlockPhysFiniteDifference3D<T,DESCRIPTOR>::operator() (T output[], const in
   return true;
 }
 
-
-
 ////////////////////////SuperPhysFiniteDifference3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperPhysFiniteDifference3D<T,DESCRIPTOR>::SuperPhysFiniteDifference3D
 (SuperGeometry3D<T>& sGeometry, SuperF3D<T>& sFunctor, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperF3D<T>(sFunctor.getSuperStructure(),3*sFunctor.getTargetDim()),
   _sFinDiff(sGeometry,sFunctor,matNumber),_converter(converter)
@@ -668,17 +653,8 @@ SuperPhysFiniteDifference3D<T,DESCRIPTOR>::SuperPhysFiniteDifference3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperPhysFiniteDifference3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_superStructure.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_superStructure.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
 ////////////////////////BlockLatticeVelocityGradientFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeVelocityGradientFD3D<T,DESCRIPTOR>::BlockLatticeVelocityGradientFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockFinDiff)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 9), _blockFinDiff(blockFinDiff)
@@ -686,7 +662,7 @@ BlockLatticeVelocityGradientFD3D<T,DESCRIPTOR>::BlockLatticeVelocityGradientFD3D
   this->getName() = "VelocityGradientFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   //1 dudx 2 dudy 3 dudz
@@ -697,7 +673,7 @@ bool BlockLatticeVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], con
 }
 
 ////////////////////////BlockLatticeExternalVelocityGradientFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::BlockLatticeExternalVelocityGradientFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockFinDiff)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 9), _blockFinDiff(blockFinDiff)
@@ -705,7 +681,7 @@ BlockLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::BlockLatticeExternalVelo
   this->getName() = "externalVelocityGradientFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   //1 dudx 2 dudy 3 dudz
@@ -716,7 +692,7 @@ bool BlockLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T outpu
 }
 
 ////////////////////////SuperLatticeVelocityGradientFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeVelocityGradientFD3D<T,DESCRIPTOR>::SuperLatticeVelocityGradientFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,9),
   _sVelocity(sLattice), _sFinDiff(sGeometry, _sVelocity, matNumber)
@@ -729,17 +705,8 @@ SuperLatticeVelocityGradientFD3D<T,DESCRIPTOR>::SuperLatticeVelocityGradientFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticeVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
 ////////////////////////SuperLatticeExternalVelocityGradientFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::SuperLatticeExternalVelocityGradientFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,9),
   _sVelocity(sLattice), _sFinDiff(sGeometry, _sVelocity, matNumber)
@@ -752,17 +719,8 @@ SuperLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::SuperLatticeExternalVelo
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticeExternalVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
 ////////////////////////BlockLatticePhysVelocityGradientFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysVelocityGradientFD3D<T,DESCRIPTOR>::BlockLatticePhysVelocityGradientFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockFinDiff, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 9), _blockFinDiff(blockFinDiff), _converter(converter)
@@ -770,17 +728,15 @@ BlockLatticePhysVelocityGradientFD3D<T,DESCRIPTOR>::BlockLatticePhysVelocityGrad
   this->getName() = "PhysVelocityGradientFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   _blockFinDiff(output,input);
   return true;
 }
 
-
-
 ////////////////////////SuperLatticePhysVelocityGradientFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticePhysVelocityGradientFD3D<T,DESCRIPTOR>::SuperLatticePhysVelocityGradientFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,9),
   _sVelocity(sLattice, converter), _sFinDiff(sGeometry, _sVelocity, matNumber, converter), _converter(converter)
@@ -793,17 +749,8 @@ SuperLatticePhysVelocityGradientFD3D<T,DESCRIPTOR>::SuperLatticePhysVelocityGrad
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticePhysVelocityGradientFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
 ////////////////////////BlockLatticeStrainRateFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeStrainRateFD3D<T,DESCRIPTOR>::BlockLatticeStrainRateFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 9), _blockVeloGrad(blockVeloGrad)
@@ -811,7 +758,7 @@ BlockLatticeStrainRateFD3D<T,DESCRIPTOR>::BlockLatticeStrainRateFD3D
   this->getName() = "StrainRateFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeStrainRateFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -828,10 +775,8 @@ bool BlockLatticeStrainRateFD3D<T,DESCRIPTOR>::operator() (T output[], const int
   return true;
 }
 
-
-
 ////////////////////////SuperLatticeStrainRateFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeStrainRateFD3D<T,DESCRIPTOR>::SuperLatticeStrainRateFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,9),
   _sVeloGrad(sGeometry, sLattice, matNumber)
@@ -844,17 +789,8 @@ SuperLatticeStrainRateFD3D<T,DESCRIPTOR>::SuperLatticeStrainRateFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticeStrainRateFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
 ////////////////////////BlockLatticePhysStrainRateFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysStrainRateFD3D<T,DESCRIPTOR>::BlockLatticePhysStrainRateFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 9), _blockVeloGrad(blockVeloGrad), _converter(converter)
@@ -862,7 +798,7 @@ BlockLatticePhysStrainRateFD3D<T,DESCRIPTOR>::BlockLatticePhysStrainRateFD3D
   this->getName() = "PhysStrainRateFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysStrainRateFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -880,10 +816,8 @@ bool BlockLatticePhysStrainRateFD3D<T,DESCRIPTOR>::operator() (T output[], const
   return true;
 }
 
-
-
 ////////////////////////SuperLatticePhysStrainRateFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticePhysStrainRateFD3D<T,DESCRIPTOR>::SuperLatticePhysStrainRateFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,9),
   _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -896,18 +830,8 @@ SuperLatticePhysStrainRateFD3D<T,DESCRIPTOR>::SuperLatticePhysStrainRateFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticePhysStrainRateFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticeDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeDissipationFD3D<T,DESCRIPTOR>::BlockLatticeDissipationFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _blockVeloGrad(blockVeloGrad), _converter(converter)
@@ -915,7 +839,7 @@ BlockLatticeDissipationFD3D<T,DESCRIPTOR>::BlockLatticeDissipationFD3D
   this->getName() = "DissipationFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -928,10 +852,8 @@ bool BlockLatticeDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const in
   return true;
 }
 
-
-
 ////////////////////////SuperLatticeDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeDissipationFD3D<T,DESCRIPTOR>::SuperLatticeDissipationFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,1),
   _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -944,18 +866,8 @@ SuperLatticeDissipationFD3D<T,DESCRIPTOR>::SuperLatticeDissipationFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticeDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticePhysDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysDissipationFD3D<T,DESCRIPTOR>::BlockLatticePhysDissipationFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _blockVeloGrad(blockVeloGrad), _converter(converter)
@@ -963,7 +875,7 @@ BlockLatticePhysDissipationFD3D<T,DESCRIPTOR>::BlockLatticePhysDissipationFD3D
   this->getName() = "PhysDissipationFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -976,10 +888,8 @@ bool BlockLatticePhysDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], cons
   return true;
 }
 
-
-
 ////////////////////////SuperLatticePhysDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticePhysDissipationFD3D<T,DESCRIPTOR>::SuperLatticePhysDissipationFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,1),
   _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -992,18 +902,8 @@ SuperLatticePhysDissipationFD3D<T,DESCRIPTOR>::SuperLatticePhysDissipationFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticePhysDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticeEffectiveDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::BlockLatticeEffectiveDissipationFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const UnitConverter<T,DESCRIPTOR>& converter, LESDynamics<T, DESCRIPTOR>& LESdynamics)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _blockVeloGrad(blockVeloGrad), _converter(converter), _LESdynamics(LESdynamics)
@@ -1011,7 +911,7 @@ BlockLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::BlockLatticeEffectiveDissipa
   this->getName() = "EffectiveDissipationFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -1021,16 +921,14 @@ bool BlockLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::operator() (T output[],
               velograd[6] * velograd[6] + velograd[7] * velograd[7] + velograd[8] * velograd[8];
 
   T omegaEff = _LESdynamics.getEffectiveOmega(this->_blockLattice.get(input[0], input[1], input[2]));
-  T nuEff = ((1./omegaEff)-0.5)/DESCRIPTOR<T>::invCs2;
+  T nuEff = ((1./omegaEff)-0.5)/descriptors::invCs2<T,DESCRIPTOR>();
   output[0] *= nuEff;
 
   return true;
 }
 
-
-
 ////////////////////////SuperLatticeEffectiveDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::SuperLatticeEffectiveDissipationFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter, LESDynamics<T, DESCRIPTOR>& LESdynamics)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,1), _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -1043,18 +941,8 @@ SuperLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::SuperLatticeEffectiveDissipa
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticeEffectiveDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticePhysEffectiveDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::BlockLatticePhysEffectiveDissipationFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const UnitConverter<T,DESCRIPTOR>& converter, LESDynamics<T, DESCRIPTOR>& LESdynamics)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _blockVeloGrad(blockVeloGrad), _converter(converter), _LESdynamics(LESdynamics)
@@ -1062,7 +950,7 @@ BlockLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::BlockLatticePhysEffectiv
   this->getName() = "PhysEffectiveDissipationFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -1071,17 +959,16 @@ bool BlockLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::operator() (T outpu
               velograd[3] * velograd[3] + velograd[4] * velograd[4] + velograd[5] * velograd[5] +
               velograd[6] * velograd[6] + velograd[7] * velograd[7] + velograd[8] * velograd[8];
 
-  T omegaEff = _LESdynamics.getEffectiveOmega(this->_blockLattice.get(input[0], input[1], input[2]));
-  T nuEff = ((1./omegaEff)-0.5)/DESCRIPTOR<T>::invCs2;
+  auto cell = this->_blockLattice.get(input[0], input[1], input[2]);
+  T omegaEff = _LESdynamics.getEffectiveOmega(cell);
+  T nuEff = ((1./omegaEff)-0.5)/descriptors::invCs2<T,DESCRIPTOR>();
   output[0] *= _converter.getPhysViscosity( nuEff );
 
   return true;
 }
 
-
-
 ////////////////////////SuperLatticePhysEffectiveDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::SuperLatticePhysEffectiveDissipationFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter, LESDynamics<T, DESCRIPTOR>& LESdynamics)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,1), _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -1094,18 +981,8 @@ SuperLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::SuperLatticePhysEffectiv
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticePhysEffectiveDissipationFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticeVorticityFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeVorticityFD3D<T,DESCRIPTOR>::BlockLatticeVorticityFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 3), _blockVeloGrad(blockVeloGrad)
@@ -1113,7 +990,7 @@ BlockLatticeVorticityFD3D<T,DESCRIPTOR>::BlockLatticeVorticityFD3D
   this->getName() = "VorticityFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeVorticityFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -1124,10 +1001,8 @@ bool BlockLatticeVorticityFD3D<T,DESCRIPTOR>::operator() (T output[], const int 
   return true;
 }
 
-
-
 ////////////////////////SuperLatticeVorticityFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeVorticityFD3D<T,DESCRIPTOR>::SuperLatticeVorticityFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,3),
   _sVeloGrad(sGeometry, sLattice, matNumber)
@@ -1140,18 +1015,8 @@ SuperLatticeVorticityFD3D<T,DESCRIPTOR>::SuperLatticeVorticityFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticeVorticityFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticePhysVorticityFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysVorticityFD3D<T,DESCRIPTOR>::BlockLatticePhysVorticityFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 3), _blockVeloGrad(blockVeloGrad), _converter(converter)
@@ -1159,7 +1024,7 @@ BlockLatticePhysVorticityFD3D<T,DESCRIPTOR>::BlockLatticePhysVorticityFD3D
   this->getName() = "PhysVorticityFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysVorticityFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   T velograd[9];
@@ -1170,10 +1035,8 @@ bool BlockLatticePhysVorticityFD3D<T,DESCRIPTOR>::operator() (T output[], const 
   return true;
 }
 
-
-
 ////////////////////////SuperLatticePhysVorticityFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticePhysVorticityFD3D<T,DESCRIPTOR>::SuperLatticePhysVorticityFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,3),
   _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -1186,18 +1049,8 @@ SuperLatticePhysVorticityFD3D<T,DESCRIPTOR>::SuperLatticePhysVorticityFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticePhysVorticityFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
-{
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
-  }
-}
-
 ////////////////////////BlockLatticePhysStressFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysStressFD3D<T,DESCRIPTOR>::BlockLatticePhysStressFD3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockStrainRate, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 9), _blockStrainRate(blockStrainRate), _converter(converter)
@@ -1205,7 +1058,7 @@ BlockLatticePhysStressFD3D<T,DESCRIPTOR>::BlockLatticePhysStressFD3D
   this->getName() = "PhysStressFD";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysStressFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   _blockStrainRate(output,input);
@@ -1215,10 +1068,8 @@ bool BlockLatticePhysStressFD3D<T,DESCRIPTOR>::operator() (T output[], const int
   return true;
 }
 
-
-
 ////////////////////////SuperLatticePhysStressFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticePhysStressFD3D<T,DESCRIPTOR>::SuperLatticePhysStressFD3D
 (SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,9),
   _sStrainRate(sGeometry, sLattice, matNumber, converter), _converter(converter)
@@ -1231,20 +1082,78 @@ SuperLatticePhysStressFD3D<T,DESCRIPTOR>::SuperLatticePhysStressFD3D
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
-bool SuperLatticePhysStressFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
+////////////////////////BlockIsotropicHomogeneousTKE//////////////////////////////////
+template<typename T, typename DESCRIPTOR>
+BlockIsotropicHomogeneousTKE3D<T, DESCRIPTOR>::BlockIsotropicHomogeneousTKE3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVelocity)
+  : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _blockVelocity(blockVelocity)
 {
-  if (this->_sLattice.getLoadBalancer().rank(input[0]) == singleton::mpi().getRank()) {
-    return this->getBlockF(this->_sLattice.getLoadBalancer().loc(input[0]) )(output,&input[1]);
-  } else {
-    return false;
+  this->getName() = "IsotropicHomogeneousTKE";
+}
+
+template<typename T, typename DESCRIPTOR>
+bool BlockIsotropicHomogeneousTKE3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
+{
+  output[0] = T();
+  T data[_blockVelocity.getTargetDim()];
+  _blockVelocity(data,input);
+  for (int i = 0; i < _blockVelocity.getTargetDim(); ++i) {
+    output[0] +=  data[i] * data[i];
+  }
+  output[0] = 0.5 * output[0];
+  return true;
+}
+
+////////////////////////SuperIsotropicHomogeneousTKE//////////////////////////////////
+template<typename T, typename DESCRIPTOR>
+SuperIsotropicHomogeneousTKE3D<T, DESCRIPTOR>::SuperIsotropicHomogeneousTKE3D(
+SuperLattice3D<T,DESCRIPTOR>& sLattice, const  UnitConverter<T,DESCRIPTOR>& converter)
+  : SuperLatticeF3D<T,DESCRIPTOR>(sLattice, 1), _sVelocity(sLattice, converter), _converter(converter)
+
+{
+  this->getName() = "IsotropicHomogeneousTKE";
+  int maxC = this->_sLattice.getLoadBalancer().size();
+  this->_blockF.reserve(maxC);
+  for (int iC = 0; iC < maxC; iC++)
+  {
+    this->_blockF.emplace_back(new BlockIsotropicHomogeneousTKE3D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC), this-> _sVelocity.getBlockF(iC)));
   }
 }
 
+ ////////////////////////BlockLatticePhysEnstrophyFD3D//////////////////////////////////
+template <typename T, typename DESCRIPTOR>
+BlockLatticePhysEnstrophyFD3D<T,DESCRIPTOR>::BlockLatticePhysEnstrophyFD3D
+(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockF3D<T>& blockVeloGrad, const  UnitConverter<T,DESCRIPTOR>& converter)
+  : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _blockVeloGrad(blockVeloGrad), _converter(converter)
+{
+  this->getName() = "PhysEnstrophyFD";
+}
+
+template <typename T, typename DESCRIPTOR>
+bool BlockLatticePhysEnstrophyFD3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
+{
+  T velograd[9];
+  _blockVeloGrad(velograd,input);
+  output[0] = 0.5 * ( pow(velograd[7] - velograd[5], 2) + pow(velograd[2] - velograd[6], 2) + pow(velograd[3] - velograd[1], 2) );
+  return true;
+}
+
+////////////////////////SuperLatticePhysEnstrophyFD3D//////////////////////////////////
+template <typename T, typename DESCRIPTOR>
+SuperLatticePhysEnstrophyFD3D<T,DESCRIPTOR>::SuperLatticePhysEnstrophyFD3D
+(SuperGeometry3D<T>& sGeometry, SuperLattice3D<T,DESCRIPTOR>& sLattice, std::list<int>& matNumber, const  UnitConverter<T,DESCRIPTOR>& converter) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice, 1),
+  _sVeloGrad(sGeometry, sLattice, matNumber, converter), _converter(converter)
+{
+  this->getName() = "PhysEnstrophyFD";
+  int maxC = this->_superStructure.getLoadBalancer().size();
+  this->_blockF.reserve(maxC);
+  for (int iC = 0; iC < maxC; iC++) {
+    this->_blockF.emplace_back(new BlockLatticePhysEnstrophyFD3D<T,DESCRIPTOR> (this->_sLattice.getBlockLattice(iC), this->_sVeloGrad.getBlockF(iC), this->_converter));
+  }
+}
 
 /*
 ////////////////////////BlockLatticePhysDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeSigmaADM3D<T,DESCRIPTOR>::BlockLatticeSigmaADM3D
 (BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice )
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice,3)
@@ -1252,11 +1161,11 @@ BlockLatticeSigmaADM3D<T,DESCRIPTOR>::BlockLatticeSigmaADM3D
   this->getName() = "SigmaADM3D";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool BlockLatticeSigmaADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
 
- T* sigma = this-> _blockLattice.get(input[0], input[1] , input[2]).getExternal(_localSigmaADMBeginsAt);
+ T* sigma = this-> _blockLattice.get(input[0], input[1] , input[2])[_localSigmaADMBeginsAt];
    output[0] = *sigma;
 
   return true;
@@ -1265,14 +1174,14 @@ bool BlockLatticeSigmaADM3D<T,DESCRIPTOR>::operator() (T output[], const int inp
 
 
 ////////////////////////SuperLatticePhysDissipationFD3D//////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeSigmaADM3D<T,DESCRIPTOR>::SuperLatticeSigmaADM3D
 (SuperLattice3D<T,DESCRIPTOR>& sLattice) : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,3)
 {
   this->getName() = "SigmaADM3D";
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool SuperLatticeSigmaADM3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
   int globIC = input[0];
@@ -1298,5 +1207,3 @@ bool SuperLatticeSigmaADM3D<T,DESCRIPTOR>::operator() (T output[], const int inp
 
 } // end namespace olb
 #endif
-
-

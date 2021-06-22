@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -27,17 +27,27 @@
 #include "functors/genericF.h"
 #include "functors/lattice/superBaseF2D.h"
 #include "communication/superStructure2D.h"
+#include "core/superData2D.h"
+#include "blockIndicatorBaseF2D.h"
 
 namespace olb {
 
-template<typename T> class BlockIndicatorF2D;
+template<typename T, typename W> class SuperF2D;
+template<typename T> class SuperGeometry2D;
+template<typename T> class SuperIndicatorIdentity2D;
 
 template <typename T>
 class SuperIndicatorF2D : public SuperF2D<T,bool> {
+protected:
+  SuperGeometry2D<T>& _superGeometry;
+
+  std::unique_ptr<SuperData2D<T,bool>> _cachedData;
+  std::vector<std::unique_ptr<BlockIndicatorF2D<T>>> _extendedBlockF;
 public:
   using SuperF2D<T,bool>::operator();
+  using identity_functor_type = SuperIndicatorIdentity2D<T>;
 
-  SuperIndicatorF2D(SuperStructure2D<T>& superStructure);
+  SuperIndicatorF2D(SuperGeometry2D<T>& geometry);
   /**
    * Get block indicator
    *
@@ -45,14 +55,17 @@ public:
    **/
   BlockIndicatorF2D<T>& getBlockIndicatorF(int iCloc);
   /**
-   * Indicator specific function operator overload
+   * Get extended block indicator
    *
-   * The boolean return value of `operator()(T output[], S input[])` describes
-   * the call's success and by convention must not describe the indicated domain.
-   *
-   * \return Domain indicator i.e. `true` iff the input lies within the described domain.
+   * \returns _extendedBlockF[iCloc] cast as BlockIndicatorF2D<T>&
    **/
-  virtual bool operator() (const int input[]);
+  BlockIndicatorF2D<T>& getExtendedBlockIndicatorF(int iCloc);
+  /**
+   * Get underlying super geometry
+   *
+   * \returns _superGeometry
+   **/
+  SuperGeometry2D<T>& getSuperGeometry();
   /**
    * Indicator specific function operator overload
    *
@@ -61,8 +74,21 @@ public:
    *
    * \return Domain indicator i.e. `true` iff the input lies within the described domain.
    **/
-  virtual bool operator() (int iC, int iX, int iY);
+  bool operator() (const int input[]);
+  /**
+   * Indicator specific function operator overload
+   *
+   * The boolean return value of `operator()(T output[], S input[])` describes
+   * the call's success and by convention must not describe the indicated domain.
+   *
+   * \return Domain indicator i.e. `true` iff the input lies within the described domain.
+   **/
+  bool operator() (int iC, int iX, int iY);
+
+  /// Optional: initialize _cachedData for faster access
+  void cache();
 };
+
 
 } // namespace olb
 

@@ -23,7 +23,13 @@
 
 generic        :=
 
-precompiled    := smoothIndicatorF2D \
+precompiled    := indicatorBaseF2D \
+                  indicatorBaseF3D \
+                  indicatorF2D \
+                  indicatorF3D \
+                  indicCalc2D \
+                  indicCalc3D \
+                  smoothIndicatorF2D \
                   smoothIndicatorF3D \
                   smoothIndicatorBaseF2D \
                   smoothIndicatorBaseF3D \

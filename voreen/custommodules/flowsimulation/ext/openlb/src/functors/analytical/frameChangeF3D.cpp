@@ -33,9 +33,11 @@ template class RotatingQuadratic1D<double>;
 template class CirclePowerLaw3D<double>;
 template class CirclePowerLawTurbulent3D<double>;
 template class CirclePoiseuille3D<double>;
-template class CirclePoiseuilleStrainRate3D<double, descriptors::D3Q19Descriptor>;
+template class CirclePoiseuilleStrainRate3D<double, descriptors::D3Q19<>>;
 template class RectanglePoiseuille3D<double>;
 template class EllipticPoiseuille3D<double>;
+
+template class AnalyticalPorousVelocity3D<double>;
 
 template class AngleBetweenVectors3D<double,double>;
 
@@ -51,5 +53,6 @@ template class CartesianToSpherical3D<double,double>;
 
 template class MagneticForceFromCylinder3D<double,double>;
 
+template class MagneticFieldFromCylinder3D<double,double>;
 
 }

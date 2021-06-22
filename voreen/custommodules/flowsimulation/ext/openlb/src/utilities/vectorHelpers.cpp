@@ -52,14 +52,5 @@ std::vector<double> normalize(const std::vector<double>& a);
 //bool triangleIntersectionWithNormalDirection(const std::vector<double>& point0, const std::vector<double>& point1, const std::vector<double>& point2, const std::vector<double>& origign, const std::vector<double>& normalDirection, double& distance);
 
 
-void print(const int& a);
-void print(const double& a);
-
-void print(const std::vector<int>& vec, std::string name);
-void print(const std::vector<double>& vec, std::string name);
-
-void print(const int vec[], const unsigned& size, std::string name);
-void print(const double vec[], const unsigned& size, std::string name);
-
 }
 }

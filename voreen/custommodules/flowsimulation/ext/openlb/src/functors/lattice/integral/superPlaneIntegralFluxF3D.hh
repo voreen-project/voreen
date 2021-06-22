@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -34,8 +34,8 @@
 namespace olb {
 
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -55,8 +55,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -76,8 +76,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -95,8 +95,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -114,8 +114,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -131,8 +131,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -150,8 +150,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -167,8 +167,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -186,8 +186,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -203,8 +203,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -222,8 +222,8 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   this->getName() = "SuperPlaneIntegralFluxF3D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
   SuperLattice3D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,

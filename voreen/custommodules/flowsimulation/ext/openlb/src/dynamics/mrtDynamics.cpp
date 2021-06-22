@@ -31,7 +31,6 @@
 #include "mrtDynamics.h"
 #include "mrtDynamics.hh"
 #include "mrtLatticeDescriptors.h"
-#include "mrtLatticeDescriptors.hh"
 
 namespace olb {
 

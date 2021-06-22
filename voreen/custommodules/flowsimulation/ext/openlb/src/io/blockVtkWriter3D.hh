@@ -81,7 +81,6 @@ void BlockVTKwriter3D<T>::write(int iT)
       }
     }
     closePreamble( fullNameVti );
-    clearAddedFunctors();
   }
 }
 
@@ -128,10 +127,10 @@ void BlockVTKwriter3D<T>::preamble(const std::string& fullName, int nx, int ny, 
     if (!fout) {
       clout << "Error: could not open " << fullName << std::endl;
     }
-    T spacing = T(1);
-    if (nx>0) {
-      spacing = T(1)/(T)nx;
-    }
+    // spacing is not known for BlockF3D classes
+    // prone to error: spacing might correspond to extension in y or z direction
+    //                 at the end of the day, is can be fixed by apply a scaling in paraview
+    double spacing = 1/double(nx);
 
     fout << "<?xml version=\"1.0\"?>\n";
     fout << "<VTKFile type=\"ImageData\" version=\"0.1\" "
@@ -182,12 +181,8 @@ void BlockVTKwriter3D<T>::writeRawData(const std::string& fullNameVti, BlockF3D<
 
   if (singleton::mpi().getRank()==0) {
     fout << "<DataArray " ;
-    if (f.getTargetDim() == 1) {
-      fout << "type=\"Float32\" Name=\"" << f.getName() << "\">\n";
-    } else {
-      fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
-           << "NumberOfComponents=\"" << f.getTargetDim() << "\">\n";
-    }
+    fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
+         << "NumberOfComponents=\"" << f.getTargetDim() << "\">\n";
   }
 
   int i[3] = {int()};

@@ -88,10 +88,13 @@ public:
   BaseType const& operator[] (int ind) const;
   /// Write access to the memory of the data of the block data where (iX, iY, iZ) is the point providing the data iData
   bool* operator() (int iX, int iY, int iZ, int iData);
+  bool operator() (T output[], const int input[]);
   /// read and write access to data element [iX][iY][iZ][iSize]
   BaseType& get(int iX, int iY, int iZ, int iSize=0);
+  BaseType& get(std::size_t iCell, int iSize=0);
   /// read only access to data element [iX][iY][iZ][iSize]
   BaseType const& get(int iX, int iY, int iZ, int iSize=0) const;
+  BaseType const& get(std::size_t iCell, int iSize=0) const;
   /// \return max of data, for vector valued data it determines the max component
   BaseType getMax();
   /// \return min of data, for vector valued data it determines the max component

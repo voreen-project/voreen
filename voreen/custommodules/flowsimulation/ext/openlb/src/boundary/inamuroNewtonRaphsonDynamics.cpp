@@ -24,33 +24,33 @@
 #include "inamuroNewtonRaphsonDynamics.h"
 #include "inamuroNewtonRaphsonDynamics.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 
 namespace olb {
 
 template<>
 class InamuroNewtonRaphsonDynamics <
-  double, descriptors::D3Q19Descriptor, BGKdynamics<double,descriptors::D3Q19Descriptor>, 0, 1 >;
+  double, descriptors::D3Q19<>, BGKdynamics<double,descriptors::D3Q19<>>, 0, 1 >;
 
 template<>
 class InamuroNewtonRaphsonDynamics <
-  double, descriptors::D3Q19Descriptor, BGKdynamics<double,descriptors::D3Q19Descriptor>, 0, -1 >;
+  double, descriptors::D3Q19<>, BGKdynamics<double,descriptors::D3Q19<>>, 0, -1 >;
 
 template<>
 class InamuroNewtonRaphsonDynamics <
-  double, descriptors::D3Q19Descriptor, BGKdynamics<double,descriptors::D3Q19Descriptor>, 1, 1 >;
+  double, descriptors::D3Q19<>, BGKdynamics<double,descriptors::D3Q19<>>, 1, 1 >;
 
 template<>
 class InamuroNewtonRaphsonDynamics <
-  double, descriptors::D3Q19Descriptor, BGKdynamics<double,descriptors::D3Q19Descriptor>, 1, -1 >;
+  double, descriptors::D3Q19<>, BGKdynamics<double,descriptors::D3Q19<>>, 1, -1 >;
 
 template<>
 class InamuroNewtonRaphsonDynamics <
-  double, descriptors::D3Q19Descriptor, BGKdynamics<double,descriptors::D3Q19Descriptor>, 2, 1 >;
+  double, descriptors::D3Q19<>, BGKdynamics<double,descriptors::D3Q19<>>, 2, 1 >;
 
 template<>
 class InamuroNewtonRaphsonDynamics <
-  double, descriptors::D3Q19Descriptor, BGKdynamics<double,descriptors::D3Q19Descriptor>, 2, -1 >;
+  double, descriptors::D3Q19<>, BGKdynamics<double,descriptors::D3Q19<>>, 2, -1 >;
 
 }  // namespace olb

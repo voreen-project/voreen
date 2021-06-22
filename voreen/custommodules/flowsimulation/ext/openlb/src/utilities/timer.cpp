@@ -30,8 +30,8 @@ namespace olb {
 namespace util {
 
 template class Timer<double>;
-template Timer<double>* createTimer(XMLreader& param, const UnitConverter<double,descriptors::D3Q19Descriptor>& converter, size_t numLatticePoints);
-template Timer<double>* createTimer(XMLreader& param, const UnitConverter<double,descriptors::D2Q9Descriptor>& converter, size_t numLatticePoints);
+template Timer<double>* createTimer(XMLreader& param, const UnitConverter<double,descriptors::D3Q19<>>& converter, size_t numLatticePoints);
+template Timer<double>* createTimer(XMLreader& param, const UnitConverter<double,descriptors::D2Q9<>>& converter, size_t numLatticePoints);
 
 
 

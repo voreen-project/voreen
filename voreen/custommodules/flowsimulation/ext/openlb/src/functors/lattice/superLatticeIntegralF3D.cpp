@@ -28,23 +28,8 @@
 
 namespace olb {
 
-template class SuperMin3D<double,double>;
-template class SuperMin3D<double,int>;
-template class SuperMin3D<double,bool>;
-
-template class SuperMax3D<double,double>;
-template class SuperMax3D<double,int>;
-template class SuperMax3D<double,bool>;
-
-template class SuperSumIndicator3D<double,double>;
-
-template class SuperAverage3D<double,double>;
-
-template class SuperGeometryFaces3D<double>;
-
-template class SuperLatticePhysDrag3D<double,descriptors::D3Q19Descriptor>;
-template class SuperLatticePhysDragIndicator3D<double,descriptors::D3Q19Descriptor>;
-template class SuperLatticePhysCorrDrag3D<double,descriptors::D3Q19Descriptor>;
+template class SuperLatticePhysDrag3D<double,descriptors::D3Q19<>>;
+template class SuperLatticePhysCorrDrag3D<double,descriptors::D3Q19<>>;
 
 } // end namespace olb
 

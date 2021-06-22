@@ -37,373 +37,115 @@
 
 namespace olb {
 
-
-template <typename T, typename S>
-SmoothIndicatorCuboid2D<T,S>::SmoothIndicatorCuboid2D(Vector<S,2> center, S xLength, S yLength, S mass, S epsilon, S theta)
+template <typename T, typename S, bool HLBM>
+SmoothIndicatorCuboid2D<T,S,HLBM>::SmoothIndicatorCuboid2D(Vector<S,2> center, S xLength, S yLength, S epsilon, S theta, S density, Vector<S,2> vel)
   : _xLength(xLength),_yLength(yLength)
 {
-  this->_center = center;
+  this->_pos = center;
+  this->_circumRadius = .5*(std::sqrt(std::pow(_xLength, 2)+std::pow(_yLength, 2))) + 0.5*epsilon;
+  this->_myMin = {
+    center[0] - this->getCircumRadius(),
+    center[1] - this->getCircumRadius()
+  };
+  this->_myMax = {
+    center[0] + this->getCircumRadius(),
+    center[1] + this->getCircumRadius()
+  };
   this->_epsilon = epsilon;
-  this->_theta = theta;
-  this->_mass = mass;
-  this->_mofi = 1./12.*this->_mass*(_xLength*_xLength+_yLength*_yLength);
-  this->_myMin = {this->_center[0] - getRadius() - 10*this->_epsilon, this->_center[1] - getRadius() - 10*this->_epsilon};
-  this->_myMax = {this->_center[0] + getRadius() + 10*this->_epsilon, this->_center[1] + getRadius() + 10*this->_epsilon};
+  this->_theta = theta * M_PI/180.;
+  T mass = xLength*yLength*density;
+  T mofi = 1./12.*mass*(xLength*xLength+yLength*yLength);
+  this->init(theta, vel, mass, mofi);
 }
 
-template <typename T, typename S>
-bool SmoothIndicatorCuboid2D<T,S>::operator()(T output[], const S r[])
+template <typename T, typename S, bool HLBM>
+bool SmoothIndicatorCuboid2D<T,S,HLBM>::operator()(T output[], const S input[])
 {
-  T xDist = r[0] - this->_center[0];
-  T yDist = r[1] - this->_center[1];
-
-  T xL2 = _xLength/2.;
-  T yL2 = _yLength/2.;
+  T xDist = input[0] - this->getPos()[0];
+  T yDist = input[1] - this->getPos()[1];
 
   // counter-clockwise rotation by _theta=-theta around center
-  T ct = std::cos(this->_theta);
-  T st = std::sin(this->_theta);
+  T x = this->getPos()[0] + xDist*this->getRotationMatrix()[0] + yDist*this->getRotationMatrix()[2];
+  T y = this->getPos()[1] + xDist*this->getRotationMatrix()[1] + yDist*this->getRotationMatrix()[3];
 
-  T x = this->_center[0] + xDist*ct - yDist*st;
-  T y = this->_center[1] + xDist*st + yDist*ct;
+  xDist = fabs(x-this->getPos()[0]) - 0.5*(_xLength-this->getEpsilon());
+  yDist = fabs(y-this->getPos()[1]) - 0.5*(_yLength-this->getEpsilon());
 
-  xDist = fabs(x -this-> _center[0]);
-  yDist = fabs(y -this-> _center[1]);
-
-  if ( xDist <= xL2 && yDist <= yL2) {
+  if ( xDist <= 0 && yDist <= 0) {
     output[0] = 1.;
     return true;
   }
-  if ( xDist > xL2 + this->_epsilon || yDist > yL2 + this->_epsilon ) {
+  if ( xDist >= this->getEpsilon() || yDist >= this->getEpsilon() ) {
     output[0] = 0.;
     return false;
   }
-  if ( xDist <= xL2 && (yDist <= yL2 + this->_epsilon  && yDist > yL2) ) {
-    output[0] = T( std::pow(cos(M_PI2*(yDist - yL2)/this->_epsilon), 2));
+  // treating edges and corners as "rounded"
+  if ( (xDist < this->getEpsilon() && xDist > 0) && (yDist < this->getEpsilon() && yDist > 0) ) {
+    output[0] = T( (std::pow(cos(M_PI2*xDist/this->getEpsilon()), 2) *
+                    std::pow(cos(M_PI2*yDist/this->getEpsilon()), 2)) );
     return true;
   }
-  if ( yDist <= yL2 && (xDist <= xL2 + this->_epsilon  && xDist > xL2) ) {
-    output[0] = T( std::pow(cos(M_PI2*(xDist - xL2)/this->_epsilon), 2));
+  if ( xDist < this->getEpsilon() && xDist > 0 ) {
+    output[0] = T( std::pow(cos(M_PI2*xDist/this->getEpsilon()), 2));
     return true;
   }
-  if ( (xDist <= xL2 + this->_epsilon && xDist > xL2) && (yDist <= yL2 + this->_epsilon && yDist > yL2) ) {
-    output[0] = T( (std::pow(cos(M_PI2*(xDist - xL2)/this->_epsilon), 2) *
-                    std::pow(cos(M_PI2*(yDist - yL2)/this->_epsilon), 2)) );
+  if ( yDist < this->getEpsilon() && yDist > 0 ) {
+    output[0] = T( std::pow(cos(M_PI2*yDist/this->getEpsilon()), 2));
     return true;
   }
   output[0] = 0.;
   return false;
 }
 
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorCuboid2D<T,S>::getMin()
-{
-  this->_myMin[0] = this->_center[0] - getRadius() - 10*this->_epsilon;
-  this->_myMin[1] = this->_center[1] - getRadius() - 10*this->_epsilon;
-  return this->_myMin;
-}
-
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorCuboid2D<T,S>::getMax()
-{
-  this->_myMax[0] = this->_center[0] + getRadius() + 10*this->_epsilon;
-  this->_myMax[1] = this->_center[1] + getRadius() + 10*this->_epsilon;
-  return this->_myMax;
-}
-
-template <typename T, typename S>
-S SmoothIndicatorCuboid2D<T,S>::getRadius()
-{
-  return .5*(std::sqrt(std::pow(_xLength+this->_epsilon, 2)+std::pow(_yLength+this->_epsilon, 2)));
-}
-
-template <typename T, typename S>
-S SmoothIndicatorCuboid2D<T,S>::getDiam()
-{
-  return (std::sqrt(std::pow(_xLength, 2)+std::pow(_yLength, 2)));
-}
-
-
-template <typename T, typename S>
-SmoothIndicatorCircle2D<T,S>::SmoothIndicatorCircle2D(Vector<S,2> center, S radius, S mass, S epsilon)
-{
-  this->_radius = radius;
-  this->_epsilon = epsilon;
-  this->_center = center;
-  this->_myMin = this->_center - this->_radius - this->_epsilon *0.5;
-  this->_myMax = this->_center + this->_radius + this->_epsilon *0.5;
-  this->_mass = mass;
-  this->_mofi = 0.5 * this->_mass * pow(this->_radius, 2);
-}
-
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorCircle2D<T,S>::getMin()
-{
-  this->_myMin[0] = this->_center[0] - this->_radius - .5*this->_epsilon;
-  this->_myMin[1] = this->_center[1] - this->_radius - .5*this->_epsilon;
-  return this->_myMin;
-}
-
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorCircle2D<T,S>::getMax()
-{
-  this->_myMax[0] = this->_center[0] + this->_radius + .5*this->_epsilon;
-  this->_myMax[1] = this->_center[1] + this->_radius + .5*this->_epsilon;
-  return this->_myMax;
-}
-
-// returns true if x is inside the sphere
-template <typename T, typename S>
-bool SmoothIndicatorCircle2D<T,S>::operator()(T output[], const S input[])
-{
-  double d;   // distance to the figure
-  double distToCenter2 = std::pow(this->_center[0]-input[0], 2) +
-                         std::pow(this->_center[1]-input[1], 2);
-  if ( distToCenter2 >= std::pow(this->_radius + this->_epsilon *0.5, 2)) {
-    output[0] = T(0);
-    return true;
-  } else if ( distToCenter2 <= std::pow(this->_radius - this->_epsilon *0.5, 2)) {
-    output[0] = T(1);
-    return true;
-  } else {
-    // d is between 0 and _epsilon
-    d = std::sqrt(distToCenter2) - this->_radius + this->_epsilon *0.5;
-    output[0] = T(std::pow(cos(M_PI2*d/this->_epsilon), 2));
-    return true;
-  }
-  return false;
-}
-
-template <typename T, typename S>
-SmoothIndicatorTriangle2D<T,S>::SmoothIndicatorTriangle2D(Vector<S,2> center, S radius, S mass, S epsilon, S theta)
-{
-  this->_center = center;
-  this->_radius = radius-.5*epsilon;
-  this->_theta = theta;
-  this->_epsilon = epsilon;
-  this->_mass = mass;
-  this->_mofi = 0.5 * this->_mass * pow(this->_radius, 2);
-  T smallRad = this->_radius * .5;    //sin(30)
-  T halfEdge = this->_radius * std::sqrt(3)/2.; // cos(30)
-
-  _PointA[0] = 0.;
-  _PointA[1] = this->_radius;
-  _PointB[0] = - halfEdge;
-  _PointB[1] = - smallRad;
-  _PointC[0] = halfEdge;
-  _PointC[1] = - smallRad;
-
-  T invEps = 1./this->_epsilon;
-
-  _ab = _PointB - _PointA;
-  _ab.normalize(invEps);
-  _ab_d = _ab[1]*_PointA[0] - _ab[0]*_PointA[1];
-  _bc = _PointC - _PointB;
-  _bc.normalize(invEps);
-  _bc_d = _bc[1]*_PointB[0] - _bc[0]*_PointB[1];
-  _ca = _PointA - _PointC;
-  _ca.normalize(invEps);
-  _ca_d = _ca[1]*_PointC[0] - _ca[0]*_PointC[1];
-
-  this->_myMin[0] = this->_center[0] - this->_radius - 2*this->_epsilon;
-  this->_myMin[1] = this->_center[1] - this->_radius - 2*this->_epsilon;
-  this->_myMax[0] = this->_center[0] + this->_radius + 2*this->_epsilon;
-  this->_myMax[1] = this->_center[1] + this->_radius + 2*this->_epsilon;
-}
-
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorTriangle2D<T,S>::getMin()
-{
-  this->_myMin[0] = this->_center[0] - this->_radius - 2*this->_epsilon;
-  this->_myMin[1] = this->_center[1] - this->_radius - 2*this->_epsilon;
-  return this->_myMin;
-}
-
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorTriangle2D<T,S>::getMax()
-{
-  this->_myMax[0] = this->_center[0] + this->_radius + 2*this->_epsilon;
-  this->_myMax[1] = this->_center[1] + this->_radius + 2*this->_epsilon;
-  return this->_myMax;
-}
-
-// returns true if x is inside the sphere
-template <typename T, typename S>
-bool SmoothIndicatorTriangle2D<T,S>::operator()(T output[], const S input[])
-{
-
-  T xDist = input[0] - this->_center[0];
-  T yDist = input[1] - this->_center[1];
-
-  T ct = std::cos(this->_theta);
-  T st = std::sin(this->_theta);
-  T x = xDist*ct - yDist*st;
-  T y = xDist*st + yDist*ct;
-
-  unsigned short area = 0;
-
-  T dist_a = _bc[1]*x-_bc[0]*y - _bc_d;
-  T dist_b = _ca[1]*x-_ca[0]*y - _ca_d;
-  T dist_c = _ab[1]*x-_ab[0]*y - _ab_d;
-
-  if (dist_c < 0) {
-    area = (area | 100);
-  }
-  if (dist_a < 0) {
-    area = (area | 10);
-  }
-  if (dist_b < 0) {
-    area = (area | 1);
-  }
-
-  if (area == 111) {
-    output[0] = 1;
-    return true;
-  }
-
-  if (area == 110 && dist_b < 1) {
-    output[0] = T(std::pow(cos(M_PI2*dist_b), 2));
-    return true;
-  }
-
-  if (area == 101 && dist_a < 1) {
-    output[0] = T(std::pow(cos(M_PI2*dist_a), 2));
-    return true;
-  }
-
-  if (area == 11 && dist_c < 1) {
-    output[0] = T(std::pow(cos(M_PI2*dist_c), 2));
-    return true;
-  }
-
-  if (area == 1 && dist_a < 1 && dist_c < 1) {
-    output[0] = T(std::pow(cos(M_PI2*dist_a), 2)*std::pow(cos(M_PI2*dist_c), 2));
-    return true;
-  }
-
-  if (area == 10 && dist_b < 1 && dist_c < 1) {
-    output[0] = T(std::pow(cos(M_PI2*dist_b), 2)*std::pow(cos(M_PI2*dist_c), 2));
-    return true;
-  }
-
-  if (area == 100 && dist_b < 1 && dist_a < 1) {
-    output[0] = T(std::pow(cos(M_PI2*dist_b), 2)*std::pow(cos(M_PI2*dist_a), 2));
-    return true;
-  }
-
-  output[0] = 0;
-  return false;
-}
-
-
-template <typename T, typename S>
-ParticleIndicatorCuboid2D<T,S>::ParticleIndicatorCuboid2D(Vector<S,2> center, S xLength, S yLength, S density, S epsilon, S theta)
-  : _xLength(xLength),_yLength(yLength)
+template <typename T, typename S, bool HLBM>
+SmoothIndicatorCircle2D<T,S,HLBM>::SmoothIndicatorCircle2D(Vector<S,2> center, S radius, S epsilon, S density, Vector<S,2> vel)
+  : _radius(radius)
 {
   this->_pos = center;
+  this->_circumRadius = radius + 0.5*epsilon;
+  this->_myMin = {center[0] - this->getCircumRadius(), center[1] - this->getCircumRadius()};
+  this->_myMax = {center[0] + this->getCircumRadius(), center[1] + this->getCircumRadius()};
   this->_epsilon = epsilon;
-  this->_theta = theta;
-  this->_mass = density*xLength*yLength;
-  this->_circumradius = .5*(std::sqrt(std::pow(_xLength, 2)+std::pow(_yLength, 2)))+this->_epsilon;
-  this->_mofi = 1./12.*this->_mass*(_xLength*_xLength+_yLength*_yLength);
-  this->_rotMat[0] = std::cos(theta);
-  this->_rotMat[1] = std::sin(theta);
-  this->_rotMat[2] = -std::sin(theta);
-  this->_rotMat[3] = std::cos(theta);
+  T mass = M_PI*radius*radius*density;
+  T mofi = 0.5 * mass * radius * radius;
+  this->init(0., vel, mass, mofi);
 }
 
-template <typename T, typename S>
-bool ParticleIndicatorCuboid2D<T,S>::operator()(T output[], const S r[])
+// returns true if x is inside the sphere
+template <typename T, typename S, bool HLBM>
+bool SmoothIndicatorCircle2D<T,S,HLBM>::operator()(T output[], const S input[])
 {
-  T xDist = r[0] - this->_pos[0];
-  T yDist = r[1] - this->_pos[1];
-
-  T xL2 = _xLength/2.-0.5*this->_epsilon;
-  T yL2 = _yLength/2.-0.5*this->_epsilon;
-
-  // counter-clockwise rotation by _theta=-theta around center
-  T x = this->_pos[0] + xDist*this->_rotMat[0] + yDist*this->_rotMat[2];
-  T y = this->_pos[1] + xDist*this->_rotMat[1] + yDist*this->_rotMat[3];
-
-  xDist = fabs(x -this-> _pos[0]);
-  yDist = fabs(y -this-> _pos[1]);
-
-  if ( xDist <= xL2 && yDist <= yL2) {
-    output[0] = 1.;
-    return true;
-  }
-  if ( xDist > xL2 + this->_epsilon || yDist > yL2 + this->_epsilon ) {
+  double distToCenter2 = std::pow(this->getPos()[0]-input[0], 2) +
+                         std::pow(this->getPos()[1]-input[1], 2);
+  if ( distToCenter2 >= std::pow(this->_radius + 0.5*this->getEpsilon(), 2)) {
     output[0] = 0.;
     return false;
-  }
-  if ( xDist < xL2 && (yDist <= yL2 + this->_epsilon  && yDist > yL2) ) {
-    output[0] = T( std::pow(cos(M_PI2*(yDist - yL2)/this->_epsilon), 2));
-    return true;
-  }
-  if ( yDist < yL2 && (xDist <= xL2 + this->_epsilon  && xDist > xL2) ) {
-    output[0] = T( std::pow(cos(M_PI2*(xDist - xL2)/this->_epsilon), 2));
-    return true;
-  }
-  if ( (xDist <= xL2 + this->_epsilon && xDist > xL2) && (yDist <= yL2 + this->_epsilon && yDist > yL2) ) {
-    output[0] = T( (std::pow(cos(M_PI2*(xDist - xL2)/this->_epsilon), 2) *
-                    std::pow(cos(M_PI2*(yDist - yL2)/this->_epsilon), 2)) );
-    return true;
-  }
-  output[0] = 0.;
-  return false;
-}
-
-template <typename T, typename S>
-ParticleIndicatorCircle2D<T,S>::ParticleIndicatorCircle2D(Vector<S,2> center, S radius, S mass, S epsilon)
-{
-  _radius = radius;
-  this->_circumradius = radius+this->_epsilon;
-  this->_epsilon = epsilon;
-  this->_pos = center;
-  this->_mass = mass;
-  this->_mofi = 0.5 * this->_mass * pow(this->_radius, 2);
-  this->_rotMat[0] = std::cos(0.);
-  this->_rotMat[1] = std::sin(0.);
-  this->_rotMat[2] = -std::sin(0.);
-  this->_rotMat[3] = std::cos(0.);
-}
-
-// returns true if x is inside the sphere
-template <typename T, typename S>
-bool ParticleIndicatorCircle2D<T,S>::operator()(T output[], const S input[])
-{
-  double d;   // distance to the figure
-  double distToCenter2 = std::pow(this->_pos[0]-input[0], 2) +
-                         std::pow(this->_pos[1]-input[1], 2);
-  if ( distToCenter2 >= std::pow(_radius + this->_epsilon *0.5, 2)) {
-    output[0] = T(0);
-    return true;
-  } else if ( distToCenter2 <= std::pow(_radius - this->_epsilon *0.5, 2)) {
-    output[0] = T(1);
+  } else if ( distToCenter2 <= std::pow(this->_radius - 0.5*this->getEpsilon(), 2)) {
+    output[0] = 1.;
     return true;
   } else {
     // d is between 0 and _epsilon
-    d = std::sqrt(distToCenter2) - _radius + this->_epsilon *0.5;
-    output[0] = T(std::pow(cos(M_PI2*d/this->_epsilon), 2));
+    double d = std::sqrt(distToCenter2) - this->_radius + 0.5*this->getEpsilon();
+    output[0] = T(std::pow(cos(M_PI2*d/this->getEpsilon()), 2));
     return true;
   }
   return false;
 }
 
-template <typename T, typename S>
-ParticleIndicatorTriangle2D<T,S>::ParticleIndicatorTriangle2D(Vector<S,2> center, S radius, S density, S epsilon, S theta)
+template <typename T, typename S, bool HLBM>
+SmoothIndicatorTriangle2D<T,S, HLBM>::SmoothIndicatorTriangle2D(Vector<S,2> center, S radius, S epsilon, S theta, S density, Vector<S,2> vel)
 {
   this->_pos = center;
-  this->_theta = theta;
+  this->_circumRadius = radius + 0.5*epsilon;
+  this->_myMin = {center[0] - this->getCircumRadius(), center[1] - this->getCircumRadius()};
+  this->_myMax = {center[0] + this->getCircumRadius(), center[1] + this->getCircumRadius()};
   this->_epsilon = epsilon;
-  this->_circumradius = radius+this->_epsilon;
+  this->_theta = theta * M_PI/180.;
+
   T smallRad = radius * .5;    //sin(30)
   T halfEdge = radius * std::sqrt(3)/2.; // cos(30)
   T altitude = 1.5*radius;
   T base = std::sqrt(3)*radius;
-  this->_mass = density*0.5*base*altitude;
-  this->_mofi = this->_mass*((altitude*altitude/18.)+(base*base/24.));
-
   _PointA[0] = 0.;
   _PointA[1] = radius;
   _PointB[0] = - halfEdge;
@@ -411,34 +153,33 @@ ParticleIndicatorTriangle2D<T,S>::ParticleIndicatorTriangle2D(Vector<S,2> center
   _PointC[0] = halfEdge;
   _PointC[1] = - smallRad;
 
-  T invEps = 1./this->_epsilon;
+  T invEps = 1./this->getEpsilon();
 
   _ab = _PointB - _PointA;
-  _ab.normalize(invEps);
+  _ab = normalize(_ab, invEps);
   _ab_d = _ab[1]*_PointA[0] - _ab[0]*_PointA[1];
   _bc = _PointC - _PointB;
-  _bc.normalize(invEps);
+  _bc = normalize(_bc, invEps);
   _bc_d = _bc[1]*_PointB[0] - _bc[0]*_PointB[1];
   _ca = _PointA - _PointC;
-  _ca.normalize(invEps);
+  _ca = normalize(_ca, invEps);
   _ca_d = _ca[1]*_PointC[0] - _ca[0]*_PointC[1];
 
-  this->_rotMat[0] = std::cos(theta);
-  this->_rotMat[1] = std::sin(theta);
-  this->_rotMat[2] = -std::sin(theta);
-  this->_rotMat[3] = std::cos(theta);
+  T mass = density*0.5*base*altitude;
+  T mofi = mass*((altitude*altitude/18.)+(base*base/24.));
+  this->init(theta, vel, mass, mofi);
 }
 
-// returns true if x is inside the triangle
-template <typename T, typename S>
-bool ParticleIndicatorTriangle2D<T,S>::operator()(T output[], const S input[])
+// returns true if x is inside the sphere
+// TODO: check if epsilon treatment is correct (currently epsilon not around but after the boundary)
+template <typename T, typename S, bool HLBM>
+bool SmoothIndicatorTriangle2D<T,S,HLBM>::operator()(T output[], const S input[])
 {
+  T xDist = input[0] - this->getPos()[0];
+  T yDist = input[1] - this->getPos()[1];
 
-  T xDist = input[0] - this->_pos[0];
-  T yDist = input[1] - this->_pos[1];
-
-  T x = xDist*this->_rotMat[0] + yDist*this->_rotMat[2];
-  T y = xDist*this->_rotMat[1] + yDist*this->_rotMat[3];
+  T x = xDist*this->getRotationMatrix()[0] + yDist*this->getRotationMatrix()[2];
+  T y = xDist*this->getRotationMatrix()[1] + yDist*this->getRotationMatrix()[3];
 
   unsigned short area = 0;
 
@@ -457,7 +198,7 @@ bool ParticleIndicatorTriangle2D<T,S>::operator()(T output[], const S input[])
   }
 
   if (area == 111) {
-    output[0] = 1;
+    output[0] = 1.;
     return true;
   }
 
@@ -491,27 +232,31 @@ bool ParticleIndicatorTriangle2D<T,S>::operator()(T output[], const S input[])
     return true;
   }
 
-  output[0] = 0;
+  output[0] = 0.;
   return false;
 }
-
-template <typename T, typename S, template<typename U> class DESCRIPTOR>
-ParticleIndicatorCustom2D<T,S,DESCRIPTOR>::ParticleIndicatorCustom2D(UnitConverter<T,DESCRIPTOR> const& converter,
+//needs to be updated to current state
+/*
+//TODO: Check for consitency
+template <typename T, typename S, typename DESCRIPTOR, bool HLBM>
+SmoothIndicatorCustom2D<T,S,DESCRIPTOR,HLBM>::SmoothIndicatorCustom2D(UnitConverter<T,DESCRIPTOR> const& converter,
     IndicatorF3D<T>& ind,
     Vector<T,2> center,
-    T rhoP,
     T epsilon,
-    T theta,
-    T slice)
+    T slice,
+    S theta,
+    S rhoP,
+    Vector<S,2> vel)
   : _converter(converter)
 {
   OstreamManager clout(std::cout,"createIndicatorCustom2D");
   this->_pos = center;
+  this->_vel = vel;
   this->_epsilon = epsilon;
   this->_theta = theta;
 
   // initialize temporary values
-  SmoothBlockIndicator3D<T,olb::descriptors::D3Q19Descriptor> smoothBlock(ind, this->_epsilon);
+  SmoothBlockIndicator3D<T,olb::descriptors::D3Q19<>> smoothBlock(ind, this->_epsilon);
   int _nX = smoothBlock.getBlockData().getNx();
   int _nY = smoothBlock.getBlockData().getNy();
   int tmpNcells = 0;
@@ -585,8 +330,8 @@ ParticleIndicatorCustom2D<T,S,DESCRIPTOR>::ParticleIndicatorCustom2D(UnitConvert
   this->_rotMat[3] = std::cos(theta);
 }
 
-template <typename T, typename S, template<typename U> class DESCRIPTOR>
-bool ParticleIndicatorCustom2D<T,S,DESCRIPTOR>::operator() (T output[], const S input[])
+template <typename T, typename S, typename DESCRIPTOR, bool HLBM>
+bool SmoothIndicatorCustom2D<T,S,DESCRIPTOR,HLBM>::operator() (T output[], const S input[])
 {
   // Translation
   T xDist = input[0] - this->getPos()[0];
@@ -605,6 +350,35 @@ bool ParticleIndicatorCustom2D<T,S,DESCRIPTOR>::operator() (T output[], const S 
   }
   output[0] = T(0);
   return false;
+}
+*/
+
+//Geng2019:
+template <typename T, typename S, bool HLBM>
+SmoothIndicatorHTCircle2D<T,S,HLBM>::SmoothIndicatorHTCircle2D(Vector<S,2> center, S radius, S epsilon, S density, Vector<S,2> vel)
+  : _radius(radius)
+{
+  this->_pos = center;
+  this->_circumRadius = radius + 0.5*epsilon;
+  this->_myMin = {center[0] - this->getCircumRadius(), center[1] - this->getCircumRadius()};
+  this->_myMax = {center[0] + this->getCircumRadius(), center[1] + this->getCircumRadius()};
+  this->_epsilon = epsilon;
+  T mass = M_PI*radius*radius*density;
+  T mofi = 0.5 * mass * radius * radius;
+  this->init(0., vel, mass, mofi);
+}
+
+// returns true if x is inside the sphere
+template <typename T, typename S, bool HLBM>
+bool SmoothIndicatorHTCircle2D<T,S,HLBM>::operator()(T output[], const S input[])
+{
+  double distToCenter2 = std::pow(this->getPos()[0]-input[0], 2) +
+                         std::pow(this->getPos()[1]-input[1], 2);
+  
+  
+  double d = std::sqrt(distToCenter2) - this->_radius;
+  output[0] = T((1.-tanh(d/this->getEpsilon()))/2.);
+  return true;
 }
 
 

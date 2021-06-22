@@ -73,7 +73,8 @@ ParBuf::xsputn(const char* s, std::streamsize num)
 #endif
     return originalBuf->sputn(s,num);
 #ifdef PARALLEL_MODE_MPI
-  } else {
+  }
+  else {
     return num;
   }
 #endif

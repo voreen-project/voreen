@@ -33,7 +33,7 @@ namespace olb {
 
 
 template <typename T, typename S>
-ShanChen93<T,S>::ShanChen93(T rhoZero) : AnalyticalF1D<T,S>(1), _rhoZero(rhoZero)
+ShanChen93<T,S>::ShanChen93(T rhoZero) : AnalyticalF<1,T,S>(1), _rhoZero(rhoZero)
 {
   this->getName() = "ShanChen93";
 }
@@ -47,7 +47,7 @@ bool ShanChen93<T,S>::operator()(T psi[], const S rho[])
 
 
 template <typename T, typename S>
-ShanChen94<T,S>::ShanChen94(T rhoZero, T psiZero) : AnalyticalF1D<T,S>(1), _rhoZero(rhoZero), _psiZero(psiZero)
+ShanChen94<T,S>::ShanChen94(T rhoZero, T psiZero) : AnalyticalF<1,T,S>(1), _rhoZero(rhoZero), _psiZero(psiZero)
 {
   this->getName() = "ShanChen94";
 }
@@ -61,7 +61,7 @@ bool ShanChen94<T,S>::operator()(T psi[], const S rho[])
 
 
 template <typename T, typename S>
-PengRobinson<T,S>::PengRobinson(T G, T acentricFactor, T a, T b, T tr) : AnalyticalF1D<T,S>(1), _G(G), _acentricFactor(acentricFactor), _a(a), _b(b)
+PengRobinson<T,S>::PengRobinson(T G, T acentricFactor, T a, T b, T tr) : AnalyticalF<1,T,S>(1), _G(G), _acentricFactor(acentricFactor), _a(a), _b(b)
 {
   _R = 1.;
   //a=0.45724*R*R*tc*tc/pc;
@@ -98,7 +98,7 @@ bool PengRobinson<T,S>::operator()(T psi[], const S rho[], const S t[])
 
 
 template <typename T, typename S>
-CarnahanStarling<T,S>::CarnahanStarling(T G, T a, T b, T tr) : AnalyticalF1D<T,S>(1), _G(G), _a(a), _b(b)
+CarnahanStarling<T,S>::CarnahanStarling(T G, T a, T b, T tr) : AnalyticalF<1,T,S>(1), _G(G), _a(a), _b(b)
 {
   _R = 1.;
   //a=0.4963*tc*tc*R*R/pc;
@@ -133,7 +133,7 @@ bool CarnahanStarling<T,S>::operator()(T psi[], const S rho[], const S t[])
 
 
 template <typename T, typename S>
-PsiEqualsRho<T,S>::PsiEqualsRho() : AnalyticalF1D<T,S>(1)
+PsiEqualsRho<T,S>::PsiEqualsRho() : AnalyticalF<1,T,S>(1)
 {
   this->getName() = "PsiEqualsRho";
 }
@@ -147,7 +147,7 @@ bool PsiEqualsRho<T,S>::operator()(T psi[], const S rho[])
 
 
 template <typename T, typename S>
-Krause<T,S>::Krause(T rhoZero, T psiZero) : AnalyticalF1D<T,S>(1), _rhoZero(rhoZero), _psiZero(psiZero)
+Krause<T,S>::Krause(T rhoZero, T psiZero) : AnalyticalF<1,T,S>(1), _rhoZero(rhoZero), _psiZero(psiZero)
 {
   this->getName() = "Krause";
 }
@@ -161,7 +161,7 @@ bool Krause<T,S>::operator()(T psi[], const S rho[])
 
 
 template <typename T, typename S>
-WeisbrodKrause<T,S>::WeisbrodKrause(T rhoZero, T sigmu) : AnalyticalF1D<T,S>(1), _rhoZero(rhoZero), _sigmu(sigmu)
+WeisbrodKrause<T,S>::WeisbrodKrause(T rhoZero, T sigmu) : AnalyticalF<1,T,S>(1), _rhoZero(rhoZero), _sigmu(sigmu)
 {
   _rhoZero=_rhoZero/1.005088;
   this->getName() = "WeisbrodKrause";
@@ -176,7 +176,7 @@ bool WeisbrodKrause<T,S>::operator()(T psi[], const S rho[])
 
 
 template <typename T, typename S>
-Normal<T,S>::Normal(T sigma, T mu) : AnalyticalF1D<T,S>(1), _sigma(sigma), _mu(mu)
+Normal<T,S>::Normal(T sigma, T mu) : AnalyticalF<1,T,S>(1), _sigma(sigma), _mu(mu)
 {
   this->getName() = "Normal";
 }

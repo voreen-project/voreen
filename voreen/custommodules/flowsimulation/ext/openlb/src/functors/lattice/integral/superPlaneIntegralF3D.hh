@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -26,8 +26,7 @@
 
 #include "superPlaneIntegralF3D.h"
 #include "utilities/vectorHelpers.h"
-#include "utilities/functorPtr.hh"
-#include "functors/lattice/indicator/indicator2D.hh"
+#include "functors/analytical/indicator/indicator2D.hh"
 
 namespace olb {
 
@@ -81,9 +80,9 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 {
   this->getName() = "SuperPlaneIntegralF3D";
 
-  _normal.normalize();
-  _u.normalize();
-  _v.normalize();
+  _normal = normalize(_normal);
+  _u = normalize(_u);
+  _v = normalize(_v);
 
   for ( const std::tuple<int,int,int>& pos : _reductionF.getRankLocalSubplane() ) {
     const int& i  = std::get<0>(pos);

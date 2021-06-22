@@ -28,6 +28,6 @@
 
 namespace olb {
 
-template class RotatingForceField3D<double,descriptors::D3Q19Descriptor>;
+template class RotatingForceField3D<double,descriptors::D3Q19<>>;
 
 }

@@ -26,37 +26,22 @@
 #include "boundaryPostProcessors3D.h"
 #include "boundaryPostProcessors3D.hh"
 #include "core/postProcessing.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 
 namespace olb {
 
-template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19Descriptor,          0,1>;
-template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 0,1>;
-template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19Descriptor,          0,-1>;
-template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 0,-1>;
-template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19Descriptor,          1,1>;
-template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 1,1>;
-template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19Descriptor,          1,-1>;
-template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 1,-1>;
-template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19Descriptor,          2,1>;
-template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 2,1>;
-template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19Descriptor,          2,-1>;
-template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 2,-1>;
-
-
-template class BoundaryConditionInstantiator3D
-<
-  double, descriptors::D3Q19Descriptor,
-  ExtendedFdBoundaryManager3D < double, descriptors::D3Q19Descriptor,
-                                BGKdynamics<double,descriptors::D3Q19Descriptor> >
-  >;
-
-template OnLatticeBoundaryCondition3D<double,descriptors::D3Q19Descriptor>*
-createExtendedFdBoundaryCondition3D < double,descriptors::D3Q19Descriptor,
-                                    BGKdynamics<double,descriptors::D3Q19Descriptor> >
-                                    (
-                                      BlockLatticeStructure3D<double,descriptors::D3Q19Descriptor>& block
-                                    );
+template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19<>,          0,1>;
+template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 0,1>;
+template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19<>,          0,-1>;
+template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 0,-1>;
+template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19<>,          1,1>;
+template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 1,1>;
+template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19<>,          1,-1>;
+template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 1,-1>;
+template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19<>,          2,1>;
+template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 2,1>;
+template class ExtendedFdPlaneBoundaryPostProcessor3D<double, descriptors::D3Q19<>,          2,-1>;
+template class ExtendedFdPlaneBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 2,-1>;
 
 }  // namespace olb

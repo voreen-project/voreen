@@ -39,8 +39,8 @@ namespace olb {
 template <typename T, typename W>
 SpecialAnalyticalFfromBlockF3D<T,W>::SpecialAnalyticalFfromBlockF3D(
   BlockF3D<W>& f, Cuboid3D<T>& cuboid,
-  Vector<T,3> delta)
-  : AnalyticalF3D<T,W>(f.getTargetDim()), _f(f), _cuboid(cuboid), _delta(delta)
+  Vector<T,3> delta, T scale)
+  : AnalyticalF3D<T,W>(f.getTargetDim()), _f(f), _cuboid(cuboid), _delta(delta), _scale(scale)
 {
   this->getName() = "fromBlockF";
 }
@@ -165,6 +165,10 @@ bool SpecialAnalyticalFfromBlockF3D<T,W>::operator()(W output[],
     output[iD] += output_tmp[iD] * d[0]*d[1]*d[2];
   }
 
+  for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
+    output[iD] *= _scale;
+  }
+
   return true;
 }
 
@@ -195,7 +199,7 @@ bool AnalyticalFfromBlockF3D<T,W>::operator()(W output[], const T physC[])
 
     Vector<T,3> physRiC;
     Vector<T,3> physCv(physC);
-    _cuboid.getPhysR(physRiC.data, locX, locY, locZ);
+    _cuboid.getPhysR(physRiC.data(), locX, locY, locZ);
 
     // compute weights
     Vector<W,3> d = (physCv - physRiC) * (1. / _cuboid.getDeltaR());
@@ -353,7 +357,7 @@ bool AnalyticalFfromSuperF3D<T,W>::operator()(W output[], const T physC[])
 
         Vector<T,3> physRiC;
         Vector<T,3> physCv(physC);
-        cuboid.getPhysR(physRiC.data, locX, locY, locZ);
+        cuboid.getPhysR(physRiC.data(), locX, locY, locZ);
 
         // compute weights
         Vector<W,3> d = (physCv - physRiC) * (1. / cuboid.getDeltaR());
@@ -484,7 +488,7 @@ int AnalyticalFfromSuperF3D<T,W>::getBlockFSize() const
 template <typename T, typename W>
 AnalyticalFfromBlockF3D<T,W>& AnalyticalFfromSuperF3D<T,W>::getBlockF(int iCloc)
 {
-  OLB_ASSERT(iCloc < _blockF.size() && iCloc >= 0,
+  OLB_ASSERT(iCloc < int(_blockF.size()) && iCloc >= 0,
              "block functor index within bounds");
   return *(_blockF[iCloc]);
 }

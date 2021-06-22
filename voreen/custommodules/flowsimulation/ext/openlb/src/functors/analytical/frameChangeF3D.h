@@ -27,6 +27,7 @@
 
 #include<vector>
 #include<string>
+#include <random>
 
 #include "analyticalF.h"
 
@@ -80,6 +81,28 @@ protected:
 public:
   RotatingLinear3D(std::vector<T> axisPoint_, std::vector<T> axisDirection_, T w_, T scale_=1);
   bool operator()(T output[], const T x[]) override;
+};
+
+/**
+  * This functor gives a linar profile in an annulus for a given point x between the inner and outer radius as it computes
+  * the distance between x and the inner and outer radius.
+  *
+  * The field in outcome is the velocity field of q rotating solid in an annulus
+  */
+
+/// Functor with a linear profile e.g. for rotating velocity fields.
+template <typename T>
+class RotatingLinearAnnulus3D final : public AnalyticalF3D<T,T> {
+protected:
+  std::vector<T> axisPoint;
+  std::vector<T> axisDirection;
+  T w;
+  T ri;
+  T ro;
+  T scale;
+public:
+  RotatingLinearAnnulus3D(std::vector<T> axisPoint_, std::vector<T> axisDirection_, T w_, T ri_, T ro_, T scale_=1);
+  bool operator()(T output[], const T x[]);
 };
 
 
@@ -165,18 +188,24 @@ public:
   bool operator()(T output[], const T x[]) override;
 };
 
-/// Velocity profile for round pipes and turbulent flows: u(r)=u_max*(1-r/R)^(1/n) The exponent n can be calculated by n = 1.03 * ln(Re) − 3.6
+/// Velocity profile for round pipes and turbulent flows: u(r)=u_max*(1-r/R)^(1/n) The exponent n can be calculated by n = 1.03 * ln(Re) - 3.6
 /// n=7 is used for many flow applications
 template <typename T>
 class CirclePowerLawTurbulent3D : public CirclePowerLaw3D<T> {
-public:
-  CirclePowerLawTurbulent3D(std::vector<T> axisPoint_, std::vector<T> axisDirection,  T maxVelocity, T radius, T n, T scale = T(1));
-  CirclePowerLawTurbulent3D(T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T maxVelocity, T n, T scale = T(1));
-  CirclePowerLawTurbulent3D(SuperGeometry3D<T>& superGeometry, int material, T maxVelocity, T n, T scale = T(1));
+private:
+  T _turbulenceIntensity;
+  std::random_device _rd;
+  std::mt19937 _generator;
+  std::normal_distribution<T> _dist;
 
-  CirclePowerLawTurbulent3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T n, T scale = T(1));
-  CirclePowerLawTurbulent3D(bool useMeanVelocity, T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T Velocity, T n, T scale = T(1));
-  CirclePowerLawTurbulent3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T n, T scale = T(1));
+public:
+  CirclePowerLawTurbulent3D(std::vector<T> axisPoint_, std::vector<T> axisDirection,  T maxVelocity, T radius, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+  CirclePowerLawTurbulent3D(T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T maxVelocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+  CirclePowerLawTurbulent3D(SuperGeometry3D<T>& superGeometry, int material, T maxVelocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+
+  CirclePowerLawTurbulent3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+  CirclePowerLawTurbulent3D(bool useMeanVelocity, T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T Velocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+  CirclePowerLawTurbulent3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
 
   bool operator()(T output[], const T x[]) override;
 };
@@ -196,7 +225,7 @@ public:
 };
 
 /// Strain rate for round pipes and laminar flow of a Newtonian fluid
-template < typename T,template<typename U>class DESCRIPTOR>
+template < typename T,typename DESCRIPTOR>
 class CirclePoiseuilleStrainRate3D : public AnalyticalF3D<T,T> {
 protected:
  T lengthY;
@@ -205,7 +234,7 @@ protected:
 
 public:
  CirclePoiseuilleStrainRate3D(UnitConverter<T, DESCRIPTOR> const& converter, T ly);
- bool operator()(T output[], const T input[]);
+ bool operator()(T output[], const T input[]) override;
 };
 
 /**
@@ -252,6 +281,22 @@ protected:
 public:
   EllipticPoiseuille3D(std::vector<T> center, T a, T b, T maxVel);
   bool operator()(T output[], const T x[]) override;
+};
+
+
+/// Analytical solution of porous media channel flow with low Reynolds number
+/// See Spaid and Phelan (doi:10.1063/1.869392)
+template <typename T>
+class AnalyticalPorousVelocity3D : public AnalyticalF3D<T,T> {
+protected:
+  std::vector<T> center;
+  std::vector<T> normal;
+  T K, mu, gradP, radius;
+  T eps;
+public:
+  AnalyticalPorousVelocity3D(SuperGeometry3D<T>& superGeometry, int material, T K_, T mu_, T gradP_, T radius_, T eps_=T(1));
+  T getPeakVelocity();
+  bool operator()(T output[], const T input[]) override;
 };
 
 
@@ -453,6 +498,30 @@ public:
   bool operator()(T output[], const S x[]) override;
 };
 
+template <typename T, typename S>
+class MagneticFieldFromCylinder3D final : public AnalyticalF3D<T, S> {
+protected:
+  CartesianToCylinder3D<T, S>& _car2cyl;
+  /// length of the wire, from origin to _car2cyl.axisDirection
+  T _length;
+  /// wire radius
+  T _radWire;
+  /// maximal distance from wire cutoff/threshold
+  T _cutoff;
+  /// saturation magnetization wire, linear scaling factor
+  T _Mw;
+  /// factor = mu0*4/3.*PI*radParticle^3*_Mp*radWire^2/r^3
+  T _factor;
+public:
+  MagneticFieldFromCylinder3D(CartesianToCylinder3D<T, S>& car2cyl,
+                              T length,
+                              T radWire,
+                              T cutoff,
+                              T Mw
+                             );
+  /// operator writes the magnetic force in a point x round a cylindrical wire into output field
+  bool operator()(T output[], const S x[]) override;
+};
 
 } // end namespace olb
 

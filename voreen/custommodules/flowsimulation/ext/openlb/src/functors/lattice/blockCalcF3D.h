@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Mathias J. Krause,
- *                          Albert Mink, Adrian Kummerländer
+ *                          Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -41,12 +41,12 @@ namespace olb {
  * \tparam F Function object defining the arithmetic operation to be perfomed
  *         e.g. std::minus for substraction
  *
- * Functors BlockCalc3D<T,F>::_f and BlockCalc3D<T,F>::_f are stored as GenericF<T,int>
+ * Functors BlockCalcF3D<T,F>::_f and BlockCalcF3D<T,F>::_f are stored as GenericF<T,int>
  * references to support arithmetic operations between block and super functors. For
- * details see BlockCalc3D<T,F>::operator().
+ * details see BlockCalcF3D<T,F>::operator().
  **/
 template <typename T, template<typename> class F>
-class BlockCalc3D : public BlockF3D<T> {
+class BlockCalcF3D : public BlockF3D<T> {
 protected:
   GenericF<T,int>& _f;
   GenericF<T,int>& _g;
@@ -56,40 +56,40 @@ protected:
   const bool _fIsBlock;
   const bool _gIsBlock;
 public:
-  BlockCalc3D(BlockF3D<T>& f, BlockF3D<T>& g);
+  BlockCalcF3D(BlockF3D<T>& f, BlockF3D<T>& g);
 
   /**
    * \param f    Block functor
    * \param g    Generic functor to be restricted to block level
    * \param glob Global cuboid ID to be used to prefix calls to g
    **/
-  BlockCalc3D(BlockF3D<T>& f, GenericF<T,int>& g, int glob);
+  BlockCalcF3D(BlockF3D<T>& f, GenericF<T,int>& g, int glob);
 
   /**
    * \param f    Generic functor to be restricted to block level
    * \param glob Global cuboid ID to be used to prefix calls to f
    * \param g    Block functor
    **/
-  BlockCalc3D(GenericF<T,int>& f, int glob, BlockF3D<T>& g);
+  BlockCalcF3D(GenericF<T,int>& f, int glob, BlockF3D<T>& g);
 
   bool operator() (T output[], const int input[]) override;
 };
 
 /// Block level addition functor (T==bool: Union)
 template <typename T>
-using BlockPlus3D = BlockCalc3D<T,util::plus>;
+using BlockCalcPlus3D = BlockCalcF3D<T,util::plus>;
 
 /// Block level subtraction functor (T==bool: Without)
 template <typename T>
-using BlockMinus3D = BlockCalc3D<T,util::minus>;
+using BlockCalcMinus3D = BlockCalcF3D<T,util::minus>;
 
 /// Block level multiplication functor (T==bool: Intersection)
 template <typename T>
-using BlockMultiplication3D = BlockCalc3D<T,util::multiplies>;
+using BlockCalcMultiplication3D = BlockCalcF3D<T,util::multiplies>;
 
 /// Block level division functor
 template <typename T>
-using BlockDivision3D = BlockCalc3D<T,util::divides>;
+using BlockCalcDivision3D = BlockCalcF3D<T,util::divides>;
 
 
 } // end namespace olb

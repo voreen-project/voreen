@@ -32,7 +32,7 @@
 #include "heuristicLoadBalancer.hh"
 #include "loadBalancer.hh"
 #include "superStructure3D.hh"
-
-
+#include "blockPropagation.hh"
+#include "superPropagation.hh"
 
 #endif

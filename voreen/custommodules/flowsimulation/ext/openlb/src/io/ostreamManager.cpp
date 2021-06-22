@@ -71,7 +71,8 @@ int OMBuf::sync()
     *output << "["
             << text << ":" << singleton::mpi().getRank()
             << "] " << str();
-  } else {  // multiOutput==false
+  }
+  else {    // multiOutput==false
     if (singleton::mpi().getRank()==0) {
       *output << "[" << text << "] " << str();
     }
@@ -81,7 +82,8 @@ int OMBuf::sync()
     *output << "["
             << text << ":" << omp.get_rank()
             << "] " << str();
-  } else {  // multiOutput==false
+  }
+  else {    // multiOutput==false
     if (omp.get_rank()==0) {
       *output << "[" << text << "] " << str();
     }

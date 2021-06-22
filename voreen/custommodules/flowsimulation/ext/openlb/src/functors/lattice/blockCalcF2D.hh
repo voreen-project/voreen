@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2013-2017 Albert Mink, Lukas Baron, Mathias J. Krause,
- *                          Adrian Kummerländer
+ *                          Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -30,7 +30,7 @@ namespace olb {
 
 
 template <typename T, template<typename> class F>
-BlockCalc2D<T,F>::BlockCalc2D (BlockF2D<T>& f, BlockF2D<T>& g)
+BlockCalcF2D<T,F>::BlockCalcF2D (BlockF2D<T>& f, BlockF2D<T>& g)
   : BlockF2D<T>(
       g.getBlockStructure(),
       f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
@@ -42,7 +42,7 @@ BlockCalc2D<T,F>::BlockCalc2D (BlockF2D<T>& f, BlockF2D<T>& g)
 }
 
 template <typename T, template<typename> class F>
-BlockCalc2D<T,F>::BlockCalc2D (BlockF2D<T>& f, GenericF<T,int>& g, int glob)
+BlockCalcF2D<T,F>::BlockCalcF2D (BlockF2D<T>& f, GenericF<T,int>& g, int glob)
   : BlockF2D<T>(
       f.getBlockStructure(),
       f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
@@ -54,7 +54,7 @@ BlockCalc2D<T,F>::BlockCalc2D (BlockF2D<T>& f, GenericF<T,int>& g, int glob)
 }
 
 template <typename T, template<typename> class F>
-BlockCalc2D<T,F>::BlockCalc2D (GenericF<T,int>& f, int glob, BlockF2D<T>& g)
+BlockCalcF2D<T,F>::BlockCalcF2D (GenericF<T,int>& f, int glob, BlockF2D<T>& g)
   : BlockF2D<T>(
       g.getBlockStructure(),
       f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
@@ -66,13 +66,13 @@ BlockCalc2D<T,F>::BlockCalc2D (GenericF<T,int>& f, int glob, BlockF2D<T>& g)
 }
 
 template <typename T, template<typename> class F>
-bool BlockCalc2D<T,F>::operator()(T output[], const int input[])
+bool BlockCalcF2D<T,F>::operator()(T output[], const int input[])
 {
   T* outputF = output;
   T outputG[this->getTargetDim()];
 
   if ( this->_fIsBlock && this->_gIsBlock ) {
-    this->_f(outputF,input);
+    this->_f(outputF, input);
     this->_g(outputG, input);
   } else {
     const int superInput[3] = { this->_glob, input[0], input[1] };
@@ -113,7 +113,7 @@ bool BlockCalc2D<T,F>::operator()(T output[], const int input[])
 template <typename T>
 BlockF2D<T>& BlockF2D<T>::operator+(BlockF2D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockPlus2D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcPlus2D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -121,7 +121,7 @@ BlockF2D<T>& BlockF2D<T>::operator+(BlockF2D<T>& rhs)
 template <typename T>
 BlockF2D<T>& BlockF2D<T>::operator-(BlockF2D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockMinus2D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcMinus2D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -129,7 +129,7 @@ BlockF2D<T>& BlockF2D<T>::operator-(BlockF2D<T>& rhs)
 template <typename T>
 BlockF2D<T>& BlockF2D<T>::operator*(BlockF2D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockMultiplication2D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcMultiplication2D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -137,7 +137,7 @@ BlockF2D<T>& BlockF2D<T>::operator*(BlockF2D<T>& rhs)
 template <typename T>
 BlockF2D<T>& BlockF2D<T>::operator/(BlockF2D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockDivision2D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcDivision2D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }

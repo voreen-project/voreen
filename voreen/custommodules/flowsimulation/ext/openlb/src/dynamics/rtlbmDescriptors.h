@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Albert Mink
+ *  Copyright (C) 2017-2019 Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -28,66 +28,108 @@
 #define RTLBM_DESCRIPTORS_H
 
 #include "latticeDescriptors.h"
+#include <cmath>
 
 namespace olb {
 
 namespace descriptors {
 
-//TODO AM: get control of BaseDescriptor, since template specialization in lbHelpers is mostly wrong for this stencils
+namespace tag {
 
-/// D3Q7 lattice for radiative transport problems @2016 A. Mink et al.
-template <typename T>
-struct D3Q7DescriptorBaseRTLBM {
-  typedef D3Q7DescriptorBaseRTLBM<T> BaseDescriptor;
-  enum { d = 3, q = 7 };     ///< number of dimensions/distr. functions
-  static const int vicinity;  ///< size of neighborhood
-  static const int c[q][d];   ///< lattice directions
-  static const int opposite[q]; ///< opposite entry
-  static const T t[q];        ///< lattice weights
-  static const T invCs2;      ///< inverse square of speed of sound
-  static const double henyeyPhaseFunction[q][q]; ///<anisotropic discrete scattering coefficient
+struct RTLBM : public CATEGORY, public DESCRIPTOR_TAG { };
+
+}
+
+
+namespace rtlbm_data {
+
+using utilities::Fraction;
+
+template <unsigned D, unsigned Q>
+constexpr Fraction t[Q] = {};
+
+template <unsigned D, unsigned Q>
+constexpr double norm_c[Q] = {};
+
+template <>
+constexpr Fraction t<3,7>[7] = {
+  0,
+  {1, 6}, {1, 6}, {1, 6},
+  {1, 6}, {1, 6}, {1, 6}
 };
 
-template <typename T>
-struct D3Q7DescriptorRTLBM : public D3Q7DescriptorBaseRTLBM<T>, public NoExternalFieldBase { };
-
-
-/// D3Q19 lattice TODO: AM
-template <typename T>
-struct D3Q19DescriptorBaseRTLBM {
-  typedef D3Q19DescriptorBaseRTLBM<T> BaseDescriptor;
-  enum { d = 3, q = 19 };     ///< number of dimensions/distr. functions
-  static const int vicinity;  ///< size of neighborhood
-  static const int c[q][d];   ///< lattice directions
-  static const int opposite[q]; ///< opposite entry
-  static const T t[q];        ///< lattice weights
-  static const T invCs2;      ///< inverse square of speed of sound
-  static const double henyeyPhaseFunction[q][q]; ///<anisotropic discrete scattering coefficient
+template <>
+constexpr double norm_c<3,7>[7] = {
+  0.0,
+  1.0, 1.0, 1.0,
+  1.0, 1.0, 1.0
 };
 
-template <typename T>
-struct D3Q19DescriptorRTLBM : public D3Q19DescriptorBaseRTLBM<T>, public NoExternalFieldBase {};
-
-
-
-/** D3Q27 lattice.
- *  zero direction only need for correct stream process. Contains dummy values.
- */
-template <typename T>
-struct D3Q27DescriptorBaseRTLBM {
-  typedef D3Q27DescriptorBaseRTLBM<T> BaseDescriptor;
-  enum { d = 3, q = 27 };     ///< number of dimensions/distr. functions
-  static const int vicinity;  ///< size of neighborhood
-  static const int c[q][d];   ///< lattice directions
-  static const int opposite[q]; ///< opposite entry
-  static const T t[q];        ///< lattice weights
-  static const T invCs2;      ///< inverse square of speed of sound
-  static const double henyeyPhaseFunction[q][q]; ///<anisotropic discrete scattering coefficient
+template <>
+constexpr Fraction t<3,15>[15] = {
+  0,
+  {1, 15}, {1, 15}, {1, 15},
+  {3, 40}, {3, 40}, {3, 40}, {3, 40},
+  {1, 15}, {1, 15}, {1, 15},
+  {3, 40}, {3, 40}, {3, 40}, {3, 40}
 };
 
-template <typename T>
-struct D3Q27DescriptorRTLBM : public D3Q27DescriptorBaseRTLBM<T>, public NoExternalFieldBase {};
+template <>
+constexpr double norm_c<3,15>[15] = {
+  0.0,
+  1.0, 1.0, 1.0,
+  1.73205080757, 1.73205080757, 1.73205080757, 1.73205080757,
+  1.0, 1.0, 1.0,
+  1.73205080757, 1.73205080757, 1.73205080757, 1.73205080757
+};
 
+template <>
+constexpr Fraction t<3,27>[27] = {
+  0,
+
+  {1, 21}, {1, 21}, {1, 21},
+  {4, 105}, {4, 105}, {4, 105},
+  {4, 105}, {4, 105}, {4, 105},
+  {9, 280}, {9, 280}, {9, 280}, {9, 280},
+
+  {1, 21}, {1, 21}, {1, 21},
+  {4, 105}, {4, 105}, {4, 105},
+  {4, 105}, {4, 105}, {4, 105},
+  {9, 280}, {9, 280}, {9, 280}, {9, 280}
+};
+
+template <>
+constexpr double norm_c<3,27>[27] = {
+  0.0,
+  1.0, 1.0, 1.0,
+  1.41421356237, 1.41421356237, 1.41421356237,
+  1.41421356237, 1.41421356237, 1.41421356237,
+  1.73205080757, 1.73205080757, 1.73205080757, 1.73205080757,
+  1.0, 1.0, 1.0,
+  1.41421356237, 1.41421356237, 1.41421356237,
+  1.41421356237, 1.41421356237, 1.41421356237,
+  1.73205080757, 1.73205080757, 1.73205080757, 1.73205080757
+};
+
+}
+
+template <typename T, unsigned D, unsigned Q>
+constexpr T t(unsigned iPop, tag::RTLBM)
+{
+  return rtlbm_data::t<D,Q>[iPop].template as<T>();
+}
+
+template <typename T, unsigned D, unsigned Q>
+constexpr T norm_c(unsigned iPop, tag::RTLBM)
+{
+  return T{rtlbm_data::norm_c<D,Q>[iPop]};
+}
+
+template <typename T, typename DESCRIPTOR>
+constexpr T norm_c(unsigned iPop)
+{
+  return norm_c<T, DESCRIPTOR::d, DESCRIPTOR::q>(iPop, typename DESCRIPTOR::category_tag());
+}
 
 }  // namespace descriptors
 

@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Tim Dornieden, Mathias J. Krause,
- *  Albert Mink, Benjamin Förster, Adrian Kummerländer
+ *  Albert Mink, Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -30,18 +30,18 @@
 
 namespace olb {
 
-template class SuperLatticeFfromAnalyticalF3D<double,descriptors::D3Q19Descriptor>;
+template class SuperLatticeFfromAnalyticalF3D<double,descriptors::D3Q19<>>;
 
-template class BlockLatticeFfromAnalyticalF3D<double,descriptors::D3Q19Descriptor>;
-template class SmoothBlockIndicator3D<double,descriptors::D3Q19Descriptor>;
+template class BlockLatticeFfromAnalyticalF3D<double,descriptors::D3Q19<>>;
+template class SmoothBlockIndicator3D<double,descriptors::D3Q19<>>;
 
-template class SuperLatticeInterpPhysVelocity3Degree3D<double,descriptors::D3Q19Descriptor>;
-template class SuperLatticeInterpDensity3Degree3D<double,descriptors::D3Q19Descriptor>;
-template class SuperLatticeSmoothDiracDelta3D<double,descriptors::D3Q19Descriptor>;
+template class SuperLatticeInterpPhysVelocity3Degree3D<double,descriptors::D3Q19<>>;
+template class SuperLatticeInterpDensity3Degree3D<double,descriptors::D3Q19<>>;
+template class SuperLatticeSmoothDiracDelta3D<double,descriptors::D3Q19<>>;
 
-template class BlockLatticeInterpPhysVelocity3Degree3D<double,descriptors::D3Q19Descriptor>;
-template class BlockLatticeInterpDensity3Degree3D<double,descriptors::D3Q19Descriptor>;
-template class BlockLatticeSmoothDiracDelta3D<double,descriptors::D3Q19Descriptor>;
+template class BlockLatticeInterpPhysVelocity3Degree3D<double,descriptors::D3Q19<>>;
+template class BlockLatticeInterpDensity3Degree3D<double,descriptors::D3Q19<>>;
+template class BlockLatticeSmoothDiracDelta3D<double,descriptors::D3Q19<>>;
 
 } // end namespace olb
 

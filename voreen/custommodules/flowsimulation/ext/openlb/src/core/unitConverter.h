@@ -74,7 +74,7 @@ namespace olb {
 *  - - -
 *  \param charLatticeVelocity
 */
-template <typename T, template<typename U> class Lattice>
+template <typename T, typename DESCRIPTOR>
 class UnitConverter {
 public:
   /** Documentation of constructor:
@@ -101,8 +101,8 @@ public:
       _physViscosity(physViscosity),
       _physDensity(physDensity),
       _charPhysPressure(charPhysPressure),
-      _resolution((int)(_charPhysLength / _conversionLength + 0.5)),
-      _latticeRelaxationTime( (_physViscosity / _conversionViscosity * Lattice<T>::invCs2) + 0.5 ),
+      _resolution((size_t)(_charPhysLength / _conversionLength + 0.5)),
+      _latticeRelaxationTime( (_physViscosity / _conversionViscosity * descriptors::invCs2<T,DESCRIPTOR>()) + 0.5 ),
       _charLatticeVelocity( _charPhysVelocity / _conversionVelocity ),
       clout(std::cout,"UnitConverter")
   {
@@ -126,11 +126,10 @@ public:
     return 1./_latticeRelaxationTime;
   }
   /// return relaxation frequency in lattice units computed from given physical diffusivity in __m^2 / s__
-  template <template<typename D> class DESCRIPTOR>
+  template <typename DESCRIPTOR_>
   constexpr T getLatticeRelaxationFrequencyFromDiffusivity( const T physDiffusivity ) const
   {
-    T latticeDiffusivity = physDiffusivity / _conversionViscosity;
-    return 1.0 / ( latticeDiffusivity * DESCRIPTOR<T>::invCs2 + 0.5 );
+    return 1.0 / ( physDiffusivity / _conversionViscosity * descriptors::invCs2<T,DESCRIPTOR_>() + 0.5 );
   }
   /// return characteristic length in physical units
   constexpr T getCharPhysLength(  ) const
@@ -165,9 +164,20 @@ public:
   /// return Reynolds number
   constexpr T getReynoldsNumber(  ) const
   {
-    return _charPhysVelocity*_charPhysLength/_physViscosity;
+    return _charPhysVelocity * _charPhysLength / _physViscosity;
   }
-
+  /// return Mach number
+  constexpr T getMachNumber(  ) const
+  {
+    return getCharLatticeVelocity() * std::sqrt(descriptors::invCs2<T,DESCRIPTOR>());
+  }
+  /// return Knudsen number
+  constexpr T getKnudsenNumber(  ) const
+  {
+    // This calculates the lattice Knudsen number.
+    // See e.g. (7.22) in "The Lattice Boltzmann Method: Principles and Practice" [kruger2017lattice].
+    return getMachNumber() / getReynoldsNumber();
+  }
   /// conversion from lattice to  physical length
   constexpr T getPhysLength( int latticeLength ) const
   {
@@ -190,14 +200,14 @@ public:
   }
 
   /// conversion from lattice to  physical time
-  constexpr T getPhysTime( int latticeTime ) const
+  constexpr T getPhysTime( size_t latticeTime ) const
   {
     return _conversionTime * latticeTime;
   }
   /// conversion from physical to lattice time
-  constexpr int getLatticeTime( T physTime ) const
+  constexpr size_t getLatticeTime( T physTime ) const
   {
-    return int(physTime / _conversionTime + 0.5);
+    return size_t(physTime / _conversionTime + 0.5);
   }
   /// access (read-only) to private member variable
   constexpr T getConversionFactorTime() const
@@ -238,8 +248,7 @@ public:
   }
   constexpr T getLatticeDensityFromPhysPressure( T physPressure ) const
   {
-    T latticePressure = getLatticePressure( physPressure );
-    return util::densityFromPressure<T,Lattice>( latticePressure);
+    return util::densityFromPressure<T,DESCRIPTOR>( getLatticePressure( physPressure ) );
   }
   /// access (read-only) to private member variable
   constexpr T getConversionFactorDensity() const
@@ -312,7 +321,8 @@ public:
   }
   /// nice terminal output for conversion factors, characteristical and physical data
   virtual void print() const;
-
+  void print(std::ostream& fout) const;
+  
   void write(std::string const& fileName = "unitConverter") const;
 
 protected:
@@ -334,7 +344,7 @@ protected:
   const T _charPhysPressure;      // kg / m s^2
 
   // lattice units, discretization parameters
-  const int _resolution;
+  const size_t _resolution;
   const T _latticeRelaxationTime;
   const T _charLatticeVelocity;   //
 
@@ -343,22 +353,22 @@ private:
 };
 
 /// creator function with data given by a XML file
-template <typename T, template<typename U> class Lattice>
-UnitConverter<T, Lattice>* createUnitConverter(XMLreader const& params);
+template <typename T, typename DESCRIPTOR>
+UnitConverter<T, DESCRIPTOR>* createUnitConverter(XMLreader const& params);
 
-template <typename T, template<typename U> class Lattice>
-class UnitConverterFromResolutionAndRelaxationTime : public UnitConverter<T, Lattice> {
+template <typename T, typename DESCRIPTOR>
+class UnitConverterFromResolutionAndRelaxationTime : public UnitConverter<T, DESCRIPTOR> {
 public:
   constexpr UnitConverterFromResolutionAndRelaxationTime(
-    int resolution,
+    size_t resolution,
     T latticeRelaxationTime,
     T charPhysLength,
     T charPhysVelocity,
     T physViscosity,
     T physDensity,
-    T charPhysPressure = 0) : UnitConverter<T, Lattice>(
+    T charPhysPressure = 0) : UnitConverter<T, DESCRIPTOR>(
         (charPhysLength/resolution),
-        (latticeRelaxationTime - 0.5) / Lattice<T>::invCs2 * pow((charPhysLength/resolution),2) / physViscosity,
+        (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * pow((charPhysLength/resolution),2) / physViscosity,
         charPhysLength,
         charPhysVelocity,
         physViscosity,
@@ -368,17 +378,17 @@ public:
   }
 };
 
-template <typename T, template<typename U> class Lattice>
-class UnitConverterFromResolutionAndLatticeVelocity : public UnitConverter<T, Lattice> {
+template <typename T, typename DESCRIPTOR>
+class UnitConverterFromResolutionAndLatticeVelocity : public UnitConverter<T, DESCRIPTOR> {
 public:
   constexpr UnitConverterFromResolutionAndLatticeVelocity(
-    int resolution,
+    size_t resolution,
     T charLatticeVelocity,
     T charPhysLength,
     T charPhysVelocity,
     T physViscosity,
     T physDensity,
-    T charPhysPressure = 0) : UnitConverter<T, Lattice>(
+    T charPhysPressure = 0) : UnitConverter<T, DESCRIPTOR>(
         (charPhysLength/resolution),
         (charLatticeVelocity / charPhysVelocity * charPhysLength / resolution),
         charPhysLength,
@@ -389,8 +399,8 @@ public:
   {
   }
 };
-template <typename T, template<typename U> class Lattice>
-class UnitConverterFromRelaxationTimeAndLatticeVelocity : public UnitConverter<T, Lattice> {
+template <typename T, typename DESCRIPTOR>
+class UnitConverterFromRelaxationTimeAndLatticeVelocity : public UnitConverter<T, DESCRIPTOR> {
 public:
   constexpr UnitConverterFromRelaxationTimeAndLatticeVelocity(
     T latticeRelaxationTime,
@@ -399,9 +409,9 @@ public:
     T charPhysVelocity,
     T physViscosity,
     T physDensity,
-    T charPhysPressure = 0) : UnitConverter<T, Lattice>(
-        (physViscosity * charLatticeVelocity / charPhysVelocity * Lattice<T>::invCs2 / (latticeRelaxationTime - 0.5)),
-        (physViscosity * charLatticeVelocity * charLatticeVelocity / charPhysVelocity / charPhysVelocity * Lattice<T>::invCs2 / (latticeRelaxationTime - 0.5)),
+    T charPhysPressure = 0) : UnitConverter<T, DESCRIPTOR>(
+        (physViscosity * charLatticeVelocity / charPhysVelocity * descriptors::invCs2<T,DESCRIPTOR>() / (latticeRelaxationTime - 0.5)),
+        (physViscosity * charLatticeVelocity * charLatticeVelocity / charPhysVelocity / charPhysVelocity * descriptors::invCs2<T,DESCRIPTOR>() / (latticeRelaxationTime - 0.5)),
         charPhysLength,
         charPhysVelocity,
         physViscosity,

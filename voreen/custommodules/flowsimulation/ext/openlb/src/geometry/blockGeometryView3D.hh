@@ -40,8 +40,7 @@ BlockGeometryView3D<T>::BlockGeometryView3D(
   BlockGeometryStructure3D<T>& originalBlockGeometry,
   int x0, int x1, int y0,
   int y1, int z0, int z1)
-  : BlockGeometryStructure3D<T>(originalBlockGeometry.getIcGlob()),
-    BlockStructure3D(x1-x0+1, y1-y0+1, z1-z0+1),
+  : BlockGeometryStructure3D<T>(x1-x0+1, y1-y0+1, z1-z0+1, originalBlockGeometry.getIcGlob()),
     _originalBlockGeometry(&originalBlockGeometry),
     _x0(x0), _y0(y0), _z0(z0)
 {
@@ -50,44 +49,10 @@ BlockGeometryView3D<T>::BlockGeometryView3D(
 }
 
 template<typename T>
-BlockGeometryView3D<T>::BlockGeometryView3D(BlockGeometryView3D const& rhs)
-  : BlockGeometryStructure3D<T>(rhs),
-    BlockStructure3D(0,0,0)
-{
-  _originalBlockGeometry = rhs._originalBlockGeometry;
-  _x0 = rhs._x0;
-  _y0 = rhs._y0;
-  _z0 = rhs._z0;
-  _nx = rhs._nx;
-  _ny = rhs._ny;
-  _nz = rhs._nz;
-  this->_iCglob = rhs._iCglob;
-  this->_statistics = BlockGeometryStatistics3D<T>(this);
-  addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-}
-
-template<typename T>
-BlockGeometryView3D<T>& BlockGeometryView3D<T>::operator=(BlockGeometryView3D const& rhs)
-{
-  _originalBlockGeometry = rhs._originalBlockGeometry;
-  _x0 = rhs._x0;
-  _y0 = rhs._y0;
-  _z0 = rhs._z0;
-  _nx = rhs._nx;
-  _ny = rhs._ny;
-  _nz = rhs._nz;
-  this->_iCglob = rhs._iCglob;
-  this->_statistics = BlockGeometryStatistics3D<T>(this);
-  addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-  return *this;
-}
-
-template<typename T>
 BlockGeometryView3D<T>::~BlockGeometryView3D()
 {
   removeFromStatisticsList( &(this->_statistics.getStatisticsStatus()) );
 }
-
 
 template<typename T>
 BlockGeometryStatistics3D<T>& BlockGeometryView3D<T>::getStatistics(bool verbose)
@@ -112,29 +77,10 @@ Vector<T,3> BlockGeometryView3D<T>::getOrigin() const
 }
 
 template<typename T>
-const T BlockGeometryView3D<T>::getDeltaR() const
+T BlockGeometryView3D<T>::getDeltaR() const
 {
   return _originalBlockGeometry->getDeltaR();
 }
-
-template<typename T>
-int BlockGeometryView3D<T>::getNx() const
-{
-  return _nx;
-}
-
-template<typename T>
-int BlockGeometryView3D<T>::getNy() const
-{
-  return _ny;
-}
-
-template<typename T>
-int BlockGeometryView3D<T>::getNz() const
-{
-  return _nz;
-}
-
 
 template<typename T>
 int& BlockGeometryView3D<T>::get(int iX, int iY, int iZ)
@@ -145,9 +91,7 @@ int& BlockGeometryView3D<T>::get(int iX, int iY, int iZ)
 template<typename T>
 const int& BlockGeometryView3D<T>::get(int iX, int iY, int iZ) const
 {
-  // We need to cast to a const pointer here in order to call the const get function of BlockGeometry.
-  const BlockGeometryStructure3D<T>* geometry = _originalBlockGeometry;
-  return geometry->get(_x0+iX, _y0+iY, _z0+iZ);
+  return _originalBlockGeometry->get(_x0+iX, _y0+iY, _z0+iZ);
 }
 
 template<typename T>

@@ -129,7 +129,13 @@ template<typename T>
 int BaseVTIreader<T>::getSize(const XMLreader& tag)
 {
   // read the NumberOfComponents-Attribute (VTI standard) and return as integer
-  return std::atoi((tag.getAttribute("NumberOfComponents")).c_str());
+  int size = std::atoi((tag.getAttribute("NumberOfComponents")).c_str());
+  if (size == 0) {
+    clout << "VTI READER: NumberOfComponents zero or not given!" << std::endl;
+    clout << "EXAMPLE: <DataArray Name='physVelocity' NumberOfComponents='3'" << std::endl;
+    exit(1);
+  }
+  return size;
 }
 
 

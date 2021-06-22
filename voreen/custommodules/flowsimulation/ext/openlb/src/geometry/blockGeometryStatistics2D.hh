@@ -43,7 +43,7 @@ template<typename T>
 BlockGeometryStatistics2D<T>::BlockGeometryStatistics2D( BlockGeometryStructure2D<T>* blockGeometry)
   : _blockGeometry(blockGeometry), clout(std::cout,"BlockGeometryStatistics2D")
 {
-  _statisticsUpdateNeeded=true;
+  _statisticsUpdateNeeded = true;
 }
 
 
@@ -63,6 +63,7 @@ bool const & BlockGeometryStatistics2D<T>::getStatisticsStatus() const
 template<typename T>
 void BlockGeometryStatistics2D<T>::update(bool verbose)
 {
+  const_this = const_cast<const BlockGeometryStatistics2D<T>*>(this);
 
   if (getStatisticsStatus() ) {
     _material2n.clear();
@@ -95,6 +96,12 @@ template<typename T>
 int BlockGeometryStatistics2D<T>::getNmaterials()
 {
   update();
+  return const_this->getNmaterials();
+}
+
+template<typename T>
+int BlockGeometryStatistics2D<T>::getNmaterials() const
+{
   return _nMaterials;
 }
 
@@ -102,13 +109,30 @@ template<typename T>
 int BlockGeometryStatistics2D<T>::getNvoxel(int material)
 {
   update();
-  return _material2n[material];
+  return const_this->getNvoxel(material);
+}
+
+template<typename T>
+int BlockGeometryStatistics2D<T>::getNvoxel(int material) const
+{
+  try {
+    return _material2n.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    return 0;
+  }
 }
 
 template<typename T>
 std::map<int, int> BlockGeometryStatistics2D<T>::getMaterial2n()
 {
   update();
+  return const_this->getMaterial2n();
+}
+
+template<typename T>
+std::map<int, int> BlockGeometryStatistics2D<T>::getMaterial2n() const
+{
   return _material2n;
 }
 
@@ -116,12 +140,15 @@ template<typename T>
 int BlockGeometryStatistics2D<T>::getNvoxel()
 {
   update();
+  return const_this->getNvoxel();
+}
+
+template<typename T>
+int BlockGeometryStatistics2D<T>::getNvoxel() const
+{
   int total = 0;
-  std::map<int, int>::iterator iter;
-  for (iter = _material2n.begin(); iter != _material2n.end(); iter++) {
-    if (iter->first!=0) {
-      total+=iter->second;
-    }
+  for (const auto& material : _material2n ) {
+    total += material.second;
   }
   return total;
 }
@@ -130,18 +157,42 @@ template<typename T>
 std::vector<int> BlockGeometryStatistics2D<T>::getMinLatticeR(int material)
 {
   update();
-  return _material2min[material];
+  return const_this->getMinLatticeR(material);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics2D<T>::getMinLatticeR(int material) const
+{
+  try {
+    return _material2min.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    std::vector<int> null;
+    return null;
+  }
 }
 
 template<typename T>
 std::vector<int> BlockGeometryStatistics2D<T>::getMaxLatticeR(int material)
 {
   update();
-  return _material2max[material];
+  return const_this->getMaxLatticeR(material);
 }
 
 template<typename T>
-std::vector<T> BlockGeometryStatistics2D<T>::getMinPhysR(int material)
+std::vector<int> BlockGeometryStatistics2D<T>::getMaxLatticeR(int material) const
+{
+  try {
+    return _material2max.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    std::vector<int> null;
+    return null;
+  }
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics2D<T>::getMinPhysR(int material) const
 {
   std::vector<T> tmp(2,T());
   _blockGeometry->getPhysR(&(tmp[0]), &(getMinLatticeR(material)[0]));
@@ -149,7 +200,7 @@ std::vector<T> BlockGeometryStatistics2D<T>::getMinPhysR(int material)
 }
 
 template<typename T>
-std::vector<T> BlockGeometryStatistics2D<T>::getMaxPhysR(int material)
+std::vector<T> BlockGeometryStatistics2D<T>::getMaxPhysR(int material) const
 {
   std::vector<T> tmp(2,T());
   _blockGeometry->getPhysR(&(tmp[0]), &(getMaxLatticeR(material)[0]));
@@ -160,17 +211,35 @@ template<typename T>
 std::vector<T> BlockGeometryStatistics2D<T>::getLatticeExtend(int material)
 {
   update();
-  std::vector<T> extend;
-  for (int iDim = 0; iDim < 2; iDim++) {
-    extend.push_back(_material2max[material][iDim] - _material2min[material][iDim]);
+  return const_this->getLatticeExtend(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics2D<T>::getLatticeExtend(int material) const
+{
+  try {
+    std::vector<T> extend;
+    for (int iDim = 0; iDim < 2; iDim++) {
+      extend.push_back(_material2max.at(material)[iDim] - _material2min.at(material)[iDim]);
+    }
+    return extend;
   }
-  return extend;
+  catch (std::out_of_range& ex) {
+    std::vector<double, std::allocator<double>> null;
+    return null;
+  }
 }
 
 template<typename T>
 std::vector<T> BlockGeometryStatistics2D<T>::getPhysExtend(int material)
 {
   update();
+  return const_this->getPhysExtend(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics2D<T>::getPhysExtend(int material) const
+{
   std::vector<T> extend;
   for (int iDim = 0; iDim < 2; iDim++) {
     extend.push_back(getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim]);
@@ -182,6 +251,12 @@ template<typename T>
 std::vector<T> BlockGeometryStatistics2D<T>::getPhysRadius(int material)
 {
   update();
+  return const_this->getPhysRadius(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics2D<T>::getPhysRadius(int material) const
+{
   std::vector<T> radius;
   for (int iDim=0; iDim<2; iDim++) {
     radius.push_back((getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim])/2.);
@@ -193,6 +268,12 @@ template<typename T>
 std::vector<T> BlockGeometryStatistics2D<T>::getCenterPhysR(int material)
 {
   update();
+  return const_this->getCenterPhysR(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics2D<T>::getCenterPhysR(int material) const
+{
   std::vector<T> center;
   for (int iDim=0; iDim<2; iDim++) {
     center.push_back(getMinPhysR(material)[iDim] + getPhysRadius(material)[iDim]);
@@ -201,9 +282,8 @@ std::vector<T> BlockGeometryStatistics2D<T>::getCenterPhysR(int material)
 }
 
 template<typename T>
-std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY)
+std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
 {
-
   std::vector<int> discreteNormal(3, 0);
 
   if (_blockGeometry->getMaterial(iX, iY) != 1
@@ -338,6 +418,12 @@ template<typename T>
 std::vector<int> BlockGeometryStatistics2D<T>::computeNormal(int iX, int iY)
 {
   update();
+  return const_this->computeNormal(iX, iY);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics2D<T>::computeNormal(int iX, int iY) const
+{
   std::vector<int> normal (2,int(0));
 
   if (iX != 0) {
@@ -368,6 +454,12 @@ std::vector<T> BlockGeometryStatistics2D<T>::computeNormal(int material)
 {
 
   update();
+  return const_this->computeNormal(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics2D<T>::computeNormal(int material) const
+{
   std::vector<T> normal (2,int(0));
   std::vector<int> minC = getMinLatticeR(material);
   std::vector<int> maxC = getMaxLatticeR(material);
@@ -390,8 +482,13 @@ std::vector<T> BlockGeometryStatistics2D<T>::computeNormal(int material)
 template<typename T>
 std::vector<int> BlockGeometryStatistics2D<T>::computeDiscreteNormal(int material, T maxNorm)
 {
-
   update();
+  return const_this->computeDiscreteNormal(material, maxNorm);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics2D<T>::computeDiscreteNormal(int material, T maxNorm) const
+{
   std::vector<T> normal = computeNormal(material);
   std::vector<int> discreteNormal(2,int(0));
 
@@ -412,12 +509,18 @@ std::vector<int> BlockGeometryStatistics2D<T>::computeDiscreteNormal(int materia
   return discreteNormal;
 }
 
-
 template<typename T>
 bool BlockGeometryStatistics2D<T>::check(int material, int iX, int iY,
     unsigned offsetX, unsigned offsetY)
 {
   update();
+  return const_this->check(material, iX, iY, offsetX, offsetY);
+}
+
+template<typename T>
+bool BlockGeometryStatistics2D<T>::check(int material, int iX, int iY,
+    unsigned offsetX, unsigned offsetY) const
+{
   bool found = true;
   for (int iOffsetX = -offsetX; iOffsetX <= (int) offsetX; ++iOffsetX) {
     for (int iOffsetY = -offsetY; iOffsetY <= (int) offsetY; ++iOffsetY) {
@@ -434,6 +537,13 @@ bool BlockGeometryStatistics2D<T>::find(int material, unsigned offsetX,
                                         unsigned offsetY, int& foundX, int& foundY)
 {
   update();
+  return const_this->find(material, offsetX, offsetY, foundX, foundY);
+}
+
+template<typename T>
+bool BlockGeometryStatistics2D<T>::find(int material, unsigned offsetX,
+                                        unsigned offsetY, int& foundX, int& foundY) const
+{
   bool found = false;
   for (foundX = 0; foundX < _nX; foundX++) {
     for (foundY = 0; foundY < _nY; foundY++) {
@@ -446,22 +556,29 @@ bool BlockGeometryStatistics2D<T>::find(int material, unsigned offsetX,
   return found;
 }
 
-
 template<typename T>
 void BlockGeometryStatistics2D<T>::print()
 {
-
   update();
-  std::map<int, int>::iterator iter;
-  for (iter = _material2n.begin(); iter != _material2n.end(); iter++) {
-    clout << "materialNumber=" << iter->first
-          << "; count=" << iter->second
-          << "; minLatticeR=(" << _material2min[iter->first][0] <<","<< _material2min[iter->first][1] <<")"
-          << "; maxLatticeR=(" << _material2max[iter->first][0] <<","<< _material2max[iter->first][1] <<")"
-          << std::endl;
-  }
+  return const_this->print();
 }
 
+template<typename T>
+void BlockGeometryStatistics2D<T>::print() const
+{
+  try {
+    std::map<int, int>::iterator iter;
+    for (const auto& material : _material2n) {
+      clout << "materialNumber=" << material.first
+            << "; count=" << material.second
+            << "; minLatticeR=(" << _material2min.at(material.first)[0] <<","<< _material2min.at(material.first)[1] <<")"
+            << "; maxLatticeR=(" << _material2max.at(material.first)[0] <<","<< _material2max.at(material.first)[1] <<")"
+            << std::endl;
+    }
+  }
+  catch (std::out_of_range& ex)
+  { }
+}
 
 template<typename T>
 void BlockGeometryStatistics2D<T>::takeStatistics(int iX, int iY)
@@ -479,7 +596,8 @@ void BlockGeometryStatistics2D<T>::takeStatistics(int iX, int iY)
     maxCo.push_back(iY);
     _material2max[type] = maxCo;
 
-  } else {
+  }
+  else {
     _material2n[type]++;
     if (iX < _material2min[type][0]) {
       _material2min[type][0] = iX;

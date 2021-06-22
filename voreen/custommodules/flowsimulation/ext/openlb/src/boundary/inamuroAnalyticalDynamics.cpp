@@ -24,25 +24,25 @@
 #include "inamuroAnalyticalDynamics.h"
 #include "inamuroAnalyticalDynamics.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 
 namespace olb {
 
 template<>
 class InamuroAnalyticalDynamics <
-  double, descriptors::D2Q9Descriptor, BGKdynamics<double,descriptors::D2Q9Descriptor>, 0, 1 >;
+  double, descriptors::D2Q9<>, BGKdynamics<double,descriptors::D2Q9<>>, 0, 1 >;
 
 template<>
 class InamuroAnalyticalDynamics <
-  double, descriptors::D2Q9Descriptor, BGKdynamics<double,descriptors::D2Q9Descriptor>, 0, -1 >;
+  double, descriptors::D2Q9<>, BGKdynamics<double,descriptors::D2Q9<>>, 0, -1 >;
 
 template<>
 class InamuroAnalyticalDynamics <
-  double, descriptors::D2Q9Descriptor, BGKdynamics<double,descriptors::D2Q9Descriptor>, 1, 1 >;
+  double, descriptors::D2Q9<>, BGKdynamics<double,descriptors::D2Q9<>>, 1, 1 >;
 
 template<>
 class InamuroAnalyticalDynamics <
-  double, descriptors::D2Q9Descriptor, BGKdynamics<double,descriptors::D2Q9Descriptor>, 1, -1 >;
+  double, descriptors::D2Q9<>, BGKdynamics<double,descriptors::D2Q9<>>, 1, -1 >;
 
 }  // namespace olb

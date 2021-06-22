@@ -66,7 +66,9 @@ public:
   SuperStructure3D(int overlap = 1);
 
   /// Write access to the memory of the data of the super structure where (iX, iY, iZ) is the point providing the data iData in the block iCloc
-  virtual bool* operator() (int iCloc, int iX, int iY, int iZ, int iData) =0;
+  virtual std::uint8_t* operator() (int iCloc, int iX, int iY, int iZ, int iData) =0;
+  virtual std::uint8_t* operator() (int iCloc, std::size_t iCell, int iData) =0;
+
   /// Read only access to the dim of the data of the super structure
   virtual int getDataSize() const =0;
   /// Read only access to the data type dim of the data of the super structure
@@ -84,9 +86,10 @@ public:
   LoadBalancer<T>& getLoadBalancer();
   /// Read only access to the load balancer
   LoadBalancer<T> const& getLoadBalancer() const;
-
   /// Communicates the data in the overlap
   void communicate(bool verbose=false);
+
+  void initCommunication();
 };
 
 } // namespace olb

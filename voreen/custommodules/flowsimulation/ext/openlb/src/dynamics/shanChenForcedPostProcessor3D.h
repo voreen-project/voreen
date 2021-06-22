@@ -39,15 +39,15 @@ namespace olb {
 // ===========Shan Chen coupling without wall interaction===================//
 // =========================================================================//
 
-template<typename T, template<typename U> class Lattice>
-class ShanChenForcedPostProcessor3D : public LocalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ShanChenForcedPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   ShanChenForcedPostProcessor3D (
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_,
-    AnalyticalF1D<T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
+    AnalyticalF<1,T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
   ShanChenForcedPostProcessor3D (
     T G_, std::vector<T> rho0_,
-    AnalyticalF1D<T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
+    AnalyticalF<1,T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
   int extent() const override
   {
     return 1;
@@ -56,28 +56,29 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
                                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
+  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<2, 0, 0>;
   int x0, x1, y0, y1, z0, z1;
   T G;
   std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
+  AnalyticalF<1,T,T>& interactionPotential;
   std::vector<SpatiallyExtendedObject3D*> partners;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ShanChenForcedGenerator3D : public LatticeCouplingGenerator3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ShanChenForcedGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
 public:
-  ShanChenForcedGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  ShanChenForcedGenerator3D(T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  PostProcessor3D<T,Lattice>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const override;
-  LatticeCouplingGenerator3D<T,Lattice>* clone() const override;
+  ShanChenForcedGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+  ShanChenForcedGenerator3D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const override;
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 private:
   T G;
   std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
+  AnalyticalF<1,T,T>& interactionPotential;
 };
 
 }

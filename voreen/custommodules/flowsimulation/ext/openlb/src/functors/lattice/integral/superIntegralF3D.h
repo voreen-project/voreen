@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -26,7 +26,7 @@
 
 #include "functors/lattice/superBaseF3D.h"
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "functors/lattice/indicator/superIndicatorF3D.h"
 #include "geometry/superGeometry3D.h"
 #include "utilities/functorPtr.h"

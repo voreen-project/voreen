@@ -39,24 +39,18 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice> class Cell;
-
 
 /// Implementation of the entropic collision step
-template<typename T, template<typename U> class Lattice>
-class EntropicEqDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class EntropicEqDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  EntropicEqDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  EntropicEqDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell,
+  void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -66,47 +60,36 @@ private:
 };
 
 /// Implementation of the forced entropic collision step
-template<typename T, template<typename U> class Lattice>
-class ForcedEntropicEqDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ForcedEntropicEqDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ForcedEntropicEqDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ForcedEntropicEqDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  virtual T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const;
+  virtual T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const;
   /// Collision step
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
-  /// Collide with fixed velocity
-  virtual void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_);
   /// Get local relaxation parameter of the dynamics
   virtual T getOmega() const;
   /// Set local relaxation parameter of the dynamics
   virtual void setOmega(T omega_);
 private:
   T omega;  ///< relaxation parameter
-
-  static const int forceBeginsAt = Lattice<T>::ExternalField::forceBeginsAt;
-  static const int sizeOfForce   = Lattice<T>::ExternalField::sizeOfForce;
 };
 
 /// Implementation of the entropic collision step
 
-template<typename T, template<typename U> class Lattice>
-class EntropicDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class EntropicDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  EntropicDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  EntropicDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell,
+  void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -126,20 +109,16 @@ private:
 };
 
 /// Implementation of the forced entropic collision step
-template<typename T, template<typename U> class Lattice>
-class ForcedEntropicDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ForcedEntropicDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ForcedEntropicDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ForcedEntropicDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  virtual T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const;
+  virtual T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const;
   /// Collision step
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
-  /// Collide with fixed velocity
-  virtual void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_);
   /// Get local relaxation parameter of the dynamics
   virtual T getOmega() const;
   /// Set local relaxation parameter of the dynamics
@@ -156,9 +135,6 @@ private:
   bool getAlpha(T &alpha, const T f[], const T fNeq[]);
 
   T omega;  ///< relaxation parameter
-
-  static const int forceBeginsAt = Lattice<T>::ExternalField::forceBeginsAt;
-  static const int sizeOfForce   = Lattice<T>::ExternalField::sizeOfForce;
 };
 }
 

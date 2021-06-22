@@ -74,6 +74,7 @@ bool const & SuperGeometryStatistics2D<T>::getStatisticsStatus() const
 template<typename T>
 void SuperGeometryStatistics2D<T>::update(bool verbose)
 {
+  const_this = const_cast<const SuperGeometryStatistics2D<T>*>(this);
 
 #ifdef PARALLEL_MODE_MPI
   int updateReallyNeededGlobal = 0;
@@ -92,7 +93,8 @@ void SuperGeometryStatistics2D<T>::update(bool verbose)
     int updateReallyNeeded = 0;
     for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
       if (_superGeometry->getBlockGeometry(iCloc).getStatistics().getStatisticsStatus() ) {
-        _superGeometry->getBlockGeometry(iCloc).getStatistics().update(false);
+        auto& blockGeometry = const_cast<BlockGeometryView2D<T>&>(_superGeometry->getBlockGeometry(iCloc));
+        blockGeometry.getStatistics(false).update(false);
         updateReallyNeeded++;
       }
     }
@@ -137,7 +139,8 @@ void SuperGeometryStatistics2D<T>::update(bool verbose)
             _material2min[iter->first] = minPhysR;
             _material2max[iter->first] = maxPhysR;
             //std::cout << iter->first<<":"<<_material2n[iter->first]<<std::endl;
-          } else {
+          }
+          else {
             _material2n[iter->first] += iter->second;
             for (int iDim=0; iDim<2; iDim++) {
               if (_material2min[iter->first][iDim] > minPhysR[iDim]) {
@@ -202,7 +205,8 @@ void SuperGeometryStatistics2D<T>::update(bool verbose)
             _material2n[materialsInBuf[iM]] = materialCountInBuf[iM];
             _material2min[materialsInBuf[iM]] = minPhysR;
             _material2max[materialsInBuf[iM]] = maxPhysR;
-          } else {
+          }
+          else {
             _material2n[materialsInBuf[iM]] += materialCountInBuf[iM];
             for (int iDim=0; iDim<2; iDim++) {
               if (_material2min[materialsInBuf[iM]][iDim] > minPhysR[iDim]) {
@@ -233,6 +237,12 @@ template<typename T>
 int SuperGeometryStatistics2D<T>::getNmaterials()
 {
   update();
+  return const_this->getNmaterials();
+}
+
+template<typename T>
+int SuperGeometryStatistics2D<T>::getNmaterials() const
+{
   return _nMaterials;
 }
 
@@ -240,18 +250,34 @@ template<typename T>
 int SuperGeometryStatistics2D<T>::getNvoxel(int material)
 {
   update(true);
-  return _material2n[material];
+  return const_this->getNvoxel(material);
+}
+
+template<typename T>
+int SuperGeometryStatistics2D<T>::getNvoxel(int material) const
+{
+  try {
+    return _material2n.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    return 0;
+  }
 }
 
 template<typename T>
 int SuperGeometryStatistics2D<T>::getNvoxel()
 {
   update();
+  return const_this->getNvoxel();
+}
+
+template<typename T>
+int SuperGeometryStatistics2D<T>::getNvoxel() const
+{
   int total = 0;
-  std::map<int, int>::iterator iter;
-  for (iter = _material2n.begin(); iter != _material2n.end(); iter++) {
-    if (iter->first!=0) {
-      total+=iter->second;
+  for (const auto& material : _material2n) {
+    if (material.first!=0) {
+      total+=material.second;
     }
   }
   return total;
@@ -261,31 +287,70 @@ template<typename T>
 std::vector<T> SuperGeometryStatistics2D<T>::getMinPhysR(int material)
 {
   update();
-  return _material2min[material];
+  return const_this->getMinPhysR(material);
+}
+
+template<typename T>
+std::vector<T> SuperGeometryStatistics2D<T>::getMinPhysR(int material) const
+{
+  try {
+    return _material2min.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    return std::vector<T> {};
+  }
 }
 
 template<typename T>
 std::vector<T> SuperGeometryStatistics2D<T>::getMaxPhysR(int material)
 {
   update();
-  return _material2max[material];
+  return const_this->getMaxPhysR(material);
+}
+
+template<typename T>
+std::vector<T> SuperGeometryStatistics2D<T>::getMaxPhysR(int material) const
+{
+  try {
+    return _material2max.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    return std::vector<T> {};
+  }
 }
 
 template<typename T>
 std::vector<T> SuperGeometryStatistics2D<T>::getPhysExtend(int material)
 {
   update();
-  std::vector<T> extend;
-  for (int iDim = 0; iDim < 2; iDim++) {
-    extend.push_back(_material2max[material][iDim] - _material2min[material][iDim]);
+  return const_this->getPhysExtend(material);
+}
+
+template<typename T>
+std::vector<T> SuperGeometryStatistics2D<T>::getPhysExtend(int material) const
+{
+  try {
+    std::vector<T> extend;
+    for (int iDim = 0; iDim < 2; iDim++) {
+      extend.push_back(_material2max.at(material)[iDim] - _material2min.at(material)[iDim]);
+    }
+    return extend;
   }
-  return extend;
+  catch (std::out_of_range& ex) {
+    return std::vector<T> {};
+  }
 }
 
 template<typename T>
 std::vector<T> SuperGeometryStatistics2D<T>::getPhysRadius(int material)
 {
   update();
+  return const_this->getPhysRadius(material);
+}
+
+template<typename T>
+std::vector<T> SuperGeometryStatistics2D<T>::getPhysRadius(int material) const
+{
   std::vector<T> radius;
   for (int iDim=0; iDim<2; iDim++) {
     radius.push_back((getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim])/2.);
@@ -297,6 +362,12 @@ template<typename T>
 std::vector<T> SuperGeometryStatistics2D<T>::getCenterPhysR(int material)
 {
   update();
+  return const_this->getCenterPhysR(material);
+}
+
+template<typename T>
+std::vector<T> SuperGeometryStatistics2D<T>::getCenterPhysR(int material) const
+{
   std::vector<T> center;
   for (int iDim=0; iDim<2; iDim++) {
     center.push_back(getMinPhysR(material)[iDim] + getPhysRadius(material)[iDim]);
@@ -308,6 +379,12 @@ template<typename T>
 std::vector<int> SuperGeometryStatistics2D<T>::getType(int iC, int iX, int iY)
 {
   update();
+  return const_this->getType(iC, iX, iY);
+}
+
+template<typename T>
+std::vector<int> SuperGeometryStatistics2D<T>::getType(int iC, int iX, int iY) const
+{
   int iCloc=_superGeometry->getLoadBalancer().loc(iC);
   std::vector<int> discreteNormal = _superGeometry->getExtendedBlockGeometry(iCloc).getStatistics(false).getType(iX+_overlap, iY+_overlap);
   return discreteNormal;
@@ -317,7 +394,12 @@ template<typename T>
 std::vector<T> SuperGeometryStatistics2D<T>::computeNormal(int material)
 {
   update();
+  return const_this->computeNormal(material);
+}
 
+template<typename T>
+std::vector<T> SuperGeometryStatistics2D<T>::computeNormal(int material) const
+{
   std::vector<T> normal (2,int());
   for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
     for (int iDim=0; iDim<2; iDim++) {
@@ -353,6 +435,12 @@ template<typename T>
 std::vector<int> SuperGeometryStatistics2D<T>::computeDiscreteNormal(int material, T maxNorm)
 {
   update();
+  return const_this->computeDiscreteNormal(material, maxNorm);
+}
+
+template<typename T>
+std::vector<int> SuperGeometryStatistics2D<T>::computeDiscreteNormal(int material, T maxNorm) const
+{
   std::vector<T> normal = computeNormal(material);
   std::vector<int> discreteNormal(2,int(0));
 
@@ -373,17 +461,21 @@ std::vector<int> SuperGeometryStatistics2D<T>::computeDiscreteNormal(int materia
   return discreteNormal;
 }
 
-
 template<typename T>
 void SuperGeometryStatistics2D<T>::print()
 {
   update();
-  std::map<int, int>::iterator iter;
-  for (iter = _material2n.begin(); iter != _material2n.end(); iter++) {
-    clout << "materialNumber=" << iter->first
-          << "; count=" << iter->second
-          << "; minPhysR=(" << _material2min[iter->first][0] <<","<< _material2min[iter->first][1] <<")"
-          << "; maxPhysR=(" << _material2max[iter->first][0] <<","<< _material2max[iter->first][1] <<")"
+  return const_this->print();
+}
+
+template<typename T>
+void SuperGeometryStatistics2D<T>::print() const
+{
+  for (const auto& material : _material2n) {
+    clout << "materialNumber=" << material.first
+          << "; count=" << material.second
+          << "; minPhysR=(" << _material2min.at(material.first)[0] <<","<< _material2min.at(material.first)[1] <<")"
+          << "; maxPhysR=(" << _material2max.at(material.first)[0] <<","<< _material2max.at(material.first)[1] <<")"
           << std::endl;
   }
 }

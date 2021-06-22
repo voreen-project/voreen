@@ -37,12 +37,12 @@
 namespace olb {
 
 
-template<typename T, template<typename U> class Lattice> class BlockLattice2D;
+template<typename T, typename DESCRIPTOR> class BlockLattice2D;
 template<typename T> class BlockIndicatorF2D;
 
 
 /// BlockMax2D returns the max in each component of all points of a certain material
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockMax2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
@@ -56,7 +56,7 @@ public:
 
 
 /// BlockSum2D sums over all cells of a certain material number
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockSum2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
@@ -70,7 +70,7 @@ public:
 
 
 /// BlockIntegral2D
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockIntegral2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
@@ -84,7 +84,7 @@ public:
 
 
 /// BlockL1Norm2D returns componentwise the l1 norm
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockL1Norm2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
@@ -98,7 +98,7 @@ public:
 
 
 /// BlockL222D returns componentwise the squared l2-norm
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockL222D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
@@ -115,31 +115,28 @@ public:
 template <typename T>
 class BlockGeometryFaces2D final : public GenericF<T,int> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  const BlockGeometryStructure2D<T>& _blockGeometry;
   int _material;
   T _latticeL;
 public:
-  template<template<typename U> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   BlockGeometryFaces2D(BlockGeometryStructure2D<T>& blockGeometry, int material, const UnitConverter<T,DESCRIPTOR>& converter);
   BlockGeometryFaces2D(BlockGeometryStructure2D<T>& blockGeometry, int material, T latticeL);
   bool operator() (T output[], const int input[]) override;
 };
 
-/// functor counts to get the discrete surface for a smooth indicator circle in direction (1,0,0), (0,1,0), (0,0,1), (-1,0,0), (0,-1,0), (0,0,-1)
+/// functor counts to get the discrete surface for a smooth indicator in direction (1,0,0), (0,1,0), (-1,0,0), (0,-1,0)
 /// and total surface, then it converts it into phys units
-template <typename T>
+template <typename T, bool HLBM=false>
 class BlockGeometryFacesIndicator2D final : public GenericF<T,int> {
 private:
   BlockGeometryStructure2D<T>& _blockGeometry;
-  SmoothIndicatorCircle2D<T,T>& _indicator;
+  SmoothIndicatorF2D<T,T,HLBM>& _indicator;
   int _material;
   T _latticeL;
 public:
-  template<template<typename U> class DESCRIPTOR>
-  BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorCircle2D<T,T>& indicator,
-                                int material, const UnitConverter<T,DESCRIPTOR>& converter);
-  BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorCircle2D<T,T>& indicator,
-                                int material, T latticeL);
+  BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorF2D<T,T,HLBM>& indicator,
+                                int material, T deltaX);
   bool operator() (T output[], const int input[]) override;
 };
 
@@ -149,7 +146,7 @@ public:
  *  material on local lattice, if globIC is not on
  *  the local processor, the returned vector is empty
  */
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysDrag2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
   BlockGeometry2D<T>& _blockGeometry;
@@ -167,7 +164,7 @@ public:
  *  the local processor, the returned vector is empty
  *  see: Caiazzo, Junk: Boundary Forces in lattice Boltzmann: Analysis of MEA
  */
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysCorrDrag2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
   BlockGeometry2D<T>& _blockGeometry;

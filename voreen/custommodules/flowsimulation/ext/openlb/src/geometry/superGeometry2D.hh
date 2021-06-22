@@ -39,8 +39,7 @@
 #include "geometry/superGeometry2D.h"
 #include "communication/superStructure2D.h"
 #include "communication/loadBalancer.h"
-#include "functors/lattice/indicator/indicatorF2D.h"
-#include "functors/lattice/indicator/indicCalcF2D.h"
+#include "functors/analytical/indicator/indicatorF2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
 #include "io/ostreamManager.h"
 
@@ -55,64 +54,36 @@ SuperGeometry2D<T>::SuperGeometry2D(CuboidGeometry2D<T>& cuboidGeometry, LoadBal
   this->_communicator.init();
   this->_communicationNeeded = true;
 
-  // constructing the block and extended block geometries from the cuboid geometry
-  _blockGeometries.clear();
+  _extendedBlockGeometries.reserve(this->getLoadBalancer().size());
+  _blockGeometries.reserve(this->getLoadBalancer().size());
 
   for (int iCloc=0; iCloc<this->getLoadBalancer().size(); iCloc++) {
     int iCglob = this->getLoadBalancer().glob(iCloc);
     Cuboid2D<T> extendedCuboid(cuboidGeometry.get(iCglob),overlap);
-    BlockGeometry2D<T> tmp(extendedCuboid,iCglob);
-    _extendedBlockGeometries.push_back(tmp);
+    _extendedBlockGeometries.emplace_back(extendedCuboid, iCglob);
   }
 
   for (int iCloc=0; iCloc<this->getLoadBalancer().size(); iCloc++) {
     int iCglob = this->getLoadBalancer().glob(iCloc);
     int nX = cuboidGeometry.get(iCglob).getNx();
     int nY = cuboidGeometry.get(iCglob).getNy();
-    BlockGeometryView2D<T> tmp2(_extendedBlockGeometries[iCloc],overlap,overlap+nX-1,overlap,overlap+nY-1);
-    _blockGeometries.push_back(tmp2);
+    _blockGeometries.emplace_back(_extendedBlockGeometries[iCloc], overlap, overlap+nX-1, overlap, overlap+nY-1);
   }
   _statistics.getStatisticsStatus() = true;
 }
 
 template<typename T>
-SuperGeometry2D<T>::SuperGeometry2D(SuperGeometry2D const& rhs) : SuperStructure2D<T>(rhs._cuboidGeometry, rhs._loadBalancer, rhs._overlap), _statistics(this), clout(std::cout,"SuperGeometry2D")
+std::uint8_t* SuperGeometry2D<T>::operator() (int iCloc, int iX, int iY, int iData)
 {
-  // init communicator
-  this->_communicator.init_nh();
-  this->_communicator.add_cells(this->_overlap);
-  this->_communicator.init();
-  this->_communicationNeeded = true;
-  // copy block and extended block geometries
-  _blockGeometries = rhs._blockGeometries;
-  _extendedBlockGeometries = rhs._extendedBlockGeometries;
-  _statistics.getStatisticsStatus() = true;
+  return reinterpret_cast<std::uint8_t*>(
+      &getExtendedBlockGeometry(iCloc).get(iX+this->_overlap, iY+this->_overlap));
 }
 
 template<typename T>
-SuperGeometry2D<T>& SuperGeometry2D<T>::operator=(SuperGeometry2D const& rhs)
+std::uint8_t* SuperGeometry2D<T>::operator() (int iCloc, std::size_t iCell, int iData)
 {
-
-  // init communicator
-  this->_communicator.init_nh();
-  this->_communicator.add_cells(this->_overlap);
-  this->_communicator.init();
-  this->_communicationNeeded = true;
-  // copy mother data
-  this->_cuboidGeometry = rhs._cuboidGeometry;
-  this->_loadBalancer = rhs._loadBalancer;
-  this->_overlap = rhs._overlap;
-  // copy block and extended block geometrie
-  _blockGeometries = rhs._blockGeometries;
-  _extendedBlockGeometries = rhs._extendedBlockGeometries;
-  _statistics = SuperGeometryStatistics2D<T>(this);
-  return *this;
-}
-
-template<typename T>
-bool* SuperGeometry2D<T>::operator() (int iCloc, int iX, int iY, int iData)
-{
-  return (bool*)&getExtendedBlockGeometry(iCloc).get(iX+this->_overlap, iY+this->_overlap);
+  return reinterpret_cast<std::uint8_t*>(
+      &getExtendedBlockGeometry(iCloc).get(iCell));
 }
 
 template<typename T>
@@ -385,6 +356,16 @@ bool SuperGeometry2D<T>::checkForErrors(bool verbose)
   return error;
 }
 
+template<typename T>
+void SuperGeometry2D<T>::reset(IndicatorF2D<T>& domain)
+{
+  this->communicate();
+  for (unsigned iC = 0; iC < _extendedBlockGeometries.size(); ++iC) {
+    _blockGeometries[iC].reset(domain);
+  }
+  _statistics.getStatisticsStatus() = true;
+  this->_communicationNeeded = true;
+}
 
 template<typename T>
 void SuperGeometry2D<T>::rename(int fromM, int toM)
@@ -403,8 +384,6 @@ void SuperGeometry2D<T>::rename(int fromM, int toM, IndicatorF2D<T>& condition)
 {
 
   this->communicate();
-  //  call Identity to prevent deleting
-  IndicatorIdentity2D<T> tmpCondition(condition);
 
   for (unsigned iC=0; iC<_extendedBlockGeometries.size(); iC++) {
     _extendedBlockGeometries[iC].rename(fromM,toM,condition);
@@ -454,8 +433,6 @@ void SuperGeometry2D<T>::rename(int fromBcMat, int toBcMat, int fluidMat,
 {
   if (this->_overlap>1) {
     this->communicate();
-    //  call Identity to prevent deleting
-    IndicatorIdentity2D<T> tmpCondition(condition);
     rename(fromBcMat, toBcMat, condition);
     std::vector<int> testDirection = this->getStatistics().computeDiscreteNormal(toBcMat);
 

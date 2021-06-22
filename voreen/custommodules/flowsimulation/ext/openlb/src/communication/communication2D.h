@@ -34,8 +34,7 @@
 #include "mpiManager.h"
 #include "ompManager.h"
 #include "superStructure2D.h"
-
-
-
+#include "blockPropagation.h"
+#include "superPropagation.h"
 
 #endif

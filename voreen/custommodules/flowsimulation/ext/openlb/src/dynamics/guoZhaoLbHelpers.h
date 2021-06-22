@@ -29,7 +29,7 @@
 #ifndef LB_GUOZHAO_HELPERS_H
 #define LB_GUOZHAO_HELPERS_H
 
-#include "dynamics/guoZhaoLatticeDescriptors.h"
+#include "dynamics/descriptorAlias.h"
 #include "core/cell.h"
 #include "core/util.h"
 
@@ -38,53 +38,62 @@ namespace olb {
 
 
 // Forward declarations
-template<typename T, class Descriptor> struct GuoZhaoLbDynamicsHelpers;
-template<typename T, template<typename U> class Lattice> struct GuoZhaoLbExternalHelpers;
+template<typename T, typename DESCRIPTOR> struct GuoZhaoLbDynamicsHelpers;
+template<typename T, typename DESCRIPTOR> struct GuoZhaoLbExternalHelpers;
 
 /// This structure forwards the calls to the appropriate Guo Zhao helper class
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 struct GuoZhaoLbHelpers {
 
-  static T equilibrium(int iPop, T epsilon, T rho, const T u[Lattice<T>::d], const T uSqr) {
-    return GuoZhaoLbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+  static T equilibrium(int iPop, T epsilon, T rho, const T u[DESCRIPTOR::d], const T uSqr) {
+    return GuoZhaoLbDynamicsHelpers<T,DESCRIPTOR>
            ::equilibrium(iPop, epsilon, rho, u, uSqr);
   }
 
-  static T bgkCollision(Cell<T,Lattice>& cell, T const& epsilon, T const& rho, const T u[Lattice<T>::d], T const& omega) {
-    return GuoZhaoLbDynamicsHelpers<T,typename Lattice<T>::BaseDescriptor>
+  static T bgkCollision(Cell<T,DESCRIPTOR>& cell, T const& epsilon, T const& rho, const T u[DESCRIPTOR::d], T const& omega) {
+    return GuoZhaoLbDynamicsHelpers<T,DESCRIPTOR>
            ::bgkCollision(cell, epsilon, rho, u, omega);
   }
 
-  static void updateGuoZhaoForce(Cell<T,Lattice>& cell, const T u[Lattice<T>::d]) {
-    GuoZhaoLbExternalHelpers<T,Lattice>::updateGuoZhaoForce(cell, u);
+  static void updateGuoZhaoForce(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d]) {
+    GuoZhaoLbExternalHelpers<T,DESCRIPTOR>::updateGuoZhaoForce(cell, u);
+  }
+
+  static void addExternalForce(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d], T omega, T rho, T epsilon=(T)1)
+  {
+    GuoZhaoLbExternalHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, omega, rho, epsilon);
   }
 
 };  // struct GuoZhaoLbHelpers
 
 
 /// All Guo Zhao helper functions are inside this structure
-template<typename T, class Descriptor>
+template<typename T, typename DESCRIPTOR>
 struct GuoZhaoLbDynamicsHelpers {
 
   /// Computation of Guo Zhao equilibrium distribution - original (compressible) formulation following Guo and Zhao (2002).
-  static T equilibrium(int iPop, T epsilon, T rho, const T u[Descriptor::d], const T uSqr) {
+  static T forceEquilibrium(int iPop, T epsilon, T rho, const T u[DESCRIPTOR::d], const T force[DESCRIPTOR::d], T nu) {
+  }
+
+  /// Computation of Guo Zhao equilibrium distribution - original (compressible) formulation following Guo and Zhao (2002).
+  static T equilibrium(int iPop, T epsilon, T rho, const T u[DESCRIPTOR::d], const T uSqr) {
     T c_u = T();
-    for (int iD=0; iD < Descriptor::d; ++iD) {
-      c_u += Descriptor::c[iPop][iD]*u[iD];
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
     }
-    return rho * Descriptor::t[iPop] * (
-             (T)1 + Descriptor::invCs2 * c_u +
-             Descriptor::invCs2 * Descriptor::invCs2/((T)2*epsilon) * c_u*c_u -
-             Descriptor::invCs2/((T)2*epsilon) * uSqr
-           ) - Descriptor::t[iPop];
+    return rho * descriptors::t<T,DESCRIPTOR>(iPop) * (
+             (T)1 + descriptors::invCs2<T,DESCRIPTOR>() * c_u +
+             descriptors::invCs2<T,DESCRIPTOR>() * descriptors::invCs2<T,DESCRIPTOR>()/((T)2*epsilon) * c_u*c_u -
+             descriptors::invCs2<T,DESCRIPTOR>()/((T)2*epsilon) * uSqr
+           ) - descriptors::t<T,DESCRIPTOR>(iPop);
   }
 
   /// Guo Zhao BGK collision step
-  static T bgkCollision(CellBase<T,Descriptor>& cell, T const& epsilon, T const& rho, const T u[Descriptor::d], T const& omega) {
-    const T uSqr = util::normSqr<T,Descriptor::d>(u);
-    for (int iPop=0; iPop < Descriptor::q; ++iPop) {
+  static T bgkCollision(Cell<T,DESCRIPTOR>& cell, T const& epsilon, T const& rho, const T u[DESCRIPTOR::d], T const& omega) {
+    const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
       cell[iPop] *= (T)1-omega;
-      cell[iPop] += omega * GuoZhaoLbDynamicsHelpers<T,Descriptor>::equilibrium (
+      cell[iPop] += omega * GuoZhaoLbDynamicsHelpers<T,DESCRIPTOR>::equilibrium (
                       iPop, epsilon, rho, u, uSqr );
     }
     return uSqr;
@@ -93,24 +102,51 @@ struct GuoZhaoLbDynamicsHelpers {
 };  // struct GuoZhaoLbDynamicsHelpers
 
 /// Helper functions for dynamics that access external field
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 /// Updates Guo Zhao porous force
 struct GuoZhaoLbExternalHelpers {
-  static void updateGuoZhaoForce(Cell<T,Lattice>& cell, const T u[Lattice<T>::d]) {
-    T epsilon = *cell.getExternal(Lattice<T>::ExternalField::epsilonAt);
-    T k       = *cell.getExternal(Lattice<T>::ExternalField::KAt);
-    T nu      = *cell.getExternal(Lattice<T>::ExternalField::nuAt);
-    T bodyF0  = *cell.getExternal(Lattice<T>::ExternalField::bodyForceBeginsAt);
-    T bodyF1  = *cell.getExternal(Lattice<T>::ExternalField::bodyForceBeginsAt+1);
+  static void updateGuoZhaoForce(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d]) {
+    const T epsilon = cell.template getField<descriptors::EPSILON>();
+    const T k       = cell.template getField<descriptors::K>();
+    const T nu      = cell.template getField<descriptors::NU>();
+    auto bodyF      = cell.template getField<descriptors::BODY_FORCE>();
 
-    T* force0 = cell.getExternal(Lattice<T>::ExternalField::forceBeginsAt);
-    T* force1 = cell.getExternal(Lattice<T>::ExternalField::forceBeginsAt+1);
+    auto force = cell.template getFieldPointer<descriptors::FORCE>();
 
-    *force0 = -u[0]*epsilon*nu/k + bodyF0*epsilon;
-    *force1 = -u[1]*epsilon*nu/k + bodyF1*epsilon;
+    const T uMag = sqrt( util::normSqr<T,DESCRIPTOR::d>(u) );
+    const T Fe = 0;//1.75/sqrt(150.*pow(epsilon,3));
+
+    // Linear Darcy term, nonlinear Forchheimer term and body force
+    for (int iDim=0; iDim <DESCRIPTOR::d; iDim++) {
+      force[iDim] = -u[iDim]*epsilon*nu/k - epsilon*Fe/sqrt(k)*uMag*u[iDim] + bodyF[iDim]*epsilon;
+    }
+  }
+
+  /// Add a force term scaled by physical porosity epsilon after BGK collision
+  static void addExternalForce(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d], T omega, T rho, T epsilon)
+  {
+    auto force = cell.template getFieldPointer<descriptors::FORCE>();
+    for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+      T c_u = T();
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
+      }
+      c_u *= descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()/epsilon;
+      T forceTerm = T();
+      for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+        forceTerm +=
+          (   (epsilon*(T)descriptors::c<DESCRIPTOR>(iPop,iD)-u[iD]) * descriptors::invCs2<T,DESCRIPTOR>()/epsilon
+              + c_u * descriptors::c<DESCRIPTOR>(iPop,iD)
+          )
+          * force[iD];
+      }
+      forceTerm *= descriptors::t<T,DESCRIPTOR>(iPop);
+      forceTerm *= T(1) - omega/T(2);
+      forceTerm *= rho;
+      cell[iPop] += forceTerm;
+    }
   }
 };  // struct GuoZhaoLbExternalHelpers
-
 
 }  // namespace olb
 

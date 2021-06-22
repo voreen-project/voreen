@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -31,7 +31,6 @@
 #include "utilities/functorPtr.hh"
 #include "functors/lattice/indicator/indicator2D.hh"
 
-#include "functors/lattice/superLatticeLocalF2D.h"
 #include "functors/lattice/superCalcF2D.h"
 #include "functors/lattice/superCalcF2D.hh"
 

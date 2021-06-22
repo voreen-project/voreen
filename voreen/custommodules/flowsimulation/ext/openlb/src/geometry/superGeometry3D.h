@@ -53,8 +53,9 @@
 #include "geometry/blockGeometryView3D.h"
 #include "communication/superStructure3D.h"
 #include "communication/loadBalancer.h"
-#include "functors/lattice/indicator/indicatorF3D.h"
+#include "functors/analytical/indicator/indicatorF3D.h"
 #include "io/ostreamManager.h"
+#include "utilities/functorPtr.h"
 
 
 /// All OpenLB code is contained in this namespace.
@@ -73,9 +74,9 @@ class SuperGeometry3D : public SuperStructure3D<T> {
 
 private:
   /// Vector of block geometries with overlap
-  std::vector<BlockGeometry3D<T> > _extendedBlockGeometries;
+  std::vector<BlockGeometry3D<T>> _extendedBlockGeometries;
   /// Vector of block geometries without overlap
-  std::vector<BlockGeometryView3D<T> > _blockGeometries;
+  std::vector<BlockGeometryView3D<T>> _blockGeometries;
   /// Statistic class
   SuperGeometryStatistics3D<T> _statistics;
   /// class specific output stream
@@ -85,13 +86,10 @@ public:
   /// Constructor
   SuperGeometry3D(CuboidGeometry3D<T>& cuboidGeometry,
                   LoadBalancer<T>& lb, int overlap = 2);
-  /// Copy constructor
-  SuperGeometry3D(SuperGeometry3D const& rhs);
-  /// Copy assignment
-  SuperGeometry3D& operator=(SuperGeometry3D const& rhs);
 
   /// Interface for the communicator class: Write access to the memory of the data of the super structure
-  bool* operator() (int iCloc, int iX, int iY, int iZ, int iData) override;
+  std::uint8_t* operator() (int iCloc, int iX, int iY, int iZ, int iData) override;
+  std::uint8_t* operator() (int iCloc, std::size_t, int iData) override;
   /// Interface for the communicator class: Read only access to the dim of the data of the super structure
   int getDataSize() const override;
   /// Interface for the communicator class: Read only access to the data type dim of the data of the super structure
@@ -154,13 +152,15 @@ public:
   /// replace one material with another
   void rename(int fromM, int toM);
   /// replace one material that fulfills an indicator functor condition with another
-  void rename(int fromM, int toM, IndicatorF3D<T>& condition);
+  void rename(int fromM, int toM, FunctorPtr<IndicatorF3D<T>>&& condition);
   /// replace one material with another respecting an offset (overlap)
   void rename(int fromM, int toM, unsigned offsetX, unsigned offsetY, unsigned offsetZ);
   /// renames all voxels of material fromM to toM if the number of voxels given by testDirection is of material testM
   void rename(int fromM, int toM, int testM, std::vector<int> testDirection);
   /// renames all boundary voxels of material fromBcMat to toBcMat if two neighbour voxel in the direction of the discrete normal are fluid voxel with material fluidM in the region where the indicator function is fulfilled
-  void rename(int fromBcMat, int toBcMat, int fluidMat, IndicatorF3D<T>& condition);
+  void rename(int fromBcMat, int toBcMat, int fluidMat, FunctorPtr<IndicatorF3D<T>>&& condition);
+  /// Copy a layer of material numbers inside an indicator in a discrete normal direction
+  void copyMaterialLayer(IndicatorF3D<T>& condition, int discreteNormal[3], int numberOfLayers=3);
 
   /// Prints some information about the super geometry
   void print();

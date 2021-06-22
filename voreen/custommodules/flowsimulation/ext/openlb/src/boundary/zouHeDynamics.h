@@ -36,19 +36,15 @@ namespace olb {
 * "On pressure and velocity boundary conditions for the lattice Boltzmann BGK model",
 * Phys. Fluids , (1997), Volume 9, Issue 6, pp. 1591-1598
 */
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-class ZouHeDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+class ZouHeDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ZouHeDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ZouHeDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics) override;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics

@@ -35,7 +35,7 @@ class Gnuplot {
 public:
   /// Constructor with name for output files
   /// boolean true for real-time plotting //WARNING: experimental!
-  Gnuplot(std::string name, bool liveplot = false);
+  Gnuplot(std::string name, bool liveplot = false, std::string preCommand = "");
 
   /// initialises the data file
   void init();
@@ -57,7 +57,7 @@ public:
   void setLabel(std::string xLabel = "", std::string yLabel = "");
 
   /// writes an PDF
-  void writePDF();
+  void writePDF(std::string plotName = "");
 
   /// writes PNGs
   /// usage: first argument: numbering of png file (optional),
@@ -66,6 +66,12 @@ public:
   /// user want to create more than one plot with the simulation results
   /// no arguments: writes in one file with adaptive xrange and no specific name
   void writePNG(int iT = -1, double xRange = -1, std::string plotName = "");
+
+
+  /// higher precision file output, respects /tmp folder structure if changed
+  void datFileOut(T xValue, T yValue, std::string plotFileName = "");
+  void datFileOut(T xValue, std::vector<T> yValues, std::string plotFileName = "");
+
 
 private:
   std::string _xLabel;
@@ -77,6 +83,7 @@ private:
   std::string _dir;
   std::vector<std::string> _names;
   std::string _key;
+  std::string _preCommand;
   /// plotType vector stores the type of the plot the user wants to create
   /// (e.g. 'l' line graph (default) or 'p' scatterplot)
   std::vector<char> _plotTypes;

@@ -30,12 +30,17 @@
 #define CUBOID_NEIGHBOURHOOD_2D_H
 
 #include "communication/mpiManager.h"
-#include <vector>
 #include "communication/superStructure2D.h"
+#include "core/blockStructure2D.h"
+
+#include <vector>
 
 
 /// All OpenLB code is contained in this namespace.
 namespace olb {
+
+template<typename T> class SuperStructure2D;
+
 
 /// Single 2D cuboid neighbourhoods are the basic component of a
 /// 2D communicator
@@ -49,31 +54,21 @@ namespace olb {
  *
  * This class is not intended to be derived from.
  */
-
-
-template<typename T> class SuperStructure2D;
-
 template<typename T>
 struct Cell2D {
-
-  Cell2D()
-  {
-    latticeR.resize(3);
-    physR.resize(2);
-  };
-
-  // local position latticeR
-  std::vector<int> latticeR;
-  //int iC, iX, iY;
-  // global position physR
-  //T x, y;
-  std::vector<T> physR;
+  Cell2D() : latticeR {0,0,0} {};
+  // local position latticeR: iC, iX, iY;
+  int latticeR[3];
+  std::size_t latticeCellId;
+  // global position physR: x, y;
+  T physR[2];
 
   bool operator==(Cell2D const& rhs) const
   {
       return latticeR == rhs.latticeR;
   };
 
+  /// Copy constructor
   Cell2D(Cell2D const& rhs) = default;
 
   /// Copy assignment
@@ -85,19 +80,23 @@ struct Cell2D {
 template<typename T>
 class CuboidNeighbourhood2D {
 private:
-  /// Cuboid ID
-  int _iCglob;
-  /// Number of cubboids in the structure
-  int _nC;
-  /// Delta of the cuboid
-  T _deltaC;
   /// Reference to the super structure
   SuperStructure2D<T>& _superStructure;
-
+  /// Cuboid ID
+  const int _iCglob;
+  /// Number of cubboids in the structure
+  const int _nC;
+  /// Delta of the cuboid
+  const T _deltaC;
   /// Number of data to be transfered
-  int _nData;
+  const std::size_t _nData;
   /// Size of underlying data type
-  int _nDataType;
+  const std::size_t _nDataType;
+
+  /// Cuboid representing overlapping _iCglob
+  Cuboid2D<T> _iCuboid;
+  /// Block representing _iCuboid for local cell ID calculation
+  BlockStructure2D _iCblock;
 
   /// Internal needed cells
   std::vector<Cell2D<T> > _inCells;
@@ -110,9 +109,11 @@ private:
   std::vector<int> _outC;
   std::vector<int> _outN;
   /// Buffer for the internal needed data
-  bool **_inData;
+  std::uint8_t** _inData;
+  std::size_t* _inDataSize;
   /// Buffer for the external needed data
-  bool **_outData;
+  std::uint8_t** _outData;
+  std::size_t* _outDataSize;
   /// Buffer for the internal needed data
   T **_inDataCoordinates;
   /// Buffer for the external needed data
@@ -147,10 +148,11 @@ public:
   /// Returns the number of cells in _inC
   int get_inCsize() const;
   /// Read and write access to **_inData
-  bool** get_inData();
+  std::uint8_t** get_inData();
   /// Read and write access to **_outData
-  bool** get_outData();
+  std::uint8_t** get_outData();
 
+  std::size_t getLocalCellId(int iX, int iY) const;
   /// Adds a cell to the vector _inCells
   void add_inCell(Cell2D<T> cell);
   /// Adds a cell to the vector _outCells
@@ -167,7 +169,11 @@ public:
   /// Initializes _outC and _outN
   void init_outCN();
   /// Initialization Helper
-  void bufSend_inCells();
+#ifdef PARALLEL_MODE_MPI
+  void bufSend_inCells(singleton::MpiNonBlockingHelper& helper);
+#else
+  void bufSend_inCells() {}
+#endif
   /// Initialization Helper
   void recWrite_outCells();
   /// Finishes a communication step

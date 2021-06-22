@@ -26,16 +26,16 @@
 #include "core/postProcessing.h"
 #include "core/postProcessing.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 
 namespace olb {
-template class ZeroVelocityBouzidiLinearPostProcessor3D<double, descriptors::D3Q19Descriptor>;
-template class ZeroVelocityBouzidiLinearPostProcessorGenerator3D<double, descriptors::D3Q19Descriptor>;
-template class ZeroVelocityBounceBackPostProcessor3D<double, descriptors::D3Q19Descriptor>;
-template class ZeroVelocityBounceBackPostProcessorGenerator3D<double, descriptors::D3Q19Descriptor>;
-template class VelocityBouzidiLinearPostProcessor3D<double, descriptors::D3Q19Descriptor>;
-template class VelocityBouzidiLinearPostProcessorGenerator3D<double, descriptors::D3Q19Descriptor>;
-template class VelocityBounceBackPostProcessor3D<double, descriptors::D3Q19Descriptor>;
-template class VelocityBounceBackPostProcessorGenerator3D<double, descriptors::D3Q19Descriptor>;
+template class ZeroVelocityBouzidiLinearPostProcessor3D<double, descriptors::D3Q19<>>;
+template class ZeroVelocityBouzidiLinearPostProcessorGenerator3D<double, descriptors::D3Q19<>>;
+template class ZeroVelocityBounceBackPostProcessor3D<double, descriptors::D3Q19<>>;
+template class ZeroVelocityBounceBackPostProcessorGenerator3D<double, descriptors::D3Q19<>>;
+template class VelocityBouzidiLinearPostProcessor3D<double, descriptors::D3Q19<>>;
+template class VelocityBouzidiLinearPostProcessorGenerator3D<double, descriptors::D3Q19<>>;
+template class VelocityBounceBackPostProcessor3D<double, descriptors::D3Q19<>>;
+template class VelocityBounceBackPostProcessorGenerator3D<double, descriptors::D3Q19<>>;
 }  // namespace olb

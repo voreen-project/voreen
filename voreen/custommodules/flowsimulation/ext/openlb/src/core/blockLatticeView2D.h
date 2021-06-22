@@ -40,59 +40,61 @@ namespace olb {
  * - The postProcessors of the original BlockLattice are not called any
  *   more. New, appropriate PostProcessors are generated instead.
  */
-template<typename T, template<typename U> class Lattice>
-class BlockLatticeView2D : public BlockLatticeStructure2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class BlockLatticeView2D : public BlockLatticeStructure2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeView2D(BlockLatticeStructure2D<T,Lattice>& originalLattice_);
-  BlockLatticeView2D(BlockLatticeStructure2D<T,Lattice>& originalLattice_,
+  BlockLatticeView2D(BlockLatticeStructure2D<T,DESCRIPTOR>& originalLattice_);
+  BlockLatticeView2D(BlockLatticeStructure2D<T,DESCRIPTOR>& originalLattice_,
                      int x0_, int x1_, int y0_, int y1_);
   ~BlockLatticeView2D() override;
   BlockLatticeView2D(BlockLatticeView2D const& rhs);
-  BlockLatticeView2D<T,Lattice>& operator=
-  (BlockLatticeView2D<T,Lattice> const& rhs);
-  void swap(BlockLatticeView2D<T,Lattice>& rhs);
+  BlockLatticeView2D<T,DESCRIPTOR>& operator=
+  (BlockLatticeView2D<T,DESCRIPTOR> const& rhs);
+  void swap(BlockLatticeView2D<T,DESCRIPTOR>& rhs);
 
-  Cell<T,Lattice>& get(int iX, int iY) override;
-  Cell<T,Lattice> const& get(int iX, int iY) const override;
+  Cell<T,DESCRIPTOR> get(int iX, int iY) override;
+  Cell<T,DESCRIPTOR> get(int latticeR[]) override;
+  ConstCell<T,DESCRIPTOR> get(int iX, int iY) const override;
+
+  T& getPop(std::size_t iCell, unsigned iPop) override;
+  T& getPop(int iX, int iY, unsigned iPop) override;
+
   void initialize() override;
   void defineDynamics (
     int x0_, int x1_, int y0_, int y1_,
-    Dynamics<T,Lattice>* dynamics ) override;
-  void defineDynamics(int iX, int iY, Dynamics<T,Lattice>* dynamics ) override;
-  Dynamics<T,Lattice>* getDynamics(int iX, int iY) override;
+    Dynamics<T,DESCRIPTOR>* dynamics ) override;
+  void defineDynamics(int iX, int iY, Dynamics<T,DESCRIPTOR>* dynamics ) override;
+  Dynamics<T,DESCRIPTOR>* getDynamics(int iX, int iY) override;
+
   void collide(int x0_, int x1_, int y0_, int y1_) override;
-  void collide() override;
-  /*virtual void staticCollide (int x0, int x1, int y0, int y1,
-                              TensorFieldBase2D<T,2> const& u);
-  virtual void staticCollide (TensorFieldBase2D<T,2> const& u);*/
-  void stream(int x0_, int x1_, int y0_, int y1_) override;
   void collideAndStream(int x0_, int x1_, int y0_, int y1_) override;
-  void stream(bool periodic=false) override;
-  void collideAndStream(bool periodic=false) override;
+  void collide() override;
+  void collideAndStream() override;
+
   T computeAverageDensity(int x0_, int x1_, int y0_, int y1_) const override;
   T computeAverageDensity() const override;
-  void computeStress(int iX, int iY, T pi[util::TensorVal<Lattice<T> >::n]) override;
+  void computeStress(int iX, int iY, T pi[util::TensorVal<DESCRIPTOR >::n]) override;
   void stripeOffDensityOffset (
     int x0_, int x1_, int y0_, int y1_, T offset ) override;
   void stripeOffDensityOffset(T offset) override;
   void forAll(int x0_, int x1_, int y0_, int y1_,
-                      WriteCellFunctional<T,Lattice> const& application) override;
-  void forAll(WriteCellFunctional<T,Lattice> const& application) override;
+                      WriteCellFunctional<T,DESCRIPTOR> const& application) override;
+  void forAll(WriteCellFunctional<T,DESCRIPTOR> const& application) override;
   void addPostProcessor (
-    PostProcessorGenerator2D<T,Lattice> const& ppGen) override;
+    PostProcessorGenerator2D<T,DESCRIPTOR> const& ppGen) override;
   void resetPostProcessors() override;
   void postProcess(int x0_, int x1_, int y0_, int y1_) override;
   void postProcess() override;
   void addLatticeCoupling (
-    LatticeCouplingGenerator2D<T,Lattice> const& lcGen,
+    LatticeCouplingGenerator2D<T,DESCRIPTOR> const& lcGen,
     std::vector<SpatiallyExtendedObject2D*> partners ) override;
   void executeCoupling(int x0_, int x1_, int y0_, int y1_) override;
   void executeCoupling() override;
-  void subscribeReductions(Reductor<T>& reductor) override;
   LatticeStatistics<T>& getStatistics() override;
   LatticeStatistics<T> const& getStatistics() const override;
+
 private:
-  BlockLatticeStructure2D<T,Lattice>  *originalLattice;
+  BlockLatticeStructure2D<T,DESCRIPTOR>  *originalLattice;
   int                          x0, y0;
 };
 

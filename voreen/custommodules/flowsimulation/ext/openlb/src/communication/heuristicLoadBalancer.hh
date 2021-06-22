@@ -90,7 +90,7 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry3D<T>& cGeometry3d, const do
   int nC = _cGeometry3d->getNc();
 #ifdef PARALLEL_MODE_MPI
   rank = singleton::mpi().getRank();
-  size = singleton::mpi().getSize();
+  size = std::max<int>(singleton::mpi().getSize(), 1);
 #endif
   std::vector<Cell3D<T> > inCells;
   //int xN, yN, zN;

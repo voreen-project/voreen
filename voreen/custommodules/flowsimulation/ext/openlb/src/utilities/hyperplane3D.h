@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -56,7 +56,7 @@ struct Hyperplane3D {
   Vector<T,3> v;
   Vector<T,3> normal;
 
-  Hyperplane3D() = default;
+  explicit Hyperplane3D() = default;
 
   /// Center the hyperplane at the given origin vector
   /// \return Hyperplane3D reference for further construction

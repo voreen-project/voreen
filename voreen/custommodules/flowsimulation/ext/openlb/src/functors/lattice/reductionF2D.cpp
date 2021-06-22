@@ -30,7 +30,7 @@
 
 namespace olb {
 
-template class SuperLatticeFfromAnalyticalF2D<double,descriptors::D2Q9Descriptor>;
+template class SuperLatticeFfromAnalyticalF2D<double,descriptors::D2Q9<>>;
 
 
 } // end namespace olb

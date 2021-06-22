@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Albert Mink, Christopher McHardy
+ *  Copyright (C) 2017-2019 Albert Mink, Christopher McHardy
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -29,195 +29,155 @@
 #define RTLBM_DYNAMICS_HH
 
 #include "rtlbmDynamics.h"
+#include "rtlbmDescriptors.h"
 #include "lbHelpers.h"
-
-using namespace olb::descriptors;
 
 namespace olb {
 
 
 
 //==================================================================//
-//============= BGK Model for Advection diffusion plus sink term ===//
-//==================================================================//
-
-template<typename T, template<typename U> class Lattice>
-RTLBMdynamicsMink<T,Lattice>::RTLBMdynamicsMink
-( T omega, Momenta<T,Lattice>& momenta, T latticeAbsorption, T latticeScattering )
-  : BasicDynamics<T, Lattice>( momenta ), _omega(omega), _sink( 3.0*latticeAbsorption*(latticeAbsorption+latticeScattering) / 8.0)
-{
-  static_assert( std::is_base_of<D3Q7DescriptorBaseRTLBM<T>, Lattice<T> >::value, "Descriptor not derived from D3Q7DescriptorBase.");
-}
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMink<T, Lattice>::computeEquilibrium
-( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const
-{
-  return lbHelpers<T, Lattice>::equilibriumFirstOrder( iPop, rho, u );
-}
-
-
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMink<T, Lattice>::collide
-( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics )
-{
-  T intensity = this->_momenta.computeRho( cell );
-  T uSqr = lbHelpers<T,Lattice>::sinkCollision( cell, intensity, _omega, _sink );
-  statistics.incrementStats( intensity, uSqr );
-}
-
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMink<T, Lattice>::staticCollide( Cell<T, Lattice>& cell,
-    const T u[Lattice<T>::d], LatticeStatistics<T>& statistics )
-{
-  assert( false );
-}
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMink<T, Lattice>::getOmega() const
-{
-  return _omega;
-}
-
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMink<T, Lattice>::setOmega( T omega )
-{
-  _omega = omega;
-}
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMink<T, Lattice>::getSink() const
-{
-  return _sink;
-}
-
-
-template<typename T, template<typename U> class Lattice>
-RTLBMconstDynamicsMink<T,Lattice>::RTLBMconstDynamicsMink
-( Momenta<T,Lattice>& momenta, T latticeAbsorption, T latticeScattering )
-  : BasicDynamics<T, Lattice>( momenta ), _sink( 3.0*latticeAbsorption*(latticeAbsorption+latticeScattering) / 8.0)
-{
-  constexpr bool is_d3q7_descriptor = std::is_base_of<D3Q7DescriptorBaseRTLBM<T>, Lattice<T> >::value
-                               || std::is_base_of<D3Q7DescriptorBase<T>, Lattice<T> >::value;
-
-  static_assert( is_d3q7_descriptor, "Descriptor not derived from D3Q7DescriptorBase.");
-}
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMconstDynamicsMink<T, Lattice>::computeEquilibrium
-( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const
-{
-  return lbHelpers<T, Lattice>::equilibriumFirstOrder( iPop, rho, u );
-}
-
-
-template<typename T, template<typename U> class Lattice>
-void RTLBMconstDynamicsMink<T, Lattice>::collide
-( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics )
-{
-  T intensity = this->_momenta.computeRho( cell );
-  T uSqr = lbHelpers<T,Lattice>::sinkCollision( cell, intensity, 1, _sink );
-  statistics.incrementStats( intensity, uSqr );
-}
-
-template<typename T, template<typename U> class Lattice>
-void RTLBMconstDynamicsMink<T, Lattice>::staticCollide( Cell<T, Lattice>& cell,
-    const T u[Lattice<T>::d], LatticeStatistics<T>& statistics )
-{
-  assert( false );
-}
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMconstDynamicsMink<T, Lattice>::getOmega() const
-{
-  return 1;
-}
-
-template<typename T, template<typename U> class Lattice>
-void RTLBMconstDynamicsMink<T, Lattice>::setOmega( T omega )
-{}
-
-//==================================================================//
 //============= BGK Model for Advection diffusion anisotropic ===//
 //==================================================================//
 
-template<typename T, template<typename U> class Lattice>
-RTLBMdynamicsMcHardy<T, Lattice>::RTLBMdynamicsMcHardy
-(Momenta<T, Lattice>& momenta, T latticeAbsorption, T latticeScattering)
-  : BasicDynamics<T, Lattice>(momenta), _absorption(latticeAbsorption), _scattering(latticeScattering)
-{ }
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMcHardy<T, Lattice>::computeEquilibrium( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const
+template<typename T, typename DESCRIPTOR>
+RTLBMdynamicsMcHardy<T, DESCRIPTOR>::RTLBMdynamicsMcHardy
+(Momenta<T, DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix)
+  : BasicDynamics<T, DESCRIPTOR>(momenta), _absorption(latticeAbsorption), _scattering(latticeScattering), _anisoMatrix(anisoMatrix)
 {
-  return lbHelpers<T,Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  this->getName() = "RTLBMdynamicsMcHardy";  
+}
+
+template<typename T, typename DESCRIPTOR>
+T RTLBMdynamicsMcHardy<T, DESCRIPTOR>::computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const
+{
+  return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMcHardy<T, Lattice>::collide( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR>
+void RTLBMdynamicsMcHardy<T, DESCRIPTOR>::collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics )
 {
-  T temperature = this->_momenta.computeRho(cell );
-//  T uSqr = advectionDiffusionLbHelpers<T,Lattice>::sinkCollision( cell, temperature, omega, 0. );
-  T uSqr = lbHelpers<T, Lattice>::
-           anisoCollision( cell, temperature, _absorption, _scattering );
-  statistics.incrementStats( temperature, uSqr );
+  std::array<double, DESCRIPTOR::q> feq = {};
+  for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
+    for ( int jPop = 0; jPop < DESCRIPTOR::q; ++jPop ) {
+      feq[iPop] += (cell[jPop] + descriptors::t<T,DESCRIPTOR>(jPop)) * _anisoMatrix[jPop][iPop];
+    }
+    feq[iPop] *= descriptors::t<T,DESCRIPTOR>(iPop);
+  }
+  // execute collision
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = (cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))
+               - descriptors::norm_c<T,DESCRIPTOR>(iPop)*(_absorption+_scattering) * ( (cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))- feq[iPop] )
+               - _absorption*descriptors::norm_c<T,DESCRIPTOR>(iPop) *(cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))
+               - descriptors::t<T,DESCRIPTOR>(iPop);
+  }
+  T temperature = lbHelpers<T,DESCRIPTOR>::computeRho(cell);
+  statistics.incrementStats( temperature, T() );
 }
 
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMcHardy<T, Lattice>::staticCollide( Cell<T, Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics )
-{
-  assert( false );
-}
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMcHardy<T, Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T RTLBMdynamicsMcHardy<T, DESCRIPTOR>::getOmega() const
 {
   return -1;
 }
 
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMcHardy<T, Lattice>::setOmega( T omega )
+template<typename T, typename DESCRIPTOR>
+void RTLBMdynamicsMcHardy<T, DESCRIPTOR>::setOmega( T omega )
 {
 }
 
 //==================================================================================//
-template<typename T, template<typename U> class Lattice>
-RTLBMdynamicsMcHardyWH<T, Lattice>::RTLBMdynamicsMcHardyWH
-(Momenta<T, Lattice>& momenta, T latticeAbsorption, T latticeScattering)
-  : RTLBMdynamicsMcHardy<T, Lattice>(momenta, latticeAbsorption, latticeScattering)
-{ }
-
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMcHardyWH<T, Lattice>::computeEquilibrium( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const
+template<typename T, typename DESCRIPTOR>
+RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::RTLBMdynamicsMcHardyRK
+(Momenta<T, DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix)
+  : BasicDynamics<T, DESCRIPTOR>(momenta), _absorption(latticeAbsorption), _scattering(latticeScattering), _anisoMatrix(anisoMatrix)
 {
-  return lbHelpers<T,Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  this->getName() = "RTLBMdynamicsMcHardyRK";  
+}
+template<typename T, typename DESCRIPTOR>
+T RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const
+{
+  return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
 }
 
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMcHardyWH<T, Lattice>::collide( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR>
+void RTLBMdynamicsMcHardyRK<T,DESCRIPTOR>::computeEquilibriumAniso(Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq)
 {
-  T temperature = this->_momenta.computeRho(cell );
-//  T uSqr = advectionDiffusionLbHelpers<T,Lattice>::sinkCollision( cell, temperature, omega, 0. );
-  T uSqr = lbHelpers<T, Lattice>::
-           anisoCollisionWH( cell, temperature, this->_absorption, this->_scattering );
-  statistics.incrementStats( temperature, uSqr );
+  feq.fill( T() );
+  for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
+    for ( int jPop = 0; jPop < DESCRIPTOR::q; ++jPop ) {
+      feq[iPop] += cell[jPop] * _anisoMatrix[jPop][iPop];
+    }
+    feq[iPop] *= descriptors::t<T,DESCRIPTOR>(iPop);
+  }
 }
 
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMcHardyWH<T, Lattice>::staticCollide( Cell<T, Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR>
+std::array<T,DESCRIPTOR::q> RTLBMdynamicsMcHardyRK<T,DESCRIPTOR>::doCollision(Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq)
 {
-  assert( false );
+  std::array<T,DESCRIPTOR::q> k;
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    k[iPop]  = - descriptors::norm_c<T,DESCRIPTOR>(iPop)*(_absorption+_scattering) * (cell[iPop])
+               + descriptors::norm_c<T,DESCRIPTOR>(iPop)*_scattering * feq[iPop];
+  }
+  return k;
 }
 
-template<typename T, template<typename U> class Lattice>
-T RTLBMdynamicsMcHardyWH<T, Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+void RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics )
+{
+  std::array<T,DESCRIPTOR::q> feq;
+  std::array<T,DESCRIPTOR::q> f_pre_collision;
+  // separate cell and precollision f_i
+  for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
+    f_pre_collision[iPop] = cell[iPop] + descriptors::t<T,DESCRIPTOR>(iPop);
+  }
+
+  // shift only first collision und equilibrium and then at the very end
+  for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
+    cell[iPop] += descriptors::t<T,DESCRIPTOR>(iPop);
+  }
+  computeEquilibriumAniso(cell,feq);
+  std::array<T,DESCRIPTOR::q> k1 = doCollision(cell,feq);
+  // update cell
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = f_pre_collision[iPop] + 0.5*k1[iPop];
+  }
+
+  computeEquilibriumAniso(cell,feq);
+  std::array<T,DESCRIPTOR::q> k2 = doCollision(cell,feq);
+  // update cell
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = f_pre_collision[iPop] + 0.5*k2[iPop];
+  }
+
+  computeEquilibriumAniso(cell,feq);
+  std::array<T,DESCRIPTOR::q> k3 = doCollision(cell,feq);
+  // update cell
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = f_pre_collision[iPop] + k3[iPop];
+  }
+
+  computeEquilibriumAniso(cell,feq);
+  std::array<T,DESCRIPTOR::q> k4 = doCollision(cell,feq);
+  // update cell
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = f_pre_collision[iPop] + 1/6.*(k1[iPop] + 2*k2[iPop] + 2*k3[iPop] + k4[iPop])
+                 - descriptors::t<T,DESCRIPTOR>(iPop); // back shift for OpenLB
+  }
+  T temperature = lbHelpers<T,DESCRIPTOR>::computeRho(cell);
+  statistics.incrementStats( temperature, T() );
+}
+
+template<typename T, typename DESCRIPTOR>
+T RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::getOmega() const
 {
   return -1;
 }
 
-template<typename T, template<typename U> class Lattice>
-void RTLBMdynamicsMcHardyWH<T, Lattice>::setOmega( T omega )
+template<typename T, typename DESCRIPTOR>
+void RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::setOmega( T omega )
 {
 }
 
@@ -226,3 +186,4 @@ void RTLBMdynamicsMcHardyWH<T, Lattice>::setOmega( T omega )
 
 
 #endif
+

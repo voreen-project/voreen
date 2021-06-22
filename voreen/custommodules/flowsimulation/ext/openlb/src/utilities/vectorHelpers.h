@@ -45,6 +45,7 @@ namespace util {
 template <class T>
 inline bool nearZero(const T& a)
 {
+  if (a==T()) return true;
   T EPSILON = std::numeric_limits<T>::epsilon();
   if (a > -EPSILON && a < EPSILON) {
     return true;
@@ -53,10 +54,30 @@ inline bool nearZero(const T& a)
   }
 }
 
+template <class T>
+inline bool nearZero(const T& a, const T& epsilon)
+{
+  if (a > -epsilon && a < epsilon) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+template<typename T>
+inline bool approxEqual(const T& a, const T& b, const T& epsilon)
+{
+  if (a==b) return true;
+  return nearZero<T>(a - b, epsilon);
+}
+
 template<typename T>
 inline bool approxEqual(const T& a, const T& b)
 {
-    return nearZero<T>(a - b);
+  if (a==b) return true;
+  if (nearZero(a) && nearZero(b)) return true;
+  T EPSILON = std::numeric_limits<T>::epsilon()*4.*fabs(a);
+  return approxEqual(a,b,EPSILON);
 }
 
 template <class T>
@@ -145,6 +166,28 @@ std::vector<T> normalize(const std::vector<T>& a)
   return out;
 }
 
+/// applies floor to each component of a vector
+template <typename T, unsigned Size>
+Vector<T,Size> floor(const Vector<T,Size>& a)
+{
+  Vector<T,Size> out;
+  for (unsigned int iDim=0; iDim < Size; ++iDim) {
+    out[iDim] = std::floor(a[iDim]);
+  }
+  return out;
+}
+
+/// applies ceil to each component of a vector
+template <typename T, unsigned Size>
+Vector<T,Size> ceil(const Vector<T,Size>& a)
+{
+  Vector<T,Size> out;
+  for (unsigned int iDim=0; iDim < Size; ++iDim) {
+    out[iDim] = std::ceil(a[iDim]);
+  }
+  return out;
+}
+
 /*
 /// algorithm by Möller–Trumbore (TODO add ref), implemented by Lucas Cruz and Mathias J. Krause
 /// returns true if there is an intersection of a triangle given by (point0, point1, point1) and a ray given by its origin and direction and computes the distance
@@ -211,60 +254,24 @@ std::vector<T> assign(T a, T b, T c)
   return v1;
 }
 
-/// prints a vector of arbitrary length
-template <typename T>
-void print(const T& a, std::string name="", OstreamManager clout = OstreamManager(std::cout,"print"))
+
+template<typename U>
+void print(U data, const std::string& name="", OstreamManager clout = OstreamManager(std::cout,"print"),
+  const char delimiter=',')
 {
+  static_assert(!std::is_integral<U>::value && !std::is_floating_point<U>::value, "passed integral or floating_point value to function print()");
   if (name != "") {
-    clout << name << "=";
+    clout << name << " = ";
   }
-  clout << a << std::endl;
+  for( auto& element : data ) {
+    clout << std::fixed << element << delimiter << ' ';
+  }
+  clout << std::endl;
 }
 
-/// prints a vector of arbitrary length
-template <typename T>
-void print(const std::vector<T>& a, std::string name="", OstreamManager clout = OstreamManager(std::cout,"print"))
-{
-  if (name != "") {
-    clout << name << "=";
-  }
-  clout << "(";
-  for (unsigned iD=0; iD<a.size()-1; iD++) {
-    clout << a[iD] << ",";
-  }
-  clout << a[a.size()-1] << ")" << std::endl;
-}
-
-/// prints a vector of arbitrary length
-template <typename T>
-void print(const T a[2], std::string name="", OstreamManager clout = OstreamManager(std::cout,"print"))
-{
-  if (name != "") {
-    clout << name << "=";
-  }
-  unsigned size = 2;
-  clout << "(";
-  for (unsigned iD=0; iD<size-1; iD++) {
-    clout << a[iD] << ",";
-  }
-  clout << a[size-1] << ")" << std::endl;
-}
-
-/// prints a vector of arbitrary length
-template <typename T>
-void print(const T a[3], const unsigned& size, std::string name="", OstreamManager clout = OstreamManager(std::cout,"print"))
-{
-  if (name != "") {
-    clout << name << "=";
-  }
-  clout << "(";
-  for (unsigned iD=0; iD<size-1; iD++) {
-    clout << a[iD] << ",";
-  }
-  clout << a[size-1] << ")" << std::endl;
-}
 
 } // namespace util
+
 } // namespace olb
 
 #endif

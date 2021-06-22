@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -34,8 +34,8 @@
 namespace olb {
 
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   SuperLattice2D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -55,8 +55,8 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   this->getName() = "SuperPlaneIntegralFluxF2D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   SuperLattice2D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -76,8 +76,8 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   this->getName() = "SuperPlaneIntegralFluxF2D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   SuperLattice2D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -95,8 +95,8 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   this->getName() = "SuperPlaneIntegralFluxF2D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   SuperLattice2D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
@@ -114,8 +114,8 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   this->getName() = "SuperPlaneIntegralFluxF2D";
 }
 
-template<typename T, template<typename, template<typename> class> class F>
-template<template<typename> class DESCRIPTOR>
+template<typename T, template<typename, typename> class F>
+template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
   SuperLattice2D<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,

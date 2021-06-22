@@ -29,9 +29,9 @@
 #define BLOCK_GEOMETRY_STRUCTURE_3D_H
 
 #include <vector>
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
-#include "functors/lattice/indicator/indicatorF3D.h"
+#include "core/vector.h"
 #include "geometry/blockGeometryStatistics3D.h"
+#include "core/blockStructure3D.h"
 #include "io/ostreamManager.h"
 
 
@@ -39,11 +39,11 @@
 namespace olb {
 
 
-template<typename T> class BlockGeometryStatistics3D;
 template<typename T> class IndicatorF3D;
 
 /// Representation of a block geometry structure
-/** This pure virtual class provides an interface for the classes
+/**
+ * This pure virtual class provides an interface for the classes
  * block geometry and block geometry view. It presents a volume
  * of voxels. Different types are given my material numbers
  * which is imporant e.g. to work with different boundaries
@@ -58,23 +58,20 @@ template<typename T> class IndicatorF3D;
  * This class is intended to be derived from.
  */
 template<typename T>
-class BlockGeometryStructure3D {
-
+class BlockGeometryStructure3D : public BlockStructure3D {
 protected:
   /// Number of the cuboid, default=-1
   int _iCglob;
   /// Statistic class
   BlockGeometryStatistics3D<T> _statistics;
-
   /// class specific output stream
   mutable OstreamManager clout;
 
 public:
   /// Constructor
-  BlockGeometryStructure3D(int iCglob=-1);
+  BlockGeometryStructure3D(int nX, int nY, int nZ, int iCglob=-1);
   /// dtor
   virtual ~BlockGeometryStructure3D() {};
-
 
   /// Read only access to the global iC number which is given !=-1 if the block geometries are part of a super geometry
   virtual int const& getIcGlob() const;
@@ -85,21 +82,21 @@ public:
 
   /// Returns the position of the block origin which is the node (iX=0/iY=0/iZ=0) in physical units (meter)
   virtual Vector<T,3> getOrigin() const = 0;
-  /// Returns the extend in x direction of the block in lattice units
-  virtual int getNx() const = 0;
-  /// Returns the extend in y direction of the block in lattice units
-  virtual int getNy() const = 0;
-  /// Returns the extend in z direction of the block in lattice units
-  virtual int getNz() const = 0;
   /// Returns the extend of the block in lattice units
-  virtual Vector<int,3> const getExtend() const;
+  virtual Vector<int,3> getExtend() const;
   /// Returns the spacing in physical units (meter)
-  virtual const T getDeltaR() const = 0;
+  virtual T getDeltaR() const = 0;
 
   /// Transforms lattice to physical coordinates (wrapped from cuboid geometry)
   virtual void getPhysR(T physR[3], const int& iX, const int& iY, const int& iZ) const = 0;
   /// Transforms lattice to physical coordinates (wrapped from cuboid geometry)
   virtual void getPhysR(T physR[3], const int latticeR[3]) const;
+
+  Vector<T,3> getPhysR(int iX, int iY, int iZ) {
+    T physR[3];
+    getPhysR(physR, iX, iY, iZ);
+    return Vector<T,3>(physR);
+  }
 
   // TODO to be removed old once
   /// returns the (iX,iY,iZ) entry in the 3D scalar field
@@ -120,9 +117,9 @@ public:
   virtual int clean(int material, bool verbos=true);
   /// Changes all materials with material 1 to 0 if there is a neighbour with material 0
   virtual int outerClean(bool verbose=true);
-  /// Changes all materials which are not 0 or 1 to 1 if there is a non robust constiallation
+  /// Changes all materials which are not 0 or 1 to 1 if there is a non robust constellation
   virtual int innerClean(bool verbose=true);
-  /// Changes all materials with material fromM to 1 if there is a non robust constiallation
+  /// Changes all materials with material fromM to 1 if there is a non robust constellation
   virtual int innerClean(int fromM, bool verbose=true);
 
   /// Returns the coordinates (iX,iY,iZ) of a voxel with a given material number (material) if there exists an neighbourhood of size (offsetX,offsetY,offsetZ) only with voxels of the  given material number
@@ -144,6 +141,8 @@ public:
   virtual void rename(int fromM, int toM, int fluidM, IndicatorF3D<T>& condition, std::vector<int> discreteNormal);
   /// Replaces all material numbers (fromM) to another (toM) if all materials in the neighbourhood (iX+discreteNormal[0],iX+2*discreteNormal[0]), .. are of another material number (fluidM) and if an indicator functor condition is fulfilled, the discreteNormal is computed from all fromM which fulfill the indicator functor condition
   virtual void rename(int fromM, int toM, int fluidM, IndicatorF3D<T>& condition);
+  /// Copy a layer of material numbers inside an indicator in a discrete normal direction
+  virtual void copyMaterialLayer(IndicatorF3D<T>& condition, int discreteNormal[3], int numberOfLayers);
 
   /// Replaces all material numbers (fromM) to another (toM) using a seed point and max. directions indicated by offsetX,Y,Z != 0
   virtual void regionGrowing(int fromM, int toM, int seedX, int seedY, int seedZ, int offsetX, int offsetY, int offsetZ, std::map<std::vector<int>, int >* tmp=nullptr);

@@ -35,50 +35,50 @@ namespace olb {
 * Multiphysics class for coupling between different lattices.
 */
 
-// =========================================================================//
-// ===========Shan Chen coupling without wall interaction===================//
-// =========================================================================//
-
-template<typename T, template<typename U> class Lattice>
-class ShanChenDynGForcedPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
-public:
-  ShanChenDynGForcedPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
-                                    std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_,
-                                    std::vector<SpatiallyExtendedObject2D*> partners_);
-  ShanChenDynGForcedPostProcessor2D(T G_,
-                                    std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_,
-                                    std::vector<SpatiallyExtendedObject2D*> partners_);
-  virtual int extent() const
-  {
-    return 1;
-  }
-  virtual int extent(int whichDirection) const
-  {
-    return 1;
-  }
-  virtual void process(BlockLattice2D<T,Lattice>& blockLattice);
-  virtual void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_);
-private:
-  int x0, x1, y0, y1;
-  T G;
-  std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
-  std::vector<SpatiallyExtendedObject2D*> partners;
-};
-
-template<typename T, template<typename U> class Lattice>
-class ShanChenDynGForcedGenerator2D : public LatticeCouplingGenerator2D<T,Lattice> {
-public:
-  ShanChenDynGForcedGenerator2D(int x0_, int x1_, int y0_, int y1_, T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  ShanChenDynGForcedGenerator2D(T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  virtual PostProcessor2D<T,Lattice>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const;
-  virtual LatticeCouplingGenerator2D<T,Lattice>* clone() const;
-private:
-  T G;
-  std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
-};
+//// =========================================================================//
+//// ===========Shan Chen coupling without wall interaction===================//
+//// =========================================================================//
+//
+//template<typename T, typename DESCRIPTOR>
+//class ShanChenDynGForcedPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
+//public:
+//  ShanChenDynGForcedPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
+//                                    std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
+//                                    std::vector<SpatiallyExtendedObject2D*> partners_);
+//  ShanChenDynGForcedPostProcessor2D(T G_,
+//                                    std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
+//                                    std::vector<SpatiallyExtendedObject2D*> partners_);
+//  virtual int extent() const
+//  {
+//    return 1;
+//  }
+//  virtual int extent(int whichDirection) const
+//  {
+//    return 1;
+//  }
+//  virtual void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice);
+//  virtual void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+//                                int x0_, int x1_, int y0_, int y1_);
+//private:
+//  int x0, x1, y0, y1;
+//  T G;
+//  std::vector<T> rho0;
+//  AnalyticalF<1,T,T>& interactionPotential;
+//  std::vector<SpatiallyExtendedObject2D*> partners;
+//};
+//
+//template<typename T, typename DESCRIPTOR>
+//class ShanChenDynGForcedGenerator2D : public LatticeCouplingGenerator2D<T,DESCRIPTOR> {
+//public:
+//  ShanChenDynGForcedGenerator2D(int x0_, int x1_, int y0_, int y1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+//  ShanChenDynGForcedGenerator2D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+//  virtual PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const;
+//  virtual LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const;
+//private:
+//  T G;
+//  std::vector<T> rho0;
+//  AnalyticalF<1,T,T>& interactionPotential;
+//};
 
 }
 

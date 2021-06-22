@@ -72,7 +72,7 @@ public:
 
   /// Constructs empty Geometry
   CuboidGeometry2D();
-  /// Constructs a cuboid geometry with a cubic shape of size nX times nY times nZ with origin originR=(originX, originY, originZ) that consits of nC cuboids
+  /// Constructs a cuboid geometry with a cubic shape of size nX times nY with origin originR=(originX, originY) that consits of nC cuboids
   CuboidGeometry2D(T originX, T originY, T deltaR, int nX, int nY, int nC=1);
   /// Constructs a cuboid structure with a uniform spacing of voxelsize which consits of  nC cuboids, the cuboids not needed are removed and too big ones are shrinked
   CuboidGeometry2D(IndicatorF2D<T>& indicatorF, T voxelSize, int nC=1);
@@ -94,7 +94,7 @@ public:
   /// Returns true and the nearest lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getLatticeR(std::vector<T> physR, std::vector<int>& latticeR) const;
   bool getLatticeR(int latticeR[], const T physR[]) const;
-
+  bool getLatticeR(const Vector<T,2>& physR, Vector<int,3>& latticeR) const;
   /// Returns true and the floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getFloorLatticeR(std::vector<T> physR, std::vector<int>& latticeR) const;
   /// Returns true and the floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
@@ -106,7 +106,7 @@ public:
   void getPhysR(T output[2], const int latticeR[3]) const;
   void getPhysR(T output[2], const int iCglob, const int iX, const int iY) const;
 
-  /// Returns the number of cuboids in the structure
+  /// Returns the number of cuboids in t < 2he structure
   int getNc() const;
   /// Returns the maximum/minimum of the ratio nX/NY in the structure
   T getMinRatio() const;

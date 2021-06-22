@@ -58,11 +58,14 @@ protected:
 public:
   /// Construction of a super structure
   SuperStructure2D(CuboidGeometry2D<T>& cuboidGeometry,
-                   LoadBalancer<T>& loadBalancer, int overlap = 1);
+                   LoadBalancer<T>& loadBalancer, int overlap = 2);
   /// Default Constructor for empty SuperStructure
   SuperStructure2D(int overlap = 1);
-  /// Write access to the memory of the data of the super structure where (iX, iY, iZ) is the point providing the data iData in the block iCloc
-  virtual bool* operator() (int iCloc, int iX, int iY, int iData) =0;
+
+  /// Write access to the memory of the data of the super structure where (iX, iY) is the point providing the data iData in the block iCloc
+  virtual std::uint8_t* operator() (int iCloc, int iX, int iY, int iData) =0;
+  virtual std::uint8_t* operator() (int iCloc, std::size_t iCell, int iData) =0;
+
   /// Read only access to the dim of the data of the super structure
   virtual int getDataSize() const =0;
   /// Read only access to the data type dim of the data of the super structure

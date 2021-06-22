@@ -36,6 +36,7 @@
 #include "core/singleton.h"
 #include "communication/mpiManager.h"
 #include "octree.hh"
+#include "stlReader.h"
 
 using namespace olb::util;
 
@@ -496,6 +497,99 @@ STLmesh<T>::STLmesh(std::string fName, T stlSize)
 }
 
 template<typename T>
+STLmesh<T>::STLmesh(const std::vector<std::vector<T>> meshPoints, T stlSize)
+  : _fName("meshPoints.stl"),
+    _min(T()),
+    _max(T()),
+    _maxDist2(0),
+    clout(std::cout, "STLmesh")
+{
+  _triangles.reserve(10000);
+  for (size_t i = 0; i < meshPoints.size() / 3; i++) {
+    STLtriangle<T> tri;
+    tri.point[0].r[0] = meshPoints[i*3 + 0][0];
+    tri.point[0].r[1] = meshPoints[i*3 + 0][1];
+    tri.point[0].r[2] = meshPoints[i*3 + 0][2];
+
+    tri.point[1].r[0] = meshPoints[i*3 + 1][0];
+    tri.point[1].r[1] = meshPoints[i*3 + 1][1];
+    tri.point[1].r[2] = meshPoints[i*3 + 1][2];
+
+    tri.point[2].r[0] = meshPoints[i*3 + 2][0];
+    tri.point[2].r[1] = meshPoints[i*3 + 2][1];
+    tri.point[2].r[2] = meshPoints[i*3 + 2][2];
+    for (int k = 0; k < 3; k++) {
+      tri.point[0].r[k] *= stlSize;
+      tri.point[1].r[k] *= stlSize;
+      tri.point[2].r[k] *= stlSize;
+    }
+    if (i == 0) {
+      _min*=T();
+      _max*=T();
+
+      _min[0] = tri.point[0].r[0];
+      _min[1] = tri.point[0].r[1];
+      _min[2] = tri.point[0].r[2];
+
+      _max[0] = tri.point[0].r[0];
+      _max[1] = tri.point[0].r[1];
+      _max[2] = tri.point[0].r[2];
+
+      _min[0] = std::min(_min[0], (T) tri.point[1].r[0]);
+      _min[1] = std::min(_min[1], (T) tri.point[1].r[1]);
+      _min[2] = std::min(_min[2], (T) tri.point[1].r[2]);
+
+      _max[0] = std::max(_max[0], (T) tri.point[1].r[0]);
+      _max[1] = std::max(_max[1], (T) tri.point[1].r[1]);
+      _max[2] = std::max(_max[2], (T) tri.point[1].r[2]);
+
+      _min[0] = std::min(_min[0], (T) tri.point[2].r[0]);
+      _min[1] = std::min(_min[1], (T) tri.point[2].r[1]);
+      _min[2] = std::min(_min[2], (T) tri.point[2].r[2]);
+
+      _max[0] = std::max(_max[0], (T) tri.point[2].r[0]);
+      _max[1] = std::max(_max[1], (T) tri.point[2].r[1]);
+      _max[2] = std::max(_max[2], (T) tri.point[2].r[2]);
+
+    } else {
+      _min[0] = std::min(_min[0], (T) tri.point[0].r[0]);
+      _min[1] = std::min(_min[1], (T) tri.point[0].r[1]);
+      _min[2] = std::min(_min[2], (T) tri.point[0].r[2]);
+
+      _max[0] = std::max(_max[0], (T) tri.point[0].r[0]);
+      _max[1] = std::max(_max[1], (T) tri.point[0].r[1]);
+      _max[2] = std::max(_max[2], (T) tri.point[0].r[2]);
+
+      _min[0] = std::min(_min[0], (T) tri.point[1].r[0]);
+      _min[1] = std::min(_min[1], (T) tri.point[1].r[1]);
+      _min[2] = std::min(_min[2], (T) tri.point[1].r[2]);
+
+      _max[0] = std::max(_max[0], (T) tri.point[1].r[0]);
+      _max[1] = std::max(_max[1], (T) tri.point[1].r[1]);
+      _max[2] = std::max(_max[2], (T) tri.point[1].r[2]);
+
+      _min[0] = std::min(_min[0], (T) tri.point[2].r[0]);
+      _min[1] = std::min(_min[1], (T) tri.point[2].r[1]);
+      _min[2] = std::min(_min[2], (T) tri.point[2].r[2]);
+
+      _max[0] = std::max(_max[0], (T) tri.point[2].r[0]);
+      _max[1] = std::max(_max[1], (T) tri.point[2].r[1]);
+      _max[2] = std::max(_max[2], (T) tri.point[2].r[2]);
+    }
+
+    tri.init();
+    _triangles.push_back(tri);
+
+    _maxDist2 = std::max(distPoints(tri.point[0], tri.point[1]),
+                         _maxDist2);
+    _maxDist2 = std::max(distPoints(tri.point[2], tri.point[1]),
+                         _maxDist2);
+    _maxDist2 = std::max(distPoints(tri.point[0], tri.point[2]),
+                         _maxDist2);
+  }
+}
+
+template<typename T>
 T STLmesh<T>::distPoints(STLpoint<T>& p1, STLpoint<T>& p2)
 {
   return std::pow(double(p1.r[0] - p2.r[0]), 2)
@@ -511,7 +605,7 @@ void STLmesh<T>::print(bool full)
     clout << "Triangles: " << std::endl;
     typename std::vector<STLtriangle<T> >::iterator it = _triangles.begin();
 
-    for (; it != _triangles.end(); it++) {
+    for (; it != _triangles.end(); ++it) {
       clout << i++ << ": " << it->point[0].r[0] << " " << it->point[0].r[1]
             << " " << it->point[0].r[2] << " | " << it->point[1].r[0] << " "
             << it->point[1].r[1] << " " << it->point[1].r[2] << " | "
@@ -632,6 +726,110 @@ STLreader<T>::STLreader(const std::string fName, T voxelSize, T stlSize,
   case 1:
     indicate1();
     break;
+  case 3:
+    indicate3();
+    break;
+  case 4:
+    indicate2_Xray();
+    break;
+  case 5:
+    indicate2_Yray();
+	break;
+  default:
+    indicate2();
+    break;
+  }
+
+  if (_verbose) {
+    print();
+  }
+  if (_verbose) {
+    clout << "Voxelizing ... OK" << std::endl;
+  }
+}
+
+/*
+ * STLReader functions
+ */
+template<typename T>
+STLreader<T>::STLreader(const std::vector<std::vector<T>> meshPoints, T voxelSize, T stlSize,
+                        unsigned short int method, bool verbose, T overlap, T max)
+  : _voxelSize(voxelSize),
+    _stlSize(stlSize),
+    _overlap(overlap),
+    _fName("meshPoints.stl"),
+    _mesh(meshPoints, stlSize),
+    _verbose(verbose),
+    clout(std::cout, "STLreader")
+{
+  this->getName() = "STLreader";
+
+  if (_verbose) {
+    clout << "Voxelizing ..." << std::endl;
+  }
+
+  Vector<T,3> extension = _mesh.getMax() - _mesh.getMin();
+  if ( util::nearZero(max) ) {
+    max = std::max(extension[0], std::max(extension[1], extension[2])) + _voxelSize;
+  }
+  int j = 0;
+  for (; _voxelSize * std::pow(2, j) < max; j++)
+    ;
+  Vector<T,3> center;
+  T radius = _voxelSize * std::pow(2, j - 1);
+
+  /// Find center of tree and move by _voxelSize/4.
+  for (unsigned i = 0; i < 3; i++) {
+    center[i] = (_mesh.getMin()[i] + _mesh.getMax()[i]) / 2. - _voxelSize / 4.;
+  }
+
+  /// Create tree
+
+  _tree = new Octree<T>(center, radius, &_mesh, j, _overlap);
+
+  /// Compute _myMin, _myMax such that they are the smallest (greatest) Voxel inside the STL.
+  for (int i = 0; i < 3; i++) {
+    this->_myMin[i] = center[i] + _voxelSize / 2.;
+    this->_myMax[i] = center[i] - _voxelSize / 2.;
+  }
+  for (int i = 0; i < 3; i++) {
+    while (this->_myMin[i] > _mesh.getMin()[i]) {
+      this->_myMin[i] -= _voxelSize;
+    }
+    while (this->_myMax[i] < _mesh.getMax()[i]) {
+      this->_myMax[i] += _voxelSize;
+    }
+    this->_myMax[i] -= _voxelSize;
+    this->_myMin[i] += _voxelSize;
+  }
+  //automaticly choose the method with minimum extension in its direction
+  
+  /*if(extension[0] == std::min_element(extension.begin(), extension.end())){
+    method = 4;
+  }
+  else if(extension[1] == std::min_element(extension.begin(), extension.end())){
+    method = 5;
+  }
+  else if(extension[2] == std::min_element(extension.begin(), extension.end())){
+    method = 0; 
+  }
+  */
+ 
+  
+  // Indicate nodes of the tree. (Inside/Outside)
+  switch (method) {
+  case 1:
+    indicate1();
+    break;
+  case 3:
+    indicate3();
+    break;
+  case 4:
+    indicate2_Xray();
+    break;
+  case 5:
+	indicate2_Yray();
+	break;
   default:
     indicate2();
     break;
@@ -669,7 +867,7 @@ void STLreader<T>::indicate1()
   int inside = 0;
   Octree<T>* node = nullptr;
   T step = 1. / 1000. * _voxelSize;
-  for (; it != leafs.end(); it++) {
+  for (; it != leafs.end(); ++it) {
     inside = 0;
 
     pt = (*it)->getCenter();
@@ -764,6 +962,226 @@ void STLreader<T>::indicate2()
   }
 }
 
+
+
+/*
+ *  New indicate function (faster, less stable)
+ *  Define ray in X-direction for each Voxel in YZ-layer. Indicate all nodes on the fly.
+ */
+
+template<typename T>
+void STLreader<T>::indicate2_Xray()
+{
+  T rad = _tree->getRadius();
+  Vector<T,3> rayPt = _tree->getCenter() - rad + .5 * _voxelSize;
+  Vector<T,3> pt = rayPt;
+  Vector<T,3> rayDir;
+  rayDir[0] = 1.;
+  rayDir[1] = 0.;
+  rayDir[2] = 0.;
+  //Vector<T,3> maxEdge = _tree->getCenter() + rad;
+
+  T step = 1. / 1000. * _voxelSize;
+
+  Octree<T>* node = nullptr;
+  unsigned short rayInside = 0;
+  Vector<T,3> nodeInters;
+  while (pt[2] < _mesh.getMax()[2] + std::numeric_limits<T>::epsilon()) {
+    node = _tree->find(pt);
+    nodeInters = pt;
+    nodeInters[0] = node->getCenter()[0] - node->getRadius();
+    rayInside = 0;
+    while (pt[1] < _mesh.getMax()[1] + std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(pt);
+      nodeInters = pt;
+      nodeInters[0] = node->getCenter()[0] - node->getRadius();
+      rayInside = 0;
+      while (pt[0] < _mesh.getMax()[0] + std::numeric_limits<T>::epsilon()) {
+        node = _tree->find(pt);
+        node->checkRay(nodeInters, rayDir, rayInside);
+        node->intersectRayNode(pt, rayDir, nodeInters);
+        pt = nodeInters + step * rayDir;
+      }
+      pt[0] = rayPt[0];
+      pt[1] += _voxelSize;
+    }
+    pt[1] = rayPt[1];
+    pt[2] += _voxelSize;
+  }
+}
+
+/*
+ *  New indicate function (faster, less stable)
+ *  Define ray in Y-direction for each Voxel in XZ-layer. Indicate all nodes on the fly.
+ */
+
+template<typename T>
+void STLreader<T>::indicate2_Yray()
+{
+  T rad = _tree->getRadius();
+  Vector<T,3> rayPt = _tree->getCenter() - rad + .5 * _voxelSize;
+  Vector<T,3> pt = rayPt;
+  Vector<T,3> rayDir;
+  rayDir[0] = 0.;
+  rayDir[1] = 1.;
+  rayDir[2] = 0.;
+  //Vector<T,3> maxEdge = _tree->getCenter() + rad;
+
+  T step = 1. / 1000. * _voxelSize;
+
+  Octree<T>* node = nullptr;
+  unsigned short rayInside = 0;
+  Vector<T,3> nodeInters;
+  while (pt[2] < _mesh.getMax()[2] + std::numeric_limits<T>::epsilon()) {
+    node = _tree->find(pt);
+    nodeInters = pt;
+    nodeInters[1] = node->getCenter()[1] - node->getRadius();
+    rayInside = 0;
+    while (pt[0] < _mesh.getMax()[0] + std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(pt);
+      nodeInters = pt;
+      nodeInters[1] = node->getCenter()[1] - node->getRadius();
+      rayInside = 0;
+      while (pt[1] < _mesh.getMax()[1] + std::numeric_limits<T>::epsilon()) {
+        node = _tree->find(pt);
+        node->checkRay(nodeInters, rayDir, rayInside);
+        node->intersectRayNode(pt, rayDir, nodeInters);
+        pt = nodeInters + step * rayDir;
+      }
+      pt[1] = rayPt[1];
+      pt[0] += _voxelSize;
+    }
+    pt[0] = rayPt[0];
+    pt[2] += _voxelSize;
+  }
+}
+
+/*
+ *  Double ray approach: two times (X-, Y-, Z-direction) for each leaf.
+ *  Could be use to deal with double layer triangles and face intersections.
+ */
+template<typename T>
+void STLreader<T>::indicate3()
+{
+  std::vector<Octree<T>*> leafs;
+  _tree->getLeafs(leafs);
+  typename std::vector<Octree<T>*>::iterator it = leafs.begin();
+
+  Vector<T,3> dir, pt, s;
+  Octree<T>* node = nullptr;
+  T step = 1. / 1000. * _voxelSize;
+  int intersections;
+  int sum_intersections;
+
+  for (; it != leafs.end(); ++it) {
+    pt = (*it)->getCenter();
+    intersections = 0;
+    sum_intersections = 0;
+    s = pt;  // + step;
+
+    /// X+ dir
+    dir[0] = 1;
+    dir[1] = 0;
+    dir[2] = 0;
+    while (s[0] < _mesh.getMax()[0] + std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(s, (*it)->getMaxdepth());
+      intersections = node->testIntersection(pt, dir);
+      node->intersectRayNode(pt, dir, s);
+      s = s + step * dir;
+      if (intersections > 0) {
+        sum_intersections++;
+        break;
+      }
+    }
+
+    /// Y+ Test
+    intersections = 0;
+    s = pt;  // + step;
+    dir[0] = 0;
+    dir[1] = 1;
+    dir[2] = 0;
+    while (s[1] < _mesh.getMax()[1] + std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(s, (*it)->getMaxdepth());
+      intersections = node->testIntersection(pt, dir);
+      node->intersectRayNode(pt, dir, s);
+      s = s + step * dir;
+      if (intersections > 0) {
+        sum_intersections++;
+        break;
+      }
+    }
+
+    /// Z+ Test
+    intersections = 0;
+    s = pt;  // + step;
+    dir[0] = 0;
+    dir[1] = 0;
+    dir[2] = 1;
+    while (s[2] < _mesh.getMax()[2] + std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(s, (*it)->getMaxdepth());
+      intersections = node->testIntersection(pt, dir);
+      node->intersectRayNode(pt, dir, s);
+      s = s + step * dir;
+      if (intersections > 0) {
+        sum_intersections++;
+        break;
+      }
+    }
+
+    /// X- dir
+    intersections = 0;
+    s = pt;  // + step;
+    dir[0] = -1;
+    dir[1] = 0;
+    dir[2] = 0;
+    while (s[0] > _mesh.getMin()[0] - std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(s, (*it)->getMaxdepth());
+      intersections = node->testIntersection(pt, dir);
+      node->intersectRayNode(pt, dir, s);
+      s = s + step * dir;
+      if (intersections > 0) {
+        sum_intersections++;
+        break;
+      }
+    }
+
+    /// Y- Test
+    intersections = 0;
+    s = pt;  // + step;
+    dir[0] = 0;
+    dir[1] = -1;
+    dir[2] = 0;
+    while (s[1] > _mesh.getMin()[1] - std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(s, (*it)->getMaxdepth());
+      intersections = node->testIntersection(pt, dir);
+      node->intersectRayNode(pt, dir, s);
+      s = s + step * dir;
+      if (intersections > 0) {
+        sum_intersections++;
+        break;
+      }
+    }
+
+    /// Z- Test
+    intersections = 0;
+    s = pt;  // + step;
+    dir[0] = 0;
+    dir[1] = 0;
+    dir[2] = -1;
+    while (s[2] > _mesh.getMin()[2] - std::numeric_limits<T>::epsilon()) {
+      node = _tree->find(s, (*it)->getMaxdepth());
+      intersections = node->testIntersection(pt, dir);
+      node->intersectRayNode(pt, dir, s);
+      s = s + step * dir;
+      if (intersections > 0) {
+        sum_intersections++;
+        break;
+      }
+    }
+    (*it)->setInside(sum_intersections > 5);
+  }
+}
+
 template<typename T>
 bool STLreader<T>::operator() (bool output[], const T input[])
 {
@@ -785,7 +1203,7 @@ bool STLreader<T>::distance(T& distance, const Vector<T,3>& origin,
 {
   Octree<T>* node = nullptr;
   Vector<T,3> dir(direction);
-  dir.normalize();
+  dir = normalize(dir);
   Vector<T,3> extends = _mesh.getMax() - _mesh.getMin();
   Vector<T,3> pt(origin);
   Vector<T,3> q;
@@ -881,7 +1299,7 @@ bool STLreader<T>::distance(T& distance, const Vector<T,3>& origin,
     node = _tree->find(pt);
     if (node->closestIntersection(Vector<T,3>(origin), dir, q, a)) {
       Vector<T,3> vek(q - Vector<T,3>(origin));
-      distance = vek.norm();
+      distance = norm(vek);
       return true;
     } else {
       Octree<T>* tmpNode = _tree->find(pt);
@@ -891,7 +1309,10 @@ bool STLreader<T>::distance(T& distance, const Vector<T,3>& origin,
       }
     }
   }
-  //clout << "Returning false" << std::endl;
+
+  if (_verbose) {
+    clout << "Returning false" << std::endl;
+  }
   return false;
 }
 
@@ -914,9 +1335,13 @@ void STLreader<T>::writeOctree()
 }
 
 template<typename T>
-void STLreader<T>::writeSTL()
+void STLreader<T>::writeSTL(std::string stlName)
 {
-  _mesh.write(_fName);
+  if (stlName == "") {
+    _mesh.write(_fName);
+  } else {
+    _mesh.write(stlName);
+  }
 }
 
 template<typename T>

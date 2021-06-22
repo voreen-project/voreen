@@ -37,7 +37,7 @@
 #include <limits>
 
 #include "geometry/cuboidGeometry3D.h"
-#include "functors/lattice/indicator/indicatorF3D.h"
+#include "functors/analytical/indicator/indicatorF3D.h"
 #include "communication/loadBalancer.h"
 
 
@@ -85,7 +85,11 @@ CuboidGeometry3D<T>::CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, 
   split(0, nC);
   shrink(indicatorF);
 }
-
+template<typename T>
+CuboidGeometry3D<T>::CuboidGeometry3D(std::shared_ptr<IndicatorF3D<T>> indicator_sharedPtrF, T voxelSize, int nC)
+  : CuboidGeometry3D<T>(*indicator_sharedPtrF, voxelSize, nC)
+{
+}
 
 template<typename T>
 CuboidGeometry3D<T>::CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, int nC, std::string minimizeBy)
@@ -176,6 +180,11 @@ CuboidGeometry3D<T>::CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, 
 
   }
 
+}
+template<typename T>
+CuboidGeometry3D<T>::CuboidGeometry3D(std::shared_ptr<IndicatorF3D<T>> indicator_sharedPtrF, T voxelSize, int nC, std::string minimizeBy)
+  : CuboidGeometry3D<T>(*indicator_sharedPtrF, voxelSize, nC, minimizeBy)
+{
 }
 
 template<typename T>
@@ -350,12 +359,7 @@ void CuboidGeometry3D<T>::getPhysR(T physR[3], const int& iCglob, const int& iX,
                                _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]));
       // solving the rounding error problem for double
       if ( physR[iDim]*physR[iDim] < 0.001 * _motherCuboid.getDeltaR()*_motherCuboid.getDeltaR() ) {
-        if ( physR[iDim] > 0 ) {
-          physR[iDim] = _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]);
-        }
-        else {
-          physR[iDim] = T();
-        }
+        physR[iDim] = T();
       }
       // make it to mod instead remainer
       if ( physR[iDim] < 0 ) {

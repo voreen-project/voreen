@@ -32,5 +32,6 @@ namespace olb {
 
 template class BlockData3D<double,int>;
 template class BlockData3D<double,double>;
+template class BlockData3D<double,bool>;
 
 }  // namespace olb

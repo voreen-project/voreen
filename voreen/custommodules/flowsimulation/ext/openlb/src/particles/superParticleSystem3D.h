@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2016 Thomas Henn, Mathias J. Krause
+ *  Copyright (C) 2016 Thomas Henn, Mathias J. Krause, Davide Dapelo
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -26,19 +26,24 @@
 
 #define shadows
 
-#include<memory>
+#include <set>
+#include <vector>
+#include <list>
+#include <deque>
+#include <memory>
 #include "boundary/boundary3D.h"
 #include "communication/loadBalancer.h"
 #include "communication/mpiManager.h"
 #include "core/superLattice3D.h"
 #include "forces/force3D.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "functors/analytical/analyticalF.h"
 #include "geometry/cuboidGeometry3D.h"
 #include "geometry/superGeometry3D.h"
 #include "particleSystem3D.h"
 #include "superParticleSysVTUout.h"
-#include "functors/lattice/superLatticeLocalF3D.h"
+#include "functors/lattice/latticeInterpPhysVelocity3D.h"
+#include "twoWayCouplings/twoWayCouplings3D.h"
 
 namespace olb {
 
@@ -54,7 +59,7 @@ class Force3D;
 template<typename T, template<typename U> class PARTICLETYPE>
 class Boundary3D;
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SuperLatticeInterpVelocity3D;
 
 /**
@@ -72,6 +77,7 @@ class SuperLatticeInterpVelocity3D;
 
 template<typename T, template<typename U> class PARTICLETYPE>
 class SuperParticleSystem3D : public SuperStructure3D<T> {
+
 public:
   time_t _stopSorting;
 
@@ -87,27 +93,63 @@ public:
   /// Move Constructor for SuperParticleSystem
   SuperParticleSystem3D(SuperParticleSystem3D<T, PARTICLETYPE> && spSys);
   /// Destructor
-  ~SuperParticleSystem3D() override
-  {
-  }
+  ~SuperParticleSystem3D() override {};
 
   /// Add a Particle to SuperParticleSystem
   void addParticle(PARTICLETYPE<T> &p);
-  /// Add a number of identical Particles equally distributed in a given IndicatorF3D
-  void addParticle(IndicatorF3D<T>& ind, T mas, T rad, int no = 1, std::vector<T> vel= {0.,0.,0.});
-  /// Add a number of identical Particles equally distributed in a given IndicatorF3D and in given
-  /// Material Number
+
+  /// Add a number of identical particles randomly distributed in a given IndicatorF3D
+  void addParticle(IndicatorF3D<T>& ind, T mas, T rad, int no = 1, std::vector<T> vel = {0., 0., 0.});
+  void addParticle(IndicatorF3D<T>& ind, T mas, T rad, int no, int id,
+                   std::vector<T> vel, std::vector<T> dMoment, std::vector<T> aVel,
+                   std::vector<T> torque, T magnetisation, int sActivity)
+  {
+    addParticle(ind, mas, rad, no, vel);
+  };
+
+  /// Add a number of identical Pprticles randomly distributed in a given IndicatorF3D
+  /// and in given Material Number
   void addParticle(IndicatorF3D<T>& ind, std::set<int>  material, T mas, T rad, int no = 1,
-                   std::vector<T> vel= {0.,0.,0.});
-  /// Add a number of identical Particles equally distributed in a given Material Number
-  void addParticle(std::set<int>  material, int no, T mas, T rad, std::vector<T> vel = {0.,0.,0.});
+                   std::vector<T> vel = {0., 0., 0.});
+  void addParticle(IndicatorF3D<T>& ind,  std::set<int>  material, T mas, T rad, int no, int id,
+                   std::vector<T> vel, std::vector<T> dMoment, std::vector<T> aVel,
+                   std::vector<T> torque, T magnetisation, int sActivity)
+  {
+    addParticle(ind, material, mas, rad, no, vel);
+  };
+
+  /// Add a number of identical particles randomly distributed in a given Material Number
+  void addParticle(std::set<int>  material, int no, T mas, T rad, std::vector<T> vel = {0., 0., 0.});
+
+  /// Add a number of identical particles equally distributed in a given Material Number
   void addParticleEquallyDistributed(IndicatorCuboid3D<T>& cuboid, T pMass,
-    T pRad,/* number of particles on x, y, z axis*/
-    int nox, int noy, int noz, std::vector<T> vel= {0.,0.,0.});
-  /// Add Particles form a File. Save using saveToFile(std::string name)
+                                     T pRad,/* number of particles on x, y, z axis*/
+                                     int nox, int noy, int noz, std::vector<T> vel = {0., 0., 0.});
+
+  void addParticleEquallyDistributed(IndicatorCuboid3D<T>& cuboid, int nox, int noy, int noz, PARTICLETYPE<T>& p);
+
+  /// Generates particle at a circle shaped inlet, amount given by mass concentration in feedstream.
+  /// It is taken care that the particles do not overlap during initialization, therefore they are
+  /// saved in posDeq with size deqSize.
+  /// The parameters particlesPerPhyTimeStep and inletVec are initialized for iT = 0 and given back
+  /// by reference. They can be defined by an arbitrary value.
+  template<typename DESCRIPTOR>
+  void generateParticlesCircleInletMassConcentration(
+    IndicatorCircle3D<T>& indicatorCircle, T particleMassConcentration, T charPhysVelocity,
+    T conversionFactorTime, SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel,
+    PARTICLETYPE<T>& p, std::set<int> material, int iT, T& particlesPerPhyTimeStep,
+    std::vector<T>& inletVec, std::deque<std::vector<T>>& posDeq, int deqSize);
+
+  /// Add particles form a File. Save using saveToFile(std::string name)
   void addParticlesFromFile(std::string name, T mass, T radius);
-  /// Add a number of Particles with a certain ID (TracerParticle) equally distributed in a given IndicatorF3D
-  void addTracerParticle(IndicatorF3D<T>& ind, T idTP, T mas, T rad, int noTP = 1, std::vector<T> vel= {0.,0.,0.});
+  /// Add a number of particles with a certain ID (TracerParticle) equally distributed in a given IndicatorF3D
+  void addTracerParticle(IndicatorF3D<T>& ind, T idTP, T mas, T rad, int noTP = 1, std::vector<T> vel = {0., 0., 0.});
+
+  /// Add a number of unidentical particles with normally distributed radius (Box-Muller Method) in a given IndicatorF3D
+  /// with specific appearance probability
+  void addParticleBoxMuller(IndicatorF3D<T>& ind, T partRho, T mu, T sigma, int no = 1, T appProb = 1., std::vector<T> vel
+                            = {0., 0., 0.});
+
   /// Removes all particles from System
   void clearParticles();
 
@@ -124,6 +166,47 @@ public:
 
   /// Integrate on Timestep dT, scale = true keeps the particle velocity in stable range
   void simulate(T dT, bool scale = false);
+  // multiple collision models
+  void simulate(T dT, std::set<int> sActivityOfFreeParticle, bool scale = false)
+  {
+    simulate(dT, scale);
+  };
+  /// Integrate on Timestep dT with two-way coupling, scale = true keeps the particle velocity in stable range
+  void simulateWithTwoWayCoupling_Mathias ( T dT,
+                                    ForwardCouplingModel<T,PARTICLETYPE>& forwardCoupling,
+                                    BackCouplingModel<T,PARTICLETYPE>& backCoupling,
+                                    int material, int subSteps = 1, bool resetExternalField = true, bool scale = false );
+  void simulateWithTwoWayCoupling_Davide ( T dT,
+                                    ForwardCouplingModel<T,PARTICLETYPE>& forwardCoupling,
+                                    BackCouplingModel<T,PARTICLETYPE>& backCoupling,
+                                    int material, int subSteps = 1, bool resetExternalField = true, bool scale = false );
+
+  /// Gives random velocity to all particles
+  void setParticlesVelRandom(T velFactor);
+  /// Changes particle positions randomly
+  void setParticlesPosRandom(T posFactor);
+  void setParticlesPosRandom(T posFactorX, T posFactorY, T posFactorZ);
+  /// Gives random dipolemoment orientation to all MagneticParticle3D
+  void setMagneticParticlesdMomRandom() {};
+  /// Gives specific attributes to all MagneticParticle3D
+  void setMagneticParticles(std::vector<T> dMoment, std::vector<T> vel, std::vector<T> aVel, std::vector<T> torque,
+                            T magnetisation) {};
+  void setMagneticParticles(std::vector<T> dMoment, std::vector<T> vel, std::vector<T> aVel, std::vector<T> torque,
+                            T magnetisation, int sActivity) {};
+
+  /// Agglomerate detection functions: Todo: enable for paralle mode
+  /// Initializes an empty agglomerate list in every particleSystem3D
+  void prepareAgglomerates() {};
+  /// Adds new generated particles to the list of non agglomerated Particles
+  void initAggloParticles() {};
+  /// Detects and manages particle agglomerates
+  void findAgglomerates(int iT, int itVtkOutputMagParticles) {};
+
+  /// Tests if particles with specific sActivity exist
+  bool particleSActivityTest(int sActivity)
+  {
+    return 0;
+  };
 
   /// Set overlap of ParticleSystems, overlap has to be in lattice units
   /// particle system _overlap+1 <= _superGeometry.getOverlap()
@@ -170,18 +253,24 @@ public:
   void addForce(std::shared_ptr<Force3D<T, PARTICLETYPE> > f);
   /// Add a boundary to system
   void addBoundary(std::shared_ptr<Boundary3D<T, PARTICLETYPE> > b);
+  /// Add an operation to system
+  void addParticleOperation(std::shared_ptr<ParticleOperation3D<T, PARTICLETYPE> > o);
 
   /// Set particle velocity to fluid velocity (e.g. as inital condition
-  template<template<typename V> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   void setVelToFluidVel(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>&);
 
   /// Set particle velocity to analytical velocity (e.g. as inital condition
-  void setVelToAnalyticalVel(AnalyticalConst3D<T,T>&);
+  void setVelToAnalyticalVel(AnalyticalConst3D<T, T>&);
 
   /// Set contact detection algorithm for particle-particle contact. Not yet implemented.
   void setContactDetection(ContactDetection<T, PARTICLETYPE>& contactDetection);
+  /// Set contact detection algorithm for particle-particle contact. Not yet implemented.
+  void setContactDetectionForPSys(ContactDetection<T, PARTICLETYPE>& contactDetection, int pSysNr);
 
   void print();
+
+  void printDeep(std::string message="");
 
   /// console output number of particles at different material numbers mat
   void print(std::list<int> mat);
@@ -189,13 +278,27 @@ public:
   /// console output of escape (E), capture (C) rate for material numbers mat
   void captureEscapeRate(std::list<int> mat);
 
+  /// Console output of differential escape rate for material numbers mat (e.g. material of outlet).
+  /// Initialisation to be done for t=0: globalPSum = 0, pSumOutlet = 0, diffEscapeRate = 0, maxDiffEscapeRate = 0
+  /// Writes maximal escape rate in maxDiffEscapeRate and average rate between tStart and tEnd in avDiffEscapeRate
+  /// Set genPartPerTimeStep to simulate a steady state when no new particles are generated
+  void diffEscapeRate(std::list<int> mat, int& globalPSum, int& pSumOutlet, T& diffEscapeRate, T& maxDiffEscapeRate,
+                      int iT, int iTConsole, T genPartPerTimeStep = 0);
+  void diffEscapeRate(std::list<int> mat, int& globalPSum, int& pSumOutlet, T& diffEscapeRate, T& maxDiffEscapeRate,
+                      int iT, int iTConsole, T genPartPerTimeStep,
+                      T& avDiffEscapeRate, T latticeTimeStart, T latticeTimeEnd);
+
   /// Get Output of particleMovement
   /// Write the data of the particle movement into an txtFile
   void getOutput(std::string filename, int iT, T conversionFactorTime,
-      unsigned short particleProperties);
+                 unsigned short particleProperties);
 
   /// Not relevant. But class must inherit from SuperStructure3D so we are forced to implement these functions.
-  bool* operator()(int iCloc, int iX, int iY, int iZ, int iData) override
+  std::uint8_t* operator()(int iCloc, int iX, int iY, int iZ, int iData) override
+  {
+    return nullptr;
+  }
+  std::uint8_t* operator()(int iCloc, std::size_t iCell, int iData) override
   {
     return nullptr;
   }
@@ -209,16 +312,17 @@ public:
   }
 
   /// Particle-Fluid interaction for subgrid scale particles
-  //  template<template<typename V> class DESCRIPTOR>
+  //  template<typename DESCRIPTOR>
   //  void particleOnFluid(SuperLattice3D<T, DESCRIPTOR>& sLattice, T eps, SuperGeometry3D<T>& sGeometry);
-  //  template<template<typename V> class DESCRIPTOR>
+  //  template<typename DESCRIPTOR>
   //  void resetFluid(SuperLattice3D<T, DESCRIPTOR>& sLattice);
 
   /// returns the Stokes number
-  template<template<typename V> class DESCRIPTOR>
-  T getStokes(UnitConverter<T,DESCRIPTOR>& conv, T pRho, T rad)
+  template<typename DESCRIPTOR>
+  T getStokes(UnitConverter<T, DESCRIPTOR>& conv, T pRho, T rad)
   {
-    return pRho*std::pow(2.*rad,2)*conv.getCharPhysVelocity()/(18.*conv.getCharPhysLength()*(conv.getPhysViscosity()*conv.getPhysDensity()));
+    return pRho * std::pow(2.*rad, 2) * conv.getCharPhysVelocity() / (18.*conv.getCharPhysLength() *
+           (conv.getPhysViscosity() * conv.getPhysDensity()));
   };
 
   friend class SuperParticleSysVtuWriter<T, PARTICLETYPE> ;
@@ -226,11 +330,11 @@ public:
 
   enum particleProperties
     : unsigned short {position = 1, velocity = 2, radius = 4, mass = 8,
-                      force = 16, storeForce = 32};
+                    force = 16, storeForce = 32
+                   };
 
 protected:
   mutable OstreamManager clout;
-
 
   /// Init the SuperParticleSystem
   void init();

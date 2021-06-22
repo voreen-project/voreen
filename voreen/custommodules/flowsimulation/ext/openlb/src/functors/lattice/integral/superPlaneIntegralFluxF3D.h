@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,7 +25,8 @@
 #define SUPER_PLANE_INTEGRAL_FLUX_F_3D_H
 
 #include "superPlaneIntegralF3D.h"
-#include "functors/lattice/superLatticeLocalF3D.h"
+#include "functors/lattice/latticePhysPressure3D.h"
+#include "functors/lattice/latticePhysVelocity3D.h"
 
 namespace olb {
 
@@ -43,10 +44,10 @@ namespace olb {
  *
  * See SuperPlaneIntegralF3D for further documentation.
  **/
-template<typename T, template<typename, template<typename> class> class F>
+template<typename T, template<typename, typename> class F>
 class SuperPlaneIntegralFluxF3D : public SuperPlaneIntegralF3D<T> {
 public:
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
@@ -55,7 +56,7 @@ public:
                             FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>&    geometry,
@@ -63,7 +64,7 @@ public:
                             FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
                             FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>&     geometry,
@@ -71,7 +72,7 @@ public:
                             FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
@@ -79,7 +80,7 @@ public:
                             const Vector<T,3>& u, const Vector<T,3>& v,
                             std::vector<int> materials,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
@@ -87,7 +88,7 @@ public:
                             const Vector<T,3>& u, const Vector<T,3>& v,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
@@ -95,7 +96,7 @@ public:
                             const Vector<T,3>& normal,
                             std::vector<int> materials,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
@@ -103,28 +104,28 @@ public:
                             const Vector<T,3>& normal,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
                             const Vector<T,3>& normal,
                             std::vector<int> materials,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
                             const Vector<T,3>& normal,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,
                             IndicatorCircle3D<T>& circle,
                             std::vector<int> materials,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
-  template<template<typename> class DESCRIPTOR>
+  template<typename DESCRIPTOR>
   SuperPlaneIntegralFluxF3D(SuperLattice3D<T, DESCRIPTOR>& sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
                             SuperGeometry3D<T>& geometry,

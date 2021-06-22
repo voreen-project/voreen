@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2006-2008 Jonas Latt
+ *  Copyright (C) 2006-2018 Jonas Latt, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -37,91 +37,210 @@
 #include "geometry/blockGeometryStructure3D.h"
 #include "latticeStatistics.h"
 #include "functors/analytical/analyticalF.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorBaseF3D.h"
 
 
 namespace olb {
-template<typename T, typename S> class AnalyticalF3D;
 
-template<typename T, template<typename U> class Lattice> struct Dynamics;
-template<typename T, template<typename U> class Lattice> class Cell;
-template<typename T, template<typename U> class Lattice> struct WriteCellFunctional;
+template<typename T, typename DESCRIPTOR> struct Dynamics;
+template<typename T, typename DESCRIPTOR> struct WriteCellFunctional;
 template<typename T> class BlockIndicatorF3D;
 template<typename T> class IndicatorSphere3D;
-template<typename T> class BlockGeometryStructure3D;
 
 
 /** BlockLatticeStructure3D is a interface class for defining dynamics on a BlockStructure3D.
  *  The pure virtual methods are wrapped by generic methods.
  */
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class BlockLatticeStructure3D : public BlockStructure3D, public SpatiallyExtendedObject3D {
 public:
   BlockLatticeStructure3D(int nx, int ny, int nz) : BlockStructure3D(nx,ny,nz) {};
   ~BlockLatticeStructure3D() override { }
 public:
+  /*
+     * Vectors out of Boundary instantiator privates
+     */
+  std::vector<Momenta<T,DESCRIPTOR>*>  momentaVector;
+  std::vector<Dynamics<T,DESCRIPTOR>*> dynamicsVector;
+  /// Define rho on a domain described by an indicator
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param rho       Analytical functor (global)
+   **/
+  virtual void defineRho(BlockIndicatorF3D<T>& indicator,
+                         AnalyticalF<3,T,T>& rho);
+  /// Define rho on a domain with a particular material number
   virtual void defineRho(BlockGeometryStructure3D<T>& blockGeometry, int material,
-                         AnalyticalF3D<T,T>& rho);
-  virtual void defineU(BlockGeometryStructure3D<T>& blockGeometry, int material,
-                       AnalyticalF3D<T,T>& u);
-  virtual void defineRhoU(BlockGeometryStructure3D<T>& blockGeometry,
-                          int material, AnalyticalF3D<T,T>& rho, AnalyticalF3D<T,T>& u);
-  virtual void definePopulations(BlockGeometryStructure3D<T>& blockGeometry, int material,
-                                 AnalyticalF3D<T,T>& Pop);
-  virtual void defineExternalField(BlockGeometryStructure3D<T>& blockGeometry,
-                                   int material, int fieldBeginsAt, int sizeOfField,
-                                   AnalyticalF3D<T,T>& field);
-  virtual void defineExternalField(BlockIndicatorF3D<T>& indicator, int overlap,
-                                   int fieldBeginsAt, int sizeOfField,
-                                   AnalyticalF3D<T,T>& field);
-  virtual void defineExternalField(BlockGeometryStructure3D<T>& blockGeometry,
-                                   IndicatorF3D<T>& indicator, int fieldBeginsAt, int sizeOfField,
-                                   AnalyticalF3D<T,T>& field);
-  virtual void setExternalParticleField(BlockGeometryStructure3D<T>& blockGeometry, AnalyticalF3D<T,T>& velocity, ParticleIndicatorF3D<T,T>& sIndicator);
+                         AnalyticalF<3,T,T>& rho);
 
+  /// Define u on a domain described by an indicator
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param u         Analytical functor (global)
+   **/
+  virtual void defineU(BlockIndicatorF3D<T>& indicator,
+                       AnalyticalF<3,T,T>& u);
+  /// Define u on a domain with a particular material number
+  virtual void defineU(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                       AnalyticalF<3,T,T>& u);
+
+  /// Define rho and u on a domain described by an indicator
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param rho       Analytical functor (global)
+   * \param u         Analytical functor (global)
+   **/
+  virtual void defineRhoU(BlockIndicatorF3D<T>& indicator,
+                          AnalyticalF<3,T,T>& rho, AnalyticalF<3,T,T>& u);
+  /// Define rho and u on a domain with a particular material number
+  virtual void defineRhoU(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                          AnalyticalF<3,T,T>& rho, AnalyticalF<3,T,T>& u);
+
+  /// Define a population on a domain described by an indicator
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param Pop       Analytical functor (global), target dimension DESCRIPTOR::q
+   **/
+  virtual void definePopulations(BlockIndicatorF3D<T>& indicator,
+                                 AnalyticalF<3,T,T>& Pop);
+  /// Define a population on a domain with a particular material number
+  virtual void definePopulations(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                                 AnalyticalF<3,T,T>& Pop);
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param Pop       Block functor, target dimension DESCRIPTOR::q
+   **/
+  virtual void definePopulations(BlockIndicatorF3D<T>& indicator,
+                                 BlockF3D<T>& Pop);
+  /// Define a population on a domain with a particular material number
+  virtual void definePopulations(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                                 BlockF3D<T>& Pop);
+
+  /// Define a field on a domain described by an indicator
+  /**
+   * \param indicator     Block indicator describing the target domain
+   * \param field         Analytical functor (global)
+   **/
+  template <typename FIELD>
+  void defineField(BlockIndicatorF3D<T>& indicator,
+                   AnalyticalF<3,T,T>& field);
+  /// Define a field on a domain with a particular material number
+  template <typename FIELD>
+  void defineField(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                   AnalyticalF<3,T,T>& field);
+  /// Define a field on a domain described by an analytical indicator
+  /**
+   * \param indicatorF Domain indicator to be reduced to BlockIndicatorFfromIndicatorF3D
+   **/
+  template <typename FIELD>
+  void defineField(BlockGeometryStructure3D<T>& blockGeometry,
+                   IndicatorF3D<T>& indicatorF,
+                   AnalyticalF<3,T,T>& field);
+
+  /// Initialize by equilibrium on a domain described by an indicator
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param rho       Analytical functor (global)
+   * \param u         Analytical functor (global)
+   **/
+  virtual void iniEquilibrium(BlockIndicatorF3D<T>& indicator,
+                              AnalyticalF<3,T,T>& rho, AnalyticalF<3,T,T>& u);
+  /// Initialize by equilibrium on a domain with a particular material number
   virtual void iniEquilibrium(BlockGeometryStructure3D<T>& blockGeometry, int material,
-                              AnalyticalF3D<T,T>& rho , AnalyticalF3D<T,T>& u);
+                              AnalyticalF<3,T,T>& rho, AnalyticalF<3,T,T>& u);
+
+  /// Initialize by non- and equilibrium on a domain described by an indicator
+  /**
+   * \param indicator Block indicator describing the target domain
+   * \param rho       Analytical functor (global)
+   * \param u         Analytical functor (global)
+   **/
+  virtual void iniRegularized(BlockIndicatorF3D<T>& indicator,
+                              AnalyticalF<3,T,T>& rho, AnalyticalF<3,T,T>& u, AnalyticalF<3,T,T>& pi);
+  /// Initialize by equilibrium on a domain with a particular material number
+  virtual void iniRegularized(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                              AnalyticalF<3,T,T>& rho, AnalyticalF<3,T,T>& u, AnalyticalF<3,T,T>& pi);
+
   // pure virtual member functions
-  virtual Cell<T,Lattice>& get(int iX, int iY, int iZ) =0;
-  virtual Cell<T,Lattice> const& get(int iX, int iY, int iZ) const =0;
+  virtual Cell<T,DESCRIPTOR> get(int iX, int iY, int iZ) =0;
+  virtual Cell<T,DESCRIPTOR> get(const int latticeR[]) =0;
+  virtual ConstCell<T,DESCRIPTOR> get(int iX, int iY, int iZ) const =0;
+
+  virtual T& getPop(std::size_t iCell, unsigned iPop) =0;
+  virtual T& getPop(int iX, int iY, int iZ, unsigned iPop) =0;
+
   virtual void initialize() =0;
-  virtual void defineDynamics(int x0_, int x1_, int y0_, int y1_, int z0_,
-                              int z1_, Dynamics<T,Lattice>* dynamics) =0;
-  virtual void defineDynamics(int iX, int iY, int iZ, Dynamics<T,Lattice>* dynamics ) =0;
-  virtual void defineDynamics(BlockGeometryStructure3D<T>& blockGeometry,
-                              int material, Dynamics<T,Lattice>* dynamics)=0;
-  virtual Dynamics<T,Lattice>* getDynamics(int iX, int iY, int iZ) = 0;
+
+  /// Define the dynamics on a lattice site
+  virtual void defineDynamics(int iX, int iY, int iZ, Dynamics<T,DESCRIPTOR>* dynamics) = 0;
+  /// Define the dynamics on a 3D sub-box
+  virtual void defineDynamics(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                              Dynamics<T,DESCRIPTOR>* dynamics) = 0;
+  /// Define the dynamics on a domain described by an indicator
+  virtual void defineDynamics(BlockIndicatorF3D<T>& indicator,
+                              Dynamics<T,DESCRIPTOR>* dynamics) = 0;
+  /// Define the dynamics on a domain with a particular material number
+  virtual void defineDynamics(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                              Dynamics<T,DESCRIPTOR>* dynamics) = 0;
+
+  virtual Dynamics<T,DESCRIPTOR>* getDynamics(int iX, int iY, int iZ) = 0;
+
   virtual void collide(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
-  virtual void collide() =0;
-  virtual void staticCollide(int x0_, int x1_, int y0_, int y1_, int z0_,
-                             int z1_, BlockData3D<T,T> const& u) =0;
-  virtual void staticCollide( BlockData3D<T,T> const& u) =0;
-  virtual void stream(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
-  virtual void stream(bool periodic=false) =0;
   virtual void collideAndStream(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
-  virtual void collideAndStream(bool periodic=false) =0;
+  virtual void collide() =0;
+  virtual void collideAndStream() =0;
+
   virtual T computeAverageDensity(int x0_, int x1_, int y0_, int y1_, int z0_,
                                   int z1_) const =0;
   virtual T computeAverageDensity() const =0;
-  virtual void computeStress(int iX, int iY, int iZ, T pi[util::TensorVal<Lattice<T> >::n]) = 0;
+  virtual void computeStress(int iX, int iY, int iZ, T pi[util::TensorVal<DESCRIPTOR >::n]) = 0;
+
   virtual void stripeOffDensityOffset(int x0_, int x1_, int y0_, int y1_, int z0_,
                                       int z1_, T offset) =0;
   virtual void stripeOffDensityOffset(T offset) =0;
+
   virtual void forAll(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                      WriteCellFunctional<T,Lattice> const& application) =0;
-  virtual void forAll(WriteCellFunctional<T,Lattice> const& application) =0;
-  virtual void addPostProcessor(PostProcessorGenerator3D<T,Lattice> const& ppGen) =0;
+                      WriteCellFunctional<T,DESCRIPTOR> const& application) =0;
+  virtual void forAll(WriteCellFunctional<T,DESCRIPTOR> const& application) =0;
+
+  virtual void addPostProcessor(PostProcessorGenerator3D<T,DESCRIPTOR> const& ppGen) =0;
   virtual void resetPostProcessors() =0;
   virtual void postProcess(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
   virtual void postProcess() =0;
-  virtual void addLatticeCoupling(LatticeCouplingGenerator3D<T,Lattice> const& lcGen,
+
+  virtual void addLatticeCoupling(LatticeCouplingGenerator3D<T,DESCRIPTOR> const& lcGen,
                                   std::vector<SpatiallyExtendedObject3D*> partners ) =0;
   virtual void executeCoupling(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
   virtual void executeCoupling() =0;
-  virtual void subscribeReductions(Reductor<T>& reductor) =0;
+
   virtual LatticeStatistics<T>& getStatistics() =0;
   virtual LatticeStatistics<T> const& getStatistics() const =0;
 };
+
+////////// FREE FUNCTIONS //////////
+
+template <typename T>
+bool getRangeBlockGeometrySmoothIndicatorIntersection3D(BlockGeometryStructure3D<T>& blockGeometry,
+    SmoothIndicatorF3D<T,T,true>& sIndicator,
+    T invDeltaX, std::vector<int>& start, std::vector<int>& end);
+
+template<typename T>
+void checkSmoothIndicatorOutOfGeometry( bool& outOfGeometry, Vector<T,3>& ghostPos,
+                                        SmoothIndicatorF3D<T,T,true>& sIndicator,
+                                        Vector<T,3> cellMin, Vector<T,3> cellMax,
+                                        Vector<bool,3> periodic);
+
+template <typename T, typename DESCRIPTOR>
+void setBlockExternalParticleField( BlockGeometryStructure3D<T>& blockGeometry, AnalyticalF<3,T,T>& velocity,
+                                    SmoothIndicatorF3D<T,T,true>& sIndicator,
+                                    BlockLattice3D<T,DESCRIPTOR>& extendedBlockLattice);
+
+template <typename T, typename DESCRIPTOR>
+void setBlockExternalParticleField( BlockGeometryStructure3D<T>& blockGeometry, AnalyticalF<3,T,T>& velocity,
+                                    SmoothIndicatorF3D<T,T,true>& sIndicator,
+                                    BlockLattice3D<T,DESCRIPTOR>& extendedBlockLattice,
+                                    Vector<T,3> cellMin, Vector<T,3> cellMax,
+                                    Vector<bool,3> periodic);
 
 }  // namespace olb
 

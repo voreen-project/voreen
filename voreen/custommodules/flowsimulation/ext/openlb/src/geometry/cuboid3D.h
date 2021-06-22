@@ -33,7 +33,7 @@
 
 #include "core/serializer.h"
 #include "io/ostreamManager.h"
-#include "functors/lattice/indicator/indicatorF3D.h"
+#include "functors/analytical/indicator/indicatorF3D.h"
 
 
 /// All OpenLB code is contained in this namespace.

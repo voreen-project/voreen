@@ -30,8 +30,9 @@
 
 namespace olb {
 
-/** \file These functions help you to create file names. By overloading the
- *        the function createFileName() the corresponding version is performed.
+/** \file
+ * These functions help you to create file names. By overloading the
+ * the function createFileName() the corresponding version is performed.
  */
 
 /// for .pvd masterFile

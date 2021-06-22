@@ -111,9 +111,9 @@ void SuperData2D<T,BaseType>::allocateMemory()
     for (int iCloc = 0; iCloc < this->getLoadBalancer().size(); ++iCloc) {
       int iCglob = this->getLoadBalancer().glob(iCloc);
       Cuboid2D<T> extendedCuboid(this->getCuboidGeometry().get(iCglob), this->getOverlap());
-      _extendedBlockData.push_back( BlockData2D<T,BaseType>(extendedCuboid.getNx(),
-                                    extendedCuboid.getNy(),
-                                    _size) );  // move ctor !!
+      _extendedBlockData.emplace_back(extendedCuboid.getNx(),
+                                      extendedCuboid.getNy(),
+                                      _size);
     }
   }
 }
@@ -124,7 +124,8 @@ void SuperData2D<T,BaseType>::swap(std::vector< BlockData2D<T,BaseType> > & bloc
   // Needed for vtiReader: After building geometry, vtiReader builds Block Data vector
   if ( blockDatas.size() == 0 ) {
     _size = 1;
-  } else {
+  }
+  else {
     _size = blockDatas[0].getSize();
   }
   std::swap(_extendedBlockData, blockDatas);
@@ -191,9 +192,15 @@ BaseType const& SuperData2D<T,BaseType>::get(int iC, int iX, int iY, int iData) 
 }
 
 template<typename T, typename BaseType>
-bool* SuperData2D<T,BaseType>::operator() (int iCloc, int iX, int iY, int iData)
+std::uint8_t* SuperData2D<T,BaseType>::operator() (int iCloc, int iX, int iY, int iData)
 {
-  return (bool*)&get(iCloc,iX,iY,iData);
+  return reinterpret_cast<std::uint8_t*>(&get(iCloc,iX,iY,iData));
+}
+
+template<typename T, typename BaseType>
+std::uint8_t* SuperData2D<T,BaseType>::operator() (int iCloc, std::size_t iCell, int iData)
+{
+  return reinterpret_cast<std::uint8_t*>(&_extendedBlockData[iCloc].get(iCell, iData));
 }
 
 template<typename T, typename BaseType>

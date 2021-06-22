@@ -34,13 +34,12 @@
 
 namespace olb {
 
-inline void olbInit(int *argc, char ***argv, bool verbose=false)
+inline void olbInit(int *argc, char ***argv, bool multiOutput=false, bool verbose=true)
 {
-
   // create an OstreamManager object in order to enable multi output
   olb::OstreamManager clout(std::cout,"olbInit");
-  clout.setMultiOutput(verbose);
-  singleton::mpi().init(argc, argv);
+  clout.setMultiOutput(multiOutput);
+  singleton::mpi().init(argc, argv, verbose);
 
 #ifdef PARALLEL_MODE_MPI
   /*ParBuf *newCoutBuf = new ParBuf(std::cout.rdbuf());
@@ -54,9 +53,8 @@ inline void olbInit(int *argc, char ***argv, bool verbose=false)
 
 #ifdef PARALLEL_MODE_OMP
   #pragma omp parallel
-  omp.init();
+  omp.init(verbose);
 #endif
-
 }
 
 }  // namespace olb

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Marie-Luise Maier, Mathias J. Krause
+ *  Copyright (C) 2015 Marie-Luise Maier, Mathias J. Krause, Sascha Janz
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -23,7 +23,7 @@
 /** Alberto Di Renzo, Francesco Paolo Di Maio:
  * "Comparison of contact-force models for the simulation of collisions in
  * DEM-based granular ow codes",
- * Chemical Engineering Science 59 (2004) 525 – 541
+ * Chemical Engineering Science 59 (2004) 525 - 541
  *
  * validation paper for contact:
  * H. Kruggel-Emden, E. Simsek, S. Rickelt, S. Wirtz, V. Scherer: Review and
@@ -35,15 +35,15 @@
 #define HERTZMINDLINDERESIEWICZ3D_H
 
 #include <cmath>
-#include "functors/lattice/superLatticeLocalF3D.h"
 #include "particles/particleSystem3D.h"
-#include "forces.h"
+#include "force3D.h"
 
 namespace olb {
 
+template<typename T, template<typename U> class PARTICLETYPE>
+class ParticleSystem3D;
 
-template<typename T, template<typename U> class PARTICLETYPE, template<
-           typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 class HertzMindlinDeresiewicz3D: public Force3D<T, PARTICLETYPE> {
 
 public:

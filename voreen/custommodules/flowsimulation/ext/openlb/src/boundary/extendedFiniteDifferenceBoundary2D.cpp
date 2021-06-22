@@ -26,32 +26,19 @@
 #include "boundaryPostProcessors2D.h"
 #include "boundaryPostProcessors2D.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 
 namespace olb {
 
-template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9Descriptor,          0,1>;
-template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 0,1>;
-template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9Descriptor,          0,-1>;
-template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 0,-1>;
-template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9Descriptor,          1,1>;
-template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 1,1>;
-template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9Descriptor,          1,-1>;
-template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 1,-1>;
+template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9<>,          0,1>;
+template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 0,1>;
+template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9<>,          0,-1>;
+template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 0,-1>;
+template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9<>,          1,1>;
+template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 1,1>;
+template class ExtendedStraightFdBoundaryPostProcessor2D<double, descriptors::D2Q9<>,          1,-1>;
+template class ExtendedStraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 1,-1>;
 
-template class BoundaryConditionInstantiator2D
-<
-  double, descriptors::D2Q9Descriptor,
-  ExtendedFdBoundaryManager2D < double, descriptors::D2Q9Descriptor,
-                                BGKdynamics<double,descriptors::D2Q9Descriptor> >
-  >;
-
-template OnLatticeBoundaryCondition2D<double,descriptors::D2Q9Descriptor>*
-createExtendedFdBoundaryCondition2D < double,descriptors::D2Q9Descriptor,
-                                    BGKdynamics<double,descriptors::D2Q9Descriptor> >
-                                    (
-                                      BlockLatticeStructure2D<double,descriptors::D2Q9Descriptor>& block
-                                    );
 
 }  // namespace olb

@@ -48,7 +48,7 @@ template<typename T> class HeuristicLoadBalancer;
  *  local cuboid number of thread 0:    0   1
  *  local cuboid number of thread 1:            0   1   2   3
  *
- *  \param _glob  is a vector from 0,1,...,numberOfThreads-1
+ *  \param _glob  is a vector from 0,1,...,numberOfCuboids-1
  *  \param _loc   indicates local cuboid number in actual thread, for given global cuboid number
  *  \param _rank  indicates the processing thread of a global cuboid number
  *
@@ -56,7 +56,7 @@ template<typename T> class HeuristicLoadBalancer;
 template<typename T>
 class LoadBalancer : public BufferSerializable {
 protected:
-  /// number of threads -1
+  /// number of cuboids after shrink -1 in appropriate thread
   int _size;
   /// maps global cuboid to (local) thread cuboid
   std::map<int,int> _loc;

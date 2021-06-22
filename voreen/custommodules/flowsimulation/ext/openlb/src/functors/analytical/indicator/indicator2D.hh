@@ -25,6 +25,10 @@
  * Groups all include files for the directory genericFunctions.
  */
 
+#include "indicatorBaseF2D.hh"
+#include "indicatorF2D.hh"
+#include "indicCalc2D.hh"
+
 #include "smoothIndicatorBaseF2D.hh"
 #include "smoothIndicatorF2D.hh"
 #include "smoothIndicatorCalcF2D.hh"

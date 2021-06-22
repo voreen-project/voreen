@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -75,8 +75,8 @@ SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
 {
   this->getName() = "SuperPlaneIntegralF2D";
 
-  _normal.normalize();
-  _u.normalize();
+  _normal = normalize(_normal);
+  _u = normalize(_u);
 
   for ( const std::tuple<int,int>& pos : _reductionF.getRankLocalSubplane() ) {
     const int& i  = std::get<0>(pos);

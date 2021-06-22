@@ -26,6 +26,12 @@
  * Groups all include files for the directory genericFunctions.
  */
 
+#include "indicatorBaseF3D.hh"
+#include "indicatorF3D.hh"
+#include "indicCalc3D.hh"
+
 #include "smoothIndicatorBaseF3D.hh"
 #include "smoothIndicatorF3D.hh"
 #include "smoothIndicatorCalcF3D.hh"
+
+#include "sdf.hh"

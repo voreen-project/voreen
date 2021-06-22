@@ -28,16 +28,16 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice=descriptors::ParticleAdvectionDiffusionD3Q7Descriptor>
-class advectionDiffusionForce3D {
+template<typename T, typename DESCRIPTOR,
+typename ADLattice=descriptors::D3Q7<descriptors::VELOCITY,descriptors::VELOCITY2>>
+class AdvectionDiffusionForce3D {
 public:
-  advectionDiffusionForce3D()
+  AdvectionDiffusionForce3D()
   {
     initArg = 0;
   };
-  virtual ~advectionDiffusionForce3D() {};
-  virtual void applyForce(T force[], Cell<T,Lattice> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])=0;
+  virtual ~AdvectionDiffusionForce3D() {};
+  virtual void applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])=0;
   int getInitArg()
   {
     return initArg;
@@ -46,34 +46,34 @@ private:
   int initArg;
 };
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice=descriptors::ParticleAdvectionDiffusionD3Q7Descriptor>
-class advDiffDragForce3D : public advectionDiffusionForce3D<T,Lattice,ADLattice> {
+template<typename T, typename DESCRIPTOR,
+typename ADLattice=descriptors::D3Q7<descriptors::VELOCITY,descriptors::VELOCITY2>>
+class AdvDiffDragForce3D : public AdvectionDiffusionForce3D<T,DESCRIPTOR,ADLattice> {
 public:
-  advDiffDragForce3D(UnitConverter<T,Lattice> const& converter_, T St_);
-  advDiffDragForce3D(UnitConverter<T,Lattice> const& converter_, T pRadius_, T pRho_);
-  ~advDiffDragForce3D() override {};
-  void applyForce(T force[], Cell<T,Lattice> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[]) override;
+  AdvDiffDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T St_);
+  AdvDiffDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T pRadius_, T pRho_);
+  ~AdvDiffDragForce3D() override {};
+  void applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[]) override;
 
 private:
   int initArg;
   T dragCoeff;
 };
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice=descriptors::ParticleAdvectionDiffusionD3Q7Descriptor>
-class advDiffRotatingForce3D : public advectionDiffusionForce3D<T,Lattice,ADLattice> {
+template<typename T, typename DESCRIPTOR,
+typename ADLattice=descriptors::D3Q7<descriptors::VELOCITY,descriptors::VELOCITY2>>
+class AdvDiffRotatingForce3D : public AdvectionDiffusionForce3D<T,DESCRIPTOR,ADLattice> {
 public:
-  advDiffRotatingForce3D(SuperGeometry3D<T>& superGeometry_,
-                         const UnitConverter<T,Lattice>& converter_,
+  AdvDiffRotatingForce3D(SuperGeometry3D<T>& superGeometry_,
+                         const UnitConverter<T,DESCRIPTOR>& converter_,
                          std::vector<T> axisPoint_,
                          std::vector<T> axisDirection_,
                          T w_, T* frac_,
                          bool centrifugeForceOn_ = true,
                          bool coriolisForceOn_ = true);
-  advDiffRotatingForce3D(UnitConverter<T,Lattice> const& converter_, T pRadius_, T pRho_);
-  virtual ~advDiffRotatingForce3D() {};
-  void applyForce(T force[], Cell<T,Lattice> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[]);
+  AdvDiffRotatingForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T pRadius_, T pRho_);
+  virtual ~AdvDiffRotatingForce3D() {};
+  void applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[]);
 
 protected:
   SuperGeometry3D<T>& sg;
@@ -85,6 +85,22 @@ protected:
   bool centrifugeForceOn;
   bool coriolisForceOn;
 
+};
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice=descriptors::D3Q7<descriptors::VELOCITY,descriptors::VELOCITY2>>
+class AdvDiffMagneticWireForce3D : public AdvectionDiffusionForce3D<T,DESCRIPTOR,ADLattice> {
+public:
+  AdvDiffMagneticWireForce3D(SuperGeometry3D<T>& superGeometry_, UnitConverter<T,DESCRIPTOR> const& converter_, T pMass, AnalyticalF<3,T, T>& getMagForce);
+  ~AdvDiffMagneticWireForce3D() override {};
+  void applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[]) override;
+
+private:
+  SuperGeometry3D<T>& sg;
+  int initArg;
+  T _pMass;
+  T _conversionVelocity;
+  AnalyticalF<3,T, T>& _getMagForce;
 };
 
 }

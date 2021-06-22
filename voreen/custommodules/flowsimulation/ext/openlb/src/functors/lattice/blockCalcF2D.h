@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2013-2017 Albert Mink, Lukas Baron, Mathias J. Krause,
- *                          Adrian Kummerländer
+ *                          Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -41,12 +41,12 @@ namespace olb {
  * \tparam F Function object defining the arithmetic operation to be perfomed
  *         e.g. std::minus for substraction
  *
- * Functors BlockCalc2D<T,F>::_f and BlockCalc2D<T,F>::_f are stored as GenericF<T,int>
+ * Functors BlockCalcF2D<T,F>::_f and BlockCalcF2D<T,F>::_f are stored as GenericF<T,int>
  * references to support arithmetic operations between block and super functors. For
- * details see BlockCalc2D<T,F>::operator().
+ * details see BlockCalcF2D<T,F>::operator().
  **/
 template <typename T, template<typename> class F>
-class BlockCalc2D : public BlockF2D<T> {
+class BlockCalcF2D : public BlockF2D<T> {
 protected:
   GenericF<T,int>& _f;
   GenericF<T,int>& _g;
@@ -56,40 +56,40 @@ protected:
   const bool _fIsBlock;
   const bool _gIsBlock;
 public:
-  BlockCalc2D(BlockF2D<T>& f, BlockF2D<T>& g);
+  BlockCalcF2D(BlockF2D<T>& f, BlockF2D<T>& g);
 
   /**
    * \param f    Block functor
    * \param g    Generic functor to be restricted to block level
    * \param glob Global cuboid ID to be used to prefix calls to g
    **/
-  BlockCalc2D(BlockF2D<T>& f, GenericF<T,int>& g, int glob);
+  BlockCalcF2D(BlockF2D<T>& f, GenericF<T,int>& g, int glob);
 
   /**
    * \param f    Generic functor to be restricted to block level
    * \param glob Global cuboid ID to be used to prefix calls to f
    * \param g    Block functor
    **/
-  BlockCalc2D(GenericF<T,int>& f, int glob, BlockF2D<T>& g);
+  BlockCalcF2D(GenericF<T,int>& f, int glob, BlockF2D<T>& g);
 
   bool operator() (T output[], const int input[]) override;
 };
 
 /// Block level addition functor (T==bool: Union)
 template <typename T>
-using BlockPlus2D = BlockCalc2D<T,util::plus>;
+using BlockCalcPlus2D = BlockCalcF2D<T,util::plus>;
 
 /// Block level subtraction functor (T==bool: Without)
 template <typename T>
-using BlockMinus2D = BlockCalc2D<T,util::minus>;
+using BlockCalcMinus2D = BlockCalcF2D<T,util::minus>;
 
 /// Block level multiplication functor (T==bool: Intersection)
 template <typename T>
-using BlockMultiplication2D = BlockCalc2D<T,util::multiplies>;
+using BlockCalcMultiplication2D = BlockCalcF2D<T,util::multiplies>;
 
 /// Block level division functor
 template <typename T>
-using BlockDivision2D = BlockCalc2D<T,util::divides>;
+using BlockCalcDivision2D = BlockCalcF2D<T,util::divides>;
 
 
 } // end namespace olb

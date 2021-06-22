@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2016 Benjamin Förster, Adrian Kummerländer
+ *  Copyright (C) 2016-2018 Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -34,19 +34,22 @@ namespace olb {
 
 template <typename T>
 SuperIndicatorFfromIndicatorF3D<T>::SuperIndicatorFfromIndicatorF3D(
-  IndicatorF3D<T>& indicatorF, SuperGeometry3D<T>& geometry)
+  FunctorPtr<IndicatorF3D<T>>&& indicatorF, SuperGeometry3D<T>& geometry)
   : SuperIndicatorF3D<T>(geometry),
-    _indicatorF(indicatorF)
+    _indicatorF(std::move(indicatorF))
 {
-  this->getName() = "SuperIndicator_from_" + _indicatorF.getName();
+  this->getName() = "SuperIndicator_from_" + _indicatorF->getName();
 
-  LoadBalancer<T>&     load   = this->getSuperStructure().getLoadBalancer();
-  CuboidGeometry3D<T>& cuboid = this->getSuperStructure().getCuboidGeometry();
+  LoadBalancer<T>& load = this->getSuperStructure().getLoadBalancer();
 
   for (int iC = 0; iC < load.size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockIndicatorFfromIndicatorF3D<T>(
-        _indicatorF, geometry.getExtendedBlockGeometry(iC), cuboid.get(load.glob(iC)))
+        *_indicatorF, geometry.getBlockGeometry(iC))
+    );
+    this->_extendedBlockF.emplace_back(
+      new BlockIndicatorFfromIndicatorF3D<T>(
+        *_indicatorF, geometry.getExtendedBlockGeometry(iC))
     );
   }
 }
@@ -56,16 +59,47 @@ bool SuperIndicatorFfromIndicatorF3D<T>::operator() (bool output[], const int in
 {
   T physR[3];
   this->_superStructure.getCuboidGeometry().getPhysR(physR, input);
-  _indicatorF(output, physR);
-  return true;
+  return _indicatorF(output, physR);
 }
 
+
+template <typename T, bool HLBM>
+SuperIndicatorFfromSmoothIndicatorF3D<T, HLBM>::SuperIndicatorFfromSmoothIndicatorF3D(
+  FunctorPtr<SmoothIndicatorF3D<T,T,HLBM>>&& indicatorF,
+  SuperGeometry3D<T>&                     geometry)
+  : SuperIndicatorF3D<T>(geometry),
+    _indicatorF(std::move(indicatorF))
+{
+  this->getName() = "SuperIndicator_from_" + _indicatorF->getName();
+
+  LoadBalancer<T>& load = this->getSuperStructure().getLoadBalancer();
+
+  for (int iC = 0; iC < load.size(); ++iC) {
+    this->_blockF.emplace_back(
+      new BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>(
+        *_indicatorF, geometry.getBlockGeometry(iC))
+    );
+    this->_extendedBlockF.emplace_back(
+      new BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>(
+        *_indicatorF, geometry.getExtendedBlockGeometry(iC))
+    );
+  }
+}
+
+template <typename T, bool HLBM>
+bool SuperIndicatorFfromSmoothIndicatorF3D<T, HLBM>::operator() (bool output[], const int input[])
+{
+  T physR[3];
+  T inside[1];
+  this->_superStructure.getCuboidGeometry().getPhysR(physR, input);
+  _indicatorF(inside, physR);
+  return !util::nearZero(inside[0]);
+}
 
 template <typename T>
 SuperIndicatorMaterial3D<T>::SuperIndicatorMaterial3D(
   SuperGeometry3D<T>& geometry, std::vector<int> materials)
-  : SuperIndicatorF3D<T>(geometry),
-    _materialNumbers(materials)
+  : SuperIndicatorF3D<T>(geometry)
 {
   const std::string matString = std::accumulate(
                                   materials.begin()+1,
@@ -78,9 +112,12 @@ SuperIndicatorMaterial3D<T>::SuperIndicatorMaterial3D(
 
   for (int iC = 0; iC < this->_superGeometry.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
+      new BlockIndicatorMaterial3D<T>(this->_superGeometry.getBlockGeometry(iC),
+                                      materials)
+    );
+    this->_extendedBlockF.emplace_back(
       new BlockIndicatorMaterial3D<T>(this->_superGeometry.getExtendedBlockGeometry(iC),
-                                      this->_superGeometry.getOverlap(),
-                                      &_materialNumbers)
+                                      materials)
     );
   }
 }
@@ -89,7 +126,8 @@ template <typename T>
 SuperIndicatorMaterial3D<T>::SuperIndicatorMaterial3D(
   SuperGeometry3D<T>& geometry, std::list<int> materials)
   : SuperIndicatorMaterial3D(geometry,
-                             std::vector<int>(materials.begin(), materials.end())) { }
+                             std::vector<int>(materials.begin(), materials.end()))
+{ }
 
 template <typename T>
 bool SuperIndicatorMaterial3D<T>::operator() (bool output[], const int input[])
@@ -100,19 +138,33 @@ bool SuperIndicatorMaterial3D<T>::operator() (bool output[], const int input[])
 
   if (!this->_blockF.empty() && load.isLocal(input[0])) {
     // query material number of appropriate block indicator
-    this->getBlockF(load.loc(input[0]))(output,&input[1]);
-  } else {
-    // Try to query material number locally as a fallback if no block indicators
-    // were instantiated. This will terminate if data is unavailable.
-    output[0] = std::find(_materialNumbers.cbegin(),
-                          _materialNumbers.cend(),
-                          this->_superGeometry.get(input))
-                != _materialNumbers.cend();
+    return this->getBlockF(load.loc(input[0]))(output,&input[1]);
   }
-
-  return true;
+  else {
+    return false;
+  }
 }
 
+template <typename T>
+SuperIndicatorIdentity3D<T>::SuperIndicatorIdentity3D(FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF)
+  : SuperIndicatorF3D<T>(indicatorF->getSuperGeometry()),
+    _indicatorF(std::move(indicatorF))
+{
+  this->getName() = _indicatorF->getName();
+
+  for (int iC = 0; iC < _indicatorF->getBlockFSize(); ++iC) {
+    this->_blockF.emplace_back(
+      new BlockIndicatorIdentity3D<T>(_indicatorF->getBlockIndicatorF(iC)));
+    this->_extendedBlockF.emplace_back(
+      new BlockIndicatorIdentity3D<T>(_indicatorF->getExtendedBlockIndicatorF(iC)));
+  }
+}
+
+template <typename T>
+bool SuperIndicatorIdentity3D<T>::operator()(bool output[], const int input[])
+{
+  return _indicatorF(output, input);
+}
 
 } // namespace olb
 

@@ -26,12 +26,14 @@
 
 #include "communication/mpiManager.h"
 #include "core/blockData2D.h"
+#include "core/olbDebug.h"
 #include <iostream>
 #include <algorithm>
 
 #ifndef OLB_PRECOMPILED
 #include "core/blockData2D.hh"
 #endif
+
 
 namespace olb {
 
@@ -48,14 +50,17 @@ MpiManager::~MpiManager()
   }
 }
 
-void MpiManager::init(int *argc, char ***argv)
+void MpiManager::init(int *argc, char ***argv, bool verbose)
 {
 
   int ok1 = MPI_Init(argc, argv);
-  int ok2 = MPI_Comm_rank(MPI_COMM_WORLD,&taskId);
-  int ok3 = MPI_Comm_size(MPI_COMM_WORLD,&numTasks);
-  ok = (ok1==0 && ok2==0 && ok3==0);
-  clout << "Sucessfully initialized, numThreads=" << getSize() << std::endl;
+  int ok2 = MPI_Comm_rank(MPI_COMM_WORLD, &taskId);
+  int ok3 = MPI_Comm_size(MPI_COMM_WORLD, &numTasks);
+  int ok4 = MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+  ok = (ok1 == MPI_SUCCESS && ok2 == MPI_SUCCESS && ok3 == MPI_SUCCESS && ok4 == MPI_SUCCESS);
+  if (verbose) {
+    clout << "Sucessfully initialized, numThreads=" << getSize() << std::endl;
+  }
 }
 
 int MpiManager::getSize() const
@@ -113,6 +118,15 @@ void MpiManager::send<char>(char *buf, int count, int dest, int tag, MPI_Comm co
 }
 
 template <>
+void MpiManager::send<std::uint8_t>(std::uint8_t *buf, int count, int dest, int tag, MPI_Comm comm)
+{
+  if (!ok) {
+    return;
+  }
+  MPI_Send(static_cast<void*>(buf), count, MPI_CHAR, dest, tag, comm);
+}
+
+template <>
 void MpiManager::send<int>(int *buf, int count, int dest, int tag, MPI_Comm comm)
 {
   if (!ok) {
@@ -140,6 +154,14 @@ void MpiManager::send<double>(double *buf, int count, int dest, int tag, MPI_Com
 }
 
 template <>
+void MpiManager::sendInit<double>(double *buf, int count, int dest, MPI_Request* request, int tag, MPI_Comm comm)
+{
+  if (ok) {
+    MPI_Send_init(buf, count, MPI_DOUBLE, dest, tag, comm, request);
+  }
+}
+
+template <>
 void MpiManager::iSend<bool>
 (bool *buf, int count, int dest, MPI_Request* request, int tag, MPI_Comm comm)
 {
@@ -151,6 +173,15 @@ void MpiManager::iSend<bool>
 template <>
 void MpiManager::iSend<char>
 (char *buf, int count, int dest, MPI_Request* request, int tag, MPI_Comm comm)
+{
+  if (ok) {
+    MPI_Isend(static_cast<void*>(buf), count, MPI_CHAR, dest, tag, comm, request);
+  }
+}
+
+template <>
+void MpiManager::iSend<std::uint8_t>
+(std::uint8_t *buf, int count, int dest, MPI_Request* request, int tag, MPI_Comm comm)
 {
   if (ok) {
     MPI_Isend(static_cast<void*>(buf), count, MPI_CHAR, dest, tag, comm, request);
@@ -181,6 +212,15 @@ void MpiManager::iSend<double>
 {
   if (ok) {
     MPI_Isend(static_cast<void*>(buf), count, MPI_DOUBLE, dest, tag, comm, request);
+  }
+}
+
+template <>
+void MpiManager::iSend<long double>
+(long double *buf, int count, int dest, MPI_Request* request, int tag, MPI_Comm comm)
+{
+  if (ok) {
+    MPI_Isend(static_cast<void*>(buf), count, MPI_LONG_DOUBLE, dest, tag, comm, request);
   }
 }
 
@@ -286,6 +326,15 @@ void MpiManager::iSendRequestFree<double>
   MPI_Request_free(&request);
 }
 
+std::size_t MpiManager::probeReceiveSize(int source, MPI_Datatype type, int tag, MPI_Comm comm)
+{
+  MPI_Status status;
+  MPI_Probe(source, tag, comm, &status);
+  int requestSize;
+  MPI_Get_count(&status, type, &requestSize);
+  return requestSize;
+}
+
 template <>
 void MpiManager::receive<bool>(bool *buf, int count, int source, int tag, MPI_Comm comm)
 {
@@ -305,6 +354,16 @@ void MpiManager::receive<char>(char *buf, int count, int source, int tag, MPI_Co
   }
   MPI_Status status;
   MPI_Recv(static_cast<void*>(buf), count, MPI_CHAR, source, tag, comm, &status);
+}
+
+template <>
+void MpiManager::receive<std::uint8_t>(std::uint8_t *buf, int count, int source, int tag, MPI_Comm comm)
+{
+  if (!ok) {
+    return;
+  }
+  MPI_Status status;
+  MPI_Recv(static_cast<std::uint8_t*>(buf), count, MPI_CHAR, source, tag, comm, &status);
 }
 
 template <>
@@ -335,6 +394,16 @@ void MpiManager::receive<double>(double *buf, int count, int source, int tag, MP
   }
   MPI_Status status;
   MPI_Recv(static_cast<void*>(buf), count, MPI_DOUBLE, source, tag, comm, &status);
+}
+
+template <>
+void MpiManager::receive<long double>(long double *buf, int count, int source, int tag, MPI_Comm comm)
+{
+  if (!ok) {
+    return;
+  }
+  MPI_Status status;
+  MPI_Recv(static_cast<void*>(buf), count, MPI_LONG_DOUBLE, source, tag, comm, &status);
 }
 
 template <>
@@ -404,6 +473,14 @@ void MpiManager::sendToMaster<double>(double* sendBuf, int sendCount, bool iAmRo
   }
   if (isMainProcessor() && !iAmRoot) {
     receive(sendBuf, sendCount, MPI_ANY_SOURCE);
+  }
+}
+
+template <>
+void MpiManager::recvInit<double>(double *buf, int count, int dest, MPI_Request* request, int tag, MPI_Comm comm)
+{
+  if (ok) {
+    MPI_Recv_init(buf, count, MPI_DOUBLE, dest, tag, comm, request);
   }
 }
 
@@ -525,6 +602,22 @@ void MpiManager::sendRecv<double>
                static_cast<void*>(recvBuf),
                count,
                MPI_DOUBLE, source, tag, comm, &status);
+}
+
+template <>
+void MpiManager::sendRecv<long double>
+(long double *sendBuf, long double *recvBuf, int count, int dest, int source, int tag, MPI_Comm comm)
+{
+  if (!ok) {
+    return;
+  }
+  MPI_Status status;
+  MPI_Sendrecv(static_cast<void*>(sendBuf),
+               count,
+               MPI_LONG_DOUBLE, dest, tag,
+               static_cast<void*>(recvBuf),
+               count,
+               MPI_LONG_DOUBLE, source, tag, comm, &status);
 }
 
 template <>
@@ -1007,6 +1100,19 @@ void MpiManager::reduceAndBcast<double>(double& reductVal, MPI_Op op, int root, 
 }
 
 template <>
+void MpiManager::reduceAndBcast<long double>(long double& reductVal, MPI_Op op, int root, MPI_Comm comm)
+{
+  if (!ok) {
+    return;
+  }
+  long double recvVal;
+  MPI_Reduce(&reductVal, &recvVal, 1, MPI_LONG_DOUBLE, op, root, comm);
+  reductVal = recvVal;
+  MPI_Bcast(&reductVal, 1, MPI_LONG_DOUBLE, root, comm);
+
+}
+
+template <>
 void MpiManager::reduceAndBcast<long>(long& reductVal, MPI_Op op, int root, MPI_Comm comm)
 {
   if (!ok) {
@@ -1061,80 +1167,79 @@ void MpiManager::wait(MPI_Request* request, MPI_Status* status)
 
 void MpiManager::waitAll(MpiNonBlockingHelper& mpiNbHelper)
 {
-  if (!ok) {
+  if (!ok || mpiNbHelper.get_size() == 0) {
     return;
   }
   MPI_Waitall(mpiNbHelper.get_size(), mpiNbHelper.get_mpiRequest(), mpiNbHelper.get_mpiStatus());
 }
 
 
-MpiNonBlockingHelper::MpiNonBlockingHelper()
-{
-  _size = 0;
-}
+MpiNonBlockingHelper::MpiNonBlockingHelper():
+  _size(0)
+{ }
 
-MpiNonBlockingHelper::MpiNonBlockingHelper(
-  MpiNonBlockingHelper const& rhs )
+MpiNonBlockingHelper::MpiNonBlockingHelper(MpiNonBlockingHelper&& rhs)
 {
-  _size          = rhs._size;
-  if (_size!=0) {
-    allocate(_size);
-    for (unsigned i=0; i<_size; i++) {
-      _mpiRequest[i] = rhs._mpiRequest[i];
-      _mpiStatus[i]  = rhs._mpiStatus[i];
-    }
+  _size = rhs._size;
+  if (_size > 0) {
+    _mpiRequest.reset(rhs._mpiRequest.release());
+    _mpiStatus.reset(rhs._mpiStatus.release());
   }
 }
 
-MpiNonBlockingHelper MpiNonBlockingHelper::operator= (
-  MpiNonBlockingHelper rhs )
-{
-  MpiNonBlockingHelper tmp(rhs);
-  return tmp;
-}
-
-void MpiNonBlockingHelper::swap ( MpiNonBlockingHelper& rhs )
+void MpiNonBlockingHelper::swap(MpiNonBlockingHelper& rhs)
 {
   std::swap(_size, rhs._size);
   std::swap(_mpiRequest, rhs._mpiRequest);
   std::swap(_mpiStatus, rhs._mpiStatus);
 }
 
-MpiNonBlockingHelper::~MpiNonBlockingHelper()
+void MpiNonBlockingHelper::allocate(unsigned n)
 {
-  free();
-}
-
-void MpiNonBlockingHelper::allocate(unsigned i)
-{
-  free();
-  _size = i;
-  _mpiRequest = new MPI_Request [i];
-  _mpiStatus  = new MPI_Status [i];
+  _mpiRequest.reset(new MPI_Request[n]);
+  _mpiStatus.reset(new MPI_Status[n]);
+  _size = n;
 }
 
 void MpiNonBlockingHelper::free()
 {
-  if (_size!=0) {
-    delete [] _mpiRequest;
-    delete [] _mpiStatus;
-    _size = 0;
-  }
+  _size = 0;
+  _mpiRequest.reset(nullptr);
+  _mpiStatus.reset(nullptr);
 }
 
-unsigned const& MpiNonBlockingHelper::get_size() const
+unsigned MpiNonBlockingHelper::get_size() const
 {
   return _size;
 }
 
-MPI_Request* MpiNonBlockingHelper::get_mpiRequest() const
+MPI_Request* MpiNonBlockingHelper::get_mpiRequest(int i) const
 {
-  return _mpiRequest;
+  OLB_PRECONDITION(size_t(i) < _size);
+  return &_mpiRequest[i];
 }
 
-MPI_Status* MpiNonBlockingHelper::get_mpiStatus() const
+MPI_Status* MpiNonBlockingHelper::get_mpiStatus(int i) const
 {
-  return _mpiStatus;
+  OLB_PRECONDITION(size_t(i) < _size);
+  return &_mpiStatus[i];
+}
+
+void MpiNonBlockingHelper::start(int i)
+{
+  MPI_Start(get_mpiRequest(i));
+}
+
+void MpiNonBlockingHelper::wait(int i)
+{
+  MPI_Wait(get_mpiRequest(i), get_mpiStatus(i));
+}
+
+bool MpiNonBlockingHelper::isDone(int i)
+{
+  int done;
+  MPI_Test(get_mpiRequest(i), &done, MPI_STATUS_IGNORE);
+  return done;
 }
 
 

@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -30,24 +30,58 @@
 namespace olb {
 
 template <typename T>
-BlockIndicatorF3D<T>::BlockIndicatorF3D(BlockGeometry3D<T>& blockGeometry)
-  : BlockF3D<bool>(blockGeometry, 1),
-    _blockGeometry(blockGeometry)
+BlockIndicatorF3D<T>::BlockIndicatorF3D(BlockGeometryStructure3D<T>& geometry)
+  : BlockF3D<bool>(geometry, 1),
+    _blockGeometryStructure(geometry),
+    _cachedData{nullptr}
 { }
 
 template <typename T>
-BlockGeometry3D<T>& BlockIndicatorF3D<T>::getBlockGeometry()
+BlockGeometryStructure3D<T>& BlockIndicatorF3D<T>::getBlockGeometryStructure()
 {
-  return _blockGeometry;
+  return _blockGeometryStructure;
 }
 
 template <typename T>
 bool BlockIndicatorF3D<T>::operator() (const int input[])
 {
-  bool output;
-  this->operator()(&output, input);
+  bool output{};
+  if (_cachedData == nullptr) {
+    this->operator()(&output, input);
+  }
+  else {
+    _cachedData->get(input[0], input[1], input[2]);
+  }
   return output;
 }
+
+template <typename T>
+bool BlockIndicatorF3D<T>::operator() (int iX, int iY, int iZ)
+{
+  bool output{};
+  if (_cachedData == nullptr) {
+    this->operator()(&output, iX, iY, iZ);
+  }
+  else {
+    _cachedData->get(iX, iY, iZ);
+  }
+  return output;
+}
+
+template <typename T>
+void BlockIndicatorF3D<T>::setCache(const BlockData3D<T,bool>& cache)
+{
+  _cachedData = &cache;
+}
+
+template <typename T>
+bool BlockIndicatorF3D<T>::isEmpty()
+{
+  // There is no way to determine domain emptyness in a fashion that is both
+  // generic and efficient.
+  return false;
+}
+
 
 } // namespace olb
 

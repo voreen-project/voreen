@@ -29,76 +29,76 @@
 #include "momentaOnBoundaries3D.h"
 #include "momentaOnBoundaries3D.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 namespace olb {
-template class EquilibriumBM<double, descriptors::D3Q19Descriptor>;
+template class EquilibriumBM<double, descriptors::D3Q19<>>;
 
-template class FixedVelocityBM<double, descriptors::D3Q19Descriptor>;
+template class FixedVelocityBM<double, descriptors::D3Q19<>>;
 
-template class FreeStressBM<double, descriptors::D3Q19Descriptor>;
+template class FreeStressBM<double, descriptors::D3Q19<>>;
 
-template class VelocityBM<double, descriptors::D3Q19Descriptor, 0, 1>;
-template class VelocityBM<double, descriptors::D3Q19Descriptor, 0, -1>;
-template class VelocityBM<double, descriptors::D3Q19Descriptor, 1, 1>;
-template class VelocityBM<double, descriptors::D3Q19Descriptor, 1, -1>;
-template class VelocityBM<double, descriptors::D3Q19Descriptor, 2, 1>;
-template class VelocityBM<double, descriptors::D3Q19Descriptor, 2, -1>;
+template class VelocityBM<double, descriptors::D3Q19<>, 0, 1>;
+template class VelocityBM<double, descriptors::D3Q19<>, 0, -1>;
+template class VelocityBM<double, descriptors::D3Q19<>, 1, 1>;
+template class VelocityBM<double, descriptors::D3Q19<>, 1, -1>;
+template class VelocityBM<double, descriptors::D3Q19<>, 2, 1>;
+template class VelocityBM<double, descriptors::D3Q19<>, 2, -1>;
 
-template class RegularizedVelocityBM<double, descriptors::D3Q19Descriptor, 0, 1>;
-template class RegularizedVelocityBM<double, descriptors::D3Q19Descriptor, 0, -1>;
-template class RegularizedVelocityBM<double, descriptors::D3Q19Descriptor, 1, 1>;
-template class RegularizedVelocityBM<double, descriptors::D3Q19Descriptor, 1, -1>;
-template class RegularizedVelocityBM<double, descriptors::D3Q19Descriptor, 2, 1>;
-template class RegularizedVelocityBM<double, descriptors::D3Q19Descriptor, 2, -1>;
+template class RegularizedVelocityBM<double, descriptors::D3Q19<>, 0, 1>;
+template class RegularizedVelocityBM<double, descriptors::D3Q19<>, 0, -1>;
+template class RegularizedVelocityBM<double, descriptors::D3Q19<>, 1, 1>;
+template class RegularizedVelocityBM<double, descriptors::D3Q19<>, 1, -1>;
+template class RegularizedVelocityBM<double, descriptors::D3Q19<>, 2, 1>;
+template class RegularizedVelocityBM<double, descriptors::D3Q19<>, 2, -1>;
 
-template class PressureBM<double, descriptors::D3Q19Descriptor, 0, 1>;
-template class PressureBM<double, descriptors::D3Q19Descriptor, 0, -1>;
-template class PressureBM<double, descriptors::D3Q19Descriptor, 1, 1>;
-template class PressureBM<double, descriptors::D3Q19Descriptor, 1, -1>;
-template class PressureBM<double, descriptors::D3Q19Descriptor, 2, 1>;
-template class PressureBM<double, descriptors::D3Q19Descriptor, 2, -1>;
+template class PressureBM<double, descriptors::D3Q19<>, 0, 1>;
+template class PressureBM<double, descriptors::D3Q19<>, 0, -1>;
+template class PressureBM<double, descriptors::D3Q19<>, 1, 1>;
+template class PressureBM<double, descriptors::D3Q19<>, 1, -1>;
+template class PressureBM<double, descriptors::D3Q19<>, 2, 1>;
+template class PressureBM<double, descriptors::D3Q19<>, 2, -1>;
 
-template class RegularizedPressureBM<double, descriptors::D3Q19Descriptor, 0, 1>;
-template class RegularizedPressureBM<double, descriptors::D3Q19Descriptor, 0, -1>;
-template class RegularizedPressureBM<double, descriptors::D3Q19Descriptor, 1, 1>;
-template class RegularizedPressureBM<double, descriptors::D3Q19Descriptor, 1, -1>;
-template class RegularizedPressureBM<double, descriptors::D3Q19Descriptor, 2, 1>;
-template class RegularizedPressureBM<double, descriptors::D3Q19Descriptor, 2, -1>;
+template class RegularizedPressureBM<double, descriptors::D3Q19<>, 0, 1>;
+template class RegularizedPressureBM<double, descriptors::D3Q19<>, 0, -1>;
+template class RegularizedPressureBM<double, descriptors::D3Q19<>, 1, 1>;
+template class RegularizedPressureBM<double, descriptors::D3Q19<>, 1, -1>;
+template class RegularizedPressureBM<double, descriptors::D3Q19<>, 2, 1>;
+template class RegularizedPressureBM<double, descriptors::D3Q19<>, 2, -1>;
 
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, VelocityBM, 0, 1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, VelocityBM, 0, -1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, VelocityBM, 1, 1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, VelocityBM, 1, -1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, VelocityBM, 2, 1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, VelocityBM, 2, -1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, VelocityBM, 0, 1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, VelocityBM, 0, -1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, VelocityBM, 1, 1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, VelocityBM, 1, -1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, VelocityBM, 2, 1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, VelocityBM, 2, -1>;
 
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, PressureBM, 0, 1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, PressureBM, 0, -1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, PressureBM, 1, 1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, PressureBM, 1, -1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, PressureBM, 2, 1>;
-template class BasicDirichletBM<double, descriptors::D3Q19Descriptor, PressureBM, 2, -1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, PressureBM, 0, 1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, PressureBM, 0, -1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, PressureBM, 1, 1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, PressureBM, 1, -1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, PressureBM, 2, 1>;
+template class BasicDirichletBM<double, descriptors::D3Q19<>, PressureBM, 2, -1>;
 
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor, 1, 1, 1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor, 1, 1,-1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor, 1,-1, 1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor, 1,-1,-1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor,-1, 1, 1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor,-1, 1,-1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor,-1,-1, 1>;
-template class InnerCornerVelBM3D<double, descriptors::D3Q19Descriptor,-1,-1,-1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>, 1, 1, 1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>, 1, 1,-1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>, 1,-1, 1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>, 1,-1,-1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>,-1, 1, 1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>,-1, 1,-1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>,-1,-1, 1>;
+template class InnerCornerVelBM3D<double, descriptors::D3Q19<>,-1,-1,-1>;
 
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 0, 1, 1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 0, 1,-1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 0,-1, 1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 0,-1,-1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 1, 1, 1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 1, 1,-1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 1,-1, 1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 1,-1,-1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 2, 1, 1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 2, 1,-1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 2,-1, 1>;
-template class InnerEdgeVelBM3D<double, descriptors::D3Q19Descriptor, 2,-1,-1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 0, 1, 1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 0, 1,-1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 0,-1, 1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 0,-1,-1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 1, 1, 1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 1, 1,-1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 1,-1, 1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 1,-1,-1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 2, 1, 1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 2, 1,-1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 2,-1, 1>;
+template class InnerEdgeVelBM3D<double, descriptors::D3Q19<>, 2,-1,-1>;
 }

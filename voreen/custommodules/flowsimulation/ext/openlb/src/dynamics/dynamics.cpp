@@ -28,78 +28,78 @@
 #include "dynamics.h"
 #include "dynamics.hh"
 #include "latticeDescriptors.h"
-#include "latticeDescriptors.hh"
+
 
 namespace olb {
 
-template struct Dynamics<double, descriptors::D2Q9Descriptor>;
-template struct Momenta<double, descriptors::D2Q9Descriptor>;
-template class BasicDynamics<double, descriptors::D2Q9Descriptor>;
-template class BGKdynamics<double, descriptors::D2Q9Descriptor>;
-template class ConstRhoBGKdynamics<double, descriptors::D2Q9Descriptor>;
-template class IncBGKdynamics<double, descriptors::D2Q9Descriptor>;
-template class RLBdynamics<double, descriptors::D2Q9Descriptor>;
-template class CombinedRLBdynamics<double, descriptors::D2Q9Descriptor,
-                                   RLBdynamics<double, descriptors::D2Q9Descriptor> >;
-template class CombinedRLBdynamics<double, descriptors::D2Q9Descriptor,
-                                   BGKdynamics<double, descriptors::D2Q9Descriptor> >;
-template class CombinedRLBdynamics<double, descriptors::D2Q9Descriptor,
-                                   ConstRhoBGKdynamics<double, descriptors::D2Q9Descriptor> >;
-template struct BulkMomenta<double, descriptors::D2Q9Descriptor>;
-template class BounceBack<double, descriptors::D2Q9Descriptor>;
-template class BounceBackVelocity<double, descriptors::D2Q9Descriptor>;
-template class BounceBackAnti<double, descriptors::D2Q9Descriptor>;
-template class NoDynamics<double, descriptors::D2Q9Descriptor>;
-template class OffDynamics<double, descriptors::D2Q9Descriptor>;
-template class ZeroDistributionDynamics<double, descriptors::D2Q9Descriptor>;
+template struct Dynamics<double, descriptors::D2Q9<>>;
+template struct Momenta<double, descriptors::D2Q9<>>;
+template class BasicDynamics<double, descriptors::D2Q9<>>;
+template class BGKdynamics<double, descriptors::D2Q9<>>;
+template class ConstRhoBGKdynamics<double, descriptors::D2Q9<>>;
+template class IncBGKdynamics<double, descriptors::D2Q9<>>;
+template class RLBdynamics<double, descriptors::D2Q9<>>;
+template class CombinedRLBdynamics<double, descriptors::D2Q9<>,
+                                   RLBdynamics<double, descriptors::D2Q9<>> >;
+template class CombinedRLBdynamics<double, descriptors::D2Q9<>,
+                                   BGKdynamics<double, descriptors::D2Q9<>> >;
+template class CombinedRLBdynamics<double, descriptors::D2Q9<>,
+                                   ConstRhoBGKdynamics<double, descriptors::D2Q9<>> >;
+template struct BulkMomenta<double, descriptors::D2Q9<>>;
+template class BounceBack<double, descriptors::D2Q9<>>;
+template class BounceBackVelocity<double, descriptors::D2Q9<>>;
+template class BounceBackAnti<double, descriptors::D2Q9<>>;
+template class NoDynamics<double, descriptors::D2Q9<>>;
+template class OffDynamics<double, descriptors::D2Q9<>>;
+template class ZeroDistributionDynamics<double, descriptors::D2Q9<>>;
 
-template struct Dynamics<double, descriptors::D3Q19Descriptor>;
-template struct Momenta<double, descriptors::D3Q19Descriptor>;
-template class BasicDynamics<double, descriptors::D3Q19Descriptor>;
-template class BGKdynamics<double, descriptors::D3Q19Descriptor>;
-template class ConstRhoBGKdynamics<double, descriptors::D3Q19Descriptor>;
-template class IncBGKdynamics<double, descriptors::D3Q19Descriptor>;
-template class RLBdynamics<double, descriptors::D3Q19Descriptor>;
-template class CombinedRLBdynamics<double, descriptors::D3Q19Descriptor,
-                                   RLBdynamics<double, descriptors::D3Q19Descriptor> >;
-template class CombinedRLBdynamics<double, descriptors::D3Q19Descriptor,
-                                   BGKdynamics<double, descriptors::D3Q19Descriptor> >;
-template class CombinedRLBdynamics<double, descriptors::D3Q19Descriptor,
-                                   ConstRhoBGKdynamics<double, descriptors::D3Q19Descriptor> >;
-template struct BulkMomenta<double, descriptors::D3Q19Descriptor>;
-template class BounceBack<double, descriptors::D3Q19Descriptor>;
-template class BounceBackVelocity<double, descriptors::D3Q19Descriptor>;
-template class BounceBackAnti<double, descriptors::D3Q19Descriptor>;
-template class NoDynamics<double, descriptors::D3Q19Descriptor>;
-template class OffDynamics<double, descriptors::D3Q19Descriptor>;
-template class ZeroDistributionDynamics<double, descriptors::D3Q19Descriptor>;
+template struct Dynamics<double, descriptors::D3Q19<>>;
+template struct Momenta<double, descriptors::D3Q19<>>;
+template class BasicDynamics<double, descriptors::D3Q19<>>;
+template class BGKdynamics<double, descriptors::D3Q19<>>;
+template class ConstRhoBGKdynamics<double, descriptors::D3Q19<>>;
+template class IncBGKdynamics<double, descriptors::D3Q19<>>;
+template class RLBdynamics<double, descriptors::D3Q19<>>;
+template class CombinedRLBdynamics<double, descriptors::D3Q19<>,
+                                   RLBdynamics<double, descriptors::D3Q19<>> >;
+template class CombinedRLBdynamics<double, descriptors::D3Q19<>,
+                                   BGKdynamics<double, descriptors::D3Q19<>> >;
+template class CombinedRLBdynamics<double, descriptors::D3Q19<>,
+                                   ConstRhoBGKdynamics<double, descriptors::D3Q19<>> >;
+template struct BulkMomenta<double, descriptors::D3Q19<>>;
+template class BounceBack<double, descriptors::D3Q19<>>;
+template class BounceBackVelocity<double, descriptors::D3Q19<>>;
+template class BounceBackAnti<double, descriptors::D3Q19<>>;
+template class NoDynamics<double, descriptors::D3Q19<>>;
+template class OffDynamics<double, descriptors::D3Q19<>>;
+template class ZeroDistributionDynamics<double, descriptors::D3Q19<>>;
 
 
 namespace instances {
 
-template BulkMomenta<double, descriptors::D2Q9Descriptor>& getBulkMomenta();
+template BulkMomenta<double, descriptors::D2Q9<>>& getBulkMomenta();
 
-template BounceBack<double, descriptors::D2Q9Descriptor>& getBounceBack();
+template BounceBack<double, descriptors::D2Q9<>>& getBounceBack();
 
-template BounceBackAnti<double, descriptors::D2Q9Descriptor>& getBounceBackAnti(const double rho);
+template BounceBackAnti<double, descriptors::D2Q9<>>& getBounceBackAnti(const double rho);
 
-template BounceBackVelocity<double, descriptors::D2Q9Descriptor>& getBounceBackVelocity(const double rho, const double u[2]);
+template BounceBackVelocity<double, descriptors::D2Q9<>>& getBounceBackVelocity(const double rho, const double u[2]);
 
-template NoDynamics<double, descriptors::D2Q9Descriptor>& getNoDynamics(double rho);
+template NoDynamics<double, descriptors::D2Q9<>>& getNoDynamics(double rho);
 
-template ZeroDistributionDynamics<double, descriptors::D2Q9Descriptor>& getZeroDistributionDynamics();
+template ZeroDistributionDynamics<double, descriptors::D2Q9<>>& getZeroDistributionDynamics();
 
-template BulkMomenta<double, descriptors::D3Q19Descriptor>& getBulkMomenta();
+template BulkMomenta<double, descriptors::D3Q19<>>& getBulkMomenta();
 
-template BounceBack<double, descriptors::D3Q19Descriptor>& getBounceBack();
+template BounceBack<double, descriptors::D3Q19<>>& getBounceBack();
 
-template BounceBackVelocity<double, descriptors::D3Q19Descriptor>& getBounceBackVelocity(const double rho, const double u[3]);
+template BounceBackVelocity<double, descriptors::D3Q19<>>& getBounceBackVelocity(const double rho, const double u[3]);
 
-template BounceBackAnti<double, descriptors::D3Q19Descriptor>& getBounceBackAnti(const double rho);
+template BounceBackAnti<double, descriptors::D3Q19<>>& getBounceBackAnti(const double rho);
 
-template NoDynamics<double, descriptors::D3Q19Descriptor>& getNoDynamics(double rho);
+template NoDynamics<double, descriptors::D3Q19<>>& getNoDynamics(double rho);
 
-template ZeroDistributionDynamics<double, descriptors::D3Q19Descriptor>& getZeroDistributionDynamics();
+template ZeroDistributionDynamics<double, descriptors::D3Q19<>>& getZeroDistributionDynamics();
 }
 
 }

@@ -23,6 +23,8 @@
 
 #include"particle3D.h"
 #include"particle3D.hh"
+#include"particleSpecializations/magneticParticle3D.h"
+#include"particleSpecializations/magneticParticle3D.hh"
 
 namespace olb {
 

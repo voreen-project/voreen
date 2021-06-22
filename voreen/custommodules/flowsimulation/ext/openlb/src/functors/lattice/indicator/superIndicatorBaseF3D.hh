@@ -25,7 +25,6 @@
 #define SUPER_INDICATOR_BASE_F_3D_HH
 
 #include "superIndicatorBaseF3D.h"
-#include "blockIndicatorBaseF3D.h"
 #include "geometry/superGeometry3D.h"
 
 namespace olb {
@@ -48,6 +47,14 @@ BlockIndicatorF3D<T>& SuperIndicatorF3D<T>::getBlockIndicatorF(int iCloc)
 }
 
 template <typename T>
+BlockIndicatorF3D<T>& SuperIndicatorF3D<T>::getExtendedBlockIndicatorF(int iCloc)
+{
+  OLB_ASSERT(iCloc < int(this->_extendedBlockF.size()) && iCloc >= 0,
+             "block functor index within bounds");
+  return *(this->_extendedBlockF[iCloc]);
+}
+
+template <typename T>
 SuperGeometry3D<T>& SuperIndicatorF3D<T>::getSuperGeometry()
 {
   return this->_superGeometry;
@@ -56,17 +63,37 @@ SuperGeometry3D<T>& SuperIndicatorF3D<T>::getSuperGeometry()
 template <typename T>
 bool SuperIndicatorF3D<T>::operator() (const int input[])
 {
-  bool output;
-  this->operator()(&output, input);
+  bool output{};
+  if (_cachedData) {
+    output = _cachedData->get(input[0], input[1], input[2], input[3]);
+  }
+  else {
+    this->operator()(&output, input);
+  }
   return output;
 }
 
 template <typename T>
 bool SuperIndicatorF3D<T>::operator() (int iC, int iX, int iY, int iZ)
 {
-  bool output;
-  this->operator()(&output, iC, iX, iY, iZ);
+  bool output{};
+  if (_cachedData) {
+    output = _cachedData->get(iC, iX, iY, iZ);
+  }
+  else {
+    this->operator()(&output, iC, iX, iY, iZ);
+  }
   return output;
+}
+
+template <typename T>
+void SuperIndicatorF3D<T>::cache()
+{
+  _cachedData = std::unique_ptr<SuperData3D<T,bool>>(
+                  new SuperData3D<T,bool>(*this));
+  for (unsigned iC = 0; iC < this->_blockF.size(); ++iC) {
+    getExtendedBlockIndicatorF(iC).setCache(_cachedData->get(iC));
+  }
 }
 
 

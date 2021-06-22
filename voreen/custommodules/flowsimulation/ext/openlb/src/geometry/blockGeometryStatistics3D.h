@@ -51,9 +51,7 @@ class BlockGeometryStructure3D;
 
 template<typename T>
 class BlockGeometryStatistics3D {
-
 private:
-
   /// Points to the underlying data from which the statistics is taken
   BlockGeometryStructure3D<T>* _blockGeometry;
   /// Specifies if an update is needed
@@ -75,8 +73,9 @@ private:
   /// class specific cout
   mutable OstreamManager clout;
 
-public:
+  const BlockGeometryStatistics3D<T>* const_this;
 
+public:
   /// Constructor
   BlockGeometryStatistics3D(BlockGeometryStructure3D<T>* blockGeometry);
 
@@ -86,50 +85,72 @@ public:
   bool const & getStatisticsStatus() const;
   /// Returns the map with the numbers of voxels for each  material
   std::map<int, int> getMaterial2n();
+  std::map<int, int> getMaterial2n() const;
 
   /// Updates the statistics if it is really needed
   void update(bool verbose=false);
 
   /// Returns the number of different materials
   int getNmaterials();
-  /// Returns the number of voxels for a given material number
+  int getNmaterials() const;
+  ///Returns the number of voxels for a given material number
   int getNvoxel(int material);
+  int getNvoxel(int material) const;
   /// Returns the number of voxels with material!=0
   int getNvoxel();
+  int getNvoxel() const;
   /// Returns the min. lattice position in each direction
   std::vector<int> getMinLatticeR(int material);
+  std::vector<int> getMinLatticeR(int material) const;
   /// Returns the max. lattice position in each direction
   std::vector<int> getMaxLatticeR(int material);
+  std::vector<int> getMaxLatticeR(int material) const;
   /// Returns the min. phys position in each direction
-  std::vector<T> getMinPhysR(int material);
+  std::vector<T> getMinPhysR(int material) const;
   /// Returns the max. phys position in each direction
-  std::vector<T> getMaxPhysR(int material);
+  std::vector<T> getMaxPhysR(int material) const;
   /// Returns the lattice extend as length in each direction
   std::vector<T> getLatticeExtend(int material);
+  std::vector<T> getLatticeExtend(int material) const;
   /// Returns the phys extend as length in each direction
   std::vector<T> getPhysExtend(int material);
+  std::vector<T> getPhysExtend(int material) const;
   /// Returns the phys radius as length in each direction
   std::vector<T> getPhysRadius(int material);
+  std::vector<T> getPhysRadius(int material) const;
   /// Returns the center position
   std::vector<T> getCenterPhysR(int material);
-  /// Returns the boundary type which is characterized by a discrete normal (c.f. Zimny)
-  std::vector<int> getType(int iX, int iY, int iZ);
+  std::vector<T> getCenterPhysR(int material) const;
+  /* Returns the boundary type which is characterized by a discrete normal (c.f. Zimny)
+   * 0 element:   flat, corner or edge
+   * 1 element:   orientation -1, 0 or 1
+   * 2 element:   orientation -1, 0 or 1
+   * 3 element:   orientation -1, 0 or 1
+   */
+  std::vector<int> getType(int iX, int iY, int iZ, bool anyNormal = false);
+  std::vector<int> getType(int iX, int iY, int iZ, bool anyNormal = false) const;
 
   /// Returns normal that points into the fluid for paraxial surfaces
   std::vector<int> computeNormal(int iX, int iY, int iZ);
+  std::vector<int> computeNormal(int iX, int iY, int iZ) const;
   /// Returns normal that points into the fluid for paraxial surfaces
   std::vector<T> computeNormal (int material);
-  /// Returns discrete normal with norm maxNorm that points into the fluid for paraxial surfaces
+  std::vector<T> computeNormal (int material) const;
+  /// Returns discrete normal with norm maxNorm that points into the fluid for paraxial surfaces without update
   /// maxNorm=1.1 implies only normals parallel to the axises
   std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1);
+  std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1) const;
 
   // Returns true if at position (iX,iY,iZ) and in a neighbourhood of size (offsetX,offsetY,offsetZ) only voxels of the given material are found
   bool check(int material, int iX, int iY, int iZ, unsigned offsetX, unsigned offsetY, unsigned offsetZ);
+  bool check(int material, int iX, int iY, int iZ, unsigned offsetX, unsigned offsetY, unsigned offsetZ) const;
   // Returns true and a position (iX,iY,iZ) if there is a neighbourhood of size (offsetX,offsetY,offsetZ) around (iX,iY,iZ) with only voxels of the given material
   bool find(int material, unsigned offsetX, unsigned offsetY, unsigned offsetZ, int& iX, int& iY, int& iZ);
+  bool find(int material, unsigned offsetX, unsigned offsetY, unsigned offsetZ, int& iX, int& iY, int& iZ) const;
 
   /// Prints some statistic information, i.e. the number of voxels and min. max. physical position for each different material
   void print();
+  void print() const;
 
 private:
 
@@ -138,6 +159,8 @@ private:
   /// Helper function for get type (c.f. Zimny)
   std::vector<int> checkExtraBoundary(std::vector<int> discreteNormal,
                                       std::vector<int> discreteNormal2);
+  std::vector<int> checkExtraBoundary(std::vector<int> discreteNormal,
+                                      std::vector<int> discreteNormal2) const;
 };
 
 } // namespace olb

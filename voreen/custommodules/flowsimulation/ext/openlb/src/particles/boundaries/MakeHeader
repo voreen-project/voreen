@@ -24,4 +24,6 @@
 generic        := 
 
 precompiled    := boundary3D \
-                  materialBoundary3D
+                  materialBoundary3D \
+                  wireBoundaryForMagP3D \
+                  boundarySimpleReflection3D

@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -36,11 +36,9 @@ class BlockSum3D : public BlockF3D<W> {
 private:
   BlockF3D<W>&          _f;
   BlockIndicatorF3D<T>& _indicatorF;
-  Cuboid3D<T>&          _cuboid;
 public:
   BlockSum3D(BlockF3D<W>&          f,
-             BlockIndicatorF3D<T>& indicatorF,
-             Cuboid3D<T>&          cuboid);
+             BlockIndicatorF3D<T>& indicatorF);
   bool operator() (W output[], const int input[]) override;
 };
 
@@ -51,11 +49,9 @@ class BlockIntegral3D final : public BlockF3D<W> {
 private:
   BlockF3D<W>&          _f;
   BlockIndicatorF3D<T>& _indicatorF;
-  Cuboid3D<T>&          _cuboid;
 public:
   BlockIntegral3D(BlockF3D<W>&          f,
-                  BlockIndicatorF3D<T>& indicatorF,
-                  Cuboid3D<T>&          cuboid);
+                  BlockIndicatorF3D<T>& indicatorF);
   bool operator() (W output[], const int input[]) override;
 };
 

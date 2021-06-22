@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Tim Dornieden, Mathias J. Krause,
- *  Albert Mink, Adrian Kummerländer
+ *  Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -27,6 +27,9 @@
 
 #include "utilities/arithmetic.h"
 #include "superBaseF3D.h"
+#include "utilities/functorPtr.h"
+
+#include <memory>
 
 /** Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
@@ -42,7 +45,7 @@ namespace olb {
  *         e.g. std::minus for substraction
  *
  * Block level functors are instantiated for operations if at least one input
- * functor exposes block level functors. See BlockCalc3D.
+ * functor exposes block level functors. See BlockCalcF3D.
  *
  * All operations are performed componentwise if functor target dimensions are
  * equal. If at least one of the target dimensions is equal to 1 it is applied
@@ -52,31 +55,74 @@ namespace olb {
  * evaluation like SuperSum3D
  **/
 template <typename T, typename W, template<typename> class F>
-class SuperCalc3D : public SuperF3D<T,W> {
+class SuperCalcF3D : public SuperF3D<T,W> {
 protected:
-  SuperF3D<T,W>& _f;
-  SuperF3D<T,W>& _g;
+  FunctorPtr<SuperF3D<T,W>> _f;
+  FunctorPtr<SuperF3D<T,W>> _g;
 public:
-  SuperCalc3D(SuperF3D<T,W>& f, SuperF3D<T,W>& g);
+  SuperCalcF3D(FunctorPtr<SuperF3D<T,W>>&& f,
+               FunctorPtr<SuperF3D<T,W>>&& g);
+
+  SuperCalcF3D(W scalar, FunctorPtr<SuperF3D<T,W>>&& g);
+  SuperCalcF3D(FunctorPtr<SuperF3D<T,W>>&& f, W scalar);
 
   bool operator() (W output[], const int input[]) override;
 };
 
 /// Addition functor (W==bool: Union)
-template <typename T, typename W>
-using SuperPlus3D = SuperCalc3D<T,W,util::plus>;
+template <typename T, typename W = T>
+using SuperCalcPlus3D = SuperCalcF3D<T,W,util::plus>;
 
 /// Subtraction functor (W==bool: Without)
-template <typename T, typename W>
-using SuperMinus3D = SuperCalc3D<T,W,util::minus>;
+template <typename T, typename W = T>
+using SuperCalcMinus3D = SuperCalcF3D<T,W,util::minus>;
 
 /// Multiplication functor (W==bool: Intersection)
-template <typename T, typename W>
-using SuperMultiplication3D = SuperCalc3D<T,W,util::multiplies>;
+template <typename T, typename W = T>
+using SuperCalcMultiplication3D = SuperCalcF3D<T,W,util::multiplies>;
 
 /// Division functor
+template <typename T, typename W = T>
+using SuperCalcDivision3D = SuperCalcF3D<T,W,util::divides>;
+
+/// Power functor
+template <typename T, typename W = T>
+using SuperCalcPower3D = SuperCalcF3D<T,W,util::power>;
+
+/**
+ * \name Arithmetic for functors managed by std::shared_ptr
+ * \{
+ **/
+
 template <typename T, typename W>
-using SuperDivision3D = SuperCalc3D<T,W,util::divides>;
+std::shared_ptr<SuperF3D<T,W>> operator+(std::shared_ptr<SuperF3D<T,W>> lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator+(std::shared_ptr<SuperF3D<T,W>> lhs, W rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator+(W lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator-(std::shared_ptr<SuperF3D<T,W>> lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator-(std::shared_ptr<SuperF3D<T,W>> lhs, W rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator-(W lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator*(std::shared_ptr<SuperF3D<T,W>> lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator*(std::shared_ptr<SuperF3D<T,W>> lhs, W rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator*(W lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator/(std::shared_ptr<SuperF3D<T,W>> lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator/(std::shared_ptr<SuperF3D<T,W>> lhs, W rhs);
+template <typename T, typename W>
+std::shared_ptr<SuperF3D<T,W>> operator/(W lhs, std::shared_ptr<SuperF3D<T,W>> rhs);
+
+///\}
 
 
 } // end namespace olb

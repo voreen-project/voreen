@@ -24,6 +24,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/ports/flowparametrizationport.cpp
 
     # processors
+    ${MOD_DIR}/processors/features/wallshearstress.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
     ${MOD_DIR}/processors/plotting/roianalysis.cpp
@@ -61,6 +62,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/ports/flowparametrizationport.h
 
     # processors
+    ${MOD_DIR}/processors/features/wallshearstress.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
     ${MOD_DIR}/processors/plotting/roianalysis.h
@@ -117,6 +119,14 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
         MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
     ENDIF()
 
+    # OpenLB requires c++14 standard.
+    CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+    IF(COMPILER_SUPPORTS_CXX14)
+        set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
+    ELSE()
+        MESSAGE(FATAL_ERROR "OpenLB requires the compile to support c++14")
+    ENDIF()
+
     IF(VRN_MODULE_OPENMP)
         ADD_DEFINITIONS("-DPARALLEL_MODE_OMP")
     ELSE()
@@ -127,7 +137,7 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
 
     SET(OLB_BUILDTYPE "generic" CACHE STRING "OpenLB Build Type")
-    SET_PROPERTY(CACHE OLB_BUILDTYPE PROPERTY STRINGS "precompiled" "generic")
+    SET_PROPERTY(CACHE OLB_BUILDTYPE PROPERTY STRINGS "generic" "precompiled")
     SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/${OLB_BUILDTYPE}/lib/libolb.a)
     IF(${OLB_BUILDTYPE} MATCHES "precompiled")
         ADD_DEFINITIONS("-DOLB_PRECOMPILED")
@@ -139,12 +149,10 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/features/wallshearstressextractor.h
         ${MOD_DIR}/processors/simulation/flowsimulation.h
         ${MOD_DIR}/processors/geometry/geometryinsidetest.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/features/wallshearstressextractor.cpp
         ${MOD_DIR}/processors/simulation/flowsimulation.cpp
         ${MOD_DIR}/processors/geometry/geometryinsidetest.cpp
     )

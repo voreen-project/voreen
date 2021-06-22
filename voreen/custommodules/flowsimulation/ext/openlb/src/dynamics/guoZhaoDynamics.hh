@@ -34,6 +34,7 @@
 #include "core/cell.h"
 #include "dynamics/guoZhaoLbHelpers.h"
 #include "dynamics/firstOrderLbHelpers.h"
+#include "dynamics/guoZhaoDynamics.h"
 
 namespace olb {
 
@@ -42,107 +43,95 @@ namespace olb {
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, template<typename U> class Lattice>
-GuoZhaoBGKdynamics<T,Lattice>::GuoZhaoBGKdynamics (
-  T omega, Momenta<T,Lattice>& momenta )
-  : BasicDynamics<T,Lattice>(momenta),
+template<typename T, typename DESCRIPTOR>
+GuoZhaoBGKdynamics<T,DESCRIPTOR>::GuoZhaoBGKdynamics (
+  T omega, Momenta<T,DESCRIPTOR>& momenta )
+  : BasicDynamics<T,DESCRIPTOR>(momenta),
     _omega(omega)
 {
-  // This ensures both that the constant sizeOfForce is defined in
-  // ExternalField and that it has the proper size
-  OLB_PRECONDITION( Lattice<T>::d == Lattice<T>::ExternalField::sizeOfForce );
+  this->getName() = "GuoZhaoBGKdynamics";  
+  OLB_PRECONDITION( DESCRIPTOR::template provides<descriptors::FORCE>() );
 
   _epsilon = (T)1.0; // This to avoid a NaN error at the first timestep.
 }
 
-template<typename T, template<typename U> class Lattice>
-T GuoZhaoBGKdynamics<T,Lattice>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR>
+T GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
-//  int *foo = (int*)-1; // Making a bad pointer
-//  cout << *foo; // Crashing the program
-//  cout << "computeEquilibrium function reached. Stopping." << endl;
-//  exit(1); // exits nicely
-  return GuoZhaoLbHelpers<T,Lattice>::equilibrium(iPop, _epsilon, rho, u, uSqr);
+  return GuoZhaoLbHelpers<T,DESCRIPTOR>::equilibrium(iPop, _epsilon, rho, u, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void GuoZhaoBGKdynamics<T,Lattice>::computeU (Cell<T,Lattice> const& cell, T u[Lattice<T>::d] ) const
+template<typename T, typename DESCRIPTOR>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeU (ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d] ) const
 {
   T rho;
+  this->computeRhoU(cell, rho, u);
+}
+
+template<typename T, typename DESCRIPTOR>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeRhoU (ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d] ) const
+{
   this->_momenta.computeRhoU(cell, rho, u);
-  for (int iVel=0; iVel<Lattice<T>::d; ++iVel) {
-    u[iVel] += cell.getExternal(forceBeginsAt)[iVel] / (T)2.;
+
+  const T epsilon = cell.template getField<descriptors::EPSILON>();
+  const T nu      = cell.template getField<descriptors::NU>();
+  const T k       = cell.template getField<descriptors::K>();
+
+  auto bodyF = cell.template getFieldPointer<descriptors::BODY_FORCE>();
+
+  for (int iDim=0; iDim<DESCRIPTOR::d; ++iDim) {
+    u[iDim] += 0.5*epsilon*bodyF[iDim];
+  }
+
+  const T uMag = sqrt( util::normSqr<T,DESCRIPTOR::d>(u) );
+  const T Fe = 0.;//1.75/sqrt(150.*pow(epsilon,3));
+
+  const T c_0 = 0.5*(1 + 0.5*epsilon*nu/k);
+  const T c_1 = 0.5*epsilon*Fe/sqrt(k);
+
+  for (int iDim=0; iDim<DESCRIPTOR::d; ++iDim) {
+    u[iDim] /= (c_0 + sqrt(c_0*c_0 + c_1*uMag));
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void GuoZhaoBGKdynamics<T,Lattice>::computeRhoU (Cell<T,Lattice> const& cell, T& rho, T u[Lattice<T>::d] ) const
+template<typename T, typename DESCRIPTOR>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR>::updateEpsilon (Cell<T,DESCRIPTOR>& cell)
 {
-  this->_momenta.computeRhoU(cell, rho, u);
-  for (int iVel=0; iVel<Lattice<T>::d; ++iVel) {
-    u[iVel] += cell.getExternal(forceBeginsAt)[iVel] / (T)2.;
-  }
-}
-
-template<typename T, template<typename U> class Lattice>
-void GuoZhaoBGKdynamics<T,Lattice>::updateEpsilon (Cell<T,Lattice>& cell)
-{
-  _epsilon = *cell.getExternal(Lattice<T>::ExternalField::epsilonAt); //Copying epsilon from
-  // external to member variable to provide access for computeEquilibrium.
+  // Copying epsilon from external to member variable to provide access for computeEquilibrium.
+  _epsilon = cell.template getField<descriptors::EPSILON>();
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void GuoZhaoBGKdynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
   // Copying epsilon from
   // external to member variable to provide access for computeEquilibrium.
   updateEpsilon(cell);
-  T rho, u[Lattice<T>::d];
-  this->_momenta.computeRhoU(cell, rho, u);
-  T* force = cell.getExternal(forceBeginsAt);
-  for (int iVel=0; iVel<Lattice<T>::d; ++iVel) {
-    u[iVel] += force[iVel] / (T)2.;
-  }
-  T uSqr = GuoZhaoLbHelpers<T,Lattice>::bgkCollision(cell, _epsilon, rho, u, _omega);
-  GuoZhaoLbHelpers<T,Lattice>::updateGuoZhaoForce(cell, u);
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, _omega, rho);
+  T rho, u[DESCRIPTOR::d];
+  this->computeRhoU(cell, rho, u);
+  GuoZhaoLbHelpers<T,DESCRIPTOR>::updateGuoZhaoForce(cell, u);
+  T uSqr = GuoZhaoLbHelpers<T,DESCRIPTOR>::bgkCollision(cell, _epsilon, rho, u, _omega);
+  GuoZhaoLbHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, _omega, rho, _epsilon);
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void GuoZhaoBGKdynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  // Copying epsilon from
-  // external to member variable to provide access for computeEquilibrium.
-  updateEpsilon(cell);
-  T rho, uDummy[Lattice<T>::d];
-  this->_momenta.computeRhoU(cell, rho, uDummy);
-  T uSqr =GuoZhaoLbHelpers<T,Lattice>::bgkCollision(cell, _epsilon, rho, u, _omega);
-  GuoZhaoLbHelpers<T,Lattice>::updateGuoZhaoForce(cell, u);
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, _omega, rho);
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T GuoZhaoBGKdynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T GuoZhaoBGKdynamics<T,DESCRIPTOR>::getOmega() const
 {
   return _omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-T GuoZhaoBGKdynamics<T,Lattice>::getEpsilon()
+template<typename T, typename DESCRIPTOR>
+T GuoZhaoBGKdynamics<T,DESCRIPTOR>::getEpsilon()
 {
   return _epsilon;
 }
 
-template<typename T, template<typename U> class Lattice>
-void GuoZhaoBGKdynamics<T,Lattice>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR>::setOmega(T omega)
 {
   _omega = omega;
 }

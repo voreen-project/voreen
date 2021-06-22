@@ -36,7 +36,7 @@ namespace olb {
 // established -- original for both single- and multicomponent flow
 
 template <typename T, typename S>
-class ShanChen93 : public AnalyticalF1D<T,S> {
+class ShanChen93 : public AnalyticalF<1,T,S> {
 private:
   T _rhoZero;
 public:
@@ -47,7 +47,7 @@ public:
 // established -- only multicomponent flow
 
 template <typename T, typename S>
-class PsiEqualsRho : public AnalyticalF1D<T,S> {
+class PsiEqualsRho : public AnalyticalF<1,T,S> {
 private:
 public:
   PsiEqualsRho();
@@ -57,7 +57,7 @@ public:
 // established -- only singlecomponent flow
 
 template <typename T, typename S>
-class ShanChen94 : public AnalyticalF1D<T,S> {
+class ShanChen94 : public AnalyticalF<1,T,S> {
 private:
   T _rhoZero;
   T _psiZero;
@@ -67,7 +67,7 @@ public:
 };
 
 template <typename T, typename S>
-class PengRobinson : public AnalyticalF1D<T,S> {
+class PengRobinson : public AnalyticalF<1,T,S> {
 private:
   T _G;
   T _acentricFactor;
@@ -85,7 +85,7 @@ public:
 };
 
 template <typename T, typename S>
-class CarnahanStarling : public AnalyticalF1D<T,S> {
+class CarnahanStarling : public AnalyticalF<1,T,S> {
 private:
   T _G;
   T _a;
@@ -106,7 +106,7 @@ public:
 // 1.5 -> psiZero=3.5
 // 2. -> psiZero=5,45
 template <typename T, typename S>
-class Krause : public AnalyticalF1D<T,S> {
+class Krause : public AnalyticalF<1,T,S> {
 private:
   T _rhoZero;
   T _psiZero;
@@ -116,7 +116,7 @@ public:
 };
 
 template <typename T, typename S> // density of liquid phase always equals rhoZero for G=-1
-class WeisbrodKrause : public AnalyticalF1D<T,S> {
+class WeisbrodKrause : public AnalyticalF<1,T,S> {
 private:
   T _rhoZero;
   T _sigmu;
@@ -126,7 +126,7 @@ public:
 };
 
 template <typename T, typename S> // not very good
-class Normal : public AnalyticalF1D<T,S> {
+class Normal : public AnalyticalF<1,T,S> {
 private:
   T _sigma;
   T _mu;

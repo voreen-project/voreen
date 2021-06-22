@@ -31,7 +31,9 @@ template class PowerLaw2D<double>;
 
 template class Poiseuille2D<double>;
 
-template class PoiseuilleStrainRate2D<double,double,descriptors::D2Q9Descriptor>;
+template class PoiseuilleStrainRate2D<double,double,descriptors::D2Q9<>>;
+
+template class AnalyticalPorousVelocity2D<double>;
 
 template class PolarToCartesian2D<double,double>;
 

@@ -32,12 +32,7 @@
 #include "voreen/core/ports/volumeport.h"
 #include "../../ports/flowparametrizationport.h"
 
-#include <olb3D.h>
-#define DESCRIPTOR D3Q19Descriptor
-
-using namespace olb;
-using namespace olb::descriptors;
-typedef double T;
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 
 namespace voreen {
 
@@ -51,7 +46,7 @@ struct FlowSimulationInput {
 };
 
 struct FlowSimulationOutput {
-    //std::unique_ptr<VolumeList> outputVolumes;
+    // Could add insitu results here.
 };
 
 /**
@@ -82,78 +77,7 @@ protected:
 
 private:
 
-    static const T VOREEN_LENGTH_TO_SI;
-    static const T VOREEN_TIME_TO_SI;
-
-    // Static material ids.
-    enum Material {
-        MAT_EMPTY  = 0,
-        MAT_FLUID  = 1,
-        MAT_WALL   = 2,
-        MAT_COUNT,
-    };
-
-    // Allow for simulation lattice initialization by volume data.
-    class MeasuredDataMapper : public AnalyticalF3D<T, T> {
-    public:
-        MeasuredDataMapper(const VolumeBase* volume);
-        virtual bool operator() (T output[], const T input[]);
-
-    private:
-        const VolumeBase* volume_;
-        std::unique_ptr<VolumeRAMRepresentationLock> representation_;
-        tgt::Bounds bounds_;
-        tgt::mat4 physicalToVoxelMatrix_;
-    };
-
-    void runSimulation(     const FlowSimulationInput& input,
-                            ProgressReporter& progressReporter) const;
-
-    void prepareGeometry(   UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& indicator,
-                            STLreader<T>& stlReader,
-                            SuperGeometry3D<T>& superGeometry,
-                            const FlowParameterSetEnsemble& parameterSetEnsemble,
-                            size_t selectedParametrization) const;
-
-    void prepareLattice(    SuperLattice3D<T, DESCRIPTOR>& lattice,
-                            UnitConverter<T,DESCRIPTOR> const& converter,
-                            Dynamics<T, DESCRIPTOR>& bulkDynamics,
-                            sOnLatticeBoundaryCondition3D<T, DESCRIPTOR>& bc,
-                            sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                            STLreader<T>& stlReader,
-                            SuperGeometry3D<T>& superGeometry,
-                            const VolumeList* measuredData,
-                            const FlowParameterSetEnsemble& parameterSetEnsemble,
-                            size_t selectedParametrization) const;
-
-    void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
-                            sOffLatticeBoundaryCondition3D<T,DESCRIPTOR>& offBc,
-                            UnitConverter<T,DESCRIPTOR> const& converter,
-                            int iteration,
-                            SuperGeometry3D<T>& superGeometry,
-                            const FlowParameterSetEnsemble& parameterSetEnsemble,
-                            size_t selectedParametrization) const;
-
-    bool getResults(        SuperLattice3D<T, DESCRIPTOR>& sLattice,
-                            UnitConverter<T,DESCRIPTOR>& converter,
-                            int iteration,
-                            int maxIteration,
-                            Dynamics<T, DESCRIPTOR>& bulkDynamics,
-                            SuperGeometry3D<T>& superGeometry,
-                            STLreader<T>& stlReader,
-                            const FlowParameterSetEnsemble& parameterSetEnsemble,
-                            size_t selectedParametrization,
-                            const std::string& simulationResultPath) const;
-
-    void writeVVDFile(      STLreader<T>& stlReader,
-                            UnitConverter<T,DESCRIPTOR>& converter,
-                            int iteration,
-                            int maxIteration,
-                            const FlowParameterSetEnsemble& parameterSetEnsemble,
-                            size_t selectedParametrization,
-                            const std::string& simulationOutputPath,
-                            const std::string& name,
-                            SuperLatticeF3D<T, DESCRIPTOR>& feature) const;
+    void runSimulation(const FlowSimulationInput& input, ProgressReporter& progressReporter) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;

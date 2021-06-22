@@ -82,7 +82,6 @@ void BlockVTKwriter2D<T>::write(int iT)
       }
     }
     closePreamble( fullNameVti );
-    clearAddedFunctors();
   }
 }
 
@@ -129,7 +128,10 @@ void BlockVTKwriter2D<T>::preamble(const std::string& fullName, int nx, int ny,
       clout << "Error: could not open " << fullName << std::endl;
     }
 
-    T spacing = double(1.0/nx);
+    // spacing is not known for BlockF2D classes
+    // prone to error: spacing might correspond to extension in y direction
+    //                 at the end of the day, is can be fixed by apply a scaling in paraview
+    double spacing = double(1.0/nx);
 
     fout << "<?xml version=\"1.0\"?>\n";
     fout << "<VTKFile type=\"ImageData\" version=\"0.1\" "
@@ -178,12 +180,8 @@ void BlockVTKwriter2D<T>::writeRawData(const std::string& fullNameVti, BlockF2D<
 
   if (singleton::mpi().getRank()==0) {
     fout << "<DataArray " ;
-    if (f.getTargetDim() == 1) {
-      fout << "type=\"Float32\" Name=\"" << f.getName() <<"\">\n";
-    } else {
-      fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
-           << "NumberOfComponents=\"" << f.getTargetDim() <<"\">\n";
-    }
+    fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
+         << "NumberOfComponents=\"" << f.getTargetDim() <<"\">\n";
   }
 
   int i[2] = {int()};
@@ -191,8 +189,8 @@ void BlockVTKwriter2D<T>::writeRawData(const std::string& fullNameVti, BlockF2D<
   for (int iDim = 0; iDim < f.getTargetDim(); ++iDim) {
     evaluated[iDim] = T();
   }
-  for (i[0] = 0; i[0] < ny+1; ++i[0]) {
-    for (i[1] = 0; i[1] < nx+1; ++i[1]) {
+  for (i[1] = 0; i[1] < ny+1; ++i[1]) {
+    for (i[0] = 0; i[0] < nx+1; ++i[0]) {
       f(evaluated,i);
       for (int iDim = 0; iDim < f.getTargetDim(); ++iDim) {
         if (singleton::mpi().getRank()==0) {
@@ -253,8 +251,8 @@ void BlockVTKwriter2D<T>::writeRawDataBinary(const std::string& fullNameVti,
   for (int iDim = 0; iDim < f.getTargetDim(); ++iDim) {
     evaluated[iDim] = T();
   }
-  for (i[0] = 0; i[0] < ny+1; ++i[0]) {
-    for (i[1] = 0; i[1] < nx+1; ++i[1]) {
+  for (i[1] = 0; i[1] < ny+1; ++i[1]) {
+    for (i[0] = 0; i[0] < nx+1; ++i[0]) {
       f(evaluated,i);
       for (int iDim = 0; iDim < f.getTargetDim(); ++iDim) {
         if (singleton::mpi().getRank()==0) {

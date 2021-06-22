@@ -36,11 +36,15 @@ template class BlockF2D<double>;
 template class BlockDataF2D<double,int>;
 template class BlockDataF2D<double,double>;
 
+template class BlockDataViewF2D<double,int>;
+template class BlockDataViewF2D<double,double>;
+
 template class BlockIdentity2D<int>;
+template class BlockIdentity2D<bool>;
 template class BlockIdentity2D<double>;
 
-template class BlockLatticeF2D<double,descriptors::D2Q9Descriptor>;
-template class BlockLatticePhysF2D<double,descriptors::D2Q9Descriptor>;
+template class BlockLatticeF2D<double,descriptors::D2Q9<>>;
+template class BlockLatticePhysF2D<double,descriptors::D2Q9<>>;
 
 }
 

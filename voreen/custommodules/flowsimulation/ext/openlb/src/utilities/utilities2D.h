@@ -28,6 +28,7 @@
 #include "benchmarkUtil.h"
 #include "timer.h"
 #include "functorPtr.h"
+#include "functorDsl2D.h"
 #include "vectorHelpers.h"
 #include "hyperplane2D.h"
 #include "hyperplaneLattice2D.h"

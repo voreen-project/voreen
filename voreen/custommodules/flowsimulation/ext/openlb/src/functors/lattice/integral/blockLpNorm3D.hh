@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -33,27 +33,27 @@ namespace olb {
 
 template <typename T, typename W, int P>
 BlockLpNorm3D<T,W,P>::BlockLpNorm3D(BlockF3D<W>&          f,
-                                    BlockIndicatorF3D<T>& indicatorF,
-                                    Cuboid3D<T>&          cuboid)
+                                    BlockIndicatorF3D<T>& indicatorF)
   : BlockF3D<W>(f.getBlockStructure(), f.getTargetDim()),
     _f(f),
-    _indicatorF(indicatorF),
-    _cuboid(cuboid)
+    _indicatorF(indicatorF)
 {
+  OLB_ASSERT(_f.getSourceDim() == _indicatorF.getSourceDim(),
+             "functor source dimension equals indicator source dimension");
+
   this->getName() = "BlockL" + std::to_string(P) + "Norm(" + _f.getName() + ")";
 }
 
 template <typename T, typename W, int P>
 bool BlockLpNorm3D<T,W,P>::operator()(W output[], const int input[])
 {
-  const int nX = _cuboid.getNx();
-  const int nY = _cuboid.getNy();
-  const int nZ = _cuboid.getNz();
-  const T weight = pow(_cuboid.getDeltaR(), 3);
+  const auto& blockGeometry = _indicatorF.getBlockGeometryStructure();
+  const int nX = blockGeometry.getNx();
+  const int nY = blockGeometry.getNy();
+  const int nZ = blockGeometry.getNz();
+  const T weight = pow(blockGeometry.getDeltaR(), 3);
 
-  OLB_ASSERT(_f.getSourceDim() == _indicatorF.getSourceDim(),
-             "functor source dimension equals indicator source dimension");
-
+  output[0] = W(0);
   W outputTmp[_f.getTargetDim()];
   int inputTmp[_f.getSourceDim()];
 
@@ -69,6 +69,8 @@ bool BlockLpNorm3D<T,W,P>::operator()(W output[], const int input[])
       }
     }
   }
+
+  output[0] = LpNormImpl<T,W,P>().enclose(output[0]);
 
   return true;
 }

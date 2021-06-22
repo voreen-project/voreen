@@ -28,9 +28,7 @@
 
 namespace olb {
 
-template class SmoothIndicatorF3D<double,double>;
+template class SmoothIndicatorF3D<double,double,false>;
 template class SmoothIndicatorIdentity3D<double,double>;
-
-template class ParticleIndicatorF3D<double,double>;
 
 }

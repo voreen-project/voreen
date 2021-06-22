@@ -95,6 +95,7 @@ private:
     ButtonProperty clearParametrizations_;
 
     StringTableProperty parametrizations_;
+    BoolProperty addInvalidParametrizations_;
 
     static const std::string loggerCat_;
 };

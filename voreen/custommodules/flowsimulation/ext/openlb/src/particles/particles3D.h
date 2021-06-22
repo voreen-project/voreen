@@ -26,6 +26,7 @@
  * the particles directory.
  */
 
+#include "particleOperations/particleOperations3D.h"
 #include "particle3D.h"
 #include "particleSystem3D.h"
 #include "superParticleSystem3D.h"

@@ -35,40 +35,20 @@ namespace olb {
 
 template<typename T>
 BlockGeometry2D<T>::BlockGeometry2D(T x0, T y0, T h, int nX, int nY, int iCglob)
-  : BlockData2D<T,int>(nX,nY), BlockGeometryStructure2D<T>(iCglob), _cuboid(x0, y0, h, nX, nY)
+  : BlockGeometryStructure2D<T>(nX, nY, iCglob),
+    _data(this->getNcells()),
+    _cuboid(x0, y0, h, nX, nY)
 {
-  this->_statistics = BlockGeometryStatistics2D<T>(this);
   addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
 }
 
 template<typename T>
 BlockGeometry2D<T>::BlockGeometry2D(Cuboid2D<T>& cuboid, int iCglob)
-  : BlockData2D<T,int>(cuboid.getNx(),cuboid.getNy()), BlockGeometryStructure2D<T>(iCglob),
+  : BlockGeometryStructure2D<T>(cuboid.getNx(), cuboid.getNy(), iCglob),
+    _data(this->getNcells()),
     _cuboid(cuboid)
 {
-  this->_statistics = BlockGeometryStatistics2D<T>(this);
   addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-}
-
-template<typename T>
-BlockGeometry2D<T>::BlockGeometry2D(BlockGeometry2D const& rhs)
-  : BlockData2D<T,int>(rhs.getNx(), rhs.getNy()), BlockGeometryStructure2D<T>(rhs._iCglob),
-    _cuboid(rhs._cuboid)
-{
-  this->_statistics = BlockGeometryStatistics2D<T>(this);
-  addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-}
-
-template<typename T>
-BlockGeometry2D<T>& BlockGeometry2D<T>::operator=(BlockGeometry2D const& rhs)
-{
-  this->_nx = rhs._nx;
-  this->_ny = rhs._ny;
-  this->_iCglob = rhs._iCglob;
-  _cuboid = rhs._cuboid;
-  this->_statistics = BlockGeometryStatistics2D<T>(this);
-  addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-  return *this;
 }
 
 template<typename T>
@@ -90,127 +70,49 @@ Vector<T,2> BlockGeometry2D<T>::getOrigin() const
 }
 
 template<typename T>
-const T BlockGeometry2D<T>::getDeltaR() const
+T BlockGeometry2D<T>::getDeltaR() const
 {
   return _cuboid.getDeltaR();
 }
 
 template<typename T>
-int BlockGeometry2D<T>::getNx() const
-{
-  return _cuboid.getNx();
-}
-
-template<typename T>
-int BlockGeometry2D<T>::getNy() const
-{
-  return _cuboid.getNy();
-}
-
-
-template<typename T>
 int& BlockGeometry2D<T>::get(int iX, int iY)
 {
   resetStatistics();
-  return BlockData2D<T,int>::get(iX,iY);
+  return _data[0][this->getCellId(iX,iY)];
 }
 
 template<typename T>
 int const& BlockGeometry2D<T>::get(int iX, int iY) const
 {
-  return BlockData2D<T,int>::get(iX,iY);
+  return _data[0][this->getCellId(iX,iY)];
 }
 
 template<typename T>
 int BlockGeometry2D<T>::getMaterial(int iX, int iY) const
 {
   int material;
-  if (iX < 0 || iX + 1 > getNx() || iY < 0 || iY + 1 > getNy() ) {
+  if (iX < 0 || iX + 1 > this->getNx() || iY < 0 || iY + 1 > this->getNy() ) {
     material = 0;
-  } else {
-    material = BlockData2D<T,int>::get(iX,iY);
+  }
+  else {
+    material = _data[0][this->getCellId(iX,iY)];
   }
   return material;
+}
+
+template<typename T>
+int& BlockGeometry2D<T>::get(std::size_t iCell)
+{
+  resetStatistics();
+  return _data[0][iCell];
 }
 
 template<typename T>
 void BlockGeometry2D<T>::getPhysR(T physR[2], const int& iX, const int& iY) const
 {
   _cuboid.getPhysR(physR, iX, iY);
-  return;
 }
-
-///TODO up, DONE down
-/*
-template<typename T>
-olb::ScalarField3D<int>* BlockGeometry3D<T>::getRawData() {
-  return &_geometryData;
-}*/
-/*
-template<typename T>
-void BlockGeometry3D<T>::resize(int X, int Y, int Z, int nX, int nY, int nZ) {
-  olb::ScalarField3D<int> geometryDataTemp(nX, nY, nZ);
-  geometryDataTemp.construct();
-  geometryDataTemp.reset();
-  for(int iX=0; iX<nX; iX++) {
-    for(int iY=0; iY<nY; iY++) {
-      for(int iZ=0; iZ<nZ; iZ++) {
-        geometryDataTemp.get(iX, iY, iZ)
-          = _geometryData.get(X + iX, Y + iY, Z + iZ);
-      }
-    }
-  }
-  _geometryData.swap(geometryDataTemp);
-  geometryDataTemp.deConstruct();
-}
-*/
-/*
-template<typename T>
-void BlockGeometry3D<T>::refineMesh(int level) {
-
-  // new number of Voxels in X-,Y-,and Z-direction and new spacing
-
-  int _nXnew = level * getNx();
-  int _nYnew = level * getNy();
-  int _nZnew = level * getNz();
-  T _hnew = getDeltaR() / ((T) level);
-
-  olb::ScalarField3D<int> _refinedGeometryData(_nXnew, _nYnew,
-      _nZnew);
-  _refinedGeometryData.construct();
-
-  for (int iX = 0; iX < getNx(); iX++) {
-    for (int iY = 0; iY < getNy(); iY++) {
-      for (int iZ = 0; iZ < getNz(); iZ++) {
-        for (int li = 0; li < level; li++) {
-          for (int lj = 0; lj < level; lj++) {
-            for (int lk = 0; lk < level; lk++) {
-
-              _refinedGeometryData.get(level * iX + li, level
-                                       * iY + lj, level * iZ + lk) = getMaterial(
-                                             iX, iY, iZ);
-
-            }
-          }
-        }
-      }
-    }
-  }
-
-  for (int iX = 0; iX < _nXnew; iX++) {
-    for (int iY = 0; iY < _nYnew; iY++) {
-      for (int iZ = 0; iZ < _nZnew; iZ++) {
-
-        if (iX == 0 || iY == 0 || iZ == 0 || iX == _nXnew - 1 || iY
-            == _nYnew - 1 || iZ == _nZnew - 1)
-          _refinedGeometryData.get(iX, iY, iZ) = 0;
-      }
-    }
-  }
-  reInit(getOrigin()[0], getOrigin()[1], getOrigin()[2], _hnew, _nXnew - 2, _nYnew - 2, _nZnew - 2, this->_iCglob,
-         &_refinedGeometryData);
-}*/
-
 
 template<typename T>
 void BlockGeometry2D<T>::addToStatisticsList(bool* statisticStatus)
@@ -223,7 +125,6 @@ void BlockGeometry2D<T>::removeFromStatisticsList(bool* statisticStatus)
 {
   _statisticsUpdateNeeded.remove(statisticStatus);
 }
-
 
 template<typename T>
 void BlockGeometry2D<T>::printLayer(int x0, int x1, int y0, int y1, bool linenumber)
@@ -248,10 +149,10 @@ void BlockGeometry2D<T>::printLayer(int direction, int layer, bool linenumber)
   assert(direction >= 0 && direction <= 2);
   switch (direction) {
   case 0:
-    printLayer(layer, layer, 0, getNy() - 1, linenumber);
+    printLayer(layer, layer, 0, this->getNy() - 1, linenumber);
     break;
   case 1:
-    printLayer(0, getNx() - 1, layer, layer, linenumber);
+    printLayer(0, this->getNx() - 1, layer, layer, linenumber);
     break;
   }
 }
@@ -272,8 +173,8 @@ void BlockGeometry2D<T>::printNode(int x0, int y0)
 template<typename T>
 void BlockGeometry2D<T>::resetStatistics()
 {
-  for (std::list<bool*>::iterator it = _statisticsUpdateNeeded.begin(); it != _statisticsUpdateNeeded.end(); it++) {
-    **it = true;
+  for (bool* update : _statisticsUpdateNeeded) {
+    *update = true;
   }
 }
 

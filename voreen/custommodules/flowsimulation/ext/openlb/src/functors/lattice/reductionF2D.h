@@ -33,7 +33,7 @@
 namespace olb {
 
 
-template< typename T, template <typename U> class DESCRIPTOR> class SuperLattice2D;
+template< typename T, typename DESCRIPTOR> class SuperLattice2D;
 
 /// Functor used to convert analytical functions to lattice functions
 /**
@@ -42,13 +42,17 @@ template< typename T, template <typename U> class DESCRIPTOR> class SuperLattice
  *
  *  Maintains block level BlockLatticeFfromAnalyticalF2D functors.
  */
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SuperLatticeFfromAnalyticalF2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 protected:
-  AnalyticalF2D<T,T>&  _f;
+  FunctorPtr<AnalyticalF2D<T,T>> _f;
 public:
-  SuperLatticeFfromAnalyticalF2D(AnalyticalF2D<T,T>& f,
-                                 SuperLattice2D<T,DESCRIPTOR>& sLattice);
+  /**
+   * \param f        Analytical functor to be converted into a lattice functor
+   * \param sLattice DESCRIPTOR reference required for conversion and block functor construction
+   **/
+  SuperLatticeFfromAnalyticalF2D(FunctorPtr<AnalyticalF2D<T,T>>&& f,
+                                 SuperLattice2D<T,DESCRIPTOR>&    sLattice);
   bool operator() (T output[], const int input[]) override;
 };
 
@@ -57,23 +61,20 @@ public:
 /**
  * Instances are contained in SuperLatticeFfromAnalyticalF2D::_blockF.
  **/
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeFfromAnalyticalF2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 protected:
   AnalyticalF2D<T,T>& _f;
-  Cuboid2D<T>         _cuboid;
-  const int           _overlap;
+  Cuboid2D<T>&        _cuboid;
 public:
   /**
    * \param f       Analytical functor to be converted into a lattice functor
    * \param lattice Block lattice structure required for BlockLatticeF2D construction
    * \param cuboid  Cuboid reference required for input parameter conversion
-   * \param overlap Block lattice overlap for input conversion
    **/
   BlockLatticeFfromAnalyticalF2D(AnalyticalF2D<T,T>&                    f,
                                  BlockLatticeStructure2D<T,DESCRIPTOR>& lattice,
-                                 Cuboid2D<T>&                           cuboid,
-                                 int                                    overlap);
+                                 Cuboid2D<T>&                           cuboid);
   bool operator() (T output[], const int input[]) override;
 };
 

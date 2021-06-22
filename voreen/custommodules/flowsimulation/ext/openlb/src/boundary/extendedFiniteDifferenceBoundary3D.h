@@ -27,7 +27,6 @@
 #include "core/postProcessing.h"
 #include "momentaOnBoundaries.h"
 #include "core/blockLattice3D.h"
-#include "boundaryCondition3D.h"
 
 
 namespace olb {
@@ -37,8 +36,8 @@ namespace olb {
 * on a plane wall in 3D with all the terms of the CE expansion.
 */
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-class ExtendedFdPlaneBoundaryPostProcessor3D : public LocalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+class ExtendedFdPlaneBoundaryPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   ExtendedFdPlaneBoundaryPostProcessor3D (int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
   int extent() const override
@@ -49,35 +48,29 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   template<int deriveDirection>
-  void interpolateGradients( BlockLattice3D<T,Lattice> const& blockLattice,
-                             T velDeriv[Lattice<T>::d], int iX, int iY, int iZ ) const;
+  void interpolateGradients( BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
+                             T velDeriv[DESCRIPTOR::d], int iX, int iY, int iZ ) const;
 
   template<int deriveDirection>
-  void interpolateGradients ( BlockLattice3D<T,Lattice> const& blockLattice,
+  void interpolateGradients ( BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
                               T& rhoDeriv, int iX, int iY, int iZ) const;
 private:
   int x0, x1, y0, y1, z0, z1;
 };
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
 class ExtendedFdPlaneBoundaryProcessorGenerator3D
-  : public PostProcessorGenerator3D<T,Lattice> {
+  : public PostProcessorGenerator3D<T,DESCRIPTOR> {
 public:
   ExtendedFdPlaneBoundaryProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
-  PostProcessor3D<T,Lattice>* generate() const override;
-  PostProcessorGenerator3D<T,Lattice>*  clone() const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
 };
-
-
-////////// Factory function for Extended Finite Difference BC ///////////////////////////////
-
-template<typename T, template<typename U> class Lattice, typename MixinDynamics=BGKdynamics<T,Lattice> >
-OnLatticeBoundaryCondition3D<T,Lattice>* createExtendedFdBoundaryCondition3D(BlockLatticeStructure3D<T,Lattice>& block);
 
 }
 

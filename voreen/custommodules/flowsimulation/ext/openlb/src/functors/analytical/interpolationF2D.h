@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2018 Lukas Baron, Tim Dornieden, Mathias J. Krause,
- *  Albert Mink, Adrian Kummerländer
+ *  Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>

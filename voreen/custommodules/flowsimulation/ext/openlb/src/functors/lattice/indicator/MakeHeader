@@ -23,13 +23,7 @@
 
 generic        :=
 
-precompiled    := indicatorBaseF2D \
-                  indicatorBaseF3D \
-                  indicatorF2D \
-                  indicatorF3D \
-                  indicCalcF2D \
-                  indicCalcF3D \
-                  blockIndicatorF2D \
+precompiled    := blockIndicatorF2D \
                   blockIndicatorF3D \
                   blockIndicatorBaseF2D \
                   blockIndicatorBaseF3D \

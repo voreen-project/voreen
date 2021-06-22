@@ -26,6 +26,7 @@
  * the particles directory.
  */
 
+#include "particleOperations/particleOperations3D.hh"
 #include "particle3D.hh"
 #include "particleSystem3D.hh"
 #include "superParticleSystem3D.hh"

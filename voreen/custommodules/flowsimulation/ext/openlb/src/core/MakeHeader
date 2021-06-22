@@ -23,7 +23,8 @@
 
 generic        := blockStructure2D \
                   blockStructure3D \
-                  radiativeUnitConverter
+                  radiativeUnitConverter \
+                  adeUnitConverter
 
 
 precompiled    := blockStructure2D \
@@ -36,6 +37,12 @@ precompiled    := blockStructure2D \
                   blockLatticeStructure3D \
                   blockLatticeView2D \
                   blockLatticeView3D \
+                  blockStaticPopulationD2D \
+                  blockStaticPopulationD3D \
+                  blockStaticFieldsD2D \
+                  blockStaticFieldsD3D \
+                  blockDynamicFieldsD2D \
+                  blockDynamicFieldsD3D \
                   cell \
                   latticeStatistics \
                   postProcessing2D \
@@ -44,8 +51,8 @@ precompiled    := blockStructure2D \
                   serializer \
                   superData2D \
                   superData3D \
-                  superExternal2D \
-                  superExternal3D \
                   superLattice2D \
                   superLattice3D \
-                  unitConverter
+                  unitConverter \
+                  fieldArrayD \
+                  adeUnitConverter

@@ -22,7 +22,7 @@
 */
 
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 #include "particles/particle3D.h"
 #include "particles/particle3D.hh"
 #include "stokesDragForce3D.h"
@@ -30,7 +30,7 @@
 
 namespace olb {
 
-template class StokesDragForce3D<double,Particle3D,descriptors::D3Q19Descriptor>;
-template class StokesDragForce3D<double,MagneticParticle3D,descriptors::D3Q19Descriptor>;
+template class StokesDragForce3D<double,Particle3D,descriptors::D3Q19<>>;
+template class StokesDragForce3D<double,MagneticParticle3D,descriptors::D3Q19<>>;
 
 }  // namespace olb

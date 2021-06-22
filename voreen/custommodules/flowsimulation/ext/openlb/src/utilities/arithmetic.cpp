@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -41,6 +41,9 @@ template struct multiplies<bool>;
 
 template struct divides<int>;
 template struct divides<double>;
+
+template struct power<int>;
+template struct power<double>;
 
 } // end namespace util
 

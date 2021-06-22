@@ -29,12 +29,12 @@
 #include "communication/mpiManager.h"
 #include "superLattice2D.h"
 #include "superLattice2D.hh"
+#include "communication/blockPropagation.hh"
+#include "communication/superPropagation.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
-
 
 namespace olb {
 
-template class SuperLattice2D<double, descriptors::D2Q9Descriptor>;
+template class SuperLattice2D<double, descriptors::D2Q9<>>;
 
 }

@@ -56,9 +56,9 @@ FlowParametrizationRun::FlowParametrizationRun()
     , spatialResolution_("spatialResolution", "Spatial Resolution", 32, 8, 512)
     , relaxationTime_("relaxationTime", "Relaxation Time", 1.0f, 0.5f, 4.0f)
     , characteristicLength_("characteristicLength", "Characteristic Length (mm)", 10.0f, 0.1f, 10000.0f)
-    , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (mm/s)", 10.0f, 0.0f, 10000.0f)
+    , characteristicVelocity_("characteristicVelocity", "Characteristic Velocity (m/s)", 1.0f, 0.0f, 10.0f)
     , fluid_("fluid", "Fluid")
-    , viscosity_("viscosity", "Dynamic Viscosity (kg/(m x s))", 3.5, 3, 4)
+    , viscosity_("viscosity", "Kinematic Viscosity (x10^(-6) m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
     , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Contant", 0.1f, 0.1f, 5.0f)
     , bouzidi_("bouzidi", "Bouzidi", true)
@@ -67,7 +67,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
     , parametrizations_("parametrizations", "Parametrizations", 11, Processor::VALID)
-
+    , addInvalidParametrizations_("addInvalidParametrizations", "Add invalid Parametrizations", false)
 {
     addPort(inport_);
     addPort(outport_);
@@ -82,6 +82,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     addProperty(characteristicLength_);
         characteristicLength_.setGroupID("parameters");
     addProperty(characteristicVelocity_);
+        characteristicVelocity_.setNumDecimals(3);
         characteristicVelocity_.setGroupID("parameters");
     addProperty(fluid_);
         ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
@@ -124,6 +125,8 @@ FlowParametrizationRun::FlowParametrizationRun()
     parametrizations_.setColumnLabel(8, "density");
     parametrizations_.setColumnLabel(9, "Smagorinsky");
     parametrizations_.setColumnLabel(10, "Bouzidi");
+
+    addProperty(addInvalidParametrizations_);
 }
 
 void FlowParametrizationRun::fluidChanged() {
@@ -183,12 +186,12 @@ void FlowParametrizationRun::addParametrizations() {
         parameters.setSpatialResolution(spatialResolution);
         parameters.setRelaxationTime(relaxationTime);
         parameters.setCharacteristicLength(characteristicLength * 0.001f); // [mm] to [m]
-        parameters.setCharacteristicVelocity(characteristicVelocity * 0.001f); // [mm] to [m]
-        parameters.setViscosity(viscosity * 0.001f); // Due to interface value range.
+        parameters.setCharacteristicVelocity(characteristicVelocity);
+        parameters.setViscosity(viscosity * 10e-6f); // Due to interface value range.
         parameters.setDensity(density);
         parameters.setSmagorinskyConstant(smagorinskyConstant);
         parameters.setBouzidi(bouzidi);
-        flowParameters_.push_back(parameters);
+        flowParameters_.emplace_back(parameters);
 
         std::vector<std::string> row;
         row.push_back(parameters.isValid() ? "✓" : "✗");
@@ -233,9 +236,9 @@ void FlowParametrizationRun::process() {
     FlowParameterSetEnsemble* flowParametrizationList = new FlowParameterSetEnsemble(*inport_.getData());
 
     for (const FlowParameterSet& flowParameters : flowParameters_) {
-        //if(flowParameters.isValid()) { // Currently, we add anyways, since they could run through...
+        if(addInvalidParametrizations_.get() || flowParameters.isValid()) {
             flowParametrizationList->addFlowParameterSet(flowParameters);
-        //}
+        }
     }
 
     outport_.setData(flowParametrizationList);

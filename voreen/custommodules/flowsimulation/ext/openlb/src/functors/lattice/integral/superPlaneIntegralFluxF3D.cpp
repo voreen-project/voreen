@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -31,110 +31,110 @@ template class SuperPlaneIntegralFluxF3D<double, SuperLatticePhysPressure3D>;
 template class SuperPlaneIntegralFluxF3D<double, SuperLatticePhysVelocity3D>;
 
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const HyperplaneLattice3D<double>&,
   FunctorPtr<SuperIndicatorF3D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Hyperplane3D<double>&,
   FunctorPtr<SuperIndicatorF3D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Hyperplane3D<double>&,
   FunctorPtr<SuperIndicatorF3D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&, const Vector<double,3>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&, const Vector<double,3>&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   IndicatorCircle3D<double>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysPressure3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   IndicatorCircle3D<double>&,
   BlockDataReductionMode);
 
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const HyperplaneLattice3D<double>&,
   FunctorPtr<SuperIndicatorF3D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Hyperplane3D<double>&,
   FunctorPtr<SuperIndicatorF3D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Hyperplane3D<double>&,
   FunctorPtr<SuperIndicatorF3D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&, const Vector<double,3>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&, const Vector<double,3>&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&, const Vector<double,3>&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   const Vector<double,3>&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   IndicatorCircle3D<double>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF3D<double,SuperLatticePhysVelocity3D>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<double,descriptors::D3Q19Descriptor>&, const UnitConverter<double,descriptors::D3Q19Descriptor>&, SuperGeometry3D<double>&,
+  SuperLattice3D<double,descriptors::D3Q19<>>&, const UnitConverter<double,descriptors::D3Q19<>>&, SuperGeometry3D<double>&,
   IndicatorCircle3D<double>&,
   BlockDataReductionMode);
 

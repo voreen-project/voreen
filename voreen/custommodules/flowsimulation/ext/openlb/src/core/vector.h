@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2015 Asher Zarth, Mathias J. Krause, Albert Mink
+ *                2020 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -29,414 +30,256 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include <iostream>
 #include <cstring>
+#include <algorithm>
 #include <type_traits>
-#include "util.h"
-#include "math.h"
+
 #include "olbDebug.h"
-
-typedef double S;
-
-// Use BaseType double as the default BaseType.
-#ifndef BaseType
-///TODO
-//check OLD_PRECONDITION
-//change this typedef, double for testing only
-//#define BaseType S
-#define BaseType S
-#endif
+#include "scalarVector.h"
+#include "util.h"
 
 namespace olb {
 
-/** Efficient implementation of a vector class.
- * Static size.
- * Default value of vector element is T(0)
- */
-template <typename T, unsigned Size>
-class Vector {
+
+/// Plain old scalar vector
+template <typename T, unsigned D>
+class Vector : public ScalarVector<T,D,Vector<T,D>> {
+private:
+  T _data[D];
+
+  friend typename ScalarVector<T,D,Vector<T,D>>::type;
+
+protected:
+  const T* getComponentPointer(unsigned iDim) const {
+    return &_data[iDim];
+  }
+  T* getComponentPointer(unsigned iDim) {
+    return &_data[iDim];
+  }
+
 public:
-  /// number of dimensions
-  T data[Size];
-public:
-  /// Constructor from array
-  Vector(const T ar[Size]);
-  /// Constructor from std::vector<T>
-  Vector(const std::vector<T>& v);
-  /// Construct with all entries as explicit scalar
-  explicit Vector(const T& s = T());
-  /// Construct 2D, 2 explicit arguments
-  Vector(const T& a, const T& b);
-  /// Construct 3D, 3 explicit arguments
-  Vector(const T& a, const T& b, const T& c);
-  /// copy constructor
-  Vector(const Vector<T,Size>& v);
-  /// copy assignment operator
-  Vector& operator = (const Vector<T,Size>& v);
-  /// destructor
-  ~Vector() = default;
-  /// element access
-  T& operator[](unsigned n);
-  /// element access (read only)
-  const T& operator[](const unsigned n) const;
-  /// cumulative add vector
-  Vector& operator += (const Vector<T,Size>& v);
-  /// cumulatively subtract vector
-  Vector& operator -= (const Vector<T,Size>& v);
-  /// add scalar to each entry
-  Vector& operator += (const T& s);
-  /// subtract scalar from each entry
-  Vector& operator -= (const T& s);
-  /// multiply by scalar
-  Vector& operator *= (const T& s);
-  /// equal operator returns true if all components match
-  bool operator == (const Vector<T, Size>& v);
-  /// unequal operator returns true if at least one components differs
-  bool operator != (const Vector<T, Size>& v);
-  /// get l2 norm of vector
-  T norm();
-  /// get normalized vector
-  void normalize(const T& scale = T(1));
-  /// check if vector has zero length
-  bool closeToZero();
-  //operator BaseType();
-  /// convert to std::vector
-  std::vector<T> toStdVector() const;
+  Vector():
+    _data{} { }
+
+  template <typename W, typename IMPL>
+  Vector(const ScalarVector<W,D,IMPL>& rhs)
+  {
+    for (unsigned iDim=0; iDim < D; ++iDim) {
+      _data[iDim] = rhs[iDim];
+    }
+  }
+
+  Vector(const Vector& rhs)
+  {
+    for (unsigned iDim=0; iDim < D; ++iDim) {
+      _data[iDim] = rhs[iDim];
+    }
+  }
+
+  Vector(const T v[D])
+  {
+    std::memcpy(_data, v, D*sizeof(T));
+  }
+
+  Vector(const std::vector<T>& v):
+    Vector(v.data())
+  { }
+
+  Vector(std::initializer_list<T> v)
+  {
+    OLB_PRECONDITION(v.size() == D);
+    std::copy(v.begin(), v.end(), _data);
+  }
+
+  Vector(T scalar)
+  {
+    for (unsigned iDim=0; iDim < D; ++iDim) {
+      _data[iDim] = scalar;
+    }
+  }
+
+  Vector(T a, T b)
+  {
+    OLB_PRECONDITION(D == 2);
+    _data[0] = a;
+    _data[1] = b;
+  }
+
+  Vector(T a, T b, T c)
+  {
+    OLB_PRECONDITION(D == 3);
+    _data[0] = a;
+    _data[1] = b;
+    _data[2] = c;
+  }
+
+  /// Construct with entries given by a lambda expression
+  template <typename F, typename = decltype(std::declval<F&>()(std::size_t{0}))>
+  Vector(F&& f)
+  {
+    for (unsigned iDim=0; iDim < D; ++iDim) {
+      _data[iDim] = f(iDim);
+    }
+  }
+
+  template <typename U, typename IMPL_>
+  Vector& operator = (const GenericVector<U,D,IMPL_>& rhs)
+  {
+    for (unsigned iDim=0; iDim < D; ++iDim) {
+      this->operator[](iDim) = rhs[iDim];
+    }
+    return *this;
+  }
+
+  Vector& operator = (const Vector<T,D>& rhs)
+  {
+    this->operator=<T,Vector<T,D>>(rhs);
+    return *this;
+  }
+
+  const T* data() const
+  {
+    return _data;
+  }
+
+  T* data()
+  {
+    return _data;
+  }
+
 };
 
 
-
-template <typename T, unsigned Size>
-inline Vector<T, Size>::Vector(const T ar[Size])
+template <typename T, typename IMPL, typename IMPL_>
+Vector<T,3> crossProduct3D(const ScalarVector<T,3,IMPL>& a, const ScalarVector<T,3,IMPL_>& b)
 {
-  //static_assert(std::is_trivially_copyable<T>::value, "Only trivially copyable objects can safely be copied by memcpy");
-  std::memcpy( data, ar, Size*sizeof(T));
+  return Vector<T,3>(
+    a[1]*b[2] - a[2]*b[1],
+    a[2]*b[0] - a[0]*b[2],
+    a[0]*b[1] - a[1]*b[0]
+  );
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>::Vector(const std::vector<T>& v)
+template <typename T, unsigned D, typename IMPL>
+Vector<T,D> normalize(const ScalarVector<T,D,IMPL>& a, T scale = T{1})
 {
-  OLB_PRECONDITION(v.size() == Size);
-  //static_assert(std::is_trivially_copyable<T>::value, "Only trivially copyable objects can safely be copied by memcpy");
-  std::memcpy( data, v.data(), Size*sizeof(T));
+  const T invScale = scale / norm(a);
+  return Vector<T,D>([invScale,&a](unsigned iDim) -> T {
+    return a[iDim] * invScale;
+  });
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>::Vector(const T& s)
+template <typename T, unsigned D, typename IMPL>
+Vector<T,D> abs(const ScalarVector<T,D,IMPL>& a)
 {
-  for (unsigned i = 0; i < Size; ++i) {
-    data[i] = s;
+  return Vector<T,D>([a](unsigned iDim) -> T {
+    return abs(a[iDim]);
+  });
+}
+
+
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<T,D>>
+operator+ (U a, const ScalarVector<T,D,IMPL>& b)
+{
+  return Vector<T,D>(b) += a;
+}
+
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<T,D>>
+operator+ (const ScalarVector<T,D,IMPL>& a, U b)
+{
+  return Vector<T,D>(a) += b;
+}
+
+template <typename T, unsigned D, typename IMPL, typename IMPL_>
+Vector<T,D> operator+ (const ScalarVector<T,D,IMPL>& a, const ScalarVector<T,D,IMPL_>& b)
+{
+  return Vector<T,D>(a) += b;
+}
+
+template <typename T, typename W, unsigned D, typename IMPL, typename IMPL_>
+Vector<decltype(T{}+W{}),D> operator+ (const ScalarVector<T,D,IMPL>& a, const ScalarVector<W,D,IMPL_>& b)
+{
+  Vector<decltype(T{}+W{}),D> result;
+  for (unsigned iDim=0; iDim < D; ++iDim) {
+    result[iDim] = a[iDim] + b[iDim];
   }
+  return result;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>::Vector(const T& a, const T& b)
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<T,D>>
+operator- (U a, const ScalarVector<T,D,IMPL>& b)
 {
-  OLB_PRECONDITION(Size == 2);
-  data[0] = a;
-  data[1] = b;
+  return Vector<T,D>(a) - b;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>::Vector(const T& a, const T& b, const T& c)
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<T,D>>
+operator- (const ScalarVector<T,D,IMPL>& a, U b)
 {
-  OLB_PRECONDITION(Size == 3);
-  data[0] = a;
-  data[1] = b;
-  data[2] = c;
+  return Vector<T,D>(a) -= b;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>::Vector(const Vector<T,Size>& v)
+template <typename T, unsigned D, typename IMPL, typename IMPL_>
+Vector<T,D> operator- (const ScalarVector<T,D,IMPL>& a, const ScalarVector<T,D,IMPL_>& b)
 {
-  //static_assert(std::is_trivially_copyable<T>::value, "Only trivially copyable objects can safely be copied by memcpy");
-  std::memcpy( data, v.data, Size*sizeof(T));
+  return Vector<T,D>(a) -= b;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>& Vector<T, Size>::operator= (const Vector<T,Size>& v)
+template <typename T, typename W, unsigned D, typename IMPL, typename IMPL_>
+Vector<decltype(T{}-W{}),D> operator- (const ScalarVector<T,D,IMPL>& a, const ScalarVector<W,D,IMPL_>& b)
 {
-  //static_assert(std::is_trivially_copyable<T>::value, "Only trivially copyable objects can safely be copied by memcpy");
-  std::memcpy( data, v.data, Size*sizeof(T));
-  return *this;
-}
-
-template <typename T, unsigned Size>
-inline Vector<T, Size>& Vector<T, Size>::operator+= (const Vector<T,Size>& v)
-{
-  for (unsigned i = 0; i < Size; ++i) {
-    data[i] += v[i];
+  Vector<decltype(T{}-W{}),D> result;
+  for (unsigned iDim=0; iDim < D; ++iDim) {
+    result[iDim] = a[iDim] - b[iDim];
   }
-  return *this;
+  return result;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>& Vector<T, Size>::operator+= (const T& s)
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<decltype(T{}*U{}),D>>
+operator* (U a, const ScalarVector<T,D,IMPL>& b)
 {
-  for (unsigned i = 0; i < Size; ++i) {
-    data[i] += s;
-  }
-  return *this;
+  Vector<decltype(T{}*U{}),D> result(b);
+  return result *= a;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>& Vector<T, Size>::operator-= (const Vector<T,Size>& v)
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<T,D>>
+operator* (const ScalarVector<T,D,IMPL>& a, U b)
 {
-  for (unsigned i = 0; i < Size; ++i) {
-    data[i] -= v[i];
-  }
-  return *this;
+  Vector<decltype(T{}*U{}),D> result(a);
+  return result *= b;
 }
 
-template <typename T, unsigned Size>
-inline Vector<T, Size>& Vector<T, Size>::operator*= (const T& s)
+/// Inner product
+template <typename T, unsigned D, typename IMPL, typename IMPL_>
+T operator* (const ScalarVector<T,D,IMPL>& a, const ScalarVector<T,D,IMPL_>& b)
 {
-  for (unsigned i = 0; i < Size; ++i) {
-    data[i] *= s;
-  }
-  return *this;
-}
-
-template <typename T, unsigned Size>
-inline Vector<T, Size>& Vector<T, Size>::operator-= (const T& s)
-{
-  for (unsigned i = 0; i < Size; ++i) {
-    data[i] -= s;
-  }
-  return *this;
-}
-
-template <typename T, unsigned Size>
-inline bool Vector<T, Size>::operator== (const Vector<T, Size>& v)
-{
-  bool theSame = true;
-  for (unsigned i = 0; i < Size; ++i) {
-    theSame &= data[i] == v.data[i];
-  }
-  return theSame;
-}
-
-template <typename T, unsigned Size>
-inline bool Vector<T, Size>::operator!= (const Vector<T, Size>& v)
-{
-  return !(*this == v);
-}
-
-template <typename T, unsigned Size>
-inline T& Vector<T, Size>::operator[](unsigned n)
-
-{
-  OLB_PRECONDITION(n < Size);
-  return data[n];
-}
-
-template <typename T, unsigned Size>
-inline const T& Vector<T, Size>::operator[](const unsigned n) const
-{
-  OLB_PRECONDITION(n < Size);
-  return data[n];
-}
-
-template <typename T, unsigned Size>
-inline bool Vector<T, Size>::closeToZero()
-{
-  bool zero = true;
-  T EPSILON = std::numeric_limits<T>::epsilon();
-
-  for (unsigned i = 0; i < Size; ++i) {
-    if (fabs(data[i]) > EPSILON) {
-      zero = false;
-    }
-  }
-  return zero;
-}
-
-template <typename T, unsigned Size>
-inline T Vector<T, Size>::norm()
-{
-  T v(0);
-  for (unsigned iD = 0; iD < Size; ++iD) {
-    v += data[iD]*data[iD];
-  }
-  v = sqrt(v);
-  return v;
-}
-
-template <typename T, unsigned Size>
-inline void Vector<T, Size>::normalize(const T& scale)
-{
-  T invScale = scale/this->norm();
-  //assert(scale > 0);
-  for (unsigned int iDim = 0; iDim < Size; ++iDim) {
-    data[iDim] *= invScale;
-  }
-}
-
-template <typename T, unsigned Size>
-inline std::vector<T> Vector<T, Size>::toStdVector() const
-{
-  return std::vector<T> (data, data+Size);
-}
-
-template <class T, unsigned Size>
-inline std::ostream& operator << (std::ostream& os, const Vector<T,Size>& o)
-{
-  if (Size != 0) {
-    os << "[";
-    for (unsigned i = 0; i < Size-1; ++i) {
-      os << o[i] << " ";
-    }
-    os << o[Size-1]<<"]";
-  } else {
-    os << "[empty]";
-  }
-  return os;
-}
-
-template <typename T>
-inline Vector<T, 3> crossProduct3D(const Vector<T, 3>& a, const Vector<T,3>& b)
-{
-  Vector<T, 3> v(a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]);
-  return v;
-}
-
-template <typename T, unsigned Size>
-inline T norm(const Vector<T, Size>& a)
-{
-  T v(0);
-  for (unsigned iD = 0; iD < Size; ++iD) {
-    v += a[iD]*a[iD];
-  }
-  v = sqrt(v);
-  return v;
-}
-
-template <typename T, unsigned Size>
-inline void normalize(Vector<T, Size>& a)
-{
-  T scale = norm(a);
-  //assert(scale > 0);
-  for (unsigned iDim = 0; iDim < Size; ++iDim) {
-    a[iDim] /= scale;
-  }
-}
-
-
-
-
-// indirect helper functions, providing general arithmetic
-// overloading of operators for interaction with BaseType and itself
-// addition, subtraction, multiplication and division
-
-// PLUS
-template <class T, unsigned Size>
-inline Vector<T, Size> operator+ (const BaseType& a, const Vector<T, Size>& b)
-{
-  return Vector<T, Size>(b)+=a;
-}
-
-template <class T, unsigned Size>
-inline Vector<T, Size> operator+ (const Vector<T, Size>& a, const BaseType& b)
-{
-  return Vector<T, Size>(a)+=b;
-}
-
-template <class T, unsigned Size>
-inline Vector<T, Size> operator+ (const Vector<T, Size>& a, const Vector<T, Size>& b)
-{
-  return Vector<T, Size>(a)+=b;
-}
-
-// MINUS
-template <class T, unsigned Size>
-inline Vector<T, Size> operator- (const BaseType& a, const Vector<T, Size>& b)
-{
-  return Vector<T, Size>(a)-=b;
-}
-
-template <class T, unsigned Size>
-inline Vector<T, Size> operator- (const Vector<T, Size>& a, const BaseType& b)
-{
-  return Vector<T, Size>(a)-=b;
-}
-
-template <class T, unsigned Size>
-inline Vector<T, Size> operator- (const Vector<T, Size>& a, const Vector<T, Size>& b)
-{
-  return Vector<T, Size>(a)-=b;
-}
-
-// MULTIPLY
-template <class T, unsigned Size>
-inline Vector<T, Size> operator* (const BaseType& a, const Vector<T, Size>& b)
-{
-  return Vector<T, Size>(b)*=a;
-}
-
-template <class T, unsigned Size>
-inline Vector<T, Size> operator* (const Vector<T, Size>& a, const BaseType& b)
-{
-  return Vector<T, Size>(a)*=b;
-}
-
-template <class T, unsigned Size>
-inline T operator* (const Vector<T, Size>& a, const Vector<T, Size>& b)
-{
-  T scalarProduct = T();
-  for (unsigned iD = 0; iD < Size; ++iD) {
-    scalarProduct += a[iD]*b[iD];
+  T scalarProduct{};
+  for (unsigned iDim=0; iDim < D; ++iDim) {
+    scalarProduct += a[iDim] * b[iDim];
   }
   return scalarProduct;
 }
 
-/// < Operator returns true if all components are smaller
-template <class T, unsigned Size>
-inline bool operator< (const Vector<T, Size>& lhs, const Vector<T, Size>& rhs)
+template <typename T, unsigned D, typename U, typename IMPL>
+utilities::meta::enable_if_arithmetic_t<U, Vector<T,D>>
+operator/ (const ScalarVector<T,D,IMPL>& a, U b)
 {
-  bool smaller = true;
-  for (unsigned i = 0; i < Size; ++i) {
-    smaller &= (lhs[i] < rhs[i]);
-  }
-  return smaller;
+  return Vector<T,D>(a) /= b;
 }
 
-/// > Operator returns true if all components are greater
-template <class T, unsigned Size>
-inline bool operator> (const Vector<T, Size>& lhs, const Vector<T, Size>& rhs)
+template <typename T, unsigned D, typename IMPL, typename IMPL_>
+Vector<T,D> maxv(const ScalarVector<T,D,IMPL>& v, const ScalarVector<T,D,IMPL_>& w)
 {
-  return rhs < lhs;
+  return Vector<T,D>([&v,&w](unsigned iDim) -> T {
+    return std::max(v[iDim], w[iDim]);
+  });
 }
 
-/// <= Operator returns true if all components are smaller or equal
-template <class T, unsigned Size>
-inline bool operator<=(const Vector<T, Size>& lhs, const Vector<T, Size>& rhs)
-{
-  bool smallerEq = true;
-  for (unsigned i = 0; i < Size; ++i) {
-    smallerEq &= (lhs[i] <= rhs[i]);
-  }
-  return smallerEq;
-}
-
-/// >= Operator returns true if all components are smaller or equal
-template <class T, unsigned Size>
-inline bool operator>=(const Vector<T, Size>& lhs, const Vector<T, Size>& rhs)
-{
-  return rhs <= lhs;
-}
-
-
-template <typename T>
-using Scalar   = Vector<T,1>;
-
-template <typename T>
-using Vector2D = Vector<T,2>;
-
-template <typename T>
-using Vector3D = Vector<T,3>;
-
-template <typename T>
-using Vector4D = Vector<T,4>;
 
 } // end namespace olb
 

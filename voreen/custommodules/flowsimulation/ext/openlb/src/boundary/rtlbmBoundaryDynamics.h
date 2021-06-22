@@ -30,47 +30,79 @@
 namespace olb {
 
 /** Defines incoming (axis parallel) directions on flat walls.
-* why not remove typename Dynamics?
-*   forced by clone() const override
-*   could also be removed in RtlbmBoundaryManager3D, aka MixinDynamics
-*/
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-class RtlbmBoundaryDynamics : public BasicDynamics<T,Lattice> {
+ *
+ * \param directions   takes values 0, 1, 2; which corresponds to x, y, z plane normal
+ * \param orientation  takes values -1, 1; which is the sign of plane normal
+ *
+ *  Note:
+ *  Dynamics computes the arriving density on walls and redistributes it equally to
+ *  all inward pointing directions.
+ */
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+class RtlbmDiffuseBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  RtlbmBoundaryDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  RtlbmDiffuseBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
-  /// Collision step for flat boundary and given rho
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// place holder
-  void staticCollide(Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics) override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for flat boundary
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// place holder
   T getOmega() const override;
   /// place holder
   void setOmega(T omega_) override;
-//private:
-//  Dynamics boundaryDynamics;
+};
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+class RtlbmDiffuseEdgeBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  RtlbmDiffuseEdgeBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// Compute equilibrium distribution function
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for flat boundary
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
+  /// place holder
+  T getOmega() const override;
+  /// place holder
+  void setOmega(T omega_) override;
+};
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+class RtlbmDiffuseCornerBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  RtlbmDiffuseCornerBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// Compute equilibrium distribution function
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for corner
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
+  /// place holder
+  T getOmega() const override;
+  /// place holder
+  void setOmega(T omega_) override;
 };
 
 
 /** Defines incoming directions on flat walls.
-*   Emposed dirichlet density is distributed equivalently to all incoming/unkown directions.
-*
-* \param directions   takes values 0, 1, 2; which corresponds to x, y, z plane normal
-* \param orientation  takes values -1, 1; which is the sign of plane normal
-*/
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-class RtlbmDiffuseBoundaryDynamics : public BasicDynamics<T,Lattice> {
+ *  Emposed dirichlet density is distributed equivalently to all incoming/unkown directions.
+ *
+ * \param directions   takes values 0, 1, 2; which corresponds to x, y, z plane normal
+ * \param orientation  takes values -1, 1; which is the sign of plane normal
+ *
+ *  Note:
+ *  Dynamics ensure that cell has constant 0th moment.
+ *  To set the constant 0th moment defineRho() must be called.
+ */
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+class RtlbmDiffuseConstBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  RtlbmDiffuseBoundaryDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  RtlbmDiffuseConstBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
-  /// Fixes unkown directions on flat to given denstiy
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// place holder
-  void staticCollide(Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics) override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for flat boundary
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// place holder
   T getOmega() const override;
   /// place holder
@@ -86,17 +118,15 @@ public:
 * \param normal1  takes values -1 or 1; normal orientation of a surface side 'right'
 * \param normal2  takes values -1 or 1; normal orientation of a surface side 'left'
 */
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-class RtlbmDiffuseEdgeBoundaryDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+class RtlbmDiffuseConstEdgeBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  RtlbmDiffuseEdgeBoundaryDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  RtlbmDiffuseConstEdgeBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
-  /// Fixes unkown directions on edges to given denstiy
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// place holder
-  void staticCollide(Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics) override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for edges
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// place holder
   T getOmega() const override;
   /// place holder
@@ -111,17 +141,15 @@ public:
 * \param yNormal  takes value -1 or 1
 * \param zNormal  takes value -1 or 1
 */
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-class RtlbmDiffuseCornerBoundaryDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+class RtlbmDiffuseConstCornerBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  RtlbmDiffuseCornerBoundaryDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  RtlbmDiffuseConstCornerBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
-  /// Fixes unkown directions on corners to given denstiy
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// place holder
-  void staticCollide(Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics) override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for corner
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// place holder
   T getOmega() const override;
   /// place holder
@@ -129,6 +157,51 @@ public:
 };
 
 
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+class RtlbmDirectedBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  RtlbmDirectedBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// Compute equilibrium distribution function
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for directed boundary walls
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
+  /// place holder
+  T getOmega() const override;
+  /// place holder
+  void setOmega(T omega_) override;
+};
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+class RtlbmDirectedEdgeBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  RtlbmDirectedEdgeBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// Compute equilibrium distribution function
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for directed boundary walls
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
+  /// place holder
+  T getOmega() const override;
+  /// place holder
+  void setOmega(T omega_) override;
+};
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+class RtlbmDirectedCornerBoundaryDynamics : public BasicDynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  RtlbmDirectedCornerBoundaryDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// Compute equilibrium distribution function
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Collision step for directed boundary walls
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
+  /// place holder
+  T getOmega() const override;
+  /// place holder
+  void setOmega(T omega_) override;
+};
 }  // namespace olb
 
 #endif

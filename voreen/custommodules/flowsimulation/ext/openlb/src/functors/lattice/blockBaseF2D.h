@@ -31,6 +31,8 @@
 #include "core/blockLatticeStructure2D.h"
 #include "core/unitConverter.h"
 
+#include <fstream>
+#include <memory>
 
 /** Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
@@ -62,26 +64,34 @@ public:
   BlockF2D<T>& operator/(BlockF2D<T>& rhs);
 };
 
-/// BlockDataF2D can store data of any BlockFunctor2D
+/// BlockDataF2D can store data of any BlockF2D
 template <typename T,typename BaseType>
 class BlockDataF2D : public BlockF2D<T> {
 protected:
+  /// used for BlockReduction2D1D to build BlockData2D by the constructor
+  BlockDataF2D(int nx, int ny, int size=1);
+
+  std::unique_ptr<BlockData2D<T,BaseType>> _blockDataStorage;
+  BlockData2D<T,BaseType>&                 _blockData;
+public:
   BlockDataF2D(BlockData2D<T,BaseType>& blockData);
   /// to store functor data, constuctor creates _blockData with functor data
   BlockDataF2D(BlockF2D<BaseType>& f);
-  /// used for BlockReduction2D1D to build BlockData2D by the constructor
-  BlockDataF2D(int nx, int ny, int size=1);
-  BlockData2D<T,BaseType>& _blockData;
-public:
-  /// destructor is called if object was not created by passing a blockData
-  ~BlockDataF2D() override;
   /// returns _blockData
   BlockData2D<T,BaseType>& getBlockData();
   /// access to _blockData via its get()
   bool operator() (T output[], const int input[]) override;
+};
+
+/// Overlap-aware version of BlockDataF2D for usage in SuperDataF2D
+template <typename T, typename BaseType>
+class BlockDataViewF2D : public BlockDataF2D<T,BaseType> {
 private:
-  /// flag whether _blockData was allocated with new
-  bool _isConstructed;
+  const int _overlap;
+public:
+  BlockDataViewF2D(BlockData2D<T,BaseType>& blockData, int overlap);
+  /// access to _blockData shifted by overlap
+  bool operator() (T output[], const int input[]) override;
 };
 
 /// identity functor
@@ -95,8 +105,8 @@ public:
   bool operator() (T output[], const int input[]) override;
 };
 
-/// represents all functors that operate on a Lattice in general, e.g. getVelocity(), getForce(), getPressure()
-template <typename T, template <typename U> class DESCRIPTOR>
+/// represents all functors that operate on a DESCRIPTOR in general, e.g. getVelocity(), getForce(), getPressure()
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeF2D : public BlockF2D<T> {
 protected:
   BlockLatticeF2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, int targetDim);
@@ -105,8 +115,8 @@ public:
   BlockLatticeStructure2D<T,DESCRIPTOR>& getBlockLattice();
 };
 
-/// represents all functors that operate on a Lattice with output in Phys, e.g. physVelocity(), physForce(), physPressure()
-template <typename T, template <typename U> class DESCRIPTOR>
+/// represents all functors that operate on a DESCRIPTOR with output in Phys, e.g. physVelocity(), physForce(), physPressure()
+template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysF2D : public BlockLatticeF2D<T,DESCRIPTOR> {
 protected:
   BlockLatticePhysF2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
@@ -115,13 +125,13 @@ protected:
 };
 
 
-/// represents all thermal functors that operate on a Lattice with output in Phys, e.g. physTemperature(), physHeatFlux()
-template <typename T, template <typename U> class DESCRIPTOR, template <typename V> class ThermalDESCRIPTOR>
-class BlockLatticeThermalPhysF2D : public BlockLatticeF2D<T,ThermalDESCRIPTOR> {
+/// represents all thermal functors that operate on a DESCRIPTOR with output in Phys, e.g. physTemperature(), physHeatFlux()
+template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
+class BlockLatticeThermalPhysF2D : public BlockLatticeF2D<T,TDESCRIPTOR> {
 protected:
-  BlockLatticeThermalPhysF2D(BlockLatticeStructure2D<T,ThermalDESCRIPTOR>& blockLattice,
-                             const ThermalUnitConverter<T,DESCRIPTOR,ThermalDESCRIPTOR>& converter, int targetDim);
-  const ThermalUnitConverter<T,DESCRIPTOR,ThermalDESCRIPTOR>& _converter;
+  BlockLatticeThermalPhysF2D(BlockLatticeStructure2D<T,TDESCRIPTOR>& blockLattice,
+                             const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim);
+  const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& _converter;
 };
 
 

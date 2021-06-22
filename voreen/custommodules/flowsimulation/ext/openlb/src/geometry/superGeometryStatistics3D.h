@@ -59,7 +59,7 @@ class SuperGeometryStatistics3D {
 private:
 
   /// Points to the underlying data from which the statistics is taken
-  SuperGeometry3D<T>* _superGeometry;
+  const SuperGeometry3D<T>* _superGeometry;
   /// Specifies if an update is needed
   bool _statisticsUpdateNeeded;
   /// Size of ghost voxel layer
@@ -81,6 +81,8 @@ private:
   /// class specific cout
   mutable OstreamManager clout;
 
+  const SuperGeometryStatistics3D<T>* const_this;
+
 public:
 
   /// Constructor
@@ -100,38 +102,52 @@ public:
 
   /// Returns the number of different materials
   int getNmaterials();
+  int getNmaterials() const;
   /// Returns the number of voxels for a given material number
   int getNvoxel(int material);
+  int getNvoxel(int material) const;
   /// Returns the number of voxels with material!=0
   int getNvoxel();
+  int getNvoxel() const;
   /// Returns the min. phys position in each direction corresponding to material number
   std::vector<T> getMinPhysR(int material);
+  std::vector<T> getMinPhysR(int material) const;
   /// Returns the min. phys position in each direction corresponding to all non-zero material numbers
   std::vector<T> getMinPhysR();
+  std::vector<T> getMinPhysR() const;
   /// Returns the max. phys position in each direction corresponding to material number
   std::vector<T> getMaxPhysR(int material);
+  std::vector<T> getMaxPhysR(int material) const;
   /// Returns the max. phys position in each direction corresponding to all non-zero material numbers
   std::vector<T> getMaxPhysR();
+  std::vector<T> getMaxPhysR() const;
   /// Returns the phys extend as length in each direction
   std::vector<T> getPhysExtend(int material);
+  std::vector<T> getPhysExtend(int material) const;
   /// Returns the phys radius as length in each direction
   std::vector<T> getPhysRadius(int material);
+  std::vector<T> getPhysRadius(int material) const;
   /// Returns the center position
   std::vector<T> getCenterPhysR(int material);
+  std::vector<T> getCenterPhysR(int material) const;
   /// Returns the boundary type which is characterized by a discrte normal (c.f. Zimny)
   std::vector<int> getType(int iC, int iX, int iY, int iZ);
+  std::vector<int> getType(int iC, int iX, int iY, int iZ) const;
 
   /// Returns normal that points into the fluid for paraxial surfaces
   std::vector<T> computeNormal (int material);
+  std::vector<T> computeNormal (int material) const;
   /// Returns discrete normal with norm maxNorm that points into the fluid for paraxial surfaces
   /// maxNorm=1.1 implies only normals parallel to the axises
   std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1);
+  std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1) const;
   /// Returns sqrt( maxX^2 + maxY^2 + maxZ^2 ) max over a certain material number
-  T computeMaxPhysDistance( int material );
+  T computeMaxPhysDistance(int material ) const;
   /// Returns sqrt( maxX^2 + maxY^2 + maxZ^2 ) max over all material numbers
-  T computeMaxPhysDistance();
+  T computeMaxPhysDistance() const;
   /// Prints some statistic information, i.e. the number of voxels and min. max. physical position for each different material
   void print();
+  void print() const;
 };
 
 } // namespace olb

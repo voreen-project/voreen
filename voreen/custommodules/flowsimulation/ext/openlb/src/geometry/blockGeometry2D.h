@@ -30,7 +30,8 @@
 
 #include <vector>
 #include <list>
-#include "core/blockData2D.h"
+
+#include "core/columnVector.h"
 #include "geometry/blockGeometryStatistics2D.h"
 #include "geometry/blockGeometryStructure2D.h"
 #include "geometry/cuboid2D.h"
@@ -39,18 +40,19 @@
 namespace olb {
 
 /// Representation of a block geometry
-/** This class is derived from block geometry structure. It
+/**
+ * This class is derived from block geometry structure. It
  * holds the actual data with the materials. It stores pointers
  * to all dependent block geometry views.
  * It presents a volume of voxels where different types are
- * given my material numbers which is imporant e.g. to work
+ * given my material numbers which is important e.g. to work
  * with different boundaries (like for inflow/output regions).
- *
  */
 template<typename T>
-class BlockGeometry2D  final : public BlockData2D<T,int>, public BlockGeometryStructure2D<T> {
-
+class BlockGeometry2D final : public BlockGeometryStructure2D<T> {
 private:
+  ColumnVector<int,1> _data;
+
   /// Cuboid which charaterizes the block geometry
   Cuboid2D<T> _cuboid;
   /// List to all depending statistic status objects
@@ -61,10 +63,6 @@ public:
   BlockGeometry2D(T x0, T y0, T h, int nX, int nY, int iCglob=-1);
   /// Constructor
   BlockGeometry2D(Cuboid2D<T>& cuboid, int iCglob=-1);
-  /// Copy constructor
-  BlockGeometry2D(BlockGeometry2D const& rhs);
-  /// Copy assignment
-  BlockGeometry2D& operator=(BlockGeometry2D const& rhs);
 
   /// Write access to the associated block statistic
   BlockGeometryStatistics2D<T>& getStatistics(bool verbose=true) override;
@@ -74,16 +72,14 @@ public:
   /// Read only access to the origin position given in SI units (meter)
   Vector<T,2> getOrigin() const override;
   /// Read only access to the voxel size given in SI units (meter)
-  const T getDeltaR() const override;
-  /// Returns the extend (number of voxels) in X-direction
-  int getNx() const override;
-  /// Returns the extend (number of voxels) in Y-direction
-  int getNy() const override;
+  T getDeltaR() const override;
 
+  using BlockGeometryStructure2D<T>::get;
   /// Write access to a material number
   int& get(int iX, int iY) override;  // override BlockGeometryStructure2D::get() by linking to BlockData2D<T,int>::get()
   /// Read only access to a material number
   int const& get(int iX, int iY) const override;  // override BlockGeometryStructure2D::get() by linking to BlockData2D<T,int>::get()
+  int& get(std::size_t iCell);
   /// returns the (iX,iY) entry in the 2D scalar field
   int getMaterial(int iX, int iY) const override; // TODO old
 

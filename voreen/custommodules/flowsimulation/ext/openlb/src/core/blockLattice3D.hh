@@ -1,6 +1,8 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2006-2008 Jonas Latt
+ *                2008-2020 Mathias Krause
+ *                2020 Adrian Kummerlaender
  *  OMP parallel code by Mathias Krause, Copyright (C) 2007
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
@@ -37,6 +39,7 @@
 #include "dynamics/lbHelpers.h"
 #include "communication/loadBalancer.h"
 #include "communication/blockLoadBalancer.h"
+#include "communication/ompManager.h"
 
 namespace olb {
 
@@ -46,13 +49,16 @@ namespace olb {
  *  \param ny_ lattice height (second index)
  *  \param nz_ lattice depth (third index)
  */
-template<typename T, template<typename U> class Lattice>
-BlockLattice3D<T,Lattice>::BlockLattice3D(int nx, int ny, int nz, BlockGeometry3D<T>& geometry)
-  : BlockLatticeStructure3D<T,Lattice>(nx,ny,nz),
-  geometry_(geometry)
+template<typename T, typename DESCRIPTOR>
+BlockLattice3D<T,DESCRIPTOR>::BlockLattice3D(int nX, int nY, int nZ)
+  : BlockLatticeStructure3D<T,DESCRIPTOR>(nX, nY, nZ),
+    _staticPopulationD(nX, nY, nZ),
+    _staticFieldsD(nX, nY, nZ),
+    _dynamicFieldsD(nX, nY, nZ),
+    _dynamicsMap(this->getNcells())
 {
-  allocateMemory();
   resetPostProcessors();
+
 #ifdef PARALLEL_MODE_OMP
   statistics = new LatticeStatistics<T>* [3*omp.get_size()];
   #pragma omp parallel
@@ -73,10 +79,9 @@ BlockLattice3D<T,Lattice>::BlockLattice3D(int nx, int ny, int nz, BlockGeometry3
  * cells is released. However, the dynamics objects pointed to by
  * the cells must be deleted manually by the user.
  */
-template<typename T, template<typename U> class Lattice>
-BlockLattice3D<T,Lattice>::~BlockLattice3D()
+template<typename T, typename DESCRIPTOR>
+BlockLattice3D<T,DESCRIPTOR>::~BlockLattice3D()
 {
-  releaseMemory();
   clearPostProcessors();
   clearLatticeCouplings();
 #ifdef PARALLEL_MODE_OMP
@@ -90,10 +95,33 @@ BlockLattice3D<T,Lattice>::~BlockLattice3D()
 #endif
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::initialize()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::initialize()
 {
+  std::stable_sort(_postProcessors.begin(),
+                   _postProcessors.end(),
+                   [](PostProcessor3D<T,DESCRIPTOR>* lhs, PostProcessor3D<T,DESCRIPTOR>* rhs) -> bool {
+                     return lhs->getPriority() <= rhs->getPriority();
+                   });
   postProcess();
+}
+
+template<typename T, typename DESCRIPTOR>
+Dynamics<T,DESCRIPTOR>* BlockLattice3D<T,DESCRIPTOR>::getDynamics (
+  int iX, int iY, int iZ)
+{
+  return get(iX, iY, iZ).getDynamics();
+}
+
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::defineDynamics (
+  int iX, int iY, int iZ, Dynamics<T,DESCRIPTOR>* dynamics )
+{
+  OLB_PRECONDITION(iX>=0 && iX<this->_nx);
+  OLB_PRECONDITION(iY>=0 && iY<this->_ny);
+  OLB_PRECONDITION(iZ>=0 && iZ<this->_nz);
+
+  get(iX, iY, iZ).defineDynamics(dynamics);
 }
 
 /** The dynamics object is not duplicated: all cells of the rectangular
@@ -102,10 +130,10 @@ void BlockLattice3D<T,Lattice>::initialize()
  * The dynamics object is not owned by the BlockLattice3D object, its
  * memory management must be taken care of by the user.
  */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::defineDynamics (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::defineDynamics (
   int x0, int x1, int y0, int y1, int z0, int z1,
-  Dynamics<T,Lattice>* dynamics )
+  Dynamics<T,DESCRIPTOR>* dynamics )
 {
   OLB_PRECONDITION(x0>=0 && x1<this->_nx);
   OLB_PRECONDITION(x1>=x0);
@@ -114,70 +142,40 @@ void BlockLattice3D<T,Lattice>::defineDynamics (
   OLB_PRECONDITION(z0>=0 && z1<this->_nz);
   OLB_PRECONDITION(z1>=z0);
 
-  for (int iX=x0; iX<=x1; ++iX) {
-    for (int iY=y0; iY<=y1; ++iY) {
-      for (int iZ=z0; iZ<=z1; ++iZ) {
-        grid[iX][iY][iZ].defineDynamics(dynamics);
+  for (int iX = x0; iX <= x1; ++iX) {
+    for (int iY = y0; iY <= y1; ++iY) {
+      for (int iZ = z0; iZ <= z1; ++iZ) {
+        get(iX, iY, iZ).defineDynamics(dynamics);
       }
     }
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::defineDynamics (
-  int iX, int iY, int iZ, Dynamics<T,Lattice>* dynamics )
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::defineDynamics (
+  BlockIndicatorF3D<T>& indicator, Dynamics<T,DESCRIPTOR>* dynamics)
 {
-  OLB_PRECONDITION(iX>=0 && iX<this->_nx);
-  OLB_PRECONDITION(iY>=0 && iY<this->_ny);
-  OLB_PRECONDITION(iZ>=0 && iZ<this->_nz);
-
-  grid[iX][iY][iZ].defineDynamics(dynamics);
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::defineDynamics (
-  BlockGeometryStructure3D<T>& blockGeometry, int material, Dynamics<T,Lattice>* dynamics)
-{
-  for (int iX=0; iX<this->_nx; ++iX) {
-    for (int iY=0; iY<this->_ny; ++iY) {
-      for (int iZ=0; iZ<this->_nz; ++iZ) {
-        if (blockGeometry.getMaterial(iX, iY, iZ)==material) {
-          grid[iX][iY][iZ].defineDynamics(dynamics);
+  for (int iX = 0; iX < this->_nx; ++iX) {
+    for (int iY = 0; iY < this->_ny; ++iY) {
+      for (int iZ = 0; iZ < this->_nz; ++iZ) {
+        if (indicator(iX, iY, iZ)) {
+          get(iX, iY, iZ).defineDynamics(dynamics);
         }
       }
     }
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::defineDynamics (
-  BlockIndicatorF3D<T>& indicator, int overlap, Dynamics<T,Lattice>* dynamics)
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::defineDynamics (
+  BlockGeometryStructure3D<T>& blockGeometry, int material, Dynamics<T,DESCRIPTOR>* dynamics)
 {
-  for (int iX=0; iX<this->_nx; ++iX) {
-    for (int iY=0; iY<this->_ny; ++iY) {
-      for (int iZ=0; iZ<this->_nz; ++iZ) {
-        const int blockLocation[3] = { iX-overlap, iY-overlap, iZ-overlap };
-        if (indicator(blockLocation)) {
-          grid[iX][iY][iZ].defineDynamics(dynamics);
-        }
-      }
-    }
-  }
+  BlockIndicatorMaterial3D<T> indicator(blockGeometry, std::vector<int>(1, material));
+  defineDynamics(indicator, dynamics);
 }
 
-template<typename T, template<typename U> class Lattice>
-Dynamics<T,Lattice>* BlockLattice3D<T,Lattice>::getDynamics (
-        int iX, int iY, int iZ)
-{
-    return grid[iX][iY][iZ].getDynamics();
-}
-
-/**
- * This method is automatically parallelized if your compiler understands
- * OpenMP
- */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::collide (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::collide (
   int x0, int x1, int y0, int y1, int z0, int z1)
 {
   OLB_PRECONDITION(x0>=0 && x1<this->_nx);
@@ -188,165 +186,57 @@ void BlockLattice3D<T,Lattice>::collide (
   OLB_PRECONDITION(z1>=z0);
 
   int iX;
+  auto cell = get(0,0,0);
 #ifdef PARALLEL_MODE_OMP
-  #pragma omp parallel for schedule(dynamic,1)
+  #pragma omp parallel for schedule(dynamic,1) firstprivate(cell)
 #endif
   for (iX=x0; iX<=x1; ++iX) {
     for (int iY=y0; iY<=y1; ++iY) {
+      cell.setCellId(this->getCellId(iX,iY,z0));
       for (int iZ=z0; iZ<=z1; ++iZ) {
-        grid[iX][iY][iZ].collide(getStatistics());
-        grid[iX][iY][iZ].revert();
+        cell.collide(getStatistics());
+        cell.advanceCellId();
       }
     }
   }
 }
 
-/** \sa collide(int,int,int,int) */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::collide()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::stream()
+{
+  _staticPopulationD.shift();
+}
+
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::collideAndStream (
+  int x0, int x1, int y0, int y1, int z0, int z1)
+{
+  collide(x0, x1, y0, y1, z0, z1);
+  stream();
+  postProcess();
+}
+
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::collide()
 {
   collide(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1);
 }
 
-/**
- * A useful method for initializing the flow field to a given velocity
- * profile.
- */
-
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::staticCollide (
-  int x0, int x1, int y0, int y1, int z0, int z1,
-  BlockData3D<T,T> const& u )
-{
-  OLB_PRECONDITION(x0>=0 && x1<this->_nx);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=0 && y1<this->_ny);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=0 && z1<this->_nz);
-  OLB_PRECONDITION(z1>=z0);
-
-  int iX;
-#ifdef PARALLEL_MODE_OMP
-  #pragma omp parallel for schedule(dynamic,1)
-#endif
-  for (iX=x0; iX<=x1; ++iX) {
-    for (int iY=y0; iY<=y1; ++iY) {
-      for (int iZ=z0; iZ<=z1; ++iZ) {
-        grid[iX][iY][iZ].staticCollide(&(u.get(iX,iY,iZ)), getStatistics());
-        grid[iX][iY][iZ].revert();
-      }
-    }
-  }
-}
-
-
-/** \sa collide(int,int,int,int) */
-
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::staticCollide(BlockData3D<T,T> const& u)
-{
-  staticCollide(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1, u);
-}
-
-
-/** The distribution function never leave the rectangular domain. On the
- * domain boundaries, the (outgoing) distribution functions that should
- * be streamed outside are simply left untouched.
- */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::stream(int x0, int x1, int y0, int y1, int z0, int z1)
-{
-  OLB_PRECONDITION(x0>=0 && x1<this->_nx);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=0 && y1<this->_ny);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=0 && z1<this->_nz);
-  OLB_PRECONDITION(z1>=z0);
-
-  static const int vicinity = Lattice<T>::vicinity;
-
-  bulkStream(x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z0+vicinity,z1-vicinity);
-
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0,x0+vicinity-1, y0,y1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x1-vicinity+1,x1, y0,y1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y0,y0+vicinity-1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y1-vicinity+1,y1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z0,z0+vicinity-1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z1-vicinity+1,z1);
-}
-
-/** Post-processing steps are called at the end of this method.
- * \sa stream(int,int,int,int,int,int) */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::stream(bool periodic)
-{
-  stream(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1);
-
-  if (periodic) {
-    makePeriodic();
-  }
-
-  postProcess();
-  getStatistics().incrementTime();
-}
-
-/** This operation is more efficient than a successive application of
- * collide(int,int,int,int,int,int) and stream(int,int,int,int,int,int),
- * because memory is traversed only once instead of twice.
- */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::collideAndStream(int x0, int x1, int y0, int y1, int z0, int z1)
-{
-  OLB_PRECONDITION(x0>=0 && x1<this->_nx);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=0 && y1<this->_ny);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=0 && z1<this->_nz);
-  OLB_PRECONDITION(z1>=z0);
-
-  static const int vicinity = Lattice<T>::vicinity;
-
-  collide(x0,x0+vicinity-1, y0,y1, z0,z1);
-  collide(x1-vicinity+1,x1, y0,y1, z0,z1);
-  collide(x0+vicinity,x1-vicinity, y0,y0+vicinity-1, z0,z1);
-  collide(x0+vicinity,x1-vicinity, y1-vicinity+1,y1, z0,z1);
-  collide(x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z0,z0+vicinity-1);
-  collide(x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z1-vicinity+1,z1);
-
-  bulkCollideAndStream(x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z0+vicinity,z1-vicinity);
-
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0,x0+vicinity-1, y0,y1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x1-vicinity+1,x1, y0,y1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y0,y0+vicinity-1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y1-vicinity+1,y1, z0,z1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z0,z0+vicinity-1);
-  boundaryStream(x0,x1,y0,y1,z0,z1, x0+vicinity,x1-vicinity, y0+vicinity,y1-vicinity, z1-vicinity+1,z1);
-}
-
-/** Post-processing steps are called at the end of this method.
- * \sa collideAndStream(int,int,int,int,int,int) */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::collideAndStream(bool periodic)
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::collideAndStream()
 {
   collideAndStream(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1);
-
-  if (periodic) {
-    makePeriodic();
-  }
-
-  postProcess();
-  getStatistics().incrementTime();
 }
 
-template<typename T, template<typename U> class Lattice>
-T BlockLattice3D<T,Lattice>::computeAverageDensity (
+template<typename T, typename DESCRIPTOR>
+T BlockLattice3D<T,DESCRIPTOR>::computeAverageDensity (
   int x0, int x1, int y0, int y1, int z0, int z1) const
 {
   T sumRho = T();
   for (int iX=x0; iX<=x1; ++iX) {
     for (int iY=y0; iY<=y1; ++iY) {
       for (int iZ=z0; iZ<=z1; ++iZ) {
-        T rho, u[Lattice<T>::d];
+        T rho, u[DESCRIPTOR::d];
         get(iX,iY,iZ).computeRhoU(rho, u);
         sumRho += rho;
       }
@@ -355,21 +245,21 @@ T BlockLattice3D<T,Lattice>::computeAverageDensity (
   return sumRho / (T)(x1-x0+1) / (T)(y1-y0+1) / (T)(z1-z0+1);
 }
 
-template<typename T, template<typename U> class Lattice>
-T BlockLattice3D<T,Lattice>::computeAverageDensity() const
+template<typename T, typename DESCRIPTOR>
+T BlockLattice3D<T,DESCRIPTOR>::computeAverageDensity() const
 {
   return computeAverageDensity(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::computeStress(int iX, int iY, int iZ,
-T pi[util::TensorVal<Lattice<T> >::n])
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::computeStress(int iX, int iY, int iZ,
+    T pi[util::TensorVal<DESCRIPTOR >::n])
 {
-    grid[iX][iY][iZ].computeStress(pi);
+  get(iX,iY,iZ).computeStress(pi);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::stripeOffDensityOffset (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::stripeOffDensityOffset (
   int x0, int x1, int y0, int y1, int z0, int z1, T offset )
 {
   for (int iX=x0; iX<=x1; ++iX) {
@@ -378,20 +268,20 @@ void BlockLattice3D<T,Lattice>::stripeOffDensityOffset (
         //if (offset<-42000.) {
         //T rho = get(iX,iY,iZ).computeRho();
         // if (rho<0) {
-        //for (int iPop=0; iPop<Lattice<T>::q; ++iPop) {
-        //  if (get(iX,iY,iZ)[iPop] + Lattice<T>::t[iPop] < T() ) {
-        //    get(iX,iY,iZ)[iPop] = -Lattice<T>::t[iPop]+0.0000001;
+        //for (int iPop=0; iPop<DESCRIPTOR::q; ++iPop) {
+        //  if (get(iX,iY,iZ)[iPop] + descriptors::t<T,DESCRIPTOR>(iPop) < T() ) {
+        //    get(iX,iY,iZ)[iPop] = -descriptors::t<T,DESCRIPTOR>(iPop)+0.0000001;
         //  }
         //  else if(rho>1.)
-        // get(iX,iY,iZ)[iPop] -= Lattice<T>::t[iPop] * (rho-1.);
+        // get(iX,iY,iZ)[iPop] -= descriptors::t<T,DESCRIPTOR>(iPop) * (rho-1.);
         //}
         //}
         //}
         //else {
         // only stripe off if rho stays positive
         //if (get(iX,iY,iZ).computeRho()>offset) {
-        for (int iPop=0; iPop<Lattice<T>::q; ++iPop) {
-          get(iX,iY,iZ)[iPop] -= Lattice<T>::t[iPop] * offset;
+        for (int iPop=0; iPop<DESCRIPTOR::q; ++iPop) {
+          get(iX,iY,iZ)[iPop] -= descriptors::t<T,DESCRIPTOR>(iPop) * offset;
         }
         // }
       }
@@ -399,121 +289,112 @@ void BlockLattice3D<T,Lattice>::stripeOffDensityOffset (
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::stripeOffDensityOffset(T offset)
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::stripeOffDensityOffset(T offset)
 {
   stripeOffDensityOffset(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1, offset);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::forAll (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::forAll (
   int x0, int x1, int y0, int y1, int z0, int z1,
-  WriteCellFunctional<T,Lattice> const& application )
+  WriteCellFunctional<T,DESCRIPTOR> const& application )
 {
   for (int iX=x0; iX<=x1; ++iX) {
     for (int iY=y0; iY<=y1; ++iY) {
       for (int iZ=z0; iZ<=z1; ++iZ) {
         int pos[] = {iX, iY, iZ};
-        application.apply( get(iX,iY,iZ), pos );
+        auto cell = get(iX,iY,iZ);
+        application.apply(cell, pos);
       }
     }
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::forAll(WriteCellFunctional<T,Lattice> const& application)
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::forAll(WriteCellFunctional<T,DESCRIPTOR> const& application)
 {
   forAll(0, this->_nx-1, 0, this->_ny-1, 0, this->_nz-1, application);
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::addPostProcessor (
-  PostProcessorGenerator3D<T,Lattice> const& ppGen )
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::addPostProcessor (
+  PostProcessorGenerator3D<T,DESCRIPTOR> const& ppGen )
 {
-  postProcessors.push_back(ppGen.generate());
+  _postProcessors.push_back(ppGen.generate());
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::resetPostProcessors()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::resetPostProcessors()
 {
   clearPostProcessors();
-  StatPPGenerator3D<T,Lattice> statPPGenerator;
+  StatPPGenerator3D<T,DESCRIPTOR> statPPGenerator;
   addPostProcessor(statPPGenerator);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::clearPostProcessors()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::clearPostProcessors()
 {
-  typename std::vector<PostProcessor3D<T,Lattice>*>::iterator ppIt = postProcessors.begin();
-  for (; ppIt != postProcessors.end(); ++ppIt) {
-    delete *ppIt;
+  for (PostProcessor3D<T,DESCRIPTOR>* postProcessor : _postProcessors) {
+    delete postProcessor;
   }
-  postProcessors.clear();
+  _postProcessors.clear();
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::postProcess()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::postProcess()
 {
-  for (unsigned iPr=0; iPr<postProcessors.size(); ++iPr) {
-    postProcessors[iPr] -> process(*this);
+  for (PostProcessor3D<T,DESCRIPTOR>* postProcessor : _postProcessors) {
+    postProcessor->process(*this);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::postProcess (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::postProcess (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
-  for (unsigned iPr=0; iPr<postProcessors.size(); ++iPr) {
-    postProcessors[iPr] -> processSubDomain(*this, x0_, x1_, y0_, y1_, z0_, z1_);
+  for (PostProcessor3D<T,DESCRIPTOR>* postProcessor : _postProcessors) {
+    postProcessor->processSubDomain(*this, x0_, x1_, y0_, y1_, z0_, z1_);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::addLatticeCoupling (
-  LatticeCouplingGenerator3D<T,Lattice> const& lcGen,
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::addLatticeCoupling (
+  LatticeCouplingGenerator3D<T,DESCRIPTOR> const& lcGen,
   std::vector<SpatiallyExtendedObject3D*> partners )
 {
-  latticeCouplings.push_back(lcGen.generate(partners));
+  _latticeCouplings.push_back(lcGen.generate(partners));
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::executeCoupling()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::executeCoupling()
 {
-  for (unsigned iPr=0; iPr<latticeCouplings.size(); ++iPr) {
-    latticeCouplings[iPr] -> process(*this);
+  for (PostProcessor3D<T,DESCRIPTOR>* coupling : _latticeCouplings) {
+    coupling->process(*this);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::executeCoupling (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::executeCoupling (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
-  for (unsigned iPr=0; iPr<latticeCouplings.size(); ++iPr) {
-    latticeCouplings[iPr] -> processSubDomain(*this, x0_, x1_, y0_, y1_, z0_, z1_);
+  for (PostProcessor3D<T,DESCRIPTOR>* coupling : _latticeCouplings) {
+    coupling->processSubDomain(*this, x0_, x1_, y0_, y1_, z0_, z1_);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::clearLatticeCouplings()
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::clearLatticeCouplings()
 {
-  typename std::vector<PostProcessor3D<T,Lattice>*>::iterator ppIt = latticeCouplings.begin();
-  for (; ppIt != latticeCouplings.end(); ++ppIt) {
-    delete *ppIt;
+  for (PostProcessor3D<T,DESCRIPTOR>* coupling : _latticeCouplings) {
+    delete coupling;
   }
-  latticeCouplings.clear();
+  _latticeCouplings.clear();
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::subscribeReductions(Reductor<T>& reductor)
-{
-  for (unsigned iPr=0; iPr<postProcessors.size(); ++iPr) {
-    postProcessors[iPr] -> subscribeReductions(*this, &reductor);
-  }
-}
-
-template<typename T, template<typename U> class Lattice>
-LatticeStatistics<T>& BlockLattice3D<T,Lattice>::getStatistics()
+template<typename T, typename DESCRIPTOR>
+LatticeStatistics<T>& BlockLattice3D<T,DESCRIPTOR>::getStatistics()
 {
 #ifdef PARALLEL_MODE_OMP
   return *statistics[omp.get_rank()];
@@ -522,9 +403,9 @@ LatticeStatistics<T>& BlockLattice3D<T,Lattice>::getStatistics()
 #endif
 }
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 LatticeStatistics<T> const&
-BlockLattice3D<T,Lattice>::getStatistics() const
+BlockLattice3D<T,DESCRIPTOR>::getStatistics() const
 {
 #ifdef PARALLEL_MODE_OMP
   return *statistics[omp.get_rank()];
@@ -533,149 +414,11 @@ BlockLattice3D<T,Lattice>::getStatistics() const
 #endif
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::allocateMemory()
+
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::makePeriodic()
 {
-  // The conversions to size_t ensure 64-bit compatibility. Note that
-  //   nx, ny and nz are of type int, which might by 32-bit types, even on
-  //   64-bit platforms. Therefore, nx*ny*nz may lead to a type overflow.
-  rawData = new Cell<T,Lattice> [(size_t)this->_nx*(size_t)this->_ny*(size_t)this->_nz];
-  grid    = new Cell<T,Lattice>** [(size_t)this->_nx];
-  for (int iX=0; iX<this->_nx; ++iX) {
-    grid[iX] = new Cell<T,Lattice>* [(size_t)this->_ny];
-    for (int iY=0; iY<this->_ny; ++iY) {
-      grid[iX][iY] = rawData + (size_t)this->_nz*((size_t)iY+(size_t)this->_ny*(size_t)iX);
-    }
-  }
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::releaseMemory()
-{
-  delete [] rawData;
-  for (int iX=0; iX<this->_nx; ++iX) {
-    delete [] grid[iX];
-  }
-  delete [] grid;
-}
-
-/** This method is slower than bulkStream(int,int,int,int), because it must
- * be verified which distribution functions are to be kept from leaving
- * the domain.
- * \sa stream(int,int,int,int)
- * \sa stream()
- */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::boundaryStream (
-  int lim_x0, int lim_x1, int lim_y0, int lim_y1, int lim_z0, int lim_z1,
-  int x0, int x1, int y0, int y1, int z0, int z1 )
-{
-  OLB_PRECONDITION(lim_x0>=0 && lim_x1<this->_nx);
-  OLB_PRECONDITION(lim_x1>=lim_x0);
-  OLB_PRECONDITION(lim_y0>=0 && lim_y1<this->_ny);
-  OLB_PRECONDITION(lim_y1>=lim_y0);
-  OLB_PRECONDITION(lim_z0>=0 && lim_z1<this->_nz);
-  OLB_PRECONDITION(lim_z1>=lim_z0);
-
-  OLB_PRECONDITION(x0>=lim_x0 && x1<=lim_x1);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=lim_y0 && y1<=lim_y1);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=lim_z0 && z1<=lim_z1);
-  OLB_PRECONDITION(z1>=z0);
-
-  int iX;
-
-#ifdef PARALLEL_MODE_OMP
-  #pragma omp parallel for
-#endif
-  for (iX=x0; iX<=x1; ++iX) {
-    for (int iY=y0; iY<=y1; ++iY) {
-      for (int iZ=z0; iZ<=z1; ++iZ) {
-        for (int iPop=1; iPop<=Lattice<T>::q/2; ++iPop) {
-          int nextX = iX + Lattice<T>::c[iPop][0];
-          int nextY = iY + Lattice<T>::c[iPop][1];
-          int nextZ = iZ + Lattice<T>::c[iPop][2];
-          if ( nextX>=lim_x0 && nextX<=lim_x1 &&
-               nextY>=lim_y0 && nextY<=lim_y1 &&
-               nextZ>=lim_z0 && nextZ<=lim_z1 ) {
-            std::swap(grid[iX][iY][iZ][iPop+Lattice<T>::q/2],
-                      grid[nextX][nextY][nextZ][iPop]);
-          }
-        }
-      }
-    }
-  }
-}
-
-/** This method is faster than boundaryStream(int,int,int,int,int,int), but it
- * is erroneous when applied to boundary cells.
- * \sa stream(int,int,int,int,int,int)
- * \sa stream()
- */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::bulkStream (
-  int x0, int x1, int y0, int y1, int z0, int z1 )
-{
-  OLB_PRECONDITION(x0>=0 && x1<this->_nx);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=0 && y1<this->_ny);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=0 && z1<this->_nz);
-  OLB_PRECONDITION(z1>=z0);
-
-  int iX;
-#ifdef PARALLEL_MODE_OMP
-  #pragma omp parallel for
-#endif
-  for (iX=x0; iX<=x1; ++iX) {
-    for (int iY=y0; iY<=y1; ++iY) {
-      for (int iZ=z0; iZ<=z1; ++iZ) {
-        for (int iPop=1; iPop<=Lattice<T>::q/2; ++iPop) {
-          int nextX = iX + Lattice<T>::c[iPop][0];
-          int nextY = iY + Lattice<T>::c[iPop][1];
-          int nextZ = iZ + Lattice<T>::c[iPop][2];
-          std::swap(grid[iX][iY][iZ][iPop+Lattice<T>::q/2],
-                    grid[nextX][nextY][nextZ][iPop]);
-        }
-      }
-    }
-  }
-}
-
-#ifndef PARALLEL_MODE_OMP // OpenMP parallel version is at the end
-// of this file
-/** This method is fast, but it is erroneous when applied to boundary
- * cells.
- * \sa collideAndStream(int,int,int,int,int,int)
- * \sa collideAndStream()
- */
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::bulkCollideAndStream (
-  int x0, int x1, int y0, int y1, int z0, int z1 )
-{
-  OLB_PRECONDITION(x0>=0 && x1<this->_nx);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=0 && y1<this->_ny);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=0 && z1<this->_nz);
-  OLB_PRECONDITION(z1>=z0);
-
-  for (int iX=x0; iX<=x1; ++iX) {
-    for (int iY=y0; iY<=y1; ++iY) {
-      for (int iZ=z0; iZ<=z1; ++iZ) {
-        grid[iX][iY][iZ].collide(getStatistics());
-        lbHelpers<T,Lattice>::swapAndStream3D(grid, iX, iY, iZ);
-      }
-    }
-  }
-}
-#endif  // not defined PARALLEL_MODE_OMP
-
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::makePeriodic()
-{
-  static const int vicinity = Lattice<T>::vicinity;
+  static const int vicinity = descriptors::vicinity<DESCRIPTOR>();
   int maxX = this->getNx()-1;
   int maxY = this->getNy()-1;
   int maxZ = this->getNz()-1;
@@ -687,17 +430,17 @@ void BlockLattice3D<T,Lattice>::makePeriodic()
   periodicSurface(vicinity,      maxX-vicinity, vicinity, maxY-vicinity, maxZ-vicinity+1, maxZ);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::periodicSurface (
+template<typename T, typename DESCRIPTOR>
+void BlockLattice3D<T,DESCRIPTOR>::periodicSurface (
   int x0, int x1, int y0, int y1, int z0, int z1)
 {
   for (int iX=x0; iX<=x1; ++iX) {
     for (int iY=y0; iY<=y1; ++iY) {
       for (int iZ=z0; iZ<=z1; ++iZ) {
-        for (int iPop=1; iPop<=Lattice<T>::q/2; ++iPop) {
-          int nextX = iX + Lattice<T>::c[iPop][0];
-          int nextY = iY + Lattice<T>::c[iPop][1];
-          int nextZ = iZ + Lattice<T>::c[iPop][2];
+        for (int iPop=1; iPop<=DESCRIPTOR::q/2; ++iPop) {
+          int nextX = iX + descriptors::c<DESCRIPTOR>(iPop,0);
+          int nextY = iY + descriptors::c<DESCRIPTOR>(iPop,1);
+          int nextZ = iZ + descriptors::c<DESCRIPTOR>(iPop,2);
           if ( nextX<0 || nextX>=this->getNx() ||
                nextY<0 || nextY>=this->getNy() ||
                nextZ<0 || nextZ>=this->getNz() ) {
@@ -705,8 +448,8 @@ void BlockLattice3D<T,Lattice>::periodicSurface (
             nextY = (nextY+this->getNy())%this->getNy();
             nextZ = (nextZ+this->getNz())%this->getNz();
             std::swap (
-              grid[iX][iY][iZ]         [iPop+Lattice<T>::q/2],
-              grid[nextX][nextY][nextZ][iPop] );
+              get(iX,iY,iZ)         [iPop+DESCRIPTOR::q/2],
+              get(nextX,nextY,nextZ)[iPop] );
           }
         }
       }
@@ -714,121 +457,42 @@ void BlockLattice3D<T,Lattice>::periodicSurface (
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-std::size_t BlockLattice3D<T,Lattice>::getNblock() const
+template<typename T, typename DESCRIPTOR>
+std::size_t BlockLattice3D<T,DESCRIPTOR>::getNblock() const
 {
-  return 3 + rawData[0].getNblock() * this->_nx * this->_ny * this->_nz;
+  return 3
+       + _staticPopulationD.getNblock()
+       + _staticFieldsD.getNblock()
+       + _dynamicFieldsD.getNblock();
 }
 
 
-template<typename T, template<typename U> class Lattice>
-std::size_t BlockLattice3D<T,Lattice>::getSerializableSize() const
+template<typename T, typename DESCRIPTOR>
+std::size_t BlockLattice3D<T,DESCRIPTOR>::getSerializableSize() const
 {
-  return 3 * sizeof(int) + rawData[0].getSerializableSize() * this->_nx * this->_ny * this->_nz;
+  return 3 * sizeof(int)
+       + _staticPopulationD.getSerializableSize()
+       + _staticFieldsD.getSerializableSize()
+       + _dynamicFieldsD.getSerializableSize();
 }
 
 
-template<typename T, template<typename U> class Lattice>
-bool* BlockLattice3D<T,Lattice>::getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode)
+template<typename T, typename DESCRIPTOR>
+bool* BlockLattice3D<T,DESCRIPTOR>::getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode)
 {
   std::size_t currentBlock = 0;
   bool* dataPtr = nullptr;
 
-  registerVar                      (iBlock, sizeBlock, currentBlock, dataPtr, this->_nx);
-  registerVar                      (iBlock, sizeBlock, currentBlock, dataPtr, this->_ny);
-  registerVar                      (iBlock, sizeBlock, currentBlock, dataPtr, this->_nz);
-  registerSerializablesOfConstSize (iBlock, sizeBlock, currentBlock, dataPtr, rawData,
-                                    (size_t) this->_nx * this->_ny * this->_nz, loadingMode);
+  registerVar                     (iBlock, sizeBlock, currentBlock, dataPtr, this->_nx);
+  registerVar                     (iBlock, sizeBlock, currentBlock, dataPtr, this->_ny);
+  registerVar                     (iBlock, sizeBlock, currentBlock, dataPtr, this->_nz);
+  registerSerializableOfConstSize (iBlock, sizeBlock, currentBlock, dataPtr, _staticPopulationD, loadingMode);
+  registerSerializableOfConstSize (iBlock, sizeBlock, currentBlock, dataPtr, _staticFieldsD, loadingMode);
+  registerSerializableOfConstSize (iBlock, sizeBlock, currentBlock, dataPtr, _dynamicFieldsD, loadingMode);
 
   return dataPtr;
 }
 
-template<typename T, template<typename U> class Lattice>
-int BlockLattice3D<T,Lattice>::getMaterial(int iX, int iY, int iZ) {
-  return geometry_.getMaterial(iX, iY, iZ);
-}
-
-//// OpenMP implementation of the method bulkCollideAndStream,
-//   by Mathias Krause                                         ////
-#ifdef PARALLEL_MODE_OMP
-template<typename T, template<typename U> class Lattice>
-void BlockLattice3D<T,Lattice>::bulkCollideAndStream (
-  int x0, int x1, int y0, int y1, int z0, int z1 )
-{
-  OLB_PRECONDITION(x0>=0 && x1<this->_nx);
-  OLB_PRECONDITION(x1>=x0);
-  OLB_PRECONDITION(y0>=0 && y1<this->_ny);
-  OLB_PRECONDITION(y1>=y0);
-  OLB_PRECONDITION(z0>=0 && z1<this->_nz);
-  OLB_PRECONDITION(z1>=z0);
-
-  if (omp.get_size() <= x1-x0+1) {
-    #pragma omp parallel
-    {
-      BlockLoadBalancer<T> loadbalance(omp.get_rank(), omp.get_size(), x1-x0+1, x0);
-      int iX, iY, iZ, iPop;
-
-      iX=loadbalance.firstGlobNum();
-      for (int iY=y0; iY<=y1; ++iY)
-      {
-        for (int iZ=z0; iZ<=z1; ++iZ) {
-          grid[iX][iY][iZ].collide(getStatistics());
-          grid[iX][iY][iZ].revert();
-        }
-      }
-
-      for (iX=loadbalance.firstGlobNum()+1; iX<=loadbalance.lastGlobNum(); ++iX)
-      {
-        for (iY=y0; iY<=y1; ++iY) {
-          for (iZ=z0; iZ<=z1; ++iZ) {
-            grid[iX][iY][iZ].collide(getStatistics());
-            /** The method beneath doesnt work with Intel
-             *  compiler 9.1044 and 9.1046 for Itanium prozessors
-             *    lbHelpers<T,Lattice>::swapAndStream3D(grid, iX, iY, iZ);
-             *  Therefore we use:
-             */
-            int half = Lattice<T>::q/2;
-            for (int iPop=1; iPop<=half; ++iPop) {
-              int nextX = iX + Lattice<T>::c[iPop][0];
-              int nextY = iY + Lattice<T>::c[iPop][1];
-              int nextZ = iZ + Lattice<T>::c[iPop][2];
-              T fTmp                          = grid[iX][iY][iZ][iPop];
-              grid[iX][iY][iZ][iPop]          = grid[iX][iY][iZ][iPop+half];
-              grid[iX][iY][iZ][iPop+half]     = grid[nextX][nextY][nextZ][iPop];
-              grid[nextX][nextY][nextZ][iPop] = fTmp;
-            }
-          }
-        }
-      }
-
-      #pragma omp barrier
-      iX=loadbalance.firstGlobNum();
-      for (iY=y0; iY<=y1; ++iY)
-      {
-        for (iZ=z0; iZ<=z1; ++iZ) {
-          for (iPop=1; iPop<=Lattice<T>::q/2; ++iPop) {
-            int nextX = iX + Lattice<T>::c[iPop][0];
-            int nextY = iY + Lattice<T>::c[iPop][1];
-            int nextZ = iZ + Lattice<T>::c[iPop][2];
-            std::swap(grid[iX][iY][iZ][iPop+Lattice<T>::q/2],
-                      grid[nextX][nextY][nextZ][iPop]);
-          }
-        }
-      }
-    }
-  } else {
-    for (int iX=x0; iX<=x1; ++iX) {
-      for (int iY=y0; iY<=y1; ++iY) {
-        for (int iZ=z0; iZ<=z1; ++iZ) {
-          grid[iX][iY][iZ].collide(getStatistics());
-          lbHelpers<T,Lattice>::swapAndStream3D(grid, iX, iY, iZ);
-        }
-      }
-    }
-  }
-}
-
-#endif // defined PARALLEL_MODE_OMP
 
 }  // namespace olb
 

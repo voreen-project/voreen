@@ -28,26 +28,21 @@
 namespace olb {
 
 // 2nd level classes
-template class AnalyticalF1D<double,int>;
-template class AnalyticalF1D<double,double>;
+template class AnalyticalF<1,double,int>;
+template class AnalyticalF<2,double,int>;
+template class AnalyticalF<3,double,int>;
+template class AnalyticalF<1,double,double>;
+template class AnalyticalF<2,double,double>;
+template class AnalyticalF<3,double,double>;
+template class AnalyticalF<1,bool,double>;
+template class AnalyticalF<2,bool,double>;
+template class AnalyticalF<3,bool,double>;
 
-template class AnalyticalIdentity1D<double,int>;
-template class AnalyticalIdentity1D<double,double>;
-
-
-template class AnalyticalF2D<double,int>;
-template class AnalyticalF2D<double,double>;
-
-template class AnalyticalIdentity2D<double,int>;
-template class AnalyticalIdentity2D<double,double>;
-
-
-template class AnalyticalF3D<double,int>;
-template class AnalyticalF3D<double,double>;
-template class AnalyticalF3D<bool,double>; // indicatorF
-
-template class AnalyticalIdentity3D<double,int>;
-template class AnalyticalIdentity3D<double,double>;
-
+template class AnalyticalIdentity<1,double,int>;
+template class AnalyticalIdentity<2,double,int>;
+template class AnalyticalIdentity<3,double,int>;
+template class AnalyticalIdentity<1,double,double>;
+template class AnalyticalIdentity<2,double,double>;
+template class AnalyticalIdentity<3,double,double>;
 }
 

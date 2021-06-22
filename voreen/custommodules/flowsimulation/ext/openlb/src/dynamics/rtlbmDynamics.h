@@ -32,67 +32,6 @@
 
 namespace olb {
 
-/**
- * Solves poisson equation, according to Mink et al 2016. First order scheme.
- *
- * \f[ D \Delta \Phi = \sigma * \Phi \f]
- *
- * \param _omega       is relaxation parameter and accounts the time scale of the problem
- * \param _sink        corresponds to \f$ sink = \sigma / 8 \f$
- */
-template<typename T, template<typename U> class Lattice>
-class RTLBMdynamicsMink : public BasicDynamics<T, Lattice> {
-public:
-  /// Constructor
-  RTLBMdynamicsMink( T omega, Momenta<T, Lattice>& momenta, T latticeAbsorption, T latticeScattering );
-  /// Compute equilibrium distribution function
-  T computeEquilibrium( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const override;
-  /// Collision step
-  void collide( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics ) override;
-  /// Collide with fixed velocity
-  void staticCollide( Cell<T, Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics ) override;
-  /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
-  /// Set local relaxation parameter of the dynamics
-  void setOmega( T omega ) override;
-  T getSink() const;
-private:
-  T _omega;
-  T _sink;    // 3*latticeAbs*(latticeAbs+latticeScat) / 8
-};
-
-/**
- * Solves poisson equation, according to Mink et al 2016.
- * Second order scheme, due to no collision with fixed relaxation time.
- *
- * Target equation (Poisson problem)
- * \f[ \Delta \Phi = f(\Phi) \f]
- * for linear function \f$ f(\Phi) = \alpha \Phi \f$.
- *
- * Where parameter \f$ \alpha \f$ (nondimensional) is related to sink parameter of dynamics by
- * \f[ sink = \alpha / 8 \f]
- *
-
- * \param _sink     given by \f$ sink = \alpha / 8 \f$
- */
-template<typename T, template<typename U> class Lattice>
-class RTLBMconstDynamicsMink : public BasicDynamics<T, Lattice> {
-public:
-  /// Constructor
-  RTLBMconstDynamicsMink( Momenta<T, Lattice>& momenta, T latticeAbsorption, T latticeScattering );
-  /// Compute equilibrium distribution function
-  T computeEquilibrium( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const override;
-  /// Collision step
-  void collide( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics ) override;
-  /// Collide with fixed velocity
-  void staticCollide( Cell<T, Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics ) override;
-  /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
-  /// Set local relaxation parameter of the dynamics
-  void setOmega( T omega ) override;
-private:
-  T _sink;
-};
 
 
 /**
@@ -101,19 +40,17 @@ private:
  * \f$ \sigma_a \f$ and \f$ \sigma_s \f$
  *
  * \param omega             change into beta the extinction coefficient
- * \param singleScatAlbedo  is the single scattering albedo, given by \f$ \frac{\sigma_s}{sigma_a + sigma_s} \f$
+ * \param singleScatAlbedo  is the single scattering albedo, given by \f$ \frac{\sigma_s}{\sigma_a + \sigma_s} \f$
  */
-template<typename T, template<typename U> class Lattice>
-class RTLBMdynamicsMcHardy : public BasicDynamics<T, Lattice> {
+template<typename T, typename DESCRIPTOR>
+class RTLBMdynamicsMcHardy : public BasicDynamics<T, DESCRIPTOR> {
 public:
   /// Constructor
-  RTLBMdynamicsMcHardy( Momenta<T,Lattice>& momenta, T latticeAbsorption, T latticeScattering );
+  RTLBMdynamicsMcHardy( Momenta<T,DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix );
   /// Compute equilibrium distribution function
-  T computeEquilibrium( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const override;
+  T computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const override;
   /// Collision step
-  void collide( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics ) override;
-  /// Collide with fixed velocity
-  void staticCollide( Cell<T, Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics ) override;
+  void collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -123,26 +60,30 @@ public:
 protected:
   T _absorption;
   T _scattering;
+  std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& _anisoMatrix;
 };
 
-template<typename T, template<typename U> class Lattice>
-class RTLBMdynamicsMcHardyWH : public RTLBMdynamicsMcHardy<T, Lattice> {
+template<typename T, typename DESCRIPTOR>
+class RTLBMdynamicsMcHardyRK : public BasicDynamics<T, DESCRIPTOR> {
 public:
+  static_assert(DESCRIPTOR::template provides<descriptors::tag::RTLBM>(), "Must be RTLBM");
+
   /// Constructor
-  RTLBMdynamicsMcHardyWH( Momenta<T,Lattice>& momenta, T latticeAbsorption, T latticeScattering );
+  RTLBMdynamicsMcHardyRK( Momenta<T,DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix );
   /// Compute equilibrium distribution function
-  T computeEquilibrium( int iPop, T rho, const T u[Lattice<T>::d], T uSqr ) const override;
+  T computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const override;
   /// Collision step
-  void collide( Cell<T, Lattice>& cell, LatticeStatistics<T>& statistics ) override;
-  /// Collide with fixed velocity
-  void staticCollide( Cell<T, Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics ) override;
+  void collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
   void setOmega( T omega ) override;
 private:
-//  T _absorption;
-//  T _scattering;
+  void computeEquilibriumAniso( Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq );
+  std::array<T,DESCRIPTOR::q> doCollision( Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq );
+  T _absorption;
+  T _scattering;
+  std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& _anisoMatrix;
 };
 
 

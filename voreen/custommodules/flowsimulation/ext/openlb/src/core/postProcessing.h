@@ -36,99 +36,87 @@ namespace olb {
 
 /////////////////// Forward Declarations /////////////////////////////
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class BlockLatticeStructure2D;
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class BlockLatticeStructure3D;
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class BlockLattice2D;
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class BlockLattice3D;
-
-
-/////////////////// How to handle reductions /////////////////////////
-
-template<typename T>
-struct Reductor {
-  virtual ~Reductor() { }
-  virtual void subscribeSum(T& element) =0;
-  virtual void subscribeAverage(size_t const& weight, T& element) =0;
-  virtual void subscribeMin(T& element) =0;
-  virtual void subscribeMax(T& element) =0;
-};
 
 
 /////////////////// 2D Postprocessing ///////////////////////////////
 
 /// Interface of 2D post-processing steps.
-template<typename T, template<typename U> class Lattice>
-struct PostProcessor2D {
+template<typename T, typename DESCRIPTOR>
+class PostProcessor2D {
+public:
+  PostProcessor2D():
+    _priority{0} { }
   virtual ~PostProcessor2D() { }
   /// Execute post-processing step
-  virtual void process(BlockLattice2D<T,Lattice>& blockLattice) =0;
+  virtual void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) =0;
   /// Execute post-processing step on a sublattice
-  virtual void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
+  virtual void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
                                 int x0_, int x1_, int y0_, int y1_) =0;
   /// Extent of application area (0 for purely local operations)
   virtual int extent() const =0;
   /// Extent of application area along a direction (0 or 1)
   virtual int extent(int direction) const =0;
-  virtual bool hasReductions() const =0;
-  virtual void subscribeReductions(BlockLattice2D<T,Lattice>& blockLattice,
-                                   Reductor<T>* reductor) =0;
+  /// read and write access to name
+  std::string& getName();
+  /// read only access to name
+  std::string const& getName() const;
+  /// read only access to priority
+  int getPriority() const;
+protected:
+  int _priority;
+private:
+  std::string _name;
 };
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class PostProcessorGenerator2D {
 public:
   PostProcessorGenerator2D(int x0_, int x1_, int y0_, int y1_);
   virtual ~PostProcessorGenerator2D() { }
   void shift(int deltaX, int deltaY);
   bool extract(int x0_, int x1_, int y0_, int y1_);
-  virtual PostProcessor2D<T,Lattice>* generate() const =0;
-  virtual PostProcessorGenerator2D<T,Lattice>* clone() const =0;
+  void reset(int x0_, int x1_, int y0_, int y1_);
+  virtual PostProcessor2D<T,DESCRIPTOR>* generate() const =0;
+  virtual PostProcessorGenerator2D<T,DESCRIPTOR>* clone() const =0;
 protected:
   int x0, x1, y0, y1;
 };
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class LatticeCouplingGenerator2D {
 public:
   LatticeCouplingGenerator2D(int x0_, int x1_, int y0_, int y1_);
   virtual ~LatticeCouplingGenerator2D() { }
   void shift(int deltaX, int deltaY);
   bool extract(int x0_, int x1_, int y0_, int y1_);
-  virtual PostProcessor2D<T,Lattice>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const =0;
-  virtual LatticeCouplingGenerator2D<T,Lattice>* clone() const =0;
+  void reset(int x0_, int x1_, int y0_, int y1_);
+  virtual PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const =0;
+  virtual LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const =0;
 protected:
   int x0, x1, y0, y1;
 };
 
 
-template<typename T, template<typename U> class Lattice>
-struct LocalPostProcessor2D : public PostProcessor2D<T,Lattice> {
-  bool hasReductions() const override
-  {
-    return false;
-  }
-  void subscribeReductions(BlockLattice2D<T,Lattice>& blockLattice,
-                                   Reductor<T>* reductor) override
-  {
-  }
+template<typename T, typename DESCRIPTOR>
+struct LocalPostProcessor2D : public PostProcessor2D<T,DESCRIPTOR> {
 };
 
-template<typename T, template<typename U> class Lattice>
-struct GlobalPostProcessor2D : public PostProcessor2D<T,Lattice> {
-  bool hasReductions() const override
-  {
-    return true;
-  }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override =0;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override
+template<typename T, typename DESCRIPTOR>
+struct GlobalPostProcessor2D : public PostProcessor2D<T,DESCRIPTOR> {
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override =0;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override
   {
     this -> process(blockLattice);
   }
@@ -145,76 +133,77 @@ struct GlobalPostProcessor2D : public PostProcessor2D<T,Lattice> {
 
 /////////////////// 3D Postprocessing ///////////////////////////////
 
-template<typename T, template<typename U> class Lattice>
-struct PostProcessor3D {
+template<typename T, typename DESCRIPTOR>
+class PostProcessor3D {
+public:
+  PostProcessor3D():
+    _priority{0} { }
   virtual ~PostProcessor3D() { }
   /// Execute post-processing step
-  virtual void process(BlockLattice3D<T,Lattice>& blockLattice) =0;
+  virtual void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) =0;
   /// Execute post-processing step on a sublattice
-  virtual void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
+  virtual void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
                                 int x0_, int x1_, int y0_, int y1_,
                                 int z0_, int z1_ ) =0;
   /// Extent of application area (0 for purely local operations)
   virtual int extent() const =0;
   /// Extent of application area along a direction (0 or 1)
   virtual int extent(int direction) const =0;
-  virtual bool hasReductions() const =0;
-  virtual void subscribeReductions(BlockLattice3D<T,Lattice>& blockLattice,
-                                   Reductor<T>* reductor) =0;
+  /// read and write access to name
+  std::string& getName();
+  /// read only access to name
+  std::string const& getName() const;
+  /// read only access to priority
+  int getPriority() const;
+protected:
+  int _priority;
+private:
+  std::string _name;
 };
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class PostProcessorGenerator3D {
 public:
   PostProcessorGenerator3D( int x0_, int x1_, int y0_, int y1_,
                             int z0_, int z1_ );
   virtual ~PostProcessorGenerator3D() { }
-  void shift(int deltaX, int deltaY, int deltaZ);
-  bool extract(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
-  virtual PostProcessor3D<T,Lattice>* generate() const =0;
-  virtual PostProcessorGenerator3D<T,Lattice>* clone() const =0;
-protected:
-  int x0, x1, y0, y1, z0, z1;
-};
-
-
-template<typename T, template<typename U> class Lattice>
-class LatticeCouplingGenerator3D {
-public:
-  LatticeCouplingGenerator3D( int x0_, int x1_, int y0_, int y1_,
-                              int z0_, int z1_ );
-  virtual ~LatticeCouplingGenerator3D() { }
   void shift(int deltaX, int deltaY, int deltaZ, int iC_=-1);
   bool extract(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
-  virtual PostProcessor3D<T,Lattice>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const =0;
-  virtual LatticeCouplingGenerator3D<T,Lattice>* clone() const =0;
+  void reset(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
+  virtual PostProcessor3D<T,DESCRIPTOR>* generate() const =0;
+  virtual PostProcessorGenerator3D<T,DESCRIPTOR>* clone() const =0;
 protected:
   int x0, x1, y0, y1, z0, z1, iC;
 };
 
 
-template<typename T, template<typename U> class Lattice>
-struct LocalPostProcessor3D : public PostProcessor3D<T,Lattice> {
-  bool hasReductions() const override
-  {
-    return false;
-  }
-  void subscribeReductions(BlockLattice3D<T,Lattice>& blockLattice,
-                                   Reductor<T>* reductor) override
-  {
-  }
+template<typename T, typename DESCRIPTOR>
+class LatticeCouplingGenerator3D {
+public:
+  LatticeCouplingGenerator3D() = delete;
+  LatticeCouplingGenerator3D( int x0_, int x1_, int y0_, int y1_,
+                              int z0_, int z1_ );
+  virtual ~LatticeCouplingGenerator3D() { }
+  void shift(int deltaX, int deltaY, int deltaZ, int iC_=-1);
+  bool extract(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
+  void reset(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
+  virtual PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const =0;
+  virtual LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const =0;
+protected:
+  int x0, x1, y0, y1, z0, z1, iC;
 };
 
-template<typename T, template<typename U> class Lattice>
-struct GlobalPostProcessor3D : public PostProcessor3D<T,Lattice> {
-  bool hasReductions() const override
-  {
-    return true;
-  }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override =0;
-  void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_,
-                                int z0_, int z1_ ) override
+
+template<typename T, typename DESCRIPTOR>
+struct LocalPostProcessor3D : public PostProcessor3D<T,DESCRIPTOR> {
+};
+
+template<typename T, typename DESCRIPTOR>
+struct GlobalPostProcessor3D : public PostProcessor3D<T,DESCRIPTOR> {
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override =0;
+  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_,
+                        int z0_, int z1_ ) override
   {
     this -> process(blockLattice);
   }
@@ -228,38 +217,34 @@ struct GlobalPostProcessor3D : public PostProcessor3D<T,Lattice> {
   }
 };
 
-template<typename T, template<typename U> class Lattice>
-struct StatisticsPostProcessor2D : public GlobalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+struct StatisticsPostProcessor2D : public GlobalPostProcessor2D<T,DESCRIPTOR> {
   StatisticsPostProcessor2D();
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void subscribeReductions(BlockLattice2D<T,Lattice>& blockLattice,
-                                   Reductor<T>* reductor) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
 };
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class StatPPGenerator2D
-  : public PostProcessorGenerator2D<T,Lattice> {
+  : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   StatPPGenerator2D();
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>* clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>* clone() const override;
 };
 
-template<typename T, template<typename U> class Lattice>
-struct StatisticsPostProcessor3D : public GlobalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+struct StatisticsPostProcessor3D : public GlobalPostProcessor3D<T,DESCRIPTOR> {
   StatisticsPostProcessor3D();
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void subscribeReductions(BlockLattice3D<T,Lattice>& blockLattice,
-                                   Reductor<T>* reductor) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
 };
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 class StatPPGenerator3D
-  : public PostProcessorGenerator3D<T,Lattice> {
+  : public PostProcessorGenerator3D<T,DESCRIPTOR> {
 public:
   StatPPGenerator3D();
-  PostProcessor3D<T,Lattice>* generate() const override;
-  PostProcessorGenerator3D<T,Lattice>* clone() const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator3D<T,DESCRIPTOR>* clone() const override;
 };
 
 

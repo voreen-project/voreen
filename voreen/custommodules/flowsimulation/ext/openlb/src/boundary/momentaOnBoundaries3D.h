@@ -31,78 +31,75 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int plane, int normal1, int normal2>
-class InnerEdgeVelBM3D : public DirichletBoundaryMomenta<T,Lattice> {
+class InnerEdgeVelBM3D : public DirichletBoundaryMomenta<T,DESCRIPTOR> {
 public:
   enum { direction1 = (plane+1)%3, direction2 = (plane+2)%3 };
 public:
   /// Default Constructor: initialization to zero
   InnerEdgeVelBM3D();
   /// Constructor with boundary initialization
-  InnerEdgeVelBM3D(const T u_[Lattice<T>::d]);
+  InnerEdgeVelBM3D(const T u_[DESCRIPTOR::d]);
 
-  T computeRho(Cell<T,Lattice> const& cell) const override;
+  T computeRho(ConstCell<T,DESCRIPTOR>& cell) const override;
   void computeU (
-    Cell<T,Lattice> const& cell,
-    T u[Lattice<T>::d] ) const override;
+    ConstCell<T,DESCRIPTOR>& cell,
+    T u[DESCRIPTOR::d] ) const override;
   void computeJ (
-    Cell<T,Lattice> const& cell,
-    T j[Lattice<T>::d] ) const override;
-  void computeU(T u[Lattice<T>::d]) const;
-  void defineRho(Cell<T,Lattice>& cell, T rho) override ;
-  void defineU(Cell<T,Lattice>& cell,
-                       const T u[Lattice<T>::d]) override ;
-  void defineU(const T u[Lattice<T>::d]);
+    ConstCell<T,DESCRIPTOR>& cell,
+    T j[DESCRIPTOR::d] ) const override;
+  void computeU(T u[DESCRIPTOR::d]) const;
+  void defineRho(Cell<T,DESCRIPTOR>& cell, T rho) override ;
+  void defineU(Cell<T,DESCRIPTOR>& cell,
+               const T u[DESCRIPTOR::d]) override ;
+  void defineU(const T u[DESCRIPTOR::d]);
   void defineAllMomenta (
-    Cell<T,Lattice>& cell,
-    T rho, const T u[Lattice<T>::d],
-    const T pi[util::TensorVal<Lattice<T> >::n] ) override;
+    Cell<T,DESCRIPTOR>& cell,
+    T rho, const T u[DESCRIPTOR::d],
+    const T pi[util::TensorVal<DESCRIPTOR >::n] ) override;
   /// Stress tensor
   void computeStress (
-    Cell<T,Lattice> const& cell,
-    T rho, const T u[Lattice<T>::d],
-    T pi[util::TensorVal<Lattice<T> >::n] ) const override;
+    ConstCell<T,DESCRIPTOR>& cell,
+    T rho, const T u[DESCRIPTOR::d],
+    T pi[util::TensorVal<DESCRIPTOR >::n] ) const override;
 private:
-  RegularizedVelocityBM<T,Lattice,direction1,normal1> momenta1;
-  RegularizedVelocityBM<T,Lattice,direction2,normal2> momenta2;
+  T _u[DESCRIPTOR::d];   ///< value of the velocity on the boundary
 };
 
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY, int normalZ>
-class InnerCornerVelBM3D : public DirichletBoundaryMomenta<T,Lattice> {
+class InnerCornerVelBM3D : public DirichletBoundaryMomenta<T,DESCRIPTOR> {
 public:
   /// Default Constructor: initialization to zero
   InnerCornerVelBM3D();
   /// Constructor with boundary initialization
-  InnerCornerVelBM3D(const T u_[Lattice<T>::d]);
+  InnerCornerVelBM3D(const T u_[DESCRIPTOR::d]);
 
-  T computeRho(Cell<T,Lattice> const& cell) const override;
+  T computeRho(ConstCell<T,DESCRIPTOR>& cell) const override;
   void computeU (
-    Cell<T,Lattice> const& cell,
-    T u[Lattice<T>::d] ) const override;
+    ConstCell<T,DESCRIPTOR>& cell,
+    T u[DESCRIPTOR::d] ) const override;
   void computeJ (
-    Cell<T,Lattice> const& cell,
-    T j[Lattice<T>::d] ) const override;
-  void computeU(T u[Lattice<T>::d]) const;
-  void defineRho(Cell<T,Lattice>& cell, T rho) override ;
-  void defineU(Cell<T,Lattice>& cell,
-                       const T u[Lattice<T>::d]) override ;
-  void defineU(const T u[Lattice<T>::d]);
+    ConstCell<T,DESCRIPTOR>& cell,
+    T j[DESCRIPTOR::d] ) const override;
+  void computeU(T u[DESCRIPTOR::d]) const;
+  void defineRho(Cell<T,DESCRIPTOR>& cell, T rho) override ;
+  void defineU(Cell<T,DESCRIPTOR>& cell,
+               const T u[DESCRIPTOR::d]) override ;
+  void defineU(const T u[DESCRIPTOR::d]);
   void defineAllMomenta (
-    Cell<T,Lattice>& cell,
-    T rho, const T u[Lattice<T>::d],
-    const T pi[util::TensorVal<Lattice<T> >::n] ) override;
+    Cell<T,DESCRIPTOR>& cell,
+    T rho, const T u[DESCRIPTOR::d],
+    const T pi[util::TensorVal<DESCRIPTOR >::n] ) override;
   /// Stress tensor
   void computeStress (
-    Cell<T,Lattice> const& cell,
-    T rho, const T u[Lattice<T>::d],
-    T pi[util::TensorVal<Lattice<T> >::n] ) const override;
+    ConstCell<T,DESCRIPTOR>& cell,
+    T rho, const T u[DESCRIPTOR::d],
+    T pi[util::TensorVal<DESCRIPTOR >::n] ) const override;
 private:
-  RegularizedVelocityBM<T,Lattice,0,normalX> xMomenta;
-  RegularizedVelocityBM<T,Lattice,1,normalY> yMomenta;
-  RegularizedVelocityBM<T,Lattice,2,normalZ> zMomenta;
+  T _u[DESCRIPTOR::d];   ///< value of the velocity on the boundary
 };
 
 }

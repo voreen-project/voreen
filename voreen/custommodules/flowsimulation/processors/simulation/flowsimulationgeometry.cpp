@@ -38,10 +38,11 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     , geometryPort_(Port::OUTPORT, "geometry", "Geometry Port")
     , geometryType_("geometryType", "Geometry Type")
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
-    , length_("length", "Length (mm)", 1.0f, 0.1f, 10.0f)
+    , radius_("radius", "Radius (mm)", 1.0f, 0.1f, 1000.0f)
+    , length_("length", "Length (mm)", 1.0f, 0.1f, 1000.0f)
     , transformation_("transformation", "Transformation", tgt::mat4::identity)
     , flowProfile_("flowProfile", "Flow Profile")
-    , inflowVelocity_("inflowVelocity", "Inflow Velocity (mm/s)", 1000.0f, 0.0f, 10000.0f)
+    , inflowVelocity_("inflowVelocity", "Inflow Velocity (m/s)", 1.0f, 0.0f, 10.0f)
 {
     addPort(flowParametrizationInport_);
     addPort(flowParametrizationOutport_);
@@ -56,6 +57,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     geometryType_.addOption("narrowing", "Narrowing", FSGT_NARROWING);
 
     addProperty(ratio_);
+    addProperty(radius_);
     addProperty(length_);
     addProperty(transformation_);
     addProperty(flowProfile_);
@@ -63,48 +65,53 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
     //flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
     addProperty(inflowVelocity_);
+    inflowVelocity_.setNumDecimals(3);
 }
 
 void FlowSimulationGeometry::process() {
 
+    // Add indicators.
     auto* flowParametrizationList = new FlowParameterSetEnsemble(*flowParametrizationInport_.getData());
 
     FlowIndicator inlet;
     inlet.type_ = FIT_VELOCITY;
     inlet.flowProfile_ = flowProfile_.getValue();
-    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.25f, inflowVelocity_.get());
+    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.1f, inflowVelocity_.get());
     inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
     inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
-    inlet.radius_ = 1.0f;
+    inlet.radius_ = radius_.get();
     flowParametrizationList->addFlowIndicator(inlet);
 
     FlowIndicator outlet;
     outlet.type_ = FIT_PRESSURE;
     outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, length_.get());
     outlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
-    outlet.radius_ = 1.0f;
+    outlet.radius_ = radius_.get();
     flowParametrizationList->addFlowIndicator(outlet);
 
+    flowParametrizationOutport_.setData(flowParametrizationList);
+
+    // Generate geometry.
     auto* geometry = new GlMeshGeometryUInt32Normal();
     geometry->setTransformationMatrix(transformation_.get());
     switch(geometryType_.getValue()) {
     case FSGT_CHANNEL:
-        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, 1.0f, length_.get(), 4, 1, true, true);
+        geometry->setCylinderGeometry(tgt::vec4::one, radius_.get(), radius_.get(), length_.get(), 4, 32, true, true);
         //geometry->setTransformationMatrix(transformation_.get() * tgt::mat4::createRotationZDegree(45.0f));
         break;
     case FSGT_CYLINDER:
-        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, 1.0f, length_.get(), 32, 1, true, true);
+        geometry->setCylinderGeometry(tgt::vec4::one, radius_.get(), radius_.get(), length_.get(), 32, 32, true, true);
         break;
     case FSGT_NARROWING: {
         const size_t slices = 32;
         const size_t tiles = 5;
-        geometry->setCylinderGeometry(tgt::vec4::one, 1.0f, 1.0f, length_.get(), slices, tiles, true, true);
+        geometry->setCylinderGeometry(tgt::vec4::one, radius_.get(), radius_.get(), length_.get(), slices, tiles, true, true);
         for(size_t i=2; i<=3; i++) {
             size_t offset = (2 + i) * (slices + 1); // (cap + tiles)
             for (size_t j = 0; j <= slices; j++) {
                 auto vertex = geometry->getVertex(offset + j);
-                vertex.pos_.x *= ratio_.get();
-                vertex.pos_.y *= ratio_.get();
+                vertex.pos_.x *= ratio_.get() * radius_.get();
+                vertex.pos_.y *= ratio_.get() * radius_.get();
                 geometry->setVertex(offset + j, vertex);
             }
         }
@@ -115,7 +122,6 @@ void FlowSimulationGeometry::process() {
         break;
     }
 
-    flowParametrizationOutport_.setData(flowParametrizationList);
     geometryPort_.setData(geometry);
 }
 

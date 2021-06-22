@@ -26,15 +26,57 @@
 
 namespace olb {
 
+template class AnalyticalComposed<2,double,int>;
+template class AnalyticalComposed<3,double,int>;
+template class AnalyticalComposed<2,double,double>;
+template class AnalyticalComposed<3,double,double>;
 
-template class AnalyticalConst1D<double,int>;
-template class AnalyticalConst1D<double,double>;
+template class AnalyticalConst<1,double,int>;
+template class AnalyticalConst<2,double,int>;
+template class AnalyticalConst<3,double,int>;
+template class AnalyticalConst<1,double,double>;
+template class AnalyticalConst<2,double,double>;
+template class AnalyticalConst<3,double,double>;
+
+template class AnalyticalNormal<1,double,int>;
+template class AnalyticalNormal<2,double,int>;
+template class AnalyticalNormal<3,double,int>;
+template class AnalyticalNormal<1,double,double>;
+template class AnalyticalNormal<2,double,double>;
+template class AnalyticalNormal<3,double,double>;
+
+template class AnalyticalRandomBase<1,double,int>;
+template class AnalyticalRandomBase<2,double,int>;
+template class AnalyticalRandomBase<3,double,int>;
+template class AnalyticalRandomBase<1,double,double>;
+template class AnalyticalRandomBase<2,double,double>;
+template class AnalyticalRandomBase<3,double,double>;
+
+template class AnalyticalRandomUniform<1,double,int>;
+template class AnalyticalRandomUniform<2,double,int>;
+template class AnalyticalRandomUniform<3,double,int>;
+template class AnalyticalRandomUniform<1,double,double>;
+template class AnalyticalRandomUniform<2,double,double>;
+template class AnalyticalRandomUniform<3,double,double>;
+
+template class AnalyticalRandomNormal<1,double,int>;
+template class AnalyticalRandomNormal<2,double,int>;
+template class AnalyticalRandomNormal<3,double,int>;
+template class AnalyticalRandomNormal<1,double,double>;
+template class AnalyticalRandomNormal<2,double,double>;
+template class AnalyticalRandomNormal<3,double,double>;
+
+template class AnalyticalRandomOld<1,double,int>;
+template class AnalyticalRandomOld<2,double,int>;
+template class AnalyticalRandomOld<3,double,int>;
+template class AnalyticalRandomOld<1,double,double>;
+template class AnalyticalRandomOld<2,double,double>;
+template class AnalyticalRandomOld<3,double,double>;
+
+////////////// OLD IMPLEMENTATION //////////////////////////
 
 template class AnalyticalLinear1D<double,int>;
 template class AnalyticalLinear1D<double,double>;
-
-template class AnalyticalRandom1D<double,int>;
-template class AnalyticalRandom1D<double,double>;
 
 template class AnalyticalSquare1D<double,int>;
 template class AnalyticalSquare1D<double,double>;
@@ -47,39 +89,24 @@ template class SinusStartScale<double,double>;
 
 template class AnalyticalDiffFD1D<double>;
 
+template class Cosinus<double,int>;
+template class Cosinus<double,double>;
 
-template class AnalyticalComposed2D<double,int>;
-template class AnalyticalComposed2D<double,double>;
+template class CosinusComposite<double, int>;
+template class CosinusComposite<double, double>;
 
-template class AnalyticalConst2D<double,int>;
-template class AnalyticalConst2D<double,double>;
+
+
 
 template class AnalyticalLinear2D<double,int>;
 template class AnalyticalLinear2D<double,double>;
 
-template class AnalyticalRandom2D<double,int>;
-template class AnalyticalRandom2D<double,double>;
-
-//template class ParticleU2D<double,double>;
-
-
-
-template class AnalyticalComposed3D<double,int>;
-template class AnalyticalComposed3D<double,double>;
-
-template class AnalyticalConst3D<double,int>;
-template class AnalyticalConst3D<double,double>;
 
 template class AnalyticalLinear3D<double,int>;
 template class AnalyticalLinear3D<double,double>;
 
-template class AnalyticalRandom3D<double,int>;
-template class AnalyticalRandom3D<double,double>;
-
 template class AnalyticalScaled3D<double,int>;
 template class AnalyticalScaled3D<double,double>;
-
-//template class ParticleU3D<double,double>;
 
 }
 

@@ -37,44 +37,13 @@ namespace olb {
 
 template<typename T>
 BlockGeometryView2D<T>::BlockGeometryView2D
-(BlockGeometryStructure2D<T>& originalBlockGeometry, int x0, int x1, int y0,
- int y1)
-  : BlockGeometryStructure2D<T>(originalBlockGeometry.getIcGlob()),
-    BlockStructure2D(x1-x0+1, y1-y0+1),
-    _originalBlockGeometry(&originalBlockGeometry), _x0(x0), _y0(y0),
-    _nx(x1-x0+1), _ny(y1-y0+1)
+(BlockGeometryStructure2D<T>& originalBlockGeometry, int x0, int x1, int y0, int y1)
+  : BlockGeometryStructure2D<T>(x1-x0+1, y1-y0+1, originalBlockGeometry.getIcGlob()),
+    _originalBlockGeometry(&originalBlockGeometry),
+    _x0(x0), _y0(y0)
 {
   this->_statistics = BlockGeometryStatistics2D<T>(this);
   addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-}
-
-template<typename T>
-BlockGeometryView2D<T>::BlockGeometryView2D(BlockGeometryView2D const& rhs)
-  : BlockGeometryStructure2D<T>(rhs),
-    BlockStructure2D(0,0)
-{
-  _originalBlockGeometry = rhs._originalBlockGeometry;
-  _x0 = rhs._x0;
-  _y0 = rhs._y0;
-  _nx = rhs._nx;
-  _ny = rhs._ny;
-  this->_iCglob = rhs._iCglob;
-  this->_statistics = BlockGeometryStatistics2D<T>(this);
-  addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-}
-
-template<typename T>
-BlockGeometryView2D<T>& BlockGeometryView2D<T>::operator=(BlockGeometryView2D const& rhs)
-{
-  _originalBlockGeometry = rhs._originalBlockGeometry;
-  _x0 = rhs._x0;
-  _y0 = rhs._y0;
-  _nx = rhs._nx;
-  _ny = rhs._ny;
-  this->_iCglob = rhs._iCglob;
-  this->_statistics = BlockGeometryStatistics2D<T>(this);
-  addToStatisticsList( &(this->_statistics.getStatisticsStatus()) );
-  return *this;
 }
 
 template<typename T>
@@ -82,7 +51,6 @@ BlockGeometryView2D<T>::~BlockGeometryView2D()
 {
   removeFromStatisticsList( &(this->_statistics.getStatisticsStatus()) );
 }
-
 
 template<typename T>
 BlockGeometryStatistics2D<T>& BlockGeometryView2D<T>::getStatistics(bool verbose)
@@ -106,23 +74,10 @@ Vector<T,2> BlockGeometryView2D<T>::getOrigin() const
 }
 
 template<typename T>
-const T BlockGeometryView2D<T>::getDeltaR() const
+T BlockGeometryView2D<T>::getDeltaR() const
 {
   return _originalBlockGeometry->getDeltaR();
 }
-
-template<typename T>
-int BlockGeometryView2D<T>::getNx() const
-{
-  return _nx;
-}
-
-template<typename T>
-int BlockGeometryView2D<T>::getNy() const
-{
-  return _ny;
-}
-
 
 template<typename T>
 int& BlockGeometryView2D<T>::get(int iX, int iY)

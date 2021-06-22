@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Tim Dornieden,
- *  Mathias J. Krause, Albert Mink, Adrian Kummerländer
+ *  Mathias J. Krause, Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,23 +24,27 @@
 
 #include "superCalcF3D.h"
 #include "superCalcF3D.hh"
+#include "utilities/functorPtr.hh"
 
 namespace olb {
 
-template class SuperCalc3D<double,double,util::plus>;
-template class SuperCalc3D<double,int,util::plus>;
-template class SuperCalc3D<double,bool,util::plus>;
+template class SuperCalcF3D<double,double,util::plus>;
+template class SuperCalcF3D<double,int,util::plus>;
+template class SuperCalcF3D<double,bool,util::plus>;
 
-template class SuperCalc3D<double,double,util::minus>;
-template class SuperCalc3D<double,int,util::minus>;
-template class SuperCalc3D<double,bool,util::minus>;
+template class SuperCalcF3D<double,double,util::minus>;
+template class SuperCalcF3D<double,int,util::minus>;
+template class SuperCalcF3D<double,bool,util::minus>;
 
-template class SuperCalc3D<double,double,util::multiplies>;
-template class SuperCalc3D<double,int,util::multiplies>;
-template class SuperCalc3D<double,bool,util::multiplies>;
+template class SuperCalcF3D<double,double,util::multiplies>;
+template class SuperCalcF3D<double,int,util::multiplies>;
+template class SuperCalcF3D<double,bool,util::multiplies>;
 
-template class SuperCalc3D<double,double,util::divides>;
-template class SuperCalc3D<double,int,util::divides>;
-template class SuperCalc3D<double,bool,util::divides>;
+template class SuperCalcF3D<double,double,util::divides>;
+template class SuperCalcF3D<double,int,util::divides>;
+template class SuperCalcF3D<double,bool,util::divides>;
+
+template class SuperCalcF3D<double,double,util::power>;
+template class SuperCalcF3D<double,int,util::power>;
 
 } // end namespace olb

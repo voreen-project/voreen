@@ -49,7 +49,8 @@ XMLreader::XMLreader( TiXmlNode* pParent)
   _warningsOn = true;
   if (singleton::mpi().isMainProcessor()) {
     mainProcessorIni(pParent);
-  } else {
+  }
+  else {
     slaveProcessorIni();
   }
 }
@@ -75,7 +76,8 @@ XMLreader::XMLreader(const std::string& fName)
     mainProcessorIni(doc);
     delete doc;
 #ifdef PARALLEL_MODE_MPI  // parallel program execution
-  } else {
+  }
+  else {
     slaveProcessorIni();
   }
 #endif
@@ -130,7 +132,8 @@ void XMLreader::mainProcessorIni( TiXmlNode* pParent )
 #endif
     if ( type==TiXmlNode::TINYXML_ELEMENT ) {
       _children.push_back( new XMLreader( pChild ) );
-    } else if ( type==TiXmlNode::TINYXML_TEXT ) {
+    }
+    else if ( type==TiXmlNode::TINYXML_TEXT ) {
       _text = pChild->ToText()->ValueStr();
 #ifdef PARALLEL_MODE_MPI  // parallel program execution
       singleton::mpi().bCast(&_text,1);
@@ -155,7 +158,8 @@ void XMLreader::slaveProcessorIni()
     singleton::mpi().bCast(&key, size);
     singleton::mpi().bCast(&value, size);
     _attributes[key] = value;
-  } while (key != "");
+  }
+  while (key != "");
 #endif
 
   int type=0;
@@ -165,12 +169,14 @@ void XMLreader::slaveProcessorIni()
 #endif
     if ( type==TiXmlNode::TINYXML_ELEMENT ) {
       _children.push_back( new XMLreader( nullptr ) );
-    } else if ( type==TiXmlNode::TINYXML_TEXT ) {
+    }
+    else if ( type==TiXmlNode::TINYXML_TEXT ) {
 #ifdef PARALLEL_MODE_MPI  // parallel program execution
       singleton::mpi().bCast(&_text,1);
 #endif
     }
-  } while (type != TiXmlNode::TINYXML_UNKNOWN);
+  }
+  while (type != TiXmlNode::TINYXML_UNKNOWN);
 }
 
 void XMLreader::print(int indent) const
@@ -193,7 +199,7 @@ XMLreader const& XMLreader::operator[] (std::string fName) const
     }
   }
   if ( _warningsOn ) {
-    clout << "Warning: cannot read value from node \"" << _name << "\"" << std::endl;
+    clout << "Warning: cannot read value from node \"" << _name << "\"" << ", \"" << fName <<"\"" << std::endl;
   }
   return _notFound;
 }
@@ -223,7 +229,7 @@ void XMLreader::setWarningsOn(bool warnings) const
 
 // template specialization for T=bool
 template <>
-bool XMLreader::read<bool>(bool& value, bool verboseOn) const
+bool XMLreader::read<bool>(bool& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   std::string word;
@@ -233,14 +239,16 @@ bool XMLreader::read<bool>(bool& value, bool verboseOn) const
   if (!word.compare("true") || (word=="1")) {
     value = true;
     return true;
-  } else if (!word.compare("false") || (word=="0")) {
+  }
+  else if (!word.compare("false") || (word=="0")) {
     value=false;
     return true;
-  } else {
+  }
+  else {
     if ( verboseOn ) {
       std::stringstream ss;
       ss << ( value ? "true" : "false" );
-      printWarning("bool", ss.str(), verboseOn);
+      printWarning("bool", ss.str(),  verboseOn, exitIfMissing);
     }
   }
   return false;
@@ -248,14 +256,14 @@ bool XMLreader::read<bool>(bool& value, bool verboseOn) const
 
 // template specialization for T=int
 template <>
-bool XMLreader::read<int>(int& value, bool verboseOn) const
+bool XMLreader::read<int>(int& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   int tmp = int();
   if (!(valueStr >> tmp)) {
     std::stringstream ss;
     ss << value;
-    printWarning("int", ss.str(), verboseOn);
+    printWarning("int", ss.str(), verboseOn, exitIfMissing);
     return false;
   }
   value = tmp;
@@ -264,14 +272,14 @@ bool XMLreader::read<int>(int& value, bool verboseOn) const
 
 // template specialization for T=double
 template <>
-bool XMLreader::read<double>(double& value, bool verboseOn) const
+bool XMLreader::read<double>(double& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   double tmp = double();
   if (!(valueStr >> tmp)) {
     std::stringstream ss;
     ss << value;
-    printWarning("double", ss.str(), verboseOn);
+    printWarning("double", ss.str(), verboseOn, exitIfMissing);
     return false;
   }
   value = tmp;
@@ -279,9 +287,17 @@ bool XMLreader::read<double>(double& value, bool verboseOn) const
 }
 
 template <>
-bool XMLreader::read<std::string>(std::string& entry, bool verboseOn) const
+bool XMLreader::read<std::string>(std::string& entry, bool verboseOn, bool exitIfMissing) const
 {
   if (_name == "XML node not found") {
+    return false;
+  }
+  std::stringstream valueStr(_text);
+  std::string tmp = std::string();
+  if (!(valueStr >> tmp)) {
+    std::stringstream ss;
+    ss << entry;
+    printWarning("string", ss.str(), verboseOn, exitIfMissing);
     return false;
   }
 
@@ -300,15 +316,22 @@ std::string XMLreader::getAttribute(const std::string& aName) const
 }
 
 
-/// print warning if verbose mode is on
-void XMLreader::printWarning(std::string typeName, std::string value, bool verboseOn) const
+/// print warning if verbose mode is on and exit, if exItMissing is true
+void XMLreader::printWarning(std::string typeName, std::string value, bool verboseOn, bool exitIfMissing) const
 {
+
   if ( verboseOn ) {
     clout << "Warning: Cannot read " << typeName << " value from XML element " << _name << "." << std::endl;
     if ( ! value.empty() ) {
       clout << "         Setting default value = " << value << std::endl;
     }
   }
+  if ( exitIfMissing ) {
+    clout << "Error: This program cannot continue without \"" << _name << "\". Optimization aborted." << std::endl;
+    exit(1);
+  }
 }
+
+
 
 }  // namespace olb

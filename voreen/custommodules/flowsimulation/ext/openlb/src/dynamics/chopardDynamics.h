@@ -33,21 +33,17 @@
 namespace olb {
 
 /// Implementation of the BGK collision step
-template<typename T, template<typename U> class Lattice>
-class ChopardDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ChopardDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ChopardDynamics(T vs2_, T omega_, Momenta<T,Lattice>& momenta_);
-  ChopardDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ChopardDynamics(T vs2_, T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  ChopardDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell,
+  void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -58,9 +54,9 @@ public:
   T    getVs2() const;
 public:
   static T chopardBgkCollision (
-    Cell<T,Lattice>& cell, T rho, const T u[Lattice<T>::d], T vs2, T omega);
+    Cell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d], T vs2, T omega);
   static T chopardEquilibrium (
-    int iPop, T rho, const T u[Lattice<T>::d], T uSqr, T vs2 );
+    int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr, T vs2 );
 private:
   T vs2;    ///< speed of sound
   T omega;  ///< relaxation parameter

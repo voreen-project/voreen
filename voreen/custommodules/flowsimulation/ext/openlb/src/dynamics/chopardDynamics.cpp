@@ -29,11 +29,11 @@
 #include "chopardDynamics.h"
 #include "chopardDynamics.hh"
 #include "latticeDescriptors.h"
-#include "latticeDescriptors.hh"
+
 
 namespace olb {
 
-template class ChopardDynamics<double, descriptors::D2Q9Descriptor>;
-template class ChopardDynamics<double, descriptors::D3Q19Descriptor>;
+template class ChopardDynamics<double, descriptors::D2Q9<>>;
+template class ChopardDynamics<double, descriptors::D3Q19<>>;
 
 }

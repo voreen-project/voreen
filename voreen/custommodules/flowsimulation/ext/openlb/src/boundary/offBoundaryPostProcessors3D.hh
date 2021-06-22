@@ -43,16 +43,20 @@ namespace olb {
  *
 */
 
-template<typename T, template<typename U> class Lattice>
-ZeroVelocityBouzidiLinearPostProcessor3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
 ZeroVelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
+  this->getName() = "ZeroVelocityBouzidiLinearPostProcessor3D";  
+  this->_priority = -1;
+#ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << z << "): "
               << dist << std::endl;
-  typedef Lattice<T> L;
-  const int* c = L::c[iPop];
+#endif
+  typedef DESCRIPTOR L;
+  const Vector<int,3> c = descriptors::c<DESCRIPTOR>(iPop);
   opp = util::opposite<L>(iPop);
   xN = x + c[0];
   yN = y + c[1];
@@ -64,7 +68,8 @@ ZeroVelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T di
     zB = z - c[2];
     q = 1/(2*dist);
     iPop2 = opp;
-  } else {
+  }
+  else {
     xB = x;
     yB = y;
     zB = z;
@@ -79,33 +84,38 @@ ZeroVelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T di
   */
 }
 
-template<typename T, template<typename U> class Lattice>
-void ZeroVelocityBouzidiLinearPostProcessor3D<T,Lattice>::
-processSubDomain(BlockLattice3D<T,Lattice>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+template<typename T, typename DESCRIPTOR>
+void ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void ZeroVelocityBouzidiLinearPostProcessor3D<T,Lattice>::
-process(BlockLattice3D<T,Lattice>& blockLattice)
+template<typename T, typename DESCRIPTOR>
+void ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
 {
   blockLattice.get(x, y, z)[opp] = q*blockLattice.get(xN, yN, zN)[iPop] +
                                    (1-q)*blockLattice.get(xB, yB, zB)[iPop2];
 }
 
-template<typename T, template<typename U> class Lattice>
-VelocityBouzidiLinearPostProcessor3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+VelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
 VelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
+  this->getName() = "VelocityBouzidiLinearPostProcessor3D";
+  this->_priority = -1;
+  
+#ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << z << "): "
               << dist << std::endl;
-  typedef Lattice<T> L;
-  const int* c = L::c[iPop];
+#endif
+  typedef DESCRIPTOR L;
+  const Vector<int,3> c = descriptors::c<DESCRIPTOR>(iPop);
   opp = util::opposite<L>(iPop);
   xN = x + c[0];
   yN = y + c[1];
@@ -118,7 +128,8 @@ VelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
     q = 1/(2*dist);
     ufrac = q;
     iPop2 = opp;
-  } else {
+  }
+  else {
     xB = x;
     yB = y;
     zB = z;
@@ -134,40 +145,45 @@ VelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   */
 }
 
-template<typename T, template<typename U> class Lattice>
-void VelocityBouzidiLinearPostProcessor3D<T,Lattice>::
-processSubDomain(BlockLattice3D<T,Lattice>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+template<typename T, typename DESCRIPTOR>
+void VelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void VelocityBouzidiLinearPostProcessor3D<T,Lattice>::
-process(BlockLattice3D<T,Lattice>& blockLattice)
+template<typename T, typename DESCRIPTOR>
+void VelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
 {
-  Dynamics<T,Lattice>* dynamics = blockLattice.getDynamics(xN, yN, zN);
+  Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(xN, yN, zN);
   T u = ufrac*dynamics->getVelocityCoefficient(iPop);
-  dynamics->defineRho( blockLattice.get(xN, yN, zN), blockLattice.get(x, y, z).computeRho() );
-  T j = u;// * blockLattice.get(x, y, z).computeRho();
-  blockLattice.get(x, y, z)[opp] = q*blockLattice.get(xN, yN, zN)[iPop] +
-                                   (1-q)*blockLattice.get(xB, yB, zB)[iPop2] + j;
+  auto cellN = blockLattice.get(xN, yN, zN);
+  auto cell = blockLattice.get(x, y, z);
+  dynamics->defineRho(cellN, cell.computeRho());
+  cell[opp] = q*cellN[iPop] + (1-q)*blockLattice.get(xB, yB, zB)[iPop2] + u;
 }
 
 
 //////// CornerBouzidiPostProcessor3D ///////////////////
 
-template<typename T, template<typename U> class Lattice>
-ZeroVelocityBounceBackPostProcessor3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
 ZeroVelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
+  this->getName() = "ZeroVelocityBounceBackPostProcessor3D";  
+  this->_priority = -1;
+
+#ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << z << "): "
               << dist << std::endl;
-  typedef Lattice<T> L;
-  const int* c = L::c[iPop];
+#endif
+  typedef DESCRIPTOR L;
+  const Vector<int,3> c = descriptors::c<L>(iPop);
   opp = util::opposite<L>(iPop);
   xN = x + c[0];
   yN = y + c[1];
@@ -179,32 +195,37 @@ ZeroVelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_
   */
 }
 
-template<typename T, template<typename U> class Lattice>
-void ZeroVelocityBounceBackPostProcessor3D<T,Lattice>::
-processSubDomain(BlockLattice3D<T,Lattice>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+template<typename T, typename DESCRIPTOR>
+void ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void ZeroVelocityBounceBackPostProcessor3D<T,Lattice>::
-process(BlockLattice3D<T,Lattice>& blockLattice)
+template<typename T, typename DESCRIPTOR>
+void ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
 {
   blockLattice.get(x, y, z)[opp] = blockLattice.get(xN, yN, zN)[iPop];
 }
 
-template<typename T, template<typename U> class Lattice>
-VelocityBounceBackPostProcessor3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
 VelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
+  this->getName() = "VelocityBounceBackPostProcessor3D";  
+  this->_priority = -1;
+
+#ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << z << "): "
               << dist << std::endl;
-  typedef Lattice<T> L;
-  const int* c = L::c[iPop];
+#endif
+  typedef DESCRIPTOR L;
+  const Vector<int,3> c = descriptors::c<L>(iPop);
   opp = util::opposite<L>(iPop);
   xN = x + c[0];
   yN = y + c[1];
@@ -217,119 +238,120 @@ VelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   */
 }
 
-template<typename T, template<typename U> class Lattice>
-void VelocityBounceBackPostProcessor3D<T,Lattice>::
-processSubDomain(BlockLattice3D<T,Lattice>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+template<typename T, typename DESCRIPTOR>
+void VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-void VelocityBounceBackPostProcessor3D<T,Lattice>::
-process(BlockLattice3D<T,Lattice>& blockLattice)
+template<typename T, typename DESCRIPTOR>
+void VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
 {
-  Dynamics<T,Lattice>* dynamics = blockLattice.getDynamics(xN, yN, zN);
+  Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(xN, yN, zN);
   T u = dynamics->getVelocityCoefficient(iPop);
-  dynamics->defineRho( blockLattice.get(xN, yN, zN), blockLattice.get(x, y, z).computeRho() );
-  T j = u;//*blockLattice.get(x, y, z).computeRho();
-  blockLattice.get(x, y, z)[opp] = blockLattice.get(xN, yN, zN)[iPop] + j;
+  auto cellN = blockLattice.get(xN, yN, zN);
+  auto cell  = blockLattice.get(x, y, z);
+  dynamics->defineRho(cellN, cell.computeRho());
+  cell[opp] = cellN[iPop] + u;
 }
 
 ////////  LinearBouzidiBoundaryPostProcessorGenerator ////////////////////////////////
 
-template<typename T, template<typename U> class Lattice>
-ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>::
 ZeroVelocityBouzidiLinearPostProcessorGenerator3D(int x_, int y_, int z_, int iPop_, T dist_)
-  : PostProcessorGenerator3D<T,Lattice>(x_, x_, y_, y_, z_, z_),
+  : PostProcessorGenerator3D<T,DESCRIPTOR>(x_, x_, y_, y_, z_, z_),
     x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 { }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessor3D<T,Lattice>*
-ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>::generate() const
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>*
+ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>::generate() const
 {
-  return new ZeroVelocityBouzidiLinearPostProcessor3D<T,Lattice>
+  return new ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>
          ( this->x, this->y, this->z, this->iPop, this->dist);
 }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessorGenerator3D<T,Lattice>*
-ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>::clone() const
+template<typename T, typename DESCRIPTOR>
+PostProcessorGenerator3D<T,DESCRIPTOR>*
+ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>::clone() const
 {
-  return new ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>
+  return new ZeroVelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>
          (this->x, this->y, this->z, this->iPop, this->dist);
 }
 
-template<typename T, template<typename U> class Lattice>
-VelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+VelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>::
 VelocityBouzidiLinearPostProcessorGenerator3D(int x_, int y_, int z_, int iPop_, T dist_)
-  : PostProcessorGenerator3D<T,Lattice>(x_, x_, y_, y_, z_, z_),
+  : PostProcessorGenerator3D<T,DESCRIPTOR>(x_, x_, y_, y_, z_, z_),
     x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 { }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessor3D<T,Lattice>*
-VelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>::generate() const
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>*
+VelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>::generate() const
 {
-  return new VelocityBouzidiLinearPostProcessor3D<T,Lattice>
+  return new VelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>
          ( this->x, this->y, this->z, this->iPop, this->dist);
 }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessorGenerator3D<T,Lattice>*
-VelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>::clone() const
+template<typename T, typename DESCRIPTOR>
+PostProcessorGenerator3D<T,DESCRIPTOR>*
+VelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>::clone() const
 {
-  return new VelocityBouzidiLinearPostProcessorGenerator3D<T,Lattice>
+  return new VelocityBouzidiLinearPostProcessorGenerator3D<T,DESCRIPTOR>
          (this->x, this->y, this->z, this->iPop, this->dist);
 }
 
 /////////// CornerBouzidiBoundaryPostProcessorGenerator /////////////////////////////////////
 
-template<typename T, template<typename U> class Lattice>
-ZeroVelocityBounceBackPostProcessorGenerator3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+ZeroVelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>::
 ZeroVelocityBounceBackPostProcessorGenerator3D(int x_, int y_, int z_, int iPop_, T dist_)
-  : PostProcessorGenerator3D<T,Lattice>(x_, x_, y_, y_, z_, z_),
+  : PostProcessorGenerator3D<T,DESCRIPTOR>(x_, x_, y_, y_, z_, z_),
     x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 { }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessor3D<T,Lattice>*
-ZeroVelocityBounceBackPostProcessorGenerator3D<T,Lattice>::generate() const
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>*
+ZeroVelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>::generate() const
 {
-  return new ZeroVelocityBounceBackPostProcessor3D<T,Lattice>
+  return new ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>
          ( this->x, this->y, this->z, this->iPop, this->dist);
 }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessorGenerator3D<T,Lattice>*
-ZeroVelocityBounceBackPostProcessorGenerator3D<T,Lattice>::clone() const
+template<typename T, typename DESCRIPTOR>
+PostProcessorGenerator3D<T,DESCRIPTOR>*
+ZeroVelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>::clone() const
 {
-  return new ZeroVelocityBounceBackPostProcessorGenerator3D<T,Lattice>
+  return new ZeroVelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>
          (this->x, this->y, this->z, this->iPop, this->dist);
 }
 
-template<typename T, template<typename U> class Lattice>
-VelocityBounceBackPostProcessorGenerator3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+VelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>::
 VelocityBounceBackPostProcessorGenerator3D(int x_, int y_, int z_, int iPop_, T dist_)
-  : PostProcessorGenerator3D<T,Lattice>(x_, x_, y_, y_, z_, z_),
+  : PostProcessorGenerator3D<T,DESCRIPTOR>(x_, x_, y_, y_, z_, z_),
     x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 { }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessor3D<T,Lattice>*
-VelocityBounceBackPostProcessorGenerator3D<T,Lattice>::generate() const
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>*
+VelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>::generate() const
 {
-  return new VelocityBounceBackPostProcessor3D<T,Lattice>
+  return new VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>
          ( this->x, this->y, this->z, this->iPop, this->dist);
 }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessorGenerator3D<T,Lattice>*
-VelocityBounceBackPostProcessorGenerator3D<T,Lattice>::clone() const
+template<typename T, typename DESCRIPTOR>
+PostProcessorGenerator3D<T,DESCRIPTOR>*
+VelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>::clone() const
 {
-  return new VelocityBounceBackPostProcessorGenerator3D<T,Lattice>
+  return new VelocityBounceBackPostProcessorGenerator3D<T,DESCRIPTOR>
          (this->x, this->y, this->z, this->iPop, this->dist);
 }
 

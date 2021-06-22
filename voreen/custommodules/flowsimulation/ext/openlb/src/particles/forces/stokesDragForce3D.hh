@@ -33,38 +33,58 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, T dT, T mu)
   : Force3D<T, PARTICLETYPE>(),
     _getVel(getVel),
     _mu(mu)
 {
-  _C1 = 6. * M_PI * _mu * dT;
+  _C1 = 6. * M_PI * _mu * dT ;
   _dTinv = 1. / dT;
+  _scaleFactor = 1.;
 }
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
-StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, UnitConverter<T,DESCRIPTOR> const& converter)
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
+StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, UnitConverter<T, DESCRIPTOR> const& converter)
   : Force3D<T, PARTICLETYPE>(),
     _getVel(getVel)
 {
   //implicit formulation
-  _C1 = 6. * M_PI *  converter.getPhysViscosity()*converter.getPhysDensity() * converter.getConversionFactorTime();
-  _mu = converter.getPhysViscosity()*converter.getPhysDensity();
+  _C1 = 6. * M_PI * converter.getPhysViscosity() * converter.getPhysDensity() * converter.getConversionFactorTime();
+  _mu = converter.getPhysViscosity() * converter.getPhysDensity();
+  // explicit formulation
+  //  _C1 = 6. * M_PI * converter.getDynamicViscosity();
+  _dTinv = 1. / converter.getConversionFactorTime();
+  _scaleFactor = 1. ;
+}
+
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
+StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::StokesDragForce3D(SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>& getVel, UnitConverter<T, DESCRIPTOR> const& converter, T scaleFactor)
+  : Force3D<T, PARTICLETYPE>(),
+    _getVel(getVel),
+    _scaleFactor(scaleFactor)
+{
+  //implicit formulation
+  _C1 = 6. * M_PI * converter.getPhysViscosity() * converter.getPhysDensity() * converter.getConversionFactorTime();
+  _mu = converter.getPhysViscosity() * converter.getPhysDensity();
+  // explicit formulation
+  //  _C1 = 6. * M_PI * converter.getDynamicViscosity();
   _dTinv = 1. / converter.getConversionFactorTime();
 }
 
 /// 6 Pi r mu (u_f-u_p)
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 void StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::applyForce(
   typename std::deque<PARTICLETYPE<T> >::iterator p, int pInt,
   ParticleSystem3D<T, PARTICLETYPE>& psSys)
 {
-  T fluidVel[3] = {0.,0.,0.};
-
+  T fluidVel[3] = {0., 0., 0.};
 
   //implicit formulation
   _getVel(fluidVel, &p->getPos()[0], p->getCuboid());
+  fluidVel[0] *= _scaleFactor;
+  fluidVel[1] *= _scaleFactor;
+  fluidVel[2] *= _scaleFactor;
 
   T c = _C1 * p->getRad() * p->getInvMass();
   T C2 = 1. / (1. + c);
@@ -86,11 +106,11 @@ void StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::applyForce(
   //  p->getForce()[2] += cex * (fluidVel[2]-p->getVel()[2]);
 }
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 void StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::computeForce(
   int pInt, ParticleSystem3D<T, PARTICLETYPE>* psSys, T force[3])
 {
-  T fluidVel[3] = {0.,0.,0.};
+  T fluidVel[3] = {0., 0., 0.};
 
   _getVel(fluidVel, &psSys->operator[](pInt).getPos()[0], psSys->operator[](pInt).getCuboid());
 
@@ -98,15 +118,9 @@ void StokesDragForce3D<T, PARTICLETYPE, DESCRIPTOR>::computeForce(
   T C2 = 1. / (1. + c);
   T mass = psSys->operator[](pInt).getMass();
   std::vector<T> vel = psSys->operator[](pInt).getVel();
-  force[0] = mass * _dTinv
-             * ((c * fluidVel[0] + vel[0]) * C2
-                - vel[0]);
-  force[1] = mass * _dTinv
-             * ((c * fluidVel[1] + vel[1]) * C2
-                - vel[1]);
-  force[2] = mass * _dTinv
-             * ((c * fluidVel[2] + vel[2]) * C2
-                - vel[2]);
+  force[0] = mass * _dTinv * ((c * fluidVel[0] + vel[0]) * C2 - vel[0]);
+  force[1] = mass * _dTinv * ((c * fluidVel[1] + vel[1]) * C2 - vel[1]);
+  force[2] = mass * _dTinv * ((c * fluidVel[2] + vel[2]) * C2 - vel[2]);
 }
 
 }

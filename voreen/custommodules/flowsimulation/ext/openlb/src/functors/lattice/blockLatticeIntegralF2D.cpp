@@ -27,16 +27,16 @@
 
 namespace olb {
 
-template class BlockMax2D<double,descriptors::D2Q9Descriptor>;
-template class BlockSum2D<double,descriptors::D2Q9Descriptor>;
-template class BlockIntegral2D<double,descriptors::D2Q9Descriptor>;
+template class BlockMax2D<double,descriptors::D2Q9<>>;
+template class BlockSum2D<double,descriptors::D2Q9<>>;
+template class BlockIntegral2D<double,descriptors::D2Q9<>>;
 
-template class BlockL1Norm2D<double,descriptors::D2Q9Descriptor>;
-template class BlockL222D<double,descriptors::D2Q9Descriptor>;
+template class BlockL1Norm2D<double,descriptors::D2Q9<>>;
+template class BlockL222D<double,descriptors::D2Q9<>>;
 template class BlockGeometryFaces2D<double>;
-template class BlockGeometryFacesIndicator2D<double>;
-template class BlockLatticePhysDrag2D<double,descriptors::D2Q9Descriptor>;
-template class BlockLatticePhysCorrDrag2D<double,descriptors::D2Q9Descriptor>;
+template class BlockGeometryFacesIndicator2D<double,false>;
+template class BlockLatticePhysDrag2D<double,descriptors::D2Q9<>>;
+template class BlockLatticePhysCorrDrag2D<double,descriptors::D2Q9<>>;
 
 } // end namespace olb
 

@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2006, 2007 Jonas Latt
+ *  Copyright (C) 2019 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -21,38 +21,31 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-/** \file
- * Descriptor for all types of 2D and 3D lattices. In principle, thanks
- * to the fact that the OpenLB code is generic, it is sufficient to
- * write a new descriptor when a new type of lattice is to be used.
- *  -- template instantiation
- */
 #include "latticeDescriptors.h"
-#include "latticeDescriptors.hh"
+#include "mrtLatticeDescriptors.h"
 
 namespace olb {
+
 namespace descriptors {
-//template class DescriptorBase<1>;
-//template class DescriptorBase<2>;
-//template class DescriptorBase<3>;
-//template class DescriptorBase<9>;
-//template class DescriptorBase<19>;
 
-template struct D2Q5DescriptorBase<double>;
-template struct AdvectionDiffusionD2Q5Descriptor<double>;
-template struct AdvectionDiffusionMRTD2Q5DescriptorBase<double>;
-template struct AdvectionDiffusionMRTD2Q5Descriptor<double>;
-template struct D2Q9DescriptorBase<double>;
-template struct D2Q9Descriptor<double>;
-template struct D3Q7DescriptorBase<double>;
-template struct AdvectionDiffusionD3Q7Descriptor<double>;
-template struct AdvectionDiffusionMRTD3Q7DescriptorBase<double>;
-template struct AdvectionDiffusionMRTD3Q7Descriptor<double>;
-template struct D3Q13DescriptorBase<double>;
-template struct D3Q15DescriptorBase<double>;
-template struct D3Q19DescriptorBase<double>;
-template struct D3Q19Descriptor<double>;
-template struct D3Q27DescriptorBase<double>;
-}
+template struct D2Q9<>;
+template struct D2Q5<>;
+template struct D2Q5<VELOCITY>;
+template struct D3Q7<>;
+template struct D3Q7<VELOCITY>;
+template struct D3Q13<>;
+template struct D3Q13<FORCE>;
+template struct D3Q15<>;
+template struct D3Q15<FORCE>;
+template struct D3Q19<>;
+template struct D3Q27<>;
+template struct D3Q27<FORCE>;
+
+template struct D2Q5<tag::MRT>;
+template struct D2Q5<tag::MRT,VELOCITY>;
+template struct D3Q7<tag::MRT>;
+template struct D3Q7<tag::MRT,VELOCITY>;
+
 }
 
+}

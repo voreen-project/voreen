@@ -32,20 +32,745 @@
 #include "advectionDiffusionForces.hh"
 #include "advectionDiffusionForces.h"
 
+#include "descriptorAlias.h"
+
 namespace olb {
 
 //=====================================================================================
 //==============  NavierStokesAdvectionDiffusionCouplingPostProcessor3D ===========
 //=====================================================================================
 
-template<typename T, template<typename U> class Lattice>
-NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>::
 NavierStokesAdvectionDiffusionCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
     T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_,
     std::vector<SpatiallyExtendedObject3D* > partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
      gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_),
      dir(dir_), partners(partners_)
+{
+  this->getName() = "NavierStokesAdvectionDiffusionCouplingPostProcessor3D";  
+  // we normalize the direction of force vector
+  T normDir = T();
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    normDir += dir[iD]*dir[iD];
+  }
+  normDir = sqrt(normDir);
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    dir[iD] /= normDir;
+  }
+
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    forcePrefactor[iD] = gravity * dir[iD];
+  }
+
+  tPartner = static_cast<BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY>> *>(partners[0]);
+}
+
+template<typename T, typename DESCRIPTOR>
+void NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+{
+
+  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+  if ( util::intersect (
+         x0, x1, y0, y1, z0, z1,
+         x0_, x1_, y0_, y1_, z0_, z1_,
+         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+
+    for (int iX=newX0; iX<=newX1; ++iX) {
+      for (int iY=newY0; iY<=newY1; ++iY) {
+        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
+          // computation of the bousinessq force
+          auto force = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::FORCE>();
+          T temperatureDifference = tPartner->get(iX,iY,iZ).computeRho() - T0;
+          for (unsigned iD = 0; iD < L::d; ++iD) {
+            force[iD] = forcePrefactor[iD] * temperatureDifference;
+          }
+          // Velocity coupling
+          auto u = tPartner->get(iX,iY,iZ).template getField<descriptors::VELOCITY>();
+          blockLattice.get(iX,iY,iZ).computeU(u.data());
+          tPartner->get(iX,iY,iZ).template setField<descriptors::VELOCITY>(u);
+        }
+      }
+    }
+  }
+}
+
+template<typename T, typename DESCRIPTOR>
+void NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+{
+  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+}
+
+
+//=====================================================================================
+//==============  TotalEnthalpyPhaseChangeCouplingPostProcessor3D ===============
+//=====================================================================================
+
+template<typename T, typename DESCRIPTOR>
+TotalEnthalpyPhaseChangeCouplingPostProcessor3D<T,DESCRIPTOR>::
+TotalEnthalpyPhaseChangeCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_,
+    std::vector<SpatiallyExtendedObject3D* > partners_)
+  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
+     gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_),
+     dir(dir_), partners(partners_)
+{
+  this->getName() = "TotalEnthalpyPhaseChangeCouplingPostProcessor3D";  
+  // we normalize the direction of force vector
+  T normDir = T();
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    normDir += dir[iD]*dir[iD];
+  }
+  normDir = sqrt(normDir);
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    dir[iD] /= normDir;
+  }
+
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    forcePrefactor[iD] = gravity * dir[iD];
+  }
+
+  tPartner = static_cast<BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TEMPERATURE>> *>(partners[0]);
+}
+
+template<typename T, typename DESCRIPTOR>
+void TotalEnthalpyPhaseChangeCouplingPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+{
+
+  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+  if ( util::intersect (
+         x0, x1, y0, y1, z0, z1,
+         x0_, x1_, y0_, y1_, z0_, z1_,
+         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+
+    for (int iX=newX0; iX<=newX1; ++iX) {
+      for (int iY=newY0; iY<=newY1; ++iY) {
+        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
+          T enthalpy = tPartner->get(iX,iY,iZ).computeRho();
+
+          auto liquid_fraction = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::POROSITY>();
+          liquid_fraction[0] = dynamic_cast<TotalEnthalpyAdvectionDiffusionBGKdynamics<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TEMPERATURE>>*>(tPartner->get(iX,iY,iZ).getDynamics())->computeLiquidFraction( enthalpy );
+          auto temperature = tPartner->get(iX,iY,iZ).template getFieldPointer<descriptors::TEMPERATURE>();
+          temperature[0] = dynamic_cast<TotalEnthalpyAdvectionDiffusionBGKdynamics<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TEMPERATURE>>*>(tPartner->get(iX,iY,iZ).getDynamics())->computeTemperature( enthalpy );
+
+          // computation of the bousinessq force
+          auto force = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::FORCE>();
+          T temperatureDifference = temperature[0] - T0;
+          for (unsigned iD = 0; iD < L::d; ++iD) {
+            force[iD] = forcePrefactor[iD] * temperatureDifference;
+          }
+          // Velocity coupling
+          FieldD<T,DESCRIPTOR,descriptors::VELOCITY> u;
+          blockLattice.get(iX,iY,iZ).computeU(u.data());
+          tPartner->get(iX,iY,iZ).template setField<descriptors::VELOCITY>(u);
+        }
+      }
+    }
+  }
+}
+
+template<typename T, typename DESCRIPTOR>
+void TotalEnthalpyPhaseChangeCouplingPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+{
+  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+}
+
+/// LatticeCouplingGenerator for advectionDiffusion coupling
+
+template<typename T, typename DESCRIPTOR>
+TotalEnthalpyPhaseChangeCouplingGenerator3D<T,DESCRIPTOR>::
+TotalEnthalpyPhaseChangeCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_)
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_),
+    gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_), dir(dir_)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>* TotalEnthalpyPhaseChangeCouplingGenerator3D<T,DESCRIPTOR>::generate (
+  std::vector<SpatiallyExtendedObject3D* > partners) const
+{
+  return new TotalEnthalpyPhaseChangeCouplingPostProcessor3D<T,DESCRIPTOR>(
+           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, gravity, T0, deltaTemp, dir,partners);
+}
+
+template<typename T, typename DESCRIPTOR>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* TotalEnthalpyPhaseChangeCouplingGenerator3D<T,DESCRIPTOR>::clone() const
+{
+  return new TotalEnthalpyPhaseChangeCouplingGenerator3D<T,DESCRIPTOR>(*this);
+}
+
+
+//=====================================================================================
+//==============  PhaseFieldCouplingPostProcessor3D ===============
+//=====================================================================================
+
+template<typename T, typename DESCRIPTOR>
+PhaseFieldCouplingPostProcessor3D<T,DESCRIPTOR>::
+PhaseFieldCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                                  T rho_L, T rho_H, T mu_L, T mu_H, T surface_tension, T interface_thickness,
+                                  std::vector<SpatiallyExtendedObject3D* > partners_)
+  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
+     _rho_L(rho_L), _rho_H(rho_H), _delta_rho(rho_H - rho_L), _mu_L(mu_L), _mu_H(mu_H), _surface_tension(surface_tension), _interface_thickness(interface_thickness),
+     _beta(12.0 * surface_tension / interface_thickness), _kappa(1.5 * surface_tension * interface_thickness)
+{
+  this->getName() = "PhaseFieldCouplingPostProcessor3D";  
+  tPartner = static_cast<BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::INTERPHASE_NORMAL>> *>(partners_[0]);
+}
+
+template<typename T, typename DESCRIPTOR>
+void PhaseFieldCouplingPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+{
+
+  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+  if ( util::intersect (
+         x0, x1, y0, y1, z0, z1,
+         x0_, x1_, y0_, y1_, z0_, z1_,
+         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+
+    // generate phi cache
+    auto& phi_cache = blockLattice.template getDynamicFieldArray<PHI_CACHE>()[0];
+    for (int iX=newX0-1; iX<=newX1+1; ++iX) {
+      for (int iY=newY0-1; iY<=newY1+1; ++iY) {
+        for (int iZ=newZ0-1; iZ<=newZ1+1; ++iZ) {
+          phi_cache[blockLattice.getCellId(iX,iY,iZ)] = max(min(tPartner->get(iX,iY,iZ).computeRho(), 1.0), 0.0);
+        }
+      }
+    }
+
+    for (int iX=newX0; iX<=newX1; ++iX) {
+      for (int iY=newY0; iY<=newY1; ++iY) {
+        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
+          T phi = phi_cache[blockLattice.getCellId(iX, iY, iZ)];
+
+          // compute rho from phi
+          T rho = _rho_L + phi * _delta_rho;
+
+          // compute dynamic viscosity
+          T viscosity = _mu_L + phi * (_mu_H - _mu_L);
+
+          // get relaxation time
+          auto tau = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::TAU_EFF>();
+
+          // compute grad phi and laplace phi
+          Vector<T,3> grad_phi;
+          T laplace_phi = 0.0;
+          for (int iPop = 1; iPop < L::q; ++iPop) {
+            int nextX = iX + descriptors::c<L>(iPop,0);
+            int nextY = iY + descriptors::c<L>(iPop,1);
+            int nextZ = iZ + descriptors::c<L>(iPop,2);
+            T neighbor_phi = phi_cache[blockLattice.getCellId(nextX, nextY, nextZ)];
+
+            laplace_phi += (neighbor_phi - phi) * descriptors::t<T,L>(iPop);
+            neighbor_phi *= descriptors::t<T,L>(iPop);
+            grad_phi += neighbor_phi * descriptors::c<L>(iPop);
+          }
+          grad_phi *= descriptors::invCs2<T,L>();
+          laplace_phi *= 2.0 * descriptors::invCs2<T,L>();
+
+          // compute grad rho
+          Vector<T,3> grad_rho = _delta_rho * grad_phi;
+
+          // compute interphase normal, save to external field
+          T norm_grad_phi = std::max(norm(grad_phi), std::numeric_limits<T>::epsilon());
+          tPartner->get(iX,iY,iZ).template setField<descriptors::INTERPHASE_NORMAL>(grad_phi / norm_grad_phi);
+
+          // compute _forces (F_s, F_b, F_p, F_nu)
+          // F_s (surface tension)
+          T chemical_potential = (4.0 * _beta * (phi - 0.0) * (phi - 0.5) * (phi - 1.0)) - _kappa * laplace_phi;
+          Vector<T,3> surface_tension_force = chemical_potential * grad_phi;
+
+          // F_b (body force, e.g. bouyancy)
+          Vector<T,3> body_force;
+
+          // F_p (pressure)
+          T pressure = blockLattice.get(iX,iY,iZ).computeRho();
+          Vector<T,3> pressure_force = -pressure / descriptors::invCs2<T,L>() * grad_rho;
+
+          // F_nu (viscous)
+          Vector<T,3> viscous_force;
+          T rho_tmp, u_tmp[3];
+          blockLattice.get(iX,iY,iZ).computeRhoU( rho_tmp, u_tmp );
+          T p_tmp = rho_tmp / descriptors::invCs2<T,DESCRIPTOR>();
+          T uSqr_tmp = util::normSqr<T,DESCRIPTOR::d>(u_tmp);
+          for (int iPop = 0; iPop < L::q; ++iPop) {
+            T fEq = blockLattice.get(iX,iY,iZ).getDynamics()->computeEquilibrium( iPop, p_tmp, u_tmp, uSqr_tmp );
+            T fNeq = blockLattice.get(iX,iY,iZ)[iPop] - fEq;
+            for (int iD = 0; iD < L::d; ++iD) {
+              for (int jD = 0; jD < L::d; ++jD) {
+                viscous_force[iD] += descriptors::c<L>(iPop,iD) * descriptors::c<L>(iPop,jD) * fNeq * grad_rho[jD];
+              }
+            }
+          }
+          viscous_force *= -viscosity / rho / tau[0] * descriptors::invCs2<T,L>();
+
+          // save force/rho to external field
+          blockLattice.get(iX,iY,iZ).template setField<descriptors::FORCE>(
+            (surface_tension_force + body_force + pressure_force + viscous_force) / rho
+          );
+
+          // compute u, save to external field
+          auto u = tPartner->get(iX,iY,iZ).template getField<descriptors::VELOCITY>();
+          blockLattice.get(iX,iY,iZ).computeU(u.data());
+          tPartner->get(iX,iY,iZ).template setField<descriptors::VELOCITY>(u);
+
+          // compute relaxation time, save to external field
+          tau[0] = viscosity / rho * descriptors::invCs2<T,L>() + 0.5;
+        }
+      }
+    }
+  }
+}
+
+template<typename T, typename DESCRIPTOR>
+void PhaseFieldCouplingPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+{
+  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+}
+
+/// LatticeCouplingGenerator for advectionDiffusion coupling
+
+template<typename T, typename DESCRIPTOR>
+PhaseFieldCouplingGenerator3D<T,DESCRIPTOR>::
+PhaseFieldCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                              T rho_L, T rho_H, T mu_L, T mu_H, T surface_tension, T interface_thickness)
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_),
+    _rho_L(rho_L), _rho_H(rho_H), _mu_L(mu_L), _mu_H(mu_H), _surface_tension(surface_tension), _interface_thickness(interface_thickness)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>* PhaseFieldCouplingGenerator3D<T,DESCRIPTOR>::generate (
+  std::vector<SpatiallyExtendedObject3D* > partners) const
+{
+  return new PhaseFieldCouplingPostProcessor3D<T,DESCRIPTOR>(
+           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, _rho_L, _rho_H, _mu_L, _mu_H, _surface_tension, _interface_thickness, partners);
+}
+
+template<typename T, typename DESCRIPTOR>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* PhaseFieldCouplingGenerator3D<T,DESCRIPTOR>::clone() const
+{
+  return new PhaseFieldCouplingGenerator3D<T,DESCRIPTOR>(*this);
+}
+
+
+//=====================================================================================
+//==============  SmagorinskyBoussinesqCouplingPostProcessor3D ===============
+//=====================================================================================
+
+template<typename T, typename DESCRIPTOR>
+SmagorinskyBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>::
+SmagorinskyBoussinesqCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_, T smagoPrefactor_,
+    std::vector<SpatiallyExtendedObject3D* > partners_)
+  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
+     gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_),
+     dir(dir_), PrTurb(PrTurb_), smagoPrefactor(smagoPrefactor_), partners(partners_)
+{
+  this->getName() = "SmagorinskyBoussinesqCouplingPostProcessor3D";  
+  // we normalize the direction of force vector
+  T normDir = T();
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    normDir += dir[iD]*dir[iD];
+  }
+  normDir = sqrt(normDir);
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    dir[iD] /= normDir;
+  }
+
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    forcePrefactor[iD] = gravity * dir[iD];
+  }
+
+  tauTurbADPrefactor = descriptors::invCs2<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TAU_EFF>>() / descriptors::invCs2<T,DESCRIPTOR>() / PrTurb;
+  tPartner = static_cast<BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TAU_EFF>> *>(partners[0]);
+}
+
+
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+{
+
+  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+  if ( util::intersect (
+         x0, x1, y0, y1, z0, z1,
+         x0_, x1_, y0_, y1_, z0_, z1_,
+         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+
+    for (int iX=newX0; iX<=newX1; ++iX) {
+      for (int iY=newY0; iY<=newY1; ++iY) {
+        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
+
+          // computation of the bousinessq force
+          auto force = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::FORCE>();
+          T temperatureDifference = tPartner->get(iX,iY,iZ).computeRho() - T0;
+          for (unsigned iD = 0; iD < L::d; ++iD) {
+            force[iD] = forcePrefactor[iD] * temperatureDifference;
+          }
+
+          // Velocity coupling
+          auto u = tPartner->get(iX,iY,iZ).template getField<descriptors::VELOCITY>();
+
+          // tau coupling
+          auto tauNS = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::TAU_EFF>();
+          auto tauAD = tPartner->get(iX,iY,iZ).template getFieldPointer<descriptors::TAU_EFF>();
+
+          T rho, pi[util::TensorVal<DESCRIPTOR >::n];
+          blockLattice.get(iX,iY,iZ).computeAllMomenta(rho, u.data(), pi);
+          tPartner->get(iX,iY,iZ).template setField<descriptors::VELOCITY>(u);
+          T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
+          if (util::TensorVal<DESCRIPTOR >::n == 6) {
+            PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
+          }
+          T PiNeqNorm    = sqrt(PiNeqNormSqr);
+          /// Molecular realaxation time
+          T tau_mol_NS = 1. / blockLattice.get(iX,iY,iZ).getDynamics()->getOmega();
+          T tau_mol_AD = 1. / tPartner->get(iX,iY,iZ).getDynamics()->getOmega();
+          /// Turbulent realaxation time
+          T tau_turb_NS = 0.5*(sqrt(tau_mol_NS*tau_mol_NS + smagoPrefactor/rho*PiNeqNorm) - tau_mol_NS);
+          if (tau_turb_NS != tau_turb_NS) {
+            tau_turb_NS = 0.0;
+          }
+          /// Effective realaxation time
+          tauNS[0] = tau_mol_NS+tau_turb_NS;
+
+          T tau_turb_AD = tau_turb_NS * tauTurbADPrefactor;
+          tauAD[0] = tau_mol_AD+tau_turb_AD;
+        }
+      }
+    }
+  }
+}
+
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+{
+  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+}
+
+/// LatticeCouplingGenerator for advectionDiffusion coupling
+
+template<typename T, typename DESCRIPTOR>
+SmagorinskyBoussinesqCouplingGenerator3D<T,DESCRIPTOR>::
+SmagorinskyBoussinesqCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_, T smagoPrefactor_)
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_),
+    gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_), dir(dir_), PrTurb(PrTurb_), smagoPrefactor(smagoPrefactor_)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>* SmagorinskyBoussinesqCouplingGenerator3D<T,DESCRIPTOR>::generate (
+  std::vector<SpatiallyExtendedObject3D* > partners) const
+{
+  return new SmagorinskyBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>(
+           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, gravity, T0, deltaTemp, dir, PrTurb, smagoPrefactor, partners);
+}
+
+template<typename T, typename DESCRIPTOR>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* SmagorinskyBoussinesqCouplingGenerator3D<T,DESCRIPTOR>::clone() const
+{
+  return new SmagorinskyBoussinesqCouplingGenerator3D<T,DESCRIPTOR>(*this);
+}
+
+
+
+//=====================================================================================
+//==============  AdvectionDiffusionParticleCouplingPostProcessor3D ===========
+//=====================================================================================
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+AdvectionDiffusionParticleCouplingPostProcessor3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::
+AdvectionDiffusionParticleCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, int iC_,
+    std::vector<SpatiallyExtendedObject3D* > partners_,
+    std::vector<std::reference_wrapper<AdvectionDiffusionForce3D<T,DESCRIPTOR,ADLattice>>> forces_)
+  :  _forces(forces_),
+     x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), iC(iC_),
+     _partnerLattice(static_cast<BlockLattice3D<T,ADLattice> *>(partners_[0])),
+     _cell(_partnerLattice->get(x0,y0,z0)),
+     _cellXp(_partnerLattice->get(x0+1,y0,z0)),
+     _cellXn(_partnerLattice->get(x0-1,y0,z0)),
+     _cellYp(_partnerLattice->get(x0,y0+1,z0)),
+     _cellYn(_partnerLattice->get(x0,y0-1,z0)),
+     _cellZp(_partnerLattice->get(x0,y0,z0+1)),
+     _cellZn(_partnerLattice->get(x0,y0,z0-1))
+{ 
+  this->getName() = "AdvectionDiffusionParticleCouplingPostProcessor3D";  
+}
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+void AdvectionDiffusionParticleCouplingPostProcessor3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+{
+  auto vel     = par ? _cell.template getField<FIELD_B>() : _cell.template getField<FIELD_A>();
+  auto vel_new = par ? _cell.template getFieldPointer<FIELD_A>() : _cell.template getFieldPointer<FIELD_B>();
+
+  auto velXp = par ? _cellXp.template getFieldPointer<FIELD_B>() : _cellXp.template getFieldPointer<FIELD_A>();
+  auto velXn = par ? _cellXn.template getFieldPointer<FIELD_B>() : _cellXn.template getFieldPointer<FIELD_A>();
+  auto velYp = par ? _cellYp.template getFieldPointer<FIELD_B>() : _cellYp.template getFieldPointer<FIELD_A>();
+  auto velYn = par ? _cellYn.template getFieldPointer<FIELD_B>() : _cellYn.template getFieldPointer<FIELD_A>();
+  auto velZp = par ? _cellZp.template getFieldPointer<FIELD_B>() : _cellZp.template getFieldPointer<FIELD_A>();
+  auto velZn = par ? _cellZn.template getFieldPointer<FIELD_B>() : _cellZn.template getFieldPointer<FIELD_A>();
+
+  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+
+  if ( util::intersect (
+         x0, x1, y0, y1, z0, z1,
+         x0_, x1_, y0_, y1_, z0_, z1_,
+         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+
+    for (int iX=newX0; iX<=newX1; ++iX) {
+      for (int iY=newY0; iY<=newY1; ++iY) {
+        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
+          int latticeR[4] = {iC, iX, iY, iZ};
+          T velGrad[3] = {0.,0.,0.};
+          T forceValue[3] = {0.,0.,0.};
+          T velF[3] = {0.,0.,0.};
+
+          auto nsCell = blockLattice.get(iX,iY,iZ);
+
+          if (_forces.begin() != _forces.end()) {
+            // calculating upwind Gradient
+            // vel contains velocity information on ADlattice
+            // velGrad contains upwind vel on ADlattice
+            if (vel[0]<0.) {
+              velGrad[0] = vel[0]*(velXp[0]-vel[0]);
+              velGrad[1] = vel[0]*(velXp[1]-vel[1]);
+              velGrad[2] = vel[0]*(velXp[2]-vel[2]);
+            }
+            else {
+              velGrad[0] = vel[0]*(vel[0]-velXn[0]);
+              velGrad[1] = vel[0]*(vel[1]-velXn[1]);
+              velGrad[2] = vel[0]*(vel[2]-velXn[2]);
+            }
+            if (vel[1]<0.) {
+              velGrad[0] += vel[1]*(velYp[0]-vel[0]);
+              velGrad[1] += vel[1]*(velYp[1]-vel[1]);
+              velGrad[2] += vel[1]*(velYp[2]-vel[2]);
+            }
+            else {
+              velGrad[0] += vel[1]*(vel[0]-velYn[0]);
+              velGrad[1] += vel[1]*(vel[1]-velYn[1]);
+              velGrad[2] += vel[1]*(vel[2]-velYn[2]);
+            }
+            if (vel[2]<0.) {
+              velGrad[0] += vel[2]*(velZp[0]-vel[0]);
+              velGrad[1] += vel[2]*(velZp[1]-vel[1]);
+              velGrad[2] += vel[2]*(velZp[2]-vel[2]);
+            }
+            else {
+              velGrad[0] += vel[2]*(vel[0]-velZn[0]);
+              velGrad[1] += vel[2]*(vel[1]-velZn[1]);
+              velGrad[2] += vel[2]*(vel[2]-velZn[2]);
+            }
+
+            for (AdvectionDiffusionForce3D<T, DESCRIPTOR, ADLattice>& f : _forces) {
+              // writes force in forceValues, vel refers to ADlattice
+              auto adCell = _partnerLattice->get(x0,y0,z0);
+              f.applyForce(forceValue, &nsCell, &adCell, vel.data(), latticeR);
+              if (par) {
+                _cell.template setField<FIELD_B>(vel);
+              } else {
+                _cell.template setField<FIELD_A>(vel);
+              }
+            }
+
+            // compute new particle velocity
+            for (int i=0; i < DESCRIPTOR::d; i++) {
+              vel_new[i] = vel[i] + forceValue[i] - velGrad[i];
+            }
+          }
+          else {   // set particle velocity to fluid velocity
+            nsCell.computeU(velF);
+            for (int i = 0; i < DESCRIPTOR::d; i++) {
+              vel_new[i] = velF[i];
+            }
+          }
+        }
+      }
+    }
+  }
+  par = !par;
+}
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+void AdvectionDiffusionParticleCouplingPostProcessor3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+{
+  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+}
+
+// LatticeCouplingGenerator for advectionDiffusion coupling
+
+template<typename T, typename DESCRIPTOR>
+NavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>::
+NavierStokesAdvectionDiffusionCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_,int z0_, int z1_, T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_)
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_),
+    gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_), dir(dir_)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>* NavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>::generate (
+  std::vector<SpatiallyExtendedObject3D* > partners) const
+{
+  return new NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>(
+           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, gravity, T0, deltaTemp, dir,partners);
+}
+
+template<typename T, typename DESCRIPTOR>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* NavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>::clone() const
+{
+  return new NavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>(*this);
+}
+
+// LatticeCouplingGenerator for one-way advectionDiffusion coupling with Stokes drag
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+AdvectionDiffusionParticleCouplingGenerator3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::
+AdvectionDiffusionParticleCouplingGenerator3D()
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(0, 0, 0, 0, 0, 0)
+{ }
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+PostProcessor3D<T,DESCRIPTOR>* AdvectionDiffusionParticleCouplingGenerator3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::generate(
+  std::vector<SpatiallyExtendedObject3D* > partners) const
+{
+  return new AdvectionDiffusionParticleCouplingPostProcessor3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>(
+           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, this->iC, partners, ADforces);
+}
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* AdvectionDiffusionParticleCouplingGenerator3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::clone() const
+{
+  return new AdvectionDiffusionParticleCouplingGenerator3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>(*this);
+}
+
+template<typename T, typename DESCRIPTOR, typename ADLattice, typename FIELD_A, typename FIELD_B>
+void AdvectionDiffusionParticleCouplingGenerator3D<T,DESCRIPTOR,ADLattice,FIELD_A,FIELD_B>::addForce(
+  AdvectionDiffusionForce3D<T,DESCRIPTOR,ADLattice> &force)
+{
+  ADforces.push_back(force);
+}
+
+
+//=====================================================================================
+//==============  PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D ===========
+//=====================================================================================
+
+template<typename T, typename DESCRIPTOR>
+PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>::
+PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_,
+    std::vector<SpatiallyExtendedObject3D* > partners_)
+  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
+     gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_),
+     dir(dir_), partners(partners_)
+{
+  this->getName() = "PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D";  
+  // we normalize the direction of force vector
+  T normDir = T();
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    normDir += dir[iD]*dir[iD];
+  }
+  normDir = sqrt(normDir);
+  for (unsigned iD = 0; iD < dir.size(); ++iD) {
+    dir[iD] /= normDir;
+  }
+}
+
+template<typename T, typename DESCRIPTOR>
+void PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+{
+  typedef DESCRIPTOR L;
+  enum {x,y,z};
+
+  BlockLattice3D<T,descriptors::PorousAdvectionDiffusionD3Q7Descriptor> *tPartner =
+    static_cast<BlockLattice3D<T,descriptors::PorousAdvectionDiffusionD3Q7Descriptor> *>(partners[0]);
+
+  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+  if ( util::intersect (
+         x0, x1, y0, y1, z0, z1,
+         x0_, x1_, y0_, y1_, z0_, z1_,
+         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+
+    for (int iX=newX0; iX<=newX1; ++iX) {
+      for (int iY=newY0; iY<=newY1; ++iY) {
+        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
+          //                  Velocity coupling
+          auto u = tPartner->get(iX,iY,iZ).template getField<descriptors::VELOCITY>();
+          blockLattice.get(iX,iY,iZ).computeU(u.data());
+          tPartner->get(iX,iY,iZ).template setField<descriptors::VELOCITY>(u);
+
+          //coupling between the temperature and navier stokes.
+
+          auto force = blockLattice.get(iX,iY,iZ).template getFieldPointer<descriptors::FORCE>();
+          // this should return the interpolated solid-fluid temperature
+          T temperature = tPartner->get(iX,iY,iZ).computeRho();
+          T rho = blockLattice.get(iX,iY,iZ).computeRho();
+          for (unsigned iD = 0; iD < L::d; ++iD) {
+            force[iD] = gravity * rho * (temperature - T0) / deltaTemp * dir[iD];
+          }
+        }
+      }
+    }
+  }
+}
+
+template<typename T, typename DESCRIPTOR>
+void PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+{
+  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+}
+
+template<typename T, typename DESCRIPTOR>
+PorousNavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>::
+PorousNavierStokesAdvectionDiffusionCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_,int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_)
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_),
+    gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_), dir(dir_)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>* PorousNavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>::generate (
+  std::vector<SpatiallyExtendedObject3D* > partners) const
+{
+  return new PorousNavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,DESCRIPTOR>(
+           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, gravity, T0, deltaTemp, dir,partners);
+}
+
+template<typename T, typename DESCRIPTOR>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* PorousNavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>::clone() const
+{
+  return new PorousNavierStokesAdvectionDiffusionCouplingGenerator3D<T,DESCRIPTOR>(*this);
+}
+
+
+//=====================================================================================
+//==============  MixedScaleBoussinesqCouplingPostProcessor3D ===============
+//=====================================================================================
+
+template<typename T, typename DESCRIPTOR>
+MixedScaleBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>::
+MixedScaleBoussinesqCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_,
+    std::vector<SpatiallyExtendedObject3D* > partners_)
+  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
+     gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_),
+     dir(dir_), PrTurb(PrTurb_), partners(partners_)
 {
   // we normalize the direction of force vector
   T normDir = T();
@@ -61,212 +786,283 @@ NavierStokesAdvectionDiffusionCouplingPostProcessor3D(int x0_, int x1_, int y0_,
     forcePrefactor[iD] = gravity * dir[iD];
   }
 
-  tPartner = dynamic_cast<BlockLattice3D<T,AdvectionDiffusionD3Q7Descriptor> *>(partners[0]);
+  tauTurbADPrefactor = descriptors::invCs2<T,descriptors::D3Q7<>>() / descriptors::invCs2<T,DESCRIPTOR>() / PrTurb;
+  tPartner = static_cast<BlockLattice3D<T,descriptors::D3Q7<descriptors::VELOCITY,descriptors::TAU_EFF,descriptors::CUTOFF_HEAT_FLUX>> *>(partners[0]);
 }
 
-template<typename T, template<typename U> class Lattice>
-void NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,Lattice>::
-processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
+template<typename T, typename DESCRIPTOR>
+void MixedScaleBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>::
+processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
                  int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
 
-  int newX0, newX1, newY0, newY1, newZ0, newZ1;
+  const T C_nu = 0.04;
+  const T C_alpha = 0.5;
+  // const T deltaT = 1.0;
+
+  const T invCs2 = descriptors::invCs2<T,DESCRIPTOR>();
+  const T invCs2_g = descriptors::invCs2<T,descriptors::D3Q7<>>();
+
+  int newX0, newX1, newY0, newY1, newZ1, newZ0;
   if ( util::intersect (
          x0, x1, y0, y1, z0, z1,
          x0_, x1_, y0_, y1_, z0_, z1_,
-         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
+         newX0, newX1, newY0, newY1, newZ1, newZ0 ) ) {
 
-    for (int iX=newX0; iX<=newX1; ++iX) {
-      for (int iY=newY0; iY<=newY1; ++iY) {
-        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
-          // Velocity coupling
-          T *u = tPartner->get(iX,iY,iZ).getExternal(velOffset);
-          blockLattice.get(iX,iY,iZ).computeU(u);
+    auto& heatFluxCache = blockLattice.template getDynamicFieldArray<HEAT_FLUX_CACHE>()[0];
+    for (int iX=newX0-1; iX<=newX1+1; ++iX) {
+      for (int iY=newY0-1; iY<=newY1+1; ++iY) {
+        for (int iZ=newZ0-1; iZ<=newZ1+1; ++iZ) {
+          const T temperature = tPartner->get(iX,iY,iZ).computeRho();
+          heatFluxCache[blockLattice.getCellId(iX, iY, iZ)] = temperature;
 
           // computation of the bousinessq force
-          T *force = blockLattice.get(iX,iY,iZ).getExternal(forceOffset);
-          T temperatureDifference = tPartner->get(iX,iY,iZ).computeRho() - T0;
-          for (unsigned iD = 0; iD < L::d; ++iD) {
-            force[iD] = forcePrefactor[iD] * temperatureDifference;
-          }
+          T temperatureDifference = temperature - T0;
+          blockLattice.get(iX,iY,iZ).template setField<descriptors::FORCE>(temperatureDifference*forcePrefactor);
+
+          FieldD<T,DESCRIPTOR,descriptors::VELOCITY> u;
+          blockLattice.get(iX,iY,iZ).computeU(u.data());
+          tPartner->get(iX,iY,iZ).template setField<descriptors::VELOCITY>(u);
         }
       }
     }
-  }
-}
-
-template<typename T, template<typename U> class Lattice>
-void NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,Lattice>::
-process(BlockLattice3D<T,Lattice>& blockLattice)
-{
-  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
-}
-
-//=====================================================================================
-//==============  StokesDragCouplingPostProcessor3D ===========
-//=====================================================================================
-
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-AdvectionDiffusionParticleCouplingPostProcessor3D<T,Lattice,ADLattice>::
-AdvectionDiffusionParticleCouplingPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, int iC_,
-    int offset_, std::vector<SpatiallyExtendedObject3D* > partners_,
-    std::vector<std::reference_wrapper<advectionDiffusionForce3D<T, Lattice, ADLattice> > > forces_)
-  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), iC(iC_), offset(offset_), forces(forces_)
-{
-  BlockLattice3D<T,ADLattice> *partnerLattice =
-    dynamic_cast<BlockLattice3D<T,ADLattice> *>(partners_[0]);
-  adCell = &partnerLattice->get(x0,y0,z0);
-  vel = partnerLattice->get(x0,y0,z0).getExternal(offset);
-  vel_new = partnerLattice->get(x0,y0,z0).getExternal(offset);
-  velXp = partnerLattice->get(x0+1,y0,z0).getExternal(offset);
-  velXn = partnerLattice->get(x0-1,y0,z0).getExternal(offset);
-  velYp = partnerLattice->get(x0,y0+1,z0).getExternal(offset);
-  velYn = partnerLattice->get(x0,y0-1,z0).getExternal(offset);
-  velZp = partnerLattice->get(x0,y0,z0+1).getExternal(offset);
-  velZn = partnerLattice->get(x0,y0,z0-1).getExternal(offset);
-}
-
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-void AdvectionDiffusionParticleCouplingPostProcessor3D<T,Lattice,ADLattice>::
-processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
-                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-{
-  int newX0, newX1, newY0, newY1, newZ0, newZ1;
-  if ( util::intersect (
-         x0, x1, y0, y1, z0, z1,
-         x0_, x1_, y0_, y1_, z0_, z1_,
-         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
 
     for (int iX=newX0; iX<=newX1; ++iX) {
       for (int iY=newY0; iY<=newY1; ++iY) {
         for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
-          int off = (par) ? 3 : 0;
-          int off2 = (par) ? 0 : 3;
-          int latticeR[4] = {iC, iX, iY, iZ};
-          T velGrad[3] = {0.,0.,0.};
-          T forceValue[3] = {0.,0.,0.};
-          T velF[3] = {0.,0.,0.};
 
-          nsCell = &(blockLattice.get(iX,iY,iZ));
-          //.computeU(velF);
+          auto u_ppp = tPartner->get(iX+1, iY+1, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_0pp = tPartner->get(iX, iY+1, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_npp = tPartner->get(iX-1, iY+1, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_p0p = tPartner->get(iX+1, iY, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_00p = tPartner->get(iX, iY, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_n0p = tPartner->get(iX-1, iY, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_pnp = tPartner->get(iX+1, iY-1, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_0np = tPartner->get(iX,   iY-1, iZ+1).template getField<descriptors::VELOCITY>();
+          auto u_nnp = tPartner->get(iX-1, iY-1, iZ+1).template getField<descriptors::VELOCITY>();
 
-          if (forces.begin() != forces.end()) {
-            // calculating upwind Gradient
-            if (vel[0+off]<0.) {
-              velGrad[0] = vel[0+off]*(velXp[0+off]-vel[0+off]);
-              velGrad[1] = vel[0+off]*(velXp[1+off]-vel[1+off]);
-              velGrad[2] = vel[0+off]*(velXp[2+off]-vel[2+off]);
-            } else {
-              velGrad[0] = vel[0+off]*(vel[0+off]-velXn[0+off]);
-              velGrad[1] = vel[0+off]*(vel[1+off]-velXn[1+off]);
-              velGrad[2] = vel[0+off]*(vel[2+off]-velXn[2+off]);
-            }
-            if (vel[1+off]<0.) {
-              velGrad[0] += vel[1+off]*(velYp[0+off]-vel[0+off]);
-              velGrad[1] += vel[1+off]*(velYp[1+off]-vel[1+off]);
-              velGrad[2] += vel[1+off]*(velYp[2+off]-vel[2+off]);
-            } else {
-              velGrad[0] += vel[1+off]*(vel[0+off]-velYn[0+off]);
-              velGrad[1] += vel[1+off]*(vel[1+off]-velYn[1+off]);
-              velGrad[2] += vel[1+off]*(vel[2+off]-velYn[2+off]);
-            }
-            if (vel[2+off]<0.) {
-              velGrad[0] += vel[2+off]*(velZp[0+off]-vel[0+off]);
-              velGrad[1] += vel[2+off]*(velZp[1+off]-vel[1+off]);
-              velGrad[2] += vel[2+off]*(velZp[2+off]-vel[2+off]);
-            } else {
-              velGrad[0] += vel[2+off]*(vel[0+off]-velZn[0+off]);
-              velGrad[1] += vel[2+off]*(vel[1+off]-velZn[1+off]);
-              velGrad[2] += vel[2+off]*(vel[2+off]-velZn[2+off]);
-            }
+          auto u_pp0 = tPartner->get(iX+1, iY+1, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_0p0 = tPartner->get(iX, iY+1, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_np0 = tPartner->get(iX-1, iY+1, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_p00 = tPartner->get(iX+1, iY, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_000 = tPartner->get(iX, iY, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_n00 = tPartner->get(iX-1, iY, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_pn0 = tPartner->get(iX+1, iY-1, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_0n0 = tPartner->get(iX,   iY-1, iZ  ).template getField<descriptors::VELOCITY>();
+          auto u_nn0 = tPartner->get(iX-1, iY-1, iZ  ).template getField<descriptors::VELOCITY>();
 
-            for (advectionDiffusionForce3D<T, Lattice,ADLattice>& f : forces) {
-              f.applyForce(forceValue, nsCell, adCell, &vel[off], latticeR);
-            }
+          auto u_ppn = tPartner->get(iX+1, iY+1, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_0pn = tPartner->get(iX, iY+1, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_npn = tPartner->get(iX-1, iY+1, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_p0n = tPartner->get(iX+1, iY, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_00n = tPartner->get(iX, iY, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_n0n = tPartner->get(iX-1, iY, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_pnn = tPartner->get(iX+1, iY-1, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_0nn = tPartner->get(iX,   iY-1, iZ-1).template getField<descriptors::VELOCITY>();
+          auto u_nnn = tPartner->get(iX-1, iY-1, iZ-1).template getField<descriptors::VELOCITY>();
 
-            // compute new particle velocity
-            for (int i=0; i < Lattice<T>::d; i++) {
-              vel_new[i+off2] = vel[i+off] + forceValue[i] - velGrad[i];
-            }
-          } else {
-            nsCell->computeU(velF);
-            for (int i = 0; i < Lattice<T>::d; i++) {
-              vel_new[i + off2] = velF[i];
+          const T *h_ppp = & heatFluxCache[blockLattice.getCellId(iX+1, iY+1, iZ+1)];
+          const T *h_0pp = & heatFluxCache[blockLattice.getCellId(iX  , iY+1, iZ+1)];
+          const T *h_npp = & heatFluxCache[blockLattice.getCellId(iX-1, iY+1, iZ+1)];
+          const T *h_p0p = & heatFluxCache[blockLattice.getCellId(iX+1, iY  , iZ+1)];
+          const T *h_pnp = & heatFluxCache[blockLattice.getCellId(iX+1, iY-1, iZ+1)];
+          const T *h_00p = & heatFluxCache[blockLattice.getCellId(iX  , iY  , iZ+1)];
+          const T *h_0np = & heatFluxCache[blockLattice.getCellId(iX  , iY-1, iZ+1)];
+          const T *h_n0p = & heatFluxCache[blockLattice.getCellId(iX-1, iY  , iZ+1)];
+          const T *h_nnp = & heatFluxCache[blockLattice.getCellId(iX-1, iY-1, iZ+1)];
+
+          const T *h_pp0 = & heatFluxCache[blockLattice.getCellId(iX+1, iY+1, iZ  )];
+          const T *h_0p0 = & heatFluxCache[blockLattice.getCellId(iX  , iY+1, iZ  )];
+          const T *h_np0 = & heatFluxCache[blockLattice.getCellId(iX-1, iY+1, iZ  )];
+          const T *h_p00 = & heatFluxCache[blockLattice.getCellId(iX+1, iY  , iZ  )];
+          const T *h_pn0 = & heatFluxCache[blockLattice.getCellId(iX+1, iY-1, iZ  )];
+          const T *h_000 = & heatFluxCache[blockLattice.getCellId(iX  , iY  , iZ  )];
+          const T *h_0n0 = & heatFluxCache[blockLattice.getCellId(iX  , iY-1, iZ  )];
+          const T *h_n00 = & heatFluxCache[blockLattice.getCellId(iX-1, iY  , iZ  )];
+          const T *h_nn0 = & heatFluxCache[blockLattice.getCellId(iX-1, iY-1, iZ  )];
+
+          const T *h_ppn = & heatFluxCache[blockLattice.getCellId(iX+1, iY+1, iZ-1)];
+          const T *h_0pn = & heatFluxCache[blockLattice.getCellId(iX  , iY+1, iZ-1)];
+          const T *h_npn = & heatFluxCache[blockLattice.getCellId(iX-1, iY+1, iZ-1)];
+          const T *h_p0n = & heatFluxCache[blockLattice.getCellId(iX+1, iY  , iZ-1)];
+          const T *h_pnn = & heatFluxCache[blockLattice.getCellId(iX+1, iY-1, iZ-1)];
+          const T *h_00n = & heatFluxCache[blockLattice.getCellId(iX  , iY  , iZ-1)];
+          const T *h_0nn = & heatFluxCache[blockLattice.getCellId(iX  , iY-1, iZ-1)];
+          const T *h_n0n = & heatFluxCache[blockLattice.getCellId(iX-1, iY  , iZ-1)];
+          const T *h_nnn = & heatFluxCache[blockLattice.getCellId(iX-1, iY-1, iZ-1)];
+
+//        cout<<"h_ppn= "<<h_ppp[0]<<endl;
+//        cout<<"h_0pn= "<<h_0pp[0]<<endl;
+//        cout<<"h_npn= "<<h_npp[0]<<endl;
+//        cout<<"h_p0n= "<<h_p0p[0]<<endl;
+//        cout<<"h_00n= "<<h_00p[0]<<endl;
+//        cout<<"h_n0n= "<<h_n0p[0]<<endl;
+//        cout<<"h_pnn= "<<h_pnp[0]<<endl;
+//        cout<<"h_0nn= "<<h_0np[0]<<endl;
+//        cout<<"h_nnn= "<<h_nnp[0]<<endl;
+
+          //Testfilter h 3D
+          Vector<T,3> filtered_u;
+          T filtered_h = (
+            (
+              ( h_ppp[0] + 2. * h_0pp[0] + h_npp[0]) + 2.*
+              ( h_p0p[0] + 2. * h_00p[0] + h_n0p[0]) +
+              ( h_pnp[0] + 2. * h_0np[0] + h_nnp[0])
+            ) * 0.25 * 0.25 + 2. *
+
+            (
+              ( h_pp0[0] + 2. * h_0p0[0] + h_np0[0]) + 2.*
+              ( h_p00[0] + 2. * h_000[0] + h_n00[0]) +
+              ( h_pn0[0] + 2. * h_0n0[0] + h_nn0[0])
+            ) * 0.25 * 0.25  +
+
+            (
+              ( h_ppn[0] + 2. * h_0pn[0] + h_npn[0]) + 2.*
+              ( h_p0n[0] + 2. * h_00n[0] + h_n0n[0]) +
+              ( h_pnn[0] + 2. * h_0nn[0] + h_nnn[0])
+            ) * 0.25 * 0.25
+          ) * 0.25;
+
+          //Testfilter u 3D
+          filtered_u = (
+            (
+              ( u_ppp + 2. * u_0pp + u_npp) + 2.*
+              ( u_p0p + 2. * u_00p + u_n0p) +
+              ( u_pnp + 2. * u_0np + u_nnp)
+            ) * 0.25 * 0.25 + 2. *
+
+            (
+              ( u_pp0 + 2. * u_0p0 + u_np0) + 2.*
+              ( u_p00 + 2. * u_000 + u_n00) +
+              ( u_pn0 + 2. * u_0n0 + u_nn0)
+            ) * 0.25 * 0.25 +
+
+            (
+              ( u_ppn + 2. * u_0pn + u_npn) + 2.*
+              ( u_p0n + 2. * u_00n + u_n0n) +
+              ( u_pnn + 2. * u_0nn + u_nnn)
+            ) * 0.25 * 0.25
+          ) * 0.25;
+
+         //Ende Testfilter u
+         // filtered_u[i] -= u_00[i];
+
+//        cout << "u["<<i<<"]= "<< filtered_u[i] << endl;
+//        cout << "h[0]= "<< filtered_h[0] << endl;
+          const Vector<T,3> filtered_u_reduced = u_000 - filtered_u;
+          const Vector<T,3> filtered_heatFlux_reduced = u_000*h_000[0] - filtered_u*filtered_h;
+          T cutoffKinEnergy = filtered_u_reduced[0] * filtered_u_reduced[0]
+            + filtered_u_reduced[1] * filtered_u_reduced[1]
+            + filtered_u_reduced[2] * filtered_u_reduced[2];
+          T cutoffHeatFlux = filtered_heatFlux_reduced[0] * filtered_heatFlux_reduced[0]
+            + filtered_heatFlux_reduced[1] * filtered_heatFlux_reduced[1]
+            + filtered_heatFlux_reduced[2] * filtered_heatFlux_reduced[2];
+//          cout << "filtered_u_reduced= " << filtered_u_reduced << endl;
+//          cout << "filtered_heatFlux_reduced= " << filtered_heatFlux_reduced << endl;
+//          cout << "cutoffKinEnergy= " << cutoffKinEnergy << endl;
+//          cout << "cutoffHeatFlux= " << cutoffHeatFlux << endl;
+
+          blockLattice.get(iX,iY,iZ).template setField<descriptors::CUTOFF_KIN_ENERGY>(pow(0.5*cutoffKinEnergy, 0.25));
+          tPartner->get(iX,iY,iZ).template setField<descriptors::CUTOFF_HEAT_FLUX>(pow(0.5*cutoffHeatFlux, 0.25));
+
+//        std::cout<<"cutoffKinEnergy_14= "<<cutoffKinEnergy_14[0]<<std::endl;
+//          std::cout<<"cutoffHeatFlux_14= "<<cutoffHeatFlux_14[0]<<std::endl;
+
+
+          // tau coupling
+          auto tauNS = blockLattice.get(iX,iY,iZ).template getField<descriptors::TAU_EFF>();
+          auto tauAD = tPartner->get(iX,iY,iZ).template getField<descriptors::TAU_EFF>();
+
+
+//        std::cout<<"tau_NS= "<<tauNS[0]<<std::endl;
+//        std::cout<<"tau_AD= "<<tauAD[0]<<std::endl;
+
+          /// Molecular realaxation time
+          T tau_mol_NS = 1. / blockLattice.get(iX, iY, iZ).getDynamics()->getOmega();
+          T tau_mol_AD = 1. / tPartner->get(iX, iY, iZ).getDynamics()->getOmega();
+
+          const T temperature = h_000[0];
+
+          // computation of the bousinessq force
+          auto force = blockLattice.get(iX,iY,iZ).template getField<descriptors::FORCE>();
+          // T temperatureDifference = temperature - T0;
+          // for (unsigned iD = 0; iD < L::d; ++iD) {
+          //   force[iD] = forcePrefactor[iD] * temperatureDifference;
+          // }
+
+          auto u = tPartner->get(iX,iY,iZ).template getFieldPointer<descriptors::VELOCITY>();
+          T rho, pi[util::TensorVal<DESCRIPTOR>::n], j[DESCRIPTOR::d];
+          // blockLattice.get(iX,iY).computeAllMomenta(rho, u, pi);
+          rho = blockLattice.get(iX,iY,iZ).computeRho();
+          blockLattice.get(iX,iY,iZ).computeStress(pi);
+
+          int iPi = 0;
+          const int dim = DESCRIPTOR::d;
+          for (int Alpha=0; Alpha<dim; ++Alpha) {
+            for (int Beta=Alpha; Beta<dim; ++Beta) {
+              pi[iPi] += rho/2.*(force[Alpha]*u[Beta] + u[Alpha]*force[Beta]);
+              ++iPi;
             }
           }
-          par = !par;
+          const T piSqr[6] = {pi[0]*pi[0], pi[1]*pi[1], pi[2]*pi[2], pi[3]*pi[3], pi[4]*pi[4], pi[5]*pi[5]};
+          const T PiNeqNormSqr = piSqr[0] + 2.0 * piSqr[1] + 2.0 * piSqr[2] + piSqr[3] + 2.0 * piSqr[4] + piSqr[5];
+          const T PiNeqNorm    = sqrt(PiNeqNormSqr);
+
+          tPartner->get(iX, iY, iZ).computeJ(j);
+
+          const Vector<T,3> jNeq = {(j[0] - temperature * u[0]), (j[1] - temperature * u[1]), (j[2] - temperature * u[2])};
+
+          const Vector<T,6> t = { 2.0 * jNeq[0] * pi[0], (jNeq[0] + jNeq[1]) * pi[1], (jNeq[0] + jNeq[2]) * pi[2], 2.0 * jNeq[1] * pi[3], (jNeq[1] + jNeq[2]) * pi[4], 2.0 * jNeq[2] * pi[5]};
+          const Vector<T,6> tSqr = {t[0]*t[0], t[1]*t[1], t[2]*t[2], t[3]*t[3], t[4]*t[4], t[5]*t[5]};
+          const T TnormSqr = tSqr[0] + 2.0 * tSqr[1] + 2.0 * tSqr[2] + tSqr[3] + 2.0 * tSqr[4] + tSqr[5];
+          const T Tnorm    = sqrt(2.0 * 0.25 * TnormSqr);
+
+          auto cutoffKinEnergy_14 = blockLattice.get(iX,iY,iZ).template getField<descriptors::CUTOFF_KIN_ENERGY>();
+          auto cutoffHeatFlux_14 = tPartner->get(iX,iY,iZ).template getField<descriptors::CUTOFF_HEAT_FLUX>();
+
+          const T tau_turb_NS = C_nu * sqrt(sqrt(2.)/2.) * invCs2 * invCs2 * sqrt(PiNeqNorm / rho / tauNS) * cutoffKinEnergy_14;
+          const T tau_turb_AD = C_alpha * invCs2 / rho * sqrt(Tnorm * invCs2_g / tauNS / tauAD) * cutoffHeatFlux_14;
+
+          /// Effective realaxation time
+          blockLattice.get(iX,iY,iZ).template setField<descriptors::TAU_EFF>(tau_mol_NS + tau_turb_NS);
+          tPartner->get(iX,iY,iZ).template setField<descriptors::TAU_EFF>(tau_mol_AD + tau_turb_AD);
+
         }
       }
     }
   }
 }
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-void AdvectionDiffusionParticleCouplingPostProcessor3D<T,Lattice,ADLattice>::
-process(BlockLattice3D<T,Lattice>& blockLattice)
+template<typename T, typename DESCRIPTOR>
+void MixedScaleBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>::
+process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
 
-// LatticeCouplingGenerator for advectionDiffusion coupling
+/// LatticeCouplingGenerator for advectionDiffusion coupling
 
-template<typename T, template<typename U> class Lattice>
-NavierStokesAdvectionDiffusionCouplingGenerator3D<T,Lattice>::
-NavierStokesAdvectionDiffusionCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_,int z0_, int z1_,
-    T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_)
-  : LatticeCouplingGenerator3D<T,Lattice>(x0_, x1_, y0_, y1_, z0_, z1_),
-    gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_), dir(dir_)
+template<typename T, typename DESCRIPTOR>
+MixedScaleBoussinesqCouplingGenerator3D<T,DESCRIPTOR>::
+MixedScaleBoussinesqCouplingGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                                        T gravity_, T T0_, T deltaTemp_, std::vector<T> dir_, T PrTurb_)
+  : LatticeCouplingGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_),
+    gravity(gravity_), T0(T0_), deltaTemp(deltaTemp_), dir(dir_), PrTurb(PrTurb_)
 { }
 
-template<typename T, template<typename U> class Lattice>
-PostProcessor3D<T,Lattice>* NavierStokesAdvectionDiffusionCouplingGenerator3D<T,Lattice>::generate (
+template<typename T, typename DESCRIPTOR>
+PostProcessor3D<T,DESCRIPTOR>* MixedScaleBoussinesqCouplingGenerator3D<T,DESCRIPTOR>::generate (
   std::vector<SpatiallyExtendedObject3D* > partners) const
 {
-  return new NavierStokesAdvectionDiffusionCouplingPostProcessor3D<T,Lattice>(
-           this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, gravity, T0, deltaTemp, dir,partners);
+  return new MixedScaleBoussinesqCouplingPostProcessor3D<T,DESCRIPTOR>(
+           this->x0,this->x1,this->y0,this->y1, this-> z0, this->z1, gravity, T0, deltaTemp, dir, PrTurb, partners);
 }
 
-template<typename T, template<typename U> class Lattice>
-LatticeCouplingGenerator3D<T,Lattice>* NavierStokesAdvectionDiffusionCouplingGenerator3D<T,Lattice>::clone() const
+template<typename T, typename DESCRIPTOR>
+LatticeCouplingGenerator3D<T,DESCRIPTOR>* MixedScaleBoussinesqCouplingGenerator3D<T,DESCRIPTOR>::clone() const
 {
-  return new NavierStokesAdvectionDiffusionCouplingGenerator3D<T,Lattice>(*this);
+  return new MixedScaleBoussinesqCouplingGenerator3D<T,DESCRIPTOR>(*this);
 }
-
-// LatticeCouplingGenerator for one-way advectionDiffusion coupling with Stokes drag
-
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-AdvectionDiffusionParticleCouplingGenerator3D<T,Lattice,ADLattice>::
-AdvectionDiffusionParticleCouplingGenerator3D(int offset_)
-  : LatticeCouplingGenerator3D<T,Lattice>(0, 0, 0, 0, 0, 0), offset(offset_)
-{ }
-
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-PostProcessor3D<T,Lattice>* AdvectionDiffusionParticleCouplingGenerator3D<T,Lattice,ADLattice>::generate (
-  std::vector<SpatiallyExtendedObject3D* > partners) const
-{
-  return new AdvectionDiffusionParticleCouplingPostProcessor3D<T,Lattice,ADLattice>(this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, this->iC, offset, partners, ADforces);
-}
-
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-LatticeCouplingGenerator3D<T,Lattice>* AdvectionDiffusionParticleCouplingGenerator3D<T,Lattice,ADLattice>::clone() const
-{
-  return new AdvectionDiffusionParticleCouplingGenerator3D<T,Lattice,ADLattice>(*this);
-}
-
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-void AdvectionDiffusionParticleCouplingGenerator3D<T,Lattice,ADLattice>::addForce(
-    advectionDiffusionForce3D<T,Lattice,ADLattice> &force)
-{
-  ADforces.push_back(force);
-}
-
 
 }  // namespace olb
 

@@ -40,12 +40,12 @@
 namespace olb {
 
 template<typename T>
-BlockGeometryStatistics3D<T>::BlockGeometryStatistics3D( BlockGeometryStructure3D<T>* blockGeometry)
-  : _blockGeometry(blockGeometry), clout(std::cout,"BlockGeometryStatistics3D")
+BlockGeometryStatistics3D<T>::BlockGeometryStatistics3D(BlockGeometryStructure3D<T>* blockGeometry)
+  : _blockGeometry(blockGeometry),
+    clout(std::cout,"BlockGeometryStatistics3D")
 {
-  _statisticsUpdateNeeded=true;
+  _statisticsUpdateNeeded = true;
 }
-
 
 template<typename T>
 bool& BlockGeometryStatistics3D<T>::getStatisticsStatus()
@@ -63,6 +63,7 @@ bool const & BlockGeometryStatistics3D<T>::getStatisticsStatus() const
 template<typename T>
 void BlockGeometryStatistics3D<T>::update(bool verbose)
 {
+  const_this = const_cast<const BlockGeometryStatistics3D<T>*>(this);
 
   if (getStatisticsStatus() ) {
     _material2n.clear();
@@ -98,6 +99,12 @@ template<typename T>
 int BlockGeometryStatistics3D<T>::getNmaterials()
 {
   update();
+  return const_this->getNmaterials();
+}
+
+template<typename T>
+int BlockGeometryStatistics3D<T>::getNmaterials() const
+{
   return _nMaterials;
 }
 
@@ -105,13 +112,30 @@ template<typename T>
 int BlockGeometryStatistics3D<T>::getNvoxel(int material)
 {
   update();
-  return _material2n[material];
+  return const_this->getNvoxel(material);
+}
+
+template<typename T>
+int BlockGeometryStatistics3D<T>::getNvoxel(int material) const
+{
+  try {
+    return _material2n.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    return 0;
+  }
 }
 
 template<typename T>
 std::map<int, int> BlockGeometryStatistics3D<T>::getMaterial2n()
 {
   update();
+  return const_this->getMaterial2n();
+}
+
+template<typename T>
+std::map<int, int> BlockGeometryStatistics3D<T>::getMaterial2n() const
+{
   return _material2n;
 }
 
@@ -119,32 +143,58 @@ template<typename T>
 int BlockGeometryStatistics3D<T>::getNvoxel()
 {
   update();
+  return const_this->getNvoxel();
+}
+
+template<typename T>
+int BlockGeometryStatistics3D<T>::getNvoxel() const
+{
   int total = 0;
-  std::map<int, int>::iterator iter;
-  for (iter = _material2n.begin(); iter != _material2n.end(); iter++) {
-    if (iter->first!=0) {
-      total+=iter->second;
-    }
+  for (const auto& material : _material2n) {
+    total += material.second;
   }
   return total;
 }
-
 template<typename T>
 std::vector<int> BlockGeometryStatistics3D<T>::getMinLatticeR(int material)
 {
   update();
-  return _material2min[material];
+  return const_this->getMinLatticeR(material);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics3D<T>::getMinLatticeR(int material) const
+{
+  try {
+    return _material2min.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    std::vector<int> null;
+    return null;
+  }
 }
 
 template<typename T>
 std::vector<int> BlockGeometryStatistics3D<T>::getMaxLatticeR(int material)
 {
   update();
-  return _material2max[material];
+  return const_this->getMaxLatticeR(material);
 }
 
 template<typename T>
-std::vector<T> BlockGeometryStatistics3D<T>::getMinPhysR(int material)
+std::vector<int> BlockGeometryStatistics3D<T>::getMaxLatticeR(int material) const
+{
+  try {
+    return _material2max.at(material);
+  }
+  catch (std::out_of_range& ex) {
+    std::vector<int> null;
+    return null;
+  }
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics3D<T>::getMinPhysR(int material) const
 {
   std::vector<T> tmp(3,T());
   _blockGeometry->getPhysR(&(tmp[0]), &(getMinLatticeR(material)[0]));
@@ -152,7 +202,7 @@ std::vector<T> BlockGeometryStatistics3D<T>::getMinPhysR(int material)
 }
 
 template<typename T>
-std::vector<T> BlockGeometryStatistics3D<T>::getMaxPhysR(int material)
+std::vector<T> BlockGeometryStatistics3D<T>::getMaxPhysR(int material) const
 {
   std::vector<T> tmp(3,T());
   _blockGeometry->getPhysR(&(tmp[0]), &(getMaxLatticeR(material)[0]));
@@ -163,17 +213,35 @@ template<typename T>
 std::vector<T> BlockGeometryStatistics3D<T>::getLatticeExtend(int material)
 {
   update();
-  std::vector<T> extend;
-  for (int iDim = 0; iDim < 3; iDim++) {
-    extend.push_back(_material2max[material][iDim] - _material2min[material][iDim]);
+  return const_this->getLatticeExtend(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics3D<T>::getLatticeExtend(int material) const
+{
+  try {
+    std::vector<T> extend;
+    for (int iDim = 0; iDim < 3; iDim++) {
+      extend.push_back(_material2max.at(material)[iDim] - _material2min.at(material)[iDim]);
+    }
+    return extend;
   }
-  return extend;
+  catch (std::out_of_range& ex) {
+    std::vector<double, std::allocator<double>> null;
+    return null;
+  }
 }
 
 template<typename T>
 std::vector<T> BlockGeometryStatistics3D<T>::getPhysExtend(int material)
 {
   update();
+  return const_this->getPhysExtend(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics3D<T>::getPhysExtend(int material) const
+{
   std::vector<T> extend;
   for (int iDim = 0; iDim < 3; iDim++) {
     extend.push_back(getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim]);
@@ -185,6 +253,12 @@ template<typename T>
 std::vector<T> BlockGeometryStatistics3D<T>::getPhysRadius(int material)
 {
   update();
+  return const_this->getPhysRadius(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics3D<T>::getPhysRadius(int material) const
+{
   std::vector<T> radius;
   for (int iDim=0; iDim<3; iDim++) {
     radius.push_back((getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim])/2.);
@@ -196,6 +270,12 @@ template<typename T>
 std::vector<T> BlockGeometryStatistics3D<T>::getCenterPhysR(int material)
 {
   update();
+  return const_this->getCenterPhysR(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics3D<T>::getCenterPhysR(int material) const
+{
   std::vector<T> center;
   for (int iDim=0; iDim<3; iDim++) {
     center.push_back(getMinPhysR(material)[iDim] + getPhysRadius(material)[iDim]);
@@ -204,10 +284,15 @@ std::vector<T> BlockGeometryStatistics3D<T>::getCenterPhysR(int material)
 }
 
 template<typename T>
-std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
+std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ, bool anyNormal)
 {
-
   update();
+  return const_this->getType(iX, iY, iZ, anyNormal);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ, bool anyNormal) const
+{
   std::vector<int> discreteNormal(4, 0);
   std::vector<int> discreteNormal2(4, 0);
   std::vector<int> nullVector(4, 0);
@@ -231,7 +316,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 0;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 0;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 0;
@@ -245,7 +331,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = 0;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 0;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = 0;
@@ -270,7 +357,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = -1;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 0;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = -1;
@@ -284,7 +372,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = 1;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 0;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = 1;
@@ -309,7 +398,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = 0;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 0;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = 0;
@@ -323,7 +413,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = 0;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 0;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = 0;
@@ -353,7 +444,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = -1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 1;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = -1;
@@ -374,7 +466,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 1;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 1;
@@ -404,7 +497,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 1;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 1;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 1;
@@ -481,7 +575,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = -1;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 1;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = -1;
@@ -511,7 +606,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = -1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 1;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = -1;
@@ -561,7 +657,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = 1;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 2;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = 1;
@@ -606,7 +703,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = -1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 2;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = -1;
@@ -623,7 +721,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = 1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 2;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = 1;
@@ -649,7 +748,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 1;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 2;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 1;
@@ -714,7 +814,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = -1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 2;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = -1;
@@ -742,7 +843,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = 1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = 1;
@@ -759,7 +861,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = -1;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = -1;
@@ -785,7 +888,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = -1;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = -1;
@@ -800,7 +904,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 0;
           discreteNormal[2] = 1;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 0;
           discreteNormal2[2] = 1;
@@ -828,7 +933,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 0;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 0;
@@ -847,7 +953,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = 0;
           discreteNormal[3] = -1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = 0;
@@ -875,7 +982,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 0;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 0;
@@ -894,7 +1002,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = 0;
           discreteNormal[3] = 1;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = 0;
@@ -918,7 +1027,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = -1;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = -1;
@@ -933,7 +1043,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = -1;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = -1;
@@ -957,7 +1068,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = 1;
           discreteNormal[2] = 1;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = 1;
           discreteNormal2[2] = 1;
@@ -973,7 +1085,8 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
           discreteNormal[1] = -1;
           discreteNormal[2] = 1;
           discreteNormal[3] = 0;
-        } else {
+        }
+        else {
           discreteNormal2[0] = 3;
           discreteNormal2[1] = -1;
           discreteNormal2[2] = 1;
@@ -1190,11 +1303,20 @@ std::vector<int> BlockGeometryStatistics3D<T>::getType(int iX, int iY, int iZ)
     }
 
     // special boundary conditions
-    if (discreteNormal2 != nullVector) {
-      discreteNormal
-        = checkExtraBoundary(discreteNormal, discreteNormal2);
+    if (discreteNormal2 != nullVector && anyNormal == false) {
+      discreteNormal = checkExtraBoundary(discreteNormal, discreteNormal2);
     }
   }
+
+  if (discreteNormal[1] == 0 && discreteNormal[2] == 0 && discreteNormal[3] == 0) {
+    clout << "WARNING: no discreteNormal is found" << std::endl;
+  }
+  else if (_blockGeometry->getMaterial(iX-discreteNormal[1], iY-discreteNormal[2], iZ-discreteNormal[3]) != 1) {
+    #ifdef OLB_DEBUG
+    clout << "WARNING: discreteNormal is not pointing outside the fluid. Use option: anyNormal" << std::endl;
+    #endif
+  }
+
   return discreteNormal;
 }
 
@@ -1202,6 +1324,12 @@ template<typename T>
 std::vector<int> BlockGeometryStatistics3D<T>::computeNormal(int iX, int iY, int iZ)
 {
   update();
+  return const_this->computeNormal(iX, iY, iZ);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics3D<T>::computeNormal(int iX, int iY, int iZ) const
+{
   std::vector<int> normal (3,int(0));
 
   if (iX != 0) {
@@ -1242,6 +1370,12 @@ std::vector<T> BlockGeometryStatistics3D<T>::computeNormal(int material)
 {
 
   update();
+  return const_this->computeNormal(material);
+}
+
+template<typename T>
+std::vector<T> BlockGeometryStatistics3D<T>::computeNormal(int material) const
+{
   std::vector<T> normal (3,int(0));
   std::vector<int> minC = getMinLatticeR(material);
   std::vector<int> maxC = getMaxLatticeR(material);
@@ -1268,8 +1402,13 @@ std::vector<T> BlockGeometryStatistics3D<T>::computeNormal(int material)
 template<typename T>
 std::vector<int> BlockGeometryStatistics3D<T>::computeDiscreteNormal(int material, T maxNorm)
 {
-
   update();
+  return const_this->computeDiscreteNormal(material, maxNorm);
+}
+
+template<typename T>
+std::vector<int> BlockGeometryStatistics3D<T>::computeDiscreteNormal(int material, T maxNorm) const
+{
   std::vector<T> normal = computeNormal(material);
   std::vector<int> discreteNormal(3,int(0));
 
@@ -1293,12 +1432,18 @@ std::vector<int> BlockGeometryStatistics3D<T>::computeDiscreteNormal(int materia
   return discreteNormal;
 }
 
-
 template<typename T>
 bool BlockGeometryStatistics3D<T>::check(int material, int iX, int iY,
     int iZ, unsigned offsetX, unsigned offsetY, unsigned offsetZ)
 {
   update();
+  return const_this->check(material, iX, iY, iZ, offsetX, offsetY, offsetZ);
+}
+
+template<typename T>
+bool BlockGeometryStatistics3D<T>::check(int material, int iX, int iY,
+    int iZ, unsigned offsetX, unsigned offsetY, unsigned offsetZ) const
+{
   bool found = true;
   for (int iOffsetX = -offsetX; iOffsetX <= (int) offsetX; ++iOffsetX) {
     for (int iOffsetY = -offsetY; iOffsetY <= (int) offsetY; ++iOffsetY) {
@@ -1319,6 +1464,14 @@ bool BlockGeometryStatistics3D<T>::find(int material, unsigned offsetX,
                                         int& foundZ)
 {
   update();
+  return const_this->find(material, offsetX, offsetY, offsetZ, foundX, foundY, foundZ);
+}
+
+template<typename T>
+bool BlockGeometryStatistics3D<T>::find(int material, unsigned offsetX,
+                                        unsigned offsetY, unsigned offsetZ, int& foundX, int& foundY,
+                                        int& foundZ) const
+{
   bool found = false;
   for (foundX = 0; foundX < _nX; foundX++) {
     for (foundY = 0; foundY < _nY; foundY++) {
@@ -1334,22 +1487,30 @@ bool BlockGeometryStatistics3D<T>::find(int material, unsigned offsetX,
   return found;
 }
 
-
 template<typename T>
 void BlockGeometryStatistics3D<T>::print()
 {
-
   update();
-  std::map<int, int>::iterator iter;
-  for (iter = _material2n.begin(); iter != _material2n.end(); iter++) {
-    clout << "materialNumber=" << iter->first
-          << "; count=" << iter->second
-          << "; minLatticeR=(" << _material2min[iter->first][0] <<","<< _material2min[iter->first][1] <<","<< _material2min[iter->first][2] <<")"
-          << "; maxLatticeR=(" << _material2max[iter->first][0] <<","<< _material2max[iter->first][1] <<","<< _material2max[iter->first][2] <<")"
-          << std::endl;
-  }
+  return const_this->print();
 }
 
+template<typename T>
+void BlockGeometryStatistics3D<T>::print() const
+{
+  try {
+    for (const auto& material : _material2n) {
+      clout << "materialNumber=" << material.first
+            << "; count=" << material.second
+            << "; minLatticeR=(" << _material2min.at(material.first)[0] <<","
+            << _material2min.at(material.first)[1] <<","<< _material2min.at(material.first)[2] <<")"
+            << "; maxLatticeR=(" << _material2max.at(material.first)[0] <<","
+            << _material2max.at(material.first)[1] <<","<< _material2max.at(material.first)[2] <<")"
+            << std::endl;
+    }
+  }
+  catch (std::out_of_range& ex) {
+  }
+}
 
 template<typename T>
 void BlockGeometryStatistics3D<T>::takeStatistics(int iX, int iY, int iZ)
@@ -1369,7 +1530,8 @@ void BlockGeometryStatistics3D<T>::takeStatistics(int iX, int iY, int iZ)
     maxCo.push_back(iZ);
     _material2max[type] = maxCo;
 
-  } else {
+  }
+  else {
     _material2n[type]++;
     if (iX < _material2min[type][0]) {
       _material2min[type][0] = iX;
@@ -1414,49 +1576,62 @@ std::vector<int> BlockGeometryStatistics3D<T>::checkExtraBoundary(
 {
 
   update();
-  std::vector<int> Data(6, 0);
-
-  for (int i = 1; i < 4; i++) {
-    if (discreteNormal[i] == discreteNormal2[i]) {
-      Data[i - 1] = (-1) * discreteNormal2[i];
-      Data[i + 2] = 1;
-    } else if (discreteNormal[i] * discreteNormal2[i] == -1) {
-      Data[i - 1] = 0;
-      Data[i + 2] = 2;
-    } else if (discreteNormal[i] * discreteNormal2[i] == 0) {
-      Data[i - 1] = 0;
-      Data[i + 2] = 3;
-    }
-  }
-
-  std::vector<int> newDiscreteNormal(4, 0);
-
-  for (int i = 1; i < 4; i++) {
-    newDiscreteNormal[i] = Data[i - 1];
-  }
-
-  if (Data[0] * Data[0] + Data[1] * Data[1] + Data[2] * Data[2] == 0) {
-    for (int i = 1; i < 4; i++) {
-      if (Data[i + 2] == 3) {
-        if (discreteNormal[i] == 0) {
-          newDiscreteNormal[i] = (-1) * discreteNormal2[i];
-        } else {
-          newDiscreteNormal[i] = (-1) * discreteNormal[i];
-        }
-      }
-    }
-  }
-
-  if (newDiscreteNormal[1] * newDiscreteNormal[1] + newDiscreteNormal[2]
-      * newDiscreteNormal[2] + newDiscreteNormal[3]
-      * newDiscreteNormal[3] == 1) {
-    newDiscreteNormal[0] = 0;
-  } else {
-    newDiscreteNormal[0] = 3;
-  }
-  return newDiscreteNormal;
+  return const_this->checkExtraBoundary( discreteNormal, discreteNormal2);
 }
 
+template<typename T>
+std::vector<int> BlockGeometryStatistics3D<T>::checkExtraBoundary(
+  std::vector<int> discreteNormal, std::vector<int> discreteNormal2) const
+{
+  return discreteNormal;
+
+  //std::vector<int> Data(6, 0);
+  //
+  //for (int i = 1; i < 4; i++) {
+  //  if (discreteNormal[i] == discreteNormal2[i]) {
+  //    Data[i - 1] = discreteNormal[i];
+  //    Data[i + 2] = 1;
+  //  }
+  //  else if (discreteNormal[i] * discreteNormal2[i] == -1) {
+  //    Data[i - 1] = 0;
+  //    Data[i + 2] = 2;
+  //  }
+  //  else if (discreteNormal[i] * discreteNormal2[i] == 0) {
+  //    Data[i - 1] = 0;
+  //    Data[i + 2] = 3;
+  //  }
+  //}
+  //
+  //
+  //std::vector<int> newDiscreteNormal(4, 0);
+  //
+  //for (int i = 1; i < 4; i++) {
+  //  newDiscreteNormal[i] = Data[i - 1];
+  //}
+  //
+  //if (Data[0] * Data[0] + Data[1] * Data[1] + Data[2] * Data[2] == 0) {
+  //  for (int i = 1; i < 4; i++) {
+  //    if (Data[i + 2] == 3) {
+  //      if (discreteNormal[i] == 0) {
+  //        newDiscreteNormal[i] = (-1) * discreteNormal2[i];
+  //      }
+  //      else {
+  //        newDiscreteNormal[i] = (-1) * discreteNormal[i];
+  //      }
+  //    }
+  //  }
+  //}
+  //
+  //if (newDiscreteNormal[1] * newDiscreteNormal[1] + newDiscreteNormal[2]
+  //    * newDiscreteNormal[2] + newDiscreteNormal[3]
+  //    * newDiscreteNormal[3] == 1) {
+  //  newDiscreteNormal[0] = 0;
+  //}
+  //else {
+  //  newDiscreteNormal[0] = 3;
+  //}
+  //return newDiscreteNormal;
+}
 
 } // namespace olb
 

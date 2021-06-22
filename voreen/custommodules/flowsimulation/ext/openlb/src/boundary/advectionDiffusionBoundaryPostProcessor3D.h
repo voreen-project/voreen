@@ -23,6 +23,10 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA  02110-1301, USA.
 */
+#ifndef ADVECTION_DIFFUSION_BOUNDARY_POST_PROCESSOR_3D_H
+#define ADVECTION_DIFFUSION_BOUNDARY_POST_PROCESSOR_3D_H
+
+
 
 #include "core/postProcessing.h"
 #include "core/blockLattice3D.h"
@@ -36,8 +40,8 @@ namespace olb {
 * next two cells in direction of this f_i have
 * viable values.
 */
-template<typename T, template<typename U> class Lattice>
-class ConvectionBoundaryProcessor3D : public LocalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ConvectionBoundaryProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   ConvectionBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_,
                                 int z1_, int discreteNormalX_,
@@ -50,22 +54,22 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,Lattice>& blockLattice,
-                                  int x0_, int x1_, int y0_, int y1_ , int z0_, int z1_) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                          int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
-  int interpolationPop[Lattice<T>::q];
+  int interpolationPop[DESCRIPTOR::q];
   int x0, x1, y0, y1, z0, z1;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ConvectionBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ConvectionBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,DESCRIPTOR> {
 public:
   ConvectionBoundaryProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_,
                                          int z0_, int z1_, int discreteNormalX_,
                                          int discreteNormalY_, int discreteNormalZ_);
-  PostProcessor3D<T,Lattice>* generate() const override;
-  PostProcessorGenerator3D<T,Lattice>*  clone() const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
 private:
   int discreteNormalX;
   int discreteNormalY;
@@ -77,12 +81,11 @@ private:
 * external field from the neighbour in normal direction.
 * Therefore it is assumed this neighbour is a fluid cell.
 */
-template<typename T, template<typename U> class Lattice>
-class ExtFieldBoundaryProcessor3D : public LocalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename FIELD_A, typename FIELD_B>
+class ExtFieldBoundaryProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
-  ExtFieldBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_,
-                              int z1_, int discreteNormalX_, int discreteNormalY_,
-                              int discreteNormalZ_, int offset_);
+  ExtFieldBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                              int discreteNormalX_, int discreteNormalY_, int discreteNormalZ_);
   int extent() const override
   {
     return 0;
@@ -91,27 +94,25 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,Lattice>& blockLattice,
-                                  int x0_, int x1_, int y0_, int y1_ , int z0_, int z1_) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                          int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int x0, x1, y0, y1, z0, z1;
   int discreteNormalX, discreteNormalY, discreteNormalZ;
-  int offset;
-  bool par;
+  bool tick;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ExtFieldBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename FIELD_A, typename FIELD_B>
+class ExtFieldBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,DESCRIPTOR> {
 public:
   ExtFieldBoundaryProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_,
                                        int z1_, int discreteNormalX_, int discreteNormalY_,
-                                       int discreteNormalZ_, int offset_);
-  PostProcessor3D<T,Lattice>* generate() const override;
-  PostProcessorGenerator3D<T,Lattice>*  clone() const override;
+                                       int discreteNormalZ_);
+  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
 private:
   int discreteNormalX, discreteNormalY, discreteNormalZ;
-  int offset;
 };
 
 /**
@@ -120,8 +121,8 @@ private:
 * to be zero and thus ensures a correct computation
 * of the density that is about to leave the domain.
 */
-template<typename T, template<typename U> class Lattice>
-class ZeroDistributionBoundaryProcessor3D : public LocalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ZeroDistributionBoundaryProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   ZeroDistributionBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_,
                                       int z1_, int discreteNormalX_, int discreteNormalY_,
@@ -134,26 +135,29 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,Lattice>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,Lattice>& blockLattice,
-                                  int x0_, int x1_, int y0_, int y1_ , int z0_, int z1_) override;
+  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+                          int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
-  int resetPop[Lattice<T>::q];
+  int resetPop[DESCRIPTOR::q];
   int x0, x1, y0, y1, z0, z1;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ZeroDistributionBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ZeroDistributionBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,DESCRIPTOR> {
 public:
   ZeroDistributionBoundaryProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_,
       int z0_, int z1_, int discreteNormalX_,
       int discreteNormalY_, int discreteNormalZ_);
-  PostProcessor3D<T,Lattice>* generate() const override;
-  PostProcessorGenerator3D<T,Lattice>*  clone() const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
 private:
   int discreteNormalX;
   int discreteNormalY;
   int discreteNormalZ;
 };
 }
+
+
+#endif
 

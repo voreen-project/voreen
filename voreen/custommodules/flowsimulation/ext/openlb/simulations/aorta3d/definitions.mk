@@ -25,6 +25,6 @@
 ###########################################################################
 ## DEFINITIONS TO BE CHANGED
 
-ROOT            := ../..
+ROOT            := ../../..
 SRC             := aorta3d.cpp
 OUTPUT          := aorta3d

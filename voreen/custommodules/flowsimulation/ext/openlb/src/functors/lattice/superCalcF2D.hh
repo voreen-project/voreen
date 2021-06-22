@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2014-2017 Albert Mink, Mathias J. Krause,
- *                          Adrian Kummerländer
+ *                          Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -27,73 +27,98 @@
 
 #include "superCalcF2D.h"
 #include "blockCalcF2D.h"
+#include "superConst2D.h"
 
 namespace olb {
 
 
 template <typename T, typename W, template<typename> class F>
-SuperCalc2D<T,W,F>::SuperCalc2D(SuperF2D<T,W>& f, SuperF2D<T,W>& g)
+SuperCalcF2D<T,W,F>::SuperCalcF2D(FunctorPtr<SuperF2D<T,W>>&& f,
+                                  FunctorPtr<SuperF2D<T,W>>&& g)
   : SuperF2D<T,W>(
-      f.getSuperStructure(),
-      f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
-  _f(f), _g(g)
+      f->getSuperStructure(),
+      f->getTargetDim() > g->getTargetDim() ? f->getTargetDim() : g->getTargetDim()),
+    _f(std::move(f)),
+    _g(std::move(g))
 {
   OLB_ASSERT(
-    f.getTargetDim() == g.getTargetDim() || f.getTargetDim() == 1 || g.getTargetDim() == 1,
+    _f->getTargetDim() == _g->getTargetDim() || _f->getTargetDim() == 1 || _g->getTargetDim() == 1,
     "Componentwise operation must be well defined.");
 
-  this->getName() = "(" + f.getName() + F<T>::symbol + g.getName() + ")";
+  this->getName() = "(" + _f->getName() + F<T>::symbol + _g->getName() + ")";
 
-  std::swap(f._ptrCalcC, this->_ptrCalcC);
+  std::swap(_f->_ptrCalcC, this->_ptrCalcC);
 
-  LoadBalancer<T>& load = f.getSuperStructure().getLoadBalancer();
+  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
 
-  if ( f.getBlockFSize() == load.size() ) {
-    if ( g.getBlockFSize() == load.size() ) {
+  if ( _f->getBlockFSize() == load.size() ) {
+    if ( _g->getBlockFSize() == load.size() ) {
       // both functors expose the correct count of block level functors
       for (int iC = 0; iC < load.size(); ++iC) {
         this->_blockF.emplace_back(
-          new BlockCalc2D<W,F>(f.getBlockF(iC), g.getBlockF(iC))
-        );
-      }
-    } else {
-      // operate on super functor `g` and block level functors provided by `f`
-      for (int iC = 0; iC < load.size(); ++iC) {
-        this->_blockF.emplace_back(
-          new BlockCalc2D<W,F>(f.getBlockF(iC), g, load.glob(iC))
+          new BlockCalcF2D<W,F>(_f->getBlockF(iC), _g->getBlockF(iC))
         );
       }
     }
-  } else if ( g.getBlockFSize() == load.size() ) {
+    else {
+      // operate on super functor `g` and block level functors provided by `f`
+      for (int iC = 0; iC < load.size(); ++iC) {
+        this->_blockF.emplace_back(
+          new BlockCalcF2D<W,F>(_f->getBlockF(iC), *g, load.glob(iC))
+        );
+      }
+    }
+  }
+  else if ( _g->getBlockFSize() == load.size() ) {
     // operate on block level functors provided by `f` and super functor `g`
     for (int iC = 0; iC < load.size(); ++iC) {
       this->_blockF.emplace_back(
-        new BlockCalc2D<W,F>(f, load.glob(iC), g.getBlockF(iC))
+        new BlockCalcF2D<W,F>(*f, load.glob(iC), _g->getBlockF(iC))
       );
     }
   }
 }
 
 template <typename T, typename W, template<typename> class F>
-bool SuperCalc2D<T,W,F>::operator()(W output[], const int input[])
+SuperCalcF2D<T,W,F>::SuperCalcF2D(W scalar, FunctorPtr<SuperF2D<T,W>>&& g)
+  : SuperCalcF2D(
+      std::unique_ptr<SuperF2D<T,W>>(new SuperConst2D<T,W>(g->getSuperStructure(), scalar)),
+      std::forward<decltype(g)>(g))
+{ }
+
+template <typename T, typename W, template<typename> class F>
+SuperCalcF2D<T,W,F>::SuperCalcF2D(FunctorPtr<SuperF2D<T,W>>&& f, W scalar)
+  : SuperCalcF2D(
+      std::forward<decltype(f)>(f),
+      std::unique_ptr<SuperF2D<T,W>>(new SuperConst2D<T,W>(f->getSuperStructure(), scalar)))
+{ }
+
+template <typename T, typename W, template<typename> class F>
+bool SuperCalcF2D<T,W,F>::operator()(W output[], const int input[])
 {
-  if ( _f.getTargetDim() == 1 || _g.getTargetDim() == 1 ) {
+  if ( _f->getTargetDim() == 1 || _g->getTargetDim() == 1 ) {
     // scalar operation
     W scalar;
-    if ( _f.getTargetDim() == 1 ) {
+    if ( _f->getTargetDim() == 1 ) {
       // apply the scalar f to possibly multidimensional g
-      _g(output, input);
       _f(&scalar, input);
-    } else {
+      _g(output, input);
+
+      for (int i = 0; i < this->getTargetDim(); i++) {
+        output[i] = F<T>()(scalar, output[i]);
+      }
+    }
+    else {
       // apply scalar g to possibly multidimensional f
       _f(output, input);
       _g(&scalar, input);
-    }
 
-    for (int i = 0; i < this->getTargetDim(); i++) {
-      output[i] = F<T>()(output[i], scalar);
+      for (int i = 0; i < this->getTargetDim(); i++) {
+        output[i] = F<T>()(output[i], scalar);
+      }
     }
-  } else {
+  }
+  else {
     // componentwise operation on equidimensional functors
     W* outputF = output;
     W outputG[this->getTargetDim()];
@@ -109,11 +134,95 @@ bool SuperCalc2D<T,W,F>::operator()(W output[], const int input[])
 }
 
 
-/////////////////////////////////operator()/// ////////////////////////////////
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator+(std::shared_ptr<SuperF2D<T,W>> lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcPlus2D<T,W>(std::move(lhs), std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator+(std::shared_ptr<SuperF2D<T,W>> lhs, W rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcPlus2D<T,W>(std::move(lhs), rhs));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator+(W lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcPlus2D<T,W>(lhs, std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator-(std::shared_ptr<SuperF2D<T,W>> lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcMinus2D<T,W>(std::move(lhs), std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator-(std::shared_ptr<SuperF2D<T,W>> lhs, W rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcMinus2D<T,W>(std::move(lhs), rhs));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator-(W lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcMinus2D<T,W>(lhs, std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator*(std::shared_ptr<SuperF2D<T,W>> lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcMultiplication2D<T,W>(std::move(lhs), std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator*(std::shared_ptr<SuperF2D<T,W>> lhs, W rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcMultiplication2D<T,W>(std::move(lhs), rhs));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator*(W lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcMultiplication2D<T,W>(lhs, std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator/(std::shared_ptr<SuperF2D<T,W>> lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcDivision2D<T,W>(std::move(lhs), std::move(rhs)));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator/(std::shared_ptr<SuperF2D<T,W>> lhs, W rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcDivision2D<T,W>(std::move(lhs), rhs));
+}
+
+template <typename T, typename W>
+std::shared_ptr<SuperF2D<T,W>> operator/(W lhs, std::shared_ptr<SuperF2D<T,W>> rhs)
+{
+  return std::shared_ptr<SuperF2D<T,W>>(
+           new SuperCalcDivision2D<T,W>(lhs, std::move(rhs)));
+}
+
+
 template <typename T, typename W>
 SuperF2D<T,W>& SuperF2D<T,W>::operator+(SuperF2D<T,W>& rhs)
 {
-  auto tmp = std::make_shared< SuperPlus2D<T,W> >(*this,rhs);
+  auto tmp = std::make_shared< SuperCalcPlus2D<T,W> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -121,7 +230,7 @@ SuperF2D<T,W>& SuperF2D<T,W>::operator+(SuperF2D<T,W>& rhs)
 template <typename T, typename W>
 SuperF2D<T,W>& SuperF2D<T,W>::operator-(SuperF2D<T,W>& rhs)
 {
-  auto tmp = std::make_shared< SuperMinus2D<T,W> >(*this,rhs);
+  auto tmp = std::make_shared< SuperCalcMinus2D<T,W> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -129,7 +238,7 @@ SuperF2D<T,W>& SuperF2D<T,W>::operator-(SuperF2D<T,W>& rhs)
 template <typename T, typename W>
 SuperF2D<T,W>& SuperF2D<T,W>::operator*(SuperF2D<T,W>& rhs)
 {
-  auto tmp = std::make_shared< SuperMultiplication2D<T,W> >(*this,rhs);
+  auto tmp = std::make_shared< SuperCalcMultiplication2D<T,W> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -137,7 +246,7 @@ SuperF2D<T,W>& SuperF2D<T,W>::operator*(SuperF2D<T,W>& rhs)
 template <typename T, typename W>
 SuperF2D<T,W>& SuperF2D<T,W>::operator/(SuperF2D<T,W>& rhs)
 {
-  auto tmp = std::make_shared< SuperDivision2D<T,W> >(*this,rhs);
+  auto tmp = std::make_shared< SuperCalcDivision2D<T,W> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }

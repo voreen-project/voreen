@@ -28,82 +28,95 @@
 #include "core/postProcessing.h"
 #include "core/postProcessing.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+#include "core/cell.hh"
+
 
 namespace olb {
 
 using namespace descriptors;
 
-template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          0,1>;
-template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 0,1>;
-template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          0,-1>;
-template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 0,-1>;
-template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          1,1>;
-template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 1,1>;
-template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          1,-1>;
-template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 1,-1>;
-template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          2,1>;
-template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 2,1>;
-template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          2,-1>;
-template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 2,-1>;
+template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19<>,          0,1>;
+template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 0,1>;
+template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19<>,          0,-1>;
+template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 0,-1>;
+template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19<>,          1,1>;
+template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 1,1>;
+template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19<>,          1,-1>;
+template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 1,-1>;
+template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19<>,          2,1>;
+template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 2,1>;
+template class PlaneFdBoundaryProcessor3D<double, descriptors::D3Q19<>,          2,-1>;
+template class PlaneFdBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 2,-1>;
 
-template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          0,1>;
-template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 0,1>;
-template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          0,-1>;
-template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 0,-1>;
-template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          1,1>;
-template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 1,1>;
-template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          1,-1>;
-template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 1,-1>;
-template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          2,1>;
-template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 2,1>;
-template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19Descriptor,          2,-1>;
-template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor, 2,-1>;
+template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19<>,          0,1>;
+template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 0,1>;
+template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19<>,          0,-1>;
+template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 0,-1>;
+template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19<>,          1,1>;
+template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 1,1>;
+template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19<>,          1,-1>;
+template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 1,-1>;
+template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19<>,          2,1>;
+template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 2,1>;
+template class StraightConvectionBoundaryProcessor3D<double, descriptors::D3Q19<>,          2,-1>;
+template class StraightConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>, 2,-1>;
 
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 0,-1,-1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 0,-1,-1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 0,-1, 1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 0,-1, 1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 0, 1,-1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 0, 1,-1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 0, 1, 1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 0, 1, 1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 1,-1,-1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 1,-1,-1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 1,-1, 1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 1,-1, 1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 1, 1,-1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 1, 1,-1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 1, 1, 1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 1, 1, 1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 2,-1,-1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 2,-1,-1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 2,-1, 1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 2,-1, 1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 2, 1,-1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 2, 1,-1>;
-template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19Descriptor, 2, 1, 1>;
-template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19Descriptor, 2, 1, 1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 0,-1,-1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 0,-1,-1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 0,-1, 1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 0,-1, 1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 0, 1,-1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 0, 1,-1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 0, 1, 1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 0, 1, 1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 1,-1,-1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 1,-1,-1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 1,-1, 1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 1,-1, 1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 1, 1,-1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 1, 1,-1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 1, 1, 1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 1, 1, 1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 2,-1,-1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 2,-1,-1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 2,-1, 1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 2,-1, 1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 2, 1,-1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 2, 1,-1>;
+template class OuterVelocityEdgeProcessor3D          <double, descriptors::D3Q19<>, 2, 1, 1>;
+template class OuterVelocityEdgeProcessorGenerator3D <double, descriptors::D3Q19<>, 2, 1, 1>;
 
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor, -1,-1,-1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor, -1,-1,-1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor, -1,-1, 1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor, -1,-1, 1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor, -1, 1,-1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor, -1, 1,-1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor, -1, 1, 1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor, -1, 1, 1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor,  1,-1,-1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor,  1,-1,-1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor,  1,-1, 1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor,  1,-1, 1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor,  1, 1,-1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor,  1, 1,-1>;
-template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19Descriptor,  1, 1, 1>;
-template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19Descriptor,  1, 1, 1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>, -1,-1,-1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>, -1,-1,-1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>, -1,-1, 1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>, -1,-1, 1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>, -1, 1,-1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>, -1, 1,-1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>, -1, 1, 1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>, -1, 1, 1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>,  1,-1,-1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>,  1,-1,-1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>,  1,-1, 1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>,  1,-1, 1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>,  1, 1,-1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>,  1, 1,-1>;
+template class OuterVelocityCornerProcessor3D          <double, descriptors::D3Q19<>,  1, 1, 1>;
+template class OuterVelocityCornerProcessorGenerator3D <double, descriptors::D3Q19<>,  1, 1, 1>;
 
 
-template class SlipBoundaryProcessor3D<double, descriptors::D3Q19Descriptor>;
-template class SlipBoundaryProcessorGenerator3D<double, descriptors::D3Q19Descriptor>;
+template class SlipBoundaryProcessor3D<double, descriptors::D3Q19<>>;
+template class SlipBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>>;
+
+template class PartialSlipBoundaryProcessor3D<double, descriptors::D3Q19<>>;
+template class PartialSlipBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>>;
+
+template class FreeEnergyWallProcessor3D<double, descriptors::D3Q19<>>;
+template class FreeEnergyWallProcessorGenerator3D<double, descriptors::D3Q19<>>;
+
+template class FreeEnergyChemPotBoundaryProcessor3D<double, descriptors::D3Q19<>>;
+template class FreeEnergyChemPotBoundaryProcessorGenerator3D<double, descriptors::D3Q19<>>;
+
+template class FreeEnergyConvectiveProcessor3D<double, descriptors::D3Q19<>>;
+template class FreeEnergyConvectiveProcessorGenerator3D<double, descriptors::D3Q19<>>;
 
 }

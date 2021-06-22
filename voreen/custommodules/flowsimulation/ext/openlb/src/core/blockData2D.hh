@@ -33,19 +33,20 @@
 #include "geometry/cuboid2D.h"
 #include "functors/lattice/blockBaseF2D.h"
 
-
 namespace olb {
 
 
 template<typename T, typename BaseType>
-BlockData2D<T,BaseType>::BlockData2D() : BlockStructure2D(0,0), _size(0), _rawData(nullptr), _field(nullptr)
+BlockData2D<T,BaseType>::BlockData2D()
+  : BlockStructure2D(0,0), _size(0), _rawData(nullptr), _field(nullptr)
 {
   construct();
 }
 
 template<typename T, typename BaseType>
 BlockData2D<T,BaseType>::BlockData2D(Cuboid2D<T>& cuboid, int size)
-  : BlockStructure2D(cuboid.getNx(), cuboid.getNy()), _size(size), _rawData(nullptr), _field(nullptr)
+  : BlockStructure2D(cuboid.getNx(), cuboid.getNy()),
+    _size(size), _rawData(nullptr), _field(nullptr)
 {
   construct();
 }
@@ -65,8 +66,9 @@ BlockData2D<T,BaseType>::~BlockData2D()
 
 template<typename T, typename BaseType>
 BlockData2D<T,BaseType>::BlockData2D(BlockF2D<BaseType>& rhs)
-  : BlockStructure2D(rhs.getBlockStructure().getNx(), rhs.getBlockStructure().getNy()),
-    _size(rhs.getTargetDim())
+  : BlockStructure2D(rhs.getBlockStructure().getNx(),
+                     rhs.getBlockStructure().getNy()),
+    _size(rhs.getTargetDim()), _rawData(nullptr), _field(nullptr)
 {
   construct();
   int i[2];
@@ -95,14 +97,12 @@ BlockData2D<T,BaseType>& BlockData2D<T,BaseType>::operator=(BlockData2D<T,BaseTy
   return *this;
 }
 
-// benefits of move operator: does not allocate memory or copys objects
 template<typename T, typename BaseType>
 BlockData2D<T,BaseType>& BlockData2D<T,BaseType>::operator=(BlockData2D<T,BaseType>&& rhs)
 {
   if (this == &rhs) {
-      return *this;
+    return *this;
   }
-//  this->releaseMemory();  // free data of object this
 
   _size = rhs._size;      // swap object data
   _rawData = rhs._rawData;
@@ -114,11 +114,9 @@ BlockData2D<T,BaseType>& BlockData2D<T,BaseType>::operator=(BlockData2D<T,BaseTy
   rhs._field = nullptr;
   rhs._nx = 0;
   rhs._ny = 0;
-
   return *this;
 }
 
-// benefits of move operator: does not allocate memory
 template<typename T, typename BaseType>
 BlockData2D<T,BaseType>::BlockData2D(BlockData2D<T,BaseType>&& rhs)
   : BlockStructure2D(rhs._nx, rhs._ny), _size(0), _rawData(nullptr), _field(nullptr)
@@ -174,17 +172,15 @@ template<typename T, typename BaseType>
 void BlockData2D<T,BaseType>::allocateMemory()
 {
   // The conversions to size_t ensure 64-bit compatibility. Note that
-  //   nx and ny are of type int, which might by 32-bit types, even on
+  //   nx and ny are of type int, which might be 32-bit types, even on
   //   64-bit platforms. Therefore, nx*ny may lead to a type overflow.
-  _rawData = new BaseType[ getDataSize() ];
-  _field   = new BaseType** [(size_t)(this->_nx)];
+  _rawData = new BaseType[getDataSize()];
+  _field   = new BaseType**[(size_t)(this->_nx)];
   for (int iX = 0; iX < this->_nx; ++iX) {
     _field[iX] = new BaseType* [(size_t)this->_ny];
     for (int iY = 0; iY < this->_ny; ++iY) {
-      // connect matrix element to the corresponding array entry of _rawData
-      _field[iX][iY] = _rawData + _size*( (size_t)iY + (size_t)(this->_ny)*(size_t)iX );
+      _field[iX][iY] = _rawData + _size*this->getCellId(iX,iY);
       for (int iDim = 0; iDim < _size; ++iDim) {
-        // initialize data with zero
         _field[iX][iY][iDim] = BaseType();
       }
     }
@@ -196,30 +192,10 @@ void BlockData2D<T,BaseType>::releaseMemory()
 {
   delete [] _rawData;
   _rawData = nullptr;
-  for (unsigned int iX = 0; iX < (size_t)(this->_nx); ++iX) {
+  for (int iX = 0; iX < this->_nx; ++iX) {
     delete [] _field[iX];
   }
   delete [] _field;
-}
-
-template<typename T, typename BaseType>
-BaseType& BlockData2D<T,BaseType>::get(int iX, int iY, int iSize)
-{
-  OLB_PRECONDITION(iX >= 0 && iX < this->_nx);
-  OLB_PRECONDITION(iY >= 0 && iY < this->_ny);
-  OLB_PRECONDITION(iSize >= 0 && iSize < _size);
-  OLB_PRECONDITION(isConstructed());
-  return _field[iX][iY][iSize];
-}
-
-template<typename T, typename BaseType>
-BaseType const& BlockData2D<T,BaseType>::get(int iX, int iY, int iSize) const
-{
-  OLB_PRECONDITION(iX >= 0 && iX < this->_nx);
-  OLB_PRECONDITION(iY >= 0 && iY < this->_ny);
-  OLB_PRECONDITION(iSize >= 0 && iSize < _size);
-  OLB_PRECONDITION(isConstructed());
-  return _field[iX][iY][iSize];
 }
 
 template<typename T, typename BaseType>
@@ -242,6 +218,38 @@ template<typename T, typename BaseType>
 bool* BlockData2D<T,BaseType>::operator() (int iX, int iY, int iData)
 {
   return (bool*)&_field[iX][iY][iData];
+}
+
+template<typename T, typename BaseType>
+bool BlockData2D<T,BaseType>::operator() (T output[], const int input[])
+{
+  if ( input[0] >= 0 && input[1] >= 0 && input[2] >= 0 && input[0] < this->_nx && input[1] < this->_ny ) {
+    for (int i=0; i < _size; i++)
+      output[i] = _field[input[0]][input[1]][i];
+    return true;
+  } else {
+    return false;
+  }
+}
+
+template<typename T, typename BaseType>
+BaseType& BlockData2D<T,BaseType>::get(int iX, int iY, int iSize)
+{
+  OLB_PRECONDITION(iX >= 0 && iX < this->_nx);
+  OLB_PRECONDITION(iY >= 0 && iY < this->_ny);
+  OLB_PRECONDITION(iSize >= 0 && iSize < _size);
+  OLB_PRECONDITION(isConstructed());
+  return _field[iX][iY][iSize];
+}
+
+template<typename T, typename BaseType>
+BaseType const& BlockData2D<T,BaseType>::get(int iX, int iY, int iSize) const
+{
+  OLB_PRECONDITION(iX >= 0 && iX < this->_nx);
+  OLB_PRECONDITION(iY >= 0 && iY < this->_ny);
+  OLB_PRECONDITION(iSize >= 0 && iSize < _size);
+  OLB_PRECONDITION(isConstructed());
+  return _field[iX][iY][iSize];
 }
 
 template<typename T, typename BaseType>
@@ -274,11 +282,12 @@ int BlockData2D<T,BaseType>::getSize() const
   return _size;
 }
 
+
 template<typename T, typename BaseType>
 size_t BlockData2D<T,BaseType>::getSerializableSize() const
 {
-  return   3 * sizeof(int) // _size, _nX/Y
-           + getDataSize() * sizeof(BaseType); // _rawData
+  return 3 * sizeof(int) // _size, _nX/Y
+         + getDataSize() * sizeof(BaseType); // _rawData
 };
 
 template<typename T, typename BaseType>

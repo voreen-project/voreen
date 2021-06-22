@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2016 Thomas Henn
+ *  Copyright (C) 2016 Thomas Henn, Davide Dapelo
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,12 +24,12 @@
 #ifndef PARTICLESYSTEM_3D_HH
 #define PARTICLESYSTEM_3D_HH
 
-#include <list>
+#include <iostream>
+#include <cstring>
+#include <algorithm>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include <set>
 #include <memory>
 #include <stdexcept>
 
@@ -43,12 +43,15 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// For agglomeration functions
+
 namespace olb {
 
 template<typename T, template<typename U> class PARTICLETYPE>
-ParticleSystem3D<T, PARTICLETYPE>::ParticleSystem3D(
+ParticleSystem3D<T, PARTICLETYPE>::ParticleSystem3D( int iGeometry,
   SuperGeometry3D<T>& superGeometry)
   : clout(std::cout, "ParticleSystem3D"),
+    _iGeometry(iGeometry),
     _superGeometry(superGeometry),
     _contactDetection(new ContactDetection<T, PARTICLETYPE>(*this)),
     _sim(this)
@@ -59,6 +62,7 @@ template<typename T, template<typename U> class PARTICLETYPE>
 ParticleSystem3D<T, PARTICLETYPE>::ParticleSystem3D(
   const ParticleSystem3D<T, PARTICLETYPE>& pS)
   : clout(std::cout, "ParticleSystem3D"),
+    _iGeometry(pS._iGeometry),
     _superGeometry(pS._superGeometry),
     _contactDetection(new ContactDetection<T, PARTICLETYPE>(*this)),
     _sim(this),
@@ -73,6 +77,7 @@ template<typename T, template<typename U> class PARTICLETYPE>
 ParticleSystem3D<T, PARTICLETYPE>::ParticleSystem3D(
   ParticleSystem3D<T, PARTICLETYPE> && pS)
   :     clout(std::cout, "ParticleSystem3D"),
+        _iGeometry(pS._iGeometry),
         _superGeometry(pS._superGeometry),
         _contactDetection(new ContactDetection<T, PARTICLETYPE>(*this)),
         _sim(this),
@@ -87,6 +92,15 @@ template<typename T, template<typename U> class PARTICLETYPE>
 ContactDetection<T, PARTICLETYPE>* ParticleSystem3D<T, PARTICLETYPE>::getContactDetection()
 {
   return _contactDetection;
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
+void ParticleSystem3D<T, PARTICLETYPE>::printDeep(std::string message)
+{
+  std::deque<PARTICLETYPE<T>*> allParticles = this->getAllParticlesPointer();
+  for (auto p : allParticles) {
+    p->printDeep("");
+  }
 }
 
 template<typename T, template<typename U> class PARTICLETYPE>
@@ -226,13 +240,20 @@ void ParticleSystem3D<T, PARTICLETYPE>::addForce(
 
 template<typename T, template<typename U> class PARTICLETYPE>
 void ParticleSystem3D<T, PARTICLETYPE>::addBoundary(
-  std::shared_ptr<Boundary3D<T, PARTICLETYPE> > b)
+  std::shared_ptr<Boundary3D<T, PARTICLETYPE> > pB)
 {
-  _boundaries.push_back(b);
+  _boundaries.push_back(pB);
 }
 
 template<typename T, template<typename U> class PARTICLETYPE>
-template<template<typename V> class DESCRIPTOR>
+void ParticleSystem3D<T, PARTICLETYPE>::addParticleOperation(
+  std::shared_ptr<ParticleOperation3D<T, PARTICLETYPE> > pO)
+{
+  _particleOperations.push_back(pO);
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
+template<typename DESCRIPTOR>
 void ParticleSystem3D<T, PARTICLETYPE>::setVelToFluidVel(
   SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR> & fVel)
 {
@@ -245,7 +266,7 @@ void ParticleSystem3D<T, PARTICLETYPE>::setVelToFluidVel(
 
 template<typename T, template<typename U> class PARTICLETYPE>
 void ParticleSystem3D<T, PARTICLETYPE>::setVelToAnalyticalVel(
-  AnalyticalConst3D<T,T>& aVel)
+  AnalyticalConst3D<T, T>& aVel)
 {
   for (auto& p : _particles) {
     if (p.getActive()) {
@@ -284,9 +305,47 @@ void ParticleSystem3D<T, PARTICLETYPE>::computeBoundary()
 }
 
 template<typename T, template<typename U> class PARTICLETYPE>
+void ParticleSystem3D<T, PARTICLETYPE>::computeParticleOperation()
+{
+  typename std::deque<PARTICLETYPE<T> >::iterator p;
+  for (auto o : _particleOperations) {
+    for (p = _particles.begin(); p != _particles.end(); ++p) {
+      if (p->getActive()) {
+        o->applyParticleOperation(p, *this);
+      }
+    }
+  }
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
 void ParticleSystem3D<T, PARTICLETYPE>::simulate(T dT, bool scale)
 {
   _sim.simulate(dT, scale);
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
+void ParticleSystem3D<T, PARTICLETYPE>::simulateWithTwoWayCoupling_Mathias ( T dT,
+                                    ForwardCouplingModel<T,PARTICLETYPE>& forwardCoupling,
+                                    BackCouplingModel<T,PARTICLETYPE>& backCoupling,
+                                    int material, int subSteps, bool scale )
+{
+  _sim.simulateWithTwoWayCoupling_Mathias(dT, forwardCoupling, backCoupling, material, subSteps, scale);
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
+void ParticleSystem3D<T, PARTICLETYPE>::simulateWithTwoWayCoupling_Davide ( T dT,
+                                    ForwardCouplingModel<T,PARTICLETYPE>& forwardCoupling,
+                                    BackCouplingModel<T,PARTICLETYPE>& backCoupling,
+                                    int material, int subSteps, bool scale )
+{
+  _sim.simulateWithTwoWayCoupling_Davide(dT, forwardCoupling, backCoupling, material, subSteps, scale);
+}
+
+// multiple collision models
+template<typename T, template<typename U> class MagneticParticle3D>
+void ParticleSystem3D<T, MagneticParticle3D>::simulate(T dT, std::set<int> sActivity, bool scale)
+{
+  _sim.simulate(dT, sActivity, scale);
 }
 
 template<typename T, template<typename U> class PARTICLETYPE>
@@ -298,9 +357,9 @@ int ParticleSystem3D<T, PARTICLETYPE>::countMaterial(int mat)
     _superGeometry.getCuboidGeometry().get(p.getCuboid()).getFloorLatticeR(
       locLatCoords, &p.getPos()[0]);
     const BlockGeometryStructure3D<T>& bg = _superGeometry.getExtendedBlockGeometry(_superGeometry.getLoadBalancer().loc(p.getCuboid()));
-    int iX = locLatCoords[0]+_superGeometry.getOverlap();
-    int iY = locLatCoords[1]+_superGeometry.getOverlap();
-    int iZ = locLatCoords[2]+_superGeometry.getOverlap();
+    int iX = locLatCoords[0] + _superGeometry.getOverlap();
+    int iY = locLatCoords[1] + _superGeometry.getOverlap();
+    int iZ = locLatCoords[2] + _superGeometry.getOverlap();
     if    (bg.get(iX,     iY,     iZ) == mat
            || bg.get(iX,     iY + 1, iZ) == mat
            || bg.get(iX,     iY,     iZ + 1) == mat
@@ -316,6 +375,34 @@ int ParticleSystem3D<T, PARTICLETYPE>::countMaterial(int mat)
 }
 
 template<typename T, template<typename U> class PARTICLETYPE>
+bool ParticleSystem3D<T, PARTICLETYPE>::executeForwardCoupling(ForwardCouplingModel<T,PARTICLETYPE>& forwardCoupling)
+{
+  for (auto& p : _particles) {
+    if (p.getActive()) {
+      if (! forwardCoupling(&p, _iGeometry) ) {
+        std::cout << "ERROR: ForwardCoupling functional failed on particle " << p.getID();
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
+bool ParticleSystem3D<T, PARTICLETYPE>::executeBackwardCoupling(BackCouplingModel<T,PARTICLETYPE>& backCoupling, int material, int subSteps)
+{
+  for (auto& p : _particles) {
+    if (p.getActive()) {
+      if (! backCoupling(&p, _iGeometry, material) ) {
+        std::cout << "ERROR: BackwardCoupling functional failed on particle " << p.getID();
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template<typename T, template<typename U> class PARTICLETYPE>
 void ParticleSystem3D<T, PARTICLETYPE>::explicitEuler(T dT, bool scale)
 {
 
@@ -323,10 +410,13 @@ void ParticleSystem3D<T, PARTICLETYPE>::explicitEuler(T dT, bool scale)
   T maxFactor = T();
 
   for (auto& p : _particles) {
+
     if (p.getActive()) {
+
       for (int i = 0; i < 3; i++) {
-        p.getVel()[i] += p.getForce()[i] * p.getInvMass() * dT;
+        p.getVel()[i] += p.getForce()[i] * p.getInvAddedMass() * dT;
         p.getPos()[i] += p.getVel()[i] * dT;
+
         // computation of direction depending maxFactor to scale velocity value
         // to keep velocity small enough for simulation
         if (fabs(p.getVel()[i]) > fabs(maxDeltaR / dT)) {
@@ -344,6 +434,8 @@ void ParticleSystem3D<T, PARTICLETYPE>::explicitEuler(T dT, bool scale)
           p.getPos()[i] += p.getVel()[i] * dT;
         }
       }
+
+
       // if particles are too fast, e.g. material boundary can not work anymore
 //#ifdef OLB_DEBUG
 //      if (p.getVel()[i] * dT > _superGeometry.getCuboidGeometry().getMaxDeltaR()) {
@@ -355,161 +447,11 @@ void ParticleSystem3D<T, PARTICLETYPE>::explicitEuler(T dT, bool scale)
 //        exit(-1);
 //      }
 //#endif
+
     }
   }
 }
 
-//template<typename T, template<typename U> class PARTICLETYPE>
-//void ParticleSystem3D<T, PARTICLETYPE>::integrateTorque(T dT)
-//{
-//  for (auto& p : _particles) {
-//    if (p.getActive()) {
-//      for (int i = 0; i < 3; i++) {
-//        p.getAVel()[i] += p.getTorque()[i] * 1.
-//                          / (2. / 5. * p.getMass() * std::pow(p.getRad(), 2)) * dT;
-//      }
-//    }
-//  }
-//}
-
-//template<typename T, template<typename U> class PARTICLETYPE>
-//void ParticleSystem3D<T, PARTICLETYPE>::integrateTorqueMag(T dT) {
-////template<typename T>
-////void ParticleSystem3D<T, MagneticParticle3D>::integrateTorqueMag(T dT) {
-//  for (auto& p : _particles) {
-//    if (p.getActive()) {
-//      Vector<T, 3> deltaAngle;
-//      T angle;
-//      T epsilon = std::numeric_limits<T>::epsilon();
-//      for (int i = 0; i < 3; i++) {
-//        // change orientation due to torque moments
-//        deltaAngle[i] = (5. * p.getTorque()[i] * dT * dT) / (2. * p.getMass() * std::pow(p.getRad(), 2));
-//        // apply change in angle to dMoment vector
-//      }
-//      angle = norm(deltaAngle);
-//      if (angle > epsilon) {
-//        //Vector<T, 3> axis(deltaAngle);
-//        //  Vector<T, 3> axis(T(), T(), T(1));
-//        //axis.normalize();
-//        std::vector<T> null(3, T());
-//
-//        //RotationRoundAxis3D<T, S> rotRAxis(p.getPos(), fromVector3(axis), angle);
-//        RotationRoundAxis3D<T, S> rotRAxis(null, fromVector3(deltaAngle), angle);
-//        T input[3] = {p.getMoment()[0], p.getMoment()[1], p.getMoment()[2]};
-//        Vector<T, 3> in(input);
-//        T output[3] = {T(), T(), T()};
-//        rotRAxis(output, input);
-//        Vector<T, 3> out(output);
-////        std::vector<T> mainRefVec(3, T());
-////        mainRefVec[0] = 1.;
-////        std::vector<T> secondaryRefVec(3, T());
-////        secondaryRefVec[2] = 1.;
-////        AngleBetweenVectors3D<T, T> checkAngle(mainRefVec, secondaryRefVec);
-////        T angle[1];
-////        checkAngle(angle, input);
-//        std::cout<< "|moment|_in: " << in.norm() << ", |moment|_out: " << out.norm()
-//                 << ", | |in| - |out| |: " << fabs(in.norm() - out.norm())
-//                 /*<< " Angle: " << angle[0] */<< std::endl;
-//        p.getMoment()[0] = output[0];
-//        p.getMoment()[1] = output[1];
-//        p.getMoment()[2] = output[2];
-//      }
-//    }
-//  }
-//}
-
-//template<typename T, template<typename U> class PARTICLETYPE>
-//void ParticleSystem3D<T, PARTICLETYPE>::implicitEuler(T dT, AnalyticalF3D<T,T>& getvel) {
-//  _activeParticles = 0;
-//  for (auto& p : _particles) {
-//    if(p.getActive()) {
-//      std::vector<T> fVel = getvel(p._pos);
-////      std::vector<T> vel = p.getVel();
-//      std::vector<T> pos = p.getPos();
-//      T C = 6.* M_PI * p._rad * this->_converter.getCharNu() * this->_converter.getCharRho()* dT/p.getMass();
-//      for (int i = 0; i<3; i++) {
-//        p._vel[i] = (p._vel[i]+C*fVel[i]) / (1+C);
-//        p._pos[i] += p._vel[i] * dT;
-//      }
-////      p.setVel(vel);
-////      p.setPos(pos);
-//      checkActive(p);
-////      cout << "C: " << C << std::endl;
-//    }
-////    cout << "pos: " << p._pos[0] << " " << p._pos[1] << " " << p._pos[2] << " " << p._vel[0] << " " << p._vel[1] << " " << p._vel[2]<< std::endl; //"\n force: " << p._force[0] << " " << p._force[1] << " " << p._force[2]<< "\n " << std::endl;
-//  }
-//}
-
-/*
-template<typename T, template<typename U> class PARTICLETYPE>
-void ParticleSystem3D<T, PARTICLETYPE>::predictorCorrector1(T dT)
-{
-  std::vector<T> vel;
-  std::vector<T> pos;
-  std::vector<T> frc;
-  for (auto& p : _particles) {
-    if (p.getActive()) {
-      vel = p.getVel();
-      p.setVel(vel, 1);
-      pos = p.getPos();
-      p.setVel(pos, 2);
-      frc = p.getForce();
-      p.setForce(frc, 1);
-      for (int i = 0; i < 3; i++) {
-        vel[i] += p._force[i] / p.getMass() * dT;
-        pos[i] += vel[i] * dT;
-      }
-      p.setVel(vel);
-      p.setPos(pos);
-    }
-  }
-}
-
-template<typename T, template<typename U> class PARTICLETYPE>
-void ParticleSystem3D<T, PARTICLETYPE>::predictorCorrector2(T dT)
-{
-  std::vector<T> vel;
-  std::vector<T> pos;
-  std::vector<T> frc;
-  for (auto& p : _particles) {
-    if (p.getActive()) {
-      vel = p.getVel(1);
-      pos = p.getVel(2);
-      for (int i = 0; i < 3; i++) {
-        vel[i] += dT * .5 * (p.getForce()[i] + p.getForce(1)[i]) / p.getMass();
-        pos[i] += vel[i] * dT;
-      }
-      p.setVel(vel);
-      p.setPos(pos);
-    }
-  }
-}
-*/
-
-/*
-template<typename T, template<typename U> class PARTICLETYPE>
-void ParticleSystem3D<T, PARTICLETYPE>::adamBashforth4(T dT)
-{
-  for (auto& p : _particles) {
-    if (p.getActive()) {
-      std::vector<T> vel = p.getVel();
-      std::vector<T> pos = p.getPos();
-      for (int i = 0; i < 3; i++) {
-        vel[i] += dT / p.getMas()
-                  * (55. / 24. * p.getForce()[i] - 59. / 24. * p.getForce(1)[i]
-                     + 37. / 24. * p.getForce(2)[i] - 9. / 24. * p.getForce(3)[i]);
-      }
-      p.rotAndSetVel(vel);
-      for (int i = 0; i < 3; i++) {
-        pos[i] += dT
-                  * (55. / 24. * p.getVel()[i] - 59. / 24. * p.getVel(1)[i]
-                     + 37. / 24. * p.getVel(2)[i] - 3. / 8. * p.getVel(3)[i]);
-      }
-      p.setPos(pos);
-    }
-  }
-}
-*/
 
 template<typename T, template<typename U> class PARTICLETYPE>
 void ParticleSystem3D<T, PARTICLETYPE>::velocityVerlet1(T dT)
@@ -704,13 +646,13 @@ getAllParticlesPointer()
 
 template<typename T, template<typename U> class PARTICLETYPE>
 std::deque<PARTICLETYPE<T>*> ParticleSystem3D<T, PARTICLETYPE>::
-getShadowParticlesPointer(){
-   std::deque<PARTICLETYPE<T>*> pointerParticles;
-   for (int i = 0; i < (int) (_shadowParticles.size()); i++) {
-      pointerParticles.push_back(&_shadowParticles[i]);
-    }
-   return pointerParticles;
- }
+getShadowParticlesPointer() {
+  std::deque<PARTICLETYPE<T>*> pointerParticles;
+  for (int i = 0; i < (int) (_shadowParticles.size()); i++) {
+    pointerParticles.push_back(&_shadowParticles[i]);
+  }
+  return pointerParticles;
+}
 
 template<typename T, template<typename U> class PARTICLETYPE>
 void ParticleSystem3D<T, PARTICLETYPE>::saveToFile(std::string fullName)
@@ -772,20 +714,18 @@ void ParticleSystem3D<T, PARTICLETYPE>::saveToFile(std::string fullName)
 //            vel[2] = _converter.latticeVelocity(vel[2]);
 //            if (dist < rad * rad) {
 //              porosity = 0;
-//              bLattice.get(iX, iY, iZ).defineExternalField(
-//                DESCRIPTOR<T>::ExternalField::porosityIsAt, 1, &porosity);
-//              bLattice.get(iX, iY, iZ).defineExternalField(
-//                DESCRIPTOR<T>::ExternalField::localDragBeginsAt,
-//                DESCRIPTOR<T>::d, &vel[0]);
+//              bLattice.get(iX, iY, iZ).defineField<descriptors::POROSITY>(
+//                &porosity);
+//              bLattice.get(iX, iY, iZ).defineField<descriptors::LOCAL_DRAG>(
+//                &vel[0]);
 //            } else {
 //              T d = std::sqrt(dist) - rad;
 //              porosity = 1.
 //                         - std::pow(std::cos(M_PI * d / (2. * (eps - 1.) * rad)), 2);
-//              bLattice.get(iX, iY, iZ).defineExternalField(
-//                DESCRIPTOR<T>::ExternalField::porosityIsAt, 1, &porosity);
-//              bLattice.get(iX, iY, iZ).defineExternalField(
-//                DESCRIPTOR<T>::ExternalField::localDragBeginsAt,
-//                DESCRIPTOR<T>::d, &vel[0]);
+//              bLattice.get(iX, iY, iZ).defineField<descriptors::POROSITY>(
+//                &porosity);
+//              bLattice.get(iX, iY, iZ).defineField<descriptors::LOCAL_DRAG>(
+//                &vel[0]);
 //            }
 //          }
 //        }
@@ -821,10 +761,9 @@ void ParticleSystem3D<T, PARTICLETYPE>::saveToFile(std::string fullName)
 //    for (int iX = min[0]; iX < max[0]; ++iX) {
 //      for (int iY = min[1]; iY < max[1]; ++iY) {
 //        for (int iZ = min[2]; iZ < max[2]; ++iZ) {
-//          bLattice.get(iX, iY, iZ).defineExternalField(
-//            DESCRIPTOR<T>::ExternalField::porosityIsAt, 1, &porosity);
-//          bLattice.get(iX, iY, iZ).defineExternalField(
-//            DESCRIPTOR<T>::ExternalField::localDragBeginsAt, DESCRIPTOR<T>::d,
+//          bLattice.get(iX, iY, iZ).defineField<descriptors::POROSITY>(
+//            &porosity);
+//          bLattice.get(iX, iY, iZ).defineField<descriptors::LOCAL_DRAG>(
 //            vel);
 //          //          }
 //        }
@@ -832,6 +771,31 @@ void ParticleSystem3D<T, PARTICLETYPE>::saveToFile(std::string fullName)
 //    }
 //  }
 //}
+
+
+
+
+template<typename T, template<typename U> class PARTICLETYPE>
+void ParticleSystem3D<T, PARTICLETYPE>::setStoredValues()
+{
+
+  typename std::deque<PARTICLETYPE<T> >::iterator p;
+  int pInt = 0;
+  for (p = _particles.begin(); p != _particles.end(); ++p, ++pInt) {
+
+    p->setStoredPos(p->getPos());
+    // p->setStoredVel(p->getVel());
+    // p->setStoreForce(p->getForce());
+  }
+}
+
+
+
+template<typename T, template<typename U> class PARTICLETYPE>
+void ParticleSystem3D<T, PARTICLETYPE>::getMinDistParticle (std::vector<std::pair<size_t, T>> ret_matches)
+{
+  std::sort(ret_matches.begin(), ret_matches.end(), getMinDistPartObj);
+}
 
 
 }  //namespace olb

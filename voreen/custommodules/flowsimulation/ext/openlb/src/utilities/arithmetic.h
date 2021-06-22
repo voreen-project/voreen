@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,6 +24,7 @@
 #ifndef UTILITY_ARITHMETIC_H
 #define UTILITY_ARITHMETIC_H
 
+#include <cmath>
 #include <functional>
 
 namespace olb {
@@ -80,6 +81,18 @@ template <typename T>
 struct divides : public std::divides<T> {
   /// symbol character for functor naming
   static const char symbol = '/';
+};
+
+/// Power function object
+template <typename T>
+struct power {
+  /// symbol character for functor naming
+  static const char symbol = '^';
+
+  constexpr T operator() (const T& base, const T& exponent) const
+  {
+    return pow(base, exponent);
+  }
 };
 
 } // end namespace util

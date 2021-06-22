@@ -45,33 +45,38 @@ namespace olb {
 //////////////// Class CuboidNeighbourhood3D //////////////////
 
 template<typename T>
-CuboidNeighbourhood3D<T>::CuboidNeighbourhood3D(
-  SuperStructure3D<T>& superStructure, int iC):_superStructure(superStructure)
+CuboidNeighbourhood3D<T>::CuboidNeighbourhood3D(SuperStructure3D<T>& superStructure, int iC):
+  _superStructure(superStructure),
+  _iCglob(iC),
+  _nC(_superStructure.getCuboidGeometry().getNc()),
+  _deltaC(superStructure.getCuboidGeometry().get(iC).getDeltaR()),
+  _nData(_superStructure.getDataSize()),
+  _nDataType(_superStructure.getDataTypeSize()),
+  _iCuboid(_superStructure.getCuboidGeometry().get(_iCglob)),
+  _iCblock(_iCuboid.getNx(), _iCuboid.getNy(), _iCuboid.getNz(), _superStructure.getOverlap())
 {
-  _iCglob        = iC;
-  _nC            = _superStructure.getCuboidGeometry().getNc();
-  _deltaC        = _superStructure.getCuboidGeometry().get(iC).getDeltaR();
-  _nData         = _superStructure.getDataSize();
-  _nDataType     = _superStructure.getDataTypeSize();
   _initInCNdone  = false;
   _initOutCNdone = false;
 }
 
 template<typename T>
-CuboidNeighbourhood3D<T>::CuboidNeighbourhood3D (
-  CuboidNeighbourhood3D<T> const& rhs ):_superStructure(rhs._superStructure)
+CuboidNeighbourhood3D<T>::CuboidNeighbourhood3D(CuboidNeighbourhood3D<T> const& rhs):
+  _superStructure(rhs._superStructure),
+  _iCglob(rhs._iCglob),
+  _nC(rhs._nC),
+  _deltaC(rhs._deltaC),
+  _nData(rhs._nData),
+  _nDataType(rhs._nDataType),
+  _iCuboid(rhs._iCuboid),
+  _iCblock(rhs._iCblock)
 {
-  _iCglob        = rhs._iCglob;
-  _nC            = rhs._nC;
-  _deltaC        = rhs._deltaC;
   _inCells       = rhs._inCells;
   _outCells      = rhs._outCells;
   _inC           = rhs._inC;
   _inN           = rhs._inN;
   _outC          = rhs._outC;
   _outN          = rhs._outN;
-  _nData         = rhs._nData;
-  _nDataType     = rhs._nDataType;
+
   _initInCNdone  = false;
   _initOutCNdone = false;
 }
@@ -116,66 +121,76 @@ int CuboidNeighbourhood3D<T>::get_inCsize() const
 }
 
 template<typename T>
-bool** CuboidNeighbourhood3D<T>::get_inData()
+std::uint8_t** CuboidNeighbourhood3D<T>::get_inData()
 {
   return _inData;
 }
 
 template<typename T>
-bool** CuboidNeighbourhood3D<T>::get_outData()
+std::uint8_t** CuboidNeighbourhood3D<T>::get_outData()
 {
   return _outData;
 }
 
 
 template<typename T>
+std::size_t CuboidNeighbourhood3D<T>::getLocalCellId(int iX, int iY, int iZ) const
+{
+  const int overlap = _superStructure.getOverlap();
+  return _iCblock.getCellId(iX+overlap, iY+overlap, iZ+overlap);
+}
+
+template<typename T>
 void CuboidNeighbourhood3D<T>::add_inCell(Cell3D<T> cell)
 {
-  _inCells.push_back(cell);
+  cell.latticeCellId = getLocalCellId(cell.latticeR[1], cell.latticeR[2], cell.latticeR[3]); 
+  _inCells.emplace_back(cell);
 }
 
 template<typename T>
 void CuboidNeighbourhood3D<T>::add_outCell(Cell3D<T> cell)
 {
-  _outCells.push_back(cell);
+  cell.latticeCellId = getLocalCellId(cell.latticeR[1], cell.latticeR[2], cell.latticeR[3]); 
+  _outCells.emplace_back(cell);
 }
 
 template<typename T>
 void CuboidNeighbourhood3D<T>::add_inCell(int iX, int iY, int iZ)
 {
-
   Cell3D<T> found;
   found.latticeR[0] = _iCglob;
   found.latticeR[1] = iX;
   found.latticeR[2] = iY;
   found.latticeR[3] = iZ;
 
-  _superStructure.getCuboidGeometry().getPhysR(found.physR, found.latticeR);
+  auto& cuboidGeometry = _superStructure.getCuboidGeometry();
+  cuboidGeometry.getPhysR(found.physR, found.latticeR);
+
   std::vector<T> tmp(found.physR,found.physR + 3);
-  if (_superStructure.getCuboidGeometry().getC(tmp, found.latticeR[0]) ) {
-    for (unsigned i=0; i<_inCells.size(); i++) {
-      if (_inCells[i]==found) {
+  if (cuboidGeometry.getC(tmp, found.latticeR[0]) ) {
+    for (unsigned i=0; i < _inCells.size(); i++) {
+      if (_inCells[i] == found) {
         return;
       }
     }
-    _inCells.push_back(found);
+    add_inCell(found);
   }
 }
 
 template<typename T>
 void CuboidNeighbourhood3D<T>::add_inCells(int overlap)
 {
+  auto& cuboidGeometry = _superStructure.getCuboidGeometry();
+  const int nX  = cuboidGeometry.get(_iCglob).getNx();
+  const int nY  = cuboidGeometry.get(_iCglob).getNy();
+  const int nZ  = cuboidGeometry.get(_iCglob).getNz();
 
-  int nX  = _superStructure.getCuboidGeometry().get(_iCglob).getNx();
-  int nY  = _superStructure.getCuboidGeometry().get(_iCglob).getNy();
-  int nZ  = _superStructure.getCuboidGeometry().get(_iCglob).getNz();
-
-  for (int iX=0; iX<nX+2*overlap; iX++) {
-    for (int iY=0; iY<nY+2*overlap; iY++) {
-      for (int iZ=0; iZ<nZ+2*overlap; iZ++) {
+  for (int iX=0; iX < nX+2*overlap; ++iX) {
+    for (int iY=0; iY < nY+2*overlap; ++iY) {
+      for (int iZ=0; iZ < nZ+2*overlap; ++iZ) {
         if (iX < overlap || iX > nX + overlap - 1 ||
             iY < overlap || iY > nY + overlap - 1 ||
-            iZ < overlap || iZ > nZ + overlap - 1 ) {
+            iZ < overlap || iZ > nZ + overlap - 1) {
           Cell3D<T> found;
           found.latticeR[0] = _iCglob;
           found.latticeR[1] = iX - overlap;
@@ -185,7 +200,7 @@ void CuboidNeighbourhood3D<T>::add_inCells(int overlap)
           _superStructure.getCuboidGeometry().getPhysR(found.physR, found.latticeR);
           std::vector<T> tmp(found.physR,found.physR + 3);
           if (_superStructure.getCuboidGeometry().getC(tmp, found.latticeR[0]) ) {
-            _inCells.push_back(found);
+            add_inCell(found);
           }
         }
       }
@@ -196,13 +211,13 @@ void CuboidNeighbourhood3D<T>::add_inCells(int overlap)
 template<typename T>
 void CuboidNeighbourhood3D<T>::init_inCN()
 {
-
   _inC.clear();
   _inN.clear();
 
-  _inData = new bool* [_nC];
-  _inDataCoordinates = new T* [_nC];
-  _tempInCN = new int [_nC];
+  _inData = new std::uint8_t*[_nC];
+  _inDataSize = new std::size_t[_nC];
+  _inDataCoordinates = new T*[_nC];
+  _tempInCN = new int[_nC];
   for (int i=0; i<_nC; i++) {
     _tempInCN[i]=0;
   }
@@ -214,35 +229,21 @@ void CuboidNeighbourhood3D<T>::init_inCN()
     if (_tempInCN[i]!=0) {
       _inC.push_back(i);
       _inN.push_back(_tempInCN[i]);
-#ifdef PARALLEL_MODE_MPI
-      _inData[i] = new bool [_tempInCN[i]*_nData*_nDataType];
-      _inDataCoordinates[i] = new T [_tempInCN[i]*3];
-#endif
+      _inDataSize[i] = _tempInCN[i];
+      _inData[i] = new std::uint8_t[_tempInCN[i]*_nData*_nDataType];
+      _inDataCoordinates[i] = new T[_tempInCN[i]*3];
     }
-#ifdef PARALLEL_MODE_MPI
     else {
       _inData[i] = NULL;
       _inDataCoordinates[i] = NULL;
     }
-#endif
   }
 
 #ifdef PARALLEL_MODE_MPI
-  int counter=0;
+  _mpiNbHelper.allocate(_nC);
   for (int i=0; i<_nC; i++) {
     int dRank = _superStructure.getLoadBalancer().rank(i);
-    if ( singleton::mpi().getRank() != dRank ) {
-      counter++;
-    }
-  }
-  _mpiNbHelper.allocate(counter);
-  counter=0;
-  for (int i=0; i<_nC; i++) {
-    int dRank = _superStructure.getLoadBalancer().rank(i);
-    if ( singleton::mpi().getRank() != dRank ) {
-      singleton::mpi().iSend(&_tempInCN[i] , 1, dRank, &_mpiNbHelper.get_mpiRequest()[counter], _iCglob);
-      counter++;
-    }
+    singleton::mpi().iSend(&_tempInCN[i] , 1, dRank, _mpiNbHelper.get_mpiRequest(i), _iCglob);
   }
 #endif
 
@@ -252,11 +253,11 @@ void CuboidNeighbourhood3D<T>::init_inCN()
 template<typename T>
 void CuboidNeighbourhood3D<T>::init_outCN()
 {
-
   _outC.clear();
   _outN.clear();
-  _outData = new bool* [_nC];
-  _outDataCoordinates = new T* [_nC];
+  _outData = new std::uint8_t*[_nC];
+  _outDataSize = new std::size_t[_nC];
+  _outDataCoordinates = new T*[_nC];
 
   std::vector<int> temp(_nC,0);
 
@@ -264,80 +265,65 @@ void CuboidNeighbourhood3D<T>::init_outCN()
     temp[_outCells[i].latticeR[0]]++;
   }
 
-  for (int i=0; i<_nC; i++) {
+  for (int i=0; i < _nC; i++) {
 #ifdef PARALLEL_MODE_MPI
     int sRank = _superStructure.getLoadBalancer().rank(i);
-    if ( singleton::mpi().getRank() != sRank ) {
-      singleton::mpi().receive(&temp[i], 1, sRank, i);
-    }
+    singleton::mpi().receive(&temp[i], 1, sRank, i);
 #endif
-    if (temp[i]!=0) {
+    if (temp[i] != 0) {
       _outC.push_back(i);
       _outN.push_back(temp[i]);
     }
-    _outData[i] = new bool [temp[i]*_nData*_nDataType];
-    _outDataCoordinates[i] = new T [temp[i]*3];
+    _outDataSize[i] = temp[i];
+    _outData[i] = new std::uint8_t[temp[i]*_nData*_nDataType];
+    _outDataCoordinates[i] = new T[temp[i]*3];
   }
 
   _initOutCNdone = true;
 }
 
-template<typename T>
-void CuboidNeighbourhood3D<T>::bufSend_inCells()
-{
-
 #ifdef PARALLEL_MODE_MPI
-  _mpiNbHelper.free();
+template<typename T>
+void CuboidNeighbourhood3D<T>::bufSend_inCells(singleton::MpiNonBlockingHelper& helper)
+{
+  helper.free();
 
   std::vector<int> temp(_nC,0);
-  for (unsigned i=0; i<_inCells.size(); i++) {
+  for (unsigned i=0; i < _inCells.size(); i++) {
     int iC = _inCells[i].latticeR[0];
     if (singleton::mpi().getRank() != _superStructure.getLoadBalancer().rank(iC)) {
-      _inDataCoordinates[iC][3*temp[iC]] = _inCells[i].physR[0];
+      _inDataCoordinates[iC][3*temp[iC]]   = _inCells[i].physR[0];
       _inDataCoordinates[iC][3*temp[iC]+1] = _inCells[i].physR[1];
       _inDataCoordinates[iC][3*temp[iC]+2] = _inCells[i].physR[2];
       temp[iC]++;
     }
   }
 
-  int counter=0;
-  for (unsigned iC=0; iC<_inC.size(); iC++) {
-    //int dRank = _superStructure.get_load().rank(_inC[iC]);
-    //if ( singleton::mpi().getRank() != dRank )
-    counter++;
-  }
-
-  _mpiNbHelper.allocate(counter);
-  counter=0;
+  helper.allocate(_inC.size());
   for (unsigned iC=0; iC<_inC.size(); iC++) {
     int dRank = _superStructure.getLoadBalancer().rank(_inC[iC]);
-    //if ( singleton::mpi().getRank() != dRank ) {
-    singleton::mpi().iSend( _inDataCoordinates[_inC[iC]],
-                            _inN[iC]*3, dRank, &_mpiNbHelper.get_mpiRequest()[counter], _iCglob);
-    counter++;
-    //}
+    singleton::mpi().iSend(_inDataCoordinates[_inC[iC]],
+                           _inN[iC]*3, dRank, helper.get_mpiRequest(iC), _iCglob);
   }
-#endif
 }
+#endif
 
 template<typename T>
 void CuboidNeighbourhood3D<T>::recWrite_outCells()
 {
-
 #ifdef PARALLEL_MODE_MPI
-  for (unsigned iC=0; iC<_outC.size(); iC++) {
+  for (unsigned iC=0; iC < _outC.size(); iC++) {
     int sRank = _superStructure.getLoadBalancer().rank(_outC[iC]);
-    singleton::mpi().receive(_outDataCoordinates[_outC[iC]], _outN[iC]*3, sRank,_outC[iC]);
-    if ( singleton::mpi().getRank() != sRank ) {
-      //singleton::mpi().receive(_outDataCoordinates[_outC[iC]], _outN[iC]*3, sRank, _outC[iC]);
+    singleton::mpi().receive(_outDataCoordinates[_outC[iC]], _outN[iC]*3, sRank, _outC[iC]);
+    if (singleton::mpi().getRank() != sRank) {
       Cell3D<T> found;
-      for (int i=0; i<_outN[iC]; i++) {
+      for (int i=0; i < _outN[iC]; i++) {
         found.physR[0] = _outDataCoordinates[_outC[iC]][3*i];
         found.physR[1] = _outDataCoordinates[_outC[iC]][3*i+1];
         found.physR[2] = _outDataCoordinates[_outC[iC]][3*i+2];
         _superStructure.getCuboidGeometry().getLatticeR(found.latticeR, found.physR);
         found.latticeR[0] = _outC[iC];
-        _outCells.push_back(found);
+        add_outCell(found);
       }
     }
   }
@@ -347,29 +333,24 @@ void CuboidNeighbourhood3D<T>::recWrite_outCells()
 template<typename T>
 void CuboidNeighbourhood3D<T>::finish_comm()
 {
-
 #ifdef PARALLEL_MODE_MPI
   singleton::mpi().waitAll(_mpiNbHelper);
 #endif
-
 }
 
 template<typename T>
 void CuboidNeighbourhood3D<T>::buffer_outData()
 {
-
-  std::vector<int> temp(_nC,0);
-  int iCloc = _superStructure.getLoadBalancer().loc(_iCglob);
-  for (unsigned i=0; i<_outCells.size(); i++) {
-    int iC = _outCells[i].latticeR[0];
-    // WARNING: Here is interpolation needed if globX, globY
-    // are not integers. This needs to be fixed if one will
-    // use unstructured grids.
-    //for (int iData=0; iData<_nData; iData++) {
-    //  memcpy(_outData[iC] + (temp[iC]*_nData + iData)*_nDataType, _superStructure(iCloc,iX+overlap,iY+overlap,iZ+overlap,iData), _nDataType);
-    //}
-    memcpy(_outData[iC] + temp[iC]*_nData*_nDataType, _superStructure(iCloc,_outCells[i].latticeR[1],_outCells[i].latticeR[2],_outCells[i].latticeR[3],0), _nDataType*_nData);
-    temp[iC]++;
+  const int iCloc = _superStructure.getLoadBalancer().loc(_iCglob);
+  int iC = -1;
+  for (unsigned iData=0; iData < _nData; ++iData) {
+    std::vector<int> iCommCell(_nC,0);
+    for (unsigned i=0; i < _outCells.size(); ++i, ++iCommCell[iC]) {
+      iC = _outCells[i].latticeR[0];
+      std::uint8_t* outPop = _outData[iC] + (iData*_outDataSize[iC] + iCommCell[iC])*_nDataType;
+      std::uint8_t* locPop = _superStructure(iCloc, _outCells[i].latticeCellId, iData);
+      std::memcpy(outPop, locPop, _nDataType);
+    }
   }
 }
 
@@ -379,8 +360,9 @@ void CuboidNeighbourhood3D<T>::send_outData()
 #ifdef PARALLEL_MODE_MPI
   for (unsigned iC=0; iC<_outC.size(); iC++) {
     int dRank = _superStructure.getLoadBalancer().rank(_outC[iC]);
-    singleton::mpi().iSend( _outData[_outC[iC]],
-                            _outN[iC]*_nData*_nDataType, dRank, &_mpiNbHelper.get_mpiRequest()[iC], _iCglob);
+   singleton::mpi().iSend(_outData[_outC[iC]],
+                          _outN[iC]*_nData*_nDataType,
+                          dRank, _mpiNbHelper.get_mpiRequest(iC), _iCglob);
   }
 #endif
 }
@@ -399,18 +381,16 @@ void CuboidNeighbourhood3D<T>::receive_inData()
 template<typename T>
 void CuboidNeighbourhood3D<T>::write_inData()
 {
-
-  int iCloc = _superStructure.getLoadBalancer().loc(_iCglob);
-  std::vector<int> temp(_nC,0);
-  for (unsigned i=0; i<_inCells.size(); i++) {
-    int iC = _inCells[i].latticeR[0];
-    //for (int iData=0; iData<_nData; iData++) {
-    //  memcpy(_superStructure(iCloc,iX+overlap,iY+overlap,iZ+overlap,iData), _inData[iC] + (temp[iC]*_nData + iData)*_nDataType, _nDataType);
-    //}
-    //memcpy(_superStructure(iCloc,iX+overlap,iY+overlap,iZ+overlap,0), _inData[iC] + temp[iC]*_nData*_nDataType, _nData*_nDataType);
-    //temp[iC]++;
-    memcpy(_superStructure(iCloc,_inCells[i].latticeR[1],_inCells[i].latticeR[2],_inCells[i].latticeR[3],0), _inData[iC] + temp[iC]*_nData*_nDataType, _nData*_nDataType);
-    temp[iC]++;
+  const int iCloc = _superStructure.getLoadBalancer().loc(_iCglob);
+  int iC = -1;
+  for (unsigned iData=0; iData < _nData; ++iData) {
+    std::vector<int> iCommCell(_nC,0);
+    for (unsigned i=0; i < _inCells.size(); ++i, ++iCommCell[iC]) {
+      iC = _inCells[i].latticeR[0];
+      std::uint8_t* inPop  = _inData[iC] + (iData*_inDataSize[iC] + iCommCell[iC])*_nDataType;
+      std::uint8_t* locPop = _superStructure(iCloc, _inCells[i].latticeCellId, iData);
+      std::memcpy(locPop, inPop, _nDataType);
+    }
   }
 }
 
@@ -426,6 +406,7 @@ void CuboidNeighbourhood3D<T>::reset()
     }
 #endif
     delete[] _inData;
+    delete[] _inDataSize;
     delete[] _inDataCoordinates;
     delete[] _tempInCN;
     _initInCNdone = false;
@@ -436,6 +417,7 @@ void CuboidNeighbourhood3D<T>::reset()
       delete[] _outDataCoordinates[iC];
     }
     delete[] _outData;
+    delete[] _outDataSize;
     delete[] _outDataCoordinates;
 #ifdef PARALLEL_MODE_MPI
     _mpiNbHelper.free();

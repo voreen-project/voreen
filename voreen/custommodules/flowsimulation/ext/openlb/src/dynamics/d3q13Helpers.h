@@ -40,15 +40,15 @@ namespace olb {
 /// Helper functions for the (somewhat special) D3Q13 lattice
 template<typename T>
 struct d3q13Helpers {
-  typedef descriptors::D3Q13Descriptor<T> Lattice;
+  typedef descriptors::D3Q13<> DESCRIPTOR;
 
   /// BGK collision step
-  static T collision( Cell<T,descriptors::D3Q13Descriptor>& cell,
-                      T rho, const T u[Lattice::d],
+  static T collision( Cell<T,descriptors::D3Q13<>>& cell,
+                      T rho, const T u[DESCRIPTOR::d],
                       T lambda_nu, T lambda_nu_prime)
   {
-    const T lambda_e = descriptors::D3Q13Descriptor<T>::lambda_e;
-    const T lambda_h = descriptors::D3Q13Descriptor<T>::lambda_h;
+    const T lambda_e = descriptors::lambda_e<T,DESCRIPTOR>();
+    const T lambda_h = descriptors::lambda_h<T,DESCRIPTOR>();
 
     T uxSqr = util::sqr(u[0]);
     T uySqr = util::sqr(u[1]);
@@ -125,12 +125,12 @@ struct d3q13Helpers {
   }
 
   /// BGK collision step with density correction
-  static T constRhoCollision( Cell<T,descriptors::D3Q13Descriptor>& cell,
-                              T rho, const T u[Lattice::d],
+  static T constRhoCollision( Cell<T,descriptors::D3Q13<>>& cell,
+                              T rho, const T u[DESCRIPTOR::d],
                               T ratioRho,
                               T lambda_nu, T lambda_nu_prime)
   {
-    const T uSqr = util::normSqr<T,Lattice::d>(u);
+    const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
 
     return uSqr;
   }

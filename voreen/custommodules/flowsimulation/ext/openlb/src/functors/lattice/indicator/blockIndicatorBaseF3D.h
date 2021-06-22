@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,38 +24,82 @@
 #ifndef BLOCK_INDICATOR_BASE_F_3D_H
 #define BLOCK_INDICATOR_BASE_F_3D_H
 
+#include "functors/lattice/superBaseF3D.h"
 #include "functors/lattice/blockBaseF3D.h"
+#include "core/blockData3D.h"
 #include "core/blockStructure3D.h"
 
 namespace olb {
 
-template<typename T> class BlockF3D;
-template<typename T> class BlockGeometry3D;
-
-/// Base block indicator functor (discrete)
+/// Base block indicator functor
+/**
+ * Derived functors implement a indicator function on the full domain given by
+ * BlockGeometryStructure3D. Note the distinction between normal and extended
+ * block geometries exposed by SuperGeometry3D.
+ *
+ * By convention SuperIndicatorF3D::_blockF functors are expected to operate on
+ * overlap-less domains i.e. BlockGeometryView3D instances.
+ *
+ * Block indicators to be queried on a full block including its overlap must be
+ * constructed on extended BlockGeometry3D  instances such as  those exposed by
+ * SuperGeometry3D::getExtendedBlockGeometry
+ **/
 template <typename T>
 class BlockIndicatorF3D : public BlockF3D<bool> {
 protected:
-  BlockGeometry3D<T>& _blockGeometry;
+  BlockGeometryStructure3D<T>& _blockGeometryStructure;
+  const BlockData3D<T,bool>*   _cachedData;
 public:
   using BlockF3D<bool>::operator();
 
-  BlockIndicatorF3D(BlockGeometry3D<T>& blockGeometry);
+  /// Constructor
   /**
-   * Get underlying block geometry
-   *
-   * \returns _blockGeometry
+   * \param geometry Any implementation of BlockGeometryStructure3D
+   *                 e.g. BlockGeometry3D or BlockGeometryView3D
    **/
-  BlockGeometry3D<T>& getBlockGeometry();
+  BlockIndicatorF3D(BlockGeometryStructure3D<T>& geometry);
+
+  /// Get underlying block geometry structure
   /**
-   * Block indicator specific function operator overload
-   *
+   * \returns _blockGeometryStructure
+   **/
+  BlockGeometryStructure3D<T>& getBlockGeometryStructure();
+
+  /// Block indicator specific function operator overload
+  /**
    * The boolean return value of `operator()(T output[], S input[])` describes
    * the call's success and by convention must not describe the indicated domain.
    *
-   * \return Domain indicator i.e. `true` iff the input lies within the described domain.
+   * \return Domain indicator i.e. `true` iff the input lies within the described subset.
    **/
-  virtual bool operator() (const int input[]);
+  bool operator() (const int input[]);
+  /// Block indicator specific function operator overload
+  /**
+   * The boolean return value of `operator()(T output[], S input[])` describes
+   * the call's success and by convention must not describe the indicated domain.
+   *
+   * \return Domain indicator i.e. `true` iff the input lies within the described subset.
+   **/
+  bool operator() (int iX, int iY, int iZ);
+
+  /// Set bool-mask cache to be used by indicator operator overloads
+  void setCache(const BlockData3D<T,bool>& cache);
+
+  /// Returns true only if the indicated domain subset is empty
+  /**
+   * May return false even if the indicated domain subset is in fact empty.
+   * Primarily implemented to minimize block accesses if an empty domain can
+   * be inferred by e.g. BlockGeometryStatistics3D data.
+   *
+   * i.e. only override this method if the domain can be checked for emptyness
+   *      in an efficient fashion.
+   **/
+  virtual bool isEmpty();
+  /// Returns min lattice position of the indicated subset's bounding box
+  virtual Vector<int,3> getMin() = 0;
+  /// Returns max lattice position of the indicated subset's bounding box
+  virtual Vector<int,3> getMax() = 0;
+
 };
 
 } // namespace olb

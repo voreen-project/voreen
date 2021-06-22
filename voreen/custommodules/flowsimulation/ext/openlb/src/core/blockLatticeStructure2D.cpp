@@ -27,10 +27,10 @@
 #include "blockLatticeStructure2D.h"
 #include "blockLatticeStructure2D.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 namespace olb {
 
-template class BlockLatticeStructure2D<double, descriptors::D2Q9Descriptor>;
+template class BlockLatticeStructure2D<double, descriptors::D2Q9<>>;
 
 }  // namespace olb

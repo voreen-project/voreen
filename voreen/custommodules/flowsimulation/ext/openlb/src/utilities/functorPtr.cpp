@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -27,11 +27,38 @@
 #include "functors/functors2D.h"
 #include "functors/functors3D.h"
 
+#include "dynamics/latticeDescriptors.h"
+
 namespace olb {
 
+template class FunctorPtr<AnalyticalF<1,double,double>>;
+template class FunctorPtr<AnalyticalF<2,double,double>>;
+template class FunctorPtr<AnalyticalF<3,double,double>>;
+
+template class FunctorPtr<AnalyticalF<1,double,int>>;
+template class FunctorPtr<AnalyticalF<2,double,int>>;
+template class FunctorPtr<AnalyticalF<3,double,int>>;
+
+template class FunctorPtr<AnalyticalF<1,bool,double>>;
+template class FunctorPtr<AnalyticalF<2,bool,double>>;
+template class FunctorPtr<AnalyticalF<3,bool,double>>;
+
 template class FunctorPtr<SuperF2D<double>>;
+template class FunctorPtr<SuperF2D<double,int>>;
+template class FunctorPtr<SuperF2D<double,bool>>;
+template class FunctorPtr<SuperLatticeF2D<double,descriptors::D2Q9<>>>;
+
 template class FunctorPtr<SuperF3D<double>>;
+template class FunctorPtr<SuperF3D<double,int>>;
+template class FunctorPtr<SuperF3D<double,bool>>;
+template class FunctorPtr<SuperLatticeF3D<double,descriptors::D3Q19<>>>;
+
 template class FunctorPtr<SuperIndicatorF2D<double>>;
+template class FunctorPtr<IndicatorF2D<double>>;
+template class FunctorPtr<SmoothIndicatorF2D<double,double,false>>;
+
 template class FunctorPtr<SuperIndicatorF3D<double>>;
+template class FunctorPtr<IndicatorF3D<double>>;
+template class FunctorPtr<SmoothIndicatorF3D<double,double,false>>;
 
 }

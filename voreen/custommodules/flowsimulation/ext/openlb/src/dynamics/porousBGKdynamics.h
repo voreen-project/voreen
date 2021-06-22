@@ -33,36 +33,35 @@
 namespace olb {
 
 /// Implementation of the BGK collision step for a porosity model
-template<typename T, template<typename U> class Lattice>
-class PorousBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class PorousBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  PorousBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  PorousBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
 
   /// Collision step
-  virtual void collide(Cell<T,Lattice>& cell,
-                       LatticeStatistics<T>& statistics_);
+  void collide(Cell<T,DESCRIPTOR>& cell,
+                       LatticeStatistics<T>& statistics_) override;
 
   /// get relaxation parameter
-  T    getOmega() const;
+  T    getOmega() const override;
   /// set relaxation parameter
-  void setOmega(T omega_);
+  void setOmega(T omega_) override;
 
 
 private:
   T omega;      ///< relaxation parameter
-  static const int porosityIsAt = Lattice<T>::ExternalField::porosityIsAt;
 };
 
 /// Implementation of the BGK collision step for a porosity model enabling
 /// drag computation
-template<typename T, template<typename U> class Lattice>
-class ExtendedPorousBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ExtendedPorousBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ExtendedPorousBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ExtendedPorousBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
   /// get relaxation parameter
   T    getOmega() const;
@@ -72,22 +71,16 @@ public:
 
 private:
   T omega;      ///< relaxation parameter
-  static const int porosityIsAt      = Lattice<T>::ExternalField::
-                                       porosityIsAt;
-  static const int localDragBeginsAt = Lattice<T>::ExternalField::
-                                       localDragBeginsAt;
-  static const int sizeOfLocalDrag   = Lattice<T>::ExternalField::
-                                       sizeOfLocalDrag;
 };
 
 /// Implementation of the BGK collision step for subgridscale particles
-template<typename T, template<typename U> class Lattice>
-class SubgridParticleBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class SubgridParticleBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  SubgridParticleBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  SubgridParticleBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
   /// get relaxation parameter
   T    getOmega() const;
@@ -97,87 +90,74 @@ public:
 
 private:
   T omega;      ///< relaxation parameter
-  static const int porosityIsAt      = Lattice<T>::ExternalField::
-                                       porosityIsAt;
-  static const int localDragBeginsAt = Lattice<T>::ExternalField::
-                                       localDragBeginsAt;
-  static const int sizeOfLocalDrag   = Lattice<T>::ExternalField::
-                                       sizeOfLocalDrag;
   T _fieldTmp[4];
 };
 
-/// Implementation of the BGK collision step for a porosity model enabling
-/// drag computation for many particles
-template<typename T, template<typename U> class Lattice>
-class PorousParticleBGKdynamics : public BGKdynamics<T,Lattice> {
-public:
-  /// Constructor
-  PorousParticleBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
-  /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
-                       LatticeStatistics<T>& statistics_);
-  /// get relaxation parameter
-  T    getOmega() const;
-  /// set relaxation parameter
-  void setOmega(T omega_);
-
-
-private:
-  T omega;      ///< relaxation parameter
-  static const int porosityIsAt   = Lattice<T>::ExternalField::
-                                    porosityIsAt;
-  static const int sizeOfVelNum   = Lattice<T>::ExternalField::
-                                    sizeOfVelNum;
-  static const int velNumerator   = Lattice<T>::ExternalField::
-                                    velNumerator;
-  static const int sizeOfVelDenom = Lattice<T>::ExternalField::
-                                    sizeOfVelDenom;
-  static const int velDenominator = Lattice<T>::ExternalField::
-                                    velDenominator;
+/* Generic implementation for moving porous media (HLBM approach).
+ * As this scheme requires additionla data stored in an external field, 
+ * it is meant to be used along with a PorousParticle descriptor.
+ * \param omega Lattice relaxation frequency
+ * \param momenta A standard object for the momenta computation
+ */
+template<typename T, typename DESCRIPTOR, bool isStatic=false>
+class PorousParticleDynamics {
+protected:
+  template <bool isStatic_ = isStatic>
+  static std::enable_if_t<isStatic_> calculate(ConstCell<T,DESCRIPTOR>& cell, T* pVelocity);
+  template <bool isStatic_ = isStatic>
+  static std::enable_if_t<!isStatic_> calculate(Cell<T,DESCRIPTOR>& cell, T* pVelocity);
 };
 
-/// Implementation of the BGK collision step for a porosity model enabling
-/// drag computation for many particles
-template<typename T, template<typename U> class Lattice>
-class PorousParticleBGKdynamics3D : public BGKdynamics<T,Lattice> {
+/* Implementation of the BGK collision for moving porous media (HLBM approach).
+ * As this scheme requires additionla data stored in an external field, 
+ * it is meant to be used along with a PorousParticle descriptor.
+ * \param omega Lattice relaxation frequency
+ * \param momenta A standard object for the momenta computation
+ */
+template<typename T, typename DESCRIPTOR, bool isStatic=false>
+class PorousParticleBGKdynamics : public BGKdynamics<T,DESCRIPTOR>, public PorousParticleDynamics<T,DESCRIPTOR,isStatic> {
 public:
   /// Constructor
-  PorousParticleBGKdynamics3D(T omega_, Momenta<T,Lattice>& momenta_);
+  PorousParticleBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// Compute fluid velocity on the cell.
+  void computeU ( ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d] ) const override;
+  /// Compute fluid velocity and particle density on the cell.
+  void computeRhoU ( ConstCell<T,DESCRIPTOR>& cell,
+                     T& rho, T u[DESCRIPTOR::d]) const override;
   /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
-                       LatticeStatistics<T>& statistics_);
-  /// get relaxation parameter
-  T    getOmega() const;
-  /// set relaxation parameter
-  void setOmega(T omega_);
-
-
-private:
-  T omega;      ///< relaxation parameter
-  static const int porosityIsAt   = Lattice<T>::ExternalField::
-                                    porosityIsAt;
-  static const int sizeOfVelNum   = Lattice<T>::ExternalField::
-                                    sizeOfVelNum;
-  static const int velNumerator   = Lattice<T>::ExternalField::
-                                    velNumerator;
-  static const int sizeOfVelDenom = Lattice<T>::ExternalField::
-                                    sizeOfVelDenom;
-  static const int velDenominator = Lattice<T>::ExternalField::
-                                    velDenominator;
-  T _fieldTmp[5];
+  void collide(Cell<T,DESCRIPTOR>& cell,
+                       LatticeStatistics<T>& statistics_) override;
+protected:
+  T porousParticleBgkCollision(Cell<T,DESCRIPTOR>& cell, T rho, T u[DESCRIPTOR::d], T omega);
 };
+
+
+/* Implementation of the BGK collision for Zeta-Field formulation (Geng2019).
+ */
+template<typename T, typename DESCRIPTOR, bool isStatic=false>
+class DBBParticleBGKdynamics : public BGKdynamics<T,DESCRIPTOR>, public PorousParticleDynamics<T,    DESCRIPTOR,isStatic> {
+public:
+  /// Constructor
+  DBBParticleBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  /// extended Collision step, computes local drag in a given direction
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
+                       LatticeStatistics<T>& statistics_);
+protected:
+  T dbbParticleBgkCollision(Cell<T,DESCRIPTOR>& cell, T rho, T u[DESCRIPTOR::d], T eta[DESCRIPTOR::d], T uPlus[DESCRIPTOR::d], T tmp_cell[(DESCRIPTOR::q+1)/2], T omega );
+};
+
 
 /// Implementation of the HBGK collision step for a porosity model enabling
 /// drag computation for many particles
 /// including the Krause turbulence modell
 
-template<typename T, template<typename U> class Lattice>
-class KrauseHBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class KrauseHBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  KrauseHBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_, T smagoConst_, T dx_ = 1, T dt_ = 1);
+  KrauseHBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, T smagoConst_, T dx_ = 1, T dt_ = 1);
   /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
   /// get relaxation parameter
   T    getOmega() const;
@@ -189,9 +169,9 @@ private:
   /// Computes a constant prefactor in order to speed up the computation
   T computePreFactor(T omega_, T smagoConst_);
   /// Computes the local smagorinsky relaxation parameter
-  void computeOmega(T omega0_, Cell<T,Lattice>& cell, T preFactor_, T rho_,
-                    T u[Lattice<T>::d],
-                    T newOmega[Lattice<T>::q] );
+  void computeOmega(T omega0_, Cell<T,DESCRIPTOR>& cell, T preFactor_, T rho_,
+                    T u[DESCRIPTOR::d],
+                    T newOmega[DESCRIPTOR::q] );
 
 private:
 
@@ -205,32 +185,19 @@ private:
   T dx;
   T dt;
 
-  static const int porosityIsAt   = Lattice<T>::ExternalField::
-                                    porosityIsAt;
-  static const int sizeOfVelNum   = Lattice<T>::ExternalField::
-                                    sizeOfVelNum;
-  static const int velNumerator   = Lattice<T>::ExternalField::
-                                    velNumerator;
-  static const int sizeOfVelDenom = Lattice<T>::ExternalField::
-                                    sizeOfVelDenom;
-  static const int velDenominator = Lattice<T>::ExternalField::
-                                    velDenominator;
   T _fieldTmp[4];
-
-  //  static const int deltaMomentum  = Lattice<T>::ExternalField::deltaMomentum;
-  //  static const int sizeOfDeltaMomentum  = Lattice<T>::ExternalField::sizeOfDeltaMomentum;
 
 };
 
 /// Implementation of the BGK collision step for a porosity model enabling
 /// drag computation
-template<typename T, template<typename U> class Lattice>
-class ParticlePorousBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ParticlePorousBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ParticlePorousBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ParticlePorousBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
   /// get relaxation parameter
   T    getOmega() const;
@@ -240,23 +207,17 @@ public:
 
 private:
   T omega;      ///< relaxation parameter
-  static const int porosityIsAt      = Lattice<T>::ExternalField::
-                                       porosityIsAt;
-  static const int localDragBeginsAt = Lattice<T>::ExternalField::
-                                       localDragBeginsAt;
-  static const int sizeOfLocalDrag   = Lattice<T>::ExternalField::
-                                       sizeOfLocalDrag;
 };
 
 /// Implementation of the BGK collision step for a small particles enabling
 /// two way coupling
-template<typename T, template<typename U> class Lattice>
-class SmallParticleBGKdynamics : public BGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class SmallParticleBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  SmallParticleBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  SmallParticleBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// extended Collision step, computes local drag in a given direction
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
   /// get relaxation parameter
   T    getOmega() const;
@@ -266,12 +227,69 @@ public:
 
 private:
   T omega;      ///< relaxation parameter
-  static const int porosityIsAt      = Lattice<T>::ExternalField::
-                                       porosityIsAt;
-  static const int localDragBeginsAt = Lattice<T>::ExternalField::
-                                       localDragBeginsAt;
-  static const int sizeOfLocalDrag   = Lattice<T>::ExternalField::
-                                       sizeOfLocalDrag;
+};
+
+
+enum Mode {M2, M3};
+
+/// Implementation of the Partially Saturated Method (PSM),
+/// see Krüger, Timm, et al. The Lattice Boltzmann Method. Springer, 2017. (p.447-451)
+template<typename T, typename DESCRIPTOR>
+class PSMBGKdynamics : public BGKdynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  PSMBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, int mode_=0);
+  ///  Compute fluid velocity on the cell.
+  void computeU (
+    ConstCell<T,DESCRIPTOR>& cell,
+    T u[DESCRIPTOR::d] ) const override;
+  /// Compute fluid velocity and particle density on the cell.
+  void computeRhoU (
+    ConstCell<T,DESCRIPTOR>& cell,
+    T& rho, T u[DESCRIPTOR::d]) const override;
+  /// Collision step
+  void collide(Cell<T,DESCRIPTOR>& cell,
+                       LatticeStatistics<T>& statistics_) override;
+  /// get relaxation parameter
+  T    getOmega() const;
+  /// set relaxation parameter
+  void setOmega(T omega_);
+
+
+private:
+  T omega;      ///< relaxation parameter
+  T paramA;      /// speed up parameter
+  Mode mode;
+};
+
+/// Implementation of the Partially Saturated Method (PSM),
+/// see Krüger, Timm, et al. The Lattice Boltzmann Method. Springer, 2017. (p.447-451)
+template<typename T, typename DESCRIPTOR>
+class ForcedPSMBGKdynamics : public ForcedBGKdynamics<T,DESCRIPTOR> {
+public:
+  /// Constructor
+  ForcedPSMBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, int mode_=0);
+  ///  Compute fluid velocity on the cell.
+  void computeU (
+    ConstCell<T,DESCRIPTOR>& cell,
+    T u[DESCRIPTOR::d] ) const override;
+  /// Compute fluid velocity and particle density on the cell.
+  void computeRhoU (
+    ConstCell<T,DESCRIPTOR>& cell,
+    T& rho, T u[DESCRIPTOR::d]) const override;
+  /// Collision step
+  void collide(Cell<T,DESCRIPTOR>& cell,
+                       LatticeStatistics<T>& statistics_) override;
+  /// get relaxation parameter
+  T    getOmega() const;
+  /// set relaxation parameter
+  void setOmega(T omega_);
+
+
+private:
+  T omega;      ///< relaxation parameter
+  T paramA;      /// speed up parameter
+  Mode mode;
 };
 
 } // olb

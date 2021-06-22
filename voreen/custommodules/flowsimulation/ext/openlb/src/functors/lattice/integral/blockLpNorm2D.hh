@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -33,26 +33,26 @@ namespace olb {
 
 template <typename T, typename W, int P>
 BlockLpNorm2D<T,W,P>::BlockLpNorm2D(BlockF2D<W>&          f,
-                                    BlockIndicatorF2D<T>& indicatorF,
-                                    Cuboid2D<T>&          cuboid)
+                                    BlockIndicatorF2D<T>& indicatorF)
   : BlockF2D<W>(f.getBlockStructure(), f.getTargetDim()),
     _f(f),
-    _indicatorF(indicatorF),
-    _cuboid(cuboid)
+    _indicatorF(indicatorF)
 {
+  OLB_ASSERT(_f.getSourceDim() == _indicatorF.getSourceDim(),
+             "functor source dimension equals indicator source dimension");
+
   this->getName() = "BlockL" + std::to_string(P) + "Norm(" + _f.getName() + ")";
 }
 
 template <typename T, typename W, int P>
 bool BlockLpNorm2D<T,W,P>::operator()(W output[], const int input[])
 {
-  const int nX = _cuboid.getNx();
-  const int nY = _cuboid.getNy();
-  const T weight = pow(_cuboid.getDeltaR(), 2);
+  const auto& blockGeometry = _indicatorF.getBlockGeometryStructure();
+  const int nX = blockGeometry.getNx();
+  const int nY = blockGeometry.getNy();
+  const T weight = pow(blockGeometry.getDeltaR(), 2);
 
-  OLB_ASSERT(_f.getSourceDim() == _indicatorF.getSourceDim(),
-             "functor source dimension equals indicator source dimension");
-
+  output[0] = W(0);
   W outputTmp[_f.getTargetDim()];
   int inputTmp[_f.getSourceDim()];
 
@@ -66,6 +66,8 @@ bool BlockLpNorm2D<T,W,P>::operator()(W output[], const int input[])
       }
     }
   }
+
+  output[0] = LpNormImpl<T,W,P>().enclose(output[0]);
 
   return true;
 }

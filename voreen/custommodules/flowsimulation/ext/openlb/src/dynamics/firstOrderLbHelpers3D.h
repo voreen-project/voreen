@@ -98,13 +98,13 @@ T fromPiToFneq7(const T pi[6]) {
 
 /// Compute RLB collision efficiently on D3Q15 lattice
 template<typename T>
-struct rlbHelpers<T, descriptors::D3Q15Descriptor> {
+struct rlbHelpers<T, descriptors::D3Q15<>> {
 
 static T rlbCollision (
-    Cell<T,descriptors::D3Q15Descriptor>& cell,
+    Cell<T,descriptors::D3Q15<>>& cell,
     T rho, const T u[3], const T pi[6], T omega )
 {
-    typedef lbHelpers<T, descriptors::D3Q15Descriptor> LH;
+    typedef lbHelpers<T, descriptors::D3Q15<>> LH;
     const T uSqr = u[0]*u[0] + u[1]*u[1] + u[2]*u[2];
 
     cell[0]  = LH::equilibrium(0, rho, u, uSqr) +
@@ -140,7 +140,7 @@ static T rlbCollision (
     return uSqr;
 }
 
-};  // struct rlbHelpers<D3Q15Descriptor>
+};  // struct rlbHelpers<D3Q15<>>
 
 
 namespace neqPiD3Q19 {
@@ -227,12 +227,12 @@ T fromPiToFneq9(const T pi[6]) {
 }  // namespace neqPiD3Q19
 
 template<typename T>
-struct rlbHelpers<T, descriptors::D3Q19Descriptor> {
+struct rlbHelpers<T, descriptors::D3Q19<>> {
 static T rlbCollision (
-    Cell<T,descriptors::D3Q19Descriptor>& cell,
+    Cell<T,descriptors::D3Q19<>>& cell,
     T rho, const T u[3], const T pi[6], T omega )
 {
-    typedef lbHelpers<T, descriptors::D3Q19Descriptor> LH;
+    typedef lbHelpers<T, descriptors::D3Q19<>> LH;
     const T uSqr = u[0]*u[0] + u[1]*u[1] + u[2]*u[2];
 
     cell[0]  = LH::equilibrium(0, rho, u, uSqr) +
@@ -276,7 +276,7 @@ static T rlbCollision (
     return uSqr;
 }
 
-};  // struct rlbHelpers<D3Q19Descriptor>
+};  // struct rlbHelpers<D3Q19<>>
 */
 
 }  // namespace olb

@@ -29,10 +29,12 @@
 #include "communication/mpiManager.h"
 #include "superLattice3D.h"
 #include "superLattice3D.hh"
+#include "communication/blockPropagation.hh"
+#include "communication/superPropagation.hh"
 #include "dynamics/latticeDescriptors.h"
 
 
 namespace olb {
 
-template class SuperLattice3D<double, descriptors::D3Q19Descriptor>;
+template class SuperLattice3D<double, descriptors::D3Q19<>>;
 }

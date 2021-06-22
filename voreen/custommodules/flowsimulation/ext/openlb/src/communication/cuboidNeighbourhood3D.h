@@ -30,8 +30,10 @@
 #define CUBOID_NEIGHBOURHOOD_3D_H
 
 #include "communication/mpiManager.h"
-#include <vector>
 #include "communication/superStructure3D.h"
+#include "core/blockStructure3D.h"
+
+#include <vector>
 
 
 /// All OpenLB code is contained in this namespace.
@@ -57,6 +59,7 @@ struct Cell3D {
   Cell3D() : latticeR {0,0,0,0} {};
   // local position latticeR: iC, iX, iY, iZ;
   int latticeR[4];
+  std::size_t latticeCellId;
   // global position physR: x, y, z;
   T physR[3];
 
@@ -77,19 +80,23 @@ struct Cell3D {
 template<typename T>
 class CuboidNeighbourhood3D {
 private:
-  /// Cuboid ID
-  int _iCglob;
-  /// Number of cubboids in the structure
-  int _nC;
-  /// Delta of the cuboid
-  T _deltaC;
   /// Reference to the super structure
   SuperStructure3D<T>& _superStructure;
-
+  /// Cuboid ID
+  const int _iCglob;
+  /// Number of cubboids in the structure
+  const int _nC;
+  /// Delta of the cuboid
+  const T _deltaC;
   /// Number of data to be transfered
-  int _nData;
+  const std::size_t _nData;
   /// Size of underlying data type
-  int _nDataType;
+  const std::size_t _nDataType;
+
+  /// Cuboid representing overlapping _iCglob
+  Cuboid3D<T> _iCuboid;
+  /// Block representing _iCuboid for local cell ID calculation
+  BlockStructure3D _iCblock;
 
   /// Internal needed cells
   std::vector<Cell3D<T> > _inCells;
@@ -102,9 +109,11 @@ private:
   std::vector<int> _outC;
   std::vector<int> _outN;
   /// Buffer for the internal needed data
-  bool **_inData;
+  std::uint8_t** _inData;
+  std::size_t* _inDataSize;
   /// Buffer for the external needed data
-  bool **_outData;
+  std::uint8_t** _outData;
+  std::size_t* _outDataSize;
   /// Buffer for the internal needed data
   T **_inDataCoordinates;
   /// Buffer for the external needed data
@@ -139,10 +148,11 @@ public:
   /// Returns the number of cells in _inC
   int get_inCsize() const;
   /// Read and write access to **_inData
-  bool** get_inData();
+  std::uint8_t** get_inData();
   /// Read and write access to **_outData
-  bool** get_outData();
+  std::uint8_t** get_outData();
 
+  std::size_t getLocalCellId(int iX, int iY, int iZ) const;
   /// Adds a cell to the vector _inCells
   void add_inCell(Cell3D<T> cell);
   /// Adds a cell to the vector _outCells
@@ -159,7 +169,11 @@ public:
   /// Initializes _outC and _outN
   void init_outCN();
   /// Initialization Helper
-  void bufSend_inCells();
+#ifdef PARALLEL_MODE_MPI
+  void bufSend_inCells(singleton::MpiNonBlockingHelper& helper);
+#else
+  void bufSend_inCells() {}
+#endif
   /// Initialization Helper
   void recWrite_outCells();
   /// Finishes a communication step

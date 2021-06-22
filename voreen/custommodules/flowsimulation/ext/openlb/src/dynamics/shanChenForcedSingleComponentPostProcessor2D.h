@@ -39,16 +39,16 @@ namespace olb {
 // ===========Shan Chen coupling without wall interaction===================//
 // =========================================================================//
 
-template<typename T, template<typename U> class Lattice>
-class ShanChenForcedSingleComponentPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ShanChenForcedSingleComponentPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   ShanChenForcedSingleComponentPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
       std::vector<T> rho0_,
-      AnalyticalF1D<T,T>& iP_,
+      AnalyticalF<1,T,T>& iP_,
       std::vector<SpatiallyExtendedObject2D*> partners_);
   ShanChenForcedSingleComponentPostProcessor2D(T G_,
       std::vector<T> rho0_,
-      AnalyticalF1D<T,T>& iP_,
+      AnalyticalF<1,T,T>& iP_,
       std::vector<SpatiallyExtendedObject2D*> partners_);
   int extent() const override
   {
@@ -58,28 +58,29 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
                                 int x0_, int x1_, int y0_, int y1_) override;
 private:
+  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<1, 0, 0>;
   int x0, x1, y0, y1;
   T G;
   std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
+  AnalyticalF<1,T,T>& interactionPotential;
   std::vector<SpatiallyExtendedObject2D*> partners;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ShanChenForcedSingleComponentGenerator2D : public LatticeCouplingGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ShanChenForcedSingleComponentGenerator2D : public LatticeCouplingGenerator2D<T,DESCRIPTOR> {
 public:
-  ShanChenForcedSingleComponentGenerator2D(int x0_, int x1_, int y0_, int y1_, T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  ShanChenForcedSingleComponentGenerator2D(T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  PostProcessor2D<T,Lattice>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
-  LatticeCouplingGenerator2D<T,Lattice>* clone() const override;
+  ShanChenForcedSingleComponentGenerator2D(int x0_, int x1_, int y0_, int y1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+  ShanChenForcedSingleComponentGenerator2D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
+  LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const override;
 private:
   T G;
   std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
+  AnalyticalF<1,T,T>& interactionPotential;
 };
 
 }

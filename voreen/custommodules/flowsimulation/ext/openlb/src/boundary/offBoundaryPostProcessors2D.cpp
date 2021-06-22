@@ -26,20 +26,20 @@
 #include "core/postProcessing.h"
 #include "core/postProcessing.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 
 namespace olb {
-template class ZeroVelocityBouzidiLinearPostProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class ZeroVelocityBouzidiLinearPostProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
-template class ZeroVelocityBounceBackPostProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class ZeroVelocityBounceBackPostProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
-template class VelocityBouzidiLinearPostProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class VelocityBouzidiLinearPostProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
-template class VelocityBounceBackPostProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class VelocityBounceBackPostProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
-template class AntiBounceBackPostProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class AntiBounceBackPostProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
-template class BoundaryStreamPostProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class BoundaryStreamPostProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
+template class ZeroVelocityBouzidiLinearPostProcessor2D<double, descriptors::D2Q9<>>;
+template class ZeroVelocityBouzidiLinearPostProcessorGenerator2D<double, descriptors::D2Q9<>>;
+template class ZeroVelocityBounceBackPostProcessor2D<double, descriptors::D2Q9<>>;
+template class ZeroVelocityBounceBackPostProcessorGenerator2D<double, descriptors::D2Q9<>>;
+template class VelocityBouzidiLinearPostProcessor2D<double, descriptors::D2Q9<>>;
+template class VelocityBouzidiLinearPostProcessorGenerator2D<double, descriptors::D2Q9<>>;
+template class VelocityBounceBackPostProcessor2D<double, descriptors::D2Q9<>>;
+template class VelocityBounceBackPostProcessorGenerator2D<double, descriptors::D2Q9<>>;
+template class AntiBounceBackPostProcessor2D<double, descriptors::D2Q9<>>;
+template class AntiBounceBackPostProcessorGenerator2D<double, descriptors::D2Q9<>>;
+template class BoundaryStreamPostProcessor2D<double, descriptors::D2Q9<>>;
+template class BoundaryStreamPostProcessorGenerator2D<double, descriptors::D2Q9<>>;
 }  // namespace olb

@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -28,7 +28,7 @@
 #include "io/ostreamManager.h"
 #include "geometry/superGeometry2D.h"
 #include "functors/lattice/superBaseF2D.h"
-#include "functors/lattice/indicator/indicatorBaseF2D.h"
+#include "functors/analytical/indicator/indicatorBaseF2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
 #include "functors/lattice/indicator/superIndicatorBaseF2D.h"
 #include "functors/lattice/blockReduction2D1D.h"

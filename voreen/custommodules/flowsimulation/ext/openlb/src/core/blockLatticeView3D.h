@@ -34,63 +34,64 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice>
-class BlockLatticeView3D : public BlockLatticeStructure3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class BlockLatticeView3D : public BlockLatticeStructure3D<T,DESCRIPTOR> {
 public:
-  BlockLatticeView3D(BlockLatticeStructure3D<T,Lattice>& originalLattice_);
-  BlockLatticeView3D(BlockLatticeStructure3D<T,Lattice>& originalLattice_,
+  BlockLatticeView3D(BlockLatticeStructure3D<T,DESCRIPTOR>& originalLattice_);
+  BlockLatticeView3D(BlockLatticeStructure3D<T,DESCRIPTOR>& originalLattice_,
                      int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
   ~BlockLatticeView3D() override;
   BlockLatticeView3D(BlockLatticeView3D const& rhs);
-  BlockLatticeView3D<T,Lattice>& operator=
-  (BlockLatticeView3D<T,Lattice> const& rhs);
-  void swap(BlockLatticeView3D<T,Lattice>& rhs);
+  BlockLatticeView3D<T,DESCRIPTOR>& operator=
+  (BlockLatticeView3D<T,DESCRIPTOR> const& rhs);
+  void swap(BlockLatticeView3D<T,DESCRIPTOR>& rhs);
 
-  Cell<T,Lattice>& get(int iX, int iY, int iZ) override;
-  Cell<T,Lattice> const& get(int iX, int iY, int iZ) const override;
+  Cell<T,DESCRIPTOR> get(int iX, int iY, int iZ) override;
+  Cell<T,DESCRIPTOR> get(const int latticeR[]) override;
+
+  T& getPop(std::size_t iCell, unsigned iPop) override;
+  T& getPop(int iX, int iY, int iZ, unsigned iPop) override;
+
+  ConstCell<T,DESCRIPTOR> get(int iX, int iY, int iZ) const override;
   void initialize() override;
-  void defineDynamics (
-    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-    Dynamics<T,Lattice>* dynamics ) override;
-  void defineDynamics(int iX, int iY, int iZ, Dynamics<T,Lattice>* dynamics) override;
-  /// Define the dynamics by material
-  void defineDynamics(BlockGeometryStructure3D<T>& blockGeometry, int material, Dynamics<T,Lattice>* dynamics) override;
-  Dynamics<T,Lattice>* getDynamics(int iX, int iY, int iZ) override;
+  void defineDynamics(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
+                      Dynamics<T,DESCRIPTOR>* dynamics) override;
+  void defineDynamics(int iX, int iY, int iZ, Dynamics<T,DESCRIPTOR>* dynamics) override;
+  void defineDynamics(BlockIndicatorF3D<T>& indicator,
+                      Dynamics<T,DESCRIPTOR>* dynamics) override;
+  void defineDynamics(BlockGeometryStructure3D<T>& blockGeometry, int material,
+                      Dynamics<T,DESCRIPTOR>* dynamics) override;
+  Dynamics<T,DESCRIPTOR>* getDynamics(int iX, int iY, int iZ) override;
   void collide (
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
+  void collideAndStream (
+    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
   void collide() override;
-  void staticCollide (
-    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, BlockData3D<T,T> const& u ) override;
-  void staticCollide (BlockData3D<T,T> const& u) override;
-  void stream(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
-  void stream(bool periodic=false) override;
-  void collideAndStream(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
-  void collideAndStream(bool periodic=false) override;
+  void collideAndStream() override;
   T computeAverageDensity (
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) const override;
   T computeAverageDensity() const override;
-  void computeStress(int iX, int iY, int iZ, T pi[util::TensorVal<Lattice<T> >::n]) override;
+  void computeStress(int iX, int iY, int iZ, T pi[util::TensorVal<DESCRIPTOR >::n]) override;
   void stripeOffDensityOffset (
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T offset ) override;
   void stripeOffDensityOffset(T offset) override;
   void forAll(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                      WriteCellFunctional<T,Lattice> const& application) override;
-  void forAll(WriteCellFunctional<T,Lattice> const& application) override;
+              WriteCellFunctional<T,DESCRIPTOR> const& application) override;
+  void forAll(WriteCellFunctional<T,DESCRIPTOR> const& application) override;
   void addPostProcessor (
-    PostProcessorGenerator3D<T,Lattice> const& ppGen) override;
+    PostProcessorGenerator3D<T,DESCRIPTOR> const& ppGen) override;
   void resetPostProcessors() override;
   void postProcess(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
   void postProcess() override;
   void addLatticeCoupling (
-    LatticeCouplingGenerator3D<T,Lattice> const& lcGen,
+    LatticeCouplingGenerator3D<T,DESCRIPTOR> const& lcGen,
     std::vector<SpatiallyExtendedObject3D*> partners ) override;
   void executeCoupling(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
   void executeCoupling() override;
-  void subscribeReductions(Reductor<T>& reductor) override;
   LatticeStatistics<T>& getStatistics() override;
   LatticeStatistics<T> const& getStatistics() const override;
 private:
-  BlockLatticeStructure3D<T,Lattice>  *originalLattice;
+  BlockLatticeStructure3D<T,DESCRIPTOR>  *originalLattice;
   int                          x0, y0, z0;
 };
 

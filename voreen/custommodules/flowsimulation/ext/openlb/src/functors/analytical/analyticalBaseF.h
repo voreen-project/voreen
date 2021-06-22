@@ -25,7 +25,7 @@
 #define ANALYTICAL_BASE_F_H
 
 #include "functors/genericF.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorBaseF3D.h"
 
 /**
  *  The functor dimensions are given by F: S^m -> T^n  (S=source, T=target)
@@ -40,75 +40,47 @@ namespace olb {
 // note: for LatticeFunctions the number indicates the SOURCE dimension,
 //       target dim depends on return variable type, so std::vector<T> is used
 
+template<unsigned D, typename T, typename S> class AnalyticalIdentity;
 
-/// AnalyticalF1D are applications from 1D to XD, where X is set by the constructor.
-template <typename T, typename S>
-class AnalyticalF1D : public GenericF<T,S> {
+/// AnalyticalF are applications from DD to XD, where X is set by the constructor.
+template<unsigned D, typename T, typename S> class AnalyticalF : public GenericF<T,S> {
 protected:
   // n denotes the target dimension
-  AnalyticalF1D(int n);
+  AnalyticalF(int n);
 public:
-  AnalyticalF1D<T,S>& operator-(AnalyticalF1D<T,S>& rhs);
-  AnalyticalF1D<T,S>& operator+(AnalyticalF1D<T,S>& rhs);
-  AnalyticalF1D<T,S>& operator*(AnalyticalF1D<T,S>& rhs);
-  AnalyticalF1D<T,S>& operator/(AnalyticalF1D<T,S>& rhs);
+  using identity_functor_type = AnalyticalIdentity<D,T,S>;
+
+  AnalyticalF<D,T,S>& operator-(AnalyticalF<D,T,S>& rhs);
+  AnalyticalF<D,T,S>& operator+(AnalyticalF<D,T,S>& rhs);
+  AnalyticalF<D,T,S>& operator*(AnalyticalF<D,T,S>& rhs);
+  AnalyticalF<D,T,S>& operator/(AnalyticalF<D,T,S>& rhs);
 };
 
-/// AnalyticalF2D are applications from 2D to XD, where X is set by the constructor.
-template <typename T, typename S>
-class AnalyticalF2D : public GenericF<T,S> {
+/// AnalyticalIdentity stores vectors, result of addition,multiplication, ...
+template <unsigned D, typename T, typename S>
+class AnalyticalIdentity : public AnalyticalF<D,T,S> {
 protected:
-  // n denotes the target dimension
-  AnalyticalF2D(int n);
+  AnalyticalF<D,T,S>& _f;
 public:
-  AnalyticalF2D<T,S>& operator-(AnalyticalF2D<T,S>& rhs);
-  AnalyticalF2D<T,S>& operator+(AnalyticalF2D<T,S>& rhs);
-  AnalyticalF2D<T,S>& operator*(AnalyticalF2D<T,S>& rhs);
-  AnalyticalF2D<T,S>& operator/(AnalyticalF2D<T,S>& rhs);
-};
-
-/// AnalyticalF3D are applications from 3D to XD, where X is set by the constructor.
-template <typename T, typename S>
-class AnalyticalF3D : public GenericF<T,S> {
-protected:
-  // n denotes the target dimension
-  AnalyticalF3D(int n);
-public:
-  AnalyticalF3D<T,S>& operator-(AnalyticalF3D<T,S>& rhs);
-  AnalyticalF3D<T,S>& operator+(AnalyticalF3D<T,S>& rhs);
-  AnalyticalF3D<T,S>& operator*(AnalyticalF3D<T,S>& rhs);
-  AnalyticalF3D<T,S>& operator/(AnalyticalF3D<T,S>& rhs);
-};
-
-/// AnalyticalIdentity1D stores vectors, result of addition,multiplication, ...
-template <typename T, typename S>
-class AnalyticalIdentity1D final : public AnalyticalF1D<T,S> {
-protected:
-  AnalyticalF1D<T,S>& _f;
-public:
-  AnalyticalIdentity1D(AnalyticalF1D<T,S>& f);
+  AnalyticalIdentity(AnalyticalF<D,T,S>& f);
   bool operator() (T output[], const S input[]) override;
 };
 
-/// AnalyticalIdentity2D stores vectors, result of addition,multiplication, ...
-template <typename T, typename S>
-class AnalyticalIdentity2D final : public AnalyticalF2D<T,S> {
-protected:
-  AnalyticalF2D<T,S>& _f;
-public:
-  AnalyticalIdentity2D(AnalyticalF2D<T,S>& f);
-  bool operator() (T output[], const S input[]) override;
-};
+////////////// CONVERSION FROM NEW TO OLD IMPLEMENTATION //////////////////////////
 
-/// AnalyticalIdentity3D stores vectors, result of addition,multiplication, ...
 template <typename T, typename S>
-class AnalyticalIdentity3D final : public AnalyticalF3D<T,S> {
-protected:
-  AnalyticalF3D<T,S>& _f;
-public:
-  AnalyticalIdentity3D(AnalyticalF3D<T,S>& f);
-  bool operator() (T output[], const S input[]) override;
-};
+using AnalyticalF1D = AnalyticalF<1,T,S>;
+template <typename T, typename S>
+using AnalyticalF2D = AnalyticalF<2,T,S>;
+template <typename T, typename S>
+using AnalyticalF3D = AnalyticalF<3,T,S>;
+
+template <typename T, typename S>
+using AnalyticalIdentity1D = AnalyticalIdentity<1,T,S>;
+template <typename T, typename S>
+using AnalyticalIdentity2D = AnalyticalIdentity<2,T,S>;
+template <typename T, typename S>
+using AnalyticalIdentity3D = AnalyticalIdentity<3,T,S>;
 
 
 /// Converts IndicatorF to AnalyticalF (used for Analytical operands for Identity)

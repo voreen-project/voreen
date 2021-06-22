@@ -27,7 +27,7 @@
 
 namespace olb {
 
-template void heatmap::write<double>(BlockReduction3D2D<double>&, int, const plotParam<double>);
-template void heatmap::write<double>(BlockReduction2D2D<double>&, int, const plotParam<double>);
+template void heatmap::write<double>(BlockReduction3D2D<double>&, int, const plotParam<double>, const std::vector<double> &);
+template void heatmap::write<double>(BlockReduction2D2D<double>&, int, const plotParam<double>, const std::vector<double> &);
 
 } // end namespace olb

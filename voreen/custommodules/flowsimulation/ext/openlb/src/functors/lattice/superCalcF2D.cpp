@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2014-2017 Albert Mink, Mathias J. Krause,
- *                          Adrian Kummerländer
+ *                          Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,23 +24,27 @@
 
 #include "superCalcF2D.h"
 #include "superCalcF2D.hh"
+#include "utilities/functorPtr.hh"
 
 namespace olb {
 
-template class SuperCalc2D<double,double,util::plus>;
-template class SuperCalc2D<double,int,util::plus>;
-template class SuperCalc2D<double,bool,util::plus>;
+template class SuperCalcF2D<double,double,util::plus>;
+template class SuperCalcF2D<double,int,util::plus>;
+template class SuperCalcF2D<double,bool,util::plus>;
 
-template class SuperCalc2D<double,double,util::minus>;
-template class SuperCalc2D<double,int,util::minus>;
-template class SuperCalc2D<double,bool,util::minus>;
+template class SuperCalcF2D<double,double,util::minus>;
+template class SuperCalcF2D<double,int,util::minus>;
+template class SuperCalcF2D<double,bool,util::minus>;
 
-template class SuperCalc2D<double,double,util::multiplies>;
-template class SuperCalc2D<double,int,util::multiplies>;
-template class SuperCalc2D<double,bool,util::multiplies>;
+template class SuperCalcF2D<double,double,util::multiplies>;
+template class SuperCalcF2D<double,int,util::multiplies>;
+template class SuperCalcF2D<double,bool,util::multiplies>;
 
-template class SuperCalc2D<double,double,util::divides>;
-template class SuperCalc2D<double,int,util::divides>;
-template class SuperCalc2D<double,bool,util::divides>;
+template class SuperCalcF2D<double,double,util::divides>;
+template class SuperCalcF2D<double,int,util::divides>;
+template class SuperCalcF2D<double,bool,util::divides>;
+
+template class SuperCalcF2D<double,double,util::power>;
+template class SuperCalcF2D<double,int,util::power>;
 
 } // end namespace olb

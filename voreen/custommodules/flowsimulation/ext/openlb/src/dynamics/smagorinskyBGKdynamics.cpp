@@ -29,16 +29,16 @@
 #include "smagorinskyBGKdynamics.h"
 #include "smagorinskyBGKdynamics.hh"
 #include "latticeDescriptors.h"
-#include "latticeDescriptors.hh"
+
 
 namespace olb {
 
-template class SmagorinskyBGKdynamics<double, descriptors::D2Q9Descriptor>;
-template class SmagorinskyBGKdynamics<double, descriptors::D3Q19Descriptor>;
+template class SmagorinskyBGKdynamics<double, descriptors::D2Q9<>>;
+template class SmagorinskyBGKdynamics<double, descriptors::D3Q19<>>;
 
-template class ConStrainSmagorinskyBGKdynamics<double, descriptors::D2Q9Descriptor>;
-template class ConStrainSmagorinskyBGKdynamics<double, descriptors::D3Q19Descriptor>;
+template class ConStrainSmagorinskyBGKdynamics<double, descriptors::D2Q9<>>;
+template class ConStrainSmagorinskyBGKdynamics<double, descriptors::D3Q19<>>;
 
-template class KrauseBGKdynamics<double, descriptors::D2Q9Descriptor>;
-template class KrauseBGKdynamics<double, descriptors::D3Q19Descriptor>;
+template class KrauseBGKdynamics<double, descriptors::D2Q9<>>;
+template class KrauseBGKdynamics<double, descriptors::D3Q19<>>;
 }

@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -33,12 +33,10 @@ namespace olb {
 
 template <typename T, typename W>
 BlockSum3D<T,W>::BlockSum3D(BlockF3D<W>&          f,
-                            BlockIndicatorF3D<T>& indicatorF,
-                            Cuboid3D<T>&          cuboid)
+                            BlockIndicatorF3D<T>& indicatorF)
   : BlockF3D<W>(f.getBlockStructure(), f.getTargetDim()+1),
     _f(f),
-    _indicatorF(indicatorF),
-    _cuboid(cuboid)
+    _indicatorF(indicatorF)
 {
   this->getName() = "BlockSum("+_f.getName()+")";
 }
@@ -53,9 +51,11 @@ bool BlockSum3D<T,W>::operator() (W output[], const int input[])
   int inputTmp[_f.getSourceDim()];
   std::size_t voxels(0);
 
-  for (inputTmp[0] = 0; inputTmp[0] < _cuboid.getNx(); ++inputTmp[0]) {
-    for (inputTmp[1] = 0; inputTmp[1] < _cuboid.getNy(); ++inputTmp[1]) {
-      for (inputTmp[2] = 0; inputTmp[2] < _cuboid.getNz(); ++inputTmp[2]) {
+  const auto& blockStructure = this->getBlockStructure();
+
+  for (inputTmp[0] = 0; inputTmp[0] < blockStructure.getNx(); ++inputTmp[0]) {
+    for (inputTmp[1] = 0; inputTmp[1] < blockStructure.getNy(); ++inputTmp[1]) {
+      for (inputTmp[2] = 0; inputTmp[2] < blockStructure.getNz(); ++inputTmp[2]) {
         if (_indicatorF(inputTmp)) {
           _f(outputTmp,inputTmp);
           for (int i = 0; i < _f.getTargetDim(); ++i) {
@@ -74,12 +74,10 @@ bool BlockSum3D<T,W>::operator() (W output[], const int input[])
 
 template <typename T, typename W>
 BlockIntegral3D<T,W>::BlockIntegral3D(BlockF3D<W>&          f,
-                                      BlockIndicatorF3D<T>& indicatorF,
-                                      Cuboid3D<T>&          cuboid)
+                                      BlockIndicatorF3D<T>& indicatorF)
   : BlockF3D<W>(f.getBlockStructure(), f.getTargetDim()),
     _f(f),
-    _indicatorF(indicatorF),
-    _cuboid(cuboid)
+    _indicatorF(indicatorF)
 {
   this->getName() = "BlockIntegral("+_f.getName()+")";
 }
@@ -90,14 +88,16 @@ bool BlockIntegral3D<T,W>::operator() (W output[], const int input[])
   OLB_ASSERT(_f.getSourceDim() == _indicatorF.getSourceDim(),
              "functor source dimension equals indicator source dimension");
 
-  const W weight = pow(_cuboid.getDeltaR(), 3);
+  const W weight = pow(_indicatorF.getBlockGeometryStructure().getDeltaR(), 3);
 
   W outputTmp[_f.getTargetDim()];
   int inputTmp[_f.getSourceDim()];
 
-  for (inputTmp[0] = 0; inputTmp[0] < _cuboid.getNx(); ++inputTmp[0]) {
-    for (inputTmp[1] = 0; inputTmp[1] < _cuboid.getNy(); ++inputTmp[1]) {
-      for (inputTmp[2] = 0; inputTmp[2] < _cuboid.getNz(); ++inputTmp[2]) {
+  const auto& blockStructure = this->getBlockStructure();
+
+  for (inputTmp[0] = 0; inputTmp[0] < blockStructure.getNx(); ++inputTmp[0]) {
+    for (inputTmp[1] = 0; inputTmp[1] < blockStructure.getNy(); ++inputTmp[1]) {
+      for (inputTmp[2] = 0; inputTmp[2] < blockStructure.getNz(); ++inputTmp[2]) {
         if (_indicatorF(inputTmp)) {
           _f(outputTmp,inputTmp);
           for (int i = 0; i < this->getTargetDim(); ++i) {

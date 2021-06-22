@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Mathias J. Krause,
- *  Albert Mink, Adrian Kummerländer
+ *  Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -28,7 +28,12 @@
 #include "functors/genericF.h"
 #include "blockBaseF3D.h"
 #include "geometry/blockGeometry3D.h"
+#include "latticePhysBoundaryForce3D.h"
+#include "latticePhysCorrBoundaryForce3D.h"
+#include "blockGeometryFaces3D.h"
 #include "integral/blockIntegralF3D.h"
+#include "indicator/blockIndicatorBaseF3D.h"
+#include "functors/analytical/indicator/smoothIndicatorBaseF3D.h"
 
 /** Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
@@ -38,52 +43,12 @@
 namespace olb {
 
 
-template<typename T, template<typename U> class Lattice> class BlockLattice3D;
+template<typename T, typename DESCRIPTOR> class BlockLattice3D;
 template<typename T> class BlockIndicatorF3D;
-
-/// BlockMin3D returns the min in each component of f on a indicated subset
-template <typename T, typename W = T>
-class BlockMin3D final : public BlockF3D<W> {
-private:
-  BlockF3D<W>&          _f;
-  BlockIndicatorF3D<T>& _indicatorF;
-  Cuboid3D<T>&          _cuboid;
-public:
-  BlockMin3D(BlockF3D<W>&          f,
-             BlockIndicatorF3D<T>& indicatorF,
-             Cuboid3D<T>&          cuboid);
-  bool operator() (W output[], const int input[]) override;
-};
-
-
-/// BlockMax3D returns the max in each component of f on a indicated subset
-template <typename T, typename W = T>
-class BlockMax3D final : public BlockF3D<W> {
-private:
-  BlockF3D<W>&          _f;
-  BlockIndicatorF3D<T>& _indicatorF;
-  Cuboid3D<T>&          _cuboid;
-public:
-  BlockMax3D(BlockF3D<W>&          f,
-             BlockIndicatorF3D<T>& indicatorF,
-             Cuboid3D<T>&          cuboid);
-  bool operator() (W output[], const int input[]) override;
-};
-
-
-/// BlockAverage3D returns the average in each component of f on a indicated subset
-template <typename T, typename W = T>
-class BlockAverage3D final : public BlockSum3D<W> {
-public:
-  BlockAverage3D(BlockF3D<W>&          f,
-                 BlockIndicatorF3D<T>& indicatorF,
-                 Cuboid3D<T>&          cuboid);
-  bool operator() (W output[], const int input[]) override;
-};
-
+template<typename T, typename DESCRIPTOR> class BlockLattice3D;
 
 /// BlockL1Norm3D returns componentwise the l1 norm
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockL1Norm3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   BlockLatticeF3D<T,DESCRIPTOR>& _f;
@@ -96,7 +61,7 @@ public:
 
 
 /// BlockL223D returns componentwise the squared l2-norm
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockL223D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   BlockLatticeF3D<T,DESCRIPTOR>& _f;
@@ -110,50 +75,41 @@ public:
 };
 
 
-/// BlockGeometryFaces3D counts to get the discrete surface for a material no. in direction (1,0,0), (0,1,0), (0,0,1), (-1,0,0), (0,-1,0), (0,0,-1) and total surface, then it converts it into phys units
-template <typename T>
-class BlockGeometryFaces3D final : public GenericF<T,int> {
-private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
-  int _material;
-  T _latticeL;
-public:
-  BlockGeometryFaces3D(BlockGeometryStructure3D<T>& blockGeometry, int material, T latticeL);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/** functor to get pointwise phys force acting on a boundary with a given
- *  material on local lattice, if globIC is not on
- *  the local processor, the returned vector is empty
- */
-template <typename T, template <typename U> class DESCRIPTOR>
+/// functor to get pointwise phys force acting on a indicated boundary on local lattice
+template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysDrag3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometry3D<T>& _blockGeometry;
-  int _material;
+  BlockIndicatorF3D<T>&                         _indicatorF;
+  BlockGeometryFaces3D<T>                       _facesF;
+  BlockLatticePhysBoundaryForce3D<T,DESCRIPTOR> _pBoundForceF;
+  BlockSum3D<T>                                 _sumF;
+
+  const T _factor;
 public:
-  BlockLatticePhysDrag3D(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                         BlockGeometry3D<T>& blockGeometry, int material,
-                         const UnitConverter<T,DESCRIPTOR>& converter);
+  BlockLatticePhysDrag3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+                         BlockIndicatorF3D<T>&                  indicatorF,
+                         const UnitConverter<T,DESCRIPTOR>&     converter);
   bool operator() (T output[], const int input[]) override;
 };
 
 
-/** functor to get pointwise phys force acting on a boundary with a given
- *  material on local lattice, if globIC is not on
- *  the local processor, the returned vector is empty
+/// functor to get pointwise phys force acting on a indicated boundary on local lattice
+/**
  *  see: Caiazzo, Junk: Boundary Forces in lattice Boltzmann: Analysis of MEA
  */
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysCorrDrag3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometry3D<T>& _blockGeometry;
-  int _material;
+  BlockIndicatorF3D<T>&                             _indicatorF;
+  BlockGeometryFaces3D<T>                           _facesF;
+  BlockLatticePhysCorrBoundaryForce3D<T,DESCRIPTOR> _pBoundForceF;
+  BlockSum3D<T>                                     _sumF;
+
+  const T _factor;
 public:
-  BlockLatticePhysCorrDrag3D(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                             BlockGeometry3D<T>& blockGeometry, int material,
-                             const UnitConverter<T,DESCRIPTOR>& converter);
+  BlockLatticePhysCorrDrag3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+                             BlockIndicatorF3D<T>&                  indicatorF,
+                             const UnitConverter<T,DESCRIPTOR>&     converter);
   bool operator() (T output[], const int input[]) override;
 };
 

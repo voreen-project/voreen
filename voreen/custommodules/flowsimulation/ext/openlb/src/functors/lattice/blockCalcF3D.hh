@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Mathias J. Krause,
- *                          Albert Mink, Adrian Kummerländer
+ *                          Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -31,7 +31,7 @@ namespace olb {
 
 
 template <typename T, template<typename> class F>
-BlockCalc3D<T,F>::BlockCalc3D (BlockF3D<T>& f, BlockF3D<T>& g)
+BlockCalcF3D<T,F>::BlockCalcF3D (BlockF3D<T>& f, BlockF3D<T>& g)
   : BlockF3D<T>(
       f.getBlockStructure(),
       f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
@@ -43,7 +43,7 @@ BlockCalc3D<T,F>::BlockCalc3D (BlockF3D<T>& f, BlockF3D<T>& g)
 }
 
 template <typename T, template<typename> class F>
-BlockCalc3D<T,F>::BlockCalc3D (BlockF3D<T>& f, GenericF<T,int>& g, int glob)
+BlockCalcF3D<T,F>::BlockCalcF3D (BlockF3D<T>& f, GenericF<T,int>& g, int glob)
   : BlockF3D<T>(
       f.getBlockStructure(),
       f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
@@ -55,7 +55,7 @@ BlockCalc3D<T,F>::BlockCalc3D (BlockF3D<T>& f, GenericF<T,int>& g, int glob)
 }
 
 template <typename T, template<typename> class F>
-BlockCalc3D<T,F>::BlockCalc3D (GenericF<T,int>& f, int glob, BlockF3D<T>& g)
+BlockCalcF3D<T,F>::BlockCalcF3D (GenericF<T,int>& f, int glob, BlockF3D<T>& g)
   : BlockF3D<T>(
       g.getBlockStructure(),
       f.getTargetDim() > g.getTargetDim() ? f.getTargetDim() : g.getTargetDim()),
@@ -67,13 +67,13 @@ BlockCalc3D<T,F>::BlockCalc3D (GenericF<T,int>& f, int glob, BlockF3D<T>& g)
 }
 
 template <typename T, template<typename> class F>
-bool BlockCalc3D<T,F>::operator()(T output[], const int input[])
+bool BlockCalcF3D<T,F>::operator()(T output[], const int input[])
 {
   T* outputF = output;
   T outputG[this->getTargetDim()];
 
   if ( this->_fIsBlock && this->_gIsBlock ) {
-    this->_f(outputF,input);
+    this->_f(outputF, input);
     this->_g(outputG, input);
   } else {
     const int superInput[4] = {
@@ -118,7 +118,7 @@ bool BlockCalc3D<T,F>::operator()(T output[], const int input[])
 template <typename T>
 BlockF3D<T>& BlockF3D<T>::operator+(BlockF3D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockPlus3D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcPlus3D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -126,7 +126,7 @@ BlockF3D<T>& BlockF3D<T>::operator+(BlockF3D<T>& rhs)
 template <typename T>
 BlockF3D<T>& BlockF3D<T>::operator-(BlockF3D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockMinus3D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcMinus3D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -134,7 +134,7 @@ BlockF3D<T>& BlockF3D<T>::operator-(BlockF3D<T>& rhs)
 template <typename T>
 BlockF3D<T>& BlockF3D<T>::operator*(BlockF3D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockMultiplication3D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcMultiplication3D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }
@@ -142,7 +142,7 @@ BlockF3D<T>& BlockF3D<T>::operator*(BlockF3D<T>& rhs)
 template <typename T>
 BlockF3D<T>& BlockF3D<T>::operator/(BlockF3D<T>& rhs)
 {
-  auto tmp = std::make_shared< BlockDivision3D<T> >(*this,rhs);
+  auto tmp = std::make_shared< BlockCalcDivision3D<T> >(*this,rhs);
   this->_ptrCalcC = tmp;
   return *tmp;
 }

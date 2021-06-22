@@ -114,7 +114,7 @@ void GeometryInsideTest::process() {
         }
     }
 
-    tgt::Vector3<T> offset = tgt::Vector3<T>::fromPointer(cuboid.getOrigin().data);
+    tgt::Vector3<T> offset = tgt::Vector3<T>::fromPointer(cuboid.getOrigin().data());
     Volume* outputVolume = new Volume(idVolume, tgt::vec3(spacing), offset);
     outport_.setData(outputVolume);
 }

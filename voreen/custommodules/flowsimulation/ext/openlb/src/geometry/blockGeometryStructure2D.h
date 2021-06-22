@@ -31,7 +31,7 @@
 #include <vector>
 #include <list>
 
-#include "functors/lattice/indicator/indicatorF2D.h"
+#include "functors/analytical/indicator/indicatorF2D.h"
 #include "geometry/blockGeometryStatistics2D.h"
 #include "io/ostreamManager.h"
 
@@ -40,6 +40,7 @@
 namespace olb {
 
 template<typename T> class BlockGeometryStatistics2D;
+template<typename T> class BlockIndicatorF2D;
 
 /// Representation of a block geometry structure
 /** This pure virtual class provides an interface for the classes
@@ -57,20 +58,20 @@ template<typename T> class BlockGeometryStatistics2D;
  * This class is intended to be derived from.
  */
 template<typename T>
-class BlockGeometryStructure2D {
-
+class BlockGeometryStructure2D : public BlockStructure2D {
 protected:
   /// Number of the cuboid, default=-1
   int _iCglob;
   /// Statistic class
   BlockGeometryStatistics2D<T> _statistics;
-
   /// class specific output stream
   mutable OstreamManager clout;
 
 public:
   /// Constructor
-  BlockGeometryStructure2D(int iCglob=-1);
+  BlockGeometryStructure2D(int nX, int nY, int iCglob=-1);
+  /// Destructor
+  virtual ~BlockGeometryStructure2D() {};
 
   /// Read only access to the global iC number which is given !=-1 if the block geometries are part of a super geometry
   virtual int const& getIcGlob() const;
@@ -81,19 +82,21 @@ public:
 
   /// Returns the position of the block origin which is the node (iX=0/iY=0) in physical units (meter)
   virtual Vector<T,2> getOrigin() const = 0;
-  /// Returns the extend in x direction of the block in lattice units
-  virtual int getNx() const = 0;
-  /// Returns the extend in y direction of the block in lattice units
-  virtual int getNy() const = 0;
   /// Returns the extend of the block in lattice units
-  virtual Vector<int,2> const getExtend() const;
+  virtual Vector<int,2> getExtend() const;
   /// Returns the spacing in physical units (meter)
-  virtual const T getDeltaR() const = 0;
+  virtual T getDeltaR() const = 0;
 
   /// Transforms lattice to physical coordinates (wrapped from cuboid geometry)
   virtual void getPhysR(T physR[2], const int& iX, const int& iY) const = 0;
   /// Transforms lattice to physical coordinates (wrapped from cuboid geometry)
   virtual void getPhysR(T physR[2], const int latticeR[2]) const;
+
+  Vector<T,2> getPhysR(int iX, int iY) {
+    T physR[2];
+    getPhysR(physR, iX, iY);
+    return Vector<T,2>(physR);
+  }
 
   // TODO to be removed old once
   /// returns the (iX,iY) entry in the 2D scalar field
@@ -117,8 +120,17 @@ public:
   /// Changes all materials with material fromM to 1 if there is a non robust constiallation
   virtual int innerClean(int fromM, bool verbose=true);
 
+  /// Resets all cell materials inside of a domain to 0
+  virtual void reset(IndicatorF2D<T>& domain);
+
+  /// Returns true if there is at least one stream direction found for a boundary voxel with coordinates (iX,iY) and if its neighbor is a bulk voxel.
+  /**
+   * It further fills the vector streamDirection with true if this direction is pointing to a bulk voxel.
+   **/
+  template<typename V, typename DESCRIPTOR >
+  bool findStreamDirections(int iX, int iY, BlockIndicatorF2D<T>& boundaryIndicator, BlockIndicatorF2D<T>& bulkIndicator, bool streamDirections[]);
   /// Returns true if there is at least one stream diection found for a voxel with coordinates (iX,iY) of material and if the neighbouring material is one of the bulkMaterials in the list. It further fills the vector streamDirection with true if this direction is pointing to a bulkMaterial.
-  template<typename V, template<typename U> class Lattice >
+  template<typename V, typename DESCRIPTOR >
   bool findStreamDirections(int iX, int iY, int material, std::list<int> bulkMaterials, bool streamDirections[]);
   /// Returns the coordinates (iX,iY) of a voxel with a given material number (material) if there exists an neighbourhood of size (offsetX,offsetY) only with voxels of the  given material number
   virtual bool find(int material, unsigned offsetX, unsigned offsetY, int& iX, int& iY);

@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Tim Dornieden, Mathias J. Krause,
- *  Albert Mink, Benjamin Förster, Adrian Kummerländer
+ *  Albert Mink, Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -42,8 +42,9 @@ protected:
   BlockF3D<W>& _f;
   Cuboid3D<T>& _cuboid;
   Vector<T,3> _delta;
+  T _scale;
 public:
-  SpecialAnalyticalFfromBlockF3D(BlockF3D<W>& f, Cuboid3D<T>& cuboid, Vector<T,3> delta);
+  SpecialAnalyticalFfromBlockF3D(BlockF3D<W>& f, Cuboid3D<T>& cuboid, Vector<T,3> delta, T scale = 1.);
   bool operator() (W output[], const T physC[]) override;
 };
 

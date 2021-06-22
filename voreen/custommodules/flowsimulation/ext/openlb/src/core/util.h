@@ -28,12 +28,15 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include<sstream>
-#include<algorithm>
-#include<utilities/vectorHelpers.h>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <type_traits>
 
-// HACK: need to include here for prebuild + omp
-#include "communication/ompManager.h"
+#include "utilities/vectorHelpers.h"
+#include "utilities/meta.h"
+#include "dynamics/descriptorFunction.h"
 
 // patch due to ploblems with older compilers
 namespace std {
@@ -49,6 +52,26 @@ std::string to_string(const T &n)
 namespace olb {
 
 namespace util {
+
+template <typename T>
+struct BaseTypeHelper {
+  using type = typename T::base_t;
+};
+
+template <>
+struct BaseTypeHelper<double> {
+  using type = double;
+};
+
+template <>
+struct BaseTypeHelper<float> {
+  using type = float;
+};
+
+template <>
+struct BaseTypeHelper<int> {
+  using type = int;
+};
 
 template<typename T> T norm(const std::vector<T>& a);
 
@@ -141,11 +164,29 @@ T sqr(T arg)
 }
 
 /// Compute norm square of a d-dimensional vector
-template<typename T, int d>
-T normSqr(const T u[d])
+template<typename T, unsigned D>
+T normSqr(const T u[D])
 {
   T uSqr = T();
-  for (int iD=0; iD<d; ++iD) {
+  for (unsigned iD=0; iD < D; ++iD) {
+    uSqr += u[iD]*u[iD];
+  }
+  return uSqr;
+}
+
+template<typename T>
+T normSqr(std::initializer_list<T> data)
+{
+  return std::inner_product(data.begin(), data.end(), data.begin(), T(0));
+}
+
+
+/// Compute norm square of a d-dimensional vector
+template<typename T, unsigned D, typename IMPL>
+T normSqr(const ScalarVector<T,D,IMPL>& u)
+{
+  T uSqr = T();
+  for (unsigned iD=0; iD < D; ++iD) {
     uSqr += u[iD]*u[iD];
   }
   return uSqr;
@@ -174,24 +215,24 @@ T scalarProduct(const std::vector<T>& u1, const std::vector<T>& u2)
 }
 
 /// Compute number of elements of a symmetric d-dimensional tensor
-template <typename Descriptor> struct TensorVal {
+template <typename DESCRIPTORBASE> struct TensorVal {
   static const int n =
-    (Descriptor::d*(Descriptor::d+1))/2; ///< result stored in n
+    (DESCRIPTORBASE::d*(DESCRIPTORBASE::d+1))/2; ///< result stored in n
 };
 
 /// Compute the opposite of a given direction
-template <typename Descriptor> inline int opposite(int iPop)
+template <typename DESCRIPTORBASE> inline int opposite(int iPop)
 {
-  return Descriptor::opposite[iPop];
+  return descriptors::opposite<DESCRIPTORBASE>(iPop);
 }
 
-template <typename Descriptor, int index, int value>
+template <typename DESCRIPTORBASE, int index, int value>
 class SubIndex {
 private:
   SubIndex()
   {
-    for (int iVel=0; iVel<Descriptor::q; ++iVel) {
-      if (Descriptor::c[iVel][index]==value) {
+    for (int iVel=0; iVel<DESCRIPTORBASE::q; ++iVel) {
+      if (descriptors::c<DESCRIPTORBASE>(iVel,index)==value) {
         indices.push_back(iVel);
       }
     }
@@ -199,24 +240,24 @@ private:
 
   std::vector<int> indices;
 
-  template <typename Descriptor_, int index_, int value_>
+  template <typename DESCRIPTORBASE_, int index_, int value_>
   friend std::vector<int> const& subIndex();
 };
 
-template <typename Descriptor, int index, int value>
+template <typename DESCRIPTORBASE, int index, int value>
 std::vector<int> const& subIndex()
 {
-  static SubIndex<Descriptor, index, value> subIndexSingleton;
+  static SubIndex<DESCRIPTORBASE, index, value> subIndexSingleton;
   return subIndexSingleton.indices;
 }
 
-template <typename Descriptor>
-int findVelocity(const int v[Descriptor::d])
+template <typename DESCRIPTORBASE>
+int findVelocity(const int v[DESCRIPTORBASE::d])
 {
-  for (int iPop=0; iPop<Descriptor::q; ++iPop) {
+  for (int iPop=0; iPop<DESCRIPTORBASE::q; ++iPop) {
     bool fit = true;
-    for (int iD=0; iD<Descriptor::d; ++iD) {
-      if (Descriptor::c[iPop][iD] != v[iD]) {
+    for (int iD=0; iD<DESCRIPTORBASE::d; ++iD) {
+      if (descriptors::c<DESCRIPTORBASE>(iPop,iD) != v[iD]) {
         fit = false;
         break;
       }
@@ -225,7 +266,7 @@ int findVelocity(const int v[Descriptor::d])
       return iPop;
     }
   }
-  return Descriptor::q;
+  return DESCRIPTORBASE::q;
 }
 
 /**
@@ -233,38 +274,38 @@ int findVelocity(const int v[Descriptor::d])
 * but we want the ones outgoing from the wall,
 * therefore we have to take the opposite ones.
 */
-template <typename Descriptor, int direction, int orientation>
+template <typename DESCRIPTORBASE, int direction, int orientation>
 class SubIndexOutgoing {
 private:
   SubIndexOutgoing()   // finds the indexes outgoing from the walls
   {
-    indices = util::subIndex<Descriptor,direction,orientation>();
+    indices = util::subIndex<DESCRIPTORBASE,direction,orientation>();
 
     for (unsigned iPop = 0; iPop < indices.size(); ++iPop) {
-      indices[iPop] = util::opposite<Descriptor>(indices[iPop]);
+      indices[iPop] = util::opposite<DESCRIPTORBASE>(indices[iPop]);
     }
 
   }
 
   std::vector<int> indices;
 
-  template <typename Descriptor_, int direction_, int orientation_>
+  template <typename DESCRIPTORBASE_, int direction_, int orientation_>
   friend std::vector<int> const& subIndexOutgoing();
 };
 
-template <typename Descriptor, int direction, int orientation>
+template <typename DESCRIPTORBASE, int direction, int orientation>
 std::vector<int> const& subIndexOutgoing()
 {
-  static SubIndexOutgoing<Descriptor, direction, orientation> subIndexOutgoingSingleton;
+  static SubIndexOutgoing<DESCRIPTORBASE, direction, orientation> subIndexOutgoingSingleton;
   return subIndexOutgoingSingleton.indices;
 }
 
 ///finds all the remaining indexes of a lattice given some other indexes
-template <typename Descriptor>
+template <typename DESCRIPTORBASE>
 std::vector<int> remainingIndexes(const std::vector<int> &indices)
 {
   std::vector<int> remaining;
-  for (int iPop = 0; iPop < Descriptor::q; ++iPop) {
+  for (int iPop = 0; iPop < DESCRIPTORBASE::q; ++iPop) {
     bool found = false;
     for (unsigned jPop = 0; jPop < indices.size(); ++jPop) {
       if (indices[jPop] == iPop) {
@@ -278,13 +319,13 @@ std::vector<int> remainingIndexes(const std::vector<int> &indices)
   return remaining;
 }
 
-template <typename Descriptor, int plane, int normal1, int normal2>
+template <typename DESCRIPTORBASE, int plane, int normal1, int normal2>
 class SubIndexOutgoing3DonEdges {
 private:
   SubIndexOutgoing3DonEdges()
   {
     int normalX,normalY,normalZ;
-    typedef Descriptor L;
+    typedef DESCRIPTORBASE L;
 
     switch (plane) {
     case 0: {
@@ -332,37 +373,37 @@ private:
     //knownIndexes.push_back(0);
     // compute scalar product with boundary normal for all other velocities
     for (int iP=1; iP<L::q; ++iP) {
-      if (L::c[iP][0]*normalX + L::c[iP][1]*normalY + L::c[iP][2]*normalZ<0) {
+      if (descriptors::c<L>(iP,0)*normalX + descriptors::c<L>(iP,1)*normalY + descriptors::c<L>(iP,2)*normalZ<0) {
         indices.push_back(iP);
       }
     }
   }
   std::vector<int> indices;
 
-  template <typename Descriptor_,  int plane_, int normal1_, int normal2_>
+  template <typename DESCRIPTORBASE_,  int plane_, int normal1_, int normal2_>
   friend std::vector<int> const& subIndexOutgoing3DonEdges();
 };
 
-template <typename Descriptor,  int plane, int normal1, int normal2>
+template <typename DESCRIPTORBASE,  int plane, int normal1, int normal2>
 std::vector<int> const& subIndexOutgoing3DonEdges()
 {
-  static SubIndexOutgoing3DonEdges<Descriptor,  plane, normal1, normal2> subIndexOutgoing3DonEdgesSingleton;
+  static SubIndexOutgoing3DonEdges<DESCRIPTORBASE,  plane, normal1, normal2> subIndexOutgoing3DonEdgesSingleton;
   return subIndexOutgoing3DonEdgesSingleton.indices;
 }
 
 // For 2D Corners
-template <typename Descriptor, int normalX, int normalY>
+template <typename DESCRIPTORBASE, int normalX, int normalY>
 class SubIndexOutgoing2DonCorners {
 private:
   SubIndexOutgoing2DonCorners()
   {
-    typedef Descriptor L;
+    typedef DESCRIPTORBASE L;
 
     // add zero velocity
     //knownIndexes.push_back(0);
     // compute scalar product with boundary normal for all other velocities
     for (int iPop=1; iPop<L::q; ++iPop) {
-      if (L::c[iPop][0]*normalX + L::c[iPop][1]*normalY<0) {
+      if (descriptors::c<L>(iPop,0)*normalX + descriptors::c<L>(iPop,1)*normalY<0) {
         indices.push_back(iPop);
       }
     }
@@ -370,30 +411,30 @@ private:
 
   std::vector<int> indices;
 
-  template <typename Descriptor_,  int normalX_, int normalY_>
+  template <typename DESCRIPTORBASE_,  int normalX_, int normalY_>
   friend std::vector<int> const& subIndexOutgoing2DonCorners();
 };
 
-template <typename Descriptor,  int normalX, int normalY>
+template <typename DESCRIPTORBASE,  int normalX, int normalY>
 std::vector<int> const& subIndexOutgoing2DonCorners()
 {
-  static SubIndexOutgoing2DonCorners<Descriptor, normalX, normalY> subIndexOutgoing2DonCornersSingleton;
+  static SubIndexOutgoing2DonCorners<DESCRIPTORBASE, normalX, normalY> subIndexOutgoing2DonCornersSingleton;
   return subIndexOutgoing2DonCornersSingleton.indices;
 }
 
 // For 3D Corners
-template <typename Descriptor, int normalX, int normalY, int normalZ>
+template <typename DESCRIPTORBASE, int normalX, int normalY, int normalZ>
 class SubIndexOutgoing3DonCorners {
 private:
   SubIndexOutgoing3DonCorners()
   {
-    typedef Descriptor L;
+    typedef DESCRIPTORBASE L;
 
     // add zero velocity
     //knownIndexes.push_back(0);
     // compute scalar product with boundary normal for all other velocities
     for (int iP=1; iP<L::q; ++iP) {
-      if (L::c[iP][0]*normalX + L::c[iP][1]*normalY + L::c[iP][2]*normalZ<0) {
+      if (descriptors::c<L>(iP,0)*normalX + descriptors::c<L>(iP,1)*normalY + descriptors::c<L>(iP,2)*normalZ<0) {
         indices.push_back(iP);
       }
     }
@@ -401,26 +442,26 @@ private:
 
   std::vector<int> indices;
 
-  template <typename Descriptor_,  int normalX_, int normalY_, int normalZ_>
+  template <typename DESCRIPTORBASE_,  int normalX_, int normalY_, int normalZ_>
   friend std::vector<int> const& subIndexOutgoing3DonCorners();
 };
 
-template <typename Descriptor,  int normalX, int normalY, int normalZ>
+template <typename DESCRIPTORBASE,  int normalX, int normalY, int normalZ>
 std::vector<int> const& subIndexOutgoing3DonCorners()
 {
-  static SubIndexOutgoing3DonCorners<Descriptor, normalX, normalY, normalZ> subIndexOutgoing3DonCornersSingleton;
+  static SubIndexOutgoing3DonCorners<DESCRIPTORBASE, normalX, normalY, normalZ> subIndexOutgoing3DonCornersSingleton;
   return subIndexOutgoing3DonCornersSingleton.indices;
 }
 
 /// Util Function for Wall Model of Malaspinas
 /// get link with smallest angle to a vector
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 int get_nearest_link(const std::vector<T>& vec)
 {
   T max=-1;
   int max_index = 0;
-  for (int iQ=1; iQ<DESCRIPTOR<T>::q; ++iQ) {
-    std::vector<T> c_i(DESCRIPTOR<T>::c[iQ], DESCRIPTOR<T>::c[iQ]+3);
+  for (int iQ=1; iQ<DESCRIPTOR::q; ++iQ) {
+    std::vector<T> c_i(DESCRIPTOR::c[iQ], DESCRIPTOR::c[iQ]+3);
     T tmp = util::scalarProduct<T>(c_i, vec)/util::norm(c_i);
     if (tmp > max) {
       max = tmp;
@@ -439,22 +480,30 @@ enum { xx=0, xy=1, xz=2, yy=3, yz=4, zz=5 };
 }
 
 /// compute lattice density from lattice pressure
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 T densityFromPressure( T latticePressure )
 {
   // rho = p / c_s^2 + 1
-  return latticePressure * DESCRIPTOR<T>::invCs2 + 1.0;
+  return latticePressure * descriptors::invCs2<T,DESCRIPTOR>() + 1.0;
 }
 
 /// compute lattice pressure from lattice density
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 T pressureFromDensity( T latticeDensity )
 {
   // p = (rho - 1) * c_s^2
-  return (latticeDensity - 1.0) / DESCRIPTOR<T>::invCs2;
+  return (latticeDensity - 1.0) / descriptors::invCs2<T,DESCRIPTOR>();
 }
 
 }  // namespace util
+
+template <typename T>
+using BaseType = typename util::BaseTypeHelper<T>::type;
+
+template <typename T>
+std::enable_if_t<std::is_arithmetic<T>::type::value, T> abs(T x) {
+  return std::fabs(x);
+}
 
 }  // namespace olb
 

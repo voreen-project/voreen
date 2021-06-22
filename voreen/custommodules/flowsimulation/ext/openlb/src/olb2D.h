@@ -6,4 +6,4 @@
 #include <geometry/geometry2D.h>
 #include <io/io2D.h>
 #include <utilities/utilities2D.h>
-
+#include <particles/hlbm/hlbmDynamics2D.h>

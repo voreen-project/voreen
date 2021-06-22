@@ -39,6 +39,7 @@ SmoothIndicCalc2D<T,S>::SmoothIndicCalc2D(SmoothIndicatorF2D<T,S>& f, SmoothIndi
     this->_myMin[i] = std::min(f.getMin()[i], g.getMin()[i]);
     this->_myMax[i] = std::max(f.getMax()[i], g.getMax()[i]);
   }
+  this->_circumRadius = std::max( 0.5*(this->getMax()[0]-this->getMin()[0]), 0.5*(this->getMax()[1]-this->getMin()[1]));
   std::swap(f._ptrCalcC, this->_ptrCalcC);
 }
 

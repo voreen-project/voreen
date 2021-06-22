@@ -15,8 +15,8 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
-#  You should have received a copy of the GNU General Public 
-#  License along with this program; if not, write to the Free 
+#  You should have received a copy of the GNU General Public
+#  License along with this program; if not, write to the Free
 #  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #  Boston, MA  02110-1301, USA.
 
@@ -38,17 +38,12 @@ DEBUG           := -g -Wall -DOLB_DEBUG
 CXXFLAGS        := $(OPTIM)
 #CXXFLAGS        := $(DEBUG)
 
-# to enable std::shared_ptr in functor arithmetik
-# works in gcc 4.3 and later, source https://gcc.gnu.org/projects/cxx0x.html
-#CXXFLAGS        += -std=c++0x
-# works in gcc 4.7 and later (recommended)
-#CXXFLAGS        += -std=c++11
-# Voreen modi
-CXXFLAGS        += -std=c++11 -fPIC #fPIC is necessary!!!
-
-# optional for gcc 4.9 and newer
-#CXXFLAGS        += -fdiagnostics-color=auto
-#CXXFLAGS        += -std=gnu++14
+# compilation requires support for C++14
+# works in:
+#  * gcc 5 or later      (https://gcc.gnu.org/projects/cxx-status.html#cxx14)
+#  * icc 17.0 or later   (https://software.intel.com/en-us/articles/c14-features-supported-by-intel-c-compiler)
+#  * clang 3.4 or later  (https://clang.llvm.org/cxx_status.html#cxx14)
+CXXFLAGS        += -std=c++14 -fPIC #fPIC is necessary!!!
 
 ARPRG           := ar
 #ARPRG           := xiar                  # mandatory for intel compiler
@@ -66,3 +61,5 @@ OMPFLAGS        := -fopenmp
 # Chosen by executing CMake script.
 #BUILDTYPE       := precompiled
 #BUILDTYPE       := generic
+
+FEATURES        :=

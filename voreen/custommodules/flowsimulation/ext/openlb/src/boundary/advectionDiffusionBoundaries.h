@@ -33,22 +33,19 @@ namespace olb {
 //===================================================================================
 //================= AdvectionDiffusionDynamcison Flat Boundaries =========
 //===================================================================================
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-class AdvectionDiffusionBoundariesDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+class AdvectionDiffusionBoundariesDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  AdvectionDiffusionBoundariesDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  AdvectionDiffusionBoundariesDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step for flat boundary and given rho
   /* Working principle:
    * 1. Compute rho_current by summing up all known f_i
    * 2. Get difference (rho - rho_current) and initialise the unknown f_i
    */
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell, const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics) override;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -60,19 +57,15 @@ private:
 //===================================================================================
 //================= AdvectionDiffusionDynamcis On Edges =========
 //===================================================================================
-template<typename T, template<typename U> class Lattice, typename Dynamics, int plane, int normal1, int normal2>
-class AdvectionDiffusionEdgesDynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, int plane, int normal1, int normal2>
+class AdvectionDiffusionEdgesDynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  AdvectionDiffusionEdgesDynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  AdvectionDiffusionEdgesDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics) override;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -85,19 +78,15 @@ private:
 //===================================================================================
 //================= AdvectionDiffusionDynamics on  Corners for 2D Boundaries =========
 //===================================================================================
-template<typename T, template<typename U> class Lattice, typename Dynamics, int xNormal, int yNormal>
-class AdvectionDiffusionCornerDynamics2D : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, int xNormal, int yNormal>
+class AdvectionDiffusionCornerDynamics2D : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  AdvectionDiffusionCornerDynamics2D(T omega_, Momenta<T,Lattice>& momenta_);
+  AdvectionDiffusionCornerDynamics2D(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics) override;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -109,19 +98,15 @@ private:
 //===================================================================================
 //================= AdvectionDiffusionDynamics on  Corners for 3D Boundaries =========
 //===================================================================================
-template<typename T, template<typename U> class Lattice, typename Dynamics, int xNormal, int yNormal, int zNormal>
-class AdvectionDiffusionCornerDynamics3D : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, int xNormal, int yNormal, int zNormal>
+class AdvectionDiffusionCornerDynamics3D : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  AdvectionDiffusionCornerDynamics3D(T omega_, Momenta<T,Lattice>& momenta_);
+  AdvectionDiffusionCornerDynamics3D(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,Lattice>& cell, LatticeStatistics<T>& statistics) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics) override;
+  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics

@@ -35,36 +35,29 @@ namespace olb {
 
 /// Implementation of the MRT collision step with stochastic relaxation based on
 /// " A stochastic subgrid model with application to turbulent flow and scalar mixing"; Phys. of Fluids 19; 2007
-template<typename T, template<typename U> class Lattice>
-class StochasticSGSdynamics : public MRTdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class StochasticSGSdynamics : public MRTdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  StochasticSGSdynamics(T omega_, Momenta<T,Lattice>& momenta_, T turbulenceInt_, T charU_, T smagoConst_, T dx_ = 1, T dt_ = 1 );
+  StochasticSGSdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, T turbulenceInt_, T charU_, T smagoConst_, T dx_ = 1, T dt_ = 1 );
 
 
   // Collide
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
-
-  /// Collide with fixed velocity
-  // virtual void staticCollide(Cell<T,Lattice>& cell,
-  //                            const T u[Lattice<T>::d],
-  //                            LatticeStatistics<T>& statistics_/*, T charU_, T drift_, T result_*/);
-
-
 
   /// Set local relaxation parameter of the dynamics
   virtual void setOmega(T omega_);
 
   /// Get local smagorinsky relaxation parameter of the dynamics
-  virtual T getSmagorinskyOmega(Cell<T,Lattice>& cell_, T X_lang_n_);
+  virtual T getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell_, T X_lang_n_);
 
   /// Get local Random number of BoxMüllertransform -> returns randBM
-  virtual T getRandBMTrans(Cell<T,Lattice>& cell_,  T turbulenceInt_, T charU_);
+  virtual T getRandBMTrans(Cell<T,DESCRIPTOR>& cell_,  T turbulenceInt_, T charU_);
 
   /// Get local Random number of BoxMüllertransform -> returns randBM
-  // virtual void setRandomWalk(Cell<T,Lattice>& cell_, T CharU, T drift_, T result_ );
-  virtual T getRandomWalk(Cell<T,Lattice>& cell_, T drift_, T result_);
+  // virtual void setRandomWalk(Cell<T,DESCRIPTOR>& cell_, T CharU, T drift_, T result_ );
+  virtual T getRandomWalk(Cell<T,DESCRIPTOR>& cell_, T drift_, T result_);
 
 
 private:
@@ -72,11 +65,11 @@ private:
   T computePreFactor(T omega_, T smagoConst_);
 
   /// Computes the local smagorinsky relaxation parameter
-  T computeOmega(T omega0_, T preFactor_, T rho_, T pi_[util::TensorVal<Lattice<T> >::n] , T X_lang_n_);
+  T computeOmega(T omega0_, T preFactor_, T rho_, T pi_[util::TensorVal<DESCRIPTOR >::n] , T X_lang_n_);
 
   /// Computes the local time scale from SGS dissipation rate for BMtransform
-  T computeTimeScale(T preFactor_, T rho_, T pi_[util::TensorVal<Lattice<T> >::n], T smagoConst_, T X_lang_n_);
-  // virtual void setTimeScale(T preFactor_, T rho_, T pi_[util::TensorVal<Lattice<T> >::n], T smagoConst_ ,T X_lang_n_);
+  T computeTimeScale(T preFactor_, T rho_, T pi_[util::TensorVal<DESCRIPTOR >::n], T smagoConst_, T X_lang_n_);
+  // virtual void setTimeScale(T preFactor_, T rho_, T pi_[util::TensorVal<DESCRIPTOR >::n], T smagoConst_ ,T X_lang_n_);
 
 private:
   /// effective collision time based upon Smagorisnky approach
@@ -100,7 +93,7 @@ private:
   T X_lang_n;
 
   // Relaxation Time Matrix for
-  T invM_S_SGS[Lattice<T>::q][Lattice<T>::q];
+  T invM_S_SGS[DESCRIPTOR::q][DESCRIPTOR::q];
 
 };
 

@@ -55,34 +55,34 @@ public:
   /**
    * If `serializable` is omitted, it has to be provided in the save method.
    */
-  inline Serializer(Serializable& serializable, std::string fileName = "");
+  Serializer(Serializable& serializable, std::string fileName = "");
 
   /// Resets the `_iBlock` counter
-  inline void resetCounter();
+  void resetCounter();
 
   /// Returns the total memory size in bits
-  inline std::size_t getSize() const;
+  std::size_t getSize() const;
 
   /// Returns pointer to the memory of the current block and increments `iBlock`
-  inline bool* getNextBlock(std::size_t& sizeBlock, const bool loadingMode);
+  bool* getNextBlock(std::size_t& sizeBlock, const bool loadingMode);
 
   /// Loads a file and pushes the data into the serialized class. Always in parallel, i.e. one file per rank.
   /**
    * \todo implement similar methods for sending and receiving data through MPI
    */
-  inline bool load(std::string fileName = "", const bool enforceUint=false);
+  bool load(std::string fileName = "", const bool enforceUint=false);
 
   /// Save `_serializable` into file `filename`. Always in parallel, i.e. one file per rank.
-  inline bool save(std::string fileName = "", const bool enforceUint=false);
+  bool save(std::string fileName = "", const bool enforceUint=false);
 
   /// computes `_size` based on the individual definition of `getBlock()`
-  inline void computeSize(const bool enforceRecompute=false);
+  void computeSize(const bool enforceRecompute=false);
 
 private:
   /// Set `fileName` to `_fileName` if empty and set it to `"Serializable"` if both equal ""
-  inline void validateFileName(std::string &fileName);
+  void validateFileName(std::string &fileName);
   /// Returns full file name for `_fileName`
-  inline const std::string getFullFileName(const std::string& fileName);
+  const std::string getFullFileName(const std::string& fileName);
 };
 
 
@@ -174,10 +174,10 @@ public:
   virtual std::size_t getSerializableSize() const = 0;
 
   /// Save `Serializable` into file `fileName`
-  inline bool save(std::string fileName = "", const bool enforceUint=false);
+  bool save(std::string fileName = "", const bool enforceUint=false);
 
   /// Load `Serializable` from file `fileName`
-  inline bool load(std::string fileName = "", const bool enforceUint=false);
+  bool load(std::string fileName = "", const bool enforceUint=false);
 
   /// Sum functor for `getNblock()` of `std::vector<Serializable>` (for `std::accumulate`)
   /**

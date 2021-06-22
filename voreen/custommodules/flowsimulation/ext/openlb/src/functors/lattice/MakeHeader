@@ -1,6 +1,6 @@
 #  This file is part of the OpenLB library
 #
-#  Copyright (C) 2017 Adrian Kummerländer
+#  Copyright (C) 2017 Adrian Kummerlaender
 #  E-mail contact: info@openlb.net
 #  The most recent release of OpenLB can be downloaded at
 #  <http://www.openlb.net/>
@@ -29,20 +29,46 @@ precompiled    := blockBaseF2D \
                   blockCalcF3D \
                   blockLatticeIntegralF2D \
                   blockLatticeIntegralF3D \
-                  blockLatticeLocalF2D \
-                  blockLatticeLocalF3D \
+                  blockLocalAverage2D \
+                  blockLocalAverage3D \
                   blockReduction2D2D \
                   blockReduction2D1D \
                   blockReduction3D2D \
+                  blockMin3D \
+                  blockMax3D \
+                  blockAverage3D \
+                  blockGeometryFaces3D \
+                  blockLatticeRefinementMetricF2D \
+                  blockLatticeRefinementMetricF3D \
+                  blockRoundingF2D \
+                  blockRoundingF3D \
+                  blockDiscretizationF2D \
+                  blockDiscretizationF3D \
                   superBaseF2D \
                   superBaseF3D \
                   superCalcF2D \
                   superCalcF3D \
+                  superConst2D \
+                  superConst3D \
                   superLatticeIntegralF2D \
                   superLatticeIntegralF3D \
-                  superLatticeLocalF2D \
-                  superLatticeLocalF3D \
+                  latticeLocalF2D \
+		  latticeLocalF3D \
+                  superLocalAverage2D \
+                  superLocalAverage3D \
                   reductionF2D \
                   reductionF3D \
                   turbulentF3D \
-                  latticeFrameChangeF3D
+                  latticeFrameChangeF3D \
+                  superMin3D \
+                  superMax3D \
+                  superAverage3D \
+                  superGeometryFaces3D \
+                  superRoundingF2D \
+                  superRoundingF3D \
+                  superErrorNorm2D \
+                  superErrorNorm3D \
+                  superLatticeRefinementMetricF2D \
+                  superLatticeRefinementMetricF3D \
+                  superDiscretizationF2D \
+                  superDiscretizationF3D

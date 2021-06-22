@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,6 +25,7 @@
 #define HYPERPLANE_LATTICE_3D_HH
 
 #include "hyperplaneLattice3D.h"
+#include "utilities/vectorHelpers.h"
 
 namespace olb {
 
@@ -37,16 +38,44 @@ int HyperplaneLattice3D<T>::computeMaxLatticeDistance(Cuboid3D<T>&& cuboid) cons
 
   T maxPhysDistance = T();
   T tmp;
+  Vector<T,3> tmpO;
+  Vector<T,3> tmpE;
 
-  for (int iDim = 0; iDim < 3; ++iDim) {
-    tmp = std::abs(origin[iDim] - _origin[iDim]);
-    if (maxPhysDistance < tmp) {
+  for(int iDim=0; iDim<3; ++iDim){
+  tmpO[iDim] = origin[iDim] - _origin[iDim];
+  tmpE[iDim] = origin[iDim] + extend[iDim]*deltaR - _origin[iDim];
+  }
+  tmp = sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1] + tmpO[2]*tmpO[2]);
+  if (maxPhysDistance < tmp) {
       maxPhysDistance = tmp;
-    }
-    tmp = std::abs(origin[iDim] + extend[iDim]*deltaR - _origin[iDim]);
-    if (maxPhysDistance < tmp) {
+  }
+  tmp = sqrt((tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1] + tmpO[2]*tmpO[2]));
+  if (maxPhysDistance < tmp) {
       maxPhysDistance = tmp;
-    }
+  }
+  tmp = sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1] + tmpO[2]*tmpO[2]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
+  }
+  tmp = sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1] + tmpE[2]*tmpE[2]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
+  }
+  tmp = sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1] + tmpE[2]*tmpE[2]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
+  }
+  tmp = sqrt(tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1] + tmpE[2]*tmpE[2]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
+  }
+  tmp = sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1] + tmpO[2]*tmpO[2]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
+  }
+  tmp = sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1] + tmpE[2]*tmpE[2]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
   }
 
   return int(maxPhysDistance/_h) + 1;
@@ -136,8 +165,8 @@ void HyperplaneLattice3D<T>::setToResolution(int resolution)
     _nx = (int) (_nx*_h/newH) + 1;
     _h = newH;
   }
-  _u.normalize(_h);
-  _v.normalize(_h);
+  _u = normalize(_u, _h);
+  _v = normalize(_v, _h);
 }
 
 template<typename T>
@@ -149,8 +178,8 @@ HyperplaneLattice3D<T>::HyperplaneLattice3D(
     _v(hyperplane.v),
     _h(geometry.getMinDeltaR())
 {
-  _u.normalize(_h);
-  _v.normalize(_h);
+  _u = normalize(_u, _h);
+  _v = normalize(_v, _h);
 
   const int maxLatticeDistance = computeMaxLatticeDistance(geometry.getMotherCuboid());
   // compute _hyperplane.origin, _nx, _ny so that the cuboid is right inside the geometry
@@ -166,8 +195,8 @@ HyperplaneLattice3D<T>::HyperplaneLattice3D(
     _v(hyperplane.v),
     _h(geometry.getMinDeltaR())
 {
-  _u.normalize(_h);
-  _v.normalize(_h);
+  _u = normalize(_u, _h);
+  _v = normalize(_v, _h);
 
   const int maxLatticeDistance = computeMaxLatticeDistance(geometry.getMotherCuboid());
   // compute _hyperplane.origin, _nx, _ny so that the cuboid is right inside the geometry
@@ -191,8 +220,8 @@ HyperplaneLattice3D<T>::HyperplaneLattice3D(
     _h = geometry.getMinDeltaR();
   }
 
-  _u.normalize(_h);
-  _v.normalize(_h);
+  _u = normalize(_u, _h);
+  _v = normalize(_v, _h);
 
   const int maxLatticeDistance = computeMaxLatticeDistance(geometry.getMotherCuboid());
   // compute _hyperplane.origin, _nx, _ny so that the cuboid is right inside the geometry
@@ -211,8 +240,8 @@ HyperplaneLattice3D<T>::HyperplaneLattice3D(
     _nx(nx),
     _ny(ny)
 {
-  _u.normalize(_h);
-  _v.normalize(_h);
+  _u = normalize(_u, _h);
+  _v = normalize(_v, _h);
 }
 
 template <typename T>

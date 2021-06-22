@@ -25,6 +25,7 @@
 #define ANALYTICAL_F_H
 
 #include <vector>
+#include <random>
 
 #include "analyticalBaseF.h"
 #include "indicator/smoothIndicatorF2D.h"
@@ -39,27 +40,142 @@
 
 namespace olb {
 
-template<typename T, typename S> class SmoothIndicatorSphere3D;
-template<typename T,  template<typename U> class Lattice> class RadiativeUnitConverter;
+template<typename T, typename S, bool> class SmoothIndicatorSphere3D;
+template<typename T,  typename DESCRIPTOR> class RadiativeUnitConverter;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////implementation of several 1d,2d,3d functors (analyticalFXD)/////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+template <unsigned D, typename T, typename S>
+class AnalyticalComposed final : public AnalyticalF<D,T,S> {
+private:
+  std::vector<std::reference_wrapper<AnalyticalF<D,T,S>>> _f;
+public:
+  template <unsigned otherD=D, typename = typename std::enable_if_t<otherD==2>>
+  AnalyticalComposed(AnalyticalF<D,T,S>& f0, AnalyticalF<D,T,S>& f1)
+    : AnalyticalF<D,T,S>(2), _f{f0, f1}
+  {
+    this->getName() = "composed";
+  }
+  template <unsigned otherD=D, typename = typename std::enable_if_t<otherD==3>>
+  AnalyticalComposed(AnalyticalF<D,T,S>& f0, AnalyticalF<D,T,S>& f1, AnalyticalF<D,T,S>& f2)
+  : AnalyticalF<D,T,S>(3), _f{f0, f1, f2}
+  {
+    this->getName() = "composed";
+  }
+  AnalyticalComposed(std::vector<AnalyticalF<D,T,S>>& f);
+  bool operator() (T output[], const S x[]) override;
+};
 
-//////////////////////////////////1D////////////////////////////////////////////
 
-/// AnalyticalConst1D: 1D -> XD, where XD is defined by value.size()
-template <typename T, typename S>
-class AnalyticalConst1D : public AnalyticalF1D<T,S> {
+/// AnalyticalConst: DD -> XD, where XD is defined by value.size()
+template <unsigned D, typename T, typename S>
+class AnalyticalConst final: public AnalyticalF<D,T,S> {
 private:
   // is constant return value of operator()
   std::vector<T> _c;
 public:
-  AnalyticalConst1D(T value);
-  AnalyticalConst1D(const std::vector<T>& value);
+  AnalyticalConst(T value);
+  AnalyticalConst(T value0, T value1);
+  AnalyticalConst(T value0, T value1, T value2);
+  AnalyticalConst(const Vector<T,3>& value);
+  AnalyticalConst(const std::vector<T>& value);
   bool operator() (T output[], const S x[]) override;
 };
+
+/// AnalyticalNormal: DD -> XD, where XD is defined by value.size()
+template <unsigned D, typename T, typename S>
+class AnalyticalNormal final: public AnalyticalF<D,T,S> {
+private:
+  // is constant return value of operator()
+  std::vector<T> _mean;
+  T _stdDev;
+public:
+  AnalyticalNormal(std::vector<T> mean, T stdDev);
+  bool operator() (T output[], const S x[]) override;
+};
+
+/// AnalyticalRandomBase: virtual base class for all the random functionals
+template <unsigned D, typename T, typename S>
+class AnalyticalRandomBase : public AnalyticalF<D,T,S> {
+protected:
+  AnalyticalRandomBase();
+  std::random_device rd;
+  std::mt19937 gen;
+};
+
+/// AnalyticalRandomUniform: DD -> 1D with random image in (0,1)
+template <unsigned D, typename T, typename S>
+class AnalyticalRandomUniform : public AnalyticalRandomBase<D,T,S> {
+public:
+  AnalyticalRandomUniform(T minVal=0., T maxVal=1.);
+  bool operator() (T output[], const S x[]) override;
+private:
+  std::uniform_real_distribution<T> distro;
+};
+
+/// AnalyticalRandomNormal: DD -> 1D with random image in (0,1)
+template <unsigned D, typename T, typename S>
+class AnalyticalRandomNormal : public AnalyticalRandomBase<D,T,S> {
+public:
+  AnalyticalRandomNormal(T mean=0., T stdDev=1.);
+  bool operator() (T output[], const S x[]) override;
+protected:
+  std::normal_distribution<T> distro;
+};
+
+/// AnalyticalRandomNormal: DD -> 1D with random image in (0,1)
+/// Normal distribution cut off outside [mean-n*stdDev, mean+n*stdDev]
+template <unsigned D, typename T, typename S>
+class AnalyticalRandomTruncatedNormal : public AnalyticalRandomNormal<D,T,S> {
+public:
+  AnalyticalRandomTruncatedNormal(T mean=0., T stdDev=1., T n=3.);
+  bool operator() (T output[], const S x[]) override;
+private:
+  T _min;
+  T _max;
+};
+
+
+/// AnalyticalRandomOld: DD -> 1D with random image in (0,1)
+template <unsigned D, typename T, typename S>
+class AnalyticalRandomOld : public AnalyticalF<D,T,S> {
+public:
+  AnalyticalRandomOld();
+  bool operator() (T output[], const S x[]) override;
+};
+
+////////////// CONVERSION FROM NEW TO OLD IMPLEMENTATION //////////////////////////
+
+template <typename T, typename S>
+using AnalyticalConst1D = AnalyticalConst<1,T,S>;
+template <typename T, typename S>
+using AnalyticalConst2D = AnalyticalConst<2,T,S>;
+template <typename T, typename S>
+using AnalyticalConst3D = AnalyticalConst<3,T,S>;
+
+template <typename T, typename S>
+using AnalyticalComposed2D = AnalyticalComposed<2,T,S>;
+template <typename T, typename S>
+using AnalyticalComposed3D = AnalyticalComposed<3,T,S>;
+
+template <typename T, typename S>
+using AnalyticalRandom1D = AnalyticalRandomOld<1,T,S>;
+template <typename T, typename S>
+using AnalyticalRandom2D = AnalyticalRandomOld<2,T,S>;
+template <typename T, typename S>
+using AnalyticalRandom3D = AnalyticalRandomOld<3,T,S>;
+
+
+
+
+
+
+////////////// OLD IMPLEMENTATION //////////////////////////
+
+
+//////////////////////////////////1D////////////////////////////////////////////
 
 /// AnalyticalLinear1D: 1D -> 1D troughout given points (x0,v0) and (x1,v1)
 //  Punktsteigungsform
@@ -72,14 +188,6 @@ public:
   AnalyticalLinear1D(T a, T b);
   AnalyticalLinear1D(S x0, T v0, S x1, T v1);
   bool operator() (T output[], const S x[]) override; ///< returns line _a*x + _b
-};
-
-/// AnalyticalRandom1D: 1D -> 1D with random image in (0,1)
-template <typename T, typename S>
-class AnalyticalRandom1D : public AnalyticalF1D<T,S> {
-public:
-  AnalyticalRandom1D();
-  bool operator() (T output[], const S x[]) override;
 };
 
 
@@ -132,30 +240,34 @@ public:
   bool operator() (T output[], const T input[]) override;
 };
 
+/// Coisnus: Coisnus with period and amplitude
+template <typename T, typename S>
+class Cosinus : public AnalyticalF1D<T,S> {
+protected:
+  T _period;
+  T _amplitude;
+  T _pi;
+public:
+  Cosinus (T period=1, T amplitude=1);
+  bool operator() (T output[], const S x[]) override;
+};
+
+/// CosinusComposite: Composition of two Cosinus to shift the low point within a period - difference denotes the share of the period in which the low point is located. Calculated with case discrimination (x%period < d or d <= x%period)
+template <typename T, typename S>
+class CosinusComposite : public AnalyticalF1D<T,S> {
+protected:
+  T _period;
+  T _difference;
+  T _amplitude;
+  T _pi;
+public:
+  CosinusComposite(T period=1, T difference = 1, T amplitude=1);
+  bool operator() (T output[], const S x[]) override;
+};
+
+
+
 //////////////////////////////////2D////////////////////////////////////////////
-
-template <typename T, typename S>
-class AnalyticalComposed2D final : public AnalyticalF2D<T,S> {
-private:
-  AnalyticalF2D<T,S>& _f0;
-  AnalyticalF2D<T,S>& _f1;
-public:
-  AnalyticalComposed2D(AnalyticalF2D<T,S>& f0, AnalyticalF2D<T,S>& f1);
-  bool operator() (T output[], const S x[]) override;
-};
-
-/// AnalyticalConst2D: 2D -> XD, where XD is defined by value.size()
-template <typename T, typename S>
-class AnalyticalConst2D final : public AnalyticalF2D<T,S> {
-private:
-  // is constant return value of operator()
-  std::vector<T> _c;
-public:
-  AnalyticalConst2D(T value);
-  AnalyticalConst2D(T value0, T value1);
-  AnalyticalConst2D(const std::vector<T>& value);
-  bool operator() (T output[], const S x[]) override;
-};
 
 /// AnalyticalLinear2D: 2D -> 1D troughout given points (x0,y0,v0), (x1,y1,v1), (x2,y2,v2)
 template <typename T, typename S>
@@ -167,14 +279,6 @@ protected:
 public:
   AnalyticalLinear2D(T a, T b, T c);
   AnalyticalLinear2D(S x0, S y0, T v0, S x1, S y1, T v1, S x2, S y2, T v2);
-  bool operator() (T output[], const S x[]) override;
-};
-
-/// AnalyticalRandom2D: 2D -> 1D with random image in (0,1)
-template <typename T, typename S>
-class AnalyticalRandom2D final : public AnalyticalF2D<T,S> {
-public:
-  AnalyticalRandom2D();
   bool operator() (T output[], const S x[]) override;
 };
 
@@ -190,45 +294,23 @@ public:
   bool operator() (T output[], const S x[]);
 };
 
-template <typename T, typename S>
+/** Computes resulting velocity of an object from translational and rotational velocity.
+ * \param indicator Class defining the object (needs to be a SmoothIndicatorF2D<T,T,true>)
+ * \param u translational velocity of the object - expected in lattice units
+ * \param omega rotational velocity of the object - expected in lattice units
+ */
+template <typename T, typename S, typename DESCRIPTOR>
 class ParticleU2D : public AnalyticalF2D<T,S> {
 protected:
-  ParticleIndicatorF2D<T,T>& _indicator;
-  std::vector<T> _u;
-  T _omega;
+  SmoothIndicatorF2D<T,T,true>& _indicator;
+  UnitConverter<T,DESCRIPTOR> const& _converter;
 public:
-  ParticleU2D(ParticleIndicatorF2D<T,T>& indicator, std::vector<T>& u, T& omega);
-  bool operator()(T output[], const S input[]);
+  ParticleU2D(SmoothIndicatorF2D<T,T,true>& indicator, UnitConverter<T,DESCRIPTOR> const& converter);
+  bool operator()(T output[], const S input[]) override;
 };
 
 
 //////////////////////////////////3D////////////////////////////////////////////
-template <typename T, typename S>
-class AnalyticalComposed3D final : public AnalyticalF3D<T,S> {
-private:
-  AnalyticalF3D<T,S>& _f0;
-  AnalyticalF3D<T,S>& _f1;
-  AnalyticalF3D<T,S>& _f2;
-public:
-  AnalyticalComposed3D(AnalyticalF3D<T,S>& f0, AnalyticalF3D<T,S>& f1, AnalyticalF3D<T,S>& f2);
-  bool operator() (T output[], const S x[]) override;
-};
-
-/// AnalyticalConst3D: 3D -> XD, where XD is defined by value.size()
-template <typename T, typename S>
-class AnalyticalConst3D final : public AnalyticalF3D<T,S> {
-private:
-  // is constant return value of operator()
-  std::vector<T> _c;
-public:
-  AnalyticalConst3D(T value);
-  AnalyticalConst3D(T value0, T value1);
-  AnalyticalConst3D(T value0, T value1, T value2);
-  AnalyticalConst3D(const std::vector<T>& value);
-  AnalyticalConst3D(const Vector<T,3>& value);
-  bool operator() (T output[], const S x[]) override;
-};
-
 /// AnalyticalLinear3D: 3D -> 1D troughout given points (x0,y0,z0,v0), (x1,y1,z1,v1), (x2,y2,z2,v2), (x3,y3,z3,v3)
 template <typename T, typename S>
 class AnalyticalLinear3D final : public AnalyticalF3D<T,S> {
@@ -244,14 +326,6 @@ public:
   bool operator() (T output[], const S x[]) override;
 };
 
-/// AnalyticalRandom3D: 3D -> 1D with random image in (0,1)
-template <typename T, typename S>
-class AnalyticalRandom3D final : public AnalyticalF3D<T,S> {
-public:
-  AnalyticalRandom3D();
-  bool operator() (T output[], const S x[]) override;
-};
-
 /// AnalyticalScaled3D: 3D -> Image(AnalyticalF) scales AnalyticalF by _scale
 template <typename T, typename S>
 class AnalyticalScaled3D final : public AnalyticalF3D<T,S> {
@@ -264,7 +338,7 @@ public:
 };
 
 /// see Mink et al. 2016 in Sec.3.1.
-template <typename T, typename S, template <typename U> class DESCRIPTOR>
+template <typename T, typename S, typename DESCRIPTOR>
 class PLSsolution3D : public AnalyticalF3D<T,S> {
 private:
   T _physSigmaEff;
@@ -275,7 +349,7 @@ public:
 };
 
 /// light source as a cylinder along z-axis
-template <typename T, typename S, template <typename U> class DESCRIPTOR>
+template <typename T, typename S, typename DESCRIPTOR>
 class LightSourceCylindrical3D : public AnalyticalF3D<T,S> {
 private:
   T _physSigmaEff;
@@ -302,19 +376,6 @@ public:
   bool operator()(T output[1], const S x[3]) override;
 };
 
-// TODO Comment
-template <typename T, typename S>
-class ParticleU3D : public AnalyticalF3D<T,S> {
-protected:
-  ParticleIndicatorF3D<T,T>& _indicator;
-  std::vector<T> _u;
-  std::vector<T> _omega;
-public:
-  ParticleU3D(ParticleIndicatorF3D<T,T>& indicator, std::vector<T>& u, std::vector<T>& omega);
-  bool operator()(T output[], const S input[]);
-};
-
-
 /// 8.6.1 Gauss Hill inital values
 template <typename T, typename S>
 class GaussianHill2D : public AnalyticalF2D<T,S> {
@@ -326,7 +387,6 @@ public:
   GaussianHill2D(T sigma, Vector<T,2> x0, T c0);
   bool operator()(T output[1], const S x[2]) override;
 };
-
 
 /// 8.6.1 Gauss Hill time evolution
 template <typename T, typename S>
@@ -341,6 +401,21 @@ private:
 public:
   GaussianHillTimeEvolution2D(T sigma0, T D, T t, Vector<T,2> x0, Vector<T,2> u, T c0);
   bool operator()(T output[1], const S x[2]) override;
+};
+
+/** Computes resulting velocity of an object from translational and rotational velocity.
+ * \param indicator Class defining the object (needs to be a SmoothIndicatorF3D)
+ * \param u translational velocity of the object - expected in lattice units
+ * \param omega rotational velocity of the object - expected in lattice units
+ */
+template <typename T, typename S, typename DESCRIPTOR>
+class ParticleU3D : public AnalyticalF3D<T,S> {
+protected:
+  SmoothIndicatorF3D<T, T, true>& _indicator;
+  UnitConverter<T,DESCRIPTOR> const& _converter;
+public:
+  ParticleU3D(SmoothIndicatorF3D<T, T, true>& indicator, UnitConverter<T,DESCRIPTOR> const& converter);
+  bool operator()(T output[], const S input[]) override;
 };
 
 } // end namespace olb

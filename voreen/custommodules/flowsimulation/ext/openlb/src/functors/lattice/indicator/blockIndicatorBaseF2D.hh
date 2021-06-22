@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,20 +25,61 @@
 #define BLOCK_INDICATOR_BASE_F_2D_HH
 
 #include "blockIndicatorBaseF2D.h"
+#include "geometry/blockGeometry2D.h"
 
 namespace olb {
 
 template <typename T>
-BlockIndicatorF2D<T>::BlockIndicatorF2D(BlockStructure2D& blockGeometry)
-  : BlockF2D<bool>(blockGeometry, 1)
+BlockIndicatorF2D<T>::BlockIndicatorF2D(BlockGeometryStructure2D<T>& geometry)
+  : BlockF2D<bool>(geometry, 1),
+    _blockGeometryStructure(geometry),
+    _cachedData{nullptr}
 { }
+
+template <typename T>
+BlockGeometryStructure2D<T>& BlockIndicatorF2D<T>::getBlockGeometryStructure()
+{
+  return _blockGeometryStructure;
+}
 
 template <typename T>
 bool BlockIndicatorF2D<T>::operator() (const int input[])
 {
-  bool output;
-  this->operator()(&output, input);
+  bool output{};
+  if (_cachedData == nullptr) {
+    this->operator()(&output, input);
+  }
+  else {
+    _cachedData->get(input[0], input[1]);
+  }
   return output;
+}
+
+template <typename T>
+bool BlockIndicatorF2D<T>::operator() (int iX, int iY)
+{
+  bool output{};
+  if (_cachedData == nullptr) {
+    this->operator()(&output, iX, iY);
+  }
+  else {
+    _cachedData->get(iX, iY);
+  }
+  return output;
+}
+
+template <typename T>
+void BlockIndicatorF2D<T>::setCache(const BlockData2D<T,bool>& cache)
+{
+  _cachedData = &cache;
+}
+
+template <typename T>
+bool BlockIndicatorF2D<T>::isEmpty()
+{
+  // There is no way to determine domain emptyness in a fashion that is both
+  // generic and efficient.
+  return false;
 }
 
 } // namespace olb

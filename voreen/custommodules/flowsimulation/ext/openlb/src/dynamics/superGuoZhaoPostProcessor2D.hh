@@ -35,58 +35,56 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice, class dynamicsManager>
-SuperGuoZhaoInstantiator2D<T, Lattice, dynamicsManager>::SuperGuoZhaoInstantiator2D (
-  SuperLattice2D<T, Lattice>& sLattice_) :
+template<typename T, typename DESCRIPTOR, class dynamicsManager>
+SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::SuperGuoZhaoInstantiator2D (
+  SuperLattice2D<T, DESCRIPTOR>& sLattice_) :
   sLattice(sLattice_)
 {}
 
-template<typename T, template<typename U> class Lattice, class dynamicsManager>
-void SuperGuoZhaoInstantiator2D<T, Lattice, dynamicsManager>::definePorousFields (
-  AnalyticalF2D<T,T>& epsilon_, AnalyticalF2D<T,T>& K_)
+template<typename T, typename DESCRIPTOR, class dynamicsManager>
+void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::definePorousFields (
+  AnalyticalF<2,T,T>& epsilon_, AnalyticalF<2,T,T>& K_)
 {
 
 }
 
-template<typename T, template<typename U> class Lattice, class dynamicsManager>
-void SuperGuoZhaoInstantiator2D<T, Lattice, dynamicsManager>::defineEpsilon (
-  SuperGeometry2D<T>& sGeometry, int material, AnalyticalF2D<T,T>& epsilon)
+template<typename T, typename DESCRIPTOR, class dynamicsManager>
+void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineEpsilon (
+  SuperGeometry2D<T>& sGeometry, int material, AnalyticalF<2,T,T>& epsilon)
 {
 
-  sLattice.defineExternalField(sGeometry, material,
-                               Lattice<T>::ExternalField::epsilonAt, 1, epsilon );
+  sLattice.template defineField<descriptors::EPSILON>(sGeometry, material, epsilon);
 }
 
-template<typename T, template<typename U> class Lattice, class dynamicsManager>
-void SuperGuoZhaoInstantiator2D<T, Lattice, dynamicsManager>::defineK (
-  UnitConverter<T,Lattice> const& converter, SuperGeometry2D<T>& sGeometry, int material, AnalyticalF2D<T,T>& K)
+template<typename T, typename DESCRIPTOR, class dynamicsManager>
+void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineK (
+  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry2D<T>& sGeometry, int material, AnalyticalF<2,T,T>& K)
 {
 
   AnalyticalConst2D<T,T> normFactor(converter.getConversionFactorLength()*converter.getConversionFactorLength());
   AnalyticalIdentity2D<T,T> KLb(K / normFactor);
-  sLattice.defineExternalField(sGeometry, material, Lattice<T>::ExternalField::KAt, 1, KLb);
+  sLattice.template defineField<descriptors::K>(sGeometry, material, KLb);
 }
 
-template<typename T, template<typename U> class Lattice, class dynamicsManager>
-void SuperGuoZhaoInstantiator2D<T, Lattice, dynamicsManager>::defineNu (
-  UnitConverter<T,Lattice> const& converter, SuperGeometry2D<T>& sGeometry, int material)
+template<typename T, typename DESCRIPTOR, class dynamicsManager>
+void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineNu (
+  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry2D<T>& sGeometry, int material)
 {
 
   AnalyticalConst2D<T,T> nu(converter.getLatticeViscosity());
-  sLattice.defineExternalField(sGeometry, material, Lattice<T>::ExternalField::nuAt, 1, nu);
+  sLattice.template defineField<descriptors::NU>(sGeometry, material, nu);
 }
 
-template<typename T, template<typename U> class Lattice, class dynamicsManager>
-void SuperGuoZhaoInstantiator2D<T, Lattice, dynamicsManager>::defineBodyForce (
-  UnitConverter<T,Lattice> const& converter, SuperGeometry2D<T>& sGeometry, int material, AnalyticalF2D<T,T>& BodyForce)
+template<typename T, typename DESCRIPTOR, class dynamicsManager>
+void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineBodyForce (
+  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry2D<T>& sGeometry, int material, AnalyticalF<2,T,T>& BodyForce)
 {
 
   std::vector<T> normFactorValue ( 2,
                                    converter.getConversionFactorLength() / (converter.getConversionFactorTime()*converter.getConversionFactorTime()) );
   AnalyticalConst2D<T,T> normFactor(normFactorValue);
   AnalyticalIdentity2D<T,T> BodyForceLb(BodyForce / normFactor);
-  sLattice.defineExternalField(sGeometry, material,
-                               Lattice<T>::ExternalField::bodyForceBeginsAt, 2, BodyForceLb);
+  sLattice.template defineField<descriptors::BODY_FORCE>(sGeometry, material, BodyForceLb);
 }
 
 }

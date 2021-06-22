@@ -27,137 +27,275 @@
 #include <cmath>
 
 #include "smoothIndicatorBaseF2D.h"
-#include "math.h"
 
 namespace olb {
 
 
 template <typename T, typename S>
-SmoothIndicatorF2D<T,S>::SmoothIndicatorF2D()
+SmoothIndicatorF2D<T,S,false>::SmoothIndicatorF2D()
   : AnalyticalF2D<T,S>(1),
-    _myMin(S()), _myMax(S()), _center(S()),
-    _vel(S()), _acc(S()), _theta(S()), _omega(S()), _alpha(S()), _mass(S()), _mofi(S())
+    _myMin(S()), _myMax(S()), _pos(S()), _rotMat(S()), _circumRadius(S()), _theta(S()), _epsilon(S())
 { }
 
 template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorF2D<T,S>::getMin()
-{
+void SmoothIndicatorF2D<T,S,false>::init(T theta, Vector<S,2> vel, T mass, T mofi) {
+  _rotMat[0] = std::cos(theta);
+  _rotMat[1] = std::sin(theta);
+  _rotMat[2] = -std::sin(theta);
+  _rotMat[3] = std::cos(theta);
+}
+
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,false>::getMin() const {
   return _myMin;
 }
 
 template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorF2D<T,S>::getMax()
-{
+const Vector<S,2>& SmoothIndicatorF2D<T,S,false>::getMax() const {
   return _myMax;
 }
 
 template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorF2D<T,S>::getCenter()
-{
-  return _center;
-};
-
-template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorF2D<T,S>::getVel()
-{
-  return _vel;
+const Vector<S,2>& SmoothIndicatorF2D<T,S,false>::getPos() const {
+  return _pos;
 }
 
 template <typename T, typename S>
-Vector<S,2>& SmoothIndicatorF2D<T,S>::getAcc()
-{
-  return _acc;
+const Vector<S,4>& SmoothIndicatorF2D<T,S,false>::getRotationMatrix() const {
+  return _rotMat;
 }
 
 template <typename T, typename S>
-Vector<S,3>& SmoothIndicatorF2D<T,S>::getAcc2()
-{
-  return _acc2;
+const S& SmoothIndicatorF2D<T,S,false>::getCircumRadius() const {
+  return _circumRadius;
 }
 
 template <typename T, typename S>
-S& SmoothIndicatorF2D<T,S>::getTheta()
-{
+const S& SmoothIndicatorF2D<T,S,false>::getTheta() const {
   return _theta;
 }
 
 template <typename T, typename S>
-S& SmoothIndicatorF2D<T,S>::getOmega()
-{
-  return _omega;
+const S& SmoothIndicatorF2D<T,S,false>::getEpsilon() const {
+  return _epsilon;
 }
 
 template <typename T, typename S>
-S& SmoothIndicatorF2D<T,S>::getAlpha()
-{
-  return _alpha;
+std::string SmoothIndicatorF2D<T,S,false>::name() {
+  return _name;
 }
 
 template <typename T, typename S>
-S& SmoothIndicatorF2D<T,S>::getMass()
-{
-  return _mass;
+void SmoothIndicatorF2D<T,S,false>::setRotationMatrix(Vector<S,4> rotMat) {
+  _rotMat[0] = rotMat[0];
+  _rotMat[1] = rotMat[1];
+  _rotMat[2] = rotMat[2];
+  _rotMat[3] = rotMat[3];
 }
 
 template <typename T, typename S>
-S& SmoothIndicatorF2D<T,S>::getMofi()
-{
-  return _mofi;
+void SmoothIndicatorF2D<T,S,false>::setTheta(S theta) {
+  _theta = theta;
 }
 
 template <typename T, typename S>
-S SmoothIndicatorF2D<T,S>::getDiam()
-{
-  return 2*_radius;
-};
-
-template <typename T, typename S>
-S SmoothIndicatorF2D<T,S>::getRadius()
-{
-  return _radius+_epsilon;
-};
-
+void SmoothIndicatorF2D<T,S,false>::setEpsilon(S epsilon) {
+  _epsilon = epsilon;
+}
 
 // identity to "store results"
 template <typename T, typename S>
-SmoothIndicatorIdentity2D<T,S>::SmoothIndicatorIdentity2D(SmoothIndicatorF2D<T,S>& f)
-  : _f(f)
-{
+SmoothIndicatorIdentity2D<T,S>::SmoothIndicatorIdentity2D(SmoothIndicatorF2D<T,S,false>& f)
+  : _f(f) {
   this->_myMin = _f.getMin();
   this->_myMax = _f.getMax();
   std::swap( _f._ptrCalcC, this->_ptrCalcC );
 }
 
 template <typename T, typename S>
-bool SmoothIndicatorIdentity2D<T,S>::operator() (T output[], const S input[])
-{
+bool SmoothIndicatorIdentity2D<T,S>::operator() (T output[], const S input[]) {
   _f(output, input);
   return true;
 }
 
+///////////////////////// for template specialisation HLBM=true
 
 template <typename T, typename S>
-ParticleIndicatorF2D<T,S>::ParticleIndicatorF2D()
+SmoothIndicatorF2D<T,S,true>::SmoothIndicatorF2D()
   : AnalyticalF2D<T,S>(1),
-    _pos(S()),
-    _vel(S()), _acc(S()), _acc2(S()), _theta(S()), _omega(S()), _alpha(S()), _alpha2(S()), _mass(S()), _mofi(S()), _circumradius(S())
+    _myMin(S()), _myMax(S()), _pos(S()), _vel(S()), _acc(S()), _acc2(S()), _force(S()),
+    _rotMat(S()), _circumRadius(S()), _theta(S()), _omega(S()), _alpha(S()), 
+    _alpha2(S()), _mass(S()), _mofi(S()), _epsilon(S())
 { }
 
-// identity to "store results"
 template <typename T, typename S>
-ParticleIndicatorIdentity2D<T,S>::ParticleIndicatorIdentity2D(ParticleIndicatorF2D<T,S>& f)
-  : _f(f)
-{
-  std::swap( _f._ptrCalcC, this->_ptrCalcC );
+void SmoothIndicatorF2D<T,S,true>::init(T theta, Vector<S,2> vel, T mass, T mofi) {
+  _rotMat[0] = std::cos(theta);
+  _rotMat[1] = std::sin(theta);
+  _rotMat[2] = -std::sin(theta);
+  _rotMat[3] = std::cos(theta);
+  _vel = vel;
+  _mass = mass;
+  _mofi = mofi;
 }
 
 template <typename T, typename S>
-bool ParticleIndicatorIdentity2D<T,S>::operator() (T output[], const S input[])
-{
-  _f(output, input);
-  return true;
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getMin() const {
+  return _myMin;
 }
 
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getMax() const {
+  return _myMax;
+}
+
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getPos() const {
+  return _pos;
+}
+
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getVel() const {
+  return _vel;
+}
+
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getAcc() const {
+  return _acc;
+}
+
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getAcc2() const {
+  return _acc2;
+}
+
+template <typename T, typename S>
+const Vector<S,2>& SmoothIndicatorF2D<T,S,true>::getHydrodynamicForce() const {
+  return _force;
+}
+
+template <typename T, typename S>
+const Vector<S,4>& SmoothIndicatorF2D<T,S,true>::getRotationMatrix() const {
+  return _rotMat;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getCircumRadius() const {
+  return _circumRadius;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getTheta() const {
+  return _theta;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getOmega() const {
+  return _omega;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getAlpha() const {
+  return _alpha;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getAlpha2() const {
+  return _alpha2;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getMass() const {
+  return _mass;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getMofi() const {
+  return _mofi;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF2D<T,S,true>::getEpsilon() const {
+  return _epsilon;
+}
+
+template <typename T, typename S>
+std::string SmoothIndicatorF2D<T,S,true>::name() {
+  return _name;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setPos(Vector<S,2> pos) {
+  _pos[0] = pos[0];
+  _pos[1] = pos[1];
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setVel(Vector<S,2> vel) {
+  _vel[0] = vel[0];
+  _vel[1] = vel[1];
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setAcc(Vector<S,2> acc) {
+  _acc[0] = acc[0];
+  _acc[1] = acc[1];
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setAcc2(Vector<S,2> acc2) {
+  _acc2[0] = acc2[0];
+  _acc2[1] = acc2[1];
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setHydrodynamicForce(Vector<S,2> force) {
+  _force[0] = force[0];
+  _force[1] = force[1];
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setRotationMatrix(Vector<S,4> rotMat) {
+  _rotMat[0] = rotMat[0];
+  _rotMat[1] = rotMat[1];
+  _rotMat[2] = rotMat[2];
+  _rotMat[3] = rotMat[3];
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setTheta(S theta) {
+  _theta = theta;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setOmega(S omega) {
+  _omega = omega;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setAlpha(S alpha) {
+  _alpha = alpha;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setAlpha2(S alpha2) {
+  _alpha2 = alpha2;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setMass(S mass) {
+  _mass = mass;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setMofi(S mofi) {
+  _mofi = mofi;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF2D<T,S,true>::setEpsilon(S epsilon) {
+  _epsilon = epsilon;
+}
 
 } // namespace olb
 

@@ -94,32 +94,25 @@ void BlockF2D<T>::setBlockStructure(BlockStructure2D* blockStructure)
 
 template <typename T,typename BaseType>
 BlockDataF2D<T,BaseType>::BlockDataF2D(BlockData2D<T,BaseType>& blockData)
-  : BlockF2D<T>( blockData, blockData.getSize() ), _blockData(blockData),
-    _isConstructed(false)
-{}
+  : BlockF2D<T>(blockData, blockData.getSize()),
+    _blockData(blockData)
+{ }
 
 template <typename T,typename BaseType>
 BlockDataF2D<T,BaseType>::BlockDataF2D(BlockF2D<BaseType>& f)
-  : BlockF2D<T>( f.getBlockStructure(), f.getTargetDim() ),
-    _blockData( *(new BlockData2D<T,BaseType>(f)) ), _isConstructed(true)
-{}
-
+  : BlockF2D<T>(f.getBlockStructure(), f.getTargetDim()),
+    _blockDataStorage(new BlockData2D<T,BaseType>(f)),
+    _blockData(*_blockDataStorage)
+{ }
 
 template <typename T,typename BaseType>
 BlockDataF2D<T,BaseType>::BlockDataF2D(int nx, int ny, int size)
-  : BlockF2D<T>( size ), _blockData( *(new BlockData2D<T,BaseType>(nx, ny, size)) ),
-    _isConstructed(true)
-{
-  this->setBlockStructure(&_blockData);
-}
-
-template <typename T,typename BaseType>
-BlockDataF2D<T,BaseType>::~BlockDataF2D()
-{
-  if (_isConstructed) {
-    delete &_blockData;
-  }
-}
+  // hacky solution to both managing BlockData2D using std::unique_ptr and
+  // passing it down the line to the base class
+  : BlockF2D<T>(*(new BlockData2D<T,BaseType>(nx, ny, size)), size),
+    _blockDataStorage(static_cast<BlockData2D<T,BaseType>*>(&(this->getBlockStructure()))),
+    _blockData(*_blockDataStorage)
+{ }
 
 template <typename T,typename BaseType>
 BlockData2D<T,BaseType>& BlockDataF2D<T,BaseType>::getBlockData()
@@ -127,12 +120,29 @@ BlockData2D<T,BaseType>& BlockDataF2D<T,BaseType>::getBlockData()
   return _blockData;
 }
 
-// access _blockLattice2D
 template <typename T, typename BaseType>
-bool BlockDataF2D<T, BaseType>::operator()(T output[], const int input[])
+bool BlockDataF2D<T,BaseType>::operator()(T output[], const int input[])
 {
   for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-    output[iDim] = (T)_blockData.get( input[0], input[1], iDim );
+    output[iDim] = static_cast<T>(_blockData.get(input[0], input[1], iDim));
+  }
+  return true;
+}
+
+
+template <typename T,typename BaseType>
+BlockDataViewF2D<T,BaseType>::BlockDataViewF2D(BlockData2D<T,BaseType>& blockData, int overlap)
+  : BlockDataF2D<T,BaseType>(blockData),
+    _overlap(overlap)
+{ }
+
+template <typename T, typename BaseType>
+bool BlockDataViewF2D<T,BaseType>::operator() (T output[], const int input[])
+{
+  for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
+    output[iDim] = this->_blockData.get(input[0] + _overlap,
+                                        input[1] + _overlap,
+                                        iDim);
   }
   return true;
 }
@@ -156,28 +166,28 @@ bool BlockIdentity2D<T>::operator()(T output[], const int input[])
 
 
 // BlockLatticeF2D
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeF2D<T,DESCRIPTOR>::BlockLatticeF2D
 (BlockLatticeStructure2D<T,DESCRIPTOR>& blockStructure, int targetDim)
   : BlockF2D<T>(blockStructure, targetDim), _blockLattice(blockStructure) { }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticeStructure2D<T,DESCRIPTOR>& BlockLatticeF2D<T,DESCRIPTOR>::getBlockLattice()
 {
   return _blockLattice;
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysF2D<T,DESCRIPTOR>::BlockLatticePhysF2D
 (BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, int targetDim)
   : BlockLatticeF2D<T,DESCRIPTOR>(blockLattice, targetDim), _converter(converter)
 { }
 
-template <typename T, template <typename U> class DESCRIPTOR, template <typename V> class ThermalDESCRIPTOR>
-BlockLatticeThermalPhysF2D<T,DESCRIPTOR,ThermalDESCRIPTOR>::BlockLatticeThermalPhysF2D
-(BlockLatticeStructure2D<T,ThermalDESCRIPTOR>& blockLattice, const ThermalUnitConverter<T,DESCRIPTOR,ThermalDESCRIPTOR>& converter, int targetDim)
-  : BlockLatticeF2D<T,ThermalDESCRIPTOR>(blockLattice, targetDim), _converter(converter)
+template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
+BlockLatticeThermalPhysF2D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticeThermalPhysF2D
+(BlockLatticeStructure2D<T,TDESCRIPTOR>& blockLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim)
+  : BlockLatticeF2D<T,TDESCRIPTOR>(blockLattice, targetDim), _converter(converter)
 { }
 
 } // end namespace olb

@@ -26,6 +26,7 @@
 
 #include "timer.h"
 #include "communication/mpiManager.h"
+#include "communication/ompManager.h"
 
 namespace olb {
 
@@ -61,6 +62,9 @@ template<typename T>
 T Timer<T>::getMLUPps()
 {
   T mlupps = getMLUPs()/singleton::mpi().getSize();
+#ifdef PARALLEL_MODE_OMP
+  mlupps /= omp.get_size();
+#endif
   return mlupps;
 }
 
@@ -75,6 +79,9 @@ template<typename T>
 T Timer<T>::getTotalMLUPps()
 {
   T tmlupps = getTotalMLUPs()/singleton::mpi().getSize();
+#ifdef PARALLEL_MODE_OMP
+  tmlupps /= omp.get_size();
+#endif
   return tmlupps;
 }
 
@@ -228,7 +235,7 @@ void Timer<T>::printShortSummary()
 
 // Factory function /////////////////////////////////
 
-template<typename T, template<typename U> class DESCRIPTOR>
+template<typename T, typename DESCRIPTOR>
 Timer<T>* createTimer(XMLreader& param, const UnitConverter<T,DESCRIPTOR>& converter, size_t numLatticePoints)
 {
   OstreamManager clout(std::cout,"createTimer");

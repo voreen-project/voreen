@@ -28,37 +28,37 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-advDiffDragForce3D<T,Lattice,ADLattice>::advDiffDragForce3D(UnitConverter<T,Lattice> const& converter_, T St_)
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T St_)
 {
   initArg = 8;
   dragCoeff = (converter_.getCharPhysVelocity()*converter_.getConversionFactorTime()) / (St_ * converter_.getCharPhysLength());
 }
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-advDiffDragForce3D<T,Lattice,ADLattice>::advDiffDragForce3D(UnitConverter<T,Lattice> const& converter_, T pRadius_, T pRho_)
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T pRadius_, T pRho_)
 {
   initArg = 8;
   dragCoeff = (9.*converter_.getPhysViscosity()*converter_.getPhysDensity()*converter_.getConversionFactorTime()) / (2.*pRho_*pRadius_*pRadius_);
 }
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-void advDiffDragForce3D<T,Lattice,ADLattice>::applyForce(T force[], Cell<T,Lattice> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+void AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
 {
   T velF[3] = {0.,0.,0.};
   nsCell->computeU(velF);
-  for (int i=0; i < Lattice<T>::d; i++) {
+  for (int i=0; i < DESCRIPTOR::d; i++) {
     force[i] += dragCoeff*(velF[i]-vel[i]);
   }
 }
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-advDiffRotatingForce3D<T,Lattice,ADLattice>::advDiffRotatingForce3D(SuperGeometry3D<T>& superGeometry_,
-    const UnitConverter<T,Lattice>& converter_, std::vector<T> axisPoint_, std::vector<T> axisDirection_,
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffRotatingForce3D(SuperGeometry3D<T>& superGeometry_,
+    const UnitConverter<T,DESCRIPTOR>& converter_, std::vector<T> axisPoint_, std::vector<T> axisDirection_,
     T w_, T* frac_, bool centrifugeForceOn_, bool coriolisForceOn_) :
   sg(superGeometry_), axisPoint(axisPoint_), axisDirection(axisDirection_),
   w(w_), frac(frac_), centrifugeForceOn(centrifugeForceOn_), coriolisForceOn(coriolisForceOn_)
@@ -66,9 +66,9 @@ advDiffRotatingForce3D<T,Lattice,ADLattice>::advDiffRotatingForce3D(SuperGeometr
   invMassLessForce = converter_.getConversionFactorTime() * converter_.getConversionFactorTime() / converter_.getConversionFactorLength();
 }
 
-template<typename T, template<typename U> class Lattice,
-template<typename U> class ADLattice>
-void advDiffRotatingForce3D<T,Lattice,ADLattice>::applyForce(T force[], Cell<T,Lattice> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+void AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
 {
   std::vector<T> F_centri(3,0);
   std::vector<T> F_coriolis(3,0);
@@ -97,6 +97,34 @@ void advDiffRotatingForce3D<T,Lattice,ADLattice>::applyForce(T force[], Cell<T,L
   force[2] += (F_coriolis[2]+F_centri[2])*invMassLessForce;
 //  }
 }
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+AdvDiffMagneticWireForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffMagneticWireForce3D(SuperGeometry3D<T>& superGeometry_, UnitConverter<T,DESCRIPTOR> const& converter_, T pMass, AnalyticalF<3,T, T>& getMagForce) : sg(superGeometry_), _getMagForce(getMagForce)
+{
+  initArg = 8;
+  _pMass = converter_.getConversionFactorTime() / pMass;
+  _conversionVelocity = converter_.getConversionFactorVelocity();
+}
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+void AdvDiffMagneticWireForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
+{
+  std::vector<T> physR(3,T());
+  this->sg.getCuboidGeometry().getPhysR(&(physR[0]),&(latticeR[0]));
+  T pos[3] = { T(), T(), T() };
+  pos[0] = physR[0];
+  pos[1] = physR[1];
+  pos[2] = physR[2];
+  T forceHelp[3] = { T(), T(), T() };
+  _getMagForce(forceHelp, pos);
+  for (int i=0; i < DESCRIPTOR::d; i++) {
+    force[i] += forceHelp[i] * _pMass / _conversionVelocity;
+//    std::cout << "----->>>>> force " << forceHelp[i] << std::endl;
+  }
+}
+
 
 }
 #endif

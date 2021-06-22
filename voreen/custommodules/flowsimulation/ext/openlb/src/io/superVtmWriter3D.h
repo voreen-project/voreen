@@ -57,20 +57,21 @@ public:
   void write(int iT=0);
   ///  writes functor instantaneously, same vti-pvd file structure as above
   void write(SuperF3D<T,W>& f, int iT=0);
+  void write(std::shared_ptr<SuperF3D<T,W>> ptr_f, int iT=0);
   ///  have to be called before calling write(int iT=0), since it creates
   //   the master pvd file, where all vti are linked!
   void createMasterFile();
   ///  put functor to _pointerVec
   ///  to simplify writing process of several functors
   void addFunctor(SuperF3D<T,W>& f);
+  ///  to clear stored functors, not yet used due to lack of necessity
+  void clearAddedFunctors();
   /// getter for _name
   std::string getName() const;
 private:
-  ///  to clear stored functors, not yet used due to lack of necessity
-  void clearAddedFunctors();
   ///  performes <VTKFile ...>, <ImageData ...>, <PieceExtent ...> and <PointData ...>
   void preambleVTI(const std::string& fullName, const Vector<int,3> extent0, const Vector<int,3> extent1,
-                   T origin[], const T delta);
+                   T origin[], T delta);
   ///  performes </ImageData> and </VTKFile>
   void closeVTI(const std::string& fullNamePiece);
   ///  performes <VTKFile ...> and <Collection>

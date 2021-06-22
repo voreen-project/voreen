@@ -27,6 +27,10 @@
 #ifndef BLOCK_STRUCTURE_2D_H
 #define BLOCK_STRUCTURE_2D_H
 
+#include <cstdint>
+
+#include "core/olbDebug.h"
+#include "core/vector.h"
 
 namespace olb {
 
@@ -44,6 +48,8 @@ protected:
   int _ny;
 public:
   BlockStructure2D(int nx, int ny) : _nx(nx), _ny(ny) {};
+  BlockStructure2D(int nx, int ny, int overlap):
+    _nx(nx+2*overlap), _ny(ny+2*overlap) { };
   /// Read only access to block width
   int getNx() const
   {
@@ -53,6 +59,38 @@ public:
   int getNy() const
   {
     return _ny;
+  };
+  /// Get number of cells
+  std::size_t getNcells() const
+  {
+    // The conversions to std::size_t ensure 64-bit compatibility. Note that
+    // Nx and Ny are of type int, which might be 32-bit types, even on
+    // 64-bit platforms. Therefore, Nx*Ny may lead to a type overflow.
+    return static_cast<std::size_t>(getNx())
+         * static_cast<std::size_t>(getNy());
+  }
+  /// Get 1D cell ID
+  std::size_t getCellId(int iX, int iY) const
+  {
+    OLB_PRECONDITION(iX >= 0 && iX < this->_nx);
+    OLB_PRECONDITION(iY >= 0 && iY < this->_ny);
+    return iX*_ny + iY;
+  }
+  /// Get 1D neighbor distance
+  std::ptrdiff_t getNeighborDistance(int iX, int iY) const
+  {
+    return iX*_ny + iY;
+  }
+  /// Get 1D neighbor distance
+  std::ptrdiff_t getNeighborDistance(Vector<int,2> c) const
+  {
+    return getNeighborDistance(c[0], c[1]);
+  }
+  /// Return whether location is valid
+  bool isInside(int iX, int iY) const
+  {
+    return 0 <= iX && iX < getNx() &&
+           0 <= iY && iY < getNy();
   };
 };
 

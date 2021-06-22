@@ -48,24 +48,25 @@ namespace olb {
 // and
 // Yu et al,, "LES of turbulent square jet flow using an MRT lattice Boltzmann model",
 // Computers & Fluids 35 (2006), 957-965
-template<typename T, template<typename U> class Lattice>
-MRTdynamics<T,Lattice>::MRTdynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_), omega(omega_), lambda(omega_)
+template<typename T, typename DESCRIPTOR>
+MRTdynamics<T,DESCRIPTOR>::MRTdynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_), omega(omega_), lambda(omega_)
 {
-  T rt[Lattice<T>::q]; // relaxation times vector.
-  for (int iPop  = 0; iPop < Lattice<T>::q; ++iPop) {
-    rt[iPop] = Lattice<T>::S[iPop];
+  this->getName() = "MRTdynamics";  
+  T rt[DESCRIPTOR::q]; // relaxation times vector.
+  for (int iPop  = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    rt[iPop] = descriptors::s<T,DESCRIPTOR>(iPop);
   }
-  for (int iPop  = 0; iPop < Lattice<T>::shearIndexes; ++iPop) {
-    rt[Lattice<T>::shearViscIndexes[iPop]] = omega;
+  for (int iPop  = 0; iPop < descriptors::shearIndexes<DESCRIPTOR>(); ++iPop) {
+    rt[descriptors::shearViscIndexes<DESCRIPTOR>(iPop)] = omega;
   }
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
       invM_S[iPop][jPop] = T();
-      for (int kPop = 0; kPop < Lattice<T>::q; ++kPop) {
+      for (int kPop = 0; kPop < DESCRIPTOR::q; ++kPop) {
         if (kPop == jPop) {
-          invM_S[iPop][jPop] += Lattice<T>::invM[iPop][kPop] *
+          invM_S[iPop][jPop] += descriptors::invM<T,DESCRIPTOR>(iPop,kPop) *
                                 rt[kPop];
         }
       }
@@ -74,19 +75,27 @@ MRTdynamics<T,Lattice>::MRTdynamics (
 
 }
 
-template<typename T, template<typename U> class Lattice>
-T MRTdynamics<T,Lattice>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR>
+T MRTdynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
-  return lbHelpers<T,Lattice>::equilibrium(iPop, rho, u, uSqr);
+  return lbHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void MRTdynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void MRTdynamics<T,DESCRIPTOR>::computeAllEquilibrium(T momentaEq[DESCRIPTOR::q],
+                                                T rho, const T u[DESCRIPTOR::d],
+                                                const T uSqr)
+{
+  mrtHelpers<T,DESCRIPTOR>::computeEquilibrium(momentaEq, rho, u, uSqr);
+}
+
+template<typename T, typename DESCRIPTOR>
+void MRTdynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef mrtHelpers<T,Lattice> mrtH;
+  typedef DESCRIPTOR L;
+  typedef mrtHelpers<T,DESCRIPTOR> mrtH;
 
   T rho, u[L::d];
   this->_momenta.computeRhoU(cell, rho, u);
@@ -96,39 +105,26 @@ void MRTdynamics<T,Lattice>::collide (
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void MRTdynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef mrtHelpers<T,Lattice> mrtH;
-
-  T rho = T(1);
-  T uSqr = mrtH::mrtCollision(cell, rho, u, invM_S);
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T MRTdynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T MRTdynamics<T,DESCRIPTOR>::getOmega() const
 {
   return omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-void MRTdynamics<T,Lattice>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR>
+void MRTdynamics<T,DESCRIPTOR>::setOmega(T omega_)
 {
   omega = omega_;
 }
 
-template<typename T, template<typename U> class Lattice>
-T MRTdynamics<T,Lattice>::getLambda() const
+template<typename T, typename DESCRIPTOR>
+T MRTdynamics<T,DESCRIPTOR>::getLambda() const
 {
   return lambda;
 }
 
-template<typename T, template<typename U> class Lattice>
-void MRTdynamics<T,Lattice>::setLambda(T lambda_)
+template<typename T, typename DESCRIPTOR>
+void MRTdynamics<T,DESCRIPTOR>::setLambda(T lambda_)
 {
   lambda = lambda_;
 }
@@ -136,24 +132,24 @@ void MRTdynamics<T,Lattice>::setLambda(T lambda_)
 
 
 
-template<typename T, template<typename U> class Lattice>
-MRTdynamics2<T,Lattice>::MRTdynamics2 (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : MRTdynamics<T,Lattice>(omega_, momenta_)
+template<typename T, typename DESCRIPTOR>
+MRTdynamics2<T,DESCRIPTOR>::MRTdynamics2 (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : MRTdynamics<T,DESCRIPTOR>(omega_, momenta_)
 {
-  T rt[Lattice<T>::q]; // relaxation times vector.
-  for (int iPop  = 0; iPop < Lattice<T>::q; ++iPop) {
-    rt[iPop] = Lattice<T>::S_2[iPop];
+  T rt[DESCRIPTOR::q]; // relaxation times vector.
+  for (int iPop  = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    rt[iPop] = descriptors::s_2<T,DESCRIPTOR>(iPop);
   }
-  for (int iPop  = 0; iPop < Lattice<T>::shearIndexes; ++iPop) {
-    rt[Lattice<T>::shearViscIndexes[iPop]] = omega;
+  for (int iPop  = 0; iPop < descriptors::shearIndexes<DESCRIPTOR>(); ++iPop) {
+    rt[descriptors::shearViscIndexes<DESCRIPTOR>(iPop)] = omega;
   }
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
       invM_S_2[iPop][jPop] = T();
-      for (int kPop = 0; kPop < Lattice<T>::q; ++kPop) {
+      for (int kPop = 0; kPop < DESCRIPTOR::q; ++kPop) {
         if (kPop == jPop) {
-          invM_S_2[iPop][jPop] += Lattice<T>::invM[iPop][kPop] *
+          invM_S_2[iPop][jPop] += descriptors::invM<T,DESCRIPTOR>(iPop,kPop) *
                                   rt[kPop];
         }
       }
@@ -163,15 +159,14 @@ MRTdynamics2<T,Lattice>::MRTdynamics2 (
 
 
 // Stabalized MRT scheme with uniform relaxation times
-template<typename T, template<typename U> class Lattice>
-void MRTdynamics2<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void MRTdynamics2<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef mrtHelpers<T,Lattice> mrtH;
+  typedef mrtHelpers<T,DESCRIPTOR> mrtH;
 
-  T rho, u[L::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
 
   T uSqr = mrtH::mrtCollision(cell,rho,u,invM_S_2);
@@ -181,26 +176,23 @@ void MRTdynamics2<T,Lattice>::collide (
 
 
 
-template<typename T, template<typename U> class Lattice>
-ForcedMRTdynamics<T,Lattice>::ForcedMRTdynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : MRTdynamics<T,Lattice>(omega_, momenta_)
+template<typename T, typename DESCRIPTOR>
+ForcedMRTdynamics<T,DESCRIPTOR>::ForcedMRTdynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : MRTdynamics<T,DESCRIPTOR>(omega_, momenta_)
 {
 }
 
-template<typename T, template<typename U> class Lattice>
-void ForcedMRTdynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void ForcedMRTdynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef Lattice<T> L;
-  typedef mrtHelpers<T,Lattice> mrtH;
-
-  T rho, u[L::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
 
-  T uSqr = mrtH::mrtCollision(cell,rho,u,this->invM_S);
-  mrtH::addExternalForce(cell, rho, u, this->invM_S);
+  T uSqr = mrtHelpers<T,DESCRIPTOR>::mrtCollision(cell, rho, u, this->invM_S);
+  mrtHelpers<T,DESCRIPTOR>::addExternalForce(cell, rho, u, this->invM_S);
 
   statistics.incrementStats(rho, uSqr);
 }

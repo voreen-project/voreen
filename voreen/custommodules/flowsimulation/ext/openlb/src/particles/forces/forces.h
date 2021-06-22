@@ -32,4 +32,11 @@
 #include "buoyancyForce3D.h"
 #include "hertzMindlinDeresiewicz3D.h"
 #include "transferExternalForce3D.h"
+#include "interpMagForceForMagP3D.h"
+#include "magneticForceForMagP3D.h"
+#include "linearDampingForceForMagDipoleMoment3D.h"
+#include "stokesDragForceForHomVelField3D.h"
+#include "magneticForceFromHField3D.h"
+#include "forceFromExtField3D.h"
+
 

@@ -33,14 +33,14 @@
 namespace olb {
 
 template<typename T>
-struct entropicLbHelpers<T, descriptors::D2Q9Descriptor> {
+struct entropicLbHelpers<T, descriptors::D2Q9<>> {
   /// Computation of equilibrium distribution with an expansion
   /// with respect to a small velocity u
   static T equilibrium( int iPop, T rho, const T u[2])
   {
-    typedef descriptors::D2Q9Descriptor<T> L;
+    typedef descriptors::D2Q9<> L;
 
-    T c_u = L::c[iPop][0]*u[0] + L::c[iPop][1]*u[1];
+    T c_u = descriptors::c<L>(iPop,0)*u[0] + descriptors::c<L>(iPop,1)*u[1];
     T c_u2 = c_u*c_u;
     T c_u3 = c_u2*c_u;
     T c_u4 = c_u3*c_u;
@@ -55,7 +55,7 @@ struct entropicLbHelpers<T, descriptors::D2Q9Descriptor> {
     T powUx = u[0]*u[0]*u[0]*u[0]*u[0]; // u_x^5
     T powUy = u[1]*u[1]*u[1]*u[1]*u[1]; // u_y^5
 
-    T C = L::c[iPop][0] * powUx + L::c[iPop][1] * powUy;
+    T C = descriptors::c<L>(iPop,0) * powUx + descriptors::c<L>(iPop,1) * powUy;
 
     powUx *= u[0]; // u_x^6
     powUy *= u[1]; // u_y^6
@@ -65,9 +65,9 @@ struct entropicLbHelpers<T, descriptors::D2Q9Descriptor> {
     powUx *= u[0]; // u_x^7
     powUy *= u[1]; // u_y^7
 
-    T F = L::c[iPop][0] * powUx + L::c[iPop][1] * powUy;
+    T F = descriptors::c<L>(iPop,0) * powUx + descriptors::c<L>(iPop,1) * powUy;
 
-    return L::t[iPop] * rho *
+    return descriptors::t<T,L>(iPop) * rho *
            ((T)1
             + c_u*(C*(T)81/(T)20 + uSqr2*(T)27/(T)8 - uSqr*(T)9/(T)2
                    - E*(T)81/(T)24 - uSqr3*(T)81/(T)48 + (T)3)
@@ -92,7 +92,7 @@ struct entropicLbHelpers<T, descriptors::D2Q9Descriptor> {
             + C*(T)27/(T)20 - uSqr3*(T)27/(T)48 - E*(T)27/(T)24
             - F*(T)81/(T)56 - uSqr*(T)3/(T)2 + uSqr2*(T)9/(T)8
            )
-           - L::t[iPop];
+           - descriptors::t<T,L>(iPop);
   }
 
 };

@@ -27,7 +27,7 @@
 
 #include "superGeometry3D.h"
 #include "superGeometry3D.hh"
-#include "functors/lattice/indicator/indicatorF3D.h"
+#include "functors/analytical/indicator/indicatorF3D.h"
 
 namespace olb {
 

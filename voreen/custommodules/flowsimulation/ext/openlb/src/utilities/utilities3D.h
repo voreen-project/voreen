@@ -29,5 +29,7 @@
 #include "timer.h"
 #include "vectorHelpers.h"
 #include "functorPtr.h"
+#include "functorDsl3D.h"
 #include "hyperplane3D.h"
 #include "hyperplaneLattice3D.h"
+#include "anisoDiscr.h"

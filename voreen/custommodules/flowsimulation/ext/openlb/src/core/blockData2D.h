@@ -55,13 +55,7 @@ protected:
   int _size;
   /// holds data as a 1D vector
   BaseType *_rawData;
-  /** Pointer structure to a 3D data field.
-   *  It can be interpreted as a 2D matrix[iX,iY] with elements of dimension _size.
-   *  Those elements may be
-   *    1. vector valued like velocity, (f0,f1,...,f8)
-   *    2. scalar valued like density, pressure, ...
-   *
-   */
+  /// Pointer structure to [2D data]x[1D element]
   BaseType ***_field;
 public:
   virtual ~BlockData2D();
@@ -69,9 +63,9 @@ public:
   BlockData2D();
   /// Construct from cuboid
   BlockData2D(Cuboid2D<T>& cuboid, int size=1);
-  /// Construct from X-Y node count
+  /// Construct from X-Y-Z node count
   BlockData2D(int nx, int ny, int size=1);
-  /// Construct from Block Functor, attention!! operator() accesses functor data
+  /// Construct from Block Functor
   BlockData2D(BlockF2D<BaseType>& rhs);
   /// Copy Constructor
   BlockData2D(BlockData2D<T,BaseType> const& rhs);
@@ -88,25 +82,26 @@ public:
   void construct();
   void deConstruct();
   void reset();
-  /// read and write access to data element [iX][iY][iSize]
-  BaseType& get(int iX, int iY, int iSize=0);
-  /// read only access to data element [iX][iY][iSize]
-  BaseType const& get(int iX, int iY, int iSize=0) const;
   /// \return dataElement _rawData[ind], read and write
   BaseType& operator[] (int ind);
   /// \return dataElement _rawData[ind], read only
   BaseType const& operator[] (int ind) const;
   /// Write access to the memory of the data of the block data where (iX, iY) is the point providing the data iData
   bool* operator() (int iX, int iY, int iData);
+  bool operator() (T output[], const int input[]);
+  /// read and write access to data element [iX][iY][iSize]
+  BaseType& get(int iX, int iY, int iSize=0);
+  /// read only access to data element [iX][iY][iSize]
+  BaseType const& get(int iX, int iY, int iSize=0) const;
   /// \return max of data, for vector valued data it determines the max component
   BaseType getMax();
   /// \return min of data, for vector valued data it determines the max component
   BaseType getMin();
   /// \return _rawData array
   BaseType* getRawData() const;
-  /// \return length of array _rawData or equivalent nX*nY*size
+  /// Number of all variables in the data field
   virtual size_t getDataSize() const;
-  /// Read only access to the dim of the data of the super structure
+  /// \return _size, the dimension of an data element
   int getSize() const;
   /// Number of data blocks for the serializable interface
   std::size_t getNblock() const override
@@ -118,10 +113,10 @@ public:
   /// Returns a pointer to the memory of the current block and its size for the serializable interface
   bool* getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode) override;
 private:
-  void allocateMemory(); // TODO
+  /// Memory Management
+  void allocateMemory();
   void releaseMemory();
 };
-
 
 }  // namespace olb
 

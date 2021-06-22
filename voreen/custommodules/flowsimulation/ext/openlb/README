@@ -1,0 +1,82 @@
+# OpenLB - Open Source Lattice Boltzmann Code
+
+The OpenLB project is a C++ package for the implementation of lattice Boltzmann
+methods addressing a vast range of transport problems.
+
+## Documentation
+
+A comprehensive user guide is available at [0].
+
+Papers featuring OpenLB are collected at [1].
+
+Up-to-date Doxygen documentation can be generated via `make doxygen`
+or accessed at [2].
+
+[0]: https://www.openlb.net/user-guide/
+[1]: https://www.openlb.net/articles/
+[2]: https://www.openlb.net/DoxyGen/html/index.html
+
+## Dependencies
+
+The only mandatory external dependency of OpenLB is GNU Make and a C++ compiler
+with C++14 support. This includes all reasonably recent versions of GCC, Clang
+and ICC.
+
+ParaView and gnuplot are optional dependencies for visualizing simulation results.
+
+## Build
+
+1. Adjust the `config.mk` file to fit your local compiler environment.
+   Preset values are for GCC compilation without parallelization support.
+2. Build the library core using `make`
+
+### Examples
+
+All examples may be compiled in one go using `make samples`.
+
+To compile an individual example such as a basic flow around a cylinder:
+
+1. Switch to `examples/laminar/cylinder2d`
+2. Execute `make`
+3. Run the program via `./cylinder2d`
+4. Follow the program output while it is running
+5. VTK and gnuplot results can be found in the `tmp/` folder
+
+## Community
+
+The OpenLB forum [3] is an open discussion board for all aspects of LBM and OpenLB.
+Feel free to post any problems, questions, suggestions or contributions.
+
+You can also reach us via mail at info@openlb.net
+
+There is a yearly one-week Spring School [4] where you can learn about LBM and
+OpenLB directly from the developer team and invited guest lecturers.
+
+A list of all present and past contributors is available at [5].
+
+[3]: https://www.openlb.net/forum/
+[4]: https://www.openlb.net/spring-school-2021/
+[5]: https://www.openlb.net/authors/
+
+## How to cite OpenLB
+
+```
+@article{OpenLB2020,
+  title = {OpenLB - Open Source Lattice Boltzmann Code},
+  year = {2020},
+  issn = {08981221},
+  doi = {10.1016/j.camwa.2020.04.033},
+  journal = {Computers \& Mathematics with Applications},
+  author = {Krause, Mathias J. and Kummerl{\"a}nder, Adrian and Avis, Samuel J. and Kusumaatmaja, Halim and Dapelo, Davide and Klemens, Fabian and Gaedtke, Maximilian and Hafen, Nicolas and Mink, Albert and Trunk, Robin and Marquardt, Jan E. and Maier, Marie-Luise and Haussmann, Marc and Simonis, Stephan},
+}
+```
+
+This article is available as open access [6].
+
+[6]: https://doi.org/10.1016/j.camwa.2020.04.033
+
+## License
+
+OpenLB is provided as open source under the terms of the GNU GPL v2 license.
+
+See `LICENSE` for details.

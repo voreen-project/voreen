@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2012 Lukas Baron, Tim Dornieden, Mathias J. Krause, Albert Mink
+ *  Copyright (C) 2012-2018 Lukas Baron, Tim Dornieden, Mathias J. Krause,
+ *  Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -26,152 +27,99 @@
 
 
 #include "analyticalBaseF.h"
-
+#include "utilities/functorPtr.h"
+#include "utilities/arithmetic.h"
 
 namespace olb {
 
-/*
-    arithmetic helper classes for AnalyticalF1D, AnalyticalF3D, AnalyticalF3D
 
-    pointwise: difference, plus, multiplication, division
-
-*/
-
-//////////////////////////////// AnalyticCalc1D ////////////////////////////////
-
-/// arithmetic helper class for analytical 1D functors
-template <typename T, typename S>
-class AnalyticCalc1D : public AnalyticalF1D<T,S> {
+/// arithmetic helper class for analytical functors
+template <unsigned D, typename T, typename S, template<typename> class F>
+class AnalyticCalcF : public AnalyticalF<D,T,S> {
 protected:
-  AnalyticalF1D<T,S>& _f;
-  AnalyticalF1D<T,S>& _g;
+  FunctorPtr<AnalyticalF<D,T,S>> _f;
+  FunctorPtr<AnalyticalF<D,T,S>> _g;
 public:
-  AnalyticCalc1D(AnalyticalF1D<T,S>& f, AnalyticalF1D<T,S>& g);
+  AnalyticCalcF(FunctorPtr<AnalyticalF<D,T,S>>&& f,
+                  FunctorPtr<AnalyticalF<D,T,S>>&& g);
+
+  AnalyticCalcF(T scalar, FunctorPtr<AnalyticalF<D,T,S>>&& g);
+  AnalyticCalcF(FunctorPtr<AnalyticalF<D,T,S>>&& f, T scalar);
+
+  bool operator() (T output[], const S input[]) override;
 };
 
 /// addition functor
+template <unsigned D, typename T, typename S>
+using AnalyticCalcPlus = AnalyticCalcF<D,T,S,util::plus>;
+
 template <typename T, typename S>
-class AnalyticPlus1D : public AnalyticCalc1D<T,S> {
-public:
-  AnalyticPlus1D(AnalyticalF1D<T,S>& f, AnalyticalF1D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+using AnalyticCalcPlus1D = AnalyticCalcPlus<1,T,S>;
+template <typename T, typename S>
+using AnalyticCalcPlus2D = AnalyticCalcPlus<2,T,S>;
+template <typename T, typename S>
+using AnalyticCalcPlus3D = AnalyticCalcPlus<3,T,S>;
 
 /// subtraction functor
+template <unsigned D, typename T, typename S>
+using AnalyticCalcMinus = AnalyticCalcF<D,T,S,util::minus>;
+
 template <typename T, typename S>
-class AnalyticMinus1D : public AnalyticCalc1D<T,S> {
-public:
-  AnalyticMinus1D(AnalyticalF1D<T,S>& f, AnalyticalF1D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+using AnalyticCalcMinus1D = AnalyticCalcMinus<1,T,S>;
+template <typename T, typename S>
+using AnalyticCalcMinus2D = AnalyticCalcMinus<2,T,S>;
+template <typename T, typename S>
+using AnalyticCalcMinus3D = AnalyticCalcMinus<3,T,S>;
 
 /// multiplication functor
+template <unsigned D, typename T, typename S>
+using AnalyticCalcMultiplication = AnalyticCalcF<D,T,S,util::multiplies>;
+
 template <typename T, typename S>
-class AnalyticMultiplication1D : public AnalyticCalc1D<T,S> {
-public:
-  AnalyticMultiplication1D(AnalyticalF1D<T,S>& f, AnalyticalF1D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+using AnalyticCalcMultiplication1D = AnalyticCalcMultiplication<1,T,S>;
+template <typename T, typename S>
+using AnalyticCalcMultiplication2D = AnalyticCalcMultiplication<2,T,S>;
+template <typename T, typename S>
+using AnalyticCalcMultiplication3D = AnalyticCalcMultiplication<3,T,S>;
 
 /// division functor
+template <unsigned D, typename T, typename S>
+using AnalyticCalcDivision = AnalyticCalcF<D,T,S,util::divides>;
+
 template <typename T, typename S>
-class AnalyticDivision1D : public AnalyticCalc1D<T,S> {
-public:
-  AnalyticDivision1D(AnalyticalF1D<T,S>& f, AnalyticalF1D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
-
-
-
-//////////////////////////////// AnalyticCalc2D ////////////////////////////////
-
-/// arithmetic helper class for analytical 2D functors
+using AnalyticCalcDivision1D = AnalyticCalcDivision<1,T,S>;
 template <typename T, typename S>
-class AnalyticCalc2D : public AnalyticalF2D<T,S> {
-protected:
-  AnalyticalF2D<T,S>& _f;
-  AnalyticalF2D<T,S>& _g;
-public:
-  AnalyticCalc2D(AnalyticalF2D<T,S>& f, AnalyticalF2D<T,S>& g);
-};
-
-/// addition functor
+using AnalyticCalcDivision2D = AnalyticCalcDivision<2,T,S>;
 template <typename T, typename S>
-class AnalyticPlus2D : public AnalyticCalc2D<T,S> {
-public:
-  AnalyticPlus2D(AnalyticalF2D<T,S>& f, AnalyticalF2D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+using AnalyticCalcDivision3D = AnalyticCalcDivision<3,T,S>;
 
-/// subtraction functor
-template <typename T, typename S>
-class AnalyticMinus2D : public AnalyticCalc2D<T,S> {
-public:
-  AnalyticMinus2D(AnalyticalF2D<T,S>& f, AnalyticalF2D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator+(std::shared_ptr<AnalyticalF<D,T,S>> lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator+(std::shared_ptr<AnalyticalF<D,T,S>> lhs, T rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator+(T lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
 
-/// multiplication functor
-template <typename T, typename S>
-class AnalyticMultiplication2D : public AnalyticCalc2D<T,S> {
-public:
-  AnalyticMultiplication2D(AnalyticalF2D<T,S>& f, AnalyticalF2D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator-(std::shared_ptr<AnalyticalF<D,T,S>> lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator-(std::shared_ptr<AnalyticalF<D,T,S>> lhs, T rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator-(T lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
 
-/// division functor
-template <typename T, typename S>
-class AnalyticDivision2D : public AnalyticCalc2D<T,S> {
-public:
-  AnalyticDivision2D(AnalyticalF2D<T,S>& f, AnalyticalF2D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator*(std::shared_ptr<AnalyticalF<D,T,S>> lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator*(std::shared_ptr<AnalyticalF<D,T,S>> lhs, T rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator*(T lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
 
-
-
-//////////////////////////////// AnalyticCalc3D ////////////////////////////////
-
-/// arithmetic helper class for analytical 3D functors
-template <typename T, typename S>
-class AnalyticCalc3D : public AnalyticalF3D<T,S> {
-protected:
-  AnalyticalF3D<T,S>& _f;
-  AnalyticalF3D<T,S>& _g;
-public:
-  AnalyticCalc3D(AnalyticalF3D<T,S>& f, AnalyticalF3D<T,S>& g);
-};
-
-/// addition functor
-template <typename T, typename S>
-class AnalyticPlus3D : public AnalyticCalc3D<T,S> {
-public:
-  AnalyticPlus3D(AnalyticalF3D<T,S>& f, AnalyticalF3D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
-
-/// subtraction functor
-template <typename T, typename S>
-class AnalyticMinus3D : public AnalyticCalc3D<T,S> {
-public:
-  AnalyticMinus3D(AnalyticalF3D<T,S>& f, AnalyticalF3D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
-
-/// multiplication functor
-template <typename T, typename S>
-class AnalyticMultiplication3D : public AnalyticCalc3D<T,S> {
-public:
-  AnalyticMultiplication3D(AnalyticalF3D<T,S>& f, AnalyticalF3D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
-
-/// division functor
-template <typename T, typename S>
-class AnalyticDivision3D : public AnalyticCalc3D<T,S> {
-public:
-  AnalyticDivision3D(AnalyticalF3D<T,S>& f, AnalyticalF3D<T,S>& g);
-  bool operator() (T output[], const S input[]) override;
-};
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator/(std::shared_ptr<AnalyticalF<D,T,S>> lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator/(std::shared_ptr<AnalyticalF<D,T,S>> lhs, T rhs);
+template <unsigned D, typename T, typename S>
+std::shared_ptr<AnalyticalF<D,T,S>> operator/(T lhs, std::shared_ptr<AnalyticalF<D,T,S>> rhs);
 
 
 } // end namespace olb

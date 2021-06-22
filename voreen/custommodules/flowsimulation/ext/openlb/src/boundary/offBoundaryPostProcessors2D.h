@@ -33,8 +33,8 @@ namespace olb {
 * This class computes the Linear Bouzidi BC
 */
 
-template<typename T, template<typename U> class Lattice>
-class ZeroVelocityBouzidiLinearPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ZeroVelocityBouzidiLinearPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   ZeroVelocityBouzidiLinearPostProcessor2D(int x_, int y_, int iPop_, T dist_);
   int extent() const override
@@ -45,9 +45,9 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   int xN, yN, xB, yB;
@@ -55,8 +55,8 @@ private:
   T q, dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ZeroVelocityBounceBackPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ZeroVelocityBounceBackPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   ZeroVelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_);
   int extent() const override
@@ -67,9 +67,9 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   int xN, yN;
@@ -77,8 +77,8 @@ private:
   T dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class VelocityBouzidiLinearPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class VelocityBouzidiLinearPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   VelocityBouzidiLinearPostProcessor2D(int x_, int y_, int iPop_, T dist_);
   int extent() const override
@@ -89,9 +89,9 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   int xN, yN, xB, yB;
@@ -100,8 +100,8 @@ private:
   T ufrac;
 };
 
-template<typename T, template<typename U> class Lattice>
-class VelocityBounceBackPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class VelocityBounceBackPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   VelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_);
   int extent() const override
@@ -112,9 +112,9 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   int xN, yN;
@@ -122,8 +122,8 @@ private:
   T dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class AntiBounceBackPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class AntiBounceBackPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   AntiBounceBackPostProcessor2D(int x_, int y_, int iPop_);
   int extent() const override
@@ -134,19 +134,19 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   int xN, yN;
   int iPop, opp;
 };
 
-template<typename T, template<typename U> class Lattice>
-class BoundaryStreamPostProcessor2D : public LocalPostProcessor2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class BoundaryStreamPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
-  BoundaryStreamPostProcessor2D(int x_, int y_, const bool streamDirections[Lattice<T>::q]);
+  BoundaryStreamPostProcessor2D(int x_, int y_, const bool streamDirections[DESCRIPTOR::q]);
   int extent() const override
   {
     return 1;
@@ -155,86 +155,86 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,Lattice>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,Lattice>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_ ) override;
+  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
-  bool _streamDirections[Lattice<T>::q];
+  bool _streamDirections[DESCRIPTOR::q];
 };
 
 /**
 * Linear Bouzidi BC Generator
 */
 
-template<typename T, template<typename U> class Lattice>
-class ZeroVelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ZeroVelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   ZeroVelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
   int x, y;
   int iPop;
   T dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ZeroVelocityBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ZeroVelocityBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   ZeroVelocityBounceBackPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
   int x, y;
   int iPop;
   T dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class VelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class VelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   VelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
   int x, y;
   int iPop;
   T dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class VelocityBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class VelocityBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   VelocityBounceBackPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
   int x, y;
   int iPop;
   T dist;
 };
 
-template<typename T, template<typename U> class Lattice>
-class AntiBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class AntiBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   AntiBounceBackPostProcessorGenerator2D(int x_, int y_, int iPop_);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
   int x, y;
   int iPop;
 };
 
-template<typename T, template<typename U> class Lattice>
-class BoundaryStreamPostProcessorGenerator2D : public PostProcessorGenerator2D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class BoundaryStreamPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
-  BoundaryStreamPostProcessorGenerator2D(int x_, int y_, const bool _streamDirections[Lattice<T>::q]);
-  PostProcessor2D<T,Lattice>* generate() const override;
-  PostProcessorGenerator2D<T,Lattice>*  clone() const override;
+  BoundaryStreamPostProcessorGenerator2D(int x_, int y_, const bool _streamDirections[DESCRIPTOR::q]);
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
   int x, y;
-  bool _streamDirections[Lattice<T>::q];
+  bool _streamDirections[DESCRIPTOR::q];
 };
 
 }

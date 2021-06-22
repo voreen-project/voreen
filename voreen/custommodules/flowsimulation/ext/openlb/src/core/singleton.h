@@ -158,6 +158,15 @@ inline void checkValue(T input)
   }
 }
 
+inline void exit(int exitcode)
+{
+#ifdef PARALLEL_MODE_MPI
+        MPI_Abort(MPI_COMM_WORLD, exitcode);
+#else
+        std::exit(exitcode);
+#endif
+}
+
 }  // namespace singleton
 
 }  // namespace olb

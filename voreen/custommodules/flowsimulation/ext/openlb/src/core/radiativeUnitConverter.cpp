@@ -26,7 +26,7 @@
  */
 
 
-#include "core/unitConverter.h"
+#include "core/radiativeUnitConverter.h"
 
 // definition required only by cygwin
 #ifndef M_PI
@@ -43,7 +43,7 @@ namespace olb {
 double getThetaRefracted(double const& thetaIncident, double const& refractiveRelative)
 {
   double thetaRefracted = M_PI/2.;
-  if( refractiveRelative * sin(thetaIncident) < 1 ) {
+  if ( refractiveRelative * sin(thetaIncident) < 1 ) {
     thetaRefracted = asin( refractiveRelative * sin(thetaIncident));  // eq.(5.118)
   }
   return thetaRefracted;

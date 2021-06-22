@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -31,56 +31,56 @@ template class SuperPlaneIntegralFluxF2D<double, SuperLatticePhysPressure2D>;
 template class SuperPlaneIntegralFluxF2D<double, SuperLatticePhysVelocity2D>;
 
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysPressure2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const HyperplaneLattice2D<double>&,
   FunctorPtr<SuperIndicatorF2D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysPressure2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Hyperplane2D<double>&,
   FunctorPtr<SuperIndicatorF2D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysPressure2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Hyperplane2D<double>&,
   FunctorPtr<SuperIndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysPressure2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Vector<double,2>&, const Vector<double,2>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysPressure2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Vector<double,2>&, const Vector<double,2>&,
   BlockDataReductionMode);
 
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysVelocity2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const HyperplaneLattice2D<double>&,
   FunctorPtr<SuperIndicatorF2D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysVelocity2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Hyperplane2D<double>&,
   FunctorPtr<SuperIndicatorF2D<double>>&&,
   FunctorPtr<IndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysVelocity2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Hyperplane2D<double>&,
   FunctorPtr<SuperIndicatorF2D<double>>&&,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysVelocity2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Vector<double,2>&, const Vector<double,2>&,
   std::vector<int>,
   BlockDataReductionMode);
 template SuperPlaneIntegralFluxF2D<double,SuperLatticePhysVelocity2D>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<double,descriptors::D2Q9Descriptor>&, const UnitConverter<double,descriptors::D2Q9Descriptor>&, SuperGeometry2D<double>&,
+  SuperLattice2D<double,descriptors::D2Q9<>>&, const UnitConverter<double,descriptors::D2Q9<>>&, SuperGeometry2D<double>&,
   const Vector<double,2>&, const Vector<double,2>&,
   BlockDataReductionMode);
 

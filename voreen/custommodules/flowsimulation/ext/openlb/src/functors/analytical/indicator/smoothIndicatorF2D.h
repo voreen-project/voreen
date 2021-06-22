@@ -32,8 +32,8 @@
 #include "core/blockData2D.h"
 #include "core/unitConverter.h"
 #include "smoothIndicatorBaseF3D.h"
-#include "functors/lattice/indicator/indicatorBaseF2D.h"
-#include "functors/lattice/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorBaseF2D.h"
+#include "functors/analytical/indicator/indicatorBaseF3D.h"
 
 namespace olb {
 
@@ -45,97 +45,47 @@ namespace olb {
  * \param epsilon
  * \param theta   TODO
  *
- * Must be final as getRadius in the constructor does not forward to derived class.
  */
-template <typename T, typename S>
-class SmoothIndicatorCuboid2D final : public SmoothIndicatorF2D<T,S> {
+template <typename T, typename S, bool HLBM=false>
+class SmoothIndicatorCuboid2D final : public SmoothIndicatorF2D<T,S,HLBM> {
 private:
   S _xLength;
   S _yLength;
 public:
-  SmoothIndicatorCuboid2D(Vector<S,2> center, S xLength, S yLength, S mass, S epsilon, S theta=0);
-  bool operator()(T output[],const S x[]) override;
-  /// \return radius of a circle at center, that contains the object
-  S getRadius() override;
-  S getDiam() override;
-  Vector<S,2>& getMin() override;
-  Vector<S,2>& getMax() override;
+  SmoothIndicatorCuboid2D(Vector<S,2> center, S xLength, S yLength, S epsilon, S theta=0, S density=0, Vector<S,2> vel = Vector<S,2> (0.,0.));
+  bool operator()(T output[],const S input[]) override;
 };
-
 
 /// implements a smooth circle in 2D with an _epsilon sector
-template <typename T, typename S>
-class SmoothIndicatorCircle2D : public SmoothIndicatorF2D<T,S> {
+template <typename T, typename S, bool HLBM=false>
+class SmoothIndicatorCircle2D final : public SmoothIndicatorF2D<T,S,HLBM> {
+private:
+  S _radius;
 public:
-  SmoothIndicatorCircle2D(Vector<S,2> center, S radius, S mass, S epsilon);
+  SmoothIndicatorCircle2D(Vector<S,2> center, S radius, S epsilon, S density=0, Vector<S,2> vel = Vector<S,2> (0.,0.));
   bool operator() (T output[], const S input[]) override;
-  Vector<S,2>& getMin() override;
-  Vector<S,2>& getMax() override;
 };
+
 
 /// implements a smooth triangle in 2D with an _epsilon sector
-template <typename T, typename S>
-class SmoothIndicatorTriangle2D : public SmoothIndicatorF2D<T, S> {
+template <typename T, typename S, bool HLBM=false>
+class SmoothIndicatorTriangle2D final : public SmoothIndicatorF2D<T,S,HLBM> {
 private:
-  /// Eckpunkte des Dreiecks
+  /// corner points
   Vector<S, 2> _PointA, _PointB, _PointC;
-  /// Verbindungsvektoren _ab von _A nach _B, etc.
+  /// vectors connecting corner points (_ab: from a to b)
   Vector<S, 2> _ab, _bc, _ca;
   /// normal on _ab * _A  = _ab_d
   S _ab_d, _bc_d, _ca_d;
-
 public:
-  SmoothIndicatorTriangle2D(Vector<S,2> center, S radius, S mass, S epsilon, S theta);
-  bool operator() (T output[], const S input[]);
-  Vector<S,2>& getMin();
-  Vector<S,2>& getMax();
-
+  SmoothIndicatorTriangle2D(Vector<S,2> center, S radius, S epsilon, S theta=0, S density=0, Vector<S,2> vel = Vector<S,2> (0.,0.));
+  bool operator() (T output[], const S input[]) override;
 };
-
-
-///////////////////////////ParticleIndicatorF/////////////////////////////////////
-
-/// implements a smooth particle cuboid in 2D with an _epsilon sector.
-template <typename T, typename S>
-class ParticleIndicatorCuboid2D : public ParticleIndicatorF2D<T,S> {
-private:
-  S _xLength;
-  S _yLength;
-public:
-  ParticleIndicatorCuboid2D(Vector<S,2> center, S xLength, S yLength, S density, S epsilon, S theta=0);
-  bool operator()(T output[],const S x[]);
-};
-
-/// implements a smooth particle circle in 2D with an _epsilon sector.
-template <typename T, typename S>
-class ParticleIndicatorCircle2D : public ParticleIndicatorF2D<T,S> {
-private:
-  T _radius;
-public:
-  ParticleIndicatorCircle2D(Vector<S,2> center, S radius, S mass, S epsilon);
-  bool operator() (T output[], const S input[]);
-};
-
-/** implements a smooth particle triangle in 2D with an _epsilon sector, constructed from circumradius
- * TODO generic constructor with angles
- */
-template <typename T, typename S>
-class ParticleIndicatorTriangle2D : public ParticleIndicatorF2D<T, S> {
-private:
-  /// Eckpunkte des Dreiecks
-  Vector<S, 2> _PointA, _PointB, _PointC;
-  /// Verbindungsvektoren _ab von _A nach _B, etc.
-  Vector<S, 2> _ab, _bc, _ca;
-  /// normal on _ab * _A  = _ab_d
-  S _ab_d, _bc_d, _ca_d;
-
-public:
-  ParticleIndicatorTriangle2D(Vector<S,2> center, S radius, S density, S epsilon, S theta);
-  bool operator() (T output[], const S input[]);
-};
-
-template <typename T, typename S, template<typename U> class DESCRIPTOR>
-class ParticleIndicatorCustom2D : public ParticleIndicatorF2D<T, S> {
+// needs to be updated to current state
+/*
+/// implements a custom shaped smooth particle //TODO: Check for consistency
+template <typename T, typename S, template<typename U> class DESCRIPTOR, bool HLBM=false>
+class SmoothIndicatorCustom2D final : public SmoothIndicatorF2D<T,S,HLBM> {
 private:
   // _center is the local center, _startPos the center at the start
   Vector<T,2> _center;
@@ -143,12 +93,22 @@ private:
   Vector<int,2> _latticeCenter;
   BlockData2D<T, T> _blockData;
   UnitConverter<T,DESCRIPTOR> const& _converter;
-
 public:
-  ParticleIndicatorCustom2D(UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& ind, Vector<T,2> center, T rhoP, T epsilon, T theta, T slice);
+  SmoothIndicatorCustom2D(UnitConverter<T,DESCRIPTOR> const& converter, IndicatorF3D<T>& ind, Vector<T,2> center, T epsilon, T slice, S theta=0, S density=0, Vector<S,2> vel = Vector<S,2> (0.,0.));
   bool operator() (T output[], const S input[]);
 };
+*/
 
+//Geng2019:
+/// implements a smooth circle in 2D with an tangiant _epsilon sector 
+template <typename T, typename S, bool HLBM=false>
+class SmoothIndicatorHTCircle2D final : public SmoothIndicatorF2D<T,S,HLBM> {
+private:
+  S _radius;
+public:
+  SmoothIndicatorHTCircle2D(Vector<S,2> center, S radius, S epsilon, S density=0, Vector<S,2> vel = Vector<S,2> (0.,0.));
+  bool operator() (T output[], const S input[]) override;
+};
 
 }
 

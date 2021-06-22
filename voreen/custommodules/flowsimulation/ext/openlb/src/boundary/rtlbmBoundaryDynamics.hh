@@ -24,246 +24,473 @@
 #ifndef RTLBM_BOUNDARY_DYNAMICS_HH
 #define RTLBM_BOUNDARY_DYNAMICS_HH
 
+#include "rtlbmBoundaryDynamics.h"
+#include "dynamics/lbHelpers.h"
 
 namespace olb {
 
 
 
-// For flat Walls
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-RtlbmBoundaryDynamics<T,Lattice,direction,orientation>::RtlbmBoundaryDynamics( T omega_, Momenta<T,Lattice>& momenta_)
-  : BasicDynamics<T,Lattice>(momenta_)
+// flat diffuse
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+RtlbmDiffuseBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::RtlbmDiffuseBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
+{
+  this->getName() = "RtlbmDiffuseBoundaryDynamics";
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+T RtlbmDiffuseBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return descriptors::t<T,DESCRIPTOR>(iPop)*rho - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+void RtlbmDiffuseBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  typedef DESCRIPTOR L;
+  T dirichletTemperature = this->_momenta.computeRho(cell);
+  std::vector<int> const missing_iPop = util::subIndexOutgoing<L,direction,orientation>();
+  // compute summ of weights for all missing directions
+  double sumWeights = 0;
+  for ( int i : missing_iPop ) {
+    sumWeights += descriptors::t<T,L>(i);
+  }
+  // construct missing directions such that 0th moment equals emposed dirichletTemperature
+  for ( int i : missing_iPop ) {
+    cell[i] = descriptors::t<T,L>(i)*dirichletTemperature/sumWeights - descriptors::t<T,L>(i);
+  }
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+T RtlbmDiffuseBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::getOmega() const
+{
+  return T(-1);
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+void RtlbmDiffuseBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::setOmega(T omega_)
 {
 }
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-T RtlbmBoundaryDynamics<T,Lattice,direction,orientation>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+// edge diffuse
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+RtlbmDiffuseEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::RtlbmDiffuseEdgeBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
 {
-  return lbHelpers<T,Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  this->getName() = "RtlbmDiffuseEdgeBoundaryDynamics";
 }
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-void RtlbmBoundaryDynamics<T,Lattice,direction,orientation>::collide(Cell<T,Lattice>& cell,LatticeStatistics<T>& statistics)
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+T RtlbmDiffuseEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
-  typedef Lattice<T> L;
+  return descriptors::t<T,DESCRIPTOR>(iPop)*rho - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+void RtlbmDiffuseEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  typedef DESCRIPTOR L;
+  T dirichletTemperature = this->_momenta.computeRho(cell);
+  std::vector<int> missing_iPop = util::subIndexOutgoing3DonEdges<L,plane,normal1,normal2>();
+  // compute summ of weights for all missing directions
+  double sumWeights = 0;
+  for ( int i : missing_iPop ) {
+    sumWeights += descriptors::t<T,L>(i);
+  }
+  // construct missing directions such that 0th moment equals emposed dirichletTemperature
+  for ( int i : missing_iPop ) {
+    cell[i] = descriptors::t<T,L>(i)*dirichletTemperature/sumWeights - descriptors::t<T,L>(i);
+  }
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+T RtlbmDiffuseEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::getOmega() const
+{
+  return T(-1);
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+void RtlbmDiffuseEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::setOmega(T omega_)
+{
+}
+
+// corner diffuse
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+RtlbmDiffuseCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::RtlbmDiffuseCornerBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
+{
+  this->getName() = "RtlbmDiffuseCornerBoundaryDynamics";
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+T RtlbmDiffuseCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return descriptors::t<T,DESCRIPTOR>(iPop)*rho - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+void RtlbmDiffuseCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  typedef DESCRIPTOR L;
+  T dirichletTemperature = this->_momenta.computeRho(cell);
+  std::vector<int> const missing_iPop = util::subIndexOutgoing3DonCorners<L,xNormal,yNormal,zNormal>();
+  // compute summ of weights for all missing directions
+  double sumWeights = 0;
+  for ( int i : missing_iPop ) {
+    sumWeights += descriptors::t<T,L>(i);
+  }
+  // construct missing directions such that 0th moment equals emposed dirichletTemperature
+  for ( int i : missing_iPop ) {
+    cell[i] = descriptors::t<T,L>(i)*dirichletTemperature/sumWeights - descriptors::t<T,L>(i);
+  }
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+T RtlbmDiffuseCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::getOmega() const
+{
+  return T(-1);
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+void RtlbmDiffuseCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::setOmega(T omega_)
+{
+}
+
+
+
+
+// flat diffuse constant density
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+RtlbmDiffuseConstBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::RtlbmDiffuseConstBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
+{
+  this->getName() = "RtlbmDiffuseConstBoundaryDynamics";
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+T RtlbmDiffuseConstBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return descriptors::t<T,DESCRIPTOR>(iPop)*rho - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+void RtlbmDiffuseConstBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  // For direction i \in I_in define
+  // cell_i = w_i * dirichlet/sumWeights - w_i
+  // For direction i \in I_out defube
+  // cell_i = - w_i
+  // This construction yields
+  // sum_{i=0}^{q-1} cell_i == dirichlet - 1
+
+  typedef DESCRIPTOR L;
+  // shift all: cell_i = f_i - weight_i
+  for ( int iPop = 0; iPop < L::q; ++iPop ) {
+    cell[iPop] = - descriptors::t<T,L>(iPop);
+  }
+
+  std::vector<int> const missing_iPop = util::subIndexOutgoing<L,direction,orientation>();
+  // compute summ of weights for all missing directions
+  double sumWeights = 0;
+  for ( int i : missing_iPop ) {
+    sumWeights += descriptors::t<T,L>(i);
+  }
+  // construct missing directions such that 0th moment equals emposed dirichletTemperature
+  T dirichletTemperature = this->_momenta.computeRho(cell);
+  for ( int i : missing_iPop ) {
+    cell[i] = descriptors::t<T,L>(i)*dirichletTemperature/sumWeights - descriptors::t<T,L>(i);
+  }
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+T RtlbmDiffuseConstBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::getOmega() const
+{
+  return T(-1);
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+void RtlbmDiffuseConstBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::setOmega(T omega_)
+{
+}
+
+
+
+// edge diffuse with constant density
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+RtlbmDiffuseConstEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::RtlbmDiffuseConstEdgeBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
+{
+  this->getName() = "RtlbmDiffuseConstEdgeBoundaryDynamics";
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+T RtlbmDiffuseConstEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return descriptors::t<T,DESCRIPTOR>(iPop)*rho - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+void RtlbmDiffuseConstEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  // For direction i \in I_in define
+  // cell_i = w_i * dirichlet/sumWeights - w_i
+  // For direction i \in I_out defube
+  // cell_i = - w_i
+  // This construction yields
+  // sum_{i=0}^{q-1} cell_i == dirichlet - 1
+
+  typedef DESCRIPTOR L;
+
+  // shift all: cell_i = f_i - weight_i
+  for ( int iPop = 0; iPop < L::q; ++iPop ) {
+    cell[iPop] = - descriptors::t<T,L>(iPop);
+  }
+
+  std::vector<int> missing_iPop = util::subIndexOutgoing3DonEdges<L,plane,normal1,normal2>();
+  double sumWeights = 0;
+  for ( int i : missing_iPop ) {
+    sumWeights += descriptors::t<T,L>(i);
+  }
+
+  T dirichletTemperature = this->_momenta.computeRho(cell);
+  for ( int i : missing_iPop ) {
+    cell[i] = descriptors::t<T,L>(i)*dirichletTemperature/sumWeights - descriptors::t<T,L>(i);
+  }
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+T RtlbmDiffuseConstEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::getOmega() const
+{
+  return T(-1);
+}
+
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+void RtlbmDiffuseConstEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::setOmega(T omega_)
+{
+}
+
+
+
+// corner diffuse with constant density
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+RtlbmDiffuseConstCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::RtlbmDiffuseConstCornerBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
+{
+  this->getName() = "RtlbmDiffuseConstCornerBoundaryDynamics";
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+T RtlbmDiffuseConstCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return descriptors::t<T,DESCRIPTOR>(iPop)*rho - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+void RtlbmDiffuseConstCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  // For direction i \in I_in define
+  // cell_i = w_i * dirichlet/sumWeights - w_i
+  // For direction i \in I_out defube
+  // cell_i = - w_i
+  // This construction yields
+  // sum_{i=0}^{q-1} cell_i == dirichlet - 1
+
+  typedef DESCRIPTOR L;
+
+  // shift all: cell_i = f_i - weight_i
+  for ( int iPop = 0; iPop < L::q; ++iPop ) {
+    cell[iPop] = - descriptors::t<T,L>(iPop);
+  }
+
+  std::vector<int> const missing_iPop = util::subIndexOutgoing3DonCorners<L,xNormal,yNormal,zNormal>();
+  double sumWeights = 0;
+  for ( int i : missing_iPop ) {
+    sumWeights += descriptors::t<T,L>(i);
+  }
+
+  T dirichletTemperature = this->_momenta.computeRho(cell);
+  for ( int i : missing_iPop ) {
+    cell[i] = descriptors::t<T,L>(i)*dirichletTemperature/sumWeights - descriptors::t<T,L>(i);
+  }
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+T RtlbmDiffuseConstCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::getOmega() const
+{
+  return T(-1);
+}
+
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+void RtlbmDiffuseConstCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::setOmega(T omega_)
+{
+}
+
+
+// directed wall
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+RtlbmDirectedBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::RtlbmDirectedBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
+{
+  this->getName() = "RtlbmDirectedBoundaryDynamics";
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+T RtlbmDirectedBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+{
+  return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
+}
+
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+void RtlbmDirectedBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
+{
+  typedef DESCRIPTOR L;
   T dirichletTemperature = this->_momenta.computeRho(cell);
 
-  for( int iPop = 0; iPop < L::q; ++iPop ) {
-    cell[iPop] = - L::t[iPop];
+  for ( int iPop = 0; iPop < L::q; ++iPop ) {
+    cell[iPop] = - descriptors::t<T,L>(iPop);
   }
 
   std::vector<int> const missingDiagonal = util::subIndexOutgoing<L,direction,orientation>();
   for ( int i : missingDiagonal ) {
     // compute norm of c_iPopMissing
     // is direction axis parallel
-    if ( util::normSqr<int,L::d>(L::c[i]) == 1 ) {
-      cell[i] = dirichletTemperature - L::t[i];
+    if ( util::normSqr<int>({descriptors::c<L>(i,0), descriptors::c<L>(i,1), descriptors::c<L>(i,2)}) == 1 ) {
+      if ( std::is_base_of<DESCRIPTOR,descriptors::D3Q7<> >::value ) {
+        cell[i] = (1-descriptors::t<T,L>(0))*dirichletTemperature - descriptors::t<T,L>(i);
+      }
+      if ( DESCRIPTOR::template provides<descriptors::tag::RTLBM>() ) {
+        cell[i] = dirichletTemperature - descriptors::t<T,L>(i);
+      }
     }
   }
+  if ( std::is_base_of<DESCRIPTOR,descriptors::D3Q7<> >::value ) {
+    cell[0] = descriptors::t<T,L>(0)*dirichletTemperature - descriptors::t<T,L>(0);
+  }
 }
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-void RtlbmBoundaryDynamics<T,Lattice,direction,orientation>::staticCollide( Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics)
-{
-  assert(false);
-}
-
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-T RtlbmBoundaryDynamics<T,Lattice,direction,orientation>::getOmega() const
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+T RtlbmDirectedBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::getOmega() const
 {
   return T(-1);
 }
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-void RtlbmBoundaryDynamics<T,Lattice,direction,orientation>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR, int direction, int orientation>
+void RtlbmDirectedBoundaryDynamics<T,DESCRIPTOR,direction,orientation>::setOmega(T omega_)
 {
 }
 
-
-
-// for flat diffuse walls
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-RtlbmDiffuseBoundaryDynamics<T,Lattice,direction,orientation>::RtlbmDiffuseBoundaryDynamics( T omega_, Momenta<T,Lattice>& momenta_)
-  : BasicDynamics<T,Lattice>(momenta_)
+// directed edges
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+RtlbmDirectedEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::RtlbmDirectedEdgeBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
 {
+  this->getName() = "RtlbmDirectedEdgeBoundaryDynamics";
 }
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-T RtlbmDiffuseBoundaryDynamics<T,Lattice,direction,orientation>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+T RtlbmDirectedEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
-  return lbHelpers<T,Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
 }
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-void RtlbmDiffuseBoundaryDynamics<T,Lattice,direction,orientation>::collide(Cell<T,Lattice>& cell,LatticeStatistics<T>& statistics)
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+void RtlbmDirectedEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
 {
-    // For direction i \in I_in define
-    // cell_i = w_i * dirichlet/sumWeights - w_i
-    // For direction i \in I_out defube
-    // cell_i = - w_i
-    // This construction yields
-    // sum_{i=0}^{q-1} cell_i == dirichlet - 1
-
-
-  // TODO AM, goal more consistent code reading/writting
-  // for int i 0 < L::q; if (i \in missing_iPop) then else
-
-  typedef Lattice<T> L;
-  // shift all: cell_i = f_i - weight_i
-  for ( int iPop = 0; iPop < L::q; ++iPop ) {
-    cell[iPop] = - L::t[iPop];
-  }
-
-  std::vector<int> const missing_iPop = util::subIndexOutgoing<L,direction,orientation>();
-  double sumWeights = 0;
-  for ( int i : missing_iPop ) {
-    sumWeights += L::t[i];
-  }
-
+  typedef DESCRIPTOR L;
   T dirichletTemperature = this->_momenta.computeRho(cell);
-  for ( int i : missing_iPop ) {
-    cell[i] = L::t[i]*dirichletTemperature/sumWeights - L::t[i];
-  }
-}
 
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-void RtlbmDiffuseBoundaryDynamics<T,Lattice,direction,orientation>::staticCollide( Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics)
-{
-  assert(false);
-}
-
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-T RtlbmDiffuseBoundaryDynamics<T,Lattice,direction,orientation>::getOmega() const
-{
-  return T(-1);
-}
-
-template<typename T, template<typename U> class Lattice, int direction, int orientation>
-void RtlbmDiffuseBoundaryDynamics<T,Lattice,direction,orientation>::setOmega(T omega_)
-{
-}
-
-
-
-// for edge diffuse walls
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-RtlbmDiffuseEdgeBoundaryDynamics<T,Lattice,plane,normal1,normal2>::RtlbmDiffuseEdgeBoundaryDynamics( T omega_, Momenta<T,Lattice>& momenta_)
-  : BasicDynamics<T,Lattice>(momenta_)
-{
-}
-
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-T RtlbmDiffuseEdgeBoundaryDynamics<T,Lattice,plane,normal1,normal2>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
-{
-  return lbHelpers<T,Lattice>::equilibriumFirstOrder( iPop, rho, u );
-}
-
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-void RtlbmDiffuseEdgeBoundaryDynamics<T,Lattice,plane,normal1,normal2>::collide(Cell<T,Lattice>& cell,LatticeStatistics<T>& statistics)
-{
-    // For direction i \in I_in define
-    // cell_i = w_i * dirichlet/sumWeights - w_i
-    // For direction i \in I_out defube
-    // cell_i = - w_i
-    // This construction yields
-    // sum_{i=0}^{q-1} cell_i == dirichlet - 1
-
-  typedef Lattice<T> L;
-
-  // shift all: cell_i = f_i - weight_i
   for ( int iPop = 0; iPop < L::q; ++iPop ) {
-    cell[iPop] = - L::t[iPop];
+    cell[iPop] = - descriptors::t<T,L>(iPop);
   }
 
-  std::vector<int> missing_iPop = util::subIndexOutgoing3DonEdges<L,plane,normal1,normal2>();
-  double sumWeights = 0;
-  for ( int i : missing_iPop ) {
-    sumWeights += L::t[i];
+  std::vector<int> const missingDiagonal = util::subIndexOutgoing3DonEdges<DESCRIPTOR,plane,normal1,normal2>();
+  for ( int i : missingDiagonal ) {
+    // compute norm of c_iPopMissing
+    // is direction axis parallel
+    if ( util::normSqr<int>({descriptors::c<L>(i,0), descriptors::c<L>(i,1), descriptors::c<L>(i,2)}) == 1 ) {
+      if ( std::is_base_of<DESCRIPTOR,descriptors::D3Q7<> >::value ) {
+        cell[i] = (1-descriptors::t<T,L>(0))*dirichletTemperature - descriptors::t<T,L>(i);
+      }
+      if ( DESCRIPTOR::template provides<descriptors::tag::RTLBM>() ) {
+        cell[i] = dirichletTemperature - descriptors::t<T,L>(i);
+      }
+    }
   }
-
-  T dirichletTemperature = this->_momenta.computeRho(cell);
-  for ( int i : missing_iPop ) {
-    cell[i] = L::t[i]*dirichletTemperature/sumWeights - L::t[i];
+  if ( std::is_base_of<DESCRIPTOR,descriptors::D3Q7<> >::value ) {
+    cell[0] = descriptors::t<T,L>(0)*dirichletTemperature - descriptors::t<T,L>(0);
   }
 }
 
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-void RtlbmDiffuseEdgeBoundaryDynamics<T,Lattice,plane,normal1,normal2>::staticCollide( Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics)
-{
-  assert(false);
-}
-
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-T RtlbmDiffuseEdgeBoundaryDynamics<T,Lattice,plane,normal1,normal2>::getOmega() const
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+T RtlbmDirectedEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::getOmega() const
 {
   return T(-1);
 }
 
-template<typename T, template<typename U> class Lattice, int plane, int normal1, int normal2>
-void RtlbmDiffuseEdgeBoundaryDynamics<T,Lattice,plane,normal1,normal2>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+void RtlbmDirectedEdgeBoundaryDynamics<T,DESCRIPTOR,plane,normal1,normal2>::setOmega(T omega_)
 {
 }
 
 
-
-// for corner diffuse walls
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-RtlbmDiffuseCornerBoundaryDynamics<T,Lattice,xNormal,yNormal,zNormal>::RtlbmDiffuseCornerBoundaryDynamics( T omega_, Momenta<T,Lattice>& momenta_)
-  : BasicDynamics<T,Lattice>(momenta_)
+// directed corner
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+RtlbmDirectedCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::RtlbmDirectedCornerBoundaryDynamics( T omega_, Momenta<T,DESCRIPTOR>& momenta_)
+  : BasicDynamics<T,DESCRIPTOR>(momenta_)
 {
+  this->getName() = "RtlbmDirectedCornerBoundaryDynamics";
 }
 
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-T RtlbmDiffuseCornerBoundaryDynamics<T,Lattice,xNormal,yNormal,zNormal>::computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+T RtlbmDirectedCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
-  return lbHelpers<T,Lattice>::equilibriumFirstOrder( iPop, rho, u );
+  return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
 }
 
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-void RtlbmDiffuseCornerBoundaryDynamics<T,Lattice,xNormal,yNormal,zNormal>::collide(Cell<T,Lattice>& cell,LatticeStatistics<T>& statistics)
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+void RtlbmDirectedCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::collide(Cell<T,DESCRIPTOR>& cell,LatticeStatistics<T>& statistics)
 {
-    // For direction i \in I_in define
-    // cell_i = w_i * dirichlet/sumWeights - w_i
-    // For direction i \in I_out defube
-    // cell_i = - w_i
-    // This construction yields
-    // sum_{i=0}^{q-1} cell_i == dirichlet - 1
+  typedef DESCRIPTOR L;
+  T dirichletTemperature = this->_momenta.computeRho(cell);
 
-  typedef Lattice<T> L;
-
-  // shift all: cell_i = f_i - weight_i
   for ( int iPop = 0; iPop < L::q; ++iPop ) {
-    cell[iPop] = - L::t[iPop];
+    cell[iPop] = - descriptors::t<T,L>(iPop);
   }
 
-  std::vector<int> const missing_iPop = util::subIndexOutgoing3DonCorners<L,xNormal,yNormal,zNormal>();
-  double sumWeights = 0;
-  for ( int i : missing_iPop ) {
-    sumWeights += L::t[i];
+  std::vector<int> const missingDiagonal = util::subIndexOutgoing3DonCorners<DESCRIPTOR,xNormal,yNormal,zNormal>();
+  for ( int i : missingDiagonal ) {
+    // compute norm of c_iPopMissing
+    // is direction axis parallel
+    if ( util::normSqr<int>({descriptors::c<L>(i,0), descriptors::c<L>(i,1), descriptors::c<L>(i,2)}) == 1 ) {
+      if ( std::is_base_of<DESCRIPTOR,descriptors::D3Q7<> >::value ) {
+        cell[i] = (1-descriptors::t<T,L>(0))*dirichletTemperature - descriptors::t<T,L>(i);
+      }
+      if ( DESCRIPTOR::template provides<descriptors::tag::RTLBM>() ) {
+        cell[i] = dirichletTemperature - descriptors::t<T,L>(i);
+      }
+    }
   }
-
-  T dirichletTemperature = this->_momenta.computeRho(cell);
-  for ( int i : missing_iPop ) {
-    cell[i] = L::t[i]*dirichletTemperature/sumWeights - L::t[i];
+  if ( std::is_base_of<DESCRIPTOR,descriptors::D3Q7<> >::value ) {
+    cell[0] = descriptors::t<T,L>(0)*dirichletTemperature - descriptors::t<T,L>(0);
   }
 }
 
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-void RtlbmDiffuseCornerBoundaryDynamics<T,Lattice,xNormal,yNormal,zNormal>::staticCollide( Cell<T,Lattice>& cell, const T u[Lattice<T>::d], LatticeStatistics<T>& statistics)
-{
-  assert(false);
-}
-
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-T RtlbmDiffuseCornerBoundaryDynamics<T,Lattice,xNormal,yNormal,zNormal>::getOmega() const
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+T RtlbmDirectedCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::getOmega() const
 {
   return T(-1);
 }
 
-template<typename T, template<typename U> class Lattice, int xNormal, int yNormal, int zNormal>
-void RtlbmDiffuseCornerBoundaryDynamics<T,Lattice,xNormal,yNormal,zNormal>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+void RtlbmDirectedCornerBoundaryDynamics<T,DESCRIPTOR,xNormal,yNormal,zNormal>::setOmega(T omega_)
 {
 }
+
+
+
+
+
 
 }  // namespace olb
 

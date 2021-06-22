@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2018 Lukas Baron, Tim Dornieden, Mathias J. Krause,
- *  Albert Mink, Adrian Kummerländer
+ *  Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -55,7 +55,7 @@ bool AnalyticalFfromBlockF2D<T,W>::operator()(W output[], const T physC[])
 
     Vector<T,2> physRiC;
     Vector<T,2> physCv(physC);
-    _cuboid.getPhysR(physRiC.data, locX, locY);
+    _cuboid.getPhysR(physRiC.data(), locX, locY);
 
     // compute weights
     Vector<W,2> d = (physCv - physRiC) * (1. / _cuboid.getDeltaR());
@@ -171,7 +171,7 @@ bool AnalyticalFfromSuperF2D<T,W>::operator() (T output[], const T physC[])
 
         Vector<T,2> physRiC;
         Vector<T,2> physCv(physC);
-        cuboid.getPhysR(physRiC.data, locX, locY);
+        cuboid.getPhysR(physRiC.data(), locX, locY);
 
         // compute weights
         Vector<W,2> d = (physCv - physRiC) * (1. / cuboid.getDeltaR());
@@ -182,39 +182,37 @@ bool AnalyticalFfromSuperF2D<T,W>::operator() (T output[], const T physC[])
           output_tmp[iD] = T();
         }
 
-        latticeC[0] = locX;
-        latticeC[1] = locY;
+        latticeC[1] = locX;
+        latticeC[2] = locY;
         _f(output_tmp,latticeC);
         for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
           output[iD] += output_tmp[iD] * e[0] * e[1];
           output_tmp[iD] = T();
         }
 
-        latticeC[0] = locX;
-        latticeC[1] = locY + 1;
+        latticeC[1] = locX;
+        latticeC[2] = locY + 1;
         _f(output_tmp,latticeC);
         for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
           output[iD] += output_tmp[iD] * e[0] * d[1];
           output_tmp[iD] = T();
         }
 
-        latticeC[0] = locX + 1;
-        latticeC[1] = locY;
+        latticeC[1] = locX + 1;
+        latticeC[2] = locY;
         _f(output_tmp,latticeC);
         for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
           output[iD] += output_tmp[iD] * d[0] * e[1];
           output_tmp[iD] = T();
         }
 
-        latticeC[0] = locX + 1;
-        latticeC[1] = locY + 1;
+        latticeC[1] = locX + 1;
+        latticeC[2] = locY + 1;
         _f(output_tmp,latticeC);
         for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
           output[iD] += output_tmp[iD] * d[0] * d[1];
           output_tmp[iD] = T();
         }
-
-        return true;
       }
       else {
         _blockF[iC]->operator()(output, physC);
@@ -258,7 +256,7 @@ bool AnalyticalFfromSuperF2D<T,W>::operator() (T output[], const T physC[])
 template <typename T, typename W>
 int AnalyticalFfromSuperF2D<T,W>::getBlockFSize() const
 {
-  OLB_ASSERT(_blockF.size() < INT32_MAX,
+  OLB_ASSERT(_blockF.size() < UINT32_MAX,
              "it is safe to cast std::size_t to int");
   return _blockF.size();
 }
@@ -266,7 +264,7 @@ int AnalyticalFfromSuperF2D<T,W>::getBlockFSize() const
 template <typename T, typename W>
 AnalyticalFfromBlockF2D<T,W>& AnalyticalFfromSuperF2D<T,W>::getBlockF(int iCloc)
 {
-  OLB_ASSERT(iCloc < _blockF.size() && iCloc >= 0,
+  OLB_ASSERT(size_t(iCloc) < _blockF.size() && iCloc >= 0,
              "block functor index within bounds");
   return *(_blockF[iCloc]);
 }

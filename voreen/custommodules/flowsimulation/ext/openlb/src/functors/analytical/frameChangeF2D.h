@@ -87,7 +87,7 @@ public:
 };
 
 
-template <typename T, typename S, template <typename U> class DESCRIPTOR>
+template <typename T, typename S, typename DESCRIPTOR>
 class PoiseuilleStrainRate2D : public AnalyticalF2D<T,S> {
 protected:
   T _lengthY;
@@ -96,6 +96,20 @@ protected:
 public:
   PoiseuilleStrainRate2D(UnitConverter<T,DESCRIPTOR> const& converter, T ly);
   bool operator()(T output[], const S input[]) override;
+};
+
+/// Analytical solution of porous media channel flow with low Reynolds number
+/// See Spaid and Phelan (doi:10.1063/1.869392)
+template <typename T>
+class AnalyticalPorousVelocity2D : public AnalyticalF2D<T,T> {
+protected:
+  std::vector<T> axisDirection;
+  T K, mu, gradP, radius;
+  T eps;
+public:
+  AnalyticalPorousVelocity2D(std::vector<T> axisDirection_, T K_, T mu_, T gradP_, T radius_, T eps_=T(1));
+  T getPeakVelocity();
+  bool operator()(T output[], const T input[]) override;
 };
 
 

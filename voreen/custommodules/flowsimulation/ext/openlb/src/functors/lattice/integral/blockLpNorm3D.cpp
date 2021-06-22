@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -27,10 +27,7 @@
 namespace olb {
 
 template class BlockLpNorm3D<double,double,0>;
-template class BlockLpNorm3D<double,int,0>;
 template class BlockLpNorm3D<double,double,1>;
-template class BlockLpNorm3D<double,int,1>;
 template class BlockLpNorm3D<double,double,2>;
-template class BlockLpNorm3D<double,int,2>;
 
 }

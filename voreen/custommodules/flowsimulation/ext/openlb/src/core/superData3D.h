@@ -97,7 +97,8 @@ public:
   virtual BaseType const& get(int iC, int iX, int iY, int iZ, int iData=0) const;
 
   /// Write access to the memory of the data of the super structure where (iX, iY, iZ) is the point providing the data iData in the block iCloc
-  bool* operator() (int iCloc, int iX, int iY, int iZ, int iData) override;
+  std::uint8_t* operator() (int iCloc, int iX, int iY, int iZ, int iData) override;
+  std::uint8_t* operator() (int iCloc, std::size_t iCell, int iData) override;
   /// Read only access to the dim of the data of the super structure
   int getDataSize() const override;
   /// Read only access to the data type dim of the data of the super structure

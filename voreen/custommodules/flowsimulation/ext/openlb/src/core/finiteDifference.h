@@ -42,6 +42,22 @@ T boundaryGradient(T u_0, T u_1, T u_2)
   return (-(T)3*u_0 + (T)4*u_1 - (T)1*u_2) / (T)2;
 }
 
+/// Forward second-order first derivative
+template<typename T>
+T FSGradient(T u_0, T u_1, T u_2)
+{
+  T result = boundaryGradient(u_0, u_1, u_2);
+  return result;
+}
+
+/// Backward second-order first derivative
+template<typename T>
+T BSGradient(T u_0, T u_1, T u_2)
+{
+  T result = -1*boundaryGradient(u_0, u_1, u_2);
+  return result;
+}
+
 /// Value at u_0 for which asymmetric gradient is zero (u_1 = u(x+1))
 template<typename T>
 T boundaryZeroGradient(T u_1, T u_2)

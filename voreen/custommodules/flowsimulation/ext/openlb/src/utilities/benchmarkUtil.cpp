@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2007 Jonas Latt
+ *  Copyright (C) 2019 Jonas Latt, Mathias J. Krause, Maximilian Gaedtke, Marc Haußmann, Davide Dapelo, Jonathan Jeppener-Haltenhoff
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -28,9 +28,12 @@ namespace olb {
 
 namespace util {
 
+template class CircularBuffer<double>;
 template class ValueTracer<double>;
 template class BisectStepper<double>;
 template class Newton1D<double>;
+template class ExponentialMovingAverage<double, int>;
+template class ExponentialMovingAverage<double, double>;
 
 }
 

@@ -32,5 +32,6 @@ namespace olb {
 
 template class SuperData3D<double,double>;
 template class SuperData3D<double,int>;
+template class SuperData3D<double,bool>;
 
 }  // namespace olb

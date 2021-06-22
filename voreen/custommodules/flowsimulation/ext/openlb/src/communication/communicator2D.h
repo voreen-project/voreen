@@ -67,6 +67,7 @@ private:
   /// Indicates if there was an initialization done
   bool _initDone;
 public:
+  ~Communicator2D() {};
   /// Constructor
   Communicator2D(SuperStructure2D<T>& superStructure);
   /// Initializes the cuboid neighbourhoods

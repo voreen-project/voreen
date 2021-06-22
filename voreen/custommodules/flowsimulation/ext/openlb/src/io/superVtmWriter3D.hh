@@ -112,8 +112,6 @@ void SuperVTMwriter3D<T,W>::write(int iT)
       closePiece(fullNameVTI);
       closeVTI(fullNameVTI);
     }
-    // empty std::vector of functors
-    clearAddedFunctors();
   }
 }
 
@@ -168,6 +166,13 @@ void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT)
   } // cuboid
 }
 
+
+template<typename T, typename W>
+void SuperVTMwriter3D<T,W>::write(std::shared_ptr<SuperF3D<T,W>> ptr_f, int iT)
+{
+  write(*ptr_f, iT);
+}
+
 template<typename T, typename W>
 void SuperVTMwriter3D<T,W>::createMasterFile()
 {
@@ -208,8 +213,11 @@ std::string SuperVTMwriter3D<T,W>::getName() const
 ////////////////////private member functions///////////////////////////////////
 template<typename T, typename W>
 void SuperVTMwriter3D<T,W>::preambleVTI (const std::string& fullName,
-    const Vector<int,3> extent0, const Vector<int,3> extent1, T origin[], const T delta)
+    const Vector<int,3> extent0, const Vector<int,3> extent1, T origin[], T delta)
 {
+  double d_delta = delta;
+  double d_origin[3] = {origin[0], origin[1], origin[2]};
+
   std::ofstream fout(fullName, std::ios::trunc);
   if (!fout) {
     clout << "Error: could not open " << fullName << std::endl;
@@ -225,8 +233,8 @@ void SuperVTMwriter3D<T,W>::preambleVTI (const std::string& fullName,
        << extent0[0] <<" "<< extent1[0] <<" "
        << extent0[1] <<" "<< extent1[1] <<" "
        << extent0[2] <<" "<< extent1[2]
-       << "\" Origin=\"" << origin[0] << " " << origin[1] << " " << origin[2]
-       << "\" Spacing=\"" << delta << " " << delta << " " << delta << "\">\n";
+       << "\" Origin=\"" << d_origin[0] << " " << d_origin[1] << " " << d_origin[2]
+       << "\" Spacing=\"" << d_delta << " " << d_delta << " " << d_delta << "\">\n";
   fout << "<Piece Extent=\""
        << extent0[0] <<" "<< extent1[0] <<" "
        << extent0[1] <<" "<< extent1[1] <<" "

@@ -67,13 +67,13 @@ T fromPiToFneq4(const T pi[3])
 }  // namespace neqPiD2Q9
 
 template<typename T>
-struct rlbHelpers<T, descriptors::D2Q9Descriptor> {
+struct rlbHelpers<T, descriptors::D2Q9<>> {
 
   static T rlbCollision (
-    Cell<T,descriptors::D2Q9Descriptor>& cell,
+    Cell<T,descriptors::D2Q9<>>& cell,
     T rho, const T u[2], const T pi[3], T omega )
   {
-    typedef lbHelpers<T, descriptors::D2Q9Descriptor> LH;
+    typedef lbHelpers<T, descriptors::D2Q9<>> LH;
     const T uSqr = u[0]*u[0] + u[1]*u[1];
 
     cell[0]  = LH::equilibrium(0, rho, u, uSqr) +
@@ -97,7 +97,7 @@ struct rlbHelpers<T, descriptors::D2Q9Descriptor> {
     return uSqr;
   }
 
-};  // struct rlbHelpers<D2Q9Descriptor>
+};  // struct rlbHelpers<D2Q9<>>
 
 }  // namespace olb
 

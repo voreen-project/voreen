@@ -27,7 +27,7 @@
 
 #include "superGeometry2D.h"
 #include "superGeometry2D.hh"
-#include "functors/lattice/indicator/indicatorF2D.h"
+#include "functors/analytical/indicator/indicatorF2D.h"
 
 namespace olb {
 

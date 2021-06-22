@@ -38,110 +38,102 @@ namespace olb {
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, template<typename U> class Lattice>
-ChopardDynamics<T,Lattice>::ChopardDynamics (
-  T vs2_, T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
+template<typename T, typename DESCRIPTOR>
+ChopardDynamics<T,DESCRIPTOR>::ChopardDynamics (
+  T vs2_, T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
     vs2(vs2_),
     omega(omega_)
-{ }
+{
+  this->getName() = "ChopardDynamics";  
+}
 
 /** With this constructor, the speed of sound is vs2 = cs2
  *  \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, template<typename U> class Lattice>
-ChopardDynamics<T,Lattice>::ChopardDynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
-    vs2((T)1/Lattice<T>::invCs2),
+template<typename T, typename DESCRIPTOR>
+ChopardDynamics<T,DESCRIPTOR>::ChopardDynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
+    vs2((T)1/descriptors::invCs2<T,DESCRIPTOR>()),
     omega(omega_)
-{ }
+{
+  this->getName() = "ChopardDynamics";  
+}
 
-template<typename T, template<typename U> class Lattice>
-T ChopardDynamics<T,Lattice>::computeEquilibrium
-(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR>
+T ChopardDynamics<T,DESCRIPTOR>::computeEquilibrium
+(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
   return chopardEquilibrium(iPop, rho, u, uSqr, vs2);
 }
 
-template<typename T, template<typename U> class Lattice>
-void ChopardDynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void ChopardDynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  T rho, u[Lattice<T>::d];
+  T rho, u[DESCRIPTOR::d];
   this->_momenta.computeRhoU(cell, rho, u);
   T uSqr = chopardBgkCollision(cell, rho, u, vs2, omega);
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void ChopardDynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  T rho;
-  rho = this->_momenta.computeRho(cell);
-  T uSqr = chopardBgkCollision(cell, rho, u, vs2, omega);
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T ChopardDynamics<T,Lattice>::getOmega() const
+template<typename T, typename DESCRIPTOR>
+T ChopardDynamics<T,DESCRIPTOR>::getOmega() const
 {
   return omega;
 }
 
-template<typename T, template<typename U> class Lattice>
-void ChopardDynamics<T,Lattice>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR>
+void ChopardDynamics<T,DESCRIPTOR>::setOmega(T omega_)
 {
   omega = omega_;
 }
 
-template<typename T, template<typename U> class Lattice>
-T ChopardDynamics<T,Lattice>::getVs2() const
+template<typename T, typename DESCRIPTOR>
+T ChopardDynamics<T,DESCRIPTOR>::getVs2() const
 {
   return vs2;
 }
 
-template<typename T, template<typename U> class Lattice>
-void ChopardDynamics<T,Lattice>::setVs2(T vs2_)
+template<typename T, typename DESCRIPTOR>
+void ChopardDynamics<T,DESCRIPTOR>::setVs2(T vs2_)
 {
   vs2 = vs2_;
 }
 
-template<typename T, template<typename U> class Lattice>
-T ChopardDynamics<T,Lattice>::chopardBgkCollision (
-  Cell<T,Lattice>& cell, T rho, const T u[Lattice<T>::d], T vs2, T omega)
+template<typename T, typename DESCRIPTOR>
+T ChopardDynamics<T,DESCRIPTOR>::chopardBgkCollision (
+  Cell<T,DESCRIPTOR>& cell, T rho, const T u[DESCRIPTOR::d], T vs2, T omega)
 {
-  const T uSqr = util::normSqr<T,Lattice<T>::d>(u);
-  for (int iPop=0; iPop < Lattice<T>::q; ++iPop) {
+  const T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+  for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
     cell[iPop] *= (T)1-omega;
     cell[iPop] += omega * chopardEquilibrium(iPop, rho, u, uSqr, vs2);
   }
   return uSqr;
 }
 
-template<typename T, template<typename U> class Lattice>
-T ChopardDynamics<T,Lattice>::chopardEquilibrium (
-  int iPop, T rho, const T u[Lattice<T>::d], T uSqr, T vs2)
+template<typename T, typename DESCRIPTOR>
+T ChopardDynamics<T,DESCRIPTOR>::chopardEquilibrium (
+  int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr, T vs2)
 {
   if (iPop==0) {
     return rho*( (T)1 -
-                 vs2*Lattice<T>::invCs2*((T)1-Lattice<T>::t[0]) -
-                 Lattice<T>::t[0]/(T)2*Lattice<T>::invCs2*uSqr ) - Lattice<T>::t[0];
+                 vs2*descriptors::invCs2<T,DESCRIPTOR>()*((T)1-descriptors::t<T,DESCRIPTOR>(0)) -
+                 descriptors::t<T,DESCRIPTOR>(0)/(T)2*descriptors::invCs2<T,DESCRIPTOR>()*uSqr ) - descriptors::t<T,DESCRIPTOR>(0);
   } else {
     T c_u = T();
-    for (int iD=0; iD < Lattice<T>::d; ++iD) {
-      c_u += Lattice<T>::c[iPop][iD]*u[iD];
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      c_u += descriptors::c<DESCRIPTOR>(iPop,iD)*u[iD];
     }
-    return rho * Lattice<T>::t[iPop] * Lattice<T>::invCs2* (
+    return rho * descriptors::t<T,DESCRIPTOR>(iPop) * descriptors::invCs2<T,DESCRIPTOR>()* (
              vs2 + c_u +
-             Lattice<T>::invCs2 / (T)2 * c_u*c_u -
+             descriptors::invCs2<T,DESCRIPTOR>() / (T)2 * c_u*c_u -
              uSqr / (T)2
-           ) - Lattice<T>::t[iPop];
+           ) - descriptors::t<T,DESCRIPTOR>(iPop);
   }
 }
 

@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2016-2017 Benjamin Förster, Adrian Kummerländer
+ *  Copyright (C) 2016-2017 Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,15 +25,17 @@
 #define SUPER_INDICATOR_BASE_F_3D_H
 
 #include "functors/genericF.h"
+#include "core/superData3D.h"
 #include "functors/lattice/superBaseF3D.h"
 #include "communication/superStructure3D.h"
+#include "blockIndicatorBaseF3D.h"
 
 namespace olb {
 
 
 template<typename T, typename W> class SuperF3D;
 template<typename T> class SuperGeometry3D;
-template<typename T> class BlockIndicatorF3D;
+template<typename T> class SuperIndicatorIdentity3D;
 
 
 /// Base indicator functor (discrete)
@@ -47,8 +49,12 @@ template <typename T>
 class SuperIndicatorF3D : public SuperF3D<T,bool> {
 protected:
   SuperGeometry3D<T>& _superGeometry;
+
+  std::unique_ptr<SuperData3D<T,bool>> _cachedData;
+  std::vector<std::unique_ptr<BlockIndicatorF3D<T>>> _extendedBlockF;
 public:
   using SuperF3D<T,bool>::operator();
+  using identity_functor_type = SuperIndicatorIdentity3D<T>;
 
   SuperIndicatorF3D(SuperGeometry3D<T>& geometry);
   /**
@@ -57,6 +63,12 @@ public:
    * \returns _blockF[iCloc] cast as BlockIndicatorF3D<T>&
    **/
   BlockIndicatorF3D<T>& getBlockIndicatorF(int iCloc);
+  /**
+   * Get extended block indicator
+   *
+   * \returns _extendedBlockF[iCloc] cast as BlockIndicatorF3D<T>&
+   **/
+  BlockIndicatorF3D<T>& getExtendedBlockIndicatorF(int iCloc);
   /**
    * Get underlying super geometry
    *
@@ -71,7 +83,7 @@ public:
    *
    * \return Domain indicator i.e. `true` iff the input lies within the described domain.
    **/
-  virtual bool operator() (const int input[]);
+  bool operator() (const int input[]);
   /**
    * Indicator specific function operator overload
    *
@@ -80,7 +92,10 @@ public:
    *
    * \return Domain indicator i.e. `true` iff the input lies within the described domain.
    **/
-  virtual bool operator() (int iC, int iX, int iY, int iZ);
+  bool operator() (int iC, int iX, int iY, int iZ);
+
+  /// Optional: initialize _cachedData for faster access
+  void cache();
 };
 
 

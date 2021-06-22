@@ -53,13 +53,13 @@ public:
     virtual std::string getCategory() const   { return "Simulation";                    }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;         }
 
-    virtual void process();
-
 protected:
 
     virtual void setDescriptions() {
         setDescription("This processor is being used to generate simple synthetic simulation geometries");
     }
+
+    virtual void process();
 
 private:
 
@@ -69,6 +69,7 @@ private:
 
     OptionProperty<FlowSimulationGeometryType> geometryType_;
     FloatProperty ratio_;
+    FloatProperty radius_;
     FloatProperty length_;
     FloatMat4Property transformation_;
     OptionProperty<FlowProfile> flowProfile_;

@@ -29,24 +29,25 @@
 
 #include "blockLatticeView3D.h"
 #include "cell.h"
+#include "functors/lattice/indicator/blockIndicatorF3D.h"
 
 namespace olb {
 
 ////////////////////// Class BlockLatticeView3D /////////////////////////
 
-template<typename T, template<typename U> class Lattice>
-BlockLatticeView3D<T,Lattice>::BlockLatticeView3D(BlockLatticeStructure3D<T,Lattice>& originalLattice_)
-  : BlockLatticeStructure3D<T,Lattice>(originalLattice_.getNx(),
+template<typename T, typename DESCRIPTOR>
+BlockLatticeView3D<T,DESCRIPTOR>::BlockLatticeView3D(BlockLatticeStructure3D<T,DESCRIPTOR>& originalLattice_)
+  : BlockLatticeStructure3D<T,DESCRIPTOR>(originalLattice_.getNx(),
                                        originalLattice_.getNy(),
                                        originalLattice_.getNz()),
     originalLattice(&originalLattice_), x0(0), y0(0), z0(0)
 { }
 
-template<typename T, template<typename U> class Lattice>
-BlockLatticeView3D<T,Lattice>::BlockLatticeView3D (
-  BlockLatticeStructure3D<T,Lattice>& originalLattice_,
+template<typename T, typename DESCRIPTOR>
+BlockLatticeView3D<T,DESCRIPTOR>::BlockLatticeView3D (
+  BlockLatticeStructure3D<T,DESCRIPTOR>& originalLattice_,
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
-  : BlockLatticeStructure3D<T,Lattice>(x1_-x0_+1, y1_-y0_+1, z1_-z0_+1),
+  : BlockLatticeStructure3D<T,DESCRIPTOR>(x1_-x0_+1, y1_-y0_+1, z1_-z0_+1),
     originalLattice(&originalLattice_), x0(x0_), y0(y0_), z0(z0_)
 {
   OLB_PRECONDITION(x0 < originalLattice->getNx());
@@ -57,29 +58,29 @@ BlockLatticeView3D<T,Lattice>::BlockLatticeView3D (
   //  OLB_PRECONDITION(nz >= 1);
 }
 
-template<typename T, template<typename U> class Lattice>
-BlockLatticeView3D<T,Lattice>::~BlockLatticeView3D()
+template<typename T, typename DESCRIPTOR>
+BlockLatticeView3D<T,DESCRIPTOR>::~BlockLatticeView3D()
 {
 }
 
-template<typename T, template<typename U> class Lattice>
-BlockLatticeView3D<T,Lattice>::BlockLatticeView3D(BlockLatticeView3D<T,Lattice> const& rhs)
-  : BlockLatticeStructure3D<T,Lattice>(rhs._nx,rhs._ny,rhs._nz), originalLattice(rhs.originalLattice),
+template<typename T, typename DESCRIPTOR>
+BlockLatticeView3D<T,DESCRIPTOR>::BlockLatticeView3D(BlockLatticeView3D<T,DESCRIPTOR> const& rhs)
+  : BlockLatticeStructure3D<T,DESCRIPTOR>(rhs._nx,rhs._ny,rhs._nz), originalLattice(rhs.originalLattice),
     x0(rhs.x0), y0(rhs.y0), z0(rhs.z0)
 { }
 
-template<typename T, template<typename U> class Lattice>
-BlockLatticeView3D<T,Lattice>& BlockLatticeView3D<T,Lattice>::operator= (
-  BlockLatticeView3D<T,Lattice> const& rhs )
+template<typename T, typename DESCRIPTOR>
+BlockLatticeView3D<T,DESCRIPTOR>& BlockLatticeView3D<T,DESCRIPTOR>::operator= (
+  BlockLatticeView3D<T,DESCRIPTOR> const& rhs )
 {
-  BlockLatticeView3D<T,Lattice> tmp(rhs);
+  BlockLatticeView3D<T,DESCRIPTOR> tmp(rhs);
   swap(tmp);
   return *this;
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::swap (
-  BlockLatticeView3D<T,Lattice>& rhs)
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::swap (
+  BlockLatticeView3D<T,DESCRIPTOR>& rhs)
 {
   std::swap(this->_nx, rhs._nx);
   std::swap(this->_ny, rhs._ny);
@@ -90,8 +91,8 @@ void BlockLatticeView3D<T,Lattice>::swap (
   std::swap(originalLattice, rhs.originalLattice);
 }
 
-template<typename T, template<typename U> class Lattice>
-Cell<T,Lattice>& BlockLatticeView3D<T,Lattice>::get(int iX, int iY, int iZ)
+template<typename T, typename DESCRIPTOR>
+Cell<T,DESCRIPTOR> BlockLatticeView3D<T,DESCRIPTOR>::get(int iX, int iY, int iZ)
 {
   OLB_PRECONDITION(iX<originalLattice->getNx());
   OLB_PRECONDITION(iY<originalLattice->getNy());
@@ -99,8 +100,14 @@ Cell<T,Lattice>& BlockLatticeView3D<T,Lattice>::get(int iX, int iY, int iZ)
   return originalLattice->get(iX+x0, iY+y0, iZ+z0);
 }
 
-template<typename T, template<typename U> class Lattice>
-Cell<T,Lattice> const& BlockLatticeView3D<T,Lattice>::get (
+template<typename T, typename DESCRIPTOR>
+Cell<T,DESCRIPTOR> BlockLatticeView3D<T,DESCRIPTOR>::get(const int latticeR[])
+{
+  return get(latticeR[0], latticeR[1], latticeR[2]);
+}
+
+template<typename T, typename DESCRIPTOR>
+ConstCell<T,DESCRIPTOR> BlockLatticeView3D<T,DESCRIPTOR>::get (
   int iX, int iY, int iZ ) const
 {
   OLB_PRECONDITION(iX<originalLattice->getNx());
@@ -109,55 +116,74 @@ Cell<T,Lattice> const& BlockLatticeView3D<T,Lattice>::get (
   return originalLattice->get(iX+x0, iY+y0, iZ+z0);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::initialize()
+template<typename T, typename DESCRIPTOR>
+T& BlockLatticeView3D<T,DESCRIPTOR>::getPop(std::size_t iCell, unsigned iPop)
+{
+  return originalLattice->getPop(iCell, iPop);
+}
+
+template<typename T, typename DESCRIPTOR>
+T& BlockLatticeView3D<T,DESCRIPTOR>::getPop(int iX, int iY, int iZ, unsigned iPop)
+{
+  return originalLattice->getPop(iX+x0, iY+y0, iZ+z0, iPop);
+}
+
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::initialize()
 {
   originalLattice->initialize();
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::defineDynamics (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::defineDynamics (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-  Dynamics<T,Lattice>* dynamics )
+  Dynamics<T,DESCRIPTOR>* dynamics )
 {
   originalLattice->defineDynamics( x0_+x0, x1_+x0,
                                    y0_+y0, y1_+y0,
                                    z0_+z0, z1_+z0,
                                    dynamics );
-
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::defineDynamics (
-  int iX, int iY, int iZ, Dynamics<T,Lattice>* dynamics )
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::defineDynamics (
+  int iX, int iY, int iZ, Dynamics<T,DESCRIPTOR>* dynamics )
 {
-  originalLattice->defineDynamics( iX+x0, iY+y0, iZ+z0, dynamics );
+  originalLattice->defineDynamics(iX+x0, iY+y0, iZ+z0, dynamics);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::defineDynamics (
-  BlockGeometryStructure3D<T>& blockGeometry, int material, Dynamics<T,Lattice>* dynamics)
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::defineDynamics (
+  BlockIndicatorF3D<T>& indicator, Dynamics<T,DESCRIPTOR>* dynamics)
 {
-  for (int iX=0; iX<this->_nx; ++iX) {
-    for (int iY=0; iY<this->_ny; ++iY) {
-      for (int iZ=0; iZ<this->_nz; ++iZ) {
-        if (blockGeometry.getMaterial(iX, iY, iZ)==material) {
-          defineDynamics(iX,iY,iZ, dynamics);
+  for (int iX = 0; iX < this->_nx; ++iX) {
+    for (int iY = 0; iY < this->_ny; ++iY) {
+      for (int iZ = 0; iZ < this->_nz; ++iZ) {
+        if (indicator(iX, iY, iZ)) {
+          defineDynamics(iX, iY, iZ, dynamics);
         }
       }
     }
   }
 }
 
-template<typename T, template<typename U> class Lattice>
-Dynamics<T,Lattice>* BlockLatticeView3D<T,Lattice>::getDynamics (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::defineDynamics (
+  BlockGeometryStructure3D<T>& blockGeometry, int material, Dynamics<T,DESCRIPTOR>* dynamics)
+{
+  BlockIndicatorMaterial3D<T> indicator(blockGeometry, std::vector<int>(1, material));
+  defineDynamics(indicator, dynamics);
+}
+
+template<typename T, typename DESCRIPTOR>
+Dynamics<T,DESCRIPTOR>* BlockLatticeView3D<T,DESCRIPTOR>::getDynamics (
         int iX, int iY, int iZ)
 {
     return originalLattice->getDynamics(iX+x0, iY+y0, iZ+z0);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::collide (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::collide (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   originalLattice->collide( x0_+x0, x1_+x0,
@@ -166,66 +192,30 @@ void BlockLatticeView3D<T,Lattice>::collide (
 
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::collide()
-{
-  originalLattice->collide( x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::staticCollide (
-  int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-  BlockData3D<T,T> const& u)
-{
-  originalLattice->staticCollide( x0_+x0, x1_+x0,
-                                  y0_+y0, y1_+y0,
-                                  z0_+z0, z1_+z0, u);
-
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::staticCollide (
-  BlockData3D<T,T> const& u )
-{
-  originalLattice->staticCollide( x0, x0+this->_nx-1, y0, y0+this->_ny-1,
-                                  z0, z0+this->_nz-1, u);
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::stream(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-{
-  originalLattice->stream( x0_+x0, x1_+x0,
-                           y0_+y0, y1_+y0,
-                           z0_+z0, z1_+z0 );
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::stream(bool periodic)
-{
-  OLB_PRECONDITION(!periodic);
-  originalLattice->stream( x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
-  postProcess();
-}
-
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::collideAndStream (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::collideAndStream (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   originalLattice->collideAndStream( x0_+x0, x1_+x0,
                                      y0_+y0, y1_+y0,
                                      z0_+z0, z1_+z0 );
+
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::collideAndStream(bool periodic)
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::collide()
 {
-  OLB_PRECONDITION(!periodic);
-  originalLattice->collideAndStream(x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
-  postProcess();
+  originalLattice->collide( x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
 }
 
-template<typename T, template<typename U> class Lattice>
-T BlockLatticeView3D<T,Lattice>::computeAverageDensity (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::collideAndStream()
+{
+  originalLattice->collideAndStream( x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
+}
+
+template<typename T, typename DESCRIPTOR>
+T BlockLatticeView3D<T,DESCRIPTOR>::computeAverageDensity (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) const
 {
   return originalLattice->computeAverageDensity( x0_+x0, x1_+x0,
@@ -233,22 +223,22 @@ T BlockLatticeView3D<T,Lattice>::computeAverageDensity (
          z0_+z0, z1_+z0 );
 }
 
-template<typename T, template<typename U> class Lattice>
-T BlockLatticeView3D<T,Lattice>::computeAverageDensity() const
+template<typename T, typename DESCRIPTOR>
+T BlockLatticeView3D<T,DESCRIPTOR>::computeAverageDensity() const
 {
   return originalLattice->computeAverageDensity (
            x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1 );
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::computeStress(int iX, int iY, int iZ,
-        T pi[util::TensorVal<Lattice<T> >::n])
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::computeStress(int iX, int iY, int iZ,
+        T pi[util::TensorVal<DESCRIPTOR >::n])
 {
     originalLattice->computeStress(iX + x0, iY + y0, iZ + z0, pi);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::stripeOffDensityOffset (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::stripeOffDensityOffset (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T offset )
 {
   originalLattice->stripeOffDensityOffset( x0_+x0, x1_+x0,
@@ -256,99 +246,92 @@ void BlockLatticeView3D<T,Lattice>::stripeOffDensityOffset (
       z0_+z0, z1_+z0, offset);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::stripeOffDensityOffset(T offset)
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::stripeOffDensityOffset(T offset)
 {
   originalLattice->stripeOffDensityOffset (
     x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1, offset);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::forAll (
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::forAll (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-  WriteCellFunctional<T,Lattice> const& application )
+  WriteCellFunctional<T,DESCRIPTOR> const& application )
 {
   originalLattice->forAll( x0_+x0, x1_+x0,
                            y0_+y0, y1_+y0,
                            z0_+z0, z1_+z0, application);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::forAll(WriteCellFunctional<T,Lattice> const& application)
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::forAll(WriteCellFunctional<T,DESCRIPTOR> const& application)
 {
   originalLattice->forAll (
     x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1, application );
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::addPostProcessor (
-  PostProcessorGenerator3D<T,Lattice> const& ppGen )
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::addPostProcessor (
+  PostProcessorGenerator3D<T,DESCRIPTOR> const& ppGen )
 {
-  PostProcessorGenerator3D<T,Lattice>* shiftedGen = ppGen.clone();
+  PostProcessorGenerator3D<T,DESCRIPTOR>* shiftedGen = ppGen.clone();
   shiftedGen->shift(x0,y0,z0);
   originalLattice->addPostProcessor(*shiftedGen);
   delete shiftedGen;
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::resetPostProcessors()
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::resetPostProcessors()
 {
   originalLattice->resetPostProcessors();
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::postProcess()
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::postProcess()
 {
   originalLattice -> postProcess(x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::postProcess(
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::postProcess(
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   originalLattice -> postProcess( x0_+x0, x1_+x0, y0_+y0, y1_+y0, z0_+z0, z1_+z0 );
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::addLatticeCoupling (
-  LatticeCouplingGenerator3D<T,Lattice> const& lcGen,
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::addLatticeCoupling (
+  LatticeCouplingGenerator3D<T,DESCRIPTOR> const& lcGen,
   std::vector<SpatiallyExtendedObject3D*> partners )
 {
-  LatticeCouplingGenerator3D<T,Lattice>* shiftedGen = lcGen.clone();
+  LatticeCouplingGenerator3D<T,DESCRIPTOR>* shiftedGen = lcGen.clone();
   shiftedGen->shift(x0,y0,z0);
   originalLattice->addLatticeCoupling(*shiftedGen, partners);
   delete shiftedGen;
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::executeCoupling()
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::executeCoupling()
 {
   originalLattice -> executeCoupling(x0, x0+this->_nx-1, y0, y0+this->_ny-1, z0, z0+this->_nz-1);
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::executeCoupling(
+template<typename T, typename DESCRIPTOR>
+void BlockLatticeView3D<T,DESCRIPTOR>::executeCoupling(
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   originalLattice -> executeCoupling( x0_+x0, x1_+x0, y0_+y0, y1_+y0, z0_+z0, z1_+z0 );
 }
 
-template<typename T, template<typename U> class Lattice>
-void BlockLatticeView3D<T,Lattice>::
-subscribeReductions(Reductor<T>& reductor)
-{
-  originalLattice -> subscribeReductions(reductor);
-}
-
-template<typename T, template<typename U> class Lattice>
-LatticeStatistics<T>& BlockLatticeView3D<T,Lattice>::
+template<typename T, typename DESCRIPTOR>
+LatticeStatistics<T>& BlockLatticeView3D<T,DESCRIPTOR>::
 getStatistics()
 {
   return originalLattice->getStatistics();
 }
 
-template<typename T, template<typename U> class Lattice>
-LatticeStatistics<T> const& BlockLatticeView3D<T,Lattice>::getStatistics() const
+template<typename T, typename DESCRIPTOR>
+LatticeStatistics<T> const& BlockLatticeView3D<T,DESCRIPTOR>::getStatistics() const
 {
   return originalLattice->getStatistics();
 }

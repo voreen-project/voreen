@@ -30,6 +30,8 @@
 #include "core/blockLatticeStructure3D.h"
 #include "core/unitConverter.h"
 
+#include <memory>
+
 /** Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
@@ -59,25 +61,33 @@ public:
 };
 
 /// BlockDataF3D can store data of any BlockFunctor3D
-template <typename T,typename BaseType>
+template <typename T, typename BaseType>
 class BlockDataF3D : public BlockF3D<BaseType> {
 protected:
   BlockDataF3D(int nx, int ny, int nz, int size=1);
-  BlockData3D<T,BaseType>& _blockData;
+
+  std::unique_ptr<BlockData3D<T,BaseType>> _blockDataStorage;
+  BlockData3D<T,BaseType>&                 _blockData;
 public:
   /// Constructor
   BlockDataF3D(BlockData3D<T,BaseType>& blockData);
   /// to store functor data, constuctor creates _blockData with functor data
   BlockDataF3D(BlockF3D<BaseType>& f);
-  /// destructor is called if object was not created by passing a blockData
-  ~BlockDataF3D() override;
   /// returns _blockData
   BlockData3D<T,BaseType>& getBlockData();
   /// access to _blockData via its get()
   bool operator() (BaseType output[], const int input[]) override;
+};
+
+/// Overlap-aware version of BlockDataF3D for usage in SuperDataF3D
+template <typename T, typename BaseType>
+class BlockDataViewF3D : public BlockDataF3D<T,BaseType> {
 private:
-  /// flag whether _blockData was allocated with new
-  bool _isConstructed;
+  const int _overlap;
+public:
+  BlockDataViewF3D(BlockData3D<T,BaseType>& blockData, int overlap);
+  /// access to _blockData shifted by overlap
+  bool operator() (BaseType output[], const int input[]) override;
 };
 
 /// identity functor
@@ -87,8 +97,6 @@ protected:
   BlockF3D<T>& _f;
 public:
   BlockIdentity3D(BlockF3D<T>& f);
-  /// Assignment Operator
-  //BlockIdentity3D<T> operator=(BlockF3D<T>& rhs);
   // access operator should not delete f, since f still has the identity as child
   bool operator() (T output[], const int input[]) override;
 };
@@ -105,6 +113,28 @@ public:
   bool operator() (T output[], const int input[]);
 };
 
+/// functor to extract one component inside an indicator
+template <typename T>
+class BlockExtractComponentIndicatorF3D : public BlockExtractComponentF3D<T> {
+protected:
+  BlockIndicatorF3D<T>& _indicatorF;
+public:
+  BlockExtractComponentIndicatorF3D(BlockF3D<T>& f, int extractDim,
+                                    BlockIndicatorF3D<T>& indicatorF);
+  bool operator() (T output[], const int input[]) override;
+};
+
+/// functor to extract data inside an indicator
+template <typename T>
+class BlockExtractIndicatorF3D : public BlockF3D<T> {
+protected:
+  BlockF3D<T>&          _f;
+  BlockIndicatorF3D<T>& _indicatorF;
+public:
+  BlockExtractIndicatorF3D(BlockF3D<T>& f,
+                           BlockIndicatorF3D<T>& indicatorF);
+  bool operator() (T output[], const int input[]);
+};
 
 /// functor to extract one component
 template <typename T>
@@ -118,8 +148,8 @@ public:
 };
 
 
-/// represents all functors that operate on a Lattice in general, e.g. getVelocity(), getForce(), getPressure()
-template <typename T, template <typename U> class DESCRIPTOR>
+/// represents all functors that operate on a DESCRIPTOR in general, e.g. getVelocity(), getForce(), getPressure()
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeF3D : public BlockF3D<T> {
 protected:
   BlockLatticeF3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, int targetDim);
@@ -133,8 +163,20 @@ public:
   BlockLatticeStructure3D<T,DESCRIPTOR>& getBlockLattice();
 };
 
-/// represents all functors that operate on a Lattice with output in Phys, e.g. physVelocity(), physForce(), physPressure()
-template <typename T, template <typename U> class DESCRIPTOR>
+
+/// identity functor
+template <typename T, typename DESCRIPTOR>
+class BlockLatticeIdentity3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
+protected:
+  BlockLatticeF3D<T,DESCRIPTOR>& _f;
+public:
+  BlockLatticeIdentity3D(BlockLatticeF3D<T,DESCRIPTOR>& f);
+  bool operator() (T output[], const int input[]) override;
+};
+
+
+/// represents all functors that operate on a DESCRIPTOR with output in Phys, e.g. physVelocity(), physForce(), physPressure()
+template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysF3D : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   const UnitConverter<T,DESCRIPTOR>& _converter;
@@ -147,13 +189,13 @@ public:
   //BlockLatticePhysF3D<T,DESCRIPTOR>& operator=(BlockLatticePhysF3D<T,DESCRIPTOR> const& rhs);
 };
 
-/// represents all thermal functors that operate on a Lattice with output in Phys, e.g. physTemperature(), physHeatFlux()
-template <typename T, template <typename U> class DESCRIPTOR, template <typename V> class ThermalDESCRIPTOR>
-class BlockLatticeThermalPhysF3D : public BlockLatticeF3D<T,ThermalDESCRIPTOR> {
+/// represents all thermal functors that operate on a DESCRIPTOR with output in Phys, e.g. physTemperature(), physHeatFlux()
+template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
+class BlockLatticeThermalPhysF3D : public BlockLatticeF3D<T,TDESCRIPTOR> {
 protected:
-  BlockLatticeThermalPhysF3D(BlockLatticeStructure3D<T,ThermalDESCRIPTOR>& blockLattice,
-                             const ThermalUnitConverter<T,DESCRIPTOR,ThermalDESCRIPTOR>& converter, int targetDim);
-  const ThermalUnitConverter<T,DESCRIPTOR,ThermalDESCRIPTOR>& _converter;
+  BlockLatticeThermalPhysF3D(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice,
+                             const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim);
+  const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& _converter;
 };
 
 

@@ -29,7 +29,7 @@
 #ifndef LB_SMAGO_GUOZHAO_DYNAMICS_H
 #define LB_SMAGO_GUOZHAO_DYNAMICS_H
 
-#include "dynamics/guoZhaoLatticeDescriptors.h"
+#include "dynamics/descriptorAlias.h"
 #include "core/util.h"
 #include "core/postProcessing.h"
 #include "core/latticeStatistics.h"
@@ -38,23 +38,19 @@ namespace olb {
 
 /// Implementation of the BGK collision step with porous force according to
 /// Guo and Zhao (2012), described as an external force
-template<typename T, template<typename U> class Lattice>
-class SmagorinskyGuoZhaoBGKdynamics : public GuoZhaoBGKdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class SmagorinskyGuoZhaoBGKdynamics : public GuoZhaoBGKdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor.
   //Passing default value for smagoConst_ because 2D boundary conditions accept only
   //two-argument constructor for dynamics class.
-  SmagorinskyGuoZhaoBGKdynamics(T omega_, Momenta<T,Lattice>& momenta_, T smagoConst_ = 0.14,
+  SmagorinskyGuoZhaoBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, T smagoConst_ = 0.14,
                                 T dx_ = 1, T dt_ = 1);
   /// Collision step
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
-  /// Collide with fixed velocity
-  virtual void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_);
   /// Get local smagorinsky relaxation parameter of the dynamics
-  virtual T getSmagorinskyOmega(Cell<T,Lattice>& cell_);
+  virtual T getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell_);
   /// Set local relaxation parameter of the dynamics
   virtual void setOmega(T omega_);
 protected:
@@ -62,7 +58,7 @@ protected:
   T computePreFactor(T omega_, T smagoConst_);
   /// Computes the local smagorinsky relaxation parameter
   T computeOmega(T omega0, T preFactor_, T rho,
-                 T pi[util::TensorVal<Lattice<T> >::n] );
+                 T pi[util::TensorVal<DESCRIPTOR >::n] );
 
   /// effective collision time based upon Smagorisnky approach
   T tau_eff;
@@ -72,9 +68,6 @@ protected:
   T preFactor;
   T dx;
   T dt;
-
-  static const int forceBeginsAt = Lattice<T>::ExternalField::forceBeginsAt;
-  static const int sizeOfForce   = Lattice<T>::ExternalField::sizeOfForce;
 };
 
 }

@@ -30,113 +30,130 @@
 #include "momentaOnBoundaries2D.h"
 #include "dynamics/lbHelpers.h"
 #include "dynamics/firstOrderLbHelpers.h"
+#include "core/cellD.h"
 
 namespace olb {
 
 ////////////////////// Class InnerCornerVelBM2D ///////////////
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-InnerCornerVelBM2D<T,Lattice,normalX,normalY>::InnerCornerVelBM2D()
-{ }
-
-template<typename T, template<typename U> class Lattice,
-         int normalX, int normalY>
-InnerCornerVelBM2D<T,Lattice,normalX,normalY>::InnerCornerVelBM2D (
-  const T u_[Lattice<T>::d])
-  : xMomenta(u_), yMomenta(u_)
-{ }
-
-template<typename T, template<typename U> class Lattice,
-         int normalX, int normalY>
-T InnerCornerVelBM2D<T,Lattice,normalX,normalY>::computeRho (
-  Cell<T,Lattice> const& cell ) const
+InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::InnerCornerVelBM2D()
 {
-  return (xMomenta.computeRho(cell) + yMomenta.computeRho(cell)) / (T)2;
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    _u[iD] = T();
+  }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::computeU (
-  Cell<T,Lattice> const& cell,
-  T u[Lattice<T>::d] ) const
+InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::InnerCornerVelBM2D (
+  const T u_[DESCRIPTOR::d])
 {
-  xMomenta.computeU(cell, u);
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    _u[iD] = u_[iD];
+  }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::computeJ (
-  Cell<T,Lattice> const& cell,
-  T j[Lattice<T>::d] ) const
+T InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::computeRho (
+  ConstCell<T,DESCRIPTOR>& cell ) const
+{
+  T rhoX = velocityBMRho<T, DESCRIPTOR, 0, normalX>(cell, _u);
+  T rhoY = velocityBMRho<T, DESCRIPTOR, 1, normalY>(cell, _u);
+  return (rhoX + rhoY) / (T)2;
+}
+
+template<typename T, typename DESCRIPTOR,
+         int normalX, int normalY>
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::computeU (
+  ConstCell<T,DESCRIPTOR>& cell,
+  T u[DESCRIPTOR::d] ) const
+{
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    u[iD] = _u[iD];
+  }
+}
+
+template<typename T, typename DESCRIPTOR,
+         int normalX, int normalY>
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::computeJ (
+  ConstCell<T,DESCRIPTOR>& cell,
+  T j[DESCRIPTOR::d] ) const
 {
   computeU(cell, j);
   T rho = computeRho(cell);
-  for (int iD=0; iD<Lattice<T>::d; ++iD) {
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
     j[iD] *= rho;
   }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::computeU (
-  T u[Lattice<T>::d] ) const
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::computeU (
+  T u[DESCRIPTOR::d] ) const
 {
-  xMomenta.computeU(u);
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    u[iD] = _u[iD];
+  }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::defineRho (
-  Cell<T,Lattice>& cell, T rho )
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::defineRho (
+  Cell<T,DESCRIPTOR>& cell, T rho )
 { }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::defineU (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d] )
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::defineU (
+  Cell<T,DESCRIPTOR>& cell,
+  const T u[DESCRIPTOR::d] )
 {
-  xMomenta.defineU(cell, u);
-  yMomenta.defineU(cell, u);
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    _u[iD] = u[iD];
+  }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::defineU (
-  const T u[Lattice<T>::d] )
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::defineU (
+  const T u[DESCRIPTOR::d] )
 {
-  xMomenta.defineU(u);
-  yMomenta.defineU(u);
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    _u[iD] = u[iD];
+  }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::defineAllMomenta (
-  Cell<T,Lattice>& cell,
-  T rho, const T u[Lattice<T>::d],
-  const T pi[util::TensorVal<Lattice<T> >::n] )
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::defineAllMomenta (
+  Cell<T,DESCRIPTOR>& cell,
+  T rho, const T u[DESCRIPTOR::d],
+  const T pi[util::TensorVal<DESCRIPTOR >::n] )
 {
-  xMomenta.defineU(u);
-  yMomenta.defineU(u);
+  for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+    _u[iD] = u[iD];
+  }
 }
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int normalX, int normalY>
-void InnerCornerVelBM2D<T,Lattice,normalX,normalY>::computeStress (
-  Cell<T,Lattice> const& cell,
-  T rho, const T u[Lattice<T>::d],
-  T pi[util::TensorVal<Lattice<T> >::n] ) const
+void InnerCornerVelBM2D<T,DESCRIPTOR,normalX,normalY>::computeStress (
+  ConstCell<T,DESCRIPTOR>& cell,
+  T rho, const T u[DESCRIPTOR::d],
+  T pi[util::TensorVal<DESCRIPTOR >::n] ) const
 {
-  typedef lbHelpers<T,Lattice> lbH;
-  Cell<T,Lattice> newCell(cell);
-  int v[Lattice<T>::d] = { -normalX, -normalY };
-  int unknownF  = util::findVelocity<Lattice<T> >(v);
+  typedef lbHelpers<T,DESCRIPTOR> lbH;
+  CellD<T,DESCRIPTOR> newCell(cell);
+  int v[DESCRIPTOR::d] = { -normalX, -normalY };
+  int unknownF  = util::findVelocity<DESCRIPTOR >(v);
 
-  if (unknownF != Lattice<T>::q) {
-    int oppositeF = util::opposite<Lattice<T> >(unknownF);
+  if (unknownF != DESCRIPTOR::q) {
+    int oppositeF = util::opposite<DESCRIPTOR >(unknownF);
 
-    T uSqr = util::normSqr<T,Lattice<T>::d>(u);
+    T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
 
     newCell[unknownF] = newCell[oppositeF]
                         - lbH::equilibrium(oppositeF, rho, u, uSqr)

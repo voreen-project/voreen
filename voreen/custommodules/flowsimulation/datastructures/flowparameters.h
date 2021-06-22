@@ -153,7 +153,7 @@ public:
     void setCharacteristicVelocity(float characteristicVelocity);
 
     /**
-     * Returns the kinematic viscosity in 10 m^2/s.
+     * Returns the kinematic viscosity in m^2/s.
      */
     float getViscosity() const;
     void setViscosity(float viscosity);
@@ -200,7 +200,7 @@ private:
     float relaxationTime_;          ///< temporal resolution in seconds
     float characteristicLength_;    ///< characteristic length in m
     float characteristicVelocity_;  ///< characteristic velocity in m/s
-    float viscosity_;               ///< viscosity in 10 m^2/s
+    float viscosity_;               ///< kinematic viscosity in m^2/s
     float density_;                 ///< density in kg/m^3
     float smagorinskyConstant_;     ///< constant for Smagorinsky turbulence model
     bool bouzidi_;                  ///< bouzidi boundary condition

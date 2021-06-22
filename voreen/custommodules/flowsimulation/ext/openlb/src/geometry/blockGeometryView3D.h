@@ -55,8 +55,7 @@ template<typename T> class BlockGeometryStructure3D;
  * This class needs to be final as addToStatisticsList and removeFromStatisticsList in the constructor don't dispatch to derived classes.
  */
 template<typename T>
-class BlockGeometryView3D final : public BlockGeometryStructure3D<T>, public BlockStructure3D {
-
+class BlockGeometryView3D final : public BlockGeometryStructure3D<T> {
 private:
   // Points to the structure where this view class is viewing at
   BlockGeometryStructure3D<T>* _originalBlockGeometry;
@@ -66,10 +65,6 @@ private:
 public:
   /// Constructor
   BlockGeometryView3D(BlockGeometryStructure3D<T>& originalBlockGeometry, int x0, int x1, int y0, int y1, int z0, int z1);
-  /// Copy constructor
-  BlockGeometryView3D(BlockGeometryView3D const& rhs);
-  /// Copy assignment
-  BlockGeometryView3D& operator=(BlockGeometryView3D const& rhs);
   /// Destructor
   ~BlockGeometryView3D() override;
 
@@ -77,17 +72,11 @@ public:
   BlockGeometryStatistics3D<T>& getStatistics(bool verbose=true) override;
   /// Read only access to the associated block statistic
   BlockGeometryStatistics3D<T> const& getStatistics(bool verbose=true) const override;
-
+  
   /// Read only access to the origin position given in SI units (meter)
   Vector<T,3> getOrigin() const override;
   /// Read only access to the voxel size given in SI units (meter)
-  const T getDeltaR() const override;
-  /// Returns the extend (number of voxels) in X-direction
-  int getNx() const override;
-  /// Returns the extend (number of voxels) in Y-direction
-  int getNy() const override;
-  /// Returns the extend (number of voxels) in Z-direction
-  int getNz() const override;
+  T getDeltaR() const override;
 
   /// Write access to a material number
   int& get(int iX, int iY, int iZ) override;

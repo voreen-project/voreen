@@ -35,7 +35,7 @@ namespace olb {
 template<typename T, template<typename U> class PARTICLETYPE>
 class ParticleSystem3D;
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 class BuoyancyForce3D: public Force3D<T, PARTICLETYPE> {
 
 public:

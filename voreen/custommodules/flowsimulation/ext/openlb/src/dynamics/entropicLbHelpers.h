@@ -32,42 +32,42 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice>
+template<typename T, typename DESCRIPTOR>
 struct entropicLbHelpers {
   /// Computation of equilibrium distribution
-  static T equilibrium( int iPop, T rho, const T u[Lattice<T>::d])
+  static T equilibrium( int iPop, T rho, const T u[DESCRIPTOR::d])
   {
-    typedef Lattice<T> L;
-    const T invCs = sqrt(L::invCs2);
+    typedef DESCRIPTOR L;
+    const T invCs = sqrt(descriptors::invCs2<T,L>());
     const T sqt3 = sqrt(3.0);
     T prod = (T)1;
-    for (int iD=0; iD < Lattice<T>::d; ++iD) {
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       T uc = u[iD] * invCs; // u[iD] / c_s
 
       prod *= ((T)2 - sqrt(1.0+uc*uc)) *
               pow((2.0 / sqt3 * uc +
                    sqrt(1.0+uc*uc))/(1.0-uc/sqt3),
-                  L::c[iPop][iD]/sqt3*invCs);
+                  descriptors::c<L>(iPop,iD)/sqt3*invCs);
     }
-    return rho*L::t[iPop]*prod-L::t[iPop];
+    return rho*descriptors::t<T,L>(iPop)*prod-descriptors::t<T,L>(iPop);
   }
 
   /// Computation of equilibrium distribution
-  static T equilibriumApprox( int iPop, T rho, const T u[Lattice<T>::d])
+  static T equilibriumApprox( int iPop, T rho, const T u[DESCRIPTOR::d])
   {
-    typedef Lattice<T> L;
+    typedef DESCRIPTOR L;
 
     T uSqr = util::normSqr<T,L::d>(u);
     T cu = T();
-    for (int iD=0; iD < Lattice<T>::d; ++iD) {
-      cu += L::c[iPop][iD]*u[iD];
+    for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
+      cu += descriptors::c<L>(iPop,iD)*u[iD];
     }
 
-    return rho * L::t[iPop] * (1.0 +
-                               cu*L::invCs2 - 0.5 * uSqr*L::invCs2 + 0.5*pow(L::invCs2,2)*cu*cu
-                               - 0.5*pow(L::invCs2,2)*cu*uSqr + pow(cu,3)*pow(L::invCs2,3)/6.0
-                               + 0.125*uSqr*uSqr*pow(L::invCs2,2) - 0.25*cu*cu*uSqr*pow(L::invCs2,3)
-                               + pow(cu,4)*pow(L::invCs2,4)/24.0)-L::t[iPop];
+    return rho * descriptors::t<T,L>(iPop) * (1.0 +
+                               cu*descriptors::invCs2<T,L>() - 0.5 * uSqr*descriptors::invCs2<T,L>() + 0.5*pow(descriptors::invCs2<T,L>(),2)*cu*cu
+                               - 0.5*pow(descriptors::invCs2<T,L>(),2)*cu*uSqr + pow(cu,3)*pow(descriptors::invCs2<T,L>(),3)/6.0
+                               + 0.125*uSqr*uSqr*pow(descriptors::invCs2<T,L>(),2) - 0.25*cu*cu*uSqr*pow(descriptors::invCs2<T,L>(),3)
+                               + pow(cu,4)*pow(descriptors::invCs2<T,L>(),4)/24.0)-descriptors::t<T,L>(iPop);
   }
 };
 

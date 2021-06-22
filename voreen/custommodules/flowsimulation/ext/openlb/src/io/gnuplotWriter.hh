@@ -36,10 +36,11 @@ namespace olb {
 /// Constructor with name of outputFiles
 /// boolean true for real-time plotting //WARNING: experimental!
 template< typename T >
-Gnuplot<T>::Gnuplot(std::string name, bool liveplot)
+Gnuplot<T>::Gnuplot(std::string name, bool liveplot, std::string preCommand)
   : _name(name),
     _dataFile(singleton::directories().getGnuplotOutDir()+"data/"+_name+".dat"),
-    _dir(singleton::directories().getGnuplotOutDir())
+    _dir(singleton::directories().getGnuplotOutDir()),
+    _preCommand(preCommand)
 {
   _liveplot = liveplot;
   if (singleton::mpi().getRank() == _rank) {
@@ -133,11 +134,11 @@ void Gnuplot<T>::setData(bool noXvalue, std::vector<T> yValues, std::vector<std:
 
 /// writes an PDF
 template< typename T >
-void Gnuplot<T>::writePDF()
+void Gnuplot<T>::writePDF(std::string plotName)
 {
   if (!_init) {
-    writePlotFile("pdf");
-    startGnuplot("plotPDF");
+    writePlotFile("pdf", plotName);
+    startGnuplot("plotPDF", plotName);
   }
   return;
 }
@@ -175,7 +176,7 @@ void Gnuplot<T>::writePlotFile(std::string type, std::string plotName)
     if (_liveplot && type == "plot") {
       plotFile = singleton::directories().getGnuplotOutDir()+"data/plot.p";
     } else if (type == "pdf") {
-      plotFile = singleton::directories().getGnuplotOutDir()+"data/plotPDF.p";
+      plotFile = singleton::directories().getGnuplotOutDir()+"data/plotPDF"+plotName+".p";
     } else if (type == "png") {
       plotFile = singleton::directories().getGnuplotOutDir()+"data/plotPNG"+plotName+".p";
     } else {
@@ -204,6 +205,9 @@ void Gnuplot<T>::writePlotFile(std::string type, std::string plotName)
     /// set the x and y label of the Plot
     fout << "set xlabel '" << _xLabel << "'" << "\n";
     fout << "set ylabel '" << _yLabel << "'" << "\n";
+
+    /// set precommands
+    fout << _preCommand << "\n";
 
     /// vector which holds the information about the plotType
     /// (e.g. scatterplot 'p' or lineplot 'l': default {'l','l'})
@@ -238,6 +242,53 @@ void Gnuplot<T>::writeDataFile(T xValue, T yValue)
   }
   return;
 }
+
+
+/// writes the data file for two doubles
+/// (higher precision and respects changes in /tmp structure)
+template< typename T >
+void Gnuplot<T>::datFileOut(T xValue, T yValue, std::string plotNameFile)
+{
+  if (singleton::mpi().getRank() == _rank) {
+    std::ofstream fout;
+    std::string DATAF;
+    DATAF = singleton::directories().getGnuplotOutDir()+"data/"+plotNameFile+".dat";
+    fout.precision(16);        // this better...
+    fout.open(DATAF.c_str(), std::ios::app);
+    fout << xValue
+         << " "
+         << yValue
+         << std::endl;
+    fout.close();
+  }
+  return;
+}
+
+
+/// writes the data file for one double and a vector of doubles
+/// (higher precision and respects changes in /tmp structure)
+template< typename T >
+void Gnuplot<T>::datFileOut(T xValue, std::vector<T> yValues, std::string plotNameFile)
+{
+  if (singleton::mpi().getRank() == _rank) {
+    std::ofstream fout;
+    std::string DATAF;
+    DATAF = singleton::directories().getGnuplotOutDir()+"data/"+plotNameFile+".dat";
+    fout.precision(16);        // this better...
+    fout.open(DATAF.c_str(), std::ios::app);
+    fout << xValue;
+    for (unsigned int i = 0; i < yValues.size(); i++) {
+      fout << " " << yValues[i];
+    }
+    fout << "\n";
+    fout.close();
+  }
+  return;
+}
+
+
+
+
 
 /// set Label of the gnuplotPlot; xLabel and yLabel
 template< typename T >
@@ -274,7 +325,7 @@ template< typename T >
 void Gnuplot<T>::startGnuplot(std::string plotFile, std::string plotName)
 {
 #ifdef WIN32
-  std::cout << "GNUPLOT WORKS ONLT WITH LINUX" << std::endl;
+  std::cout << "GNUPLOT WORKS ONLY WITH LINUX" << std::endl;
 //  exit (EXIT_FAILURE);
   return;
 #endif

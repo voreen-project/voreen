@@ -24,17 +24,18 @@
 #include "unitConverter.h"
 #include "unitConverter.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 //#include "dynamics/advectionDiffusionLatticeDescriptors.h"
 //#include "dynamics/advectionDiffusionLatticeDescriptors.hh"
 
 
 namespace olb {
 
-template class UnitConverter<double,descriptors::D2Q9Descriptor>;
-template class UnitConverter<double,descriptors::D3Q19Descriptor>;
-template class UnitConverter<double,descriptors::AdvectionDiffusionD3Q7Descriptor>;
+template class UnitConverter<double,descriptors::D2Q9<>>;
+template class UnitConverter<double,descriptors::D3Q19<>>;
+template class UnitConverter<double,descriptors::D3Q7<descriptors::VELOCITY>>;
 
-template UnitConverter<double,descriptors::D2Q9Descriptor>* createUnitConverter(const olb::XMLreader&);
+template UnitConverter<double,descriptors::D2Q9<>>* createUnitConverter(const olb::XMLreader&);
+template UnitConverter<double,descriptors::D3Q19<>>* createUnitConverter(const olb::XMLreader&);
 
 }  // namespace olb

@@ -37,9 +37,10 @@ template class SuperIdentity3D<double,double>;
 template class SuperIdentity3D<double,int>;
 template class SuperIdentity3D<double,bool>;
 
-template class SuperLatticeF3D<double,descriptors::D3Q19Descriptor>;
-template class SuperLatticePhysF3D<double,descriptors::D3Q19Descriptor>;
-template class ComposedSuperLatticeF3D<double,descriptors::D3Q19Descriptor>;
+template class SuperLatticeF3D<double,descriptors::D3Q19<>>;
+template class SuperLatticeIdentity3D<double,descriptors::D3Q19<>>;
+template class SuperLatticePhysF3D<double,descriptors::D3Q19<>>;
+template class ComposedSuperLatticeF3D<double,descriptors::D3Q19<>>;
 
 }
 

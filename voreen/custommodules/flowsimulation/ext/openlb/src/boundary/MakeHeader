@@ -23,27 +23,18 @@
 
 generic        := 
 
-precompiled    := boundaryCondition2D \
-                  boundaryCondition3D \
-                  boundaryPostProcessors2D \
+precompiled    := boundaryPostProcessors2D \
                   boundaryPostProcessors3D \
                   extendedFiniteDifferenceBoundary2D \
                   extendedFiniteDifferenceBoundary3D \
                   inamuroAnalyticalDynamics \
-                  inamuroBoundary2D \
-                  inamuroBoundary3D \
                   inamuroNewtonRaphsonDynamics \
                   momentaOnBoundaries2D \
                   momentaOnBoundaries3D \
-                  offBoundaryCondition2D \
-                  offBoundaryCondition3D \
                   offBoundaryPostProcessors2D \
                   offBoundaryPostProcessors3D \
-                  superBoundaryCondition2D \
-                  superBoundaryCondition3D \
-                  superOffBoundaryCondition2D \
-                  superOffBoundaryCondition3D \
-                  zouHeBoundary2D \
-                  zouHeBoundary3D \
-                  zouHeDynamics
+                  zouHeDynamics \
+                  setBoundaryCondition2D \
+                  setBoundaryCondition3D \
+                  
 

@@ -28,70 +28,31 @@
 
 namespace olb {
 
-
-template <typename T, typename S>
-AnalyticalF1D<T,S>::AnalyticalF1D(int n) : GenericF<T,S>(n,1) { }
-
-template <typename T, typename S>
-AnalyticalF2D<T,S>::AnalyticalF2D(int n) : GenericF<T,S>(n,2) { }
-
-template <typename T, typename S>
-AnalyticalF3D<T,S>::AnalyticalF3D(int n) : GenericF<T,S>(n,3) { }
-
-
-// identity to "store results"
-template <typename T, typename S>
-AnalyticalIdentity1D<T,S>::AnalyticalIdentity1D(AnalyticalF1D<T,S>& f)
-  : AnalyticalF1D<T,S>(f.getTargetDim()), _f(f)
+template<unsigned D, typename T, typename S>
+AnalyticalF<D,T,S>::AnalyticalF(int n) : GenericF<T,S>(n,D)
 {
-  this->getName() = _f.getName();
-  std::swap( _f._ptrCalcC, this->_ptrCalcC );
+  static_assert(D==1 || D==2 || D==3, "Only D=1,2,3 allowed.");
 }
 
-template <typename T, typename S>
-bool AnalyticalIdentity1D<T,S>::operator()(T output[], const S input[])
-{
-  _f(output,input);
-  return true;
-}
-
-
 // identity to "store results"
-template <typename T, typename S>
-AnalyticalIdentity2D<T,S>::AnalyticalIdentity2D(AnalyticalF2D<T,S>& f)
-  : AnalyticalF2D<T,S>(f.getTargetDim()), _f(f)
+template<unsigned D, typename T, typename S>
+AnalyticalIdentity<D,T,S>::AnalyticalIdentity(AnalyticalF<D,T,S>& f)
+  : AnalyticalF<D,T,S>(f.getTargetDim()), _f(f)
 {
   this->getName() = _f.getName();
   // pass through the shared_ptr from _f, e.g. an arithemticClass, to the identity
   std::swap( _f._ptrCalcC, this->_ptrCalcC );
 }
 
-template <typename T, typename S>
-bool AnalyticalIdentity2D<T,S>::operator()(T output[], const S input[])
+template<unsigned D, typename T, typename S>
+bool AnalyticalIdentity<D,T,S>::operator()(T output[], const S input[])
 {
   _f(output,input);
   return true;
 }
 
-
-// identity to "store results"
-template <typename T, typename S>
-AnalyticalIdentity3D<T,S>::AnalyticalIdentity3D(AnalyticalF3D<T,S>& f)
-  : AnalyticalF3D<T,S>(f.getTargetDim()), _f(f)
-{
-  this->getName() = _f.getName();
-  std::swap( _f._ptrCalcC, this->_ptrCalcC );
-}
-
-template <typename T, typename S>
-bool AnalyticalIdentity3D<T,S>::operator()(T output[], const S input[])
-{
-  _f(output,input);
-  return true;
-}
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
 template <typename T, typename S>
 AnalyticalFfromIndicatorF3D<T, S>::AnalyticalFfromIndicatorF3D(IndicatorF3D<T>& indicatorF)
   : AnalyticalF3D<T,S>(1), _indicatorF(indicatorF)

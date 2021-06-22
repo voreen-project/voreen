@@ -39,15 +39,15 @@ namespace olb {
 // ===========Shan Chen coupling without wall interaction===================//
 // =========================================================================//
 
-template<typename T, template<typename U> class Lattice>
-class ShanChenDynOmegaForcedPostProcessor3D : public LocalPostProcessor3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ShanChenDynOmegaForcedPostProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   ShanChenDynOmegaForcedPostProcessor3D (
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_,
-    AnalyticalF1D<T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
+    AnalyticalF<1,T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
   ShanChenDynOmegaForcedPostProcessor3D (
     T G_, std::vector<T> rho0_,
-    AnalyticalF1D<T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
+    AnalyticalF<1,T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
   virtual int extent() const
   {
     return 1;
@@ -56,28 +56,29 @@ public:
   {
     return 1;
   }
-  virtual void process(BlockLattice3D<T,Lattice>& blockLattice);
-  virtual void processSubDomain(BlockLattice3D<T,Lattice>& blockLattice,
+  virtual void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice);
+  virtual void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
                                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
 private:
+  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<2,0,0>;
   int x0, x1, y0, y1, z0, z1;
   T G;
   std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
+  AnalyticalF<1,T,T>& interactionPotential;
   std::vector<SpatiallyExtendedObject3D*> partners;
 };
 
-template<typename T, template<typename U> class Lattice>
-class ShanChenDynOmegaForcedGenerator3D : public LatticeCouplingGenerator3D<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ShanChenDynOmegaForcedGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTOR> {
 public:
-  ShanChenDynOmegaForcedGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  ShanChenDynOmegaForcedGenerator3D(T G_, std::vector<T> rho0_, AnalyticalF1D<T,T>& iP_);
-  virtual PostProcessor3D<T,Lattice>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const;
-  virtual LatticeCouplingGenerator3D<T,Lattice>* clone() const;
+  ShanChenDynOmegaForcedGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+  ShanChenDynOmegaForcedGenerator3D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
+  virtual PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const;
+  virtual LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const;
 private:
   T G;
   std::vector<T> rho0;
-  AnalyticalF1D<T,T>& interactionPotential;
+  AnalyticalF<1,T,T>& interactionPotential;
 };
 
 }

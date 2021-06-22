@@ -32,13 +32,14 @@
 namespace olb {
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::SuperLatticeFfromAnalyticalF2D(
-  AnalyticalF2D<T,T>& f, SuperLattice2D<T,DESCRIPTOR>& sLattice)
-  : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, f.getTargetDim()),
-    _f(f)
+  FunctorPtr<AnalyticalF2D<T,T>>&& f,
+  SuperLattice2D<T, DESCRIPTOR>&   sLattice)
+  : SuperLatticeF2D<T, DESCRIPTOR>(sLattice, f->getTargetDim()),
+    _f(std::move(f))
 {
-  this->getName() = "fromAnalyticalF(" + _f.getName() + ")";
+  this->getName() = "fromAnalyticalF(" + _f->getName() + ")";
 
   LoadBalancer<T>&     load   = sLattice.getLoadBalancer();
   CuboidGeometry2D<T>& cuboid = sLattice.getCuboidGeometry();
@@ -46,15 +47,14 @@ SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::SuperLatticeFfromAnalyticalF2D(
   for (int iC = 0; iC < load.size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticeFfromAnalyticalF2D<T,DESCRIPTOR>(
-        _f,
+        *_f,
         sLattice.getExtendedBlockLattice(iC),
-        cuboid.get(load.glob(iC)),
-        sLattice.getOverlap())
+        cuboid.get(load.glob(iC)))
     );
   }
 }
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::operator()(T output[], const int input[])
 {
   T physR[2] = {};
@@ -63,34 +63,24 @@ bool SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::operator()(T output[], const 
 }
 
 
-template<typename T, template<typename U> class DESCRIPTOR>
+template<typename T, typename DESCRIPTOR>
 BlockLatticeFfromAnalyticalF2D<T, DESCRIPTOR>::BlockLatticeFfromAnalyticalF2D(
   AnalyticalF2D<T, T>&                    f,
   BlockLatticeStructure2D<T, DESCRIPTOR>& lattice,
-  Cuboid2D<T>&                            cuboid,
-  int                                     overlap)
+  Cuboid2D<T>&                            cuboid)
   : BlockLatticeF2D<T, DESCRIPTOR>(lattice, f.getTargetDim()),
     _f(f),
-    _cuboid(cuboid, overlap),
-    _overlap(overlap)
+    _cuboid(cuboid)
 {
   this->getName() = "blockFfromAnalyticalF(" + _f.getName() + ")";
 }
 
-template<typename T, template<typename U> class DESCRIPTOR>
+template<typename T, typename DESCRIPTOR>
 bool BlockLatticeFfromAnalyticalF2D<T, DESCRIPTOR>::operator()(
   T output[], const int input[])
 {
-  const int blockInput[2] = {
-    input[0] + _overlap,
-    input[1] + _overlap
-  };
-
-  OLB_PRECONDITION(blockInput[0] < _cuboid.getNx());
-  OLB_PRECONDITION(blockInput[1] < _cuboid.getNy());
-
   T physR[2] = {};
-  _cuboid.getPhysR(physR,blockInput);
+  _cuboid.getPhysR(physR,input);
   return _f(output,physR);
 }
 

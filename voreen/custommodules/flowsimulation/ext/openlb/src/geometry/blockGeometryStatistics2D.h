@@ -75,9 +75,9 @@ private:
   /// class specific cout
   mutable OstreamManager clout;
 
-public:
+  const BlockGeometryStatistics2D<T>* const_this;
 
-  /// Constructor
+public:
   BlockGeometryStatistics2D(BlockGeometryStructure2D<T>* blockGeometry);
 
   /// Read and write access to a flag, which indicates if an uptate is needed (=true)
@@ -86,50 +86,67 @@ public:
   bool const & getStatisticsStatus() const;
   /// Returns the map with the numbers of voxels for each  material
   std::map<int, int> getMaterial2n();
+  std::map<int, int> getMaterial2n() const;
 
   /// Updates the statistics if it is really needed
   void update(bool verbose=true);
 
   /// Returns the number of different materials
   int getNmaterials();
+  int getNmaterials() const;
   /// Returns the number of voxels for a given material number
   int getNvoxel(int material);
+  int getNvoxel(int material) const ;
   /// Returns the number of voxels with material!=0
   int getNvoxel();
+  int getNvoxel() const;
   /// Returns the min. lattice position in each direction
   std::vector<int> getMinLatticeR(int material);
+  std::vector<int> getMinLatticeR(int material) const;
   /// Returns the max. lattice position in each direction
   std::vector<int> getMaxLatticeR(int material);
+  std::vector<int> getMaxLatticeR(int material) const;
   /// Returns the min. phys position in each direction
-  std::vector<T> getMinPhysR(int material);
+  std::vector<T> getMinPhysR(int material) const;
   /// Returns the max. phys position in each direction
-  std::vector<T> getMaxPhysR(int material);
+  std::vector<T> getMaxPhysR(int material) const;
   /// Returns the lattice extend as length in each direction
   std::vector<T> getLatticeExtend(int material);
+  std::vector<T> getLatticeExtend(int material) const;
   /// Returns the phys extend as length in each direction
   std::vector<T> getPhysExtend(int material);
+  std::vector<T> getPhysExtend(int material) const;
   /// Returns the phys radius as length in each direction
   std::vector<T> getPhysRadius(int material);
+  std::vector<T> getPhysRadius(int material) const;
   /// Returns the center position
   std::vector<T> getCenterPhysR(int material);
+  std::vector<T> getCenterPhysR(int material) const;
   /// Returns the boundary type which is characterized by a discrete normal (c.f. Zimny)
-  std::vector<int> getType(int iX, int iY);
+  std::vector<int> getType(int iX, int iY) const;
 
   /// Returns normal that points into the fluid for paraxial surfaces
   std::vector<int> computeNormal(int iX, int iY);
+  std::vector<int> computeNormal(int iX, int iY) const;
   /// Returns normal that points into the fluid for paraxial surfaces
   std::vector<T> computeNormal (int material);
+  std::vector<T> computeNormal (int material) const;
   /// Returns discrete normal with norm maxNorm that points into the fluid for paraxial surfaces
   /// maxNorm=1.1 implies only normals parallel to the axises
   std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1);
+  std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1) const;
 
   // Returns true if at position (iX,iY,iZ) and in a neighbourhood of size (offsetX,offsetY,offsetZ) only voxels of the given material are found
   bool check(int material, int iX, int iY, unsigned offsetX, unsigned offsetY);
+  bool check(int material, int iX, int iY, unsigned offsetX, unsigned offsetY) const;
+
   // Returns true and a position (iX,iY,iZ) if there is a neighbourhood of size (offsetX,offsetY,offsetZ) around (iX,iY,iZ) with only voxels of the given material
   bool find(int material, unsigned offsetX, unsigned offsetY, int& iX, int& iY);
+  bool find(int material, unsigned offsetX, unsigned offsetY, int& iX, int& iY) const;
 
   /// Prints some statistic information, i.e. the number of voxels and min. max. physical position for each different material
   void print();
+  void print() const;
 
 private:
 

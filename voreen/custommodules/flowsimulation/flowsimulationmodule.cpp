@@ -26,6 +26,7 @@
 #include "flowsimulationmodule.h"
 
 // processors
+#include "processors/features/wallshearstress.h"
 #include "processors/geometry/geometryclose.h"
 #include "processors/geometry/geometrysmoothnormals.h"
 #include "processors/render/unalignedsliceviewer.h"
@@ -59,7 +60,6 @@
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
-#include "processors/features/wallshearstressextractor.h"
 #include "processors/simulation/flowsimulation.h"
 #include "processors/geometry/geometryinsidetest.h"
 #endif
@@ -94,6 +94,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new VolumeMerger());
     registerProcessor(new VolumeNoise());
     registerProcessor(new VolumeSelectorMultiChannel());
+    registerProcessor(new WallShearStress());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerProcessor(new FlowIndicatorDetection());
 #endif
@@ -102,7 +103,6 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new FlowIndicatorAnalysis());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
-    registerProcessor(new WallShearStressExtractor());
     registerProcessor(new GeometryInsideTest());
     registerProcessor(new FlowSimulation());
 #endif

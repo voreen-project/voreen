@@ -37,7 +37,7 @@
 namespace olb {
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 RotatingForceField3D<T,DESCRIPTOR>::RotatingForceField3D
 (SuperLattice3D<T,DESCRIPTOR>& sLattice_, SuperGeometry3D<T>& superGeometry_,
  const UnitConverter<T,DESCRIPTOR>& converter_, std::vector<T> axisPoint_,
@@ -52,7 +52,7 @@ RotatingForceField3D<T,DESCRIPTOR>::RotatingForceField3D
 }
 
 
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 bool RotatingForceField3D<T,DESCRIPTOR>::operator()(T output[], const int x[])
 {
   std::vector<T> F_centri(3,0);
@@ -83,6 +83,74 @@ bool RotatingForceField3D<T,DESCRIPTOR>::operator()(T output[], const int x[])
     output[0] = (F_coriolis[0]+F_centri[0]) * converter.getConversionFactorTime() / converter.getConversionFactorVelocity();
     output[1] = (F_coriolis[1]+F_centri[1]) * converter.getConversionFactorTime() / converter.getConversionFactorVelocity();
     output[2] = (F_coriolis[2]+F_centri[2]) * converter.getConversionFactorTime() / converter.getConversionFactorVelocity();
+  }
+  return true;
+}
+
+
+template <typename T, typename DESCRIPTOR>
+HarmonicOscillatingRotatingForceField3D<T,DESCRIPTOR>::HarmonicOscillatingRotatingForceField3D
+(SuperLattice3D<T,DESCRIPTOR>& sLattice_, SuperGeometry3D<T>& superGeometry_,
+ const UnitConverter<T,DESCRIPTOR>& converter_, std::vector<T> axisPoint_,
+ std::vector<T> axisDirection_, T amplitude_, T frequency_)
+  : SuperLatticeF3D<T,DESCRIPTOR>(sLattice_,3), sg(superGeometry_),
+    converter(converter_), axisPoint(axisPoint_), axisDirection(axisDirection_),
+    amplitude(amplitude_), resonanceFrequency(2.*4.*std::atan(1.0)*frequency_), w(0.0), dwdt(0.0),
+    velocity(sLattice_,converter_)
+{
+  this->getName() = "harmonicOscillatingrotatingForce";
+}
+
+template <typename T, typename DESCRIPTOR>
+void HarmonicOscillatingRotatingForceField3D<T,DESCRIPTOR>::updateTimeStep(int iT)
+{
+  w = resonanceFrequency * amplitude * cos(resonanceFrequency*converter.getPhysTime(iT));
+  dwdt = -resonanceFrequency * resonanceFrequency * amplitude * sin(resonanceFrequency*converter.getPhysTime(iT));
+}
+
+
+template <typename T, typename DESCRIPTOR>
+bool HarmonicOscillatingRotatingForceField3D<T,DESCRIPTOR>::operator()(T output[], const int x[])
+{
+
+
+  std::vector<T> F_centri(3,0);
+  std::vector<T> F_coriolis(3,0);
+  std::vector<T> F_euler(3,0);
+
+  if ( this->_sLattice.getLoadBalancer().rank(x[0]) == singleton::mpi().getRank() ) {
+    // local coords are given, fetch local cell and compute value(s)
+    std::vector<T> physR(3,T());
+    this->sg.getCuboidGeometry().getPhysR(&(physR[0]),&(x[0]));
+
+    T scalar =  (physR[0]-axisPoint[0])*axisDirection[0]
+                +(physR[1]-axisPoint[1])*axisDirection[1]
+                +(physR[2]-axisPoint[2])*axisDirection[2];
+
+    T r[3];
+    r[0] = physR[0]-axisPoint[0]-scalar*axisDirection[0];
+    r[1] = physR[1]-axisPoint[1]-scalar*axisDirection[1];
+    r[2] = physR[2]-axisPoint[2]-scalar*axisDirection[2];
+
+    F_centri[0] = w*w*(r[0]);
+    F_centri[1] = w*w*(r[1]);
+    F_centri[2] = w*w*(r[2]);
+
+    T _vel[3];
+    (velocity)(_vel,x);
+    F_coriolis[0] = -2*w*(axisDirection[1]*_vel[2]-axisDirection[2]*_vel[1]);
+    F_coriolis[1] = -2*w*(axisDirection[2]*_vel[0]-axisDirection[0]*_vel[2]);
+    F_coriolis[2] = -2*w*(axisDirection[0]*_vel[1]-axisDirection[1]*_vel[0]);
+
+    F_euler[0] = -dwdt*(axisDirection[1]*r[2]-axisDirection[2]*r[1]);
+    F_euler[1] = -dwdt*(axisDirection[2]*r[0]-axisDirection[0]*r[2]);
+    F_euler[2] = -dwdt*(axisDirection[0]*r[1]-axisDirection[1]*r[0]);
+
+
+    // return latticeForce
+    output[0] = (F_coriolis[0]+F_centri[0]+F_euler[0]) * converter.getConversionFactorTime() / converter.getConversionFactorVelocity();
+    output[1] = (F_coriolis[1]+F_centri[1]+F_euler[1]) * converter.getConversionFactorTime() / converter.getConversionFactorVelocity();
+    output[2] = (F_coriolis[2]+F_centri[2]+F_euler[2]) * converter.getConversionFactorTime() / converter.getConversionFactorVelocity();
   }
   return true;
 }

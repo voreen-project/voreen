@@ -25,10 +25,6 @@
  * Groups all include files for the directory genericFunctions.
  */
 
-#include "indicatorBaseF2D.hh"
-#include "indicatorF2D.hh"
-#include "indicCalcF2D.hh"
-
 #include "superIndicatorBaseF2D.hh"
 #include "superIndicatorF2D.hh"
 

@@ -30,30 +30,30 @@ namespace olb {
 
 namespace fd {
 
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int direction, int orientation,
          bool orthogonal>
 struct DirectedGradients2D {
-  static void interpolateVector(T velDeriv[Lattice<T>::d],
-                                BlockLattice2D<T,Lattice> const& blockLattice,
+  static void interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY);
   static void interpolateScalar(T& rhoDeriv,
-                                BlockLattice2D<T,Lattice> const& blockLattice,
+                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY);
 };
 
 // Implementation for orthogonal==true; i.e. the derivative is along
 // the boundary normal.
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int direction, int orientation>
-struct DirectedGradients2D<T, Lattice, direction, orientation, true> {
-  static void interpolateVector(T velDeriv[Lattice<T>::d],
-                                BlockLattice2D<T,Lattice> const& blockLattice,
+struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, true> {
+  static void interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY)
   {
     using namespace fd;
 
-    T u0[Lattice<T>::d], u1[Lattice<T>::d], u2[Lattice<T>::d];
+    T u0[DESCRIPTOR::d], u1[DESCRIPTOR::d], u2[DESCRIPTOR::d];
 
     blockLattice.get(iX,iY).computeU(u0);
     blockLattice.get (
@@ -63,13 +63,13 @@ struct DirectedGradients2D<T, Lattice, direction, orientation, true> {
       iX+(direction==0 ? (-2*orientation):0),
       iY+(direction==1 ? (-2*orientation):0) ).computeU(u2);
 
-    for (int iD=0; iD<Lattice<T>::d; ++iD) {
+    for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
       velDeriv[iD] = -orientation * boundaryGradient(u0[iD], u1[iD], u2[iD]);
     }
   }
 
   static void interpolateScalar(T& rhoDeriv,
-                                BlockLattice2D<T,Lattice> const& blockLattice,
+                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY)
   {
     using namespace fd;
@@ -90,16 +90,16 @@ struct DirectedGradients2D<T, Lattice, direction, orientation, true> {
 
 // Implementation for orthogonal==false; i.e. the derivative is aligned
 // with the boundary.
-template<typename T, template<typename U> class Lattice,
+template<typename T, typename DESCRIPTOR,
          int direction, int orientation>
-struct DirectedGradients2D<T, Lattice, direction, orientation, false> {
-  static void interpolateVector(T velDeriv[Lattice<T>::d],
-                                BlockLattice2D<T,Lattice> const& blockLattice,
+struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, false> {
+  static void interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY)
   {
     using namespace fd;
 
-    T u_p1[Lattice<T>::d], u_m1[Lattice<T>::d];
+    T u_p1[DESCRIPTOR::d], u_m1[DESCRIPTOR::d];
 
     int deriveDirection = 1-direction;
     blockLattice.get (
@@ -109,13 +109,13 @@ struct DirectedGradients2D<T, Lattice, direction, orientation, false> {
       iX+(deriveDirection==0 ? (-1):0),
       iY+(deriveDirection==1 ? (-1):0) ).computeU(u_m1);
 
-    for (int iD=0; iD<Lattice<T>::d; ++iD) {
+    for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
       velDeriv[iD] = fd::centralGradient(u_p1[iD],u_m1[iD]);
     }
   }
 
   static void  interpolateScalar(T& rhoDeriv,
-                                 BlockLattice2D<T,Lattice> const& blockLattice,
+                                 BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
                                  int iX, int iY)
   {
     using namespace fd;

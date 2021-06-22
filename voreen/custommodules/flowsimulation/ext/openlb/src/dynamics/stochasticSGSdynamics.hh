@@ -57,10 +57,10 @@ namespace olb {
 
 
 
-template<typename T, template<typename U> class Lattice>
-StochasticSGSdynamics<T,Lattice>::StochasticSGSdynamics (
-  T omega_, Momenta<T,Lattice>& momenta_, T turbulenceInt_, T charU_, T smagoConst_, T dx_, T dt_)
-  : MRTdynamics<T,Lattice>(omega_, momenta_),
+template<typename T, typename DESCRIPTOR>
+StochasticSGSdynamics<T,DESCRIPTOR>::StochasticSGSdynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_, T turbulenceInt_, T charU_, T smagoConst_, T dx_, T dt_)
+  : MRTdynamics<T,DESCRIPTOR>(omega_, momenta_),
     turbulenceInt(turbulenceInt_),
     smagoConst(smagoConst_),
     charU(charU_),
@@ -68,26 +68,26 @@ StochasticSGSdynamics<T,Lattice>::StochasticSGSdynamics (
 
 {
 
-  //    T invM_S_SGS[Lattice<T>::q][Lattice<T>::q];
-  //    T rtSGS[Lattice<T>::q]; // relaxation times vector for SGS approach.
-  //    for (int iPop  = 0; iPop < Lattice<T>::q; ++iPop)
+  //    T invM_S_SGS[DESCRIPTOR::q][DESCRIPTOR::q];
+  //    T rtSGS[DESCRIPTOR::q]; // relaxation times vector for SGS approach.
+  //    for (int iPop  = 0; iPop < DESCRIPTOR::q; ++iPop)
   //    {
-  //      rtSGS[iPop] = Lattice<T>::S[iPop];
+  //      rtSGS[iPop] = DESCRIPTOR::S[iPop];
   //    }
-  //    for (int iPop  = 0; iPop < Lattice<T>::shearIndexes; ++iPop)
+  //    for (int iPop  = 0; iPop < DESCRIPTOR::shearIndexes; ++iPop)
   //    {
-  //      rtSGS[Lattice<T>::shearViscIndexes[iPop]] = omega;
+  //      rtSGS[DESCRIPTOR::shearViscIndexes[iPop]] = omega;
   //    }
-  //    for (int iPop = 0; iPop < Lattice<T>::q; ++iPop)
+  //    for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop)
   //    {
-  //      for (int jPop = 0; jPop < Lattice<T>::q; ++jPop)
+  //      for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop)
   //      {
   //        invM_S_SGS[iPop][jPop] = T();
-  //        for (int kPop = 0; kPop < Lattice<T>::q; ++kPop)
+  //        for (int kPop = 0; kPop < DESCRIPTOR::q; ++kPop)
   //        {
   //          if (kPop == jPop)
   //          {
-  //            invM_S_SGS[iPop][jPop] += Lattice<T>::invM[iPop][kPop] *
+  //            invM_S_SGS[iPop][jPop] += DESCRIPTOR::invM[iPop][kPop] *
   //                                  rtSGS[kPop];
   //            cout << "wert"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< endl;
   //          }
@@ -100,12 +100,12 @@ StochasticSGSdynamics<T,Lattice>::StochasticSGSdynamics (
 }
 
 
-template<typename T, template<typename U> class Lattice>
-void StochasticSGSdynamics<T,Lattice>::collide(
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void StochasticSGSdynamics<T,DESCRIPTOR>::collide(
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  T rho, u[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
 
 
 
@@ -124,20 +124,20 @@ void StochasticSGSdynamics<T,Lattice>::collide(
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi, X_lang_n);
 
 
-  T invM_S_SGS[Lattice<T>::q][Lattice<T>::q];
-  T rtSGS[Lattice<T>::q]; // relaxation times vector for SGS approach.
-  for (int iPop  = 0; iPop < Lattice<T>::q; ++iPop) {
-    rtSGS[iPop] = Lattice<T>::S[iPop];
+  T invM_S_SGS[DESCRIPTOR::q][DESCRIPTOR::q];
+  T rtSGS[DESCRIPTOR::q]; // relaxation times vector for SGS approach.
+  for (int iPop  = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    rtSGS[iPop] = DESCRIPTOR::S[iPop];
   }
-  for (int iPop  = 0; iPop < Lattice<T>::shearIndexes; ++iPop) {
-    rtSGS[Lattice<T>::shearViscIndexes[iPop]] = newOmega;
+  for (int iPop  = 0; iPop < DESCRIPTOR::shearIndexes; ++iPop) {
+    rtSGS[DESCRIPTOR::shearViscIndexes[iPop]] = newOmega;
   }
-  for (int iPop = 0; iPop < Lattice<T>::q; ++iPop) {
-    for (int jPop = 0; jPop < Lattice<T>::q; ++jPop) {
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    for (int jPop = 0; jPop < DESCRIPTOR::q; ++jPop) {
       invM_S_SGS[iPop][jPop] = T();
-      for (int kPop = 0; kPop < Lattice<T>::q; ++kPop) {
+      for (int kPop = 0; kPop < DESCRIPTOR::q; ++kPop) {
         if (kPop == jPop) {
-          invM_S_SGS[iPop][jPop] += Lattice<T>::invM[iPop][kPop] *
+          invM_S_SGS[iPop][jPop] += DESCRIPTOR::invM[iPop][kPop] *
                                     rtSGS[kPop];
           //cout << "wert"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< endl;
         }
@@ -145,68 +145,21 @@ void StochasticSGSdynamics<T,Lattice>::collide(
     }
   }
 
-  T uSqr = mrtHelpers<T,Lattice>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
+  T uSqr = mrtHelpers<T,DESCRIPTOR>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
   statistics.incrementStats(rho, uSqr);
 }
 
-
-
-// template<typename T, template<typename U> class Lattice>
-// void StochasticSGSdynamics<T,Lattice>::staticCollide(
-//   Cell<T,Lattice>& cell,
-//   const T u[Lattice<T>::d],
-//   LatticeStatistics<T>& statistics/*, T charU, T drift, T result */)
-// {
-
-//   T X_lang_n = getRandomWalk(cell,charU, drift, result );
-//   T rho, uTemp[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
-//   this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
-//   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi,  X_lang_n);
-
-// //  T invM_S_SGS_new[Lattice<T>::q][Lattice<T>::q];
-//   T invM_S_SGS[Lattice<T>::q][Lattice<T>::q];
-//     T rtSGS[Lattice<T>::q]; // relaxation times vector for SGS approach.
-//     for (int iPop  = 0; iPop < Lattice<T>::q; ++iPop)
-//     {
-//       rtSGS[iPop] = Lattice<T>::S[iPop];
-//     }
-//     for (int iPop  = 0; iPop < Lattice<T>::shearIndexes; ++iPop)
-//     {
-//       rtSGS[Lattice<T>::shearViscIndexes[iPop]] = newOmega;
-//     }
-//     for (int iPop = 0; iPop < Lattice<T>::q; ++iPop)
-//     {
-//       for (int jPop = 0; jPop < Lattice<T>::q; ++jPop)
-//       {
-//         invM_S_SGS[iPop][jPop] = T();
-//         for (int kPop = 0; kPop < Lattice<T>::q; ++kPop)
-//         {
-//           if (kPop == jPop)
-//           {
-//             invM_S_SGS[iPop][jPop] += Lattice<T>::invM[iPop][kPop] *
-//                                   rtSGS[kPop];
-//             cout << "wert2"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< endl;
-//           }
-//         }
-//       }
-//     }
-
-//   T uSqr = mrtHelpers<T,Lattice>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
-//   statistics.incrementStats(rho, uSqr);
-// }
-
-
-template<typename T, template<typename U> class Lattice>
-void StochasticSGSdynamics<T,Lattice>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR>
+void StochasticSGSdynamics<T,DESCRIPTOR>::setOmega(T omega)
 {
   this->setOmega(omega);
   preFactor = computePreFactor(omega, smagoConst);
 }
 
-template<typename T, template<typename U> class Lattice>
-T StochasticSGSdynamics<T,Lattice>::getSmagorinskyOmega(Cell<T,Lattice>& cell, T X_lang_n )
+template<typename T, typename DESCRIPTOR>
+T StochasticSGSdynamics<T,DESCRIPTOR>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell, T X_lang_n )
 {
-  T rho, uTemp[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, uTemp[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
   this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi, X_lang_n);
   return newOmega;
@@ -214,9 +167,9 @@ T StochasticSGSdynamics<T,Lattice>::getSmagorinskyOmega(Cell<T,Lattice>& cell, T
 
 
 
-template<typename T, template<typename U> class Lattice>
-T StochasticSGSdynamics<T,Lattice>::getRandBMTrans(
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+T StochasticSGSdynamics<T,DESCRIPTOR>::getRandBMTrans(
+  Cell<T,DESCRIPTOR>& cell,
   T turbulenceInt, T CharU )
 {
   /// Random number generator based on Box Müller transform to produuce random normal
@@ -251,9 +204,9 @@ T StochasticSGSdynamics<T,Lattice>::getRandBMTrans(
 
 
 /// Create Random walk
-template<typename T, template<typename U> class Lattice>
-T StochasticSGSdynamics<T,Lattice>::getRandomWalk(
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+T StochasticSGSdynamics<T,DESCRIPTOR>::getRandomWalk(
+  Cell<T,DESCRIPTOR>& cell,
   T drift, T result)
 {
   /// initialisation of model standard variation, see Pope pp 484
@@ -268,9 +221,9 @@ T StochasticSGSdynamics<T,Lattice>::getRandomWalk(
 }
 /// set random walk
 
-// template<typename T, template<typename U> class Lattice>
-// void StochasticSGSdynamics<T,Lattice>::setRandomWalk(
-//   Cell<T,Lattice>& cell,
+// template<typename T, typename DESCRIPTOR>
+// void StochasticSGSdynamics<T,DESCRIPTOR>::setRandomWalk(
+//   Cell<T,DESCRIPTOR>& cell,
 //   T CharU, T drift, T result )
 // {
 //   /// initialisation of model standard variation, see Pope pp 484
@@ -279,13 +232,13 @@ T StochasticSGSdynamics<T,Lattice>::getRandomWalk(
 
 
 // /// get time sclae
-template<typename T, template<typename U> class Lattice>
-T StochasticSGSdynamics<T,Lattice>::computeTimeScale(
-  T preFactor, T rho, T pi[util::TensorVal<Lattice<T> >::n], T smagoConst, T X_lang_n  )
+template<typename T, typename DESCRIPTOR>
+T StochasticSGSdynamics<T,DESCRIPTOR>::computeTimeScale(
+  T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n], T smagoConst, T X_lang_n  )
 {
   T Const = 0.2;
   T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
-  if (util::TensorVal<Lattice<T> >::n == 6) {
+  if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
   T PiNeqNorm    = sqrt(PiNeqNormSqr);
@@ -303,25 +256,25 @@ T StochasticSGSdynamics<T,Lattice>::computeTimeScale(
 
 
 // // // /// set timescale
-// template<typename T, template<typename U> class Lattice>
-// void StochasticSGSdynamics<T,Lattice>::setTimeScale(
-//   T preFactor, T rho, T pi[util::TensorVal<Lattice<T> >::n], T smagoConst, T X_lang_n)
+// template<typename T, typename DESCRIPTOR>
+// void StochasticSGSdynamics<T,DESCRIPTOR>::setTimeScale(
+//   T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n], T smagoConst, T X_lang_n)
 // {
 //   T drift = computeTimeScale(preFactor, rho, pi, smagoConst, X_lang_n);
 // }
 
 
-template<typename T, template<typename U> class Lattice>
-T StochasticSGSdynamics<T,Lattice>::computePreFactor(T omega, T smagoConst)
+template<typename T, typename DESCRIPTOR>
+T StochasticSGSdynamics<T,DESCRIPTOR>::computePreFactor(T omega, T smagoConst)
 {
-  return (T)smagoConst*smagoConst*Lattice<T>::invCs2*Lattice<T>::invCs2*2*sqrt(2);
+  return (T)smagoConst*smagoConst*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*sqrt(2);
 }
 
-template<typename T, template<typename U> class Lattice>
-T StochasticSGSdynamics<T,Lattice>::computeOmega(T omega0, T preFactor, T rho, T pi[util::TensorVal<Lattice<T> >::n], T X_lang_n)
+template<typename T, typename DESCRIPTOR>
+T StochasticSGSdynamics<T,DESCRIPTOR>::computeOmega(T omega0, T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n], T X_lang_n)
 {
   T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
-  if (util::TensorVal<Lattice<T> >::n == 6) {
+  if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
   T PiNeqNorm    = sqrt(PiNeqNormSqr);

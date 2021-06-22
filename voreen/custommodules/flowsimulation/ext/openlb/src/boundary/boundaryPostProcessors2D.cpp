@@ -28,39 +28,51 @@
 #include "core/postProcessing.h"
 #include "core/postProcessing.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+#include "core/cell.hh"
 
 
 namespace olb {
 
-template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          0,1>;
-template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 0,1>;
-template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          0,-1>;
-template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 0,-1>;
-template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          1,1>;
-template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 1,1>;
-template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          1,-1>;
-template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 1,-1>;
+template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9<>,          0,1>;
+template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 0,1>;
+template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9<>,          0,-1>;
+template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 0,-1>;
+template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9<>,          1,1>;
+template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 1,1>;
+template class StraightFdBoundaryProcessor2D<double, descriptors::D2Q9<>,          1,-1>;
+template class StraightFdBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 1,-1>;
 
-template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          0,1>;
-template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 0,1>;
-template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          0,-1>;
-template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 0,-1>;
-template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          1,1>;
-template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 1,1>;
-template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9Descriptor,          1,-1>;
-template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor, 1,-1>;
+template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9<>,          0,1>;
+template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 0,1>;
+template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9<>,          0,-1>;
+template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 0,-1>;
+template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9<>,          1,1>;
+template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 1,1>;
+template class StraightConvectionBoundaryProcessor2D<double, descriptors::D2Q9<>,          1,-1>;
+template class StraightConvectionBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>, 1,-1>;
 
-template class SlipBoundaryProcessor2D<double, descriptors::D2Q9Descriptor>;
-template class SlipBoundaryProcessorGenerator2D<double, descriptors::D2Q9Descriptor>;
+template class SlipBoundaryProcessor2D<double, descriptors::D2Q9<>>;
+template class SlipBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>>;
 
-template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9Descriptor, 1,1>;
-template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9Descriptor, 1,1>;
-template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9Descriptor, 1,-1>;
-template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9Descriptor, 1,-1>;
-template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9Descriptor,-1,1>;
-template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9Descriptor,-1,1>;
-template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9Descriptor,-1,-1>;
-template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9Descriptor,-1,-1>;
+template class PartialSlipBoundaryProcessor2D<double, descriptors::D2Q9<>>;
+template class PartialSlipBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>>;
+
+template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9<>, 1,1>;
+template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9<>, 1,1>;
+template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9<>, 1,-1>;
+template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9<>, 1,-1>;
+template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9<>,-1,1>;
+template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9<>,-1,1>;
+template class OuterVelocityCornerProcessor2D          <double, descriptors::D2Q9<>,-1,-1>;
+template class OuterVelocityCornerProcessorGenerator2D <double, descriptors::D2Q9<>,-1,-1>;
+
+template class FreeEnergyWallProcessor2D<double, descriptors::D2Q9<>>;
+template class FreeEnergyWallProcessorGenerator2D<double, descriptors::D2Q9<>>;
+
+template class FreeEnergyChemPotBoundaryProcessor2D<double, descriptors::D2Q9<>>;
+template class FreeEnergyChemPotBoundaryProcessorGenerator2D<double, descriptors::D2Q9<>>;
+
+template class FreeEnergyConvectiveProcessor2D<double, descriptors::D2Q9<>>;
+template class FreeEnergyConvectiveProcessorGenerator2D<double, descriptors::D2Q9<>>;
 
 }  // namespace olb

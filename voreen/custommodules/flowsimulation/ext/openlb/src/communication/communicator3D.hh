@@ -52,7 +52,6 @@ Communicator3D<T>::Communicator3D(SuperStructure3D<T>& superStructure):_superStr
 template<typename T>
 void Communicator3D<T>::init_nh()
 {
-
   _nC = _superStructure.getCuboidGeometry().getNc();
 
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
@@ -64,14 +63,12 @@ void Communicator3D<T>::init_nh()
 template<typename T>
 void Communicator3D<T>::add_cell(int iCloc, int iX, int iY, int iZ)
 {
-
   _nh[iCloc].add_inCell(iX,iY,iZ);
 }
 
 template<typename T>
 void Communicator3D<T>::add_cells(int overlap)
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].add_inCells(overlap);
   }
@@ -80,7 +77,6 @@ void Communicator3D<T>::add_cells(int overlap)
 template<typename T>
 void Communicator3D<T>::init()
 {
-
   reset();
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].init_inCN();
@@ -106,17 +102,18 @@ void Communicator3D<T>::init()
   }
 
 #ifdef PARALLEL_MODE_MPI
+  std::vector<singleton::MpiNonBlockingHelper> helper(_superStructure.getLoadBalancer().size());
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].finish_comm();
   }
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
-    _nh[iC].bufSend_inCells();
+    _nh[iC].bufSend_inCells(helper[iC]);
   }
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].recWrite_outCells();
   }
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
-    _nh[iC].finish_comm();
+    singleton::mpi().waitAll(helper[iC]);
   }
 #endif
 }
@@ -124,7 +121,6 @@ void Communicator3D<T>::init()
 template<typename T>
 void Communicator3D<T>::reset()
 {
-
   if (_initDone) {
     for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
       _nh[iC].reset();
@@ -136,7 +132,6 @@ void Communicator3D<T>::reset()
 template<typename T>
 void Communicator3D<T>::send()
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].buffer_outData();
 #ifdef PARALLEL_MODE_MPI
@@ -148,7 +143,6 @@ void Communicator3D<T>::send()
 template<typename T>
 void Communicator3D<T>::receive()
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
 #ifdef PARALLEL_MODE_MPI
     _nh[iC].receive_inData();
@@ -169,7 +163,6 @@ void Communicator3D<T>::receive()
 template<typename T>
 void Communicator3D<T>::write()
 {
-
   for (int iC=0; iC<_superStructure.getLoadBalancer().size(); iC++) {
     _nh[iC].write_inData();
   }

@@ -26,14 +26,14 @@
 #include "core/postProcessing.h"
 #include "core/postProcessing.hh"
 #include "latticeDescriptors.h"
-#include "latticeDescriptors.hh"
+
 //#include "advectionDiffusionLatticeDescriptors.h"
 //#include "advectionDiffusionLatticeDescriptors.hh"
 
 
 namespace olb {
 
-template class ConvectionBoundaryProcessor3D<double, descriptors::AdvectionDiffusionD3Q7Descriptor>;
-template class ConvectionBoundaryProcessorGenerator3D<double, descriptors::AdvectionDiffusionD3Q7Descriptor>;
+template class ConvectionBoundaryProcessor3D<double, descriptors::D3Q7<descriptors::VELOCITY>>;
+template class ConvectionBoundaryProcessorGenerator3D<double, descriptors::D3Q7<descriptors::VELOCITY>>;
 
 }  // namespace olb

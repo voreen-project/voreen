@@ -54,15 +54,13 @@ void TiXmlBase::EncodeString( const TIXML_STRING& str, TIXML_STRING* outString )
 {
   int i=0;
 
-  while( i<(int)str.length() )
-  {
+  while ( i<(int)str.length() ) {
     unsigned char c = (unsigned char) str[i];
 
     if (    c == '&'
             && i < ( (int)str.length() - 2 )
             && str[i+1] == '#'
-            && str[i+2] == 'x' )
-    {
+            && str[i+2] == 'x' ) {
       // Hexadecimal character reference.
       // Pass through unchanged.
       // &#xA9; -- copyright symbol, for example.
@@ -73,8 +71,7 @@ void TiXmlBase::EncodeString( const TIXML_STRING& str, TIXML_STRING* outString )
       // while fails (error case) and break (semicolon found).
       // However, there is no mechanism (currently) for
       // this function to return an error.
-      while ( i<(int)str.length()-1 )
-      {
+      while ( i<(int)str.length()-1 ) {
         outString->append( str.c_str() + i, 1 );
         ++i;
         if ( str[i] == ';' ) {
@@ -82,33 +79,27 @@ void TiXmlBase::EncodeString( const TIXML_STRING& str, TIXML_STRING* outString )
         }
       }
     }
-    else if ( c == '&' )
-    {
+    else if ( c == '&' ) {
       outString->append( entity[0].str, entity[0].strLength );
       ++i;
     }
-    else if ( c == '<' )
-    {
+    else if ( c == '<' ) {
       outString->append( entity[1].str, entity[1].strLength );
       ++i;
     }
-    else if ( c == '>' )
-    {
+    else if ( c == '>' ) {
       outString->append( entity[2].str, entity[2].strLength );
       ++i;
     }
-    else if ( c == '\"' )
-    {
+    else if ( c == '\"' ) {
       outString->append( entity[3].str, entity[3].strLength );
       ++i;
     }
-    else if ( c == '\'' )
-    {
+    else if ( c == '\'' ) {
       outString->append( entity[4].str, entity[4].strLength );
       ++i;
     }
-    else if ( c < 32 )
-    {
+    else if ( c < 32 ) {
       // Easy pass at non-alpha/numeric/symbol
       // Below 32 is symbolic.
       char buf[ 32 ];
@@ -124,8 +115,7 @@ void TiXmlBase::EncodeString( const TIXML_STRING& str, TIXML_STRING* outString )
       outString->append( buf, (int)strlen( buf ) );
       ++i;
     }
-    else
-    {
+    else {
       //char realc = (char) c;
       //outString->append( &realc, 1 );
       *outString += (char) c; // somewhat more efficient function call.
@@ -151,8 +141,7 @@ TiXmlNode::~TiXmlNode()
   TiXmlNode* node = firstChild;
   TiXmlNode* temp = nullptr;
 
-  while ( node )
-  {
+  while ( node ) {
     temp = node;
     node = node->next;
     delete temp;
@@ -173,8 +162,7 @@ void TiXmlNode::Clear()
   TiXmlNode* node = firstChild;
   TiXmlNode* temp = nullptr;
 
-  while ( node )
-  {
+  while ( node ) {
     temp = node;
     node = node->next;
     delete temp;
@@ -190,8 +178,7 @@ TiXmlNode* TiXmlNode::LinkEndChild( TiXmlNode* node )
   assert( node->parent == nullptr || node->parent == this );
   assert( node->GetDocument() == nullptr || node->GetDocument() == this->GetDocument() );
 
-  if ( node->Type() == TiXmlNode::TINYXML_DOCUMENT )
-  {
+  if ( node->Type() == TiXmlNode::TINYXML_DOCUMENT ) {
     delete node;
     if ( GetDocument() ) {
       GetDocument()->SetError( TIXML_ERROR_DOCUMENT_TOP_ONLY, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
@@ -218,8 +205,7 @@ TiXmlNode* TiXmlNode::LinkEndChild( TiXmlNode* node )
 
 TiXmlNode* TiXmlNode::InsertEndChild( const TiXmlNode& addThis )
 {
-  if ( addThis.Type() == TiXmlNode::TINYXML_DOCUMENT )
-  {
+  if ( addThis.Type() == TiXmlNode::TINYXML_DOCUMENT ) {
     if ( GetDocument() ) {
       GetDocument()->SetError( TIXML_ERROR_DOCUMENT_TOP_ONLY, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
     }
@@ -239,8 +225,7 @@ TiXmlNode* TiXmlNode::InsertBeforeChild( TiXmlNode* beforeThis, const TiXmlNode&
   if ( !beforeThis || beforeThis->parent != this ) {
     return nullptr;
   }
-  if ( addThis.Type() == TiXmlNode::TINYXML_DOCUMENT )
-  {
+  if ( addThis.Type() == TiXmlNode::TINYXML_DOCUMENT ) {
     if ( GetDocument() ) {
       GetDocument()->SetError( TIXML_ERROR_DOCUMENT_TOP_ONLY, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
     }
@@ -255,12 +240,10 @@ TiXmlNode* TiXmlNode::InsertBeforeChild( TiXmlNode* beforeThis, const TiXmlNode&
 
   node->next = beforeThis;
   node->prev = beforeThis->prev;
-  if ( beforeThis->prev )
-  {
+  if ( beforeThis->prev ) {
     beforeThis->prev->next = node;
   }
-  else
-  {
+  else {
     assert( firstChild == beforeThis );
     firstChild = node;
   }
@@ -274,8 +257,7 @@ TiXmlNode* TiXmlNode::InsertAfterChild( TiXmlNode* afterThis, const TiXmlNode& a
   if ( !afterThis || afterThis->parent != this ) {
     return nullptr;
   }
-  if ( addThis.Type() == TiXmlNode::TINYXML_DOCUMENT )
-  {
+  if ( addThis.Type() == TiXmlNode::TINYXML_DOCUMENT ) {
     if ( GetDocument() ) {
       GetDocument()->SetError( TIXML_ERROR_DOCUMENT_TOP_ONLY, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
     }
@@ -290,12 +272,10 @@ TiXmlNode* TiXmlNode::InsertAfterChild( TiXmlNode* afterThis, const TiXmlNode& a
 
   node->prev = afterThis;
   node->next = afterThis->next;
-  if ( afterThis->next )
-  {
+  if ( afterThis->next ) {
     afterThis->next->prev = node;
   }
-  else
-  {
+  else {
     assert( lastChild == afterThis );
     lastChild = node;
   }
@@ -357,8 +337,7 @@ bool TiXmlNode::RemoveChild( TiXmlNode* removeThis )
     return false;
   }
 
-  if ( removeThis->parent != this )
-  {
+  if ( removeThis->parent != this ) {
     assert( 0 );
     return false;
   }
@@ -384,8 +363,7 @@ bool TiXmlNode::RemoveChild( TiXmlNode* removeThis )
 const TiXmlNode* TiXmlNode::FirstChild( const char * _value ) const
 {
   const TiXmlNode* node;
-  for ( node = firstChild; node; node = node->next )
-  {
+  for ( node = firstChild; node; node = node->next ) {
     if ( strcmp( node->Value(), _value ) == 0 ) {
       return node;
     }
@@ -397,8 +375,7 @@ const TiXmlNode* TiXmlNode::FirstChild( const char * _value ) const
 const TiXmlNode* TiXmlNode::LastChild( const char * _value ) const
 {
   const TiXmlNode* node;
-  for ( node = lastChild; node; node = node->prev )
-  {
+  for ( node = lastChild; node; node = node->prev ) {
     if ( strcmp( node->Value(), _value ) == 0 ) {
       return node;
     }
@@ -409,12 +386,10 @@ const TiXmlNode* TiXmlNode::LastChild( const char * _value ) const
 
 const TiXmlNode* TiXmlNode::IterateChildren( const TiXmlNode* previous ) const
 {
-  if ( !previous )
-  {
+  if ( !previous ) {
     return FirstChild();
   }
-  else
-  {
+  else {
     assert( previous->parent == this );
     return previous->NextSibling();
   }
@@ -423,12 +398,10 @@ const TiXmlNode* TiXmlNode::IterateChildren( const TiXmlNode* previous ) const
 
 const TiXmlNode* TiXmlNode::IterateChildren( const char * val, const TiXmlNode* previous ) const
 {
-  if ( !previous )
-  {
+  if ( !previous ) {
     return FirstChild( val );
   }
-  else
-  {
+  else {
     assert( previous->parent == this );
     return previous->NextSibling( val );
   }
@@ -438,8 +411,7 @@ const TiXmlNode* TiXmlNode::IterateChildren( const char * val, const TiXmlNode* 
 const TiXmlNode* TiXmlNode::NextSibling( const char * _value ) const
 {
   const TiXmlNode* node;
-  for ( node = next; node; node = node->next )
-  {
+  for ( node = next; node; node = node->next ) {
     if ( strcmp( node->Value(), _value ) == 0 ) {
       return node;
     }
@@ -451,8 +423,7 @@ const TiXmlNode* TiXmlNode::NextSibling( const char * _value ) const
 const TiXmlNode* TiXmlNode::PreviousSibling( const char * _value ) const
 {
   const TiXmlNode* node;
-  for ( node = prev; node; node = node->prev )
-  {
+  for ( node = prev; node; node = node->prev ) {
     if ( strcmp( node->Value(), _value ) == 0 ) {
       return node;
     }
@@ -469,8 +440,7 @@ void TiXmlElement::RemoveAttribute( const char * name )
 #else
   TiXmlAttribute* node = attributeSet.Find( name );
 #endif
-  if ( node )
-  {
+  if ( node ) {
     attributeSet.Remove( node );
     delete node;
   }
@@ -482,8 +452,7 @@ const TiXmlElement* TiXmlNode::FirstChildElement() const
 
   for ( node = FirstChild();
         node;
-        node = node->NextSibling() )
-  {
+        node = node->NextSibling() ) {
     if ( node->ToElement() ) {
       return node->ToElement();
     }
@@ -498,8 +467,7 @@ const TiXmlElement* TiXmlNode::FirstChildElement( const char * _value ) const
 
   for ( node = FirstChild( _value );
         node;
-        node = node->NextSibling( _value ) )
-  {
+        node = node->NextSibling( _value ) ) {
     if ( node->ToElement() ) {
       return node->ToElement();
     }
@@ -514,8 +482,7 @@ const TiXmlElement* TiXmlNode::NextSiblingElement() const
 
   for ( node = NextSibling();
         node;
-        node = node->NextSibling() )
-  {
+        node = node->NextSibling() ) {
     if ( node->ToElement() ) {
       return node->ToElement();
     }
@@ -530,8 +497,7 @@ const TiXmlElement* TiXmlNode::NextSiblingElement( const char * _value ) const
 
   for ( node = NextSibling( _value );
         node;
-        node = node->NextSibling( _value ) )
-  {
+        node = node->NextSibling( _value ) ) {
     if ( node->ToElement() ) {
       return node->ToElement();
     }
@@ -544,8 +510,7 @@ const TiXmlDocument* TiXmlNode::GetDocument() const
 {
   const TiXmlNode* node;
 
-  for( node = this; node; node = node->parent )
-  {
+  for ( node = this; node; node = node->parent ) {
     if ( node->ToDocument() ) {
       return node->ToDocument();
     }
@@ -596,8 +561,7 @@ TiXmlElement::~TiXmlElement()
 void TiXmlElement::ClearThis()
 {
   Clear();
-  while( attributeSet.First() )
-  {
+  while ( attributeSet.First() ) {
     TiXmlAttribute* node = attributeSet.First();
     attributeSet.Remove( node );
     delete node;
@@ -806,8 +770,7 @@ void TiXmlElement::Print( FILE* cfile, int depth ) const
   fprintf( cfile, "<%s", value.c_str() );
 
   const TiXmlAttribute* attrib;
-  for ( attrib = attributeSet.First(); attrib; attrib = attrib->Next() )
-  {
+  for ( attrib = attributeSet.First(); attrib; attrib = attrib->Next() ) {
     fprintf( cfile, " " );
     attrib->Print( cfile, depth );
   }
@@ -817,30 +780,25 @@ void TiXmlElement::Print( FILE* cfile, int depth ) const
   // 2) An element with only a text child is printed as <foo> text </foo>
   // 3) An element with children is printed on multiple lines.
   TiXmlNode* node;
-  if ( !firstChild )
-  {
+  if ( !firstChild ) {
     fprintf( cfile, " />" );
   }
-  else if ( firstChild == lastChild && firstChild->ToText() )
-  {
+  else if ( firstChild == lastChild && firstChild->ToText() ) {
     fprintf( cfile, ">" );
     firstChild->Print( cfile, depth + 1 );
     fprintf( cfile, "</%s>", value.c_str() );
   }
-  else
-  {
+  else {
     fprintf( cfile, ">" );
 
-    for ( node = firstChild; node; node=node->NextSibling() )
-    {
-      if ( !node->ToText() )
-      {
+    for ( node = firstChild; node; node=node->NextSibling() ) {
+      if ( !node->ToText() ) {
         fprintf( cfile, "\n" );
       }
       node->Print( cfile, depth+1 );
     }
     fprintf( cfile, "\n" );
-    for( i=0; i<depth; ++i ) {
+    for ( i=0; i<depth; ++i ) {
       fprintf( cfile, "    " );
     }
     fprintf( cfile, "</%s>", value.c_str() );
@@ -856,26 +814,22 @@ void TiXmlElement::CopyTo( TiXmlElement* target ) const
   // Element class:
   // Clone the attributes, then clone the children.
   const TiXmlAttribute* attribute = nullptr;
-  for(  attribute = attributeSet.First();
-        attribute;
-        attribute = attribute->Next() )
-  {
+  for (  attribute = attributeSet.First();
+         attribute;
+         attribute = attribute->Next() ) {
     target->SetAttribute( attribute->Name(), attribute->Value() );
   }
 
   TiXmlNode* node = nullptr;
-  for ( node = firstChild; node; node = node->NextSibling() )
-  {
+  for ( node = firstChild; node; node = node->NextSibling() ) {
     target->LinkEndChild( node->Clone() );
   }
 }
 
 bool TiXmlElement::Accept( TiXmlVisitor* visitor ) const
 {
-  if ( visitor->VisitEnter( *this, attributeSet.First() ) )
-  {
-    for ( const TiXmlNode* node=FirstChild(); node; node=node->NextSibling() )
-    {
+  if ( visitor->VisitEnter( *this, attributeSet.First() ) ) {
+    for ( const TiXmlNode* node=FirstChild(); node; node=node->NextSibling() ) {
       if ( !node->Accept( visitor ) ) {
         break;
       }
@@ -969,14 +923,12 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
   // reading in binary mode so that tinyxml can normalize the EOL
   FILE* file = TiXmlFOpen( value.c_str (), "rb" );
 
-  if ( file )
-  {
+  if ( file ) {
     bool result = LoadFile( file, encoding );
     fclose( file );
     return result;
   }
-  else
-  {
+  else {
     SetError( TIXML_ERROR_OPENING_FILE, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
     return false;
   }
@@ -984,8 +936,7 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
 
 bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 {
-  if ( !file )
-  {
+  if ( !file ) {
     SetError( TIXML_ERROR_OPENING_FILE, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
     return false;
   }
@@ -1001,8 +952,7 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
   fseek( file, 0, SEEK_SET );
 
   // Strange case, but good to handle up front.
-  if ( length <= 0 )
-  {
+  if ( length <= 0 ) {
     SetError( TIXML_ERROR_DOCUMENT_EMPTY, nullptr, nullptr, TIXML_ENCODING_UNKNOWN );
     return false;
   }
@@ -1054,7 +1004,7 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
   const char LF = 0x0a;
 
   buf[length] = 0;
-  while( *p ) {
+  while ( *p ) {
     assert( p < (buf+length) );
     assert( q <= (buf+length) );
     assert( q <= p );
@@ -1084,8 +1034,7 @@ bool TiXmlDocument::SaveFile( const char * filename ) const
 {
   // The old c stuff lives on...
   FILE* fp = TiXmlFOpen( filename, "w" );
-  if ( fp )
-  {
+  if ( fp ) {
     bool result = SaveFile( fp );
     fclose( fp );
     return result;
@@ -1096,8 +1045,7 @@ bool TiXmlDocument::SaveFile( const char * filename ) const
 
 bool TiXmlDocument::SaveFile( FILE* fp ) const
 {
-  if ( useMicrosoftBOM )
-  {
+  if ( useMicrosoftBOM ) {
     const unsigned char TIXML_UTF_LEAD_0 = 0xefU;
     const unsigned char TIXML_UTF_LEAD_1 = 0xbbU;
     const unsigned char TIXML_UTF_LEAD_2 = 0xbfU;
@@ -1123,8 +1071,7 @@ void TiXmlDocument::CopyTo( TiXmlDocument* target ) const
   target->useMicrosoftBOM = useMicrosoftBOM;
 
   TiXmlNode* node = nullptr;
-  for ( node = firstChild; node; node = node->NextSibling() )
-  {
+  for ( node = firstChild; node; node = node->NextSibling() ) {
     target->LinkEndChild( node->Clone() );
   }
 }
@@ -1145,8 +1092,7 @@ TiXmlNode* TiXmlDocument::Clone() const
 void TiXmlDocument::Print( FILE* cfile, int depth ) const
 {
   assert( cfile );
-  for ( const TiXmlNode* node=FirstChild(); node; node=node->NextSibling() )
-  {
+  for ( const TiXmlNode* node=FirstChild(); node; node=node->NextSibling() ) {
     node->Print( cfile, depth );
     fprintf( cfile, "\n" );
   }
@@ -1155,10 +1101,8 @@ void TiXmlDocument::Print( FILE* cfile, int depth ) const
 
 bool TiXmlDocument::Accept( TiXmlVisitor* visitor ) const
 {
-  if ( visitor->VisitEnter( *this ) )
-  {
-    for ( const TiXmlNode* node=FirstChild(); node; node=node->NextSibling() )
-    {
+  if ( visitor->VisitEnter( *this ) ) {
+    for ( const TiXmlNode* node=FirstChild(); node; node=node->NextSibling() ) {
       if ( !node->Accept( visitor ) ) {
         break;
       }
@@ -1307,8 +1251,7 @@ void TiXmlComment::operator=( const TiXmlComment& base )
 void TiXmlComment::Print( FILE* cfile, int depth ) const
 {
   assert( cfile );
-  for ( int i=0; i<depth; i++ )
-  {
+  for ( int i=0; i<depth; i++ ) {
     fprintf( cfile,  "    " );
   }
   fprintf( cfile, "<!--%s-->", value.c_str() );
@@ -1343,8 +1286,7 @@ TiXmlNode* TiXmlComment::Clone() const
 void TiXmlText::Print( FILE* cfile, int depth ) const
 {
   assert( cfile );
-  if ( cdata )
-  {
+  if ( cdata ) {
     int i;
     fprintf( cfile, "\n" );
     for ( i=0; i<depth; i++ ) {
@@ -1352,8 +1294,7 @@ void TiXmlText::Print( FILE* cfile, int depth ) const
     }
     fprintf( cfile, "<![CDATA[%s]]>\n", value.c_str() );  // unformatted output
   }
-  else
-  {
+  else {
     TIXML_STRING buffer;
     EncodeString( value, &buffer );
     fprintf( cfile, "%s", buffer.c_str() );
@@ -1570,10 +1511,8 @@ void TiXmlAttributeSet::Remove( TiXmlAttribute* removeMe )
 {
   TiXmlAttribute* node;
 
-  for( node = sentinel.next; node != &sentinel; node = node->next )
-  {
-    if ( node == removeMe )
-    {
+  for ( node = sentinel.next; node != &sentinel; node = node->next ) {
+    if ( node == removeMe ) {
       node->prev->next = node->next;
       node->next->prev = node->prev;
       node->next = nullptr;
@@ -1588,8 +1527,7 @@ void TiXmlAttributeSet::Remove( TiXmlAttribute* removeMe )
 #ifdef TIXML_USE_STL
 TiXmlAttribute* TiXmlAttributeSet::Find( const std::string& name ) const
 {
-  for( TiXmlAttribute* node = sentinel.next; node != &sentinel; node = node->next )
-  {
+  for ( TiXmlAttribute* node = sentinel.next; node != &sentinel; node = node->next ) {
     if ( node->name == name ) {
       return node;
     }
@@ -1612,8 +1550,7 @@ TiXmlAttribute* TiXmlAttributeSet::FindOrCreate( const std::string& _name )
 
 TiXmlAttribute* TiXmlAttributeSet::Find( const char* name ) const
 {
-  for( TiXmlAttribute* node = sentinel.next; node != &sentinel; node = node->next )
-  {
+  for ( TiXmlAttribute* node = sentinel.next; node != &sentinel; node = node->next ) {
     if ( strcmp( node->name.c_str(), name ) == 0 ) {
       return node;
     }
@@ -1673,8 +1610,7 @@ std::string& operator<< (std::string& out, const TiXmlNode& base )
 
 TiXmlHandle TiXmlHandle::FirstChild() const
 {
-  if ( node )
-  {
+  if ( node ) {
     TiXmlNode* child = node->FirstChild();
     if ( child ) {
       return TiXmlHandle( child );
@@ -1686,8 +1622,7 @@ TiXmlHandle TiXmlHandle::FirstChild() const
 
 TiXmlHandle TiXmlHandle::FirstChild( const char * value ) const
 {
-  if ( node )
-  {
+  if ( node ) {
     TiXmlNode* child = node->FirstChild( value );
     if ( child ) {
       return TiXmlHandle( child );
@@ -1699,8 +1634,7 @@ TiXmlHandle TiXmlHandle::FirstChild( const char * value ) const
 
 TiXmlHandle TiXmlHandle::FirstChildElement() const
 {
-  if ( node )
-  {
+  if ( node ) {
     TiXmlElement* child = node->FirstChildElement();
     if ( child ) {
       return TiXmlHandle( child );
@@ -1712,8 +1646,7 @@ TiXmlHandle TiXmlHandle::FirstChildElement() const
 
 TiXmlHandle TiXmlHandle::FirstChildElement( const char * value ) const
 {
-  if ( node )
-  {
+  if ( node ) {
     TiXmlElement* child = node->FirstChildElement( value );
     if ( child ) {
       return TiXmlHandle( child );
@@ -1725,14 +1658,12 @@ TiXmlHandle TiXmlHandle::FirstChildElement( const char * value ) const
 
 TiXmlHandle TiXmlHandle::Child( int count ) const
 {
-  if ( node )
-  {
+  if ( node ) {
     int i;
     TiXmlNode* child = node->FirstChild();
     for ( i=0;
           child && i<count;
-          child = child->NextSibling(), ++i )
-    {
+          child = child->NextSibling(), ++i ) {
       // nothing
     }
     if ( child ) {
@@ -1745,14 +1676,12 @@ TiXmlHandle TiXmlHandle::Child( int count ) const
 
 TiXmlHandle TiXmlHandle::Child( const char* value, int count ) const
 {
-  if ( node )
-  {
+  if ( node ) {
     int i;
     TiXmlNode* child = node->FirstChild( value );
     for ( i=0;
           child && i<count;
-          child = child->NextSibling( value ), ++i )
-    {
+          child = child->NextSibling( value ), ++i ) {
       // nothing
     }
     if ( child ) {
@@ -1765,14 +1694,12 @@ TiXmlHandle TiXmlHandle::Child( const char* value, int count ) const
 
 TiXmlHandle TiXmlHandle::ChildElement( int count ) const
 {
-  if ( node )
-  {
+  if ( node ) {
     int i;
     TiXmlElement* child = node->FirstChildElement();
     for ( i=0;
           child && i<count;
-          child = child->NextSiblingElement(), ++i )
-    {
+          child = child->NextSiblingElement(), ++i ) {
       // nothing
     }
     if ( child ) {
@@ -1785,14 +1712,12 @@ TiXmlHandle TiXmlHandle::ChildElement( int count ) const
 
 TiXmlHandle TiXmlHandle::ChildElement( const char* value, int count ) const
 {
-  if ( node )
-  {
+  if ( node ) {
     int i;
     TiXmlElement* child = node->FirstChildElement( value );
     for ( i=0;
           child && i<count;
-          child = child->NextSiblingElement( value ), ++i )
-    {
+          child = child->NextSiblingElement( value ), ++i ) {
       // nothing
     }
     if ( child ) {
@@ -1819,29 +1744,24 @@ bool TiXmlPrinter::VisitEnter( const TiXmlElement& element, const TiXmlAttribute
   buffer += "<";
   buffer += element.Value();
 
-  for( const TiXmlAttribute* attrib = firstAttribute; attrib; attrib = attrib->Next() )
-  {
+  for ( const TiXmlAttribute* attrib = firstAttribute; attrib; attrib = attrib->Next() ) {
     buffer += " ";
     attrib->Print( nullptr, 0, &buffer );
   }
 
-  if ( !element.FirstChild() )
-  {
+  if ( !element.FirstChild() ) {
     buffer += " />";
     DoLineBreak();
   }
-  else
-  {
+  else {
     buffer += ">";
     if (    element.FirstChild()->ToText()
             && element.LastChild() == element.FirstChild()
-            && element.FirstChild()->ToText()->CDATA() == false )
-    {
+            && element.FirstChild()->ToText()->CDATA() == false ) {
       simpleTextPrint = true;
       // no DoLineBreak()!
     }
-    else
-    {
+    else {
       DoLineBreak();
     }
   }
@@ -1853,18 +1773,14 @@ bool TiXmlPrinter::VisitEnter( const TiXmlElement& element, const TiXmlAttribute
 bool TiXmlPrinter::VisitExit( const TiXmlElement& element )
 {
   --depth;
-  if ( !element.FirstChild() )
-  {
+  if ( !element.FirstChild() ) {
     // nothing.
   }
-  else
-  {
-    if ( simpleTextPrint )
-    {
+  else {
+    if ( simpleTextPrint ) {
       simpleTextPrint = false;
     }
-    else
-    {
+    else {
       DoIndent();
     }
     buffer += "</";
@@ -1878,22 +1794,19 @@ bool TiXmlPrinter::VisitExit( const TiXmlElement& element )
 
 bool TiXmlPrinter::Visit( const TiXmlText& text )
 {
-  if ( text.CDATA() )
-  {
+  if ( text.CDATA() ) {
     DoIndent();
     buffer += "<![CDATA[";
     buffer += text.Value();
     buffer += "]]>";
     DoLineBreak();
   }
-  else if ( simpleTextPrint )
-  {
+  else if ( simpleTextPrint ) {
     TIXML_STRING str;
     TiXmlBase::EncodeString( text.ValueTStr(), &str );
     buffer += str;
   }
-  else
-  {
+  else {
     DoIndent();
     TIXML_STRING str;
     TiXmlBase::EncodeString( text.ValueTStr(), &str );

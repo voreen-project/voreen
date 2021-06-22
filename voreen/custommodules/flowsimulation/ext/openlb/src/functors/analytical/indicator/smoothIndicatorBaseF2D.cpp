@@ -28,7 +28,7 @@
 
 namespace olb {
 
-template class SmoothIndicatorF2D<double,double>;
+template class SmoothIndicatorF2D<double,double,false>;
 template class SmoothIndicatorIdentity2D<double,double>;
 
 }

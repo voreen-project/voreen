@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2018 Adrian Kummerländer
+ *  Copyright (C) 2018 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,6 +25,7 @@
 #define HYPERPLANE_LATTICE_2D_HH
 
 #include "hyperplaneLattice2D.h"
+#include "utilities/vectorHelpers.h"
 
 namespace olb {
 
@@ -38,16 +39,28 @@ int HyperplaneLattice2D<T>::computeMaxLatticeDistance() const
 
   T maxPhysDistance = T();
   T tmp;
+  Vector<T,2> tmpO;
+  Vector<T,2> tmpE;
 
-  for (int iDim = 0; iDim < 2; ++iDim) {
-    tmp = std::abs(origin[iDim] - _origin[iDim]);
-    if (maxPhysDistance < tmp) {
+  for(int iDim=0; iDim<2; ++iDim){
+  tmpO[iDim] = origin[iDim] - _origin[iDim];
+  tmpE[iDim] = origin[iDim] + extend[iDim]*deltaR - _origin[iDim];
+  }
+  tmp = sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1]);
+  if (maxPhysDistance < tmp) {
       maxPhysDistance = tmp;
-    }
-    tmp = std::abs(origin[iDim] + extend[iDim]*deltaR - _origin[iDim]);
-    if (maxPhysDistance < tmp) {
+  }
+  tmp = sqrt((tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1]));
+  if (maxPhysDistance < tmp) {
       maxPhysDistance = tmp;
-    }
+  }
+  tmp = sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
+  }
+  tmp = sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1]);
+  if (maxPhysDistance < tmp) {
+      maxPhysDistance = tmp;
   }
 
   return int(maxPhysDistance/_h) + 1;
@@ -83,7 +96,7 @@ void HyperplaneLattice2D<T>::setToResolution(int resolution)
   T newH = _n*_h/(T) resolution;
   _n = resolution;
   _h = newH;
-  _u.normalize(_h);
+  _u = normalize(_u, _h);
 }
 
 template<typename T>
@@ -95,7 +108,7 @@ HyperplaneLattice2D<T>::HyperplaneLattice2D(
     _u(hyperplane.u),
     _h(geometry.getMinDeltaR())
 {
-  _u.normalize(_h);
+  _u = normalize(_u, _h);
 
   const int maxLatticeDistance = computeMaxLatticeDistance();
   // compute _hyperplane.origin, _nx, _ny so that the cuboid is right inside the geometry
@@ -111,7 +124,7 @@ HyperplaneLattice2D<T>::HyperplaneLattice2D(
     _u(hyperplane.u),
     _h(geometry.getMinDeltaR())
 {
-  _u.normalize(_h);
+  _u = normalize(_u, _h);
 
   const int maxLatticeDistance = computeMaxLatticeDistance();
   // compute _hyperplane.origin, _nx, _ny so that the cuboid is right inside the geometry
@@ -135,7 +148,7 @@ HyperplaneLattice2D<T>::HyperplaneLattice2D(
     _h = _geometry.getMinDeltaR();
   }
 
-  _u.normalize(_h);
+  _u = normalize(_u, _h);
 
   const int maxLatticeDistance = computeMaxLatticeDistance();
   // compute _hyperplane.origin, _nx, _ny so that the cuboid is right inside the geometry

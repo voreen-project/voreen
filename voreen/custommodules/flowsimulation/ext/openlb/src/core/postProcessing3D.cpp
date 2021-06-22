@@ -24,16 +24,16 @@
 #include "postProcessing.h"
 #include "postProcessing.hh"
 #include "dynamics/latticeDescriptors.h"
-#include "dynamics/latticeDescriptors.hh"
+
 
 namespace olb {
 
 template struct
-StatisticsPostProcessor3D<double, descriptors::D3Q19Descriptor>;
+StatisticsPostProcessor3D<double, descriptors::D3Q19<>>;
 
-template class LatticeCouplingGenerator3D<double, descriptors::D3Q19Descriptor>;
-template class PostProcessorGenerator3D<double, descriptors::D3Q19Descriptor>;
-template class StatPPGenerator3D<double, descriptors::D3Q19Descriptor>;
+template class LatticeCouplingGenerator3D<double, descriptors::D3Q19<>>;
+template class PostProcessorGenerator3D<double, descriptors::D3Q19<>>;
+template class StatPPGenerator3D<double, descriptors::D3Q19<>>;
 
 
 }  // namespace olb

@@ -27,6 +27,7 @@ precompiled    := chopardDynamics \
                   dynamics \
                   entropicDynamics \
                   latticeDescriptors \
-                  smagorinskyBGKdynamics
+                  smagorinskyBGKdynamics \
+                  freeEnergyDynamics
 
 

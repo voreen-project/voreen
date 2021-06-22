@@ -47,6 +47,10 @@ ifeq ($(PARALLEL_MODE), HYBRID)
    LDFLAGS  := $(OMPFLAGS) $(LDFLAGS)
 endif
 
+LDFLAGS += $(if $(filter $(FEATURES), OPENBLAS),-lopenblas)
+
+CXXFLAGS += $(foreach feature,$(FEATURES),-DFEATURE_$(feature))
+
 ###########################################################################
 ## defines shell
 
@@ -81,7 +85,7 @@ SUBDIRS         := src/boundary \
                    src/particles \
                    src/particles/forces \
                    src/particles/boundaries \
-                   src/utilities
+                   src/utilities \
 
 EXAMPLEDIRS     := simulations/aorta3d
 

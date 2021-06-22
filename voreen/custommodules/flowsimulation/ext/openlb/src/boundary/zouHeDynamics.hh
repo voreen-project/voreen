@@ -33,29 +33,31 @@
 
 namespace olb {
 
-using namespace descriptors;
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::ZouHeDynamics (
-  T omega_, Momenta<T,Lattice>& momenta_ )
-  : BasicDynamics<T,Lattice>(momenta_),
+
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+ZouHeDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::ZouHeDynamics (
+  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
+  : BasicDynamics<T,DESCRIPTOR>(momenta_),
     boundaryDynamics(omega_, momenta_)
-{ }
+{
+  this->getName() = "ZouHeDynamics";
+}
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-T ZouHeDynamics<T,Lattice, Dynamics, direction, orientation>::
-computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+T ZouHeDynamics<T,DESCRIPTOR, Dynamics, direction, orientation>::
+computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
   return boundaryDynamics.computeEquilibrium(iPop, rho, u, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+void ZouHeDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
-  typedef lbHelpers<T,Lattice> lbH;
-  typedef Lattice<T> L;
+  typedef lbHelpers<T,DESCRIPTOR> lbH;
+  typedef DESCRIPTOR L;
 
   // Along all the commented parts of this code there will be an example based
   // on the situation where the wall's normal vector if (0,1) and the
@@ -72,7 +74,7 @@ void ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::collide (
   for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
     int numOfNonNullComp = 0;
     for (int iDim = 0; iDim < L::d; ++iDim) {
-      numOfNonNullComp += abs(L::c[missingIndexes[iPop]][iDim]);
+      numOfNonNullComp += abs(descriptors::c<L>(missingIndexes[iPop],iDim));
     }
 
     if (numOfNonNullComp == 1) {
@@ -109,7 +111,7 @@ void ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::collide (
   for (unsigned iPop = 0; iPop < missingDiagonalIndexes.size(); ++iPop) {
     for (int iDim = 1; iDim < L::d; ++iDim) {
       cell[missingDiagonalIndexes[iPop]] +=
-        L::c[missingDiagonalIndexes[iPop]][(direction+iDim)%L::d] * diff[(direction+iDim)%L::d];
+        descriptors::c<L>(missingDiagonalIndexes[iPop],(direction+iDim)%L::d) * diff[(direction+iDim)%L::d];
     }
   }
 
@@ -118,66 +120,14 @@ void ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::collide (
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
-{
-  typedef lbHelpers<T,Lattice> lbH;
-  typedef Lattice<T> L;
-
-  std::vector<int> missingIndexes = util::subIndexOutgoing<L,direction,orientation>();
-  std::vector<int> missingDiagonalIndexes = missingIndexes;
-
-  for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-    int numOfNonNullComp = 0;
-    for (int iDim = 0; iDim < L::d; ++iDim) {
-      numOfNonNullComp += abs(L::c[missingIndexes[iPop]][iDim]);
-    }
-
-    if (numOfNonNullComp == 1) {
-      missingDiagonalIndexes.erase(missingDiagonalIndexes.begin()+iPop);
-      break;
-    }
-  }
-
-  T rho = this->_momenta.computeRho(cell);
-
-  T uSqr = util::normSqr<T,L::d>(u);
-
-  for (unsigned iPop = 0; iPop < missingIndexes.size(); ++iPop) {
-    cell[missingIndexes[iPop]] = cell[util::opposite<L>(missingIndexes[iPop])]
-                                 - computeEquilibrium(util::opposite<L>(missingIndexes[iPop]), rho, u, uSqr)
-                                 + computeEquilibrium(missingIndexes[iPop], rho, u, uSqr);
-  }
-
-  T falseRho, falseU[L::d];
-  lbH::computeRhoU(cell,falseRho,falseU);
-
-  T diff[L::d];
-  for (int iDim = 0; iDim < L::d; ++iDim) {
-    diff[iDim] = (rho*u[iDim] - falseRho*falseU[iDim])/ (T)missingDiagonalIndexes.size();
-  }
-
-  for (unsigned iPop = 0; iPop < missingDiagonalIndexes.size(); ++iPop) {
-    for (int iDim = 1; iDim < L::d; ++iDim) {
-      cell[missingDiagonalIndexes[iPop]] +=
-        L::c[missingDiagonalIndexes[iPop]][(direction+iDim)%L::d] * diff[(direction+iDim)%L::d];
-    }
-  }
-
-  boundaryDynamics.staticCollide(cell, u, statistics);
-}
-
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-T ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+T ZouHeDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::getOmega() const
 {
   return boundaryDynamics.getOmega();
 }
 
-template<typename T, template<typename U> class Lattice, typename Dynamics, int direction, int orientation>
-void ZouHeDynamics<T,Lattice,Dynamics,direction,orientation>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
+void ZouHeDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::setOmega(T omega_)
 {
   boundaryDynamics.setOmega(omega_);
 }

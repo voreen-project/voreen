@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerländer
+ *  Copyright (C) 2017 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -34,12 +34,19 @@ namespace olb {
 template <typename T, typename W, int P>
 struct LpNormImpl {
   inline W operator()(W output, W tmp, T weight);
+  inline W enclose(W output);
 };
 
 template <typename T, typename W, int P>
 inline W LpNormImpl<T,W,P>::operator()(W output, W tmp, T weight)
 {
-  return output + pow(std::abs(tmp), P)*weight;
+  return output + pow(fabs(tmp), P)*weight;
+}
+
+template <typename T, typename W, int P>
+inline W LpNormImpl<T,W,P>::enclose(W output)
+{
+  return pow(output, 1. / P);
 }
 
 /// Linf norm functor implementation details
@@ -47,7 +54,11 @@ template <typename T, typename W>
 struct LpNormImpl<T,W,0> {
   inline W operator()(W output, W tmp, T weight)
   {
-    return std::max(output, std::abs(tmp));
+    return std::max(output, fabs(tmp));
+  }
+  inline W enclose(W output)
+  {
+    return output;
   }
 };
 
@@ -56,7 +67,11 @@ template <typename T, typename W>
 struct LpNormImpl<T,W,1> {
   inline W operator()(W output, W tmp, T weight)
   {
-    return output + std::abs(tmp)*weight;
+    return output + fabs(tmp)*weight;
+  }
+  inline W enclose(W output)
+  {
+    return output;
   }
 };
 
@@ -66,6 +81,10 @@ struct LpNormImpl<T,W,2> {
   inline W operator()(W output, W tmp, T weight)
   {
     return output + tmp*tmp*weight;
+  }
+  inline W enclose(W output)
+  {
+    return sqrt(output);
   }
 };
 

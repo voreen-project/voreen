@@ -39,7 +39,7 @@ namespace util {
 // using namespace olb; //necessary? Problems have occured with singleton::xxx
 
 /** \file
- This class allows calculation and display of various time data including remaining runtime data in cpu and in user time. Output is possible during computation and as a summary after computation. Time can be measured independently from in-computation-calls which allows time statistics without touching the overall computation time of the LBM-algorithm. Moreover it is possible to determine a performance number, the Mega Lattice Updates per second (MLUPs).
+ This class allows calculation and display of various time data including remaining runtime data in cpu and in user time. Output is possible during computation and as a summary after computation. Time can be measured independently from in-computation-calls which allows time statistics without touching the overall computation time of the LBM-algorithm. Moreover it is possible to determine a performance number, the Mega DESCRIPTOR Updates per second (MLUPs).
 The template type T denotes the internal representation of time differences (in ms, s and for cpu-time). Reasonable values are eg. double and long.
  Some thoughts about data range: Actually, only positive numbers should occur (=> unsigned). The chosen data format should be capable of representing at least 7 days ( = 604.800.000 ms) of computation time. The biggest signed long32 number ist 2.147.483.647 (~3 1/2 weeks), great! For everything above, use double with it's floating point arithmetic.
 */
@@ -111,16 +111,16 @@ public:
   /** The timeval data type is used in the variables for ms-time measurement. \sa getTotalRealTimeMs*/
   T timevalDiffTimeMs(timeval end, timeval start);
 
-  /// returns Million Lattice Site Updates per second (all processes together)
+  /// returns Million DESCRIPTOR Site Updates per second (all processes together)
   T getMLUPs();
 
-  /// returns Million Lattice Site Updates per second and process
+  /// returns Million DESCRIPTOR Site Updates per second and process
   T getMLUPps();
 
-  /// returns average Million Lattice Site Updates per second between start() and stop()
+  /// returns average Million DESCRIPTOR Site Updates per second between start() and stop()
   T getTotalMLUPs();
 
-  /// returns average Million Lattice Site Updates per second and process between start() and stop()
+  /// returns average Million DESCRIPTOR Site Updates per second and process between start() and stop()
   T getTotalMLUPps();
 
   /// (Re-)sets start value for time measurement.
@@ -165,7 +165,7 @@ public:
 };
 
 // Factory function /////////////////////////////////
-template<typename T, template<typename U> class DESCRIPTOR>
+template<typename T, typename DESCRIPTOR>
 // Timer<T>* createTimer(XMLreader& param);
 Timer<T>* createTimer(XMLreader& param, const UnitConverter<T,DESCRIPTOR>& converter, size_t numLatticePoints);
 /////////////////////////////////////////////////////

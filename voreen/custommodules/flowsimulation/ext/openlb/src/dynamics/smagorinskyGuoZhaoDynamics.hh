@@ -43,81 +43,63 @@ namespace olb {
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, template<typename U> class Lattice>
-SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::SmagorinskyGuoZhaoBGKdynamics (T omega_,
-    Momenta<T,Lattice>& momenta_, T smagoConst_, T dx_, T dt_ )
-  : GuoZhaoBGKdynamics<T,Lattice>(omega_,momenta_), smagoConst(smagoConst_),
+template<typename T, typename DESCRIPTOR>
+SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::SmagorinskyGuoZhaoBGKdynamics (T omega_,
+    Momenta<T,DESCRIPTOR>& momenta_, T smagoConst_, T dx_, T dt_ )
+  : GuoZhaoBGKdynamics<T,DESCRIPTOR>(omega_,momenta_), smagoConst(smagoConst_),
     preFactor(computePreFactor(omega_,smagoConst_) )
 { }
 
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::collide (
-  Cell<T,Lattice>& cell,
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
+  Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
   // Copying epsilon from
   // external to member variable to provide access for computeEquilibrium.
   this->updateEpsilon(cell);
-  T rho, u[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
   this->_momenta.computeAllMomenta(cell, rho, u, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
-  T* force = cell.getExternal(forceBeginsAt);
-  for (int iVel=0; iVel<Lattice<T>::d; ++iVel) {
+  T* force = cell.template getFieldPointer<descriptors::FORCE>();
+  for (int iVel=0; iVel<DESCRIPTOR::d; ++iVel) {
     u[iVel] += force[iVel] / (T)2.;
   }
-  T uSqr = GuoZhaoLbHelpers<T,Lattice>::bgkCollision(cell, this->getEpsilon(), rho, u, newOmega);
-  GuoZhaoLbHelpers<T,Lattice>::updateGuoZhaoForce(cell, u);
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, newOmega, rho);
+  T uSqr = GuoZhaoLbHelpers<T,DESCRIPTOR>::bgkCollision(cell, this->getEpsilon(), rho, u, newOmega);
+  GuoZhaoLbHelpers<T,DESCRIPTOR>::updateGuoZhaoForce(cell, u);
+  lbHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, newOmega, rho);
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::staticCollide (
-  Cell<T,Lattice>& cell,
-  const T u[Lattice<T>::d],
-  LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR>
+T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell )
 {
-  // Copying epsilon from
-  // external to member variable to provide access for computeEquilibrium.
-  this->updateEpsilon(cell);
-  T rho, uTemp[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
-  this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
-  T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
-  T uSqr =GuoZhaoLbHelpers<T,Lattice>::bgkCollision(cell, this->getEpsilon(), rho, u, newOmega);
-  GuoZhaoLbHelpers<T,Lattice>::updateGuoZhaoForce(cell, u);
-  lbHelpers<T,Lattice>::addExternalForce(cell, u, newOmega, rho);
-  statistics.incrementStats(rho, uSqr);
-}
-
-template<typename T, template<typename U> class Lattice>
-T SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::getSmagorinskyOmega(Cell<T,Lattice>& cell )
-{
-  T rho, uTemp[Lattice<T>::d], pi[util::TensorVal<Lattice<T> >::n];
+  T rho, uTemp[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
   this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
   return newOmega;
 }
 
-template<typename T, template<typename U> class Lattice>
-T SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::computePreFactor(T omega_, T smagoConst_)
+template<typename T, typename DESCRIPTOR>
+T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::computePreFactor(T omega_, T smagoConst_)
 {
-  return (T)smagoConst_*smagoConst_*Lattice<T>::invCs2*Lattice<T>::invCs2*2*sqrt(2);
+  return (T)smagoConst_*smagoConst_*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*sqrt(2);
 }
 
-template<typename T, template<typename U> class Lattice>
-void SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR>
+void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::setOmega(T omega)
 {
 //  _omega = omega;
-  GuoZhaoBGKdynamics<T,Lattice>::setOmega(omega);
+  GuoZhaoBGKdynamics<T,DESCRIPTOR>::setOmega(omega);
   preFactor = computePreFactor(omega, smagoConst);
 }
 
-template<typename T, template<typename U> class Lattice>
-T SmagorinskyGuoZhaoBGKdynamics<T,Lattice>::computeOmega(T omega0, T preFactor_, T rho,
-    T pi[util::TensorVal<Lattice<T> >::n] )
+template<typename T, typename DESCRIPTOR>
+T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::computeOmega(T omega0, T preFactor_, T rho,
+    T pi[util::TensorVal<DESCRIPTOR >::n] )
 {
   T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
-  if (util::TensorVal<Lattice<T> >::n == 6) {
+  if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
   T PiNeqNorm    = sqrt(PiNeqNormSqr);

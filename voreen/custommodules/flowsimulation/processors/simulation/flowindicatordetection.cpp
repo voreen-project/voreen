@@ -124,7 +124,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , flowProfile_("flowProfile", "Flow Profile")
     , velocityCurveType_("velocityCurveType", "Velocity Curve Type")
     , velocityCurveDuration_("velocityCurveDuration", "Velocity Curve Duration (s)", 0.0f, 0.0f, 20.0f)
-    , targetVelocity_("targetVelocity", "Target Velocity (mm/s)", 0.0f, 0.0f, 10000.0f)
+    , targetVelocity_("targetVelocity", "Target Velocity (m/s)", 0.0f, 0.0f, 10.0f)
     , velocityCurveFile_("velocityCurveFile", "Velocity Curve File", "Velocity Curve File", "", "*.csv", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, FileDialogProperty::ALWAYS_OFF)
     , velocityCurvePeriodicity_("velocityCurvePeriodicity", "Repeat Velocity Curve periodically", false)
     , triggertBySelection_(false)
@@ -210,6 +210,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         velocityCurveDuration_.setGroupID("velocity");
         ON_CHANGE(velocityCurveDuration_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(targetVelocity_);
+        targetVelocity_.setNumDecimals(3);
         targetVelocity_.setGroupID("velocity");
         ON_CHANGE(targetVelocity_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(velocityCurvePeriodicity_);

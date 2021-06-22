@@ -126,25 +126,25 @@ VelocityCurve VelocityCurve::createSinusoidalCurve(float duration, float maxValu
 VelocityCurve VelocityCurve::createHumanHeartBeat() {
     VelocityCurve curve;
 
-    curve[0.040f] =  1200.0f / 20000.0f * 1200.0f;
-    curve[0.075f] =  7000.0f / 20000.0f * 1200.0f;
-    curve[0.100f] = 17000.0f / 20000.0f * 1200.0f;
-    curve[0.125f] = 20000.0f / 20000.0f * 1200.0f;
-    curve[0.150f] = 20000.0f / 20000.0f * 1200.0f;
-    curve[0.250f] = 10000.0f / 20000.0f * 1200.0f;
-    curve[0.280f] =  7500.0f / 20000.0f * 1200.0f;
-    curve[0.320f] =  4200.0f / 20000.0f * 1200.0f;
-    curve[0.350f] =  1000.0f / 20000.0f * 1200.0f;
-    curve[0.380f] =     0.0f / 20000.0f * 1200.0f;
-    curve[0.390f] =     0.0f / 20000.0f * 1200.0f;
-    curve[0.420f] =   800.0f / 20000.0f * 1200.0f;
-    curve[0.455f] =  1200.0f / 20000.0f * 1200.0f;
-    curve[0.495f] =  2500.0f / 20000.0f * 1200.0f;
-    curve[0.525f] =  2000.0f / 20000.0f * 1200.0f;
-    curve[0.560f] =  1200.0f / 20000.0f * 1200.0f;
-    curve[0.595f] =   300.0f / 20000.0f * 1200.0f;
-    curve[0.660f] =   600.0f / 20000.0f * 1200.0f;
-    curve[0.700f] =   300.0f / 20000.0f * 1200.0f;
+    curve[0.040f] =  1.2f / 20.0f * 1.2f;
+    curve[0.075f] =  7.0f / 20.0f * 1.2f;
+    curve[0.100f] = 17.0f / 20.0f * 1.2f;
+    curve[0.125f] = 20.0f / 20.0f * 1.2f;
+    curve[0.150f] = 20.0f / 20.0f * 1.2f;
+    curve[0.250f] = 10.0f / 20.0f * 1.2f;
+    curve[0.280f] =  7.5f / 20.0f * 1.2f;
+    curve[0.320f] =  4.2f / 20.0f * 1.2f;
+    curve[0.350f] =  1.0f / 20.0f * 1.2f;
+    curve[0.380f] =  0.0f / 20.0f * 1.2f;
+    curve[0.390f] =  0.0f / 20.0f * 1.2f;
+    curve[0.420f] =  0.8f / 20.0f * 1.2f;
+    curve[0.455f] =  1.2f / 20.0f * 1.2f;
+    curve[0.495f] =  2.5f / 20.0f * 1.2f;
+    curve[0.525f] =  2.0f / 20.0f * 1.2f;
+    curve[0.560f] =  1.2f / 20.0f * 1.2f;
+    curve[0.595f] =  0.3f / 20.0f * 1.2f;
+    curve[0.660f] =  0.6f / 20.0f * 1.2f;
+    curve[0.700f] =  0.3f / 20.0f * 1.2f;
 
     return curve;
 }
@@ -324,12 +324,12 @@ void FlowParameterSet::setBouzidi(bool bouzidi) {
 }
 
 float FlowParameterSet::getReynoldsNumber() const {
-    return characteristicVelocity_ * characteristicLength_ / (viscosity_ / density_);
+    return characteristicVelocity_ * characteristicLength_ / viscosity_;
 }
 
 bool FlowParameterSet::isValid() const {
     float dx = (characteristicLength_ / spatialResolution_);
-    float convertVelocity = 3.0f / (relaxationTime_ - 0.5f) * viscosity_ / density_ / dx;
+    float convertVelocity = 3.0f / (relaxationTime_ - 0.5f) * viscosity_ / dx;
     float uLatticeMax = characteristicVelocity_ / convertVelocity;
     return uLatticeMax < 0.4f; // Intrinsic property of LBM.
 }

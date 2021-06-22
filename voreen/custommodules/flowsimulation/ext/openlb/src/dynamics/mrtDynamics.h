@@ -32,24 +32,21 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class Lattice> class Cell;
-
 
 /// Implementation of the entropic collision step
-template<typename T, template<typename U> class Lattice>
-class MRTdynamics : public BasicDynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class MRTdynamics : public BasicDynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  MRTdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  MRTdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[Lattice<T>::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  /// Compute all equilibrium moments
+  void computeAllEquilibrium(T momentaEq[DESCRIPTOR::q], T rho,
+                          const T u[DESCRIPTOR::d], const T uSqr);
   /// Collision step
-  void collide(Cell<T,Lattice>& cell,
+  void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_) override;
-  /// Collide with fixed velocity
-  void staticCollide(Cell<T,Lattice>& cell,
-                             const T u[Lattice<T>::d],
-                             LatticeStatistics<T>& statistics_) override;
   /// Get local relaxation parameter of the dynamics
   T getOmega() const override;
   /// Set local relaxation parameter of the dynamics
@@ -59,35 +56,35 @@ public:
   /// Set local relaxation parameter of the dynamics
   void setLambda(T lambda_);
 protected:
-  T invM_S[Lattice<T>::q][Lattice<T>::q]; // relaxation times matrix.
-  T omega; // the shear viscosity relaxatin time
-  T lambda;// the bulk viscosity relaxatin time
+  T invM_S[DESCRIPTOR::q][DESCRIPTOR::q]; // relaxation times matrix.
+  T omega; // the shear viscosity relaxation time
+  T lambda;// the bulk viscosity relaxation time
 };
 
 /// Implementation of the entropic collision step
-template<typename T, template<typename U> class Lattice>
-class ForcedMRTdynamics : public MRTdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class ForcedMRTdynamics : public MRTdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  ForcedMRTdynamics(T omega_, Momenta<T,Lattice>& momenta_);
+  ForcedMRTdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Clone the object on its dynamic type.
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
 
 };
 
 /// Implementation of the entropic collision step
-template<typename T, template<typename U> class Lattice>
-class MRTdynamics2 : public MRTdynamics<T,Lattice> {
+template<typename T, typename DESCRIPTOR>
+class MRTdynamics2 : public MRTdynamics<T,DESCRIPTOR> {
 public:
   /// Constructor
-  MRTdynamics2(T omega_, Momenta<T,Lattice>& momenta_);
+  MRTdynamics2(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
   /// Clone the object on its dynamic type.
-  virtual void collide(Cell<T,Lattice>& cell,
+  virtual void collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
 
 protected:
-  T invM_S_2[Lattice<T>::q][Lattice<T>::q]; // relaxation times matrix.
+  T invM_S_2[DESCRIPTOR::q][DESCRIPTOR::q]; // relaxation times matrix.
   T omega;
 };
 

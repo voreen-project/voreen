@@ -33,7 +33,7 @@
 
 namespace olb {
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 BuoyancyForce3D<T, PARTICLETYPE, DESCRIPTOR>::BuoyancyForce3D(
   UnitConverter<T,DESCRIPTOR> const& converter,
   std::vector<T> direction, T g) :
@@ -48,7 +48,7 @@ BuoyancyForce3D<T, PARTICLETYPE, DESCRIPTOR>::BuoyancyForce3D(
   }
 }
 
-template<typename T, template<typename U> class PARTICLETYPE, template<typename W> class DESCRIPTOR>
+template<typename T, template<typename U> class PARTICLETYPE, typename DESCRIPTOR>
 void BuoyancyForce3D<T, PARTICLETYPE, DESCRIPTOR>::applyForce(
   typename std::deque<PARTICLETYPE<T> >::iterator p, int pInt,
   ParticleSystem3D<T, PARTICLETYPE>& psSys)

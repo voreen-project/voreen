@@ -56,7 +56,7 @@ Cuboid3D<T>::Cuboid3D(T globPosX, T globPosY, T globPosZ, T delta , int nX, int 
                       int nZ, int refinementLevel)
   : _weight(std::numeric_limits<size_t>::max()), clout(std::cout,"Cuboid3D")
 {
-  this->init(globPosX, globPosY, globPosZ, delta, nX, nY, nZ, refinementLevel);
+  init(globPosX, globPosY, globPosZ, delta, nX, nY, nZ, refinementLevel);
 }
 
 template<typename T>
@@ -65,7 +65,7 @@ Cuboid3D<T>::Cuboid3D(std::vector<T> origin, T delta , std::vector<int> extend,
   : clout(std::cout,"Cuboid3D")
 {
   _weight = std::numeric_limits<size_t>::max();
-  this->init(origin[0], origin[1], origin[2], delta, extend[0], extend[1], extend[2], refinementLevel);
+  init(origin[0], origin[1], origin[2], delta, extend[0], extend[1], extend[2], refinementLevel);
 }
 
 template<typename T>
@@ -73,19 +73,19 @@ Cuboid3D<T>::Cuboid3D(IndicatorF3D<T>& indicatorF, T voxelSize, int refinementLe
   : clout(std::cout,"Cuboid3D")
 {
   _weight = std::numeric_limits<size_t>::max();
-  this->init(indicatorF.getMin()[0],  indicatorF.getMin()[1],  indicatorF.getMin()[2], voxelSize,
-             (int)((indicatorF.getMax()[0]-indicatorF.getMin()[0])/voxelSize+1.5),
-             (int)((indicatorF.getMax()[1]-indicatorF.getMin()[1])/voxelSize+1.5),
-             (int)((indicatorF.getMax()[2]-indicatorF.getMin()[2])/voxelSize+1.5), refinementLevel);
+  init(indicatorF.getMin()[0],  indicatorF.getMin()[1],  indicatorF.getMin()[2], voxelSize,
+       (int)((indicatorF.getMax()[0]-indicatorF.getMin()[0])/voxelSize+1.5),
+       (int)((indicatorF.getMax()[1]-indicatorF.getMin()[1])/voxelSize+1.5),
+       (int)((indicatorF.getMax()[2]-indicatorF.getMin()[2])/voxelSize+1.5), refinementLevel);
 }
 
 // copy constructor
 template<typename T>
 Cuboid3D<T>::Cuboid3D(Cuboid3D<T> const& rhs, int overlap) : clout(std::cout,"Cuboid3D")
 {
-  this->init( rhs._globPosX-rhs._delta*overlap, rhs._globPosY-rhs._delta*overlap,
-              rhs._globPosZ-rhs._delta*overlap, rhs._delta, rhs._nX+2*overlap,
-              rhs._nY+2*overlap, rhs._nZ+2*overlap);
+  init( rhs._globPosX-rhs._delta*overlap, rhs._globPosY-rhs._delta*overlap,
+        rhs._globPosZ-rhs._delta*overlap, rhs._delta, rhs._nX+2*overlap,
+        rhs._nY+2*overlap, rhs._nZ+2*overlap);
   _weight = rhs._weight;
   _refinementLevel = rhs._refinementLevel;
 }
@@ -95,8 +95,8 @@ Cuboid3D<T>::Cuboid3D(Cuboid3D<T> const& rhs, int overlap) : clout(std::cout,"Cu
 template<typename T>
 Cuboid3D<T>& Cuboid3D<T>::operator=(Cuboid3D<T> const& rhs)
 {
-  this->init( rhs._globPosX, rhs._globPosY, rhs._globPosZ, rhs._delta, rhs._nX,
-              rhs._nY, rhs._nZ);
+  init( rhs._globPosX, rhs._globPosY, rhs._globPosZ, rhs._delta, rhs._nX,
+        rhs._nY, rhs._nZ);
   _weight = rhs._weight;
   _refinementLevel = rhs._refinementLevel;
   return *this;
@@ -264,15 +264,15 @@ void Cuboid3D<T>::print() const
   clout << " Corner (x/y/z): " << "\t" << "("
         << _globPosX-_delta/2. << "/" << _globPosY - _delta/2.
         << "/" << _globPosZ - _delta/2. << ")" << std::endl;
-  clout << " Delta: " << "\t" << "\t" << this->getDeltaR() << std::endl;
-  clout << " Perimeter: " << "\t" << "\t" << this->getPhysPerimeter() << std::endl;
-  clout << " Volume: " << "\t" << "\t" << this->getPhysVolume() << std::endl;
+  clout << " Delta: " << "\t" << "\t" << getDeltaR() << std::endl;
+  clout << " Perimeter: " << "\t" << "\t" << getPhysPerimeter() << std::endl;
+  clout << " Volume: " << "\t" << "\t" << getPhysVolume() << std::endl;
   clout << " Extent (x/y/z): " << "\t" << "("
-        << this->getNx() << "/" << this->getNy() << "/"
-        << this->getNz() << ")" << std::endl;
-  clout << " Nodes at Perimeter: " << "\t" << this->getLatticePerimeter() << std::endl;
-  clout << " Nodes in Volume: " << "\t" << this->getLatticeVolume() << std::endl;
-  clout << " Nodes in Indicator: " << "\t" << this->getWeight() << std::endl;
+        << getNx() << "/" << getNy() << "/"
+        << getNz() << ")" << std::endl;
+  clout << " Nodes at Perimeter: " << "\t" << getLatticePerimeter() << std::endl;
+  clout << " Nodes in Volume: " << "\t" << getLatticeVolume() << std::endl;
+  clout << " Nodes in Indicator: " << "\t" << getWeight() << std::endl;
   clout << " Other Corner: "  << "\t"<<  "(" << _globPosX + T(_nX-0.5)*_delta << "/"
         << _globPosY + T(_nY-0.5)*_delta << "/"
         << _globPosZ + T(_nZ-0.5)*_delta <<  ")" << std::endl;

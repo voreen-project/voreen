@@ -33,7 +33,7 @@
 #include "io/ostreamManager.h"
 #include "core/util.h"
 #include "io/xmlReader.h"
-
+#include "core/unitConverter.h"
 
 /// All OpenLB code is contained in this namespace.
 namespace olb {
@@ -50,8 +50,8 @@ namespace olb {
 *
 * TODO: Extend documentation for ThermalUnitConverter
 */
-template <typename T, template<typename U> class Lattice, template<typename R> class ThermalLattice>
-class ThermalUnitConverter : public UnitConverter<T, Lattice> {
+template <typename T, typename DESCRIPTOR, typename ThermalLattice>
+class ThermalUnitConverter : public UnitConverter<T, DESCRIPTOR> {
 public:
   /** Documentation of constructor:
     * TODO: Extend constructur documentation
@@ -69,7 +69,7 @@ public:
     T charPhysLowTemperature,
     T charPhysHighTemperature,
     T charPhysPressure = 0 )
-    : UnitConverter<T, Lattice>(
+    : UnitConverter<T, DESCRIPTOR>(
         physDeltaX, physDeltaT, charPhysLength, charPhysVelocity,
         physViscosity, physDensity, charPhysPressure),
       _conversionTemperature(charPhysHighTemperature - charPhysLowTemperature),
@@ -84,7 +84,7 @@ public:
       _physThermalDiffusivity(physThermalConductivity / (physDensity * physSpecificHeatCapacity)),
       _physSpecificHeatCapacity(physSpecificHeatCapacity),
       _physThermalConductivity(physThermalConductivity),
-      _latticeThermalRelaxationTime( (_physThermalDiffusivity / _conversionThermalDiffusivity * ThermalLattice<T>::invCs2) + 0.5 ),
+      _latticeThermalRelaxationTime( (_physThermalDiffusivity / _conversionThermalDiffusivity * descriptors::invCs2<T,ThermalLattice>()) + 0.5 ),
       clout(std::cout,"ThermalUnitConv")
   {
   };
@@ -216,6 +216,18 @@ public:
   {
     return _conversionHeatFlux;
   };
+  constexpr T getPrandtlNumber() const
+  {
+    return this->_physViscosity/_physThermalDiffusivity;
+  };
+  constexpr T getRayleighNumber() const
+  {
+    return 9.81 * _physThermalExpansionCoefficient/this->_physViscosity/_physThermalDiffusivity * (_charPhysHighTemperature - _charPhysLowTemperature) * pow(this->_charPhysLength,3);
+  };
+/// nice terminal output for conversion factors, characteristical and physical data
+  void print() const override;
+
+  void write(std::string const& fileName = "ThermalUnitConverter") const;
 
 
 

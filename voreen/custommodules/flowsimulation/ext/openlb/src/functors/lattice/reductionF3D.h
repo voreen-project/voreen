@@ -1,7 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2012-2017 Lukas Baron, Tim Dornieden, Mathias J. Krause,
- *  Albert Mink, Benjamin Förster, Adrian Kummerländer
+ *  Albert Mink, Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,12 +25,12 @@
 #ifndef REDUCTION_F_3D_H
 #define REDUCTION_F_3D_H
 
-#include "functors/analytical/analyticalF.h"
 #include "blockBaseF3D.h"
 #include "superBaseF3D.h"
 #include "geometry/cuboidGeometry3D.h"
 #include "geometry/blockGeometry3D.h"
 #include "geometry/superGeometry3D.h"
+#include "functors/analytical/analyticalF.h"
 
 namespace olb {
 
@@ -39,20 +39,18 @@ namespace olb {
 /**
  *  Input functions are interpreted as SI->SI units, the resulting lattice
  *  function will map lattice->lattice units
- *
- *  Maintains block level BlockLatticeFfromAnalyticalF3D functors.
  */
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SuperLatticeFfromAnalyticalF3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
 protected:
-  AnalyticalF3D<T,T>& _f;
+  FunctorPtr<AnalyticalF3D<T,T>> _f;
 public:
   /**
    * \param f        Analytical functor to be converted into a lattice functor
-   * \param sLattice Lattice reference required for conversion and block functor construction
+   * \param sLattice DESCRIPTOR reference required for conversion and block functor construction
    **/
-  SuperLatticeFfromAnalyticalF3D(AnalyticalF3D<T,T>&           f,
-                                 SuperLattice3D<T,DESCRIPTOR>& sLattice);
+  SuperLatticeFfromAnalyticalF3D(FunctorPtr<AnalyticalF3D<T,T>>&& f,
+                                 SuperLattice3D<T,DESCRIPTOR>&    sLattice);
   bool operator() (T output[], const int input[]) override;
 };
 
@@ -61,40 +59,53 @@ public:
 /**
  * Instances are contained in SuperLatticeFfromAnalyticalF3D::_blockF.
  **/
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeFfromAnalyticalF3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   AnalyticalF3D<T,T>& _f;
-  Cuboid3D<T>         _cuboid;
-  const int           _overlap;
+  Cuboid3D<T>&        _cuboid;
 public:
   /**
    * \param f       Analytical functor to be converted into a lattice functor
    * \param lattice Block lattice structure required for BlockLatticeF3D construction
    * \param cuboid  Cuboid reference required for input parameter conversion
-   * \param overlap Block lattice overlap for input conversion
    **/
   BlockLatticeFfromAnalyticalF3D(AnalyticalF3D<T,T>&                    f,
                                  BlockLatticeStructure3D<T,DESCRIPTOR>& lattice,
-                                 Cuboid3D<T>&                           cuboid,
-                                 int                                    overlap);
+                                 Cuboid3D<T>&                           cuboid);
   bool operator() (T output[], const int input[]) override;
 };
 
 //////////// not yet working // symbolically ///////////////////
 ////////////////////////////////////////////////
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SmoothBlockIndicator3D final : public BlockDataF3D<T,T> {
 protected:
+  /*
+  * int _wa (weight accuracy): to change the size of the weights array, 3 should be enough, 7 & 5 is more accurate.
+  * only use these sizes: 3, 5, 7, 9, ... (still 3 or 5 is recommended)
+  * more testing has to be done
+  * the size of the weights matrix affects the particle size, therefore it has to be known earlier, to calculate the BlockData size
+  *
+  * Note: wa influences the boundary size. Maybe unify eps-boundary size somehow.
+  */
+  /// Lattice spacing of the particle grid
+  const T _h;
+  /// Important parameter for the Gaussian point spread Function (standard deviations)
+  const T _sigma;
+  /// Size (always a multiple of 2) of the epsilon layer eps_phys = _eps * _h
+  const int _eps;
+  /// size of the matrix of weight coefficients (from 3D Gaussian Function) _wa x _wa x _wa
+  const int _wa;
+  /// _f holds the geometry
   IndicatorF3D<T>&  _f;
-  T _h;
 public:
-  SmoothBlockIndicator3D(IndicatorF3D<T>& f, T h);
+  SmoothBlockIndicator3D(IndicatorF3D<T>& f, T h, T eps, T sigma);
   //bool operator() (T output[], const int input[]);
 };
 
 // TODO: comment code
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeInterpPhysVelocity3Degree3D final : public
   BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
@@ -116,7 +127,7 @@ public:
 };
 
 // TODO: comment code
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SuperLatticeInterpPhysVelocity3Degree3D final : public
   SuperLatticeF3D<T,DESCRIPTOR> {
 private:
@@ -133,7 +144,7 @@ public:
 };
 
 // TODO: comment code
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeInterpDensity3Degree3D final : public
   BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
@@ -153,11 +164,11 @@ public:
   {
     return false;
   }
-  void operator() (T output[DESCRIPTOR<T>::q], const T input[3]);
+  void operator() (T output[DESCRIPTOR::q], const T input[3]);
 };
 
 // TODO: comment code
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SuperLatticeInterpDensity3Degree3D final : public
   SuperLatticeF3D<T,DESCRIPTOR> {
 private:
@@ -176,7 +187,7 @@ public:
 };
 
 // TODO: comment code
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class BlockLatticeSmoothDiracDelta3D final : public
   BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
@@ -195,7 +206,7 @@ public:
 };
 
 // TODO: comment code
-template <typename T, template <typename U> class DESCRIPTOR>
+template <typename T, typename DESCRIPTOR>
 class SuperLatticeSmoothDiracDelta3D final : public
   SuperLatticeF3D<T,DESCRIPTOR> {
 private:

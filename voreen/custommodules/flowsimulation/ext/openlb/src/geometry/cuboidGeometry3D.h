@@ -86,8 +86,10 @@ public:
   CuboidGeometry3D(std::vector<T> origin, T deltaR, std::vector<int> extent, int nC=1);
   /// Constructs a cuboid structure with a uniform spacing of voxelSize which consists of  nC cuboids, the cuboids not needed are removed and too big ones are shrinked
   CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, int nC=1);
+  CuboidGeometry3D(std::shared_ptr<IndicatorF3D<T>> indicator_sharedPtrF, T voxelSize, int nC=1);
   /// Constructs a cuboid structure with a uniform spacing of voxelSize which consists of nC cuboids, the cuboids not needed are removed and too big ones are shrinked. Uses an iterative method: Halves the largest child cuboid until the set number of cuboids is reached. Largest cuboid is determined by either volume or weight as choosen in minimizeBy.
   CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, int nC, std::string minimizeBy);
+  CuboidGeometry3D(std::shared_ptr<IndicatorF3D<T>> indicator_sharedPtrF, T voxelSize, int nC, std::string minimizeBy);
   /// Destructs CuboidGeometry
   virtual ~CuboidGeometry3D();
 
