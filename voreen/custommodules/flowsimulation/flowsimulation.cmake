@@ -112,20 +112,22 @@ ENDIF()
 # External dependency: OpenLB library
 ################################################################################
 
-OPTION(VRN_FLOWSIMULATION_BUILD_OPENLB "Build OpenLB?" ON)
+IF(VRN_MSVC)
+    # OpenLB was developed on and for POSIX systems, therefore, windows/MSVC is currently not supported.
+    OPTION(VRN_FLOWSIMULATION_BUILD_OPENLB "Build OpenLB?" OFF)
+ELSE()
+    OPTION(VRN_FLOWSIMULATION_BUILD_OPENLB "Build OpenLB?" ON)
+ENDIF()
+
 IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     IF(VRN_MSVC)
-        # OpenLB was developed on and for POSIX systems, therefore, windows and MSVC are not supported.
+        # We might add support in the future, but for now we have to output an error message.
         MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
     ENDIF()
 
     # OpenLB requires c++14 standard.
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-    IF(COMPILER_SUPPORTS_CXX14)
-        set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
-    ELSE()
-        MESSAGE(FATAL_ERROR "OpenLB requires the compile to support c++14")
-    ENDIF()
+    SET(CMAKE_CXX_STANDARD 14)
+    SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     IF(VRN_MODULE_OPENMP)
         ADD_DEFINITIONS("-DPARALLEL_MODE_OMP")
@@ -145,6 +147,8 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_INCLUDE_DIR})
     LIST(APPEND MOD_LIBRARIES ${OpenLB_LIBRARY_PATH})
 
+    # It currently seems to be not possible to execute the build before all other builds,
+    # so the user needs to manually build the OpenLB target first..
     ADD_CUSTOM_TARGET(OpenLB COMMAND BUILDTYPE=${OLB_BUILDTYPE} make WORKING_DIRECTORY ${OpenLB_DIR})
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
