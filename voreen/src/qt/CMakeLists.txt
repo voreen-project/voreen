@@ -2,14 +2,8 @@
 # Project file for the Voreen-Qt library
 ################################################################################
 PROJECT(voreen_qt)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1 FATAL_ERROR)
 INCLUDE(../../cmake/commonconf.cmake)
-
-# Supresses CMake warning when using version > 2.8.10
-# For details, see 'cmake --help-policy CMP0020'
-IF(WIN32)
-    CMAKE_POLICY(SET CMP0020 NEW)
-ENDIF()
 
 MESSAGE(STATUS "Configuring voreen_qt Library")
 

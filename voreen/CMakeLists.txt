@@ -1,11 +1,5 @@
 PROJECT(Voreen)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0 FATAL_ERROR)
-
-# Supresses CMake warning when using version > 2.8.10
-# For details, see 'cmake --help-policy CMP0020'
-IF(WIN32)
-    cmake_policy(SET CMP0020 NEW)
-ENDIF()
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1 FATAL_ERROR)
 
 include(cmake/commonconf.cmake)
 
