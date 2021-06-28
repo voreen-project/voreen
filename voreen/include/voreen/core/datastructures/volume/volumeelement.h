@@ -1341,20 +1341,22 @@ uint16_t getFloatAsType(float value) {
 
 template<>
 int32_t getFloatAsType(float value) {
-    value = tgt::clamp(value, -1.0f, 1.0f);
-    // int32_MAX does not fit into a float => We lose precision and an input value of 1.0f is mapped onto int32_MAX+1 == 0
-    // Therefore we cast value to double first.
-    if(value >= 0.0f)
-        return static_cast<int32_t>(static_cast<double>(value)*std::numeric_limits<int32_t>::max());
-    else
-        return static_cast<int32_t>(static_cast<double>(-value)*std::numeric_limits<int32_t>::lowest());
+    // uint32_MAX does not fit into a float => We lose precision and an input value of 1.0f is mapped onto uint32_MAX+1 == 0
+    // Therefore we cast value to the larger int64_t and clamp then.
+    if(value >= 0.0f) {
+        int64_t vali = value*VolumeElement<int32_t>::rangeMaxElement();
+        return std::min(vali, static_cast<int64_t>(std::numeric_limits<int32_t>::max()));
+    } else {
+        int64_t vali = value*VolumeElement<int32_t>::rangeMinElement();
+        return std::max(vali, static_cast<int64_t>(std::numeric_limits<int32_t>::min()));
+    }
 }
 template<>
 uint32_t getFloatAsType(float value) {
-    value = tgt::clamp(value, 0.0f, 1.0f);
     // uint32_MAX does not fit into a float => We lose precision and an input value of 1.0f is mapped onto uint32_MAX+1 == 0
-    // Therefore we cast value to double first.
-    return static_cast<uint32_t>(static_cast<double>(value)*std::numeric_limits<uint32_t>::max());
+    // Therefore we cast value to the larger int64_t and clamp then.
+    int64_t vali = value*VolumeElement<uint32_t>::rangeMaxElement();
+    return tgt::clamp(vali, 0L, static_cast<int64_t>(std::numeric_limits<uint32_t>::max()));
 }
 
 template<>

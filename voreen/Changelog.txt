@@ -30,6 +30,7 @@ Voreen Changelog
       o Fix corner case where spurious branches would not be deleted in VesselGraphCreator and VesselGraphRefiner under some conditions
       o Greatly improve loading time and memory consumption of VTIVolumeReader
       o VolumeMemoryManager now frees memory, if required, when a volume is registered
+      o Fix precision issue with u32 values in VolumeFilterList (and potentially other processors)
 
 2021-01-28: Voreen 5.2.0
 ------------------------
