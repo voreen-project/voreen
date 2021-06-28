@@ -1347,7 +1347,7 @@ int32_t getFloatAsType(float value) {
         int64_t vali = value*VolumeElement<int32_t>::rangeMaxElement();
         return std::min(vali, static_cast<int64_t>(std::numeric_limits<int32_t>::max()));
     } else {
-        int64_t vali = value*VolumeElement<int32_t>::rangeMinElement();
+        int64_t vali = value*-VolumeElement<int32_t>::rangeMinElement();
         return std::max(vali, static_cast<int64_t>(std::numeric_limits<int32_t>::min()));
     }
 }
