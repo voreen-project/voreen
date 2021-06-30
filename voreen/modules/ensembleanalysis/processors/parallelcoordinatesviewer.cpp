@@ -305,7 +305,7 @@ void ParallelCoordinatesViewer::initialize()
         "\n"
         "uniform int operator;\n"
         "uniform int operand;\n"
-        "uniform vec3 axes[128];\n"
+        "uniform vec3 axes[256];\n" //TODO: bake shader, use shader property!
         "layout( location = 0 ) in float inYCoord;\n"
         "\n"
         "void main()\n"

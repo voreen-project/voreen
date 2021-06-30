@@ -45,7 +45,7 @@ ParallelCoordinatesAxesCreator::ParallelCoordinatesAxesCreator()
     , propertyFields_("property_fields", "Selected Fields", Processor::VALID )
     , propertySampleRegion_("sampleRegion", "Sample Region")
     , propertySpatialSampleCount_("property_spatial_sample_count", "Spatial Sample Count", 32768, 1, 4194304, Processor::VALID )
-    , propertyTemporalSampleCount_("property_temporal_sample_count", "Temporal Sample Count", 1, 1, std::numeric_limits<int>::max(), Processor::VALID )
+    , propertyTemporalSampleCount_("property_temporal_sample_count", "Temporal Sample Count", 1, 1, 256, Processor::VALID )
     , propertyRequiredMemory_("property_required_memory", "Required Memory", "NA", Processor::VALID)
     , propertySeedTime_("property_seed_time", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , propertyAggregateMembers_("property_aggregate_members", "Aggregate Members", false, Processor::VALID )
@@ -166,7 +166,10 @@ void ParallelCoordinatesAxesCreator::adjustToSelection() {
         propertyFields_.blockCallbacks(false);
         propertyFields_.invalidate();
 
-        propertyTemporalSampleCount_.setMaxValue(std::max<size_t>(1, ensemble.getMaxNumTimeSteps()));
+        // TODO: currently, the viewer is limited to 256 axes. This should be handled dynamically.
+        int max = std::min<int>(256, ensemble.getMaxNumTimeSteps());
+        propertyTemporalSampleCount_.setMaxValue(max);
+        propertyTemporalSampleCount_.setMinValue(1);
         //propertyTemporalSampleCount_.set(ensemble.getMaxNumTimeSteps());
 
         fields_ = fields;
@@ -320,7 +323,7 @@ ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Com
                 auto* dst = currentValue + j;
                 for(const auto& member : members)
                 {
-                    auto t = mapRange(i, tgt::svec2(0, temporalSampleCount), timeInterval);
+                    auto t = mapRange(i, tgt::svec2(0, temporalSampleCount-1), timeInterval);
                     const auto& timestep = member.getTimeSteps()[member.getTimeStep(t)];
                     const auto& fieldName = fields[j].first;
                     const auto& channel = fields[j].second;
@@ -375,7 +378,7 @@ ParallelCoordinatesAxesCreatorOutput ParallelCoordinatesAxesCreator::compute(Com
             SubtaskProgressReporter memberProgress(progressReporter, tgt::vec2(i, i+1) / tgt::vec2(members.size()));
             for(size_t j = 0; j < temporalSampleCount; ++j, currentValue += fields.size() * seedPoints.size() )
             {
-                auto t = mapRange(j, tgt::svec2(0, temporalSampleCount), timeInterval);
+                auto t = mapRange(j, tgt::svec2(0, temporalSampleCount-1), timeInterval);
                 const auto& timestep = member.getTimeSteps()[member.getTimeStep(t)];
                 for( size_t k = 0; k < fields.size(); ++k )
                 {

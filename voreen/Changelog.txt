@@ -32,6 +32,7 @@ Voreen Changelog
       o Fix corner case where spurious branches would not be deleted in VesselGraphCreator and VesselGraphRefiner under some conditions
       o Greatly improve loading time and memory consumption of VTIVolumeReader
       o Fix precision issue with u32 values in VolumeFilterList (and potentially other processors)
+      o Parallel Coordinates now properly display and are restricted to up to 256 axes (before was 128, displaying more was possible but erroneous)
 
 2021-01-28: Voreen 5.2.0
 ------------------------
