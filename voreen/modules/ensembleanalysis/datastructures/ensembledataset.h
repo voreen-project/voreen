@@ -30,6 +30,8 @@
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/datastructures/volume/volumelist.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
+#include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/utils/statistics.h"
 
 #include "tgt/vector.h"
@@ -51,10 +53,8 @@ public:
      * TimeStep constructor.
      * @param volumeData field names mapped to volume data
      * @param time point in time
-     * @param duration optional duration (e.g. time to next captured time step)
      */
-    TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
-             float time, float duration = 0.0f);
+    TimeStep(const std::map<std::string, const VolumeBase*>& volumeData, float time, bool enforceDerivedData = false);
 
     /**
      * Creates a new time step but only containing a subset of fields.
@@ -69,9 +69,19 @@ public:
     float getTime() const;
 
     /**
-     * Returns the duration, i.e. the time till the succeeding time step.
+     * Returns the time difference between this and another time step.
      */
-    float getDuration() const;
+    float operator-(const TimeStep& rhs) const;
+
+    //** Convenience functions to compare time steps by the represented point in time:
+    bool operator<(const TimeStep& rhs) const;
+    bool operator<=(const TimeStep& rhs) const;
+
+    bool operator>(const TimeStep& rhs) const;
+    bool operator>=(const TimeStep& rhs) const;
+
+    bool operator==(const TimeStep& rhs) const;
+    bool operator!=(const TimeStep& rhs) const;
 
     /**
      * Returns the fields available for this time step.
@@ -96,15 +106,37 @@ public:
 
 private:
 
+    class DerivedData : public Serializable {
+    public:
+        DerivedData();
+        DerivedData(const VolumeBase* volume, bool calculateIfNotPresent);
+
+        void addToVolume(VolumeBase* volume);
+
+        void serialize(Serializer& s) const override;
+        void deserialize(Deserializer& s) override;
+
+    private:
+
+        boost::optional<VolumeMinMax> minMax_;
+        boost::optional<VolumeMinMaxMagnitude> minMaxMagnitude_;
+    };
+
+    /**
+     * When a time step gets copied, e.g., when using EnsembleFilter, we don't want to copy the associated volumes.
+     * Hence, the VolumeCache is shared among all copies of a time step.
+     */
     class VolumeCache : public VolumeObserver {
     public:
 
         VolumeCache();
-        VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData);
-        ~VolumeCache();
+        explicit VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData);
+        virtual ~VolumeCache();
 
         virtual void volumeDelete(const VolumeBase* source);
         virtual void volumeChange(const VolumeBase* source);
+
+        bool isOwned(const VolumeURL& url);
 
         /**
          * Requests a volume for a given field name.
@@ -124,9 +156,10 @@ private:
         boost::mutex volumeDataMutex_; ///< Mutex for threaded lazy loading of volumes.
     };
 
+
     float time_;       ///< The point in time of this time step.
-    float duration_;   ///< the duration of the time step.
     std::map<std::string, VolumeURL> urls_; ///< Field names mapped to volume URL.
+    mutable std::map<std::string, DerivedData> derivedData_; ///< Field names (optionally) mapped to derived data.
     mutable std::shared_ptr<VolumeCache> volumeCache_; ///< Shared cache by all copies of a time steps.
 };
 
@@ -173,7 +206,7 @@ private:
     std::string name_; ///< The member's name.
     tgt::vec3 color_;  ///< The member's distinct color.
     std::vector<TimeStep> timeSteps_; ///< List of time steps.
-    Statistics timeStepDurationStats_;    ///< Stats on time step duration
+    mutable Statistics timeStepDurationStats_;    ///< Stats on time step duration
 };
 
 /**

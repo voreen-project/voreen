@@ -30,16 +30,17 @@ namespace voreen {
 EnsembleHash::EnsembleHash(const EnsembleDataset& dataset)
     : hash_("")
 {
-    std::string unhashed;
+    std::stringstream unhashed;
     for (const EnsembleMember& member : dataset.getMembers()) {
-        unhashed += member.getName();
-        unhashed += std::to_string(member.getTimeSteps().size());
+        unhashed << member.getName();
+        unhashed << member.getTimeSteps().size();
     }
 
-    for (const std::string& fieldName : dataset.getCommonFieldNames())
-        unhashed += fieldName;
+    for (const std::string& fieldName : dataset.getUniqueFieldNames()) {
+        unhashed << fieldName;
+    }
 
-    hash_ = VoreenHash::getHash(unhashed);
+    hash_ = VoreenHash::getHash(unhashed.str());
 }
 
 const std::string& EnsembleHash::getHash() const {

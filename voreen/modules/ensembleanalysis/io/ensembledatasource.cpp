@@ -195,7 +195,6 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
             std::map<std::string, const VolumeBase*> volumeData;
             float time = 0.0f;
-            float duration = 0.0f;
             bool timeIsSet = false;
 
             std::vector<VolumeURL> subURLs = reader.listVolumes(url);
@@ -261,14 +260,7 @@ void EnsembleDataSource::buildEnsembleDataset() {
                 volumes_.push_back(std::move(volumeHandle));
             }
 
-            // Calculate duration of the current timeStep.
-            // Note that the last time step has a duration of 0.
-            // TODO: duration might change after sorting step.
-            if (!timeSteps.empty()) {
-                duration = time - timeSteps.back().getTime();
-            }
-
-            timeSteps.emplace_back(TimeStep{volumeData, time, duration});
+            timeSteps.emplace_back(TimeStep{volumeData, time, true});
 
             // Update progress bar.
             float progress = std::min(timeStepProgress_.getProgress() + progressPerTimeStep, 1.0f);
@@ -278,10 +270,8 @@ void EnsembleDataSource::buildEnsembleDataset() {
             }
         }
 
-        auto timeStepCompare = [] (const TimeStep& t1, const TimeStep& t2) {
-            return t1.getTime() < t2.getTime();
-        };
-        std::stable_sort(timeSteps.begin(), timeSteps.end(), timeStepCompare);
+        // Sort according to time.
+        std::stable_sort(timeSteps.begin(), timeSteps.end());
 
         // Set color.
         tgt::Color color = *colorIter;
@@ -295,9 +285,8 @@ void EnsembleDataSource::buildEnsembleDataset() {
         }
     }
 
-    hash_.set(EnsembleHash(*dataset).getHash());
-    output_ = std::move(dataset);
-    updateTable();
+    std::string hash = EnsembleHash(*dataset).getHash();
+    hash_.set(hash);
 
     if(loadingStrategy_.get() == "cached" && VoreenApplication::app()->useCaching()) {
         tgt::FileSystem::createDirectoryRecursive(getCachePath());
@@ -308,8 +297,8 @@ void EnsembleDataSource::buildEnsembleDataset() {
             try {
                 JsonSerializer s;
                 Serializer serializer(s);
-                serializer.serialize("hash", hash_.get());
-                serializer.serialize("ensemble", *output_);
+                serializer.serialize("hash", hash);
+                serializer.serialize("ensemble", *dataset);
                 s.write(outFile, false, true);
             }
             catch (tgt::Exception& e) {
@@ -321,6 +310,9 @@ void EnsembleDataSource::buildEnsembleDataset() {
             LWARNING("Could not write cache file");
         }
     }
+
+    output_ = std::move(dataset);
+    updateTable();
 
     timeStepProgress_.setProgress(1.0f);
     setProgress(1.0f);
@@ -340,7 +332,7 @@ void EnsembleDataSource::loadEnsembleDataset() {
 
         if(inFile.good()) {
 
-            std::unique_ptr<EnsembleDataset> ensemble(new EnsembleDataset);
+            std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset);
             try {
                 std::string hash;
 
@@ -348,13 +340,13 @@ void EnsembleDataSource::loadEnsembleDataset() {
                 d.read(inFile, true);
                 Deserializer deserializer(d);
                 deserializer.deserialize("hash", hash);
-                deserializer.deserialize("ensemble", *ensemble);
+                deserializer.deserialize("ensemble", *dataset);
 
                 clearEnsembleDataset();
-                if(hash == EnsembleHash(*ensemble).getHash()) {
+                if(hash == EnsembleHash(*dataset).getHash()) {
                     hash_.set(hash);
 
-                    output_ = std::move(ensemble);
+                    output_ = std::move(dataset);
                     updateTable();
                     setProgress(1.0f);
                     timeStepProgress_.setProgress(1.0f);
@@ -404,7 +396,7 @@ void EnsembleDataSource::updateTable() {
         if (!member.getTimeSteps().empty()) {
             row[2] = std::to_string(member.getTimeSteps().front().getTime()); // Start time
             row[3] = std::to_string(member.getTimeSteps().back().getTime()); // End time
-            row[4] = std::to_string(member.getTimeSteps().back().getTime() - member.getTimeSteps().front().getTime()); // Duration
+            row[4] = std::to_string(member.getTimeSteps().back() - member.getTimeSteps().front()); // Duration
         } else {
             row[2] = row[3] = row[4] = "N/A";
         }

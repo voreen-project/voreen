@@ -12,9 +12,11 @@ Voreen Changelog
       o Add EnsembleTimeStepLinker allowing to link time between ParallelCoordinatesViewer and EnsembleFilter
       o Add Wavefront OBJ file support to VesselGraphSave
       o Add (still experimental) VolumeRAMSwap disk representation to EnsembleAnalysisModule (enable by module properties) which enables loading of large ensembles without disk representation. Still it is recommended to use a format that natively supports disk representations, such as HDF5.
+      o Add (still experimental) serialization of derived data of volumes as part of an ensemble which speeds up loading times immensely for ensembles without derived data, when using the 'Cached' loading strategy.
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
+      o Duration is no longer a property of (Ensemble) TimeSteps. It can be simply derived from two consecutive time steps.
 
     * Bug Fixes/Minor Changes:
       o Handle real world mapping properly for EnsembleMean and EnsembleVariance
@@ -29,7 +31,6 @@ Voreen Changelog
       o Enable file watching for vti and netcdf files
       o Fix corner case where spurious branches would not be deleted in VesselGraphCreator and VesselGraphRefiner under some conditions
       o Greatly improve loading time and memory consumption of VTIVolumeReader
-      o VolumeMemoryManager now frees memory, if required, when a volume is registered
       o Fix precision issue with u32 values in VolumeFilterList (and potentially other processors)
 
 2021-01-28: Voreen 5.2.0

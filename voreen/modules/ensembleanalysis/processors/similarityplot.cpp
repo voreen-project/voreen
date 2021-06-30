@@ -661,6 +661,7 @@ tgt::vec3 SimilarityPlot::getColor(size_t memberIdx, size_t timeStepIdx, bool pi
     const EnsembleDataset* dataset = ensembleInport_.getData();
     const EnsembleMember& member = dataset->getMembers()[memberIdx];
 
+
     float ts = static_cast<float>(timeStepIdx) / member.getTimeSteps().size();
     if (picking)
         return tgt::vec3(static_cast<float>(memberIdx) / dataset->getMembers().size(), ts, 1.0f);
@@ -675,8 +676,12 @@ tgt::vec3 SimilarityPlot::getColor(size_t memberIdx, size_t timeStepIdx, bool pi
     case COLOR_DURATION:
     {
         const Statistics& stats = member.getTimeStepDurationStats();
-        if(std::abs(dataset->getMembers()[memberIdx].getTimeSteps()[timeStepIdx].getDuration() - stats.getMean()) > stats.getStdDev()) {
-            ts = mapRange(dataset->getMembers()[memberIdx].getTimeSteps()[timeStepIdx].getDuration(), stats.getMin(), stats.getMax(), 0.0f, 1.0f);
+        float duration = 0.0f;
+        if(timeStepIdx < member.getTimeSteps().size()-1) {
+            duration = member.getTimeSteps()[timeStepIdx+1] - member.getTimeSteps()[timeStepIdx];
+        }
+        if(std::abs(duration - stats.getMean()) > stats.getStdDev()) {
+            ts = mapRange(duration, stats.getMin(), stats.getMax(), 0.0f, 1.0f);
             return (1.0f - ts) * MIN_DURATION_COLOR + ts * MAX_DURATION_COLOR;
         }
         return MIN_DURATION_COLOR;
@@ -793,7 +798,7 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
             const TimeStep& timeStep = members[r].getTimeSteps()[t];
             float lower = std::floor(timeStep.getTime() * 100.0f) / 100.0f;
-            float upper = std::ceil((timeStep.getTime() + timeStep.getDuration()) * 100.0f) / 100.0f;
+            float upper = std::ceil(timeStep.getTime() * 100.0f) / 100.0f;
             if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
                 firstSelectedMember_.setSelectedRowIndices(memberIndices);
                 firstSelectedTimeInterval_.set(tgt::vec2(lower, upper));

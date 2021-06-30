@@ -176,7 +176,6 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
 
             const tgt::vec2& valueRange = data.getValueRange(field);
             float pixelOffset = pixelPerTimeUnit * (timeOffset + run.getTimeSteps()[0].getTime());
-            float pixel = pixelPerTimeUnit * run.getTimeSteps()[0].getDuration();
 
             const VolumeBase* volumePrev = run.getTimeSteps()[0].getVolume(field);
             tgt::mat4 worldToVoxelMatrixPrev = volumePrev->getWorldToVoxelMatrix();
@@ -192,6 +191,7 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 VolumeRAMRepresentationLock lockCurr(volumeCurr);
 
                 // Determine pixel positions.
+                float pixel = pixelPerTimeUnit * (run.getTimeSteps()[t] - run.getTimeSteps()[t-1]);
                 size_t x1 = static_cast<size_t>(pixelOffset);
                 size_t x2 = static_cast<size_t>(pixelOffset + pixel);
 
@@ -213,7 +213,6 @@ FieldParallelPlotCreatorOutput FieldParallelPlotCreator::compute(FieldParallelPl
                 lockPrev = volumePrev;
 
                 pixelOffset = pixelOffset + pixel;
-                pixel = pixelPerTimeUnit * run.getTimeSteps()[t].getDuration();
 
                 // Update progress.
                 runProgressReporter.setProgress(t*progressPerTimeStep);

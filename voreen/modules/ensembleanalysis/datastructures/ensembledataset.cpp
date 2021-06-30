@@ -28,14 +28,15 @@
 #include "voreen/core/datastructures/volume/volumedisk.h"
 #include "voreen/core/datastructures/volume/volumeminmax.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
-#include "voreen/core/io/volumereader.h"
 
 #include "../utils/utils.h"
 
 namespace voreen {
 
-//////////// Time Step
 
+///////////////////////////////////////////////////
+// class TimeStep::VolumeCache
+///////////////////////////////////////////////////
 
 TimeStep::VolumeCache::VolumeCache()
 {
@@ -73,6 +74,15 @@ void TimeStep::VolumeCache::volumeDelete(const VolumeBase* source) {
 void TimeStep::VolumeCache::volumeChange(const VolumeBase* source) {
 }
 
+bool TimeStep::VolumeCache::isOwned(const VolumeURL& url) {
+    boost::lock_guard<boost::mutex> lockGuard(volumeDataMutex_);
+    auto volIter = cacheEntries_.find(url.getURL());
+    if(volIter != cacheEntries_.end()) {
+        return volIter->second.owned_;
+    }
+    return false;
+}
+
 const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
     boost::lock_guard<boost::mutex> lockGuard(volumeDataMutex_);
 
@@ -95,19 +105,75 @@ const VolumeBase* TimeStep::VolumeCache::requestVolume(const VolumeURL& url) {
     return volume;
 }
 
+///////////////////////////////////////////////////
+// class TimeStep::DerivedData
+///////////////////////////////////////////////////
+
+TimeStep::DerivedData::DerivedData()
+{
+}
+
+TimeStep::DerivedData::DerivedData(const VolumeBase* volume, bool calculateIfNotPresent) {
+    if(volume->hasDerivedData<VolumeMinMax>() || calculateIfNotPresent) {
+        minMax_ = *volume->getDerivedData<VolumeMinMax>();
+    }
+    if(volume->hasDerivedData<VolumeMinMaxMagnitude>() || (calculateIfNotPresent && volume->getNumChannels() > 1)) {
+        minMaxMagnitude_ = *volume->getDerivedData<VolumeMinMaxMagnitude>();
+    }
+}
+
+void TimeStep::DerivedData::addToVolume(VolumeBase* volume) {
+    if(minMax_.has_value()) {
+        volume->addDerivedData(new VolumeMinMax(minMax_.get()));
+    }
+    if(minMaxMagnitude_.has_value()) {
+        volume->addDerivedData(new VolumeMinMaxMagnitude(minMaxMagnitude_.get()));
+    }
+}
+
+void TimeStep::DerivedData::serialize(Serializer& s) const {
+    if(minMax_.has_value()) {
+        s.serialize("minMax", minMax_.get());
+    }
+    if(minMaxMagnitude_.has_value()) {
+        s.serialize("minMaxMagnitude", minMaxMagnitude_.get());
+    }
+}
+void TimeStep::DerivedData::deserialize(Deserializer& s) {
+    try {
+        VolumeMinMax minMax;
+        s.deserialize("minMax", minMax);
+        minMax_ = minMax;
+    } catch (SerializationException&) {
+        s.removeLastError();
+        minMax_ = boost::none;
+    }
+
+    try {
+        VolumeMinMaxMagnitude minMaxMagnitude;
+        s.deserialize("minMaxMagnitude", minMaxMagnitude);
+        minMaxMagnitude_ = minMaxMagnitude;
+    } catch (SerializationException&) {
+        s.removeLastError();
+        minMaxMagnitude_ = boost::none;
+    }
+}
+
+///////////////////////////////////////////////////
+// class TimeStep
+///////////////////////////////////////////////////
 
 TimeStep::TimeStep()
-    : TimeStep(std::map<std::string, const VolumeBase*>(), 0.0f, 0.0f)
+    : TimeStep(std::map<std::string, const VolumeBase*>(), 0.0f)
 {}
 
-TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData,
-                                    float time, float duration)
+TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData, float time, bool enforceDerivedData)
     : time_(time)
-    , duration_(duration)
     , volumeCache_(new VolumeCache(volumeData))
 {
     for(const auto& vol : volumeData) {
         urls_.insert(std::make_pair(vol.first, vol.second->getOrigin()));
+        derivedData_.insert(std::make_pair(vol.first, DerivedData(vol.second, enforceDerivedData)));
     }
 }
 
@@ -133,8 +199,29 @@ float TimeStep::getTime() const {
     return time_;
 }
 
-float TimeStep::getDuration() const {
-    return duration_;
+float TimeStep::operator-(const TimeStep& rhs) const {
+    return getTime() - rhs.getTime();
+}
+
+bool TimeStep::operator<(const TimeStep& rhs) const {
+    return getTime() < rhs.getTime();
+}
+bool TimeStep::operator<=(const TimeStep& rhs) const {
+    return getTime() <= rhs.getTime();
+}
+
+bool TimeStep::operator>(const TimeStep& rhs) const {
+    return getTime() > rhs.getTime();
+}
+bool TimeStep::operator>=(const TimeStep& rhs) const {
+    return getTime() >= rhs.getTime();
+}
+
+bool TimeStep::operator==(const TimeStep& rhs) const {
+    return getTime() == rhs.getTime();
+}
+bool TimeStep::operator!=(const TimeStep& rhs) const {
+    return getTime() != rhs.getTime();
 }
 
 std::vector<std::string> TimeStep::getFieldNames() const {
@@ -148,7 +235,23 @@ std::vector<std::string> TimeStep::getFieldNames() const {
 const VolumeBase* TimeStep::getVolume(const std::string& fieldName) const {
     auto urlIter = urls_.find(fieldName);
     if(urlIter != urls_.end()) {
-        return volumeCache_->requestVolume(urlIter->second);
+        const VolumeURL& url = urlIter->second;
+        const VolumeBase* volume = volumeCache_->requestVolume(url);
+
+        // Add back derived data, if the volume was loaded lazily.
+        if(volume && volumeCache_->isOwned(url)) {
+            auto derivedDataIter = derivedData_.find(fieldName);
+            if (derivedDataIter != derivedData_.end()) {
+                // As the cache owns the volume, we can safely apply const cast.
+                // TODO: This is far from ideal. The volume cache should add the meta data directly,
+                //  however it is not serialized. Hence, the cache needs to know the derived data.
+                //  We should try to avoid the cache in the first place..
+                //  Additionally, VolumeRAMSwap does currently not add back meta data, which it definitely should!
+                derivedDataIter->second.addToVolume(const_cast<VolumeBase*>(volume));
+            }
+        }
+
+        return volume;
     }
 
     return nullptr;
@@ -165,20 +268,22 @@ VolumeURL TimeStep::getURL(const std::string& fieldName) const {
 
 void TimeStep::serialize(Serializer& s) const {
     s.serialize("time", time_);
-    s.serialize("duration", duration_);
     s.serialize("urls", urls_);
+    s.serialize("derivedData", derivedData_);
 }
 
 void TimeStep::deserialize(Deserializer& s) {
     s.deserialize("time", time_);
-    s.deserialize("duration", duration_);
     s.deserialize("urls", urls_);
+    s.optionalDeserialize("derivedData", derivedData_, std::map<std::string, DerivedData>());
 
     volumeCache_.reset(new VolumeCache());
 }
 
 
-//////////// Member
+///////////////////////////////////////////////////
+// class Member
+///////////////////////////////////////////////////
 
 EnsembleMember::EnsembleMember()
     : EnsembleMember("", tgt::vec3::zero, std::vector<TimeStep>())
@@ -190,9 +295,6 @@ EnsembleMember::EnsembleMember(const std::string& name, const tgt::vec3& color, 
     , timeSteps_(timeSteps)
     , timeStepDurationStats_(false)
 {
-    for(const TimeStep& timeStep : timeSteps_) {
-        timeStepDurationStats_.addSample(timeStep.getDuration());
-    }
 }
 
 const std::string& EnsembleMember::getName() const {
@@ -217,6 +319,14 @@ size_t EnsembleMember::getTimeStep(float time) const {
 }
 
 const Statistics& EnsembleMember::getTimeStepDurationStats() const {
+    if(timeStepDurationStats_.getNumSamples() == 0 && !timeSteps_.empty()) {
+        float last = timeSteps_.front().getTime();
+        for(size_t i=1; i<timeSteps_.size(); i++) {
+            float duration = timeSteps_[i].getTime() - last;
+            timeStepDurationStats_.addSample(duration);
+            last = timeSteps_[i].getTime();
+        }
+    }
     return timeStepDurationStats_;
 }
 
@@ -230,11 +340,6 @@ void EnsembleMember::deserialize(Deserializer& s) {
     s.deserialize("name", name_);
     s.deserialize("color", color_);
     s.deserialize("timeSteps", timeSteps_);
-
-    timeStepDurationStats_.reset();
-    for(const TimeStep& timeStep : timeSteps_) {
-        timeStepDurationStats_.addSample(timeStep.getDuration());
-    }
 }
 
 //////////// Field
@@ -268,7 +373,7 @@ EnsembleDataset::EnsembleDataset()
     , maxTimeStepDuration_(0.0f)
     , minTimeStepDuration_(std::numeric_limits<float>::max())
     , startTime_(std::numeric_limits<float>::max())
-    , endTime_(0.0f)
+    , endTime_(std::numeric_limits<float>::lowest())
     , commonTimeInterval_(endTime_, startTime_)
     , bounds_()
     , commonBounds_()
@@ -379,10 +484,7 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
                 }
             }
 
-            // In further applications it might be useful to force derived data calculations
-            // to improve responsivity after loading the data.
-            // TODO: Think about calculating on demand.
-
+            // Gather derived data.
             VolumeMinMax* vmm = volume->getDerivedData<VolumeMinMax>();
             tgt::vec2 minMax(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
             for(size_t c = 0; c < vmm->getNumChannels(); c++) {
@@ -458,13 +560,14 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
 
         // Calculate times and durations.
         if (t < member.getTimeSteps().size() - 1) {
-            maxTimeStepDuration_ = std::max(maxTimeStepDuration_, member.getTimeSteps()[t].getDuration());
-            minTimeStepDuration_ = std::min(minTimeStepDuration_, member.getTimeSteps()[t].getDuration());
+            float duration = member.getTimeSteps()[t+1] - member.getTimeSteps()[t];
+            maxTimeStepDuration_ = std::max(maxTimeStepDuration_, duration);
+            minTimeStepDuration_ = std::min(minTimeStepDuration_, duration);
         }
     }
 
     commonTimeInterval_.x = std::max(commonTimeInterval_.x, member.getTimeSteps().front().getTime());
-    commonTimeInterval_.y = std::min(commonTimeInterval_.y, member.getTimeSteps().back().getTime()+member.getTimeSteps().back().getDuration());
+    commonTimeInterval_.y = std::min(commonTimeInterval_.y, member.getTimeSteps().back().getTime());
 
     if(commonTimeInterval_ != tgt::vec2::zero && commonTimeInterval_.x > commonTimeInterval_.y) {
         LWARNINGC("voreen.EnsembleDataSet", "The time interval of the currently added Member " << member.getName() << " does not overlap with the previous interval");

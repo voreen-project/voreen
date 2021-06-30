@@ -277,14 +277,15 @@ public:
     EnsembleDataset* applyFilter(const EnsembleDataset& ensemble) {
 
         EnsembleDataset* dataset = new EnsembleDataset();
+        float epsilon = ensemble.getMinTimeStepDuration();
 
         for (const EnsembleMember& member : ensemble.getMembers()) {
             std::vector<TimeStep> timeSteps;
-            for (size_t i = 0; i < member.getTimeSteps().size(); i++) {
-                if (member.getTimeSteps()[i].getTime() > timeInterval_.get().y)
+            for (const auto& timeStep : member.getTimeSteps()) {
+                if (timeStep.getTime() > timeInterval_.get().y + epsilon)
                     break;
-                if (member.getTimeSteps()[i].getTime() >= timeInterval_.get().x)
-                    timeSteps.push_back(member.getTimeSteps()[i]);
+                if (timeStep.getTime() >= timeInterval_.get().x)
+                    timeSteps.push_back(timeStep);
             }
 
             if(!timeSteps.empty()) {
