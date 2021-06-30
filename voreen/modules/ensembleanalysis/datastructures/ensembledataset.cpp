@@ -123,19 +123,19 @@ TimeStep::DerivedData::DerivedData(const VolumeBase* volume, bool calculateIfNot
 }
 
 void TimeStep::DerivedData::addToVolume(VolumeBase* volume) {
-    if(minMax_.has_value()) {
+    if(minMax_) {
         volume->addDerivedData(new VolumeMinMax(minMax_.get()));
     }
-    if(minMaxMagnitude_.has_value()) {
+    if(minMaxMagnitude_) {
         volume->addDerivedData(new VolumeMinMaxMagnitude(minMaxMagnitude_.get()));
     }
 }
 
 void TimeStep::DerivedData::serialize(Serializer& s) const {
-    if(minMax_.has_value()) {
+    if(minMax_) {
         s.serialize("minMax", minMax_.get());
     }
-    if(minMaxMagnitude_.has_value()) {
+    if(minMaxMagnitude_) {
         s.serialize("minMaxMagnitude", minMaxMagnitude_.get());
     }
 }

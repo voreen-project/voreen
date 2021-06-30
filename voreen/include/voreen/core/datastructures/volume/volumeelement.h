@@ -1356,7 +1356,7 @@ uint32_t getFloatAsType(float value) {
     // uint32_MAX does not fit into a float => We lose precision and an input value of 1.0f is mapped onto uint32_MAX+1 == 0
     // Therefore we cast value to the larger int64_t and clamp then.
     int64_t vali = value*VolumeElement<uint32_t>::rangeMaxElement();
-    return tgt::clamp(vali, 0L, static_cast<int64_t>(std::numeric_limits<uint32_t>::max()));
+    return tgt::clamp(vali, int64_t(0), static_cast<int64_t>(std::numeric_limits<uint32_t>::max()));
 }
 
 template<>
