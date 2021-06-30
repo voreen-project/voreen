@@ -236,9 +236,9 @@ void JsonDeserializer::read(std::istream& stream, bool compressed)
         decompressingStream.push(gzip_decompressor());
         decompressingStream.push(stream);
 
-        std::copy(std::istream_iterator<char>(decompressingStream), std::istream_iterator<char>(), std::back_inserter(documentBuffer_));
+        std::copy(std::istreambuf_iterator<char>(decompressingStream), std::istreambuf_iterator<char>(), std::back_inserter(documentBuffer_));
     } else {
-        std::copy(std::istream_iterator<char>(stream), std::istream_iterator<char>(), std::back_inserter(documentBuffer_));
+        std::copy(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>(), std::back_inserter(documentBuffer_));
     }
 
     documentBuffer_.push_back(0); //append string-terminating zero byte.
