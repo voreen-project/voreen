@@ -45,6 +45,9 @@
 #include "processors/volume/volumelistadapter.h"
 #include "processors/volume/volumelistaggregate.h"
 #include "processors/volume/volumelistmerger.h"
+#include "processors/volume/volumelistoffset.h"
+#include "processors/volume/volumelistrealworldmapping.h"
+#include "processors/volume/volumelisttimestep.h"
 #include "processors/volume/volumemerger.h"
 #include "processors/volume/volumenoise.h"
 #include "processors/volume/volumeselectormultichannel.h"
@@ -91,6 +94,9 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new VolumeListAdapter());
     registerProcessor(new VolumeListAggregate());
     registerProcessor(new VolumeListMerger());
+    registerProcessor(new VolumeListOffset());
+    registerProcessor(new VolumeListRealWorldMapping());
+    registerProcessor(new VolumeListTimeStep());
     registerProcessor(new VolumeMerger());
     registerProcessor(new VolumeNoise());
     registerProcessor(new VolumeSelectorMultiChannel());

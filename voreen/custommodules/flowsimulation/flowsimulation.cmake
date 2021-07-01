@@ -44,6 +44,9 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumelistadapter.cpp
     ${MOD_DIR}/processors/volume/volumelistaggregate.cpp
     ${MOD_DIR}/processors/volume/volumelistmerger.cpp
+    ${MOD_DIR}/processors/volume/volumelistoffset.cpp
+    ${MOD_DIR}/processors/volume/volumelistrealworldmapping.cpp
+    ${MOD_DIR}/processors/volume/volumelisttimestep.cpp
     ${MOD_DIR}/processors/volume/volumemerger.cpp
     ${MOD_DIR}/processors/volume/volumenoise.cpp
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
@@ -82,6 +85,9 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumelistadapter.h
     ${MOD_DIR}/processors/volume/volumelistaggregate.h
     ${MOD_DIR}/processors/volume/volumelistmerger.h
+    ${MOD_DIR}/processors/volume/volumelistoffset.h
+    ${MOD_DIR}/processors/volume/volumelistrealworldmapping.h
+    ${MOD_DIR}/processors/volume/volumelisttimestep.h
     ${MOD_DIR}/processors/volume/volumemerger.h
     ${MOD_DIR}/processors/volume/volumenoise.h
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.h
