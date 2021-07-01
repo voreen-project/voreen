@@ -96,11 +96,11 @@ void GLContextManager::pushContext(GLContextBase* context) {
     tgtAssert(context, "Context was null");
     tgtAssert(isRegisteredContext(context), "Context was not registered");
 
-#ifdef TGT_DEBUG
-    std::string indentation;
-    for(size_t i=0; i < contexts_.size(); i++) indentation += "* ";
-    LDEBUG(indentation << "Pushing Context: " << registered_[context]);
-#endif
+//#ifdef TGT_DEBUG
+//    std::string indentation;
+//    for(size_t i=0; i < contexts_.size(); i++) indentation += "* ";
+//    LDEBUG(indentation << "Pushing Context: " << registered_[context]);
+//#endif
 
     if (!context->isActive())
         context->activate();
@@ -121,11 +121,11 @@ void GLContextManager::popContext() {
     tgtAssert(!contexts_.empty(), "Context stack empty");
     contexts_.pop_back();
 
-#ifdef TGT_DEBUG
-    std::string indentation;
-    for(size_t i=0; i< contexts_.size(); i++) indentation += "* ";
-    LDEBUG(indentation << "Poping Context");
-#endif
+//#ifdef TGT_DEBUG
+//    std::string indentation;
+//    for(size_t i=0; i< contexts_.size(); i++) indentation += "* ";
+//    LDEBUG(indentation << "Poping Context");
+//#endif
 
     if (!contexts_.empty() && !contexts_.back()->isActive()) {
         contexts_.back()->activate();
