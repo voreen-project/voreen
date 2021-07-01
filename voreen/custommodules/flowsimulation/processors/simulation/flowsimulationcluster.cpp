@@ -516,12 +516,12 @@ std::string FlowSimulationCluster::generateCompileScript() const {
 
     if(institution_.get() == "jena") {
         script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
-        script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
+        script << " && make";
     }
     else if(institution_.get() == "wwu") {
         script << "module load " << toolchain_.get();
         script << " && cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
-        script << " && make -j4"; // Assumes that using 4 threads is okay, which should be the case on any system.
+        script << " && make";
     }
 
     script << "\"";

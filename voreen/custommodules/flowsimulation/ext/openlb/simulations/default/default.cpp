@@ -268,6 +268,28 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter,
     clout << "Prepare Geometry ... OK" << std::endl;
 }
 
+// If any dynamics should be missing, we fix this by using "no dynamics" to prevent a crash.
+size_t fixupLattice(SuperLattice3D<T, DESCRIPTOR>& lattice) {
+    size_t errors = 0;
+    for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
+        auto& blockLattice = lattice.getExtendedBlockLattice(iC);
+        for (int iX = 0; iX < blockLattice.getNx(); ++iX) {
+            for (int iY = 0; iY < blockLattice.getNy(); ++iY) {
+                for (int iZ = 0; iZ < blockLattice.getNz(); ++iZ) {
+                    auto cell = blockLattice.get(iX, iY, iZ);
+                    auto dynamics = cell.getDynamics();
+                    if (!dynamics) {
+                        errors++;
+                        //std::cerr << "no dynamics at: " << iX << ", " << iY << ", " << iZ << std::endl;
+                        cell.defineDynamics(&instances::getNoDynamics<T, DESCRIPTOR>());
+                    }
+                }
+            }
+        }
+    }
+    return errors;
+}
+
 // Set up the geometry of the simulation
 void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
                     UnitConverter<T, DESCRIPTOR> const& converter,
@@ -312,6 +334,12 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
             lattice.defineDynamics(superGeometry.getMaterialIndicator(indicator.id_), &bulkDynamics);
             setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
         }
+    }
+
+    // If any dynamics should be missing up to this point, we fix this by using "no dynamics".
+    size_t errors = fixupLattice(lattice);
+    if(errors > 0) {
+        clout << errors << " errors have been fixed" << std::endl;
     }
 
     // Unsteered simulation.
@@ -371,32 +399,32 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
             // Apply the indicator's profile.
             switch(indicator.flowProfile_) {
-                case FP_POISEUILLE:
-                {
-//                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
-                    CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                                  normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
-                    applyFlowProfile(profile);
-                    break;
-                }
-                case FP_POWERLAW:
-                {
-                    T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
-                    CirclePowerLawTurbulent3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                                         normal[0], normal[1], normal[2], radius, targetLatticeVelocity, n);
-                    applyFlowProfile(profile);
-                    break;
-                }
-                case FP_CONSTANT:
-                {
-                    AnalyticalConst3D<T, T> profile(normal[0] * targetLatticeVelocity, normal[1] * targetLatticeVelocity, normal[2] * targetLatticeVelocity);
-                    applyFlowProfile(profile);
-                    break;
-                }
-                case FP_NONE:
-                default:
-                    // Skip!
-                    continue;
+            case FP_POISEUILLE:
+            {
+                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
+//                    CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+//                                                  normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
+                applyFlowProfile(profile);
+                break;
+            }
+            case FP_POWERLAW:
+            {
+                T n = 1.03 * std::log(converter.getReynoldsNumber()) - 3.6; // Taken from OLB documentation.
+                CirclePowerLawTurbulent3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                                     normal[0], normal[1], normal[2], radius, targetLatticeVelocity, n);
+                applyFlowProfile(profile);
+                break;
+            }
+            case FP_CONSTANT:
+            {
+                AnalyticalConst3D<T, T> profile(normal[0] * targetLatticeVelocity, normal[1] * targetLatticeVelocity, normal[2] * targetLatticeVelocity);
+                applyFlowProfile(profile);
+                break;
+            }
+            case FP_NONE:
+            default:
+                // Skip!
+                continue;
             }
         }
     }
@@ -772,9 +800,9 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
-    const int noOfCuboids = std::min( 16*spatialResolution,2*singleton::mpi().getSize() );
+    const int noOfCuboids = std::min( 16*spatialResolution, singleton::mpi().getSize() );
 #else
-    const int noOfCuboids = 2;
+    const int noOfCuboids = 1;
 #endif
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
 

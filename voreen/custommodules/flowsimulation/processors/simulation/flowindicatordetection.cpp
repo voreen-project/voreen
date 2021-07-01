@@ -203,6 +203,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         velocityCurveType_.addOption("custom", "Custom");
         velocityCurveType_.setGroupID("velocity");
         ON_CHANGE(velocityCurveType_, FlowIndicatorDetection, onIndicatorConfigChange);
+        ON_CHANGE_LAMBDA(velocityCurveType_, [this] { velocityCurveFile_.set(""); });
     addProperty(velocityCurveFile_);
         velocityCurveFile_.setGroupID("velocity");
         ON_CHANGE(velocityCurveFile_, FlowIndicatorDetection, onIndicatorConfigChange);
@@ -472,6 +473,7 @@ VelocityCurve FlowIndicatorDetection::createCurveFromSettings(FlowIndicatorSetti
         if(!settings.velocityCurveFile_.empty()) {
             try {
                 velocityCurve = VelocityCurve::createFromCSV(settings.velocityCurveFile_);
+                settings.targetVelocity_ = velocityCurve.getMaxVelocity();
             }
             catch (VoreenException& e) {
                 VoreenApplication::app()->showMessageBox("Failed loading Curve", e.what());
@@ -592,7 +594,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     }
 
     // Estimate velocity(direction) and therefore type.
-    std::vector<tgt::vec3> samples = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_, false);
+    std::vector<tgt::vec3> samples = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_);
 
     tgt::vec3 accumDirection = tgt::vec3::zero;
     float maxMagnitudeSq = 0.0f;

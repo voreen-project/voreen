@@ -98,6 +98,10 @@ float VelocityCurve::getMaxVelocity() const {
     return max;
 }
 
+float VelocityCurve::getDuration() const {
+    return peakVelocities_.rbegin()->first - peakVelocities_.begin()->first;
+}
+
 VelocityCurve VelocityCurve::createConstantCurve(float value) {
     VelocityCurve curve;
     curve[0.0f] = value;
@@ -159,21 +163,19 @@ VelocityCurve VelocityCurve::createFromCSV(const std::string& file) {
     }
 
     std::string line;
+    std::getline(lineStream, line); // Get (and ignore) header line.
+    LDEBUGC("voreen.VelocityCurve", "Header was: " << line);
     while(std::getline(lineStream, line)) {
 
         std::vector<float> cellValues;
 
-        std::stringstream cellStream;
+        std::stringstream cellStream(line);
         std::string cell;
         while(std::getline(cellStream, cell, ',')) {
-            float value;
             std::stringstream helper(cell);
+
+            float value = 0.0f;
             helper >> value;
-
-            if (!helper.good()) {
-                throw VoreenException("Invalid value: " + cell);
-            }
-
             cellValues.push_back(value);
         }
 

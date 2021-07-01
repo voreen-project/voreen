@@ -52,6 +52,7 @@ RoiAnalysis::RoiAnalysis()
     addProperty(outputQuantity_);
     outputQuantity_.addOption("maxMagnitude", "Max Magnitude");
     outputQuantity_.addOption("meanMagnitude", "Mean Magnitude");
+    outputQuantity_.addOption("medianMagnitude", "Median Magnitude");
     outputQuantity_.addOption("meanComponents", "Mean Components");
     outputQuantity_.addOption("integration", "Integration");
     outputQuantity_.setGroupID("output");
@@ -153,6 +154,17 @@ RoiAnalysisInput RoiAnalysis::prepareComputeInput() {
                 return std::vector<float>(1, meanMagnitude);
             };
         }
+        else if(outputQuantity_.get() == "medianMagnitude") {
+            outputFunc = [](const std::vector<tgt::vec3>& samples) {
+                std::vector<float> magnitudes;
+                magnitudes.reserve(samples.size());
+                for (const auto& sample : samples) {
+                    magnitudes.emplace_back(tgt::length(sample));
+                }
+                std::nth_element(magnitudes.begin(), magnitudes.begin() + magnitudes.size()/2, magnitudes.end());
+                return std::vector<float>(1, magnitudes[magnitudes.size() / 2]);
+            };
+        }
         else if(outputQuantity_.get() == "integration") {
             tgt::vec3 spacing = maskVolume->getSpacing();
             float volumeSize = seedPoints.size() * tgt::hmul(spacing);
@@ -203,10 +215,10 @@ RoiAnalysisOutput RoiAnalysis::compute(RoiAnalysisInput input, ProgressReporter&
 
         std::vector<PlotCellValue> values;
         if(timeSeries) {
-            values.push_back(PlotCellValue(volume->getTimestep()));
+            values.emplace_back(PlotCellValue(volume->getTimestep()));
         }
         else {
-            values.push_back(PlotCellValue(t+1));
+            values.emplace_back(PlotCellValue(t+1));
         }
 
         std::vector<tgt::vec3> samples;
@@ -229,7 +241,7 @@ RoiAnalysisOutput RoiAnalysis::compute(RoiAnalysisInput input, ProgressReporter&
 
         // Add to plot data.
         for(size_t i=0; i<output.size(); i++) {
-            values.push_back(PlotCellValue(output[i]));
+            values.emplace_back(PlotCellValue(output[i]));
         }
 
         data->insert(values);

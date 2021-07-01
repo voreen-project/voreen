@@ -76,6 +76,8 @@ public:
     float getMinVelocity() const;
     float getMaxVelocity() const;
 
+    float getDuration() const;
+
     static VelocityCurve createConstantCurve(float value);
     static VelocityCurve createLinearCurve(float duration, float maxValue);
     static VelocityCurve createSinusoidalCurve(float duration, float maxValue, int steps = 30);
@@ -221,7 +223,7 @@ public:
     /**
      * Returns the offset used to generate flow indicator ids.
      * Note: the offset depends on the simulation framework.
-     * E.g. OpenLB uses requires an offset of 3.
+     * E.g. OpenLB requires an offset of 3.
      */
     static int getFlowIndicatorIdOffset();
 

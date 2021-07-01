@@ -146,6 +146,28 @@ void prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
     superGeometry.checkForErrors();
 }
 
+// If any dynamics should be missing, we fix this by using "no dynamics" to prevent a crash.
+size_t fixupLattice(SuperLattice3D<T, DESCRIPTOR>& lattice) {
+    size_t errors = 0;
+    for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
+        auto& blockLattice = lattice.getExtendedBlockLattice(iC);
+        for (int iX = 0; iX < blockLattice.getNx(); ++iX) {
+            for (int iY = 0; iY < blockLattice.getNy(); ++iY) {
+                for (int iZ = 0; iZ < blockLattice.getNz(); ++iZ) {
+                    auto cell = blockLattice.get(iX, iY, iZ);
+                    auto dynamics = cell.getDynamics();
+                    if (!dynamics) {
+                        errors++;
+                        //std::cerr << "no dynamics at: " << iX << ", " << iY << ", " << iZ << std::endl;
+                        cell.defineDynamics(&instances::getNoDynamics<T, DESCRIPTOR>());
+                    }
+                }
+            }
+        }
+    }
+    return errors;
+}
+
 // Set up the geometry of the simulation.
 void prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
                      UnitConverter<T,DESCRIPTOR> const& converter,
@@ -191,6 +213,12 @@ void prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
             lattice.defineDynamics(superGeometry.getMaterialIndicator(indicator.id_), &bulkDynamics);
             setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
         }
+    }
+
+    // If any dynamics should be missing up to this point, we fix this by using "no dynamics".
+    size_t errors = fixupLattice(lattice);
+    if(errors > 0) {
+        std::cout << "[fixupLattice] " << errors << " errors have been fixed" << std::endl;
     }
 
     // Unsteered simulation.
@@ -255,9 +283,9 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             switch(indicator.flowProfile_) {
             case voreen::FP_POISEUILLE:
             {
-//                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
-                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
+                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
+//                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+//                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
                 applyFlowProfile(profile);
                 break;
             }

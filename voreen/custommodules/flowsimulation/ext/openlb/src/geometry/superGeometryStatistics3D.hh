@@ -486,7 +486,7 @@ std::vector<T> SuperGeometryStatistics3D<T>::computeNormal(int material) const
     singleton::mpi().reduceAndBcast((normal[iDim]), MPI_SUM);
   }
 #endif
-
+/* SL: normalization not necessary
   if (getNvoxel(material) == 0) {
     std::cerr << "Unkown material number" << std::endl;
     std::exit(-1);
@@ -495,7 +495,7 @@ std::vector<T> SuperGeometryStatistics3D<T>::computeNormal(int material) const
   for (int iDim=0; iDim<3; iDim++) {
     normal[iDim] /= getNvoxel(material);
   }
-
+*/
   T norm = sqrt(normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2]);
   if (norm>0.) {
     normal[0]/=norm;
