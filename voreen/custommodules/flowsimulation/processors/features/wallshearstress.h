@@ -58,7 +58,7 @@ private:
     GeometryPort wssSurfaceOutport_;
     VolumePort intensityVolume_;
 
-    FloatProperty kineticViscosity_;
+    FloatProperty kinematicViscosity_;
     FloatProperty density_;
     FloatProperty maxWSS_;
     TransFunc1DKeysProperty transferFunction_;

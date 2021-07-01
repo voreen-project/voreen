@@ -54,7 +54,7 @@ WallShearStress::WallShearStress()
     , wssSurfaceOutport_(Port::OUTPORT, "geometry.output", "Geometry Outport")
     , intensityVolume_(Port::OUTPORT, "volume.intensities", "Intensity Volume")
     //, dynamicViscosity_("dynamicViscosityProp", "Dynamic viscosity", 0.0035f, 0.f, 0.1f)
-    , kineticViscosity_("kineticViscosityProp", "Kinetic viscosity (x10^(-6) m^2/s)", 1.35f, 0.1f, 100.0f)
+    , kinematicViscosity_("kinematicViscosityProp", "Kinematic viscosity (x10^(-6) m^2/s)", 1.35f, 0.1f, 100.0f)
     , density_("densityProp", "Density (kg/m^3)", 988.21f, 0.1f, 10000.0f)
     , maxWSS_("maxWSSProp", "Expected Maximum WSS", 0.00002f, 0.0f, 1000.0f)
     , transferFunction_("transFuncProp", "Color Map")
@@ -80,8 +80,8 @@ WallShearStress::WallShearStress()
     addPort(wssSurfaceOutport_);
     addPort(intensityVolume_);
 
-    addProperty(kineticViscosity_);
-    kineticViscosity_.setNumDecimals(2);
+    addProperty(kinematicViscosity_);
+    kinematicViscosity_.setNumDecimals(2);
 
     addProperty(density_);
     density_.setNumDecimals(3);
@@ -149,7 +149,7 @@ void WallShearStress::process() {
     VolumeRAM_Float* intensityVolume = new VolumeRAM_Float(volumeData->getDimensions());
     intensityVolume->clear();
 
-    const float dynamicViscosity = kineticViscosity_.get() * 10e-6f * density_.get();
+    const float dynamicViscosity = kinematicViscosity_.get() * 10e-6f * density_.get();
     const float epsilon = epsilon_.get();
     const float r = r_.get();
     const float toMilliMeterPerSecond = velocityUnitConversion_.getValue();
@@ -264,9 +264,9 @@ void WallShearStress::process() {
         tgt::vec3 vectorInLumen = sample(pos, normal, epsilon + r);
 
         // Calculate WSS magnitude.
-        tgt::vec3 v_part = parallel(vectorInLumen - vectorAtSurface, normal) * toMilliMeterPerSecond / r;
+        tgt::vec3 v_parallel = parallel(vectorInLumen - vectorAtSurface, normal) * toMilliMeterPerSecond / r;
 
-        float wsr = tgt::length(v_part);
+        float wsr = tgt::length(v_parallel);
         float wss = dynamicViscosity * wsr;
 
 //#pragma omp critical
