@@ -51,6 +51,7 @@
 #include "processors/volume/volumemerger.h"
 #include "processors/volume/volumenoise.h"
 #include "processors/volume/volumeselectormultichannel.h"
+#include "processors/volume/volumetimestep.h"
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
 #include "processors/simulation/flowindicatordetection.h"
@@ -100,6 +101,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new VolumeMerger());
     registerProcessor(new VolumeNoise());
     registerProcessor(new VolumeSelectorMultiChannel());
+    registerProcessor(new VolumeTimestep());
     registerProcessor(new WallShearStress());
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerProcessor(new FlowIndicatorDetection());
