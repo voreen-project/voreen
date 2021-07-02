@@ -283,9 +283,9 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             switch(indicator.flowProfile_) {
             case voreen::FP_POISEUILLE:
             {
-                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
-//                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
-//                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
+//                CirclePoiseuille3D<T> profile(superGeometry, indicator.id_, targetLatticeVelocity); // This is the alternative way, but how does it work?
+                CirclePoiseuille3D<T> profile(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+                                              normal[0], normal[1], normal[2], radius, targetLatticeVelocity);
                 applyFlowProfile(profile);
                 break;
             }
