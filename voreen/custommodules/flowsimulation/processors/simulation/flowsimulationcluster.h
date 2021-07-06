@@ -94,7 +94,6 @@ private:
     StringOptionProperty simulationType_;
 
     IntProperty configNodes_;
-    IntProperty configTasks_;
     IntProperty configTasksPerNode_;
     IntProperty configCPUsPerTask_;
     IntProperty configMemory_;

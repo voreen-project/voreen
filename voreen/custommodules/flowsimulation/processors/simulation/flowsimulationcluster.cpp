@@ -46,16 +46,15 @@ FlowSimulationCluster::FlowSimulationCluster()
     , institution_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
     , emailAddress_("emailAddress", "E-Mail Address", "s_leis06@uni-muenster.de")
-    , clusterAddress_("clusterAddress", "Cluster Address", "palma2c.uni-muenster.de")
+    , clusterAddress_("clusterAddress", "Cluster Address", "palma.uni-muenster.de")
     , programPath_("programPath", "Program Path", "~/OpenLB")
     , dataPath_("dataPath", "Data Path", "/scratch/tmp")
     , toolchain_("toolchain", "Toolchain")
     , simulationType_("simulationType", "Simulation Type")
     , configNodes_("configNodes", "Nodes", 1, 1, 2)
-    , configTasks_("configTasks", "Tasks", 18, 1, 72)
     , configTasksPerNode_("configTasksPerNode", "Tasks per Node", 18, 1, 72)
     , configCPUsPerTask_("configCPUsPerTask", "CPUs per Task", 4, 1, 72)
-    , configMemory_("configMemory", "Memory (GB/Node)", 16, 1, 32)
+    , configMemory_("configMemory", "Memory (GB/Node)", 16, 1, 92)
     , configPartition_("configPartition", "Partition")
     , configTimeDays_("configTimeDays", "Max. Time Days", 0, 0, 6)
     , configTimeQuarters_("configTimeQuarters", "Max. Quarters (1/4h)", 1, 1, 4*24)
@@ -116,8 +115,6 @@ FlowSimulationCluster::FlowSimulationCluster()
 
     addProperty(configNodes_);
     configNodes_.setGroupID("cluster-resources");
-    addProperty(configTasks_);
-    configTasks_.setGroupID("cluster-resources");
     addProperty(configTasksPerNode_);
     configTasksPerNode_.setGroupID("cluster-resources");
     addProperty(configCPUsPerTask_);
@@ -597,7 +594,6 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << "#SBATCH --nodes=" << configNodes_.get() << std::endl;
         script << std::endl;
         script << "# MPI/OMP Hybrid config" << std::endl;
-        script << "#SBATCH --ntasks=" << configTasks_.get() << std::endl;
         script << "#SBATCH --ntasks-per-node=" << configTasksPerNode_.get() << std::endl;
         script << "#SBATCH --cpus-per-task=" << configCPUsPerTask_.get() << std::endl;
         script << std::endl;
@@ -632,7 +628,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         if (configCPUsPerTask_.get() > 1) {
             script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " ";
         }
-        if (configTasks_.get() > 1 || configTasksPerNode_.get() > 1) {
+        if (configTasksPerNode_.get() > 1) {
             script << "mpirun ";
         }
 
