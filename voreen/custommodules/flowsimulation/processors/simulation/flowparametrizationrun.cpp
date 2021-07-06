@@ -62,11 +62,12 @@ FlowParametrizationRun::FlowParametrizationRun()
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
     , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Contant", 0.1f, 0.1f, 5.0f)
     , bouzidi_("bouzidi", "Bouzidi", true)
+    , inletVelocityMultiplier_("inletVelocityMultiplier", "Inlet Velocity Multiplier", 1.0f, 0.1f, 10.0f)
     , discretization_("discretization", "Discretization", 3, 1, 26)
     , addParametrization_("addParametrizations", "Add Parametrizations")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
-    , parametrizations_("parametrizations", "Parametrizations", 11, Processor::VALID)
+    , parametrizations_("parametrizations", "Parametrizations", 12, Processor::VALID)
     , addInvalidParametrizations_("addInvalidParametrizations", "Add invalid Parametrizations", false)
 {
     addPort(inport_);
@@ -102,6 +103,8 @@ FlowParametrizationRun::FlowParametrizationRun()
         smagorinskyConstant_.setGroupID("parameters");
     addProperty(bouzidi_);
         bouzidi_.setGroupID("parameters");
+    addProperty(inletVelocityMultiplier_);
+        inletVelocityMultiplier_.setGroupID("parameters");
     addProperty(discretization_);
         discretization_.setGroupID("parameters");
     setPropertyGroupGuiName("parameters", "Parameters");
@@ -125,6 +128,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     parametrizations_.setColumnLabel(8, "density");
     parametrizations_.setColumnLabel(9, "Smagorinsky");
     parametrizations_.setColumnLabel(10, "Bouzidi");
+    parametrizations_.setColumnLabel(11, "Vel. Mult.");
 
     addProperty(addInvalidParametrizations_);
 }
@@ -177,6 +181,7 @@ void FlowParametrizationRun::addParametrizations() {
     PARAMETER_DISCRETIZATION_BEGIN(viscosity, float)
     PARAMETER_DISCRETIZATION_BEGIN(density, float)
     PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant, float)
+    PARAMETER_DISCRETIZATION_BEGIN(inletVelocityMultiplier, float)
     float characteristicLength = characteristicLength_.get();
     float characteristicVelocity = characteristicVelocity_.get();
     bool bouzidi = bouzidi_.get();
@@ -191,6 +196,7 @@ void FlowParametrizationRun::addParametrizations() {
         parameters.setDensity(density);
         parameters.setSmagorinskyConstant(smagorinskyConstant);
         parameters.setBouzidi(bouzidi);
+        parameters.setInletVelocityMultiplier(inletVelocityMultiplier);
         flowParameters_.emplace_back(parameters);
 
         std::vector<std::string> row;
@@ -205,9 +211,11 @@ void FlowParametrizationRun::addParametrizations() {
         row.push_back(std::to_string(parameters.getDensity()));
         row.push_back(std::to_string(parameters.getSmagorinskyConstant()));
         row.push_back(std::to_string(parameters.getBouzidi()));
+        row.push_back(std::to_string(parameters.getInletVelocityMultiplier()));
         parametrizations_.addRow(row);
     }
     //PARAMETER_DISCRETIZATION_END
+    PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END

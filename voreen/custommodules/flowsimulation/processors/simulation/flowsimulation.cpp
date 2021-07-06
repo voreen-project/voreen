@@ -258,11 +258,12 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
 {
 
     bool bouzidiOn = parameterSetEnsemble.at(selectedParametrization).getBouzidi();
+    float inletVelocityMultiplier = parameterSetEnsemble.at(selectedParametrization).getInletVelocityMultiplier();
 
     for(const auto& indicator : parameterSetEnsemble.getFlowIndicators()) {
         if (indicator.type_ == voreen::FIT_VELOCITY) {
 
-            T targetPhysVelocity = indicator.velocityCurve_(converter.getPhysTime(iteration));
+            T targetPhysVelocity = indicator.velocityCurve_(converter.getPhysTime(iteration)) * inletVelocityMultiplier;
             T targetLatticeVelocity = converter.getLatticeVelocity(targetPhysVelocity);
 
             // This function applies the velocity profile to the boundary condition and the lattice.
@@ -325,12 +326,6 @@ void writeVVDFile(STLreader<T>& stlReader,
                   std::string simulationOutputPath,
                   const std::string& name,
                   SuperLatticeF3D<T, DESCRIPTOR>& feature) {
-
-    // Create output directory.
-    simulationOutputPath += name + '/';
-    if(!tgt::FileSystem::dirExists(simulationOutputPath)) {
-        tgt::FileSystem::createDirectory(simulationOutputPath);
-    }
 
     const Vector<T, 3>& min = stlReader.getMin();
     const Vector<T, 3>& max = stlReader.getMax();

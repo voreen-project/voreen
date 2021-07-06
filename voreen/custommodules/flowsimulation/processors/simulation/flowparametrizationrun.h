@@ -88,6 +88,7 @@ private:
     FloatIntervalProperty density_;
     FloatIntervalProperty smagorinskyConstant_;
     BoolProperty bouzidi_;
+    FloatIntervalProperty inletVelocityMultiplier_;
     IntProperty discretization_;
 
     ButtonProperty addParametrization_;

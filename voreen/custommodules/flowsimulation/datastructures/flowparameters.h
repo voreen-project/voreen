@@ -179,6 +179,12 @@ public:
     void setBouzidi(bool bouzidi);
 
     /**
+     * Returns a factor that is multiplied with the inlet velocity.
+     */
+    float getInletVelocityMultiplier() const;
+    void setInletVelocityMultiplier(float multiplier);
+
+    /**
      * Returns Reynolds number.
      */
     float getReynoldsNumber() const;
@@ -206,6 +212,7 @@ private:
     float density_;                 ///< density in kg/m^3
     float smagorinskyConstant_;     ///< constant for Smagorinsky turbulence model
     bool bouzidi_;                  ///< bouzidi boundary condition
+    float inletVelocityMultiplier_; ///< factor to multiply the inlet velocity by
 };
 
 /**

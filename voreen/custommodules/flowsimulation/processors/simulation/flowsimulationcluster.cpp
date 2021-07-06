@@ -90,8 +90,8 @@ FlowSimulationCluster::FlowSimulationCluster()
 
     addProperty(institution_);
     ON_CHANGE(institution_, FlowSimulationCluster, institutionChanged);
-    institution_.addOption("jena", "Jena");
     institution_.addOption("wwu", "WWU");
+    //institution_.addOption("jena", "Jena"); // No longer in use.
     institution_.setGroupID("cluster-general");
     addProperty(username_);
     username_.setGroupID("cluster-general");
@@ -111,7 +111,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     simulationType_.setGroupID("cluster-general");
     simulationType_.addOption("default", "default");
     //simulationType_.addOption("steered", "Steered"); // TODO: implement!
-    simulationType_.addOption("aorta3d", "aorta3d");
+    //simulationType_.addOption("aorta3d", "aorta3d");
     setPropertyGroupGuiName("cluster-general", "General Cluster Config");
 
     addProperty(configNodes_);
@@ -192,7 +192,7 @@ void FlowSimulationCluster::institutionChanged() {
     if(institution_.get() == "jena") {
         setPropertyGroupVisible("cluster-resources", false);
     }
-    else if(institution_.get() == "wwu") {
+    if(institution_.get() == "wwu") {
         setPropertyGroupVisible("cluster-resources", true);
     }
     else {
@@ -278,7 +278,7 @@ void FlowSimulationCluster::enqueueSimulations() {
             std::string velocityFilename = simulationPathSource + "velocity/ " + volumeName;
             std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
 
-            const VolumeRAM* volume = volumeList->at(i)->getRepresentation<VolumeRAM>();
+            VolumeRAMRepresentationLock volume(volumeList->at(i));
             velocityFile.write(reinterpret_cast<const char*>(volume->getData()), volume->getNumBytes());
             if (!velocityFile.good()) {
                 LERROR("Could not write velocity file");

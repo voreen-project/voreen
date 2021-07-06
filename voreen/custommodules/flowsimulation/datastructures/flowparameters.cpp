@@ -325,6 +325,14 @@ void FlowParameterSet::setBouzidi(bool bouzidi) {
     bouzidi_ = bouzidi;
 }
 
+float FlowParameterSet::getInletVelocityMultiplier() const {
+    return inletVelocityMultiplier_;
+}
+
+void FlowParameterSet::setInletVelocityMultiplier(float multiplier) {
+    inletVelocityMultiplier_ = multiplier;
+}
+
 float FlowParameterSet::getReynoldsNumber() const {
     return characteristicVelocity_ * characteristicLength_ / viscosity_;
 }
@@ -346,6 +354,7 @@ void FlowParameterSet::serialize(Serializer& s) const {
     s.serialize("density", density_);
     s.serialize("smagorinskyConstant", smagorinskyConstant_);
     s.serialize("bouzidi", bouzidi_);
+    s.serialize("inletVelocityMultiplier", inletVelocityMultiplier_);
 }
 
 void FlowParameterSet::deserialize(Deserializer& s) {
@@ -358,6 +367,7 @@ void FlowParameterSet::deserialize(Deserializer& s) {
     s.deserialize("density", density_);
     s.deserialize("smagorinskyConstant", smagorinskyConstant_);
     s.deserialize("bouzidi", bouzidi_);
+    s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
 }
 
 

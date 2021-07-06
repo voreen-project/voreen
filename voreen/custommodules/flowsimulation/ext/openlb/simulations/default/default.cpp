@@ -206,6 +206,7 @@ T viscosity = 0.0;
 T density = 0.0;
 T smagorinskyConstant = 0.0;
 bool bouzidiOn = false;
+T inletVelocityMultiplier = 1.0;
 //////////////////////////////////////
 
 
@@ -235,7 +236,7 @@ void prepareGeometry(UnitConverter<T, DESCRIPTOR> const& converter,
         T radius = flowIndicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength();
 
         // Define a local disk volume.
-        IndicatorCircle3D<T> flow(center[0]*VOREEN_LENGTH_TO_SI, center[1]*VOREEN_LENGTH_TO_SI, center[2]*VOREEN_LENGTH_TO_SI,
+        IndicatorCircle3D<T> flow(center[0], center[1], center[2],
                                   normal[0], normal[1], normal[2],
                                   radius);
         IndicatorCylinder3D<T> layerFlow(flow, 2 * converter.getConversionFactorLength());
@@ -380,7 +381,7 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
     for(const auto& indicator : flowIndicators) {
         if (indicator.type_ == FIT_VELOCITY) {
 
-            T targetPhysVelocity = indicator.velocityCurve_(converter.getPhysTime(iteration));
+            T targetPhysVelocity = indicator.velocityCurve_(converter.getPhysTime(iteration)) * inletVelocityMultiplier;
             T targetLatticeVelocity = converter.getLatticeVelocity(targetPhysVelocity);
 
             // This function applies the velocity profile to the boundary condition and the lattice.
@@ -755,6 +756,7 @@ int main(int argc, char* argv[]) {
     density                 = std::atof(parameters["density"].getAttribute("value").c_str());
     smagorinskyConstant     = std::atof(parameters["smagorinskyConstant"].getAttribute("value").c_str());
     bouzidiOn               = parameters["bouzidi"].getAttribute("value") == "true";
+    inletVelocityMultiplier = std::atof(parameters["inletVelocityMultiplier"].getAttribute("value").c_str());
 
     XMLreader indicators = config["flowIndicators"];
     for(auto iter : indicators) {
@@ -800,9 +802,9 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
-    const int noOfCuboids = std::min( 16*spatialResolution, singleton::mpi().getSize() );
+    const int noOfCuboids = std::min( 16*spatialResolution, 2*singleton::mpi().getSize() );
 #else
-    const int noOfCuboids = 1;
+    const int noOfCuboids = 2;
 #endif
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
 
