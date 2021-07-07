@@ -49,13 +49,13 @@
 namespace voreen {
 
 static const int MAX_NUM_DIMENSIONS = 3;
-static const int GRAB_ENABLE_DISTANCE = 0;
 static const tgt::ivec2 MIN_MARGINS(75, 50);
 static const tgt::vec3 FIRST_TIME_STEP_COLOR(1.0f, 0.0f, 0.0f);
-static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3::one;
+static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3(0.9f, 0.9f, 0.9f);
+static const tgt::vec3 SELECTED_TIME_STEP_COLOR = tgt::vec3::zero;
 static const tgt::vec3 MIN_DURATION_COLOR(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 MAX_DURATION_COLOR(0.0f, 0.0f, 1.0f);
-static const tgt::vec3 FADE_OUT_COLOR = tgt::vec3::one;
+static const tgt::vec3 FADE_OUT_COLOR = LAST_TIME_STEP_COLOR;
 static const float SELECTED_LINE_WIDTH = 6.0f;
 static const float UNSELECTED_LINE_WIDTH = 3.0f;
 static const float PICKING_LINE_WIDTH = SELECTED_LINE_WIDTH;
@@ -571,7 +571,7 @@ void SimilarityPlot::renderEmbedding2D(bool picking) {
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
             size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
             tgt::vec3 position(vertices[selectedTimeStep][0], vertices[selectedTimeStep][1], 0.0f);
-            tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
+            tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : SELECTED_TIME_STEP_COLOR;
             renderSphere(position, color, selected);
         }
     }
@@ -609,7 +609,7 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
             size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
             tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0]);
-            tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
+            tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : SELECTED_TIME_STEP_COLOR;
             renderSphere(position, color, selected);
         }
     }
@@ -1200,20 +1200,25 @@ void SimilarityPlot::loadEmbeddings() {
 
 tgt::ivec2 SimilarityPlot::getMargins() const {
 
-    if (numDimensions_.get() >= 3) {
+    switch(numDimensions_.get()) {
+    case 1:
+        return MIN_MARGINS;
+    case 2: {
+        tgt::ivec2 size = outport_.getSize();
+        tgt::ivec2 margins = MIN_MARGINS;
+        if(size.x > size.y) {
+            margins.x += (size.x - size.y) / 2;
+        }
+        else {
+            margins.y += (size.y - size.x) / 2;
+        }
+
+        return margins;
+    }
+    case 3:
+    default:
         return tgt::ivec2::zero;
     }
-
-    tgt::ivec2 size = outport_.getSize();
-    tgt::ivec2 margins = MIN_MARGINS;
-    if(size.x > size.y) {
-        margins.x += (size.x - size.y) / 2;
-    }
-    else {
-        margins.y += (size.y - size.x) / 2;
-    }
-
-    return margins;
 }
 
 } // namespace

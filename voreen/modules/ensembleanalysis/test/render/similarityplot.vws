@@ -229,7 +229,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref10">
-                                    <value x="462" y="457" />
+                                    <value x="600" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -409,18 +409,18 @@
                 <Processor type="Canvas" name="Canvas" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-591" y="-243" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="71" y="268" width="462" height="457" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="71" y="268" width="600" height="400" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
                             <value x="71" y="268" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="462" y="457" />
+                            <value x="600" y="400" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize" id="ref18">
-                            <value x="462" y="457" />
+                            <value x="600" y="400" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -440,7 +440,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref9">
-                                    <value x="462" y="457" />
+                                    <value x="600" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -542,18 +542,18 @@
                 <Processor type="Canvas" name="Canvas 2" id="ref7">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-441" y="-243" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="205" y="363" width="462" height="457" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="205" y="363" width="600" height="400" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
                             <value x="205" y="363" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="462" y="457" />
+                            <value x="600" y="400" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize" id="ref19">
-                            <value x="462" y="457" />
+                            <value x="600" y="400" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -573,7 +573,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref13">
-                                    <value x="462" y="457" />
+                                    <value x="600" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -800,7 +800,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref14">
-                                    <value x="462" y="457" />
+                                    <value x="600" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -830,18 +830,18 @@
                 <Processor type="Canvas" name="Canvas 3" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-288" y="-236" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="365" y="462" width="462" height="457" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="365" y="462" width="600" height="400" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
                             <value x="365" y="462" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="462" y="457" />
+                            <value x="600" y="400" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize" id="ref20">
-                            <value x="462" y="457" />
+                            <value x="600" y="400" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -861,7 +861,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref16">
-                                    <value x="462" y="457" />
+                                    <value x="600" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1088,7 +1088,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref17">
-                                    <value x="462" y="457" />
+                                    <value x="600" y="400" />
                                 </Property>
                             </Properties>
                         </Port>
