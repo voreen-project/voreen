@@ -1,0 +1,279 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="0" y="0" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
+            </MetaData>
+            <Processors>
+                <Processor type="FlowSimulationGeometry" name="FlowSimulationGeometry" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-394" y="-299" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="flowProfile" name="flowProfile" value="poiseuille" />
+                        <Property mapKey="geometryType" name="geometryType" value="cylinder" />
+                        <Property mapKey="inflowVelocity" name="inflowVelocity" value="1" />
+                        <Property mapKey="length" name="length" value="1" />
+                        <Property mapKey="radius" name="radius" value="1" />
+                        <Property mapKey="ratio" name="ratio" value="1" />
+                        <Property mapKey="transformation" name="transformation">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="flowparametrization.inport" direction="1" portID="flowparametrization.inport" guiName="Flow Parametrization Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="flowparametrization.outport" direction="0" portID="flowparametrization.outport" guiName="Flow Parametrization Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="geometry" direction="0" portID="geometry" guiName="Geometry Port" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="FlowParametrizationEnsemble" name="FlowParametrizationEnsemble" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-413" y="-405" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="ensembleName" name="ensembleName" value="test_ensemble" />
+                        <Property mapKey="flowFeatures" name="flowFeatures">
+                            <items>
+                                <item value="Velocity" />
+                                <item value="Magnitude" />
+                                <item value="Pressure" />
+                                <item value="Wall Shear Stress" />
+                            </items>
+                            <instances>
+                                <item itemId="0" instanceId="1" active="true" name="Velocity" />
+                            </instances>
+                        </Property>
+                        <Property mapKey="numTimeSteps" name="numTimeSteps" value="20" />
+                        <Property mapKey="outputFileFormat" name="outputFileFormat" value=".vvd" />
+                        <Property mapKey="outputResolution" name="outputResolution" value="256" />
+                        <Property mapKey="simulationTime" name="simulationTime" value="0.5" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Parameter Inport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="FlowParametrizationRun" name="FlowParametrizationRun" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-378" y="-177" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="addInvalidParametrizations" name="addInvalidParametrizations" value="false" />
+                        <Property mapKey="addParametrizations" name="addParametrizations" />
+                        <Property mapKey="bouzidi" name="bouzidi" value="true" />
+                        <Property mapKey="characteristicLength" name="characteristicLength" value="1" />
+                        <Property mapKey="characteristicVelocity" name="characteristicVelocity" value="1" />
+                        <Property mapKey="clearParametrizations" name="clearParametrizations" />
+                        <Property mapKey="density" minValue="0.100000001" maxValue="10000" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="1000" y="1000" />
+                        </Property>
+                        <Property mapKey="discretization" name="discretization" value="3" />
+                        <Property mapKey="fluid" name="fluid" value="arbitrary" />
+                        <Property mapKey="inletVelocityMultiplier" minValue="0.100000001" maxValue="10" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="1" y="1" />
+                        </Property>
+                        <Property mapKey="parametrizationName" name="parametrizationName" value="test_parametrization" />
+                        <Property mapKey="parametrizations" name="parametrizations" columnCount="12" selectedRow="-1">
+                            <columnLabels>
+                                <item value="Valid" />
+                                <item value="Name" />
+                                <item value="Reynolds" />
+                                <item value="Res." />
+                                <item value="Relax." />
+                                <item value="Char. Len." />
+                                <item value="Char. Vel." />
+                                <item value="viscosity" />
+                                <item value="density" />
+                                <item value="Smagorinsky" />
+                                <item value="Bouzidi" />
+                                <item value="Vel. Mult." />
+                            </columnLabels>
+                            <values>
+                                <item>
+                                    <item value="✓" />
+                                    <item value="test_parametrization" />
+                                    <item value="100.000008" />
+                                    <item value="40" />
+                                    <item value="0.800000" />
+                                    <item value="0.001000" />
+                                    <item value="1.000000" />
+                                    <item value="0.000010" />
+                                    <item value="1000.000000" />
+                                    <item value="0.100000" />
+                                    <item value="1" />
+                                    <item value="1.000000" />
+                                </item>
+                            </values>
+                        </Property>
+                        <Property mapKey="relaxationTime" minValue="0.5" maxValue="4" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
+                            <value x="0.800000012" y="0.800000012" />
+                        </Property>
+                        <Property mapKey="removeParametrization" name="removeParametrization" />
+                        <Property mapKey="smagorinskyConstant" minValue="0.100000001" maxValue="5" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0.100000001" y="0.100000001" />
+                        </Property>
+                        <Property mapKey="spatialResolution" minValue="8" maxValue="512" minRange="0" maxRange="2147483647" stepping="1" tracking="true">
+                            <value x="40" y="40" />
+                        </Property>
+                        <Property mapKey="viscosity" minValue="0.100000001" maxValue="100" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="1" y="1" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="inport" direction="1" portID="inport" guiName="Parameter Inport" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Parameter Inport" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                    <flowParameters>
+                        <item name="test_parametrization" spatialResolution="40" relaxationTime="0.800000012" characteristicLength="0.001" characteristicVelocity="1" viscosity="0.00001" density="1000" smagorinskyConstant="0.100000001" bouzidi="true" inletVelocityMultiplier="1" />
+                    </flowParameters>
+                </Processor>
+                <Processor type="FlowSimulationCluster" name="FlowSimulationCluster" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-390" y="-51" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clusterAddress" name="clusterAddress" value="palma.uni-muenster.de" />
+                        <Property mapKey="compileOnUpload" name="compileOnUpload" value="true" />
+                        <Property mapKey="configCPUsPerTask" name="configCPUsPerTask" value="18" />
+                        <Property mapKey="configMemory" name="configMemory" value="16" />
+                        <Property mapKey="configNodes" name="configNodes" value="1" />
+                        <Property mapKey="configPartition" name="configPartition" value="normal" />
+                        <Property mapKey="configTasksPerNode" name="configTasksPerNode" value="1" />
+                        <Property mapKey="configTimeDays" name="configTimeDays" value="0" />
+                        <Property mapKey="configTimeQuarters" name="configTimeQuarters" value="4" />
+                        <Property mapKey="dataPath" name="dataPath" value="/scratch/tmp" />
+                        <Property mapKey="deleteOnDownload" name="deleteOnDownload" value="false" />
+                        <Property mapKey="emailAddress" name="emailAddress" value="s_leis06@uni-muenster.de" />
+                        <Property mapKey="institution" name="institution" value="wwu" />
+                        <Property mapKey="localInstancePath" name="localInstancePath" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="programPath" name="programPath" value="~/OpenLB" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="simulationResults" name="simulationResults" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/simulations" />
+                                    <item value="../../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/simulations" />
+                                    <item value="C:/Users/Simon/Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/simulations" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="simulationType" name="simulationType" value="default" />
+                        <Property mapKey="toolchain" name="toolchain" value="intel" />
+                        <Property mapKey="triggerEnqueueSimulations" name="triggerEnqueueSimulations" />
+                        <Property mapKey="triggerFetchResults" name="triggerFetchResults" />
+                        <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/d8de4415-dac9-4a79-95f6-8f6601ef044a" />
+                                    <item value="../../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/d8de4415-dac9-4a79-95f6-8f6601ef044a" />
+                                    <item value="C:/Users/Simon/Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/d8de4415-dac9-4a79-95f6-8f6601ef044a" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="useLocalInstance" name="useLocalInstance" value="false" />
+                        <Property mapKey="username" name="username" value="s_leis06" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometryDataPort" direction="1" portID="geometryDataPort" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="parameterPort" direction="1" portID="parameterPort" guiName="Parameterization" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="flowparametrization.outport">
+                        <Processor type="FlowSimulationGeometry" ref="ref0" />
+                    </Outport>
+                    <Inport name="inport">
+                        <Processor type="FlowParametrizationRun" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry">
+                        <Processor type="FlowSimulationGeometry" ref="ref0" />
+                    </Outport>
+                    <Inport name="geometryDataPort">
+                        <Processor type="FlowSimulationCluster" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="FlowParametrizationEnsemble" ref="ref3" />
+                    </Outport>
+                    <Inport name="flowparametrization.inport">
+                        <Processor type="FlowSimulationGeometry" ref="ref0" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="FlowParametrizationRun" ref="ref1" />
+                    </Outport>
+                    <Inport name="parameterPort">
+                        <Processor type="FlowSimulationCluster" ref="ref2" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>
