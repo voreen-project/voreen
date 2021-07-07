@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="Canvas" ref="ref8" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-431.06942749" y="-344.015014648" />
                 </MetaItem>
@@ -24,13 +19,13 @@
                     <Properties>
                         <Property mapKey="autoCalculate" name="autoCalculate" value="true" />
                         <Property mapKey="calculate" name="calculate" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974076" id="ref11">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974045" id="ref11">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.905592263" y="-0.435371369" z="-3.716560841" />
-                            <focus x="0" y="0" z="0" />
-                            <upVector x="-0.74361968" y="0.618616879" z="-0.253659338" />
+                            <position x="0.512693644" y="-0.107034408" z="-3.829897404" />
+                            <focus x="0.225275278" y="0.262879521" z="-0.008503329" />
+                            <upVector x="-0.805796921" y="0.580558538" z="-0.116803989" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -159,7 +154,6 @@
                         <Property mapKey="saveFileDialog" name="saveFileDialog" watchMode="3" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="scaleToMagnitude" name="scaleToMagnitude" value="true" />
                         <Property mapKey="selectedMembers" name="selectedMembers">
                             <selectedRow>
                                 <item value="0" />
@@ -364,10 +358,12 @@
                         </Property>
                         <Property mapKey="loadingStrategy" name="loadingStrategy" value="full" />
                         <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideFieldName" name="overrideFieldName" value="false" />
                         <Property mapKey="overrideTime" name="overrideTime" value="false" />
                         <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
+                        <Property mapKey="showProgressDialog" name="showProgressDialog" value="true" />
                         <Property mapKey="timeStepProgress" name="timeStepProgress" />
                     </Properties>
                     <Inports />
@@ -594,13 +590,13 @@
                     <Properties>
                         <Property mapKey="autoCalculate" name="autoCalculate" value="true" />
                         <Property mapKey="calculate" name="calculate" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974076" id="ref12">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974045" id="ref12">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.905592263" y="-0.435371369" z="-3.716560841" />
-                            <focus x="0" y="0" z="0" />
-                            <upVector x="-0.74361968" y="0.618616879" z="-0.253659338" />
+                            <position x="0.512693644" y="-0.107034408" z="-3.829897404" />
+                            <focus x="0.225275278" y="0.262879521" z="-0.008503329" />
+                            <upVector x="-0.805796921" y="0.580558538" z="-0.116803989" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -729,7 +725,6 @@
                         <Property mapKey="saveFileDialog" name="saveFileDialog" watchMode="3" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="scaleToMagnitude" name="scaleToMagnitude" value="true" />
                         <Property mapKey="selectedMembers" name="selectedMembers">
                             <selectedRow>
                                 <item value="0" />
@@ -878,18 +873,18 @@
                 </Processor>
                 <Processor type="SimilarityPlot" name="3D" id="ref6">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-275" y="-378" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-274" y="-378" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="autoCalculate" name="autoCalculate" value="true" />
                         <Property mapKey="calculate" name="calculate" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974076" id="ref15">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="50" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.025974045" id="ref15">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="0.905592263" y="-0.435371369" z="-3.716560841" />
-                            <focus x="0" y="0" z="0" />
-                            <upVector x="-0.74361968" y="0.618616879" z="-0.253659338" />
+                            <position x="0.512693644" y="-0.107034408" z="-3.829897404" />
+                            <focus x="0.225275278" y="0.262879521" z="-0.008503329" />
+                            <upVector x="-0.805796921" y="0.580558538" z="-0.116803989" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="0" />
                             </trackball>
@@ -1018,7 +1013,6 @@
                         <Property mapKey="saveFileDialog" name="saveFileDialog" watchMode="3" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="scaleToMagnitude" name="scaleToMagnitude" value="true" />
                         <Property mapKey="selectedMembers" name="selectedMembers">
                             <selectedRow>
                                 <item value="0" />

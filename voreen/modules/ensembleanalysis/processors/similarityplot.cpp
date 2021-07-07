@@ -50,7 +50,7 @@ namespace voreen {
 
 static const int MAX_NUM_DIMENSIONS = 3;
 static const int GRAB_ENABLE_DISTANCE = 0;
-static const tgt::ivec2 MARGINS(75, 50);
+static const tgt::ivec2 MIN_MARGINS(75, 50);
 static const tgt::vec3 FIRST_TIME_STEP_COLOR(1.0f, 0.0f, 0.0f);
 static const tgt::vec3 LAST_TIME_STEP_COLOR = tgt::vec3::one;
 static const tgt::vec3 MIN_DURATION_COLOR(1.0f, 0.0f, 0.0f);
@@ -91,7 +91,6 @@ SimilarityPlot::SimilarityPlot()
     , numEigenvalues_("numEigenvalues", "Number of Eigenvalues", MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS, MAX_NUM_DIMENSIONS)
     , numDimensions_("numDimensions", "Number of Dimensions", MAX_NUM_DIMENSIONS, 1, MAX_NUM_DIMENSIONS)
     , principleComponent_("principalComponent", "Principle Component", 1, 1, MAX_NUM_DIMENSIONS)
-    , scaleToMagnitude_("scaleToMagnitude", "Scale to Magnitude of Principle Component")
     , sphereRadius_("sphereRadius", "Sphere Radius", 0.01, 0.0f, 0.1f)
     , fontSize_("fontSize", "Font Size", 10, 1, 30)
     , showTooltip_("showTooltip", "Show Tooltip", true)
@@ -152,9 +151,6 @@ SimilarityPlot::SimilarityPlot()
             // Eigenvalue index only useful when rendering 1D.
             principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
 
-            // Scaling only useful when rendering 3D
-            scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
-
             // Adjust camera correctly when using 3D visualization.
             if (numDimensions_.get() == 3) {
                 camera_.adaptInteractionToScene(tgt::Bounds(-tgt::vec3::one, tgt::vec3::one), 0.1f, true);
@@ -166,9 +162,6 @@ SimilarityPlot::SimilarityPlot()
     addProperty(principleComponent_);
         principleComponent_.setVisibleFlag(numDimensions_.get() == 1);
         principleComponent_.setGroupID("rendering");
-    addProperty(scaleToMagnitude_);
-        scaleToMagnitude_.setVisibleFlag(numDimensions_.get() == 3);
-        scaleToMagnitude_.setGroupID("rendering");
     addProperty(sphereRadius_);
         sphereRadius_.setGroupID("rendering");
     addProperty(fontSize_);
@@ -255,6 +248,7 @@ void SimilarityPlot::process() {
 
     // Change depth func to apply rendering order properly.
     glDepthFunc(GL_LEQUAL);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Render picking pass.
     pickingBuffer_.activateTarget();
@@ -271,11 +265,6 @@ void SimilarityPlot::process() {
 
         renderingPass(false);
 
-        // Draw tooltip.
-        if(showTooltip_.get()) {
-            renderTooltip();
-        }
-
         outport_.deactivateTarget();
     }
     else {
@@ -284,20 +273,23 @@ void SimilarityPlot::process() {
 
         renderingPass(false);
 
-        // Draw tooltip.
-        if(showTooltip_.get()) {
-            renderTooltip();
-        }
-
         privatePort_.deactivateTarget();
 
         // Draw axes.
         renderAxes();
     }
 
+    // Draw tooltip.
+    if(showTooltip_.get()) {
+        outport_.activateTarget();
+        renderTooltip();
+        outport_.deactivateTarget();
+    }
+
     // Restore state.
     glDepthFunc(GL_LESS);
     glLineWidth(1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     IMode.color(tgt::col4::one);
 }
 
@@ -306,22 +298,26 @@ void SimilarityPlot::renderAxes() {
     outport_.activateTarget();
     outport_.clearTarget();
 
+    tgt::ivec2 size = outport_.getSize();
+    tgt::ivec2 margins = getMargins();
+
     // Set Plot status.
-    plotLib_->setWindowSize(outport_.getSize());
-    plotLib_->setAxesWidth(1.0f);
+    plotLib_->setWindowSize(size);
+    plotLib_->setAxesWidth(2.0f);
     plotLib_->setDrawingColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
     plotLib_->setLineWidth(1.0f);
     plotLib_->setMaxGlyphSize(1.0f);
-    plotLib_->setMarginBottom(MARGINS.y);
-    plotLib_->setMarginTop(MARGINS.y);
-    plotLib_->setMarginLeft(MARGINS.x);
-    plotLib_->setMarginRight(MARGINS.x);
+    plotLib_->setMarginBottom(margins.y);
+    plotLib_->setMarginTop(margins.y);
+    plotLib_->setMarginLeft(margins.x);
+    plotLib_->setMarginRight(margins.x);
     plotLib_->setMinimumScaleStep(32, PlotLibrary::X_AXIS);
     plotLib_->setMinimumScaleStep(32, PlotLibrary::Y_AXIS);
     plotLib_->setMinimumScaleStep(32, PlotLibrary::Z_AXIS);
     if (numDimensions_.get() == 1) {
         plotLib_->setDomain(Interval<plot_t>(ensembleInport_.getData()->getStartTime(),
-                                             ensembleInport_.getData()->getEndTime()), PlotLibrary::X_AXIS);
+                                             ensembleInport_.getData()->getEndTime()),
+                            PlotLibrary::X_AXIS);
     }
     else {
         plotLib_->setDomain(Interval<plot_t>(-1.0, 1.0), PlotLibrary::X_AXIS);
@@ -340,37 +336,37 @@ void SimilarityPlot::renderAxes() {
         plotLib_->setFontSize(fontSize_.get() + 2);
 
         switch (numDimensions_.get()) {
-            case 1:
-                plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
-                if (principleComponent_.get() == 1)
-                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1st PC");
-                else if (principleComponent_.get() == 2)
-                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
-                else
-                    plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
-
-                plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
-                plotLib_->setFontSize(fontSize_.get());
-                plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
-                plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
-                plotLib_->setFontSize(fontSize_.get() + 2);
-                break;
-            case 3:
-                plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
-                // Fallthrough
-            case 2:
-                plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1st PC");
+        case 1:
+            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "t [s]");
+            if (principleComponent_.get() == 1)
+                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "1st PC");
+            else if (principleComponent_.get() == 2)
                 plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
-                break;
+            else
+                plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "3rd PC");
+
+            plotLib_->setDrawingColor(tgt::Color(0, 0, 0, .5f));
+            plotLib_->setFontSize(fontSize_.get());
+            plotLib_->setFontColor(tgt::Color(0.f, 0.f, 0.f, 1.f));
+            plotLib_->renderAxisScales(PlotLibrary::X_AXIS, false);
+            plotLib_->setFontSize(fontSize_.get() + 2);
+            break;
+        case 3:
+            plotLib_->renderAxisLabel(PlotLibrary::Z_AXIS, "3rd PC");
+            // Fallthrough
+        case 2:
+            plotLib_->renderAxisLabel(PlotLibrary::X_AXIS, "1st PC");
+            plotLib_->renderAxisLabel(PlotLibrary::Y_AXIS, "2nd PC");
+            break;
         }
     }
     plotLib_->resetRenderStatus();
 
-    // Plot data
-    float xMinMarginNDC = mapRange(MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
-    float xMaxMarginNDC = mapRange(outport_.getSize().x-MARGINS.x, 0, outport_.getSize().x, -1.0f, 1.0f);
-    float yMinMarginNDC = mapRange(MARGINS.y, 0, outport_.getSize().y, -1.0f, 1.0f);
-    float yMaxMarginNDC = mapRange(outport_.getSize().y-MARGINS.y, 0, outport_.getSize().y, -1.0f, 1.0f);
+    // Plot data.
+    float x0 = mapRange(margins.x, 0, size.x, -1.0f, 1.0f);
+    float x1 = mapRange(size.x - margins.x, 0, size.x, -1.0f, 1.0f);
+    float y0 = mapRange(margins.y, 0, size.y, -1.0f, 1.0f);
+    float y1 = mapRange(size.y - margins.y, 0, size.y, -1.0f, 1.0f);
 
     tgt::TextureUnit::setZeroUnit();
     tgt::Texture* texture = privatePort_.getColorTexture();
@@ -379,10 +375,10 @@ void SimilarityPlot::renderAxes() {
         texture->bind();
 
         IMode.begin(tgt::ImmediateMode::QUADS);
-            IMode.texcoord(0.0f, 0.0f); IMode.vertex(xMinMarginNDC, yMinMarginNDC);
-            IMode.texcoord(1.0f, 0.0f); IMode.vertex(xMaxMarginNDC, yMinMarginNDC);
-            IMode.texcoord(1.0f, 1.0f); IMode.vertex(xMaxMarginNDC, yMaxMarginNDC);
-            IMode.texcoord(0.0f, 1.0f); IMode.vertex(xMinMarginNDC, yMaxMarginNDC);
+        IMode.texcoord(0.0f, 0.0f); IMode.vertex(x0, y0);
+        IMode.texcoord(1.0f, 0.0f); IMode.vertex(x1, y0);
+        IMode.texcoord(1.0f, 1.0f); IMode.vertex(x1, y1);
+        IMode.texcoord(0.0f, 1.0f); IMode.vertex(x0, y1);
         IMode.end();
 
         IMode.setTextureMode(tgt::ImmediateMode::TEXNONE);
@@ -595,13 +591,6 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
     MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
     MatStack.loadMatrix(camera_.get().getViewMatrix());
 
-    tgt::vec3 scale = tgt::vec3::one;
-    if(scaleToMagnitude_.get()) {
-        // Scale each axis to it's eigenvalues size.
-        scale = tgt::vec3::fromPointer(&embedding.eigenvalues_[0]);
-        scale /= tgt::vec3(embedding.eigenvalues_[0]);
-    }
-
     for (int memberIdx : renderingOrder_) {
 
         bool selected = (subSelection_.count(memberIdx) != 0);
@@ -613,13 +602,13 @@ void SimilarityPlot::renderEmbedding3D(bool picking) {
         IMode.begin(tgt::ImmediateMode::FAKE_LINE_STRIP);
         for(size_t j=0; j<numTimeSteps; j++) {
             IMode.color(getColor(memberIdx, j, picking));
-            IMode.vertex(tgt::vec3::fromPointer(&vertices[j][0]) * scale);
+            IMode.vertex(tgt::vec3::fromPointer(&vertices[j][0]));
         }
         IMode.end();
 
         if((!picking && renderTimeSelection_.get()) || numTimeSteps == 1) {
             size_t selectedTimeStep = dataset->getMembers()[memberIdx].getTimeStep(firstSelectedTimeInterval_.get().x);
-            tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0])*scale;
+            tgt::vec3 position = tgt::vec3::fromPointer(&vertices[selectedTimeStep][0]);
             tgt::vec3 color = (numTimeSteps == 1) ? getColor(memberIdx, selectedTimeStep, picking) : tgt::vec3::one;
             renderSphere(position, color, selected);
         }
@@ -664,7 +653,7 @@ tgt::vec3 SimilarityPlot::getColor(size_t memberIdx, size_t timeStepIdx, bool pi
 
     float ts = static_cast<float>(timeStepIdx) / member.getTimeSteps().size();
     if (picking)
-        return tgt::vec3(static_cast<float>(memberIdx) / dataset->getMembers().size(), ts, 1.0f);
+        return tgt::vec3(static_cast<float>(memberIdx) / dataset->getMembers().size(), ts, 0.0f);
 
     switch (colorCoding_.getValue()) {
     case COLOR_MEMBER:
@@ -713,9 +702,10 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
         int y = e->y();
 
         // In 1D, and 2D case, we use margins to show axis and labels.
+        tgt::ivec2 margins = getMargins();
         if (numDimensions_.get() < 3) {
-            x = tgt::clamp(x, MARGINS.x, e->viewport().x - MARGINS.x);
-            y = tgt::clamp(y, MARGINS.y, e->viewport().y - MARGINS.y);
+            x = tgt::clamp(x, margins.x, e->viewport().x - margins.x);
+            y = tgt::clamp(y, margins.y, e->viewport().y - margins.y);
         }
 
         // Not inside margins.
@@ -730,10 +720,10 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
             // Select a time interval outside of the axis
             if(e->action() == tgt::MouseEvent::PRESSED) {
-                t0 = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
+                t0 = mapRange(x, margins.x, e->viewport().x - margins.x, dataset->getStartTime(), dataset->getEndTime());
             }
             else if(e->action() == tgt::MouseEvent::RELEASED) {
-                t1 = mapRange(x, MARGINS.x, e->viewport().x - MARGINS.x, dataset->getStartTime(), dataset->getEndTime());
+                t1 = mapRange(x, margins.x, e->viewport().x - margins.x, dataset->getStartTime(), dataset->getEndTime());
             } // We don't support MOTION atm., since it would invalidate too often and would trigger linked filters.
             else {
                 return;
@@ -757,19 +747,12 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
 
         // Handle margins.
         RenderTarget* target = pickingBuffer_.getRenderTarget();
-        tgt::ivec2 pixel;
-        if (numDimensions_.get() < 3) {
-            pixel = tgt::ivec2(
-                    mapRange(tgt::vec2(x, y), tgt::vec2(MARGINS), tgt::vec2(outport_.getSize() - MARGINS),
+        tgt::ivec2 pixel = tgt::ivec2(
+                mapRange(tgt::vec2(x, y), tgt::vec2(margins), tgt::vec2(outport_.getSize() - margins),
                              tgt::vec2::zero, tgt::vec2(target->getSize())));
-        }
-        else {
-            pixel = mapRange(tgt::ivec2(x, y), tgt::ivec2::zero, outport_.getSize(), tgt::ivec2::zero,
-                             target->getSize());
-        }
 
         tgt::vec4 texel = target->getColorAtPos(tgt::ivec2(pixel.x, target->getSize().y - pixel.y - 1));
-        if (texel.z != 1.0f) {
+        if (texel.z != 0.0f) {
             return; // No hit - preserve last selection.
         }
 
@@ -877,8 +860,9 @@ void SimilarityPlot::adjustToEnsemble() {
     numEigenvalues_.setMaxValue(static_cast<int>(dataset->getTotalNumTimeSteps()));
 
     renderedField_.blockCallbacks(true);
-    for (const std::string& fieldName : dataset->getCommonFieldNames())
+    for (const std::string& fieldName : dataset->getCommonFieldNames()) {
         renderedField_.addOption(fieldName, fieldName, fieldName);
+    }
     renderedField_.blockCallbacks(false);
 
     std::vector<int> memberIndices;
@@ -1084,17 +1068,18 @@ SimilarityPlot::Embedding SimilarityPlot::createEmbedding(const SimilarityMatrix
     // Now get the resulting matrix.
     result = result * EigSq;
 
+    // Normalize values to be in domain [0, 1].
+    float maxValue = result(0, 0);
+    float minValue = result(0, 0);
+
+    for (size_t j=1; j < numPoints; j++) {
+        if (maxValue < result(j, 0))
+            maxValue = result(j, 0);
+        else if (minValue > result(j, 0))
+            minValue = result(j, 0);
+    }
+
     for (size_t i=0; i < embedding.eigenvalues_.size(); i++) {
-
-        float maxValue = result(0, i);
-        float minValue = result(0, i);
-
-        for (size_t j=1; j < numPoints; j++) {
-            if (maxValue < result(j, i))
-                maxValue = result(j, i);
-            else if (minValue > result(j, i))
-                minValue = result(j, i);
-        }
 
         // Interpret as member and time steps.
         size_t j=0;
@@ -1211,6 +1196,24 @@ void SimilarityPlot::loadEmbeddings() {
         LERROR(e.what());
         loadFileDialog_.set("");
     }
+}
+
+tgt::ivec2 SimilarityPlot::getMargins() const {
+
+    if (numDimensions_.get() >= 3) {
+        return tgt::ivec2::zero;
+    }
+
+    tgt::ivec2 size = outport_.getSize();
+    tgt::ivec2 margins = MIN_MARGINS;
+    if(size.x > size.y) {
+        margins.x += (size.x - size.y) / 2;
+    }
+    else {
+        margins.y += (size.y - size.x) / 2;
+    }
+
+    return margins;
 }
 
 } // namespace

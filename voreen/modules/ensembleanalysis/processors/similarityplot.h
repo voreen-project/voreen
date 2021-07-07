@@ -116,9 +116,6 @@ protected:
                                        "intrinsic dimensionality might be larger than three!");
         numDimensions_.setDescription("Number of dimensions to be used to visualize the embedding");
         principleComponent_.setDescription("If the 1D Embedding is used, any principle component can be plotted over time");
-        scaleToMagnitude_.setDescription("If the 3D Embeding is used, all axis can be scaled such that they represent "
-                                         "the variance of the data represented by the principle component with respect "
-                                         "to the first and largest principle component");
         sphereRadius_.setDescription("Currently selected time steps and members with only a single time steps both "
                                      "are represented by spheres in the 2D and 3D embedding. This sets their radius.");
         fontSize_.setDescription("Sets the font size");
@@ -164,6 +161,8 @@ private:
     void saveEmbeddings();
     void loadEmbeddings();
 
+    tgt::ivec2 getMargins() const;
+
     ButtonProperty calculateButton_;
     BoolProperty autoCalculate_;
     ProgressProperty progressBar_;
@@ -172,7 +171,6 @@ private:
 
     IntProperty numDimensions_;
     IntProperty principleComponent_;
-    BoolProperty scaleToMagnitude_;
     FloatProperty sphereRadius_;
     IntProperty fontSize_;
     BoolProperty showTooltip_;
