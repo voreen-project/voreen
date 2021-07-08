@@ -101,7 +101,14 @@ VolumeBase* NetCDFVolumeReader::read(const VolumeURL& origin) {
 
     vtkImageData* imageData = vtkImageData::SafeDownCast(reader->GetOutput());
     //imageData->GetFieldData()->AddArray(); // Add meta data here.
-    return createVolumeFromVtkImageData(origin, imageData);
+    Volume* volume = createVolumeFromVtkImageData(origin, imageData);
+
+    // Query unit, if available.
+    RealWorldMapping rwm = volume->getRealWorldMapping();
+    rwm.setUnit(reader->QueryArrayUnits(name.c_str()));
+    volume->setRealWorldMapping(rwm);
+
+    return volume;
 }
 
 VolumeList* NetCDFVolumeReader::read(const std::string& url) {
