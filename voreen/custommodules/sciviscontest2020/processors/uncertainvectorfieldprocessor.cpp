@@ -240,15 +240,15 @@ void UncertainVectorFieldProcessor::update()
         volumeL->voxel( x, y, z ) = static_cast<float>( countL ) / sampleCount;
 
         const auto timeEnd = std::chrono::high_resolution_clock::now();
-        if( omp_get_thread_num() == 0 && i % ( voxels.size() / 100 / omp_get_num_threads() ) == 0 )
-        {
-            const auto time = std::chrono::duration_cast<std::chrono::microseconds>( timeEnd - timeBegin ).count();
-            const auto remaining = voxels.size() / omp_get_num_threads() - i;
-            const auto seconds = time / 1000000.0 * remaining;
-            const auto minutes = static_cast<int>( seconds / 60.0 );
-
-            std::cout << "[UncertainVectorFieldProcessor]: Remaining Time: " << minutes << " min " << static_cast<int>( seconds ) % 60 << " s" << std::endl;
-        }
+        //if( omp_get_thread_num() == 0 && i % ( voxels.size() / 100 / omp_get_num_threads() ) == 0 )
+        //{
+        //    const auto time = std::chrono::duration_cast<std::chrono::microseconds>( timeEnd - timeBegin ).count();
+        //    const auto remaining = voxels.size() / omp_get_num_threads() - i;
+        //    const auto seconds = time / 1000000.0 * remaining;
+        //    const auto minutes = static_cast<int>( seconds / 60.0 );
+        //
+        //    std::cout << "[UncertainVectorFieldProcessor]: Remaining Time: " << minutes << " min " << static_cast<int>( seconds ) % 60 << " s" << std::endl;
+        //}
     }
 
     // --- Update Outports --- //

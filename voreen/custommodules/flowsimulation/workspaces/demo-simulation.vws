@@ -102,7 +102,7 @@
                         <Property mapKey="discretization" name="discretization" value="3" />
                         <Property mapKey="fluid" name="fluid" value="arbitrary" />
                         <Property mapKey="inletVelocityMultiplier" minValue="0.100000001" maxValue="10" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
-                            <value x="1" y="1" />
+                            <value x="1" y="4" />
                         </Property>
                         <Property mapKey="parametrizationName" name="parametrizationName" value="test_parametrization" />
                         <Property mapKey="parametrizations" name="parametrizations" columnCount="12" selectedRow="-1">
@@ -123,10 +123,10 @@
                             <values>
                                 <item>
                                     <item value="✓" />
-                                    <item value="test_parametrization" />
+                                    <item value="test_parametrizationA" />
                                     <item value="100.000008" />
-                                    <item value="40" />
-                                    <item value="0.800000" />
+                                    <item value="30" />
+                                    <item value="0.600000" />
                                     <item value="0.001000" />
                                     <item value="1.000000" />
                                     <item value="0.000010" />
@@ -135,17 +135,45 @@
                                     <item value="1" />
                                     <item value="1.000000" />
                                 </item>
+                                <item>
+                                    <item value="✓" />
+                                    <item value="test_parametrizationB" />
+                                    <item value="100.000008" />
+                                    <item value="30" />
+                                    <item value="0.600000" />
+                                    <item value="0.001000" />
+                                    <item value="1.000000" />
+                                    <item value="0.000010" />
+                                    <item value="1000.000000" />
+                                    <item value="0.100000" />
+                                    <item value="1" />
+                                    <item value="2.500000" />
+                                </item>
+                                <item>
+                                    <item value="✓" />
+                                    <item value="test_parametrizationC" />
+                                    <item value="100.000008" />
+                                    <item value="30" />
+                                    <item value="0.600000" />
+                                    <item value="0.001000" />
+                                    <item value="1.000000" />
+                                    <item value="0.000010" />
+                                    <item value="1000.000000" />
+                                    <item value="0.100000" />
+                                    <item value="1" />
+                                    <item value="4.000000" />
+                                </item>
                             </values>
                         </Property>
                         <Property mapKey="relaxationTime" minValue="0.5" maxValue="4" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
-                            <value x="0.800000012" y="0.800000012" />
+                            <value x="0.600000024" y="0.600000024" />
                         </Property>
                         <Property mapKey="removeParametrization" name="removeParametrization" />
                         <Property mapKey="smagorinskyConstant" minValue="0.100000001" maxValue="5" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
                             <value x="0.100000001" y="0.100000001" />
                         </Property>
                         <Property mapKey="spatialResolution" minValue="8" maxValue="512" minRange="0" maxRange="2147483647" stepping="1" tracking="true">
-                            <value x="40" y="40" />
+                            <value x="30" y="30" />
                         </Property>
                         <Property mapKey="viscosity" minValue="0.100000001" maxValue="100" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
                             <value x="1" y="1" />
@@ -167,7 +195,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <flowParameters>
-                        <item name="test_parametrization" spatialResolution="40" relaxationTime="0.800000012" characteristicLength="0.001" characteristicVelocity="1" viscosity="0.00001" density="1000" smagorinskyConstant="0.100000001" bouzidi="true" inletVelocityMultiplier="1" />
+                        <item name="test_parametrizationA" spatialResolution="30" relaxationTime="0.600000024" characteristicLength="0.001" characteristicVelocity="1" viscosity="0.00001" density="1000" smagorinskyConstant="0.100000001" bouzidi="true" inletVelocityMultiplier="1" />
+                        <item name="test_parametrizationB" spatialResolution="30" relaxationTime="0.600000024" characteristicLength="0.001" characteristicVelocity="1" viscosity="0.00001" density="1000" smagorinskyConstant="0.100000001" bouzidi="true" inletVelocityMultiplier="2.5" />
+                        <item name="test_parametrizationC" spatialResolution="30" relaxationTime="0.600000024" characteristicLength="0.001" characteristicVelocity="1" viscosity="0.00001" density="1000" smagorinskyConstant="0.100000001" bouzidi="true" inletVelocityMultiplier="4" />
                     </flowParameters>
                 </Processor>
                 <Processor type="FlowSimulationCluster" name="FlowSimulationCluster" id="ref2">
@@ -176,46 +206,52 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="clusterAddress" name="clusterAddress" value="palma.uni-muenster.de" />
-                        <Property mapKey="compileOnUpload" name="compileOnUpload" value="true" />
-                        <Property mapKey="configCPUsPerTask" name="configCPUsPerTask" value="18" />
+                        <Property mapKey="compileOnUpload" name="compileOnUpload" value="false" />
+                        <Property mapKey="configCPUsPerTask" name="configCPUsPerTask" value="4" />
                         <Property mapKey="configMemory" name="configMemory" value="16" />
                         <Property mapKey="configNodes" name="configNodes" value="1" />
                         <Property mapKey="configPartition" name="configPartition" value="normal" />
-                        <Property mapKey="configTasksPerNode" name="configTasksPerNode" value="1" />
+                        <Property mapKey="configTasksPerNode" name="configTasksPerNode" value="18" />
                         <Property mapKey="configTimeDays" name="configTimeDays" value="0" />
-                        <Property mapKey="configTimeQuarters" name="configTimeQuarters" value="4" />
+                        <Property mapKey="configTimeQuarters" name="configTimeQuarters" value="1" />
                         <Property mapKey="dataPath" name="dataPath" value="/scratch/tmp" />
                         <Property mapKey="deleteOnDownload" name="deleteOnDownload" value="false" />
                         <Property mapKey="emailAddress" name="emailAddress" value="s_leis06@uni-muenster.de" />
-                        <Property mapKey="institution" name="institution" value="wwu" />
+                        <Property mapKey="institution" name="institution" value="slurm" />
                         <Property mapKey="localInstancePath" name="localInstancePath" watchMode="3" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../Users/Simon/Desktop/default/default.exe" />
+                                    <item value="../../Users/Simon/Desktop/default/default.exe" />
+                                    <item value="C:/Users/Simon/Desktop/default/default.exe" />
+                                </paths>
+                            </paths>
                         </Property>
                         <Property mapKey="programPath" name="programPath" value="~/OpenLB" />
                         <Property mapKey="progress" name="progress" />
                         <Property mapKey="simulationResults" name="simulationResults" watchMode="3" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/simulations" />
-                                    <item value="../../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/simulations" />
-                                    <item value="C:/Users/Simon/Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/simulations" />
+                                    <item value="../../../../../Users/Simon/Desktop/default/results" />
+                                    <item value="../../Users/Simon/Desktop/default/results" />
+                                    <item value="C:/Users/Simon/Desktop/default/results" />
                                 </paths>
                             </paths>
                         </Property>
                         <Property mapKey="simulationType" name="simulationType" value="default" />
-                        <Property mapKey="toolchain" name="toolchain" value="intel" />
+                        <Property mapKey="toolchain" name="toolchain" value="foss" />
                         <Property mapKey="triggerEnqueueSimulations" name="triggerEnqueueSimulations" />
                         <Property mapKey="triggerFetchResults" name="triggerFetchResults" />
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/d8de4415-dac9-4a79-95f6-8f6601ef044a" />
-                                    <item value="../../Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/d8de4415-dac9-4a79-95f6-8f6601ef044a" />
-                                    <item value="C:/Users/Simon/Documents/Voreen/tmp/8671e612-717e-4900-b6d1-cbcf8c4bc486/d8de4415-dac9-4a79-95f6-8f6601ef044a" />
+                                    <item value="../../../data/tmp/c283b8e5-bb98-4bac-a194-d7a73f5f6461/d7771be2-7148-43da-9eeb-a1f9a454e0c2" />
+                                    <item value="data/tmp/c283b8e5-bb98-4bac-a194-d7a73f5f6461/d7771be2-7148-43da-9eeb-a1f9a454e0c2" />
+                                    <item value="C:/voreen-development/voreen/data/tmp/c283b8e5-bb98-4bac-a194-d7a73f5f6461/d7771be2-7148-43da-9eeb-a1f9a454e0c2" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="useLocalInstance" name="useLocalInstance" value="false" />
+                        <Property mapKey="useLocalInstance" name="useLocalInstance" value="true" />
                         <Property mapKey="username" name="username" value="s_leis06" />
                     </Properties>
                     <Inports>

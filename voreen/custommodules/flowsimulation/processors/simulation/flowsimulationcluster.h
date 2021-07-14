@@ -32,6 +32,7 @@
 #include "voreen/core/ports/volumeport.h"
 #include "../../ports/flowparametrizationport.h"
 
+#include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/progressproperty.h"
@@ -39,12 +40,14 @@
 
 namespace voreen {
 
+class CommandExecutingThread;
+
+
 /**
  * This processor performs simulations on the PALMAII cluster at WWU Muenster using a parameter set and as input.
  * This processor assumes:
  *     - on the cluster, there is a folder in home called 'OpenLB/<tool-chain>/simulations'
  *     - the result will be saved to /scratch/tmp/<user>/simulations/<simulation_name>/<run_name>
- * TODO: Eventually, this processor should be able to react to emails send by the cluster and process the result automatically.
  */
 class VRN_CORE_API FlowSimulationCluster : public Processor {
 public:
@@ -61,17 +64,17 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor performs simulations on the PALMAII cluster at WWU Muenster using a parameter set and as input."
-                       "The processor assumes that on the cluster, there is a folder '<simulation-path>/OpenLB/<tool-chain>/simulations'."
+        setDescription("This processor performs simulations on the PALMAII cluster at WWU Muenster using a parameter set and as input. "
+                       "The processor assumes that on the cluster, there is a folder '<simulation-path>/OpenLB/<tool-chain>/simulations'. "
                        "The simulation artifacts will be stored to and fetched from '/scratch/tmp/<user>/simulations/<simulation_name>/<run_name>'");
     }
 
 private:
 
-    void institutionChanged();
+    void threadsStopped();
+    void workloadManagerChanged();
     void enqueueSimulations();
     void fetchResults();
-    int executeCommand(const std::string& command) const;
 
     std::string generateCompileScript() const;
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;
@@ -81,9 +84,10 @@ private:
     VolumeListPort measuredDataPort_;
     FlowParametrizationPort parameterPort_;
 
-    StringOptionProperty institution_;
+    StringOptionProperty workloadManager_;
     BoolProperty useLocalInstance_;
     FileDialogProperty localInstancePath_;
+    ButtonProperty stopThreads_;
 
     StringProperty username_;
     StringProperty emailAddress_;
@@ -108,6 +112,9 @@ private:
     ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;
     ProgressProperty progress_;
+
+    std::deque<std::unique_ptr<CommandExecutingThread>> waitingThreads_;
+    std::deque<std::unique_ptr<CommandExecutingThread>> runningThreads_;
 
     static const std::string loggerCat_;
 };

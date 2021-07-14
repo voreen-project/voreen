@@ -31,7 +31,72 @@
 
 #include "modules/core/io/rawvolumereader.h"
 
+
+namespace {
+    int executeCommand(const std::string& command) {
+#ifndef WIN32
+        std::string result;
+        std::array<char, 128> buffer;
+
+        auto pipe = popen(command.c_str(), "r");
+        if (!pipe) {
+            LERROR("Failed to open pipe");
+            return EXIT_FAILURE;
+        }
+
+        while (!feof(pipe)) {
+            if (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+                result += buffer.data();
+            }
+        }
+
+        if (!result.empty()) {
+            LINFO(result);
+        }
+
+        return pclose(pipe);
+#else
+        return system(command.c_str());
+#endif
+    }
+}
+
+
 namespace voreen {
+
+
+/**
+ * Simple background thread that allows to execute a system command asyncronously.
+ */
+class CommandExecutingThread : public BackgroundThread {
+public:
+
+    CommandExecutingThread(const std::string& command, const std::string& name)
+        : command_(command)
+        , name_(name)
+        , successful_(false)
+    {}
+
+    virtual void threadMain() {
+        successful_ = executeCommand(command_) == EXIT_SUCCESS;
+    }
+
+    const std::string& getName() const {
+        return name_;
+    }
+
+    bool successful() const {
+        return successful_;
+    }
+
+private:
+
+    std::string command_;
+    std::string name_;
+    bool successful_;
+
+};
+
 
 const std::string FlowSimulationCluster::loggerCat_("voreen.flowsimulation.FlowSimulationCluster");
 
@@ -42,8 +107,9 @@ FlowSimulationCluster::FlowSimulationCluster()
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , useLocalInstance_("useLocalInstance", "Use local Instance", false)
-    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , institution_("institution", "Institution")
+    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , stopThreads_("stopThreads", "Stop Runs")
+    , workloadManager_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
     , emailAddress_("emailAddress", "E-Mail Address", "s_leis06@uni-muenster.de")
     , clusterAddress_("clusterAddress", "Cluster Address", "palma.uni-muenster.de")
@@ -62,8 +128,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , uploadDataPath_("uploadDataPath", "Upload Data Path", "Upload Data Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT)
     , compileOnUpload_("compileOnUpload", "Compile on Upload", false)
     , deleteOnDownload_("deleteOnDownload", "Delete original Data", false)
-    , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations", Processor::VALID)
-    , triggerFetchResults_("triggerFetchResults", "Fetch Results", Processor::VALID)
+    , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations")
+    , triggerFetchResults_("triggerFetchResults", "Fetch Results")
     , progress_("progress", "Progress")
 {
     addPort(geometryDataPort_);
@@ -73,25 +139,35 @@ FlowSimulationCluster::FlowSimulationCluster()
     addPort(parameterPort_);
 
     addProperty(useLocalInstance_);
-    //ON_CHANGE_LAMBDA(useLocalInstance_, [this] {
-    //    setPropertyGroupVisible("cluster-general", !useLocalInstance_.get());
-    //});
+    ON_CHANGE_LAMBDA(useLocalInstance_, [this] {
+        setPropertyGroupVisible("cluster-general", !useLocalInstance_.get());
+        setPropertyGroupVisible("cluster-resources", !useLocalInstance_.get());
+        if (!useLocalInstance_.get()) {
+            workloadManagerChanged();
+        }
+        compileOnUpload_.setVisibleFlag(!useLocalInstance_.get());
+        deleteOnDownload_.setVisibleFlag(!useLocalInstance_.get());
+        triggerFetchResults_.setVisibleFlag(!useLocalInstance_.get());
+    });
     useLocalInstance_.setGroupID("local-instance");
     addProperty(localInstancePath_);
     localInstancePath_.setGroupID("local-instance");
+    //addProperty(stopThreads_); // TODO: interrupt seems to not be working for some reason...
+    ON_CHANGE(stopThreads_, FlowSimulationCluster, threadsStopped);
+    stopThreads_.setGroupID("local-instance");
     setPropertyGroupGuiName("local-instance", "Local Instance");
-//#ifndef WIN32
+#ifndef WIN32
     // This is essentially a workaround for OpenLB not being compilable using MSVC.
     // So we compile it, e. g. using cygwin, and treat it as a local compute node.
     // TODO: see below!
     setPropertyGroupVisible("local-instance", false);
-//#endif
+#endif
 
-    addProperty(institution_);
-    ON_CHANGE(institution_, FlowSimulationCluster, institutionChanged);
-    institution_.addOption("wwu", "WWU");
-    //institution_.addOption("jena", "Jena"); // No longer in use.
-    institution_.setGroupID("cluster-general");
+    addProperty(workloadManager_);
+    ON_CHANGE(workloadManager_, FlowSimulationCluster, workloadManagerChanged);
+    workloadManager_.addOption("slurm", "slurm");
+    workloadManager_.addOption("qsub", "qsub");
+    workloadManager_.setGroupID("cluster-general");
     addProperty(username_);
     username_.setGroupID("cluster-general");
     addProperty(emailAddress_);
@@ -151,10 +227,11 @@ FlowSimulationCluster::FlowSimulationCluster()
     setPropertyGroupGuiName("results", "Results");
 
     // Set visibility according to institution.
-    institutionChanged();
+    workloadManagerChanged();
 }
 
 FlowSimulationCluster::~FlowSimulationCluster() {
+    threadsStopped();
 }
 
 bool FlowSimulationCluster::isReady() const {
@@ -182,18 +259,53 @@ bool FlowSimulationCluster::isReady() const {
 }
 
 void FlowSimulationCluster::process() {
-    // Everything to process is done using callbacks.
+    // Most of the logic is handled by callbacks.
+    // We just use the process method to start threads, if necessary.
+
+    for (auto iter = runningThreads_.begin(); iter != runningThreads_.end();) {
+        auto run = iter->get();
+        if (run->isFinished()) {
+            LINFO("Run " << run->getName() << " finished " << (run->successful() ? "sucessfully" : "unsuccesfully"));
+            iter = runningThreads_.erase(iter);
+        }
+        else {
+            iter++;
+        }
+    }
+
+    size_t maxNumThreads = boost::thread::hardware_concurrency();
+    while (!waitingThreads_.empty() && runningThreads_.size() < maxNumThreads) {
+        auto thread = std::move(waitingThreads_.front());
+        waitingThreads_.pop_front();
+
+        LINFO("Run " << thread->getName() << " started");
+        thread->run();
+        runningThreads_.push_back(std::move(thread));
+    }
+
+    if (!runningThreads_.empty()) {
+        invalidate(INVALID_RESULT);
+    }
 }
 
-void FlowSimulationCluster::institutionChanged() {
-    if(institution_.get() == "jena") {
+void FlowSimulationCluster::threadsStopped() {
+    while (!runningThreads_.empty()) {
+        runningThreads_.front()->interrupt();
+        runningThreads_.pop_front();
+    }
+
+    waitingThreads_.clear();
+}
+
+void FlowSimulationCluster::workloadManagerChanged() {
+    if(workloadManager_.get() == "qsub") {
         setPropertyGroupVisible("cluster-resources", false);
     }
-    if(institution_.get() == "wwu") {
+    else if(workloadManager_.get() == "slurm") {
         setPropertyGroupVisible("cluster-resources", true);
     }
     else {
-        tgtAssert(false, "unhandled institution");
+        tgtAssert(false, "unhandled workload manager");
     }
 }
 
@@ -219,7 +331,6 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    VoreenApplication::app()->showMessageBox("Information", "Start enqueuing runs, this may take a while...");
     LINFO("Configuring and enqueuing Simulations '" << simulationType_.get() << "'");
 
     // (Re-)compile code on cluster, if desired.
@@ -228,6 +339,8 @@ void FlowSimulationCluster::enqueueSimulations() {
 #else
     if (compileOnUpload_.get()) {
 #endif
+
+        VoreenApplication::app()->showMessageBox("Information", "Compiling program, this may take a while...");
 
         // Execute compile script on the cluster.
         std::string command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateCompileScript();
@@ -317,40 +430,29 @@ void FlowSimulationCluster::enqueueSimulations() {
     if (useLocalInstance_.get()) {
 
         // TODO: make platform independent.
-        // TODO: figure out and set working directory according to upload path.
 
         // Move directory to the very same place, the local instance is located.
         simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
-        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName(), true);
+        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()), true);
         std::string command = "move " + simulationPathSource + " " + simulationPathDest;
         if (executeCommand(command) != EXIT_SUCCESS) {
-            VoreenApplication::app()->showMessageBox("Error", "Could not move ensemble", true);
-            LERROR("Could not move ensemble");
-            return;
+            VoreenApplication::app()->showMessageBox("Error", "Could not move ensemble, trying to use existing files...", true);
+            LWARNING("Could not move ensemble, trying to use existing files...");
         }
 
         // Run simulations one after the other.
-        std::vector<std::string> failed;
         for (size_t i = 0; i < flowParametrization->size(); i++) {
 
             // Start job.
-            std::string command = localInstancePath_.get() + " " + flowParametrization->getName() + " " + flowParametrization->at(i).getName() + " " + simulationResults_.get() + "/"; // Add a trailing '/' !
-            int ret = executeCommand(command);
-            if (ret != EXIT_SUCCESS) {
-                failed.push_back(flowParametrization->at(i).getName());
-                continue;
-            }
+            std::string changeWorkingDirectoryCommand = "cd " + tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName() + "/" + flowParametrization->at(i).getName(), true);
+            std::string runCommand = localInstancePath_.get() + " " + flowParametrization->getName() + " " + flowParametrization->at(i).getName() + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
+            std::string command = changeWorkingDirectoryCommand + " & " + runCommand;
+            std::string name = flowParametrization->getName() + "-" + flowParametrization->at(i).getName();
+            waitingThreads_.emplace_back(std::unique_ptr<CommandExecutingThread>(new CommandExecutingThread(command, name)));
+            LINFO("Enqueued run " << name);
         }
 
-        if (!failed.empty()) {
-            VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued. See log for details.", true);
-            LERROR("Could not enqueue runs: \n* " << strJoin(failed, "\n* "));
-        }
-        else {
-            VoreenApplication::app()->showMessageBox("Information", "All runs successfully enqueued!");
-        }
-
-        progress_.setProgress(1.0f);
+        VoreenApplication::app()->showMessageBox("Information", "All runs successfully enqueued!");
         return;
     }
 #endif
@@ -381,7 +483,6 @@ void FlowSimulationCluster::enqueueSimulations() {
         ret = executeCommand(command);
         if (ret != EXIT_SUCCESS) {
             failed.push_back(flowParametrization->at(i).getName());
-            continue;
         }
     }
 
@@ -480,42 +581,15 @@ void FlowSimulationCluster::fetchResults() {
     VoreenApplication::app()->showMessageBox("Information", "Fetching data was successful!");
 }
 
-int FlowSimulationCluster::executeCommand(const std::string& command) const {
-#ifndef WIN32
-    std::string result;
-    std::array<char, 128> buffer;
-
-    auto pipe = popen(command.c_str(), "r");
-    if (!pipe) {
-        LERROR("Failed to open pipe");
-        return EXIT_FAILURE;
-    }
-
-    while (!feof(pipe)) {
-        if (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            result += buffer.data();
-        }
-    }
-
-    if(!result.empty()) {
-        LINFO(result);
-    }
-
-    return pclose(pipe);
-#else
-    return system(command.c_str());
-#endif
-}
-
 std::string FlowSimulationCluster::generateCompileScript() const {
     std::stringstream script;
     script << "\"";
 
-    if(institution_.get() == "jena") {
+    if(workloadManager_.get() == "qsub") {
         script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
         script << " && make";
     }
-    else if(institution_.get() == "wwu") {
+    else if(workloadManager_.get() == "slurm") {
         script << "module load " << toolchain_.get();
         script << " && cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
         script << " && make";
@@ -529,7 +603,7 @@ std::string FlowSimulationCluster::generateEnqueueScript(const std::string& para
     std::stringstream script;
     script << "\"";
 
-    if(institution_.get() == "jena") {
+    if(workloadManager_.get() == "qsub") {
         script << "cd " << parametrizationPath;
 #ifdef WIN32
         // Using windows, the script's DOS line breaks need to be converted to UNIX line breaks.
@@ -537,7 +611,7 @@ std::string FlowSimulationCluster::generateEnqueueScript(const std::string& para
 #endif
         script << " && qsub submit.cmd";
     }
-    else if(institution_.get() == "wwu") {
+    else if(workloadManager_.get() == "slurm") {
         script << "module load " << toolchain_.get();
         script << " && cd " << parametrizationPath;
 #ifdef WIN32
@@ -555,7 +629,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
     tgtAssert(parameterPort_.hasData(), "no data");
     std::stringstream script;
 
-    if(institution_.get() == "jena") {
+    if(workloadManager_.get() == "qsub") {
 
         script << "#!/bin/bash" << std::endl;
         script << "# The job should be placed into the queue 'all.q'." << std::endl;
@@ -581,7 +655,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
                << std::endl;
 
     }
-    else if(institution_.get() == "wwu") {
+    else if(workloadManager_.get() == "slurm") {
 
         int quarters = configTimeQuarters_.get();
         int minutes = quarters * 15;
