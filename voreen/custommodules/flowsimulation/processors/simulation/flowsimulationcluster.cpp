@@ -31,6 +31,8 @@
 
 #include "modules/core/io/rawvolumereader.h"
 
+#include <boost/process.hpp>
+
 
 namespace {
     int executeCommand(const std::string& command) {
@@ -68,17 +70,31 @@ namespace voreen {
 /**
  * Simple background thread that allows to execute a system command asyncronously.
  */
-class CommandExecutingThread : public BackgroundThread {
+class ExecutorProcess {
 public:
 
-    CommandExecutingThread(const std::string& command, const std::string& name)
-        : command_(command)
+    ExecutorProcess(const std::string& cd, const std::string& command, const std::string& name)
+        : cd_(cd)
+        , command_(command)
         , name_(name)
-        , successful_(false)
     {}
 
-    virtual void threadMain() {
-        successful_ = executeCommand(command_) == EXIT_SUCCESS;
+    ~ExecutorProcess() {
+        process_.terminate();
+    }
+
+    bool isFinished() {
+        return !process_.running();
+    }
+
+    void run() {
+        // We need to change the current working directory accordingly,
+        // but also need to restore the old one afterwards.
+        auto path = boost::filesystem::current_path();
+        boost::filesystem::current_path(cd_);
+        process_ = boost::process::child(command_);
+        process_.detach();
+        boost::filesystem::current_path(path);
     }
 
     const std::string& getName() const {
@@ -86,15 +102,16 @@ public:
     }
 
     bool successful() const {
-        return successful_;
+        return process_.exit_code() == EXIT_SUCCESS;
     }
 
 private:
 
+    std::string cd_;
     std::string command_;
     std::string name_;
-    bool successful_;
 
+    boost::process::child process_;
 };
 
 
@@ -131,6 +148,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations")
     , triggerFetchResults_("triggerFetchResults", "Fetch Results")
     , progress_("progress", "Progress")
+    , numEnqueuedThreads_(0)
+    , numFinishedThreads_(0)
 {
     addPort(geometryDataPort_);
     //addPort(measuredDataPort_); // Currently ignored.
@@ -152,7 +171,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     useLocalInstance_.setGroupID("local-instance");
     addProperty(localInstancePath_);
     localInstancePath_.setGroupID("local-instance");
-    //addProperty(stopThreads_); // TODO: interrupt seems to not be working for some reason...
+    addProperty(stopThreads_);
     ON_CHANGE(stopThreads_, FlowSimulationCluster, threadsStopped);
     stopThreads_.setGroupID("local-instance");
     setPropertyGroupGuiName("local-instance", "Local Instance");
@@ -267,6 +286,7 @@ void FlowSimulationCluster::process() {
         if (run->isFinished()) {
             LINFO("Run " << run->getName() << " finished " << (run->successful() ? "sucessfully" : "unsuccesfully"));
             iter = runningThreads_.erase(iter);
+            progress_.setProgress(static_cast<float>(++numFinishedThreads_) / static_cast<float>(numEnqueuedThreads_));
         }
         else {
             iter++;
@@ -289,12 +309,10 @@ void FlowSimulationCluster::process() {
 }
 
 void FlowSimulationCluster::threadsStopped() {
-    while (!runningThreads_.empty()) {
-        runningThreads_.front()->interrupt();
-        runningThreads_.pop_front();
-    }
-
+    runningThreads_.clear();
     waitingThreads_.clear();
+    numEnqueuedThreads_ = 0;
+    numFinishedThreads_ = 0;
 }
 
 void FlowSimulationCluster::workloadManagerChanged() {
@@ -436,23 +454,26 @@ void FlowSimulationCluster::enqueueSimulations() {
         simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()), true);
         std::string command = "move " + simulationPathSource + " " + simulationPathDest;
         if (executeCommand(command) != EXIT_SUCCESS) {
-            VoreenApplication::app()->showMessageBox("Error", "Could not move ensemble, trying to use existing files...", true);
-            LWARNING("Could not move ensemble, trying to use existing files...");
+            VoreenApplication::app()->showMessageBox("Error", "Could not create configuration, try to delete old configuration directory", true);
+            LERROR("Could not create configuration, try to delete old configuration directory");
+            return;
         }
 
         // Run simulations one after the other.
         for (size_t i = 0; i < flowParametrization->size(); i++) {
 
             // Start job.
-            std::string changeWorkingDirectoryCommand = "cd " + tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName() + "/" + flowParametrization->at(i).getName(), true);
+            std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName() + "/" + flowParametrization->at(i).getName(), true);
             std::string runCommand = localInstancePath_.get() + " " + flowParametrization->getName() + " " + flowParametrization->at(i).getName() + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
-            std::string command = changeWorkingDirectoryCommand + " & " + runCommand;
             std::string name = flowParametrization->getName() + "-" + flowParametrization->at(i).getName();
-            waitingThreads_.emplace_back(std::unique_ptr<CommandExecutingThread>(new CommandExecutingThread(command, name)));
+            waitingThreads_.emplace_back(std::unique_ptr<ExecutorProcess>(new ExecutorProcess(workingDirectory, runCommand, name)));
             LINFO("Enqueued run " << name);
         }
 
-        VoreenApplication::app()->showMessageBox("Information", "All runs successfully enqueued!");
+        // Update statistics.
+        numFinishedThreads_ = 0;
+        numEnqueuedThreads_ = flowParametrization->size() + waitingThreads_.size();
+
         return;
     }
 #endif

@@ -40,7 +40,7 @@
 
 namespace voreen {
 
-class CommandExecutingThread;
+class ExecutorProcess;
 
 
 /**
@@ -113,8 +113,9 @@ private:
     ButtonProperty triggerFetchResults_;
     ProgressProperty progress_;
 
-    std::deque<std::unique_ptr<CommandExecutingThread>> waitingThreads_;
-    std::deque<std::unique_ptr<CommandExecutingThread>> runningThreads_;
+    std::deque<std::unique_ptr<ExecutorProcess>> waitingThreads_;
+    std::deque<std::unique_ptr<ExecutorProcess>> runningThreads_;
+    size_t numEnqueuedThreads_, numFinishedThreads_;
 
     static const std::string loggerCat_;
 };
