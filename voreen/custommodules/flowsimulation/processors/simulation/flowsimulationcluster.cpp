@@ -92,8 +92,8 @@ public:
         // but also need to restore the old one afterwards.
         auto path = boost::filesystem::current_path();
         boost::filesystem::current_path(cd_);
-        process_ = boost::process::child(command_);
-        process_.detach();
+        process_ = boost::process::child(command_);        
+        //process_.detach(); // Could uncomment this line if we want the simulations to continue running after voreen is closed.
         boost::filesystem::current_path(path);
     }
 
@@ -451,28 +451,40 @@ void FlowSimulationCluster::enqueueSimulations() {
 
         // Move directory to the very same place, the local instance is located.
         simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
-        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()), true);
-        std::string command = "move " + simulationPathSource + " " + simulationPathDest;
-        if (executeCommand(command) != EXIT_SUCCESS) {
-            VoreenApplication::app()->showMessageBox("Error", "Could not create configuration, try to delete old configuration directory", true);
-            LERROR("Could not create configuration, try to delete old configuration directory");
-            return;
+        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName(), true);
+
+        std::vector<std::string> failed;
+        if (tgt::FileSystem::dirExists(simulationPathDest) || !tgt::FileSystem::renameFile(simulationPathSource, simulationPathDest, false)) {
+            for (size_t i = 0; i < flowParametrization->size(); i++) {
+                std::string config = flowParametrization->at(i).getName();
+                if (!tgt::FileSystem::renameFile(simulationPathSource + "/" + config, simulationPathDest + "/" + config, false)) {
+                    failed.push_back(config);
+                }
+            }
         }
 
-        // Run simulations one after the other.
+        // Enqueue jobs.
         for (size_t i = 0; i < flowParametrization->size(); i++) {
 
-            // Start job.
-            std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName() + "/" + flowParametrization->at(i).getName(), true);
-            std::string runCommand = localInstancePath_.get() + " " + flowParametrization->getName() + " " + flowParametrization->at(i).getName() + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
-            std::string name = flowParametrization->getName() + "-" + flowParametrization->at(i).getName();
+            std::string ensemble = flowParametrization->getName();
+            std::string run = flowParametrization->at(i).getName();
+
+            if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
+                LWARNING("Configuration " << ensemble << "/" << run << " is already present, skipping..");
+                continue;
+            }
+
+            std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
+            std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
+            std::string name = ensemble + "-" + run;
             waitingThreads_.emplace_back(std::unique_ptr<ExecutorProcess>(new ExecutorProcess(workingDirectory, runCommand, name)));
+            numEnqueuedThreads_++;
             LINFO("Enqueued run " << name);
         }
 
-        // Update statistics.
-        numFinishedThreads_ = 0;
-        numEnqueuedThreads_ = flowParametrization->size() + waitingThreads_.size();
+        if (!failed.empty()) {
+            VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued, they might already exist. See log for details.", true);
+        }
 
         return;
     }
