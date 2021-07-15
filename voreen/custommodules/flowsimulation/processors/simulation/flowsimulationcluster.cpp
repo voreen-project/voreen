@@ -35,6 +35,11 @@
 
 
 namespace {
+
+    /**
+     * Executes a system command.
+     * On Linux, it also logs the output to the debug console.
+     */
     int executeCommand(const std::string& command) {
 #ifndef WIN32
         std::string result;
@@ -53,7 +58,7 @@ namespace {
         }
 
         if (!result.empty()) {
-            LINFO(result);
+            LINFOC("System", result);
         }
 
         return pclose(pipe);
@@ -61,6 +66,38 @@ namespace {
         return system(command.c_str());
 #endif
     }
+
+    /**
+     * Copies an entire directory from src to dst.
+     * If abortOnError is set, the copy process is being stopped as soon as an error occurs.
+     */
+    bool copyDirectory(const boost::filesystem::path& src, const boost::filesystem::path& dst, bool abortOnError = false) {
+        if (boost::filesystem::exists(dst)) {
+            return false;
+        }
+
+        if (boost::filesystem::is_directory(src)) {
+            bool success = true;
+            boost::filesystem::create_directories(dst);
+            for (auto& item : boost::filesystem::directory_iterator(src)) {
+                success &= copyDirectory(item.path(), dst / item.path().filename(), abortOnError);
+                if (!success && abortOnError) {
+                    return false;
+                }
+            }
+            return success;
+        }
+        else if (boost::filesystem::is_regular_file(src)) {
+            boost::system::error_code ec;
+            boost::filesystem::copy(src, dst, ec);
+            if (ec == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }
 
 
@@ -454,10 +491,10 @@ void FlowSimulationCluster::enqueueSimulations() {
         simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName(), true);
 
         std::vector<std::string> failed;
-        if (tgt::FileSystem::dirExists(simulationPathDest) || !tgt::FileSystem::renameFile(simulationPathSource, simulationPathDest, false)) {
+        if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
             for (size_t i = 0; i < flowParametrization->size(); i++) {
                 std::string config = flowParametrization->at(i).getName();
-                if (!tgt::FileSystem::renameFile(simulationPathSource + "/" + config, simulationPathDest + "/" + config, false)) {
+                if (!copyDirectory(simulationPathSource + "/" + config, simulationPathDest + "/" + config, false)) {
                     failed.push_back(config);
                 }
             }
