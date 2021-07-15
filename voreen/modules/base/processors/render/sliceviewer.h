@@ -41,10 +41,11 @@
 
 namespace voreen {
 
+template<typename P>
 class OctreeSliceTexture {
 public:
-    typedef tgt::Vector4<uint8_t> Pixel;
-    OctreeSliceTexture();
+    typedef P Pixel;
+    OctreeSliceTexture(GLint format, GLint datatype, tgt::Texture::Filter filter);
     void updateDimensions(tgt::svec2);
     void uploadTexture();
     void bindTexture();
@@ -52,9 +53,55 @@ public:
     tgt::ivec2 dimensions();
     void clear();
 private:
-    std::vector<Pixel> buf_;
+    std::vector<P> buf_;
     tgt::Texture texture_;
 };
+
+typedef OctreeSliceTexture<tgt::Vector4<u_int16_t>> OctreeSliceTextureColor;
+typedef OctreeSliceTexture<u_int8_t> OctreeSliceTextureControl;
+
+template<typename Pixel>
+OctreeSliceTexture<Pixel>::OctreeSliceTexture(GLint format, GLint datatype, tgt::Texture::Filter filter)
+    : buf_()
+    , texture_(tgt::svec3(2,2,1), format, format, datatype, filter, tgt::Texture::CLAMP_TO_EDGE, nullptr, false)
+{
+}
+
+template<typename Pixel>
+void OctreeSliceTexture<Pixel>::updateDimensions(tgt::svec2 dim) {
+    if(dim != tgt::svec2(texture_.getDimensions().xy())) {
+        texture_.setCpuTextureData(nullptr, false);
+        texture_.updateDimensions(tgt::ivec3(dim.x, dim.y, 1), false);
+
+        buf_.resize(tgt::hmul(dim), Pixel(0));
+        texture_.setCpuTextureData(reinterpret_cast<GLubyte*>(buf_.data()), false);
+        LGL_ERROR;
+    }
+}
+
+template<typename Pixel>
+void OctreeSliceTexture<Pixel>::uploadTexture() {
+    texture_.uploadTexture();
+    LGL_ERROR;
+}
+
+template<typename Pixel>
+void OctreeSliceTexture<Pixel>::bindTexture() {
+    texture_.bind();
+    LGL_ERROR;
+}
+template<typename Pixel>
+Pixel* OctreeSliceTexture<Pixel>::buf() {
+    return buf_.data();
+}
+template<typename Pixel>
+tgt::ivec2 OctreeSliceTexture<Pixel>::dimensions() {
+    return texture_.getDimensions().xy();
+}
+template<typename Pixel>
+void OctreeSliceTexture<Pixel>::clear() {
+    std::fill(buf_.begin(), buf_.end(), Pixel(0));
+}
 
 struct OctreeSliceViewProgress {
     OctreeSliceViewProgress();
@@ -264,7 +311,7 @@ protected:
     MWheelNumPropInteractionHandler<float> mwheelZoomHandler_;
 
     tgt::Shader* sliceShader_;
-    tgt::Shader* copyImageShader_;
+    tgt::Shader* octreeSliceTextureShader_;
 
     SliceCache sliceCache_;       ///< Cache for slices created in 2D texture mode.
 
@@ -286,7 +333,8 @@ private:
     mutable bool mouseIsPressed_;               ///< Is a mouse button currently pressed?
     mutable tgt::ivec3 lastPickingPosition_;    ///< Mouse position during previous interaction
 
-    std::unique_ptr<OctreeSliceTexture> octreeTexture_;
+    std::unique_ptr<OctreeSliceTextureColor> octreeTexture_;
+    std::unique_ptr<OctreeSliceTextureControl> octreeTextureControl_;
     OctreeSliceViewProgress octreeRenderProgress_;
 };
 

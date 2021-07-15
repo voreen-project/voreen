@@ -51,41 +51,6 @@ using tgt::TextureUnit;
 
 namespace voreen {
 
-OctreeSliceTexture::OctreeSliceTexture()
-    : buf_()
-    , texture_(tgt::svec3(2,2,1), GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, tgt::Texture::LINEAR, tgt::Texture::CLAMP_TO_EDGE, nullptr, false)
-{
-}
-
-void OctreeSliceTexture::updateDimensions(tgt::svec2 dim) {
-    if(dim != tgt::svec2(texture_.getDimensions().xy())) {
-        texture_.setCpuTextureData(nullptr, false);
-        texture_.updateDimensions(tgt::ivec3(dim.x, dim.y, 1), false);
-
-        buf_.resize(tgt::hmul(dim), OctreeSliceTexture::Pixel(0));
-        texture_.setCpuTextureData(reinterpret_cast<GLubyte*>(buf_.data()), false);
-        LGL_ERROR;
-    }
-}
-
-void OctreeSliceTexture::uploadTexture() {
-    texture_.uploadTexture();
-    LGL_ERROR;
-}
-
-void OctreeSliceTexture::bindTexture() {
-    texture_.bind();
-    LGL_ERROR;
-}
-OctreeSliceTexture::Pixel* OctreeSliceTexture::buf() {
-    return buf_.data();
-}
-tgt::ivec2 OctreeSliceTexture::dimensions() {
-    return texture_.getDimensions().xy();
-}
-void OctreeSliceTexture::clear() {
-    std::fill(buf_.begin(), buf_.end(), OctreeSliceTexture::Pixel(0));
-}
 OctreeSliceViewProgress::OctreeSliceViewProgress()
     : nextSlice_(0)
     , nextTileX_(0)
@@ -136,7 +101,7 @@ SliceViewer::SliceViewer()
     , mwheelCycleHandler_("mouseWheelHandler", "Slice Cycling", &sliceIndex_)
     , mwheelZoomHandler_("zoomHandler", "Slice Zoom", &zoomFactor_, tgt::MouseEvent::CTRL)
     , sliceShader_(0)
-    , copyImageShader_(0)
+    , octreeSliceTextureShader_(0)
     , sliceCache_(this, 10)
     , voxelPosPermutation_(0, 1, 2)
     , sliceLowerLeft_(1.f)
@@ -146,6 +111,7 @@ SliceViewer::SliceViewer()
     , lastPickingPosition_(-1, -1, -1)
     , sliceComplete_(true)
     , octreeTexture_(nullptr)
+    , octreeTextureControl_(nullptr)
     , octreeRenderProgress_()
 {
     // texture mode (2D/3D)
@@ -340,12 +306,13 @@ Processor* SliceViewer::create() const {
 void SliceViewer::initialize() {
     VolumeRenderer::initialize();
 
-    copyImageShader_ = ShdrMgr.load("passthrough", RenderProcessor::generateHeader(), false);
+    octreeSliceTextureShader_ = ShdrMgr.load("sl_octree", generateSliceShaderHeader(), false);
     LGL_ERROR;
     sliceShader_ = ShdrMgr.load("sl_base", generateSliceShaderHeader(), false);
     LGL_ERROR;
 
-    octreeTexture_.reset(new OctreeSliceTexture());
+    octreeTexture_.reset(new OctreeSliceTextureColor(GL_RGBA, GL_UNSIGNED_SHORT, tgt::Texture::LINEAR));
+    octreeTextureControl_.reset(new OctreeSliceTextureControl(GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST));
 
     QualityMode.addObserver(this);
 
@@ -355,10 +322,11 @@ void SliceViewer::initialize() {
 void SliceViewer::deinitialize() {
     ShdrMgr.dispose(sliceShader_);
     sliceShader_ = 0;
-    ShdrMgr.dispose(copyImageShader_);
-    copyImageShader_ = 0;
+    ShdrMgr.dispose(octreeSliceTextureShader_);
+    octreeSliceTextureShader_ = 0;
 
     octreeTexture_.reset();
+    octreeTextureControl_.reset();
 
     sliceCache_.clear();
 
@@ -382,7 +350,9 @@ void SliceViewer::adjustPropertiesToInput() {
 
 void SliceViewer::invalidateOctreeTexture() {
     if(texMode_.getValue() == OCTREE && octreeTexture_) {
+        tgtAssert(octreeTextureControl_, "Both textures must be present (or none)");
         octreeTexture_->clear();
+        octreeTextureControl_->clear();
         octreeRenderProgress_ = OctreeSliceViewProgress();
         invalidate();
     }
@@ -503,50 +473,6 @@ void SliceViewer::resetChannelShift() {
     channelShift4_.set(tgt::vec3::zero);
 }
 
-static std::vector<tgt::Vector4<uint8_t>> extractLUT(const TransFunc1DKeys& tf) {
-    tgt::Texture* texture = tf.getTexture();
-
-    texture->downloadTexture();
-    const int mapDim = texture->getDimensions().x;
-
-    std::vector<tgt::Vector4<uint8_t>> valueMap;
-    valueMap.reserve(mapDim);
-    for(size_t i=0; i<mapDim; ++i) {
-        valueMap.push_back(texture->texel<tgt::Vector4<uint8_t>>(i));
-    }
-    return valueMap;
-}
-
-struct TransferFuncCPU {
-    std::vector<tgt::Vector4<uint8_t>> lut_;
-    RealWorldMapping inputToLut_;
-
-    TransferFuncCPU(TransFunc1DKeys* tf, RealWorldMapping volumeRwm)
-        : lut_()
-        , inputToLut_()
-    {
-        std::vector<uint8_t> valueMap;
-        RealWorldMapping tfRwm;
-
-        if(tf) {
-            lut_ = extractLUT(*tf);
-            tfRwm = RealWorldMapping(tf->getDomain(), "");
-        } else {
-            lut_ = extractLUT(TransFunc1DKeys());
-            tfRwm = RealWorldMapping(tgt::vec2(0.0, 1.0), "");
-        }
-
-        inputToLut_ = RealWorldMapping::combine(volumeRwm, tfRwm.getInverseMapping());
-    }
-
-    tgt::Vector4<uint8_t> lookUp(float val) const {
-        float lutVal = inputToLut_.normalizedToRealWorld(val);
-        size_t size = lut_.size();
-        size_t index = tgt::clamp<size_t>(tgt::round(lutVal * (size-1)), 0, size-1);
-        return lut_[index];
-    }
-};
-
 typedef std::chrono::steady_clock Clock;
 typedef std::chrono::time_point<Clock> TimePoint;
 
@@ -555,9 +481,10 @@ enum class DeadlineResult {
     TimedOut,
 };
 
-static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxelMats[4], size_t level, const TransferFuncCPU tfs[4], OctreeSliceViewProgress& progress, TimePoint deadline) {
+static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, OctreeSliceTextureControl& texControl, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxelMats[4], size_t level, OctreeSliceViewProgress& progress, TimePoint deadline) {
     int rowSize = texture.dimensions().x;
     auto* pixels = texture.buf();
+    auto* controlPixels = texControl.buf();
 
     tgt::mat4 voxelToPixel;
     bool success = pixelToVoxelMats[0].invert(voxelToPixel);
@@ -595,6 +522,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
     int nextOut = 0;
 
     //TODO:
+    // Redrawing after interactive finishes
     // linear sampling
     // multithreading?
     // screen reduction?
@@ -608,17 +536,8 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
             const tgt::ivec2 tileBegin(tx,ty);
             const tgt::ivec2 tileEnd = tgt::min(tileBegin + tileSize, end);
 
-            if(numChannels != 1) {
-                for(int py=tileBegin.y; py<tileEnd.y; ++py) {
-                    for(int px=tileBegin.x; px<tileEnd.x; ++px) {
-                        int index = px + py*rowSize;
-                        pixels[index] = OctreeSliceTexture::Pixel(0);
-                    }
-                }
-            }
             for(size_t channel = 0; channel < numChannels; ++channel) {
                 const tgt::mat4 pixelToVoxel = pixelToVoxelMats[channel];
-                const TransferFuncCPU& tf = tfs[channel];
                 for(int py=tileBegin.y; py<tileEnd.y; ++py) {
                     for(int px=tileBegin.x; px<tileEnd.x; ++px) {
                         tgt::vec4 pixelPos = tgt::vec4(px, py, 0.0, 1.0);
@@ -627,14 +546,11 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                         tgt::ivec3 posi = tgt::round(pos);
 
                         int index = px + py*rowSize;
-                        OctreeSliceTexture::Pixel& p = pixels[index];
+                        OctreeSliceTextureColor::Pixel& p = pixels[index];
+                        OctreeSliceTextureControl::Pixel& c = controlPixels[index];
 
                         if(tgt::hor(tgt::lessThan(posi, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(posi, volDim))) {
                             // This can happen due to channel shift
-
-                            if(numChannels == 1) {
-                                p = OctreeSliceTexture::Pixel(0);
-                            }
                             continue;
                         }
 
@@ -677,22 +593,9 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
                         } else {
                             rawVal = d.mean_;
                         }
-                        const float factor = 1.0f/0xffff;
-                        float voxelValue = static_cast<float>(rawVal) * factor;
 
-                        OctreeSliceTexture::Pixel np = tf.lookUp(voxelValue);
-
-                        // Compositing:
-                        // Looking at sl_base frag: For some reason the compositing
-                        // premultiplies alpha for multi channel, but not for
-                        // single? I guess we mirror that here...
-                        if(numChannels == 1) {
-                            p = np;
-                        } else {
-                            tgt::Vector3<uint8_t> multiplied = (tgt::Vector3<uint16_t>(np.xyz()) * static_cast<uint16_t>(np.a)) / static_cast<uint16_t>(256);
-                            p.xyz() += multiplied;
-                            p.a = std::max(np.a, p.a);
-                        }
+                        p[channel] = rawVal;
+                        c = 0xff;
                     }
                 }
             }
@@ -712,6 +615,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTexture& texture, const Volum
 
 void SliceViewer::renderFromOctree() {
     octreeTexture_->updateDimensions(outport_.getSize());
+    octreeTextureControl_->updateDimensions(outport_.getSize());
 
 
     // First update texture buffer (on cpu)
@@ -721,18 +625,13 @@ void SliceViewer::renderFromOctree() {
     const VolumeOctree& octree = *volume->getRepresentation<VolumeOctree>();
     tgt::ivec3 volDim = volume->getDimensions();
 
+    RealWorldMapping rwm = volume->getRealWorldMapping();
+
     const SliceAlignment alignment = sliceAlignment_.getValue();
     int numSlices = volDim[alignment];
     const size_t sliceIndex = static_cast<size_t>(sliceIndex_.get());
     int numSlicesCol = numGridCols_.get();
     int numSlicesRow = numGridRows_.get();
-
-    TransferFuncCPU tfs[4] = {
-        {transferFunc1_.get(), volume->getRealWorldMapping()},
-        {transferFunc2_.get(), volume->getRealWorldMapping()},
-        {transferFunc3_.get(), volume->getRealWorldMapping()},
-        {transferFunc4_.get(), volume->getRealWorldMapping()},
-    };
 
     TimePoint deadline = Clock::now();
     size_t renderTimeMs = sliceExtractionTimeLimit_.get();
@@ -794,7 +693,7 @@ void SliceViewer::renderFromOctree() {
 
         size_t level = tgt::clamp(rawLevel, 0, static_cast<int>(octree.getNumLevels()-1));
 
-        if(renderOctreeSlice(*octreeTexture_, octree, begin, end, pixelToVoxelMats, level, tfs, octreeRenderProgress_, deadline) == DeadlineResult::Succeeded) {
+        if(renderOctreeSlice(*octreeTexture_, *octreeTextureControl_, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline) == DeadlineResult::Succeeded) {
             octreeRenderProgress_.nextSlice_ += 1;
             octreeRenderProgress_.nextTileY_ = 0;
             octreeRenderProgress_.nextTileX_ = 0;
@@ -807,15 +706,50 @@ void SliceViewer::renderFromOctree() {
 
     // Update and render texture
     octreeTexture_->uploadTexture();
+    octreeTextureControl_->uploadTexture();
 
-    tgt::TextureUnit unit;
-    unit.activate();
+    octreeSliceTextureShader_->activate();
+
+    octreeSliceTextureShader_->setUniform("rwmOffset_", rwm.getOffset());
+    octreeSliceTextureShader_->setUniform("rwmScale_", rwm.getScale());
+
+    tgt::TextureUnit unitIntensity;
+    unitIntensity.activate();
     octreeTexture_->bindTexture();
+    octreeSliceTextureShader_->setUniform("intensityTex_", unitIntensity.getUnitNumber());
 
-    copyImageShader_->activate();
-    copyImageShader_->setUniform("colorTex_", unit.getUnitNumber());
+    tgt::TextureUnit unitControl;
+    unitControl.activate();
+    octreeTextureControl_->bindTexture();
+    octreeSliceTextureShader_->setUniform("controlTex_", unitControl.getUnitNumber());
+
+    // bind transfer functions
+    TextureUnit transferUnit1, transferUnit2, transferUnit3, transferUnit4;
+    transferUnit1.activate();
+    transferFunc1_.get()->getTexture()->bind();
+    transferFunc1_.get()->setUniform(octreeSliceTextureShader_, "transFuncParams_", "transFuncTex_", transferUnit1.getUnitNumber());
+    LGL_ERROR;
+    if (volume->getNumChannels() > 1) {
+        transferUnit2.activate();
+        transferFunc2_.get()->getTexture()->bind();
+        transferFunc2_.get()->setUniform(octreeSliceTextureShader_, "transFuncParams2_", "transFuncTex2_", transferUnit2.getUnitNumber());
+        LGL_ERROR;
+    }
+    if (volume->getNumChannels() > 2) {
+        transferUnit3.activate();
+        transferFunc3_.get()->getTexture()->bind();
+        transferFunc3_.get()->setUniform(octreeSliceTextureShader_, "transFuncParams3_", "transFuncTex3_", transferUnit3.getUnitNumber());
+        LGL_ERROR;
+    }
+    if (volume->getNumChannels() > 3) {
+        transferUnit4.activate();
+        transferFunc4_.get()->getTexture()->bind();
+        transferFunc4_.get()->setUniform(octreeSliceTextureShader_, "transFuncParams4_", "transFuncTex4_", transferUnit4.getUnitNumber());
+        LGL_ERROR;
+    }
+
     renderQuad();
-    copyImageShader_->deactivate();
+    octreeSliceTextureShader_->deactivate();
     LGL_ERROR;
 }
 
@@ -1291,6 +1225,9 @@ bool SliceViewer::rebuildShader() {
     if(texMode_.isSelected("3d-texture") || texMode_.isSelected("2d-texture")) {
         sliceShader_->setHeaders(generateSliceShaderHeader());
         return sliceShader_->rebuild();
+    } else if(texMode_.isSelected("octree")) {
+        octreeSliceTextureShader_->setHeaders(generateSliceShaderHeader());
+        return octreeSliceTextureShader_->rebuild();
     } else {
         return true;
     }
