@@ -47,7 +47,7 @@ namespace {
 
         auto pipe = popen(command.c_str(), "r");
         if (!pipe) {
-            LERROR("Failed to open pipe");
+            LERRORC("System", "Failed to open pipe");
             return EXIT_FAILURE;
         }
 
@@ -90,7 +90,7 @@ namespace {
         else if (boost::filesystem::is_regular_file(src)) {
             boost::system::error_code ec;
             boost::filesystem::copy(src, dst, ec);
-            if (ec == 0) {
+            if (ec.value() == 0) {
                 return true;
             }
         }
