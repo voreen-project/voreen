@@ -481,6 +481,112 @@ enum class DeadlineResult {
     TimedOut,
 };
 
+struct CacheData {
+    tgt::mat4 voxelToBrick_;
+    uint64_t addr_;
+    union {
+        const uint16_t* data_;
+        uint16_t mean_;
+    };
+};
+
+const size_t cacheSize = 8;
+struct Cache {
+    std::array<tgt::ivec3, cacheSize> llf { tgt::ivec3( 0) };
+    std::array<tgt::ivec3, cacheSize> urb { tgt::ivec3(-1) };
+    std::array<CacheData,  cacheSize> data { CacheData { tgt::mat4::identity, OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, nullptr } };
+    int nextOut = 0;
+};
+
+static uint16_t sampleAt(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
+    int cacheEntry = -1;
+    for(int i = 0; i<cacheSize; ++i) {
+        if(tgt::hand(tgt::greaterThanEqual(posi, cache.llf[i])) && tgt::hand(tgt::lessThan(posi, cache.urb[i]))) {
+            cacheEntry = i;
+        }
+    }
+
+    if(cacheEntry == -1) {
+        cacheEntry = cache.nextOut;
+        cache.nextOut = (cache.nextOut+1)%cacheSize;
+        auto& d = cache.data[cacheEntry];
+        if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+            brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
+        }
+
+        LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level, false);
+        auto& location = node.location();
+        d.voxelToBrick_ = location.voxelToBrick();
+        d.addr_ = node.node().getBrickAddress();
+        if(d.addr_ == OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+            d.mean_ = node.node().getAvgValues()[channel];
+        } else {
+            d.data_ = brickPoolManager.getBrick(d.addr_);
+        }
+        cache.llf[cacheEntry] = location.voxelLLF();
+        cache.urb[cacheEntry] = location.voxelURB();
+    }
+    auto& d = cache.data[cacheEntry];
+
+    tgt::svec3 brickPos = tgt::round(d.voxelToBrick_ * pos);
+
+    uint16_t rawVal;
+    if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+        size_t brickIndex = channel+numChannels*cubicCoordToLinear(brickPos, brickDataSize);
+
+        rawVal = d.data_[brickIndex];
+    } else {
+        rawVal = d.mean_;
+    }
+    return rawVal;
+}
+
+struct SampleNearest {
+    static boost::optional<uint16_t> sample(tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
+
+        tgt::ivec3 posi = tgt::round(pos);
+
+        if(tgt::hor(tgt::lessThan(posi, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(posi, volDim))) {
+            // This can happen due to channel shift
+            return boost::none;
+        }
+
+        return sampleAt(posi, pos, volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels);
+    }
+};
+struct SampleLinear {
+    static boost::optional<uint16_t> sample(tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
+
+        tgt::ivec3 l = tgt::floor(pos);
+        tgt::ivec3 h = l + tgt::ivec3::one;
+
+        if(tgt::hor(tgt::lessThan(h, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(l, volDim))) {
+            // This can happen due to channel shift
+            return boost::none;
+        }
+
+        l = max(l, tgt::ivec3::zero);
+        h = min(h, volDim - tgt::ivec3(1));
+
+        tgt::vec3 p = pos - tgt::vec3(l);
+        tgt::vec3 m = tgt::vec3(1.0) - p;
+
+        float v =
+              (m.x)*(m.y)*(m.z)*sampleAt(tgt::ivec3(l.x, l.y, l.z), tgt::vec3(l.x, l.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (m.x)*(m.y)*(p.z)*sampleAt(tgt::ivec3(l.x, l.y, h.z), tgt::vec3(l.x, l.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (m.x)*(p.y)*(m.z)*sampleAt(tgt::ivec3(l.x, h.y, l.z), tgt::vec3(l.x, h.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (m.x)*(p.y)*(p.z)*sampleAt(tgt::ivec3(l.x, h.y, h.z), tgt::vec3(l.x, h.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (p.x)*(m.y)*(m.z)*sampleAt(tgt::ivec3(h.x, l.y, l.z), tgt::vec3(h.x, l.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (p.x)*(m.y)*(p.z)*sampleAt(tgt::ivec3(h.x, l.y, h.z), tgt::vec3(h.x, l.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (p.x)*(p.y)*(m.z)*sampleAt(tgt::ivec3(h.x, h.y, l.z), tgt::vec3(h.x, h.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            + (p.x)*(p.y)*(p.z)*sampleAt(tgt::ivec3(h.x, h.y, h.z), tgt::vec3(h.x, h.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+            ;
+
+        return v;
+    }
+};
+
+template<typename SampleFn>
 static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, OctreeSliceTextureControl& texControl, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxelMats[4], size_t level, OctreeSliceViewProgress& progress, TimePoint deadline) {
     int rowSize = texture.dimensions().x;
     auto* pixels = texture.buf();
@@ -506,24 +612,10 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
     const tgt::ivec2 begin = tgt::max(pixBegin, tgt::ivec2::zero);
     const tgt::ivec2 end = tgt::min(pixEnd, texture.dimensions());
 
-    struct CacheData {
-        tgt::mat4 voxelToBrick_;
-        uint64_t addr_;
-        union {
-            const uint16_t* data_;
-            uint16_t mean_;
-        };
-    };
-
-    const size_t cacheSize = 8;
-    std::array<tgt::ivec3, cacheSize> cacheLlf { tgt::ivec3( 0) };
-    std::array<tgt::ivec3, cacheSize> cacheUrb { tgt::ivec3(-1) };
-    std::array<CacheData,  cacheSize> cacheData { CacheData { tgt::mat4::identity, OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, nullptr } };
-    int nextOut = 0;
+    Cache cache {};
 
     //TODO:
     // Redrawing after interactive finishes
-    // linear sampling
     // multithreading?
     // screen reduction?
 
@@ -543,59 +635,17 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
                         tgt::vec4 pixelPos = tgt::vec4(px, py, 0.0, 1.0);
                         tgt::vec3 pos = (pixelToVoxel*pixelPos).xyz();
 
-                        tgt::ivec3 posi = tgt::round(pos);
 
                         int index = px + py*rowSize;
                         OctreeSliceTextureColor::Pixel& p = pixels[index];
                         OctreeSliceTextureControl::Pixel& c = controlPixels[index];
 
-                        if(tgt::hor(tgt::lessThan(posi, tgt::ivec3::zero)) || tgt::hor(tgt::greaterThanEqual(posi, volDim))) {
-                            // This can happen due to channel shift
-                            continue;
+                        auto s = SampleFn::sample(pos, volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels);
+
+                        if(s) {
+                            p[channel] = *s;
+                            c = 0xff;
                         }
-
-                        int cacheEntry = -1;
-                        for(int i = 0; i<cacheSize; ++i) {
-                            if(tgt::hand(tgt::greaterThanEqual(posi, cacheLlf[i])) && tgt::hand(tgt::lessThan(posi, cacheUrb[i]))) {
-                                cacheEntry = i;
-                            }
-                        }
-
-                        if(cacheEntry == -1) {
-                            cacheEntry = nextOut;
-                            nextOut = (nextOut+1)%cacheSize;
-                            auto& d = cacheData[cacheEntry];
-                            if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
-                                brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
-                            }
-
-                            LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level, false);
-                            auto& location = node.location();
-                            d.voxelToBrick_ = location.voxelToBrick();
-                            d.addr_ = node.node().getBrickAddress();
-                            if(d.addr_ == OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
-                                d.mean_ = node.node().getAvgValues()[channel];
-                            } else {
-                                d.data_ = brickPoolManager.getBrick(d.addr_);
-                            }
-                            cacheLlf[cacheEntry] = location.voxelLLF();
-                            cacheUrb[cacheEntry] = location.voxelURB();
-                        }
-                        auto& d = cacheData[cacheEntry];
-
-                        tgt::svec3 brickPos = tgt::round(d.voxelToBrick_ * pos);
-
-                        uint16_t rawVal;
-                        if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
-                            size_t brickIndex = channel+numChannels*cubicCoordToLinear(brickPos, brickDataSize);
-
-                            rawVal = d.data_[brickIndex];
-                        } else {
-                            rawVal = d.mean_;
-                        }
-
-                        p[channel] = rawVal;
-                        c = 0xff;
                     }
                 }
             }
@@ -604,7 +654,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
         progress.nextTileX_ = 0;
         progress.nextTileY_ += 1;
     }
-    for(auto d : cacheData) {
+    for(auto d : cache.data) {
         if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
             brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
         }
@@ -693,7 +743,16 @@ void SliceViewer::renderFromOctree() {
 
         size_t level = tgt::clamp(rawLevel, 0, static_cast<int>(octree.getNumLevels()-1));
 
-        if(renderOctreeSlice(*octreeTexture_, *octreeTextureControl_, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline) == DeadlineResult::Succeeded) {
+        DeadlineResult res;
+        switch(inport_.getTextureFilterModeProperty().getValue()) {
+            case GL_LINEAR:
+                res = renderOctreeSlice<SampleLinear>(*octreeTexture_, *octreeTextureControl_, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                    break;
+            case GL_NEAREST:
+                res = renderOctreeSlice<SampleNearest>(*octreeTexture_, *octreeTextureControl_, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                    break;
+        }
+        if(res  == DeadlineResult::Succeeded) {
             octreeRenderProgress_.nextSlice_ += 1;
             octreeRenderProgress_.nextTileY_ = 0;
             octreeRenderProgress_.nextTileX_ = 0;
