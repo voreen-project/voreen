@@ -408,6 +408,8 @@ void SliceViewer::updatePropertyConfiguration() {
     interactionLevelOfDetail_.setReadOnlyFlag(!(mode2d || modeoctree));
     sliceExtractionTimeLimit_.setReadOnlyFlag(!(mode2d || modeoctree));
     sliceCacheSize_.setReadOnlyFlag(!mode2d);
+    inport_.getTextureBorderIntensityProperty().setReadOnlyFlag(modeoctree);
+    inport_.getTextureClampModeProperty().setReadOnlyFlag(modeoctree);
 
     if (static_cast<size_t>(sliceCacheSize_.get()) != sliceCache_.getCacheSize())
         sliceCache_.setCacheSize(static_cast<size_t>(sliceCacheSize_.get()));
