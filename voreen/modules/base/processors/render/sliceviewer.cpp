@@ -492,11 +492,11 @@ struct CacheData {
     };
 };
 
-const size_t cacheSize = 8;
+const int cacheSize = 8;
 struct Cache {
-    std::array<tgt::ivec3, cacheSize> llf { tgt::ivec3( 0) };
-    std::array<tgt::ivec3, cacheSize> urb { tgt::ivec3(-1) };
-    std::array<CacheData,  cacheSize> data { CacheData { tgt::mat4::identity, OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, nullptr } };
+    std::array<tgt::ivec3, cacheSize> llf {{ tgt::ivec3( 0) }};
+    std::array<tgt::ivec3, cacheSize> urb {{ tgt::ivec3(-1) }};
+    std::array<CacheData,  cacheSize> data {{ CacheData { tgt::mat4::identity, OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, nullptr } }};
     int nextOut = 0;
 };
 
