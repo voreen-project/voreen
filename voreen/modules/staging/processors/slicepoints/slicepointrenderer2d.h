@@ -27,7 +27,7 @@
 #define VRN_SLICEPOINTRENDERER2D_H
 
 #include "voreen/core/processors/imageprocessor.h"
-#include "modules/base/processors/render/sliceviewer.h"
+#include "voreen/core/datastructures/volume/slice/slicetexture.h"
 
 #include "voreen/core/ports/renderport.h"
 
