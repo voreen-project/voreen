@@ -1,8 +1,11 @@
 
 # Enable OpenMP
 if(WIN32)
-    #LIST(APPEND MOD_DEFINITIONS /openmp)
-    LIST(APPEND MOD_DEFINITIONS /openmp:experimental) # required for omp simd
+    IF(NOT(MSVC_VERSION LESS 1922)) # GREATER_EQUAL was introduced in CMAKE 3.7
+        LIST(APPEND MOD_DEFINITIONS /openmp:experimental) 
+    ELSE()
+        LIST(APPEND MOD_DEFINITIONS /openmp)
+    ENDIF()
 ELSEIF(UNIX)
     FIND_PACKAGE(OpenMP)
     IF(OpenMP_FOUND OR OpenMP_CXX_FOUND)

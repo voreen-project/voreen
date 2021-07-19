@@ -41,8 +41,12 @@ static float variance_of(const float* begin, const float* end, float mean) {
 
     float sq_sum = 0.0f;
     size_t n = std::distance(begin, end);
+#if defined(WIN32) && _MSC_VER < 1922
+#pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
+#else
 #ifdef VRN_MODULE_OPENMP
 #pragma omp simd
+#endif
 #endif
     for(size_t i = 0; i<n; ++i) {
         sq_sum += square(mean-begin[i]);
