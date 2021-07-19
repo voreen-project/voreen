@@ -483,13 +483,12 @@ void VolumeFilterList::inputOutputChannelCheck() {
             if (numOutputChannels == filter->getNumInputChannels()) {
                 instance.setActive(true);
                 numOutputChannels = filter->getNumOutputChannels();
+                metadata = filter->getMetaData(metadata);
             }
             else if(instance.isActive()) {
                 instance.setActive(false);
                 LWARNING("Input channel count of filter '" << instance.getName() << "' is not satisfied. Deactivating.");
             }
-
-            metadata = filter->getMetaData(metadata);
         }
     }
     else {
