@@ -57,8 +57,8 @@ private:
     tgt::Texture texture_;
 };
 
-typedef OctreeSliceTexture<tgt::Vector4<u_int16_t>> OctreeSliceTextureColor;
-typedef OctreeSliceTexture<u_int8_t> OctreeSliceTextureControl;
+typedef OctreeSliceTexture<tgt::Vector4<uint16_t>> OctreeSliceTextureColor;
+typedef OctreeSliceTexture<uint8_t> OctreeSliceTextureControl;
 
 template<typename Pixel>
 OctreeSliceTexture<Pixel>::OctreeSliceTexture(GLint format, GLint datatype, tgt::Texture::Filter filter)
