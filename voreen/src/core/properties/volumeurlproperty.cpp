@@ -84,7 +84,7 @@ void VolumeURLProperty::fileActionCallback() {
         setVolume(nullptr);
 
         // Output error message.
-        LWARNING(e.what() << " The file might has been moved or deleted.");
+        LWARNING(e.what() << " The file may have been moved or deleted.");
     }
     recursiveSet_ = false;
 }

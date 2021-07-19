@@ -299,10 +299,18 @@ void VolumeURLListProperty::setSelected(const std::string& url, bool selected) {
 }
 
 void VolumeURLListProperty::setAllSelected(bool selected) {
-    for (size_t i=0; i<value_.size(); i++)
-        selectionMap_[value_.at(i)] = selected;
+    bool selectionChanged = false;
+    for (size_t i = 0; i < value_.size(); i++) {
+        bool& selection = selectionMap_[value_.at(i)];
+        if (selection != selected) {
+            selection = selected;
+            selectionChanged = true;
+        }
+    }
 
-    invalidate();
+    if (selectionChanged) {
+        invalidate();
+    }
 }
 
 bool VolumeURLListProperty::isSelected(const std::string& url) const {

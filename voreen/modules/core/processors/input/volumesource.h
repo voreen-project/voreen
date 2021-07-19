@@ -95,8 +95,6 @@ protected:
     /// The volume port the loaded data set is written to.
     VolumePort outport_;
 
-    bool forceVolumeLoad_; ///< if true, the volume will be loaded in process
-
     static const std::string loggerCat_;
 };
 

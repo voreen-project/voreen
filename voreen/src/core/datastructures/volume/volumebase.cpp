@@ -104,7 +104,6 @@ std::string VolumeBase::getMetaDataHash() const {
     XmlSerializer s;
 
     s.serialize("metaData", metaData);
-    //p->serializeValue(s);
 
     std::stringstream stream;
     s.write(stream);

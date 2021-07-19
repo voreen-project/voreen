@@ -40,7 +40,6 @@ VolumeSource::VolumeSource()
     , volumeURL_("volumeURL", "Load Volume", "")
     , volumeInfo_("volumeInfo", "Volume Preview")
     , outport_(Port::OUTPORT, "volumehandle.volumehandle", "Volume Output")
-    , forceVolumeLoad_(true)
 {
     addPort(outport_);
     addProperty(volumeURL_);
@@ -53,7 +52,7 @@ Processor* VolumeSource::create() const {
 }
 
 void VolumeSource::process() {
-    if(forceVolumeLoad_) {
+    if(firstProcessAfterDeserialization()) {
         // load volume from URL stored in volumeURL property
         if (volumeURL_.get() != "" && !volumeURL_.getVolume()) {
             try {
@@ -78,9 +77,6 @@ void VolumeSource::process() {
 
         if (getProcessorWidget())
             getProcessorWidget()->updateFromProcessor();
-
-        //set force back to false
-        forceVolumeLoad_ = false;
     }
 }
 
