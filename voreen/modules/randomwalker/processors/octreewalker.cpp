@@ -161,6 +161,7 @@ OctreeWalker::OctreeWalker()
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
     , conjGradImplementation_("conjGradImplementation", "Implementation")
     , homogeneityThreshold_("homogeneityThreshold", "Homogeneity Threshold", 0.01, 0.0, 1.0)
+    , binaryPruningDelta_("binaryPruningDelta", "Binary Pruning Delta", 0.01, 0.0, 0.5)
     , incrementalSimilarityThreshold_("incrementalSimilarityThreshold", "Incremental Similarity Treshold", 0.01, 0.0, 1.0)
     , clearResult_("clearResult", "Clear Result", Processor::INVALID_RESULT, Property::LOD_DEBUG)
     , resultPath_("resultPath", "Result Cache Path", "Result Cache Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
@@ -201,6 +202,10 @@ OctreeWalker::OctreeWalker()
         homogeneityThreshold_.setGroupID("rwparam");
         homogeneityThreshold_.adaptDecimalsToRange(5);
         homogeneityThreshold_.setTracking(false);
+    addProperty(binaryPruningDelta_);
+        binaryPruningDelta_.setGroupID("rwparam");
+        binaryPruningDelta_.adaptDecimalsToRange(5);
+        binaryPruningDelta_.setTracking(false);
     addProperty(incrementalSimilarityThreshold_);
         incrementalSimilarityThreshold_.setGroupID("rwparam");
         incrementalSimilarityThreshold_.adaptDecimalsToRange(5);
@@ -435,6 +440,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         errorThresh,
         maxIterations,
         homogeneityThreshold_.get(),
+        binaryPruningDelta_.get(),
         incrementalSimilarityThreshold_.get(),
         noiseModel_.getValue(),
     };
@@ -961,8 +967,7 @@ template<typename NoiseModel>
 static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasSeedConflicts, bool& hasNewSeedConflicts, bool parentHadSeedsConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
-        const float delta = 0.01;
-        bool minMaxSkip = max < 0.5-delta || min > 0.5+delta;
+        bool minMaxSkip = max < 0.5-input.binaryPruningDelta_ || min > 0.5+input.binaryPruningDelta_;
         return parentValueRange < input.homogeneityThreshold_ || minMaxSkip;
     };
 

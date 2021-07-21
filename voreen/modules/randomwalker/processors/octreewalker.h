@@ -99,6 +99,7 @@ struct OctreeWalkerInput {
     float errorThreshold_;
     int maxIterations_;
     float homogeneityThreshold_;
+    float binaryPruningDelta_;
     float incrementalSimilarityThreshold_;
     RWNoiseModel noiseModel_;
 };
@@ -171,6 +172,7 @@ private:
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
     FloatProperty homogeneityThreshold_;
+    FloatProperty binaryPruningDelta_;
     FloatProperty incrementalSimilarityThreshold_;
 
     VoreenBlasCPU voreenBlasCPU_;
