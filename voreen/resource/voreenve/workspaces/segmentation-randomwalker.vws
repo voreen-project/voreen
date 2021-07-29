@@ -4312,9 +4312,9 @@ void main() {
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../../../../../../nosnapshot/tmp/VoreenVE/resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="../../../nosnapshot/tmp/VoreenVE/resource/voreenve/volumes/walnut.vvd" />
-                                        <item value="/nosnapshot/tmp/VoreenVE/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../volumes/walnut.vvd" />
+-                                       <item value="resource/voreenve/volumes/walnut.vvd" />
+-                                       <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
