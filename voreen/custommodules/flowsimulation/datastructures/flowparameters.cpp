@@ -252,8 +252,10 @@ FlowParameterSet::FlowParameterSet(const std::string& name)
     , characteristicVelocity_(0.0f)
     , viscosity_(0.0f)
     , density_(0.0f)
+    , turbulenceModel_(FTM_NONE)
     , smagorinskyConstant_(0.0f)
-    , bouzidi_(false)
+    , wallBoundaryCondition_(FBC_NONE)
+    , inletVelocityMultiplier_(0.0f)
 {
 }
 
@@ -309,6 +311,14 @@ void FlowParameterSet::setDensity(float density) {
     density_ = density;
 }
 
+FlowTurbulenceModel FlowParameterSet::getTurbulenceModel() const {
+    return turbulenceModel_;
+}
+
+void FlowParameterSet::setTurbulenceModel(FlowTurbulenceModel turbulenceModel) {
+    turbulenceModel_ = turbulenceModel;
+}
+
 float FlowParameterSet::getSmagorinskyConstant() const {
     return smagorinskyConstant_;
 }
@@ -317,12 +327,12 @@ void FlowParameterSet::setSmagorinskyConstant(float smagorinskyConstant) {
     smagorinskyConstant_ = smagorinskyConstant;
 }
 
-bool FlowParameterSet::getBouzidi() const {
-    return bouzidi_;
+FlowBoundaryCondition FlowParameterSet::getWallBoundaryCondition() const {
+    return wallBoundaryCondition_;
 }
 
-void FlowParameterSet::setBouzidi(bool bouzidi) {
-    bouzidi_ = bouzidi;
+void FlowParameterSet::setWallBoundaryCondition(FlowBoundaryCondition wallBoundaryCondition) {
+    wallBoundaryCondition_ = wallBoundaryCondition;
 }
 
 float FlowParameterSet::getInletVelocityMultiplier() const {
@@ -352,8 +362,9 @@ void FlowParameterSet::serialize(Serializer& s) const {
     s.serialize("characteristicVelocity", characteristicVelocity_);
     s.serialize("viscosity", viscosity_);
     s.serialize("density", density_);
+    s.serialize("turbulenceModel", turbulenceModel_);
     s.serialize("smagorinskyConstant", smagorinskyConstant_);
-    s.serialize("bouzidi", bouzidi_);
+    s.serialize("wallBoundaryCondition", wallBoundaryCondition_);
     s.serialize("inletVelocityMultiplier", inletVelocityMultiplier_);
 }
 
@@ -365,8 +376,12 @@ void FlowParameterSet::deserialize(Deserializer& s) {
     s.deserialize("characteristicVelocity", characteristicVelocity_);
     s.deserialize("viscosity", viscosity_);
     s.deserialize("density", density_);
+    int turbulenceModel = FTM_NONE;
+    s.optionalDeserialize("turbulenceModel", turbulenceModel, static_cast<int>(FTM_SMAGORINSKY));
+    turbulenceModel_ = static_cast<FlowTurbulenceModel>(turbulenceModel);
     s.deserialize("smagorinskyConstant", smagorinskyConstant_);
-    s.deserialize("bouzidi", bouzidi_);
+    int wallBoundaryCondition = FBC_NONE;
+    s.optionalDeserialize("wallBoundaryCondition", wallBoundaryCondition, static_cast<int>(FBC_BOUZIDI));
     s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
 }
 

@@ -26,10 +26,14 @@
 #ifndef VRN_FLOW_SIMULATION_UTILS_H
 #define VRN_FLOW_SIMULATION_UTILS_H
 
-#include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumebase.h"
+#include <vector>
+
+#include "tgt/matrix.h"
+#include "tgt/vector.h"
 
 namespace voreen {
+
+class VolumeBase;
 
 namespace utils {
 

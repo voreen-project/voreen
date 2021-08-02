@@ -64,7 +64,7 @@ std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& ori
     // Estimate number of samples
     if(numSamples == 0) {
         float voxelsPerRadius = radius / tgt::length(volume->getSpacing());
-        numSamples = 2 * tgt::PIf * voxelsPerRadius * voxelsPerRadius; // Use twice as many samples as minimally required.
+        numSamples = 2.0f * tgt::PIf * voxelsPerRadius * voxelsPerRadius; // Use twice as many samples as minimally required.
         if(numSamples < 1) {
             LWARNINGC("SampleDisk", "radius might be too small for proper sampling");
             numSamples = 10;

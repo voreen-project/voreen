@@ -60,14 +60,15 @@ FlowParametrizationRun::FlowParametrizationRun()
     , fluid_("fluid", "Fluid")
     , viscosity_("viscosity", "Kinematic Viscosity (x10^(-6) m^2/s)", 3.5, 3, 4)
     , density_("density", "Density (kg/m^3)", 1000.0f, 1000.0f, 1100.0f)
-    , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Contant", 0.1f, 0.1f, 5.0f)
-    , bouzidi_("bouzidi", "Bouzidi", true)
+    , turbulenceModel_("turbulenceModel", "Turbulence Model")
+    , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Constant", 0.1f, 0.1f, 5.0f)
+    , wallBoundaryCondition_("wallBoundaryCondition", "Wall Boundary Condition")
     , inletVelocityMultiplier_("inletVelocityMultiplier", "Inlet Velocity Multiplier", 1.0f, 0.1f, 10.0f)
     , discretization_("discretization", "Discretization", 3, 1, 26)
     , addParametrization_("addParametrizations", "Add Parametrizations")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
-    , parametrizations_("parametrizations", "Parametrizations", 12, Processor::VALID)
+    , parametrizations_("parametrizations", "Parametrizations", 13, Processor::VALID)
     , addInvalidParametrizations_("addInvalidParametrizations", "Add invalid Parametrizations", false)
 {
     addPort(inport_);
@@ -98,11 +99,20 @@ FlowParametrizationRun::FlowParametrizationRun()
     addProperty(density_);
         density_.setNumDecimals(0);
         density_.setGroupID("parameters");
+    addProperty(turbulenceModel_);
+        turbulenceModel_.addOption("smagorinsky", "Smagorinsky", FTM_SMAGORINSKY);
+        //turbulenceModel_.addOption("smagorinskyShearImproved", "Shaer Improved Smagorinsky", FTM_SMAGORINSKY_SHEAR_IMPROVED); // Does not compile in OpenLB 1.4.
+        turbulenceModel_.addOption("smagorinskyConsistent", "Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT);
+        turbulenceModel_.addOption("smagorinskyConsistentStrain", "Strain Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT_STRAIN);
+        turbulenceModel_.addOption("smagorinskyDynamic", "Dynamic Smagorinsky", FTM_SMAGORINSKY_DYNAMIC);
+        turbulenceModel_.setGroupID("parameters");
     addProperty(smagorinskyConstant_);
         smagorinskyConstant_.setNumDecimals(3);
         smagorinskyConstant_.setGroupID("parameters");
-    addProperty(bouzidi_);
-        bouzidi_.setGroupID("parameters");
+    addProperty(wallBoundaryCondition_);
+        wallBoundaryCondition_.addOption("bouzidi", "Bouzidi", FBC_BOUZIDI);
+        wallBoundaryCondition_.addOption("bounceBack", "Bounce-Back", FBC_BOUNCE_BACK);
+        wallBoundaryCondition_.setGroupID("parameters");
     addProperty(inletVelocityMultiplier_);
         inletVelocityMultiplier_.setGroupID("parameters");
     addProperty(discretization_);
@@ -117,18 +127,10 @@ FlowParametrizationRun::FlowParametrizationRun()
     ON_CHANGE(clearParametrizations_, FlowParametrizationRun, clearParametrizations);
 
     addProperty(parametrizations_);
-    parametrizations_.setColumnLabel(0, "Valid");
-    parametrizations_.setColumnLabel(1, "Name");
-    parametrizations_.setColumnLabel(2, "Reynolds");
-    parametrizations_.setColumnLabel(3, "Res.");
-    parametrizations_.setColumnLabel(4, "Relax.");
-    parametrizations_.setColumnLabel(5, "Char. Len.");
-    parametrizations_.setColumnLabel(6, "Char. Vel.");
-    parametrizations_.setColumnLabel(7, "viscosity");
-    parametrizations_.setColumnLabel(8, "density");
-    parametrizations_.setColumnLabel(9, "Smagorinsky");
-    parametrizations_.setColumnLabel(10, "Bouzidi");
-    parametrizations_.setColumnLabel(11, "Vel. Mult.");
+    std::string columnLabels[] = {"Valid", "Name", "Re", "N", "τ", "l", "U", "ν", "ρ", "Model", "Cs", "Bound. Cond.", "Mul."};
+    for(int i=0; i<parametrizations_.getNumColumns(); i++) {
+        parametrizations_.setColumnLabel(i, columnLabels[i]);
+    }
 
     addProperty(addInvalidParametrizations_);
 }
@@ -182,39 +184,36 @@ void FlowParametrizationRun::addParametrizations() {
     PARAMETER_DISCRETIZATION_BEGIN(density, float)
     PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant, float)
     PARAMETER_DISCRETIZATION_BEGIN(inletVelocityMultiplier, float)
-    float characteristicLength = characteristicLength_.get();
-    float characteristicVelocity = characteristicVelocity_.get();
-    bool bouzidi = bouzidi_.get();
-//   for (bool bouzidi : {true, false})
-    {
-        FlowParameterSet parameters(name);
-        parameters.setSpatialResolution(spatialResolution);
-        parameters.setRelaxationTime(relaxationTime);
-        parameters.setCharacteristicLength(characteristicLength * 0.001f); // [mm] to [m]
-        parameters.setCharacteristicVelocity(characteristicVelocity);
-        parameters.setViscosity(viscosity * 10e-6f); // Due to interface value range.
-        parameters.setDensity(density);
-        parameters.setSmagorinskyConstant(smagorinskyConstant);
-        parameters.setBouzidi(bouzidi);
-        parameters.setInletVelocityMultiplier(inletVelocityMultiplier);
-        flowParameters_.emplace_back(parameters);
 
-        std::vector<std::string> row;
-        row.push_back(parameters.isValid() ? "✓" : "✗");
-        row.push_back(parameters.getName());
-        row.push_back(std::to_string(parameters.getReynoldsNumber()));
-        row.push_back(std::to_string(parameters.getSpatialResolution()));
-        row.push_back(std::to_string(parameters.getRelaxationTime()));
-        row.push_back(std::to_string(parameters.getCharacteristicLength()));
-        row.push_back(std::to_string(parameters.getCharacteristicVelocity()));
-        row.push_back(std::to_string(parameters.getViscosity()));
-        row.push_back(std::to_string(parameters.getDensity()));
-        row.push_back(std::to_string(parameters.getSmagorinskyConstant()));
-        row.push_back(std::to_string(parameters.getBouzidi()));
-        row.push_back(std::to_string(parameters.getInletVelocityMultiplier()));
-        parametrizations_.addRow(row);
-    }
-    //PARAMETER_DISCRETIZATION_END
+    FlowParameterSet parameters(name);
+    parameters.setSpatialResolution(spatialResolution);
+    parameters.setRelaxationTime(relaxationTime);
+    parameters.setCharacteristicLength(characteristicLength_.get() * 0.001f); // [mm] to [m]
+    parameters.setCharacteristicVelocity(characteristicVelocity_.get());
+    parameters.setViscosity(viscosity * 10e-6f); // Due to interface value range.
+    parameters.setDensity(density);
+    parameters.setTurbulenceModel(turbulenceModel_.getValue());
+    parameters.setSmagorinskyConstant(smagorinskyConstant);
+    parameters.setWallBoundaryCondition(wallBoundaryCondition_.getValue());
+    parameters.setInletVelocityMultiplier(inletVelocityMultiplier);
+    flowParameters_.emplace_back(parameters);
+
+    std::vector<std::string> row;
+    row.push_back(parameters.isValid() ? "✓" : "✗");
+    row.push_back(parameters.getName());
+    row.push_back(std::to_string(parameters.getReynoldsNumber()));
+    row.push_back(std::to_string(parameters.getSpatialResolution()));
+    row.push_back(std::to_string(parameters.getRelaxationTime()));
+    row.push_back(std::to_string(parameters.getCharacteristicLength()));
+    row.push_back(std::to_string(parameters.getCharacteristicVelocity()));
+    row.push_back(std::to_string(parameters.getViscosity()));
+    row.push_back(std::to_string(parameters.getDensity()));
+    row.push_back(turbulenceModel_.getDescription());
+    row.push_back(std::to_string(parameters.getSmagorinskyConstant()));
+    row.push_back(wallBoundaryCondition_.getDescription());
+    row.push_back(std::to_string(parameters.getInletVelocityMultiplier()));
+    parametrizations_.addRow(row);
+
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END
     PARAMETER_DISCRETIZATION_END

@@ -62,6 +62,21 @@ enum FlowProfile {
     FP_CONSTANT   = 3, ///< constant flow profile
 };
 
+enum FlowBoundaryCondition {
+    FBC_NONE        = 0,
+    FBC_BOUNCE_BACK = 1,
+    FBC_BOUZIDI     = 2,
+};
+
+enum FlowTurbulenceModel {
+    FTM_NONE                            = 0,
+    FTM_SMAGORINSKY                     = 1,
+    FTM_SMAGORINSKY_SHEAR_IMPROVED      = 2,
+    FTM_SMAGORINSKY_CONSISTENT          = 3,
+    FTM_SMAGORINSKY_CONSISTENT_STRAIN   = 4,
+    FTM_SMAGORINSKY_DYNAMIC             = 5,
+};
+
 class VelocityCurve : public Serializable {
 public:
 
@@ -167,16 +182,22 @@ public:
     void setDensity(float density);
 
     /**
-     * Returns the constant for the Smagorinsky turbulence model.
+     * Returns the turbulence model.
+     */
+    FlowTurbulenceModel getTurbulenceModel() const;
+    void setTurbulenceModel(FlowTurbulenceModel flowTurbulenceModel);
+
+    /**
+     * Returns the constant used by the turbulence model.
      */
     float getSmagorinskyConstant() const;
     void setSmagorinskyConstant(float smagorinskyConstant);
 
     /**
-     * Returns whether Bouzidi boundary condition should be used for unaligned simulation geometries.
+     * Returns the wall boundary condition.
      */
-    bool getBouzidi() const;
-    void setBouzidi(bool bouzidi);
+    FlowBoundaryCondition getWallBoundaryCondition() const;
+    void setWallBoundaryCondition(FlowBoundaryCondition wallBoundaryCondition);
 
     /**
      * Returns a factor that is multiplied with the inlet velocity.
@@ -210,8 +231,9 @@ private:
     float characteristicVelocity_;  ///< characteristic velocity in m/s
     float viscosity_;               ///< kinematic viscosity in m^2/s
     float density_;                 ///< density in kg/m^3
-    float smagorinskyConstant_;     ///< constant for Smagorinsky turbulence model
-    bool bouzidi_;                  ///< bouzidi boundary condition
+    FlowTurbulenceModel turbulenceModel_;
+    float smagorinskyConstant_;     ///< constant for turbulence model
+    FlowBoundaryCondition wallBoundaryCondition_;
     float inletVelocityMultiplier_; ///< factor to multiply the inlet velocity by
 };
 
