@@ -44,7 +44,11 @@ PathlineCreator::PathlineCreator()
     , pathlineOutport_(Port::OUTPORT, "pathlineOutport", "Pathlines Output")
     , numSeedPoints_("numSeedPoints", "Number of Seed Points", 5000, 1, 200000)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
+    , enableReseeding_("enableReseeding", "Enable Reseeding", false)
+    , reseedingInterval_("reseedingInterval", "Reseeding interval (steps)", 1, 1, 100)
+    , reseedingIntervalUnitDisplay_("reseedingIntervalUnitDisplay", "Reseeding interval (ms)", 0.0f, 0.0f, 1.0f)
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
+    , stopOutsideMask_("stopOutsideMask", "Stop outside Mask", false)
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 10.0f, 0.1f, 1000.0f)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
@@ -63,10 +67,34 @@ PathlineCreator::PathlineCreator()
     addProperty(seedTime_);
         seedTime_.setTracking(false);
         seedTime_.setGroupID("pathline");
+    addProperty(enableReseeding_);
+        ON_CHANGE_LAMBDA(enableReseeding_, [this] {
+            reseedingInterval_.setReadOnlyFlag(!enableReseeding_.get());
+            reseedingIntervalUnitDisplay_.setReadOnlyFlag(!enableReseeding_.get());
+        });
+        enableReseeding_.setGroupID("pathline");
+    addProperty(reseedingInterval_);
+        reseedingInterval_.setReadOnlyFlag(!enableReseeding_.get());
+        reseedingInterval_.setNumDecimals(2);
+        reseedingInterval_.setTracking(false);
+        reseedingInterval_.setGroupID("pathline");
+        ON_CHANGE_LAMBDA(reseedingInterval_, [this] {
+            float value = reseedingInterval_.get() * temporalResolution_.get() / temporalIntegrationSteps_.get();
+            reseedingIntervalUnitDisplay_.setMinValue(value);
+            reseedingIntervalUnitDisplay_.setMaxValue(value);
+            reseedingIntervalUnitDisplay_.set(value);
+            reseedingIntervalUnitDisplay_.adaptDecimalsToRange(3);
+        });
+    addProperty(reseedingIntervalUnitDisplay_);
+        reseedingIntervalUnitDisplay_.setReadOnlyFlag(!enableReseeding_.get());
+        reseedingIntervalUnitDisplay_.setReadOnlyFlag(true);
+        reseedingIntervalUnitDisplay_.setGroupID("pathline");
     addProperty(absoluteMagnitudeThreshold_);
         absoluteMagnitudeThreshold_.setTracking(false);
         absoluteMagnitudeThreshold_.setNumDecimals(2);
         absoluteMagnitudeThreshold_.setGroupID("pathline");
+    addProperty(stopOutsideMask_);
+        stopOutsideMask_.setGroupID("pathline");
     addProperty(fitAbsoluteMagnitudeThreshold_);
         ON_CHANGE(fitAbsoluteMagnitudeThreshold_, PathlineCreator, adjustPropertiesToInput);
         fitAbsoluteMagnitudeThreshold_.setGroupID("pathline");
@@ -90,6 +118,9 @@ PathlineCreator::PathlineCreator()
     addProperty(temporalIntegrationSteps_);
         temporalIntegrationSteps_.setTracking(false);
         temporalIntegrationSteps_.setGroupID("pathline");
+        ON_CHANGE_LAMBDA(temporalIntegrationSteps_, [this] {
+            reseedingInterval_.setMaxValue(temporalIntegrationSteps_.get());
+        });
     setPropertyGroupGuiName("pathline", "Pathline Settings");
 }
 
@@ -123,6 +154,8 @@ void PathlineCreator::adjustPropertiesToInput() {
     if(!volumeList || volumeList->empty()) {
         return;
     }
+
+    stopOutsideMask_.setReadOnlyFlag(!seedMask_.hasData());
 
     if(fitAbsoluteMagnitudeThreshold_.get()) {
         LWARNING("Calculating Min/Max Magnitudes. This may take a while...");
@@ -163,15 +196,12 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
     const VolumeBase* referenceVolume = flowVolumes->first();
     VolumeRAMRepresentationLock reference(referenceVolume);
 
-    const tgt::mat4 worldToVoxelMatrix = referenceVolume->getPhysicalToVoxelMatrix();
     tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
-    RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
-    rwm.setScale(rwm.getScale() * velocityUnitConversion_.getValue()); // Now we have mm/s.
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
 
     auto seedMask = seedMask_.getData();
     std::vector<tgt::vec3> seedPoints;
-    seedPoints.reserve(numSeedPoints_.get());
+    seedPoints.reserve(numSeedPoints);
     if (seedMask) {
         tgt::Bounds seedMaskBounds = seedMask->getBoundingBox().getBoundingBox();
 
@@ -219,20 +249,11 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
         }
     }
 
-    SpatialSampler sampler(*reference, rwm, filterMode_.getValue(), worldToVoxelMatrix);
-    std::list<Streamline> pathlines;
-    for (const tgt::vec3& seedPoint : seedPoints) {
-        tgt::vec3 velocity = sampler.sample(seedPoint);
-
-        Streamline pathline;
-        pathline.addElementAtEnd(Streamline::StreamlineElement(seedPoint, velocity));
-        pathlines.emplace_back(pathline);
-    }
-
-    if (pathlines.empty()) {
+    if (seedPoints.empty()) {
         throw InvalidInputException("No seed points found", InvalidInputException::S_ERROR);
     }
 
+    auto mask = stopOutsideMask_.get() ? seedMask_.getData() : nullptr;
     std::unique_ptr<StreamlineListBase> output(new StreamlineList(referenceVolume));
 
     return PathlineCreatorInput {
@@ -240,10 +261,12 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
             velocityUnitConversion_.getValue(),
             temporalResolution_.get() / 1000.0f, // Convert to s.
             temporalIntegrationSteps_.get(),
+            enableReseeding_.get(),
+            reseedingInterval_.get(),
             filterMode_.getValue(),
             std::move(flowVolumes),
-            seedMask_.getThreadSafeData(),
-            std::move(pathlines),
+            mask,
+            std::move(seedPoints),
             std::move(output)
     };
 }
@@ -253,25 +276,40 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
     // Input.
     auto flowVolumes = std::move(input.flowVolumes);
     const VolumeBase* referenceVolume = flowVolumes->first();
-    //const VolumeBase* seedMask_ = input.seedMask; // Currently not used.
+    const VolumeBase* seedMask = input.seedMask;
+    const auto seedPoints = std::move(input.seedPoints);
 
     // Output.
-    std::list<Streamline> pathlines = std::move(input.pathlines);
     std::unique_ptr<StreamlineListBase> output = std::move(input.output);
 
     // Temp. requirements.
     const tgt::mat4 worldToVoxelMatrix = referenceVolume->getWorldToVoxelMatrix();
     const tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
-    RealWorldMapping rwm = referenceVolume->getRealWorldMapping();     // This maps to some unknown unit per second.
-    rwm.setScale(rwm.getScale() * input.velocityUnitConversion); // Now we have mm/s.
+    const RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
 
     const float totalTime = input.temporalResolution * (flowVolumes->size() - 1);
     const float dt = input.temporalResolution / input.temporalIntegrationSteps;
 
+    std::function<bool(const tgt::vec3&)> bounds = [&] (const tgt::vec3& position) {
+        return roi.containsPoint(position);
+    };
+
+    if(seedMask) {
+        tgt::mat4 worldToVoxel = seedMask->getWorldToVoxelMatrix();
+        VolumeRAMRepresentationLock lock(seedMask);
+        bounds = [=] (const tgt::vec3& position) {
+            if(!roi.containsPoint(position)) {
+                return false;
+            }
+            return lock->getVoxelNormalized(worldToVoxel * position) != 0.0f;
+        };
+    }
+
     const IntegrationInput integrationInput {
             dt,
-            roi,
-            input.absoluteMagnitudeThreshold * input.velocityUnitConversion,
+            input.velocityUnitConversion,
+            input.absoluteMagnitudeThreshold,
+            bounds
     };
 
     VolumeRAMRepresentationLock currVol(flowVolumes->first());
@@ -280,6 +318,7 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
         return PathlineCreatorOutput { nullptr };
     }
 
+    std::list<Streamline> pathlines;
     for(size_t i=0; i<flowVolumes->size() - 1; i++) {
 
         // We ensure the current and next time frame has a RAM representation.
@@ -293,6 +332,19 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
         for(int t=0; t<input.temporalIntegrationSteps; t++) {
             float alpha = t * dt / input.temporalResolution;
             SpatioTemporalSampler sampler(*currVol, *nextVol, alpha, rwm, input.filterMode, worldToVoxelMatrix);
+
+            // Seeding. (If first step or reseeding interval is covered.
+            if((i==0 && t==0) || (input.enableReseeding && t % input.reseedingSteps == 0)) {
+                for (const tgt::vec3& seedPoint : seedPoints) {
+                    tgt::vec3 velocity = sampler.sample(seedPoint);
+
+                    Streamline pathline;
+                    pathline.addElementAtEnd(Streamline::StreamlineElement(seedPoint, velocity, 0.0f, i*input.temporalResolution+t*dt));
+                    pathlines.emplace_back(pathline);
+                }
+            }
+
+            // Tracing.
             for (auto iter = pathlines.begin(); iter != pathlines.end();) {
                 Streamline& pathline = *iter;
                 bool continueIntegration = integrationStep(pathline, sampler, integrationInput);
@@ -306,7 +358,6 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
             }
 
             std::swap(currVol, nextVol);
-
             progressReporter.setProgress((i * input.temporalIntegrationSteps + t) * dt / totalTime);
         }
     }
@@ -338,10 +389,10 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     tgt::vec3 v = pathline.getLastElement().velocity_;
 
     // Execute 4th order Runge-Kutta step.
-    tgt::vec3 k1 = v * input.stepSize;
-    tgt::vec3 k2 = sampler.sample(r + (k1 / 2.0f)) * input.stepSize;
-    tgt::vec3 k3 = sampler.sample(r + (k2 / 2.0f)) * input.stepSize;
-    tgt::vec3 k4 = sampler.sample(r + k3) * input.stepSize;
+    tgt::vec3 k1 = v * input.stepSize * input.velocityUnitConversion;
+    tgt::vec3 k2 = sampler.sample(r + (k1 / 2.0f)) * input.stepSize * input.velocityUnitConversion;
+    tgt::vec3 k3 = sampler.sample(r + (k2 / 2.0f)) * input.stepSize * input.velocityUnitConversion;
+    tgt::vec3 k4 = sampler.sample(r + k3) * input.stepSize * input.velocityUnitConversion;
     tgt::vec3 dr = (k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f);
 
     // Note: dr can be zero in one frame, but might change in a following frame.
@@ -350,7 +401,7 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     r += dr;
 
     // Ran out of bounds?
-    if(!input.bounds.containsPoint(r)) {
+    if(!input.bounds(r)) {
         return false;
     }
 
@@ -365,7 +416,8 @@ bool PathlineCreator::integrationStep(Streamline& pathline, const SpatioTemporal
     }
 
     // Add element to pathline.
-    pathline.addElementAtEnd(Streamline::StreamlineElement(r, v, 0.0f, pathline.getNumElements() * input.stepSize));
+    float time = pathline.getFirstElement().time_ + pathline.getNumElements() * input.stepSize;
+    pathline.addElementAtEnd(Streamline::StreamlineElement(r, v, 0.0f, time));
 
     return true;
 }

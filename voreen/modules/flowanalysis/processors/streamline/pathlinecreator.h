@@ -45,10 +45,12 @@ struct PathlineCreatorInput {
     float velocityUnitConversion;
     float temporalResolution;
     int temporalIntegrationSteps;
+    bool enableReseeding;
+    int reseedingSteps;
     VolumeRAM::Filter filterMode;
     PortDataPointer<VolumeList> flowVolumes;
-    PortDataPointer<VolumeBase> seedMask; // Might be used later on to restrict integration.
-    std::list<Streamline> pathlines;
+    const VolumeBase* seedMask; // Might be used later on to restrict integration.
+    std::vector<tgt::vec3> seedPoints;
     std::unique_ptr<StreamlineListBase> output;
 };
 
@@ -85,7 +87,11 @@ protected:
                     "by other processors of the <i>FlowAnalysis</i> module.");
         numSeedPoints_.setDescription("Can be used to determine the number of pathlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
+        enableReseeding_.setDescription("Enables/Disables reseeding of pathlines. If disabled, pathlines are seeded in the initial integration step only.");
+        reseedingInterval_.setDescription("Determines the ith integration step, in which pathlines will be reseeded. If set to one, for example, pathlines will be reseeded in every integration step.");
+        reseedingIntervalUnitDisplay_.setDescription("Shows the reseeding interval in milli seconds.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold interval will not be used for pathline construction.");
+        stopOutsideMask_.setDescription("If set to true, integration will stop if pathlines leave the mask.");
         temporalResolution_.setDescription("Defines the (constant!) time between two consecutive time steps of the input volume list.");
         velocityUnitConversion_.setDescription("Defines the unit of the input velocity volumes");
         temporalIntegrationSteps_.setDescription("Defines the number of integration steps that are executed between two consecutive time steps.");
@@ -95,8 +101,9 @@ private:
 
     struct IntegrationInput {
         float stepSize;
-        tgt::Bounds bounds;
+        float velocityUnitConversion;
         tgt::vec2 absoluteMagnitudeThreshold;
+        std::function<bool(const tgt::vec3&)> bounds;
     };
 
     /// Perform a single integration step for the specified pathline.
@@ -109,9 +116,13 @@ private:
     // seeding
     IntProperty numSeedPoints_;                             ///< number of seed points
     IntProperty seedTime_;                                  ///< seed
+    BoolProperty enableReseeding_;
+    IntProperty reseedingInterval_;
+    FloatProperty reseedingIntervalUnitDisplay_;
 
     // pathline settings
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
+    BoolProperty stopOutsideMask_;                      ///< stop integration if running outside mask
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     FloatProperty temporalResolution_;                  ///< (global) temporal resolution between time steps
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
@@ -125,4 +136,4 @@ private:
 
 }   // namespace
 
-#endif  // VRN_STREAMLINECREATOR_H
+#endif  // VRN_PATHLINECREATOR_H
