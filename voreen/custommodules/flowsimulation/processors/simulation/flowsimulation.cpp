@@ -880,11 +880,11 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     std::unique_ptr<Dynamics<T, DESCRIPTOR>> bulkDynamics(createTurbulenceModel(parameters.getTurbulenceModel()));
     if(!bulkDynamics) {
-        LERROR("No bulk dynamic");
+        LERROR("No bulk dynamics");
         return;
     }
 
-    prepareLattice(sLattice, converter, *bulkDynamics.get(),
+    prepareLattice(sLattice, converter, *bulkDynamics,
                    stlReader, superGeometry,
                    measuredData,
                    parameterSetEnsemble,
@@ -904,7 +904,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool success = getResults(sLattice, converter, iteration, maxIteration, *bulkDynamics.get(), superGeometry, stlReader,
+        bool success = getResults(sLattice, converter, iteration, maxIteration, *bulkDynamics, superGeometry, stlReader,
                                   parameterSetEnsemble, parameters, simulationResultPath);
         if(!success) {
             break;
