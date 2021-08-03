@@ -72,8 +72,12 @@ bool PortConditionVolumeListEnsemble::acceptsPortData() const {
         return false;
 
     const VolumeList* volumeList = volumeListPort_->getData();
-    if(!volumeList || volumeList->empty())
+    if(!volumeList)
         return false;
+
+    // We define an empty list to be fulfilling the condition.
+    if(volumeList->empty())
+        return true;
 
     // Retrieve reference information.
     std::string type            = volumeList->first()->getFormat();
@@ -121,8 +125,12 @@ bool PortConditionVolumeListAdapter::acceptsPortData() const {
         return false;
 
     const VolumeList* volumeList = volumeListPort_->getData();
-    if(!volumeList || volumeList->empty())
+    if(!volumeList)
         return false;
+
+    // We define an empty list to be fulfilling the condition.
+    if(volumeList->empty())
+        return true;
 
     for(size_t i = 0; i < volumeList->size(); i++) {
         tmpPort_->setData(volumeList->at(i), false);
