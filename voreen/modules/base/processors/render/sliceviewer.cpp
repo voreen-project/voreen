@@ -484,8 +484,8 @@ enum class DeadlineResult {
 };
 
 struct CacheData {
-    tgt::mat4 voxelToBrick_;
-    uint64_t addr_;
+    tgt::mat4 voxelToBrick_ = tgt::mat4::identity;
+    uint64_t addr_ = OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
     union {
         const uint16_t* data_;
         uint16_t mean_;
@@ -496,7 +496,7 @@ const int cacheSize = 8;
 struct Cache {
     std::array<tgt::ivec3, cacheSize> llf {{ tgt::ivec3( 0) }};
     std::array<tgt::ivec3, cacheSize> urb {{ tgt::ivec3(-1) }};
-    std::array<CacheData,  cacheSize> data {{ CacheData { tgt::mat4::identity, OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, nullptr } }};
+    std::array<CacheData,  cacheSize> data {};
     int nextOut = 0;
 };
 
