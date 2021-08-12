@@ -35,6 +35,7 @@
 #include "tgt/tgt_gl.h"
 #include "tgt/textureunit.h"
 #include "tgt/vector.h"
+#include "tgt/memory.h"
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/voreenapplication.h"
@@ -618,10 +619,17 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
     Cache cache {};
 
     //TODO:
-    // Redrawing after interactive finishes
     // multithreading?
     // screen reduction?
 
+    tgt::ScopeGuard _releaseBricks{ [&] {
+            for(auto d : cache.data) {
+                if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+                    brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
+                }
+            }
+        }
+    };
     for(int ty=begin.y + progress.nextTileY_*tileSize.y; ty<end.y; ty+=tileSize.y) {
         for(int tx=begin.x + progress.nextTileX_*tileSize.x; tx<end.x; tx+=tileSize.x) {
             if(Clock::now() > deadline) {
@@ -656,11 +664,6 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
         }
         progress.nextTileX_ = 0;
         progress.nextTileY_ += 1;
-    }
-    for(auto d : cache.data) {
-        if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
-            brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
-        }
     }
 
     return DeadlineResult::Succeeded;
