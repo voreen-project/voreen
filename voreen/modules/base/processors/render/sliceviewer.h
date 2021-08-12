@@ -101,6 +101,7 @@ tgt::ivec2 OctreeSliceTexture<Pixel>::dimensions() {
 template<typename Pixel>
 void OctreeSliceTexture<Pixel>::clear() {
     std::fill(buf_.begin(), buf_.end(), Pixel(0));
+    uploadTexture();
 }
 
 struct OctreeSliceViewProgress {
@@ -333,6 +334,8 @@ private:
     mutable bool mouseIsPressed_;               ///< Is a mouse button currently pressed?
     mutable tgt::ivec3 lastPickingPosition_;    ///< Mouse position during previous interaction
 
+    std::unique_ptr<OctreeSliceTextureColor> octreeTextureInteractive_;
+    std::unique_ptr<OctreeSliceTextureControl> octreeTextureInteractiveControl_;
     std::unique_ptr<OctreeSliceTextureColor> octreeTexture_;
     std::unique_ptr<OctreeSliceTextureControl> octreeTextureControl_;
     OctreeSliceViewProgress octreeRenderProgress_;

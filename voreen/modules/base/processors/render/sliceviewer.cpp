@@ -113,6 +113,8 @@ SliceViewer::SliceViewer()
     , sliceComplete_(true)
     , octreeTexture_(nullptr)
     , octreeTextureControl_(nullptr)
+    , octreeTextureInteractive_(nullptr)
+    , octreeTextureInteractiveControl_(nullptr)
     , octreeRenderProgress_()
 {
     // texture mode (2D/3D)
@@ -314,6 +316,8 @@ void SliceViewer::initialize() {
 
     octreeTexture_.reset(new OctreeSliceTextureColor(GL_RGBA, GL_UNSIGNED_SHORT, tgt::Texture::LINEAR));
     octreeTextureControl_.reset(new OctreeSliceTextureControl(GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST));
+    octreeTextureInteractive_.reset(new OctreeSliceTextureColor(GL_RGBA, GL_UNSIGNED_SHORT, tgt::Texture::LINEAR));
+    octreeTextureInteractiveControl_.reset(new OctreeSliceTextureControl(GL_RED, GL_UNSIGNED_BYTE, tgt::Texture::NEAREST));
 
     QualityMode.addObserver(this);
 
@@ -328,6 +332,8 @@ void SliceViewer::deinitialize() {
 
     octreeTexture_.reset();
     octreeTextureControl_.reset();
+    octreeTextureInteractive_.reset();
+    octreeTextureInteractiveControl_.reset();
 
     sliceCache_.clear();
 
@@ -351,9 +357,13 @@ void SliceViewer::adjustPropertiesToInput() {
 
 void SliceViewer::invalidateOctreeTexture() {
     if(texMode_.getValue() == OCTREE && octreeTexture_) {
-        tgtAssert(octreeTextureControl_, "Both textures must be present (or none)");
+        tgtAssert(octreeTextureControl_, "All textures must be present (or none)");
+        tgtAssert(octreeTextureInteractive_, "All textures must be present (or none)");
+        tgtAssert(octreeTextureInteractiveControl_, "All textures must be present (or none)");
         octreeTexture_->clear();
         octreeTextureControl_->clear();
+        octreeTextureInteractive_->clear();
+        octreeTextureInteractiveControl_->clear();
         octreeRenderProgress_ = OctreeSliceViewProgress();
         invalidate();
     }
@@ -395,8 +405,14 @@ void SliceViewer::afterProcess() {
 void SliceViewer::qualityModeChanged() {
     if (!QualityMode.isInteractionMode() && processedInInteraction_) {
         processedInInteraction_ = false;
-        invalidateOctreeTexture();
+        if(texMode_.getValue() == OCTREE) {
+            octreeRenderProgress_ = OctreeSliceViewProgress();
+        }
         invalidate();
+    }
+    if (QualityMode.isInteractionMode() && !processedInInteraction_) {
+        // First processing in interaction mode
+        invalidateOctreeTexture();
     }
 }
 
@@ -620,7 +636,6 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
 
     //TODO:
     // multithreading?
-    // screen reduction?
 
     tgt::ScopeGuard _releaseBricks{ [&] {
             for(auto d : cache.data) {
@@ -670,8 +685,26 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
 }
 
 void SliceViewer::renderFromOctree() {
-    octreeTexture_->updateDimensions(outport_.getSize());
-    octreeTextureControl_->updateDimensions(outport_.getSize());
+    OctreeSliceTextureColor* texture;
+    OctreeSliceTextureControl* textureControl;
+    int lodDivider;
+    switch(QualityMode.getQuality()) {
+        case VoreenQualityMode::RQ_INTERACTIVE:
+            lodDivider = 1 << interactionLevelOfDetail_.get();
+            texture = octreeTextureInteractive_.get();
+            textureControl = octreeTextureInteractiveControl_.get();
+            break;
+        case VoreenQualityMode::RQ_DEFAULT:
+        case VoreenQualityMode::RQ_HIGH:
+            lodDivider = 1;
+            texture = octreeTexture_.get();
+            textureControl = octreeTextureControl_.get();
+            break;
+        default:
+            tgtAssert(false,"unknown rendering quality");
+    }
+    texture->updateDimensions(outport_.getSize()/lodDivider);
+    textureControl->updateDimensions(outport_.getSize()/lodDivider);
 
 
     // First update texture buffer (on cpu)
@@ -697,8 +730,8 @@ void SliceViewer::renderFromOctree() {
         deadline += std::chrono::milliseconds(renderTimeMs);
     }
 
-    tgt::ivec2 ll = tgt::round(sliceLowerLeft_);
-    tgt::ivec2 sliceSize = tgt::round(sliceSize_); //TODO check rounding here is correct
+    tgt::ivec2 ll = tgt::ivec2(tgt::round(sliceLowerLeft_))/lodDivider;
+    tgt::ivec2 sliceSize = tgt::ivec2(tgt::round(sliceSize_))/lodDivider; //TODO check rounding here is correct
 
     sliceComplete_ = true; // Will be reset if we encounter a timeout
 
@@ -752,10 +785,10 @@ void SliceViewer::renderFromOctree() {
         DeadlineResult res;
         switch(inport_.getTextureFilterModeProperty().getValue()) {
             case GL_LINEAR:
-                res = renderOctreeSlice<SampleLinear>(*octreeTexture_, *octreeTextureControl_, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                res = renderOctreeSlice<SampleLinear>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
                     break;
             case GL_NEAREST:
-                res = renderOctreeSlice<SampleNearest>(*octreeTexture_, *octreeTextureControl_, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                res = renderOctreeSlice<SampleNearest>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
                     break;
         }
         if(res  == DeadlineResult::Succeeded) {
@@ -770,8 +803,8 @@ void SliceViewer::renderFromOctree() {
 
 
     // Update and render texture
-    octreeTexture_->uploadTexture();
-    octreeTextureControl_->uploadTexture();
+    texture->uploadTexture();
+    textureControl->uploadTexture();
 
     octreeSliceTextureShader_->activate();
 
@@ -787,6 +820,16 @@ void SliceViewer::renderFromOctree() {
     unitControl.activate();
     octreeTextureControl_->bindTexture();
     octreeSliceTextureShader_->setUniform("controlTex_", unitControl.getUnitNumber());
+
+    tgt::TextureUnit unitIntensityInteractive;
+    unitIntensityInteractive.activate();
+    octreeTextureInteractive_->bindTexture();
+    octreeSliceTextureShader_->setUniform("intensityInteractiveTex_", unitIntensityInteractive.getUnitNumber());
+
+    tgt::TextureUnit unitControlInteractive;
+    unitControlInteractive.activate();
+    octreeTextureInteractiveControl_->bindTexture();
+    octreeSliceTextureShader_->setUniform("controlInteractiveTex_", unitControlInteractive.getUnitNumber());
 
     // bind transfer functions
     TextureUnit transferUnit1, transferUnit2, transferUnit3, transferUnit4;

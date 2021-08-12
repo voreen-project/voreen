@@ -29,9 +29,9 @@
 in vec2 frag_texcoord;
 
 uniform sampler2D controlTex_;
-//uniform sampler2D intensityInteractive_;
-//uniform sampler2D intensityQuality_;
 uniform sampler2D intensityTex_;
+uniform sampler2D controlInteractiveTex_;
+uniform sampler2D intensityInteractiveTex_;
 uniform float rwmOffset_;
 uniform float rwmScale_;
 
@@ -56,13 +56,17 @@ uniform vec3 channelShift4_;
 #endif
 
 void main() {
-    float control = texture(controlTex_, frag_texcoord).r;
-    vec4 intensity;
-    if(control == 0.0) {
-        discard;
+    vec4 textureVal;
+    if(texture(controlTex_, frag_texcoord).r == 0.0) {
+        if(texture(controlInteractiveTex_, frag_texcoord).r == 0.0) {
+            discard;
+        } else {
+            textureVal = texture(intensityInteractiveTex_, frag_texcoord);
+        }
     } else {
-        intensity = rwmOffset_ + rwmScale_ * texture(intensityTex_, frag_texcoord);
+        textureVal = texture(intensityTex_, frag_texcoord);
     }
+    vec4 intensity = rwmOffset_ + rwmScale_ * textureVal;
 
     vec4 result;
 #if NUM_CHANNELS == 1 // assuming red-texture
