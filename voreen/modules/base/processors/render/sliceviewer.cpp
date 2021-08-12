@@ -394,6 +394,7 @@ void SliceViewer::afterProcess() {
 void SliceViewer::qualityModeChanged() {
     if (!QualityMode.isInteractionMode() && processedInInteraction_) {
         processedInInteraction_ = false;
+        invalidateOctreeTexture();
         invalidate();
     }
 }
