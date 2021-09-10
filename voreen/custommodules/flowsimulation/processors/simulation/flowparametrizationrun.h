@@ -90,7 +90,7 @@ private:
     FloatIntervalProperty smagorinskyConstant_;
     OptionProperty<FlowBoundaryCondition> wallBoundaryCondition_;
     FloatIntervalProperty inletVelocityMultiplier_;
-    IntProperty discretization_;
+    IntProperty samples_;
 
     ButtonProperty addParametrization_;
     ButtonProperty removeParametrization_;

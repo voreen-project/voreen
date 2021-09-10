@@ -26,17 +26,17 @@
 #include "flowparametrizationrun.h"
 
 #define PARAMETER_DISCRETIZATION_BEGIN(PROPERTY, TYPE) \
-    int discretization ## PROPERTY = discretization_.get(); \
+    int samples ## PROPERTY = samples_.get(); \
     if(PROPERTY ## _.get().x == PROPERTY ## _.get().y) { \
-        discretization ## PROPERTY = 1; \
+        samples ## PROPERTY = 1; \
     } \
     std::string tmp = name; \
-    for(int PROPERTY ## i = 0; PROPERTY ## i < discretization ## PROPERTY; PROPERTY ## i++) { \
+    for(int PROPERTY ## i = 0; PROPERTY ## i < samples ## PROPERTY; PROPERTY ## i++) { \
         TYPE PROPERTY = PROPERTY ## _.get().x; \
         std::string name = tmp; \
-        if(discretization ## PROPERTY > 1) { \
+        if(samples ## PROPERTY > 1) { \
             PROPERTY += (PROPERTY ## _.get().y - PROPERTY ## _.get().x) \
-                            * PROPERTY ## i / (discretization ## PROPERTY - 1); \
+                            * PROPERTY ## i / (samples ## PROPERTY - 1); \
             name += static_cast<char>('A' + PROPERTY ## i); \
         } \
 //std::string name = tmp + std::string(#PROPERTY).substr(0, 3) + "=" + std::to_string(PROPERTY);
@@ -64,7 +64,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Constant", 0.1f, 0.1f, 5.0f)
     , wallBoundaryCondition_("wallBoundaryCondition", "Wall Boundary Condition")
     , inletVelocityMultiplier_("inletVelocityMultiplier", "Inlet Velocity Multiplier", 1.0f, 0.1f, 10.0f)
-    , discretization_("discretization", "Discretization", 3, 1, 26)
+    , samples_("samples", "Samples", 3, 1, 26)
     , addParametrization_("addParametrizations", "Add Parametrizations")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
@@ -74,65 +74,73 @@ FlowParametrizationRun::FlowParametrizationRun()
     addPort(inport_);
     addPort(outport_);
 
-    addProperty(parametrizationName_);
-        parametrizationName_.setGroupID("parameters");
     addProperty(spatialResolution_);
-        spatialResolution_.setGroupID("parameters");
+        spatialResolution_.setGroupID("numerical");
     addProperty(relaxationTime_);
         relaxationTime_.setNumDecimals(3);
-        relaxationTime_.setGroupID("parameters");
+        relaxationTime_.setGroupID("numerical");
     addProperty(characteristicLength_);
-        characteristicLength_.setGroupID("parameters");
+        characteristicLength_.setGroupID("numerical");
     addProperty(characteristicVelocity_);
         characteristicVelocity_.setNumDecimals(3);
-        characteristicVelocity_.setGroupID("parameters");
-    addProperty(fluid_);
-        ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
-        fluid_.addOption("arbitrary", "Arbitrary", FLUID_ARBITRARY);
-        fluid_.addOption("water", "Water", FLUID_WATER);
-        fluid_.addOption("blood", "Blood", FLUID_BLOOD);
-        fluid_.setGroupID("parameters");
-        fluidChanged(); // Init proper values.
-    addProperty(viscosity_);
-        viscosity_.setNumDecimals(4);
-        viscosity_.setGroupID("parameters");
-    addProperty(density_);
-        density_.setNumDecimals(0);
-        density_.setGroupID("parameters");
+        characteristicVelocity_.setGroupID("numerical");
     addProperty(turbulenceModel_);
         turbulenceModel_.addOption("smagorinsky", "Smagorinsky", FTM_SMAGORINSKY);
         //turbulenceModel_.addOption("smagorinskyShearImproved", "Shaer Improved Smagorinsky", FTM_SMAGORINSKY_SHEAR_IMPROVED); // Does not compile in OpenLB 1.4.
         turbulenceModel_.addOption("smagorinskyConsistent", "Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT);
         turbulenceModel_.addOption("smagorinskyConsistentStrain", "Strain Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT_STRAIN);
         turbulenceModel_.addOption("smagorinskyDynamic", "Dynamic Smagorinsky", FTM_SMAGORINSKY_DYNAMIC);
-        turbulenceModel_.setGroupID("parameters");
+        turbulenceModel_.setGroupID("numerical");
     addProperty(smagorinskyConstant_);
         smagorinskyConstant_.setNumDecimals(3);
-        smagorinskyConstant_.setGroupID("parameters");
+        smagorinskyConstant_.setGroupID("numerical");
     addProperty(wallBoundaryCondition_);
         wallBoundaryCondition_.addOption("bouzidi", "Bouzidi", FBC_BOUZIDI);
         wallBoundaryCondition_.addOption("bounceBack", "Bounce-Back", FBC_BOUNCE_BACK);
-        wallBoundaryCondition_.setGroupID("parameters");
-    addProperty(inletVelocityMultiplier_);
-        inletVelocityMultiplier_.setGroupID("parameters");
-    addProperty(discretization_);
-        discretization_.setGroupID("parameters");
-    setPropertyGroupGuiName("parameters", "Parameters");
+        wallBoundaryCondition_.setGroupID("numerical");
+    setPropertyGroupGuiName("numerical", "Numerical Parameters");
 
+    addProperty(fluid_);
+        ON_CHANGE(fluid_, FlowParametrizationRun, fluidChanged);
+        fluid_.addOption("arbitrary", "Arbitrary", FLUID_ARBITRARY);
+        fluid_.addOption("water", "Water", FLUID_WATER);
+        fluid_.addOption("blood", "Blood", FLUID_BLOOD);
+        fluid_.setGroupID("fluid");
+        fluidChanged(); // Init proper values.
+    addProperty(viscosity_);
+        viscosity_.setNumDecimals(4);
+        viscosity_.setGroupID("fluid");
+    addProperty(density_);
+        density_.setNumDecimals(0);
+        density_.setGroupID("fluid");
+    setPropertyGroupGuiName("fluid", "Fluid Parameters");
+
+    addProperty(inletVelocityMultiplier_);
+        inletVelocityMultiplier_.setGroupID("inlet");
+    setPropertyGroupGuiName("inlet", "Inlet Parameters");
+
+    addProperty(parametrizationName_);
+        parametrizationName_.setGroupID("general");
+    addProperty(samples_);
+        samples_.setGroupID("general");
+    addProperty(addInvalidParametrizations_);
+        addInvalidParametrizations_.setGroupID("general");
     addProperty(addParametrization_);
-    ON_CHANGE(addParametrization_, FlowParametrizationRun, addParametrizations);
+        ON_CHANGE(addParametrization_, FlowParametrizationRun, addParametrizations);
+        addParametrization_.setGroupID("general");
     addProperty(removeParametrization_);
-    ON_CHANGE(removeParametrization_, FlowParametrizationRun, removeParametrization);
+        ON_CHANGE(removeParametrization_, FlowParametrizationRun, removeParametrization);
+        removeParametrization_.setGroupID("general");
     addProperty(clearParametrizations_);
-    ON_CHANGE(clearParametrizations_, FlowParametrizationRun, clearParametrizations);
+        ON_CHANGE(clearParametrizations_, FlowParametrizationRun, clearParametrizations);
+        clearParametrizations_.setGroupID("general");
+    setPropertyGroupGuiName("general", "Edit Run Parameters");
 
     addProperty(parametrizations_);
     std::string columnLabels[] = {"Valid", "Name", "Re", "N", "τ", "l", "U", "ν", "ρ", "Model", "Cs", "Bound. Cond.", "Mul."};
     for(int i=0; i<parametrizations_.getNumColumns(); i++) {
         parametrizations_.setColumnLabel(i, columnLabels[i]);
     }
-
-    addProperty(addInvalidParametrizations_);
 }
 
 void FlowParametrizationRun::fluidChanged() {
