@@ -88,6 +88,7 @@ SpatioTemporalSampler::SpatioTemporalSampler(const VolumeRAM* volume0,
     , filter1_(volume1, rwm, filter, toVoxelMatrix)
     , alpha_(alpha)
 {
+    tgtAssert(alpha_ >= 0.0f && alpha_ <= 1.0f, "Alpha must be in range [0, 1]");
 }
 
 tgt::vec3 SpatioTemporalSampler::sample(const tgt::vec3& pos) const {
@@ -95,6 +96,7 @@ tgt::vec3 SpatioTemporalSampler::sample(const tgt::vec3& pos) const {
     tgt::vec3 voxel1 = filter1_.sample(pos);
     return voxel0 * (1.0f - alpha_) + voxel1 * alpha_;
 }
+
 
 tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3& velocity) {
 

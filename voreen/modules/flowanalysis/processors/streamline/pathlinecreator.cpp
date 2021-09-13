@@ -68,10 +68,7 @@ PathlineCreator::PathlineCreator()
         seedTime_.setTracking(false);
         seedTime_.setGroupID("pathline");
     addProperty(enableReseeding_);
-        ON_CHANGE_LAMBDA(enableReseeding_, [this] {
-            reseedingInterval_.setReadOnlyFlag(!enableReseeding_.get());
-            reseedingIntervalUnitDisplay_.setReadOnlyFlag(!enableReseeding_.get());
-        });
+        ON_CHANGE_LAMBDA(enableReseeding_, [this] { reseedingInterval_.setReadOnlyFlag(!enableReseeding_.get()); });
         enableReseeding_.setGroupID("pathline");
     addProperty(reseedingInterval_);
         reseedingInterval_.setReadOnlyFlag(!enableReseeding_.get());
@@ -86,7 +83,6 @@ PathlineCreator::PathlineCreator()
             reseedingIntervalUnitDisplay_.adaptDecimalsToRange(3);
         });
     addProperty(reseedingIntervalUnitDisplay_);
-        reseedingIntervalUnitDisplay_.setReadOnlyFlag(!enableReseeding_.get());
         reseedingIntervalUnitDisplay_.setReadOnlyFlag(true);
         reseedingIntervalUnitDisplay_.setGroupID("pathline");
     addProperty(absoluteMagnitudeThreshold_);
