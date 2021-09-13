@@ -47,7 +47,7 @@ namespace voreen {
 SciVisContest2020Module::SciVisContest2020Module(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("SciVis Contest 2020");
+    setID("SciVisContest2020");
     setGuiName("SciVis Contest 2020");
 
     addShaderPath(getModulePath("glsl"));
