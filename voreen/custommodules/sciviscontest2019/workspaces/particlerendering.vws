@@ -1,0 +1,413 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false">
+        <ProcessorNetwork version="17">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="CosmologyParticleRenderer" ref="ref0" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="-102.7644577" y="97.20962524" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.80023324" />
+            </MetaData>
+            <Processors>
+                <Processor type="CosmologyParticleRenderer" name="CosmologyParticleRenderer" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-83" y="-47" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="adaptCamera" name="adaptCamera" value="true" />
+                        <Property mapKey="alphaFactor" name="alphaFactor" value="0.31" />
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="15625" minValue="0.3125" frustLeft="-0.02020554" frustRight="0.02020554" frustBottom="-0.02020554" frustTop="0.02020554" frustNear="0.04878049" frustFar="15687.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.05" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.00000054">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <position x="-41.98742676" y="138.06286621" z="90.13816833" />
+                            <focus x="31.25" y="31.25" z="31.25" />
+                            <upVector x="-0.20483211" y="0.9751181" z="-0.08478524" />
+                            <trackball moveCenter="false">
+                                <center x="31.25" y="31.25" z="31.25" />
+                            </trackball>
+                            <sceneLLF x="0" y="0" z="0" />
+                            <sceneURB x="62.5" y="62.5" z="62.5" />
+                        </Property>
+                        <Property mapKey="parallelizeProp_" name="parallelizeProp_" value="true" />
+                        <Property mapKey="radiusProp" name="radiusProp" value="85.04000092" />
+                        <Property mapKey="relativRadiusProp_" name="relativRadiusProp_" value="0.0576" />
+                        <Property mapKey="renderMode" name="renderMode" value="velocityTransferFunc" />
+                        <Property mapKey="shaderProp" name="shaderProp" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="shaderPropDVC" name="shaderPropDVC" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="timeStep" name="timeStep" value="0.84999943" id="ref6" />
+                        <Property mapKey="transFunc" name="transFunc" domainFittingStrategy="1">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="true" x="1192" y="553" width="718" height="464" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="1.02569056" y="2887.59716797" />
+                                </MetaItem>
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="1.26305962" y="2869.1862793" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="8" g="0" b="253" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.0651341" split="false">
+                                        <colorL r="221" g="0" b="3" a="158" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="226" g="255" b="7" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="universeDimensions">
+                            <bounds.llf x="0.00000572" y="0.00000572" z="0.00001907" />
+                            <bounds.urb x="62.49996948" y="62.49999237" z="62.49998856" />
+                            <minValue x="0.00000572" y="0.00000572" z="0.00001907" />
+                            <maxValue x="62.49996948" y="62.49999237" z="62.49998856" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="340282346638528870000000000000000000000" y="340282346638528870000000000000000000000" z="340282346638528870000000000000000000000" />
+                            <stepping x="-431602080" y="-431602080" z="-431602080" />
+                        </Property>
+                        <Property mapKey="universeMatrix_" name="universeMatrix_">
+                            <value.row0 x="1235.35375977" y="0" z="0" w="-38604.8046875" />
+                            <value.row1 x="0" y="1235.35375977" z="0" w="-38604.8046875" />
+                            <value.row2 x="0" y="0" z="1235.35375977" w="-38604.8046875" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="useAlpha" name="useAlpha" value="true" />
+                        <Property mapKey="useRelativeRadius_" name="useRelativeRadius_" value="relative" />
+                        <Property mapKey="visualizesDirection" name="visualizesDirection" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="particlehandle.output" direction="1" portID="particlehandle.output" guiName="particlehandle.output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="outport" direction="0" portID="outport" guiName="Modified Image" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref5">
+                                    <value x="836" y="1006" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-42" y="135" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="172" y="122" width="836" height="1006" />
+                        <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
+                            <value x="8" y="8" />
+                        </MetaItem>
+                        <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
+                            <value x="836" y="1006" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="172" y="122" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="836" y="1006" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="836" y="1006" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref4">
+                                    <value x="836" y="1006" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="Background" name="Background" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-42" y="35" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="angle" name="angle" value="0" />
+                        <Property mapKey="backgroundModeAsString" name="backgroundModeAsString" value="gradient" />
+                        <Property mapKey="blendMode" name="blendMode" value="alpha-blending" />
+                        <Property mapKey="color1" name="color1">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="color2" name="color2">
+                            <value x="0.2" y="0.2" z="0.2" w="1" />
+                        </Property>
+                        <Property mapKey="repeat" name="repeat" value="1" />
+                        <Property mapKey="shader.program" name="shader.program" fragmentModified="false" fragmentIsExternal="false" vertexModified="false" vertexIsExternal="false" geometryModified="false" geometryIsExternal="false">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                        </Property>
+                        <Property mapKey="texture" name="texture">
+                            <paths noPathSet="true" />
+                        </Property>
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="CosmologyDataSource" name="CosmologyDataSource" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-292" y="-93" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="particleURL" name="particleURL">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../../../Users/Andreas/Downloads/vc/test" />
+                                    <item value="../../Users/Andreas/Downloads/vc/test" />
+                                    <item value="C:/Users/Andreas/Downloads/vc/test" />
+                                </paths>
+                            </paths>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="particlehandle.output" direction="0" portID="particlehandle.output" guiName="particlehandle.output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="CosmologyFakeDataSource" name="CosmologyFakeDataSource">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-310" y="-29" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="particleCount" name="particleCount" value="1000" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="particlehandle.output" direction="0" portID="particlehandle.output" guiName="particlehandle.output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="CosmologyTimeStepAnimationProcessor" name="CosmologyTimeStepAnimationProcessor">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-322" y="49" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="animationInterval_" minValue="0" maxValue="1" minRange="0" maxRange="2147483648" stepping="0.01">
+                            <value x="0.20999999" y="1" />
+                        </Property>
+                        <Property mapKey="counterStyle" name="counterStyle" value="cyclic" />
+                        <Property mapKey="enableTimerProp" name="enableTimerProp" value="false" />
+                        <Property mapKey="intervalProp" name="intervalProp" value="20" />
+                        <Property mapKey="resetProp" name="resetProp" />
+                        <Property mapKey="stepProp_" name="stepProp_" value="0.01" />
+                        <Property mapKey="tickCounterProp" name="tickCounterProp" value="0.84999943" id="ref7" />
+                    </Properties>
+                    <Inports />
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="outport">
+                        <Processor type="CosmologyParticleRenderer" ref="ref0" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Background" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.output">
+                        <Processor type="Background" ref="ref1" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="particlehandle.output">
+                        <Processor type="CosmologyDataSource" ref="ref3" />
+                    </Outport>
+                    <Inport name="particlehandle.output">
+                        <Processor type="CosmologyParticleRenderer" ref="ref0" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks>
+                <PropertyLink>
+                    <SourceProperty ref="ref4" />
+                    <DestinationProperty ref="ref5" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="FloatProperty" ref="ref6" />
+                    <DestinationProperty type="FloatProperty" ref="ref7" />
+                    <Evaluator type="LinkEvaluatorFloatId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="FloatProperty" ref="ref7" />
+                    <DestinationProperty type="FloatProperty" ref="ref6" />
+                    <Evaluator type="LinkEvaluatorFloatId" />
+                </PropertyLink>
+            </PropertyLinks>
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="Canvas::Canvas">
+            <PropertyGroups>
+                <item value="Data Input" />
+                <item value="Rendering" />
+                <item value="Animation" />
+            </PropertyGroups>
+            <GroupMembership>
+                <value key="CosmologyDataSource.particleURL">
+                    <First value="Data Input" />
+                    <Second value="0" />
+                </value>
+                <value key="CosmologyParticleRenderer.alphaFactor">
+                    <First value="Rendering" />
+                    <Second value="5" />
+                </value>
+                <value key="CosmologyParticleRenderer.camera">
+                    <First value="Rendering" />
+                    <Second value="6" />
+                </value>
+                <value key="CosmologyParticleRenderer.radiusProp">
+                    <First value="Rendering" />
+                    <Second value="3" />
+                </value>
+                <value key="CosmologyParticleRenderer.relativRadiusProp_">
+                    <First value="Rendering" />
+                    <Second value="3" />
+                </value>
+                <value key="CosmologyParticleRenderer.renderMode">
+                    <First value="Rendering" />
+                    <Second value="0" />
+                </value>
+                <value key="CosmologyParticleRenderer.timeStep">
+                    <First value="Animation" />
+                    <Second value="7" />
+                </value>
+                <value key="CosmologyParticleRenderer.transFunc">
+                    <First value="Rendering" />
+                    <Second value="1" />
+                </value>
+                <value key="CosmologyParticleRenderer.useAlpha">
+                    <First value="Rendering" />
+                    <Second value="4" />
+                </value>
+                <value key="CosmologyParticleRenderer.useRelativeRadius_">
+                    <First value="Rendering" />
+                    <Second value="2" />
+                </value>
+                <value key="CosmologyTimeStepAnimationProcessor.animationInterval_">
+                    <First value="Animation" />
+                    <Second value="3" />
+                </value>
+                <value key="CosmologyTimeStepAnimationProcessor.counterStyle">
+                    <First value="Animation" />
+                    <Second value="2" />
+                </value>
+                <value key="CosmologyTimeStepAnimationProcessor.enableTimerProp">
+                    <First value="Animation" />
+                    <Second value="0" />
+                </value>
+                <value key="CosmologyTimeStepAnimationProcessor.intervalProp">
+                    <First value="Animation" />
+                    <Second value="1" />
+                </value>
+                <value key="CosmologyTimeStepAnimationProcessor.resetProp">
+                    <First value="Animation" />
+                    <Second value="6" />
+                </value>
+                <value key="CosmologyTimeStepAnimationProcessor.stepProp_">
+                    <First value="Animation" />
+                    <Second value="4" />
+                </value>
+            </GroupMembership>
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+        <GlobalDescription>
+            <![CDATA[<font color="#808080"><h4>Particle Rendering</h4> </font>
+<p>Workspace to visualize the single particles of a dark matter simulation over time</p>]]>
+        </GlobalDescription>
+    </Workspace>
+</VoreenData>

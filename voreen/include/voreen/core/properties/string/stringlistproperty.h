@@ -77,6 +77,8 @@ public:
     virtual void reset();
     /** Adds a new row to the end of the table. */
     void addRow(const std::string& row, const tgt::vec3& color = tgt::vec3::zero);
+    /** Deletes row at selected index */
+    void removeRow(int index);
     /** Get the selected row index or -1 if nothing is selected */
     const std::vector<int>& getSelectedRowIndices() const;
     inline const std::vector<int>& get() const { return getSelectedRowIndices(); }

@@ -1,0 +1,99 @@
+################################################################################
+# Core module resources
+################################################################################
+SET(MOD_CORE_MODULECLASS SciVisContest2019Module)
+
+# deployment
+SET(MOD_INSTALL_DIRECTORIES
+    ${MOD_DIR}/glsl
+    ${MOD_DIR}/workspaces
+)
+
+SET(MOD_CORE_SOURCES
+    #Datastructures
+    ${MOD_DIR}/datastructures/cmparticledata.cpp
+    ${MOD_DIR}/datastructures/cmmergertree.cpp
+    ${MOD_DIR}/datastructures/cmplotdata.cpp
+    #Processors
+    ${MOD_DIR}/processors/cosmologyvolumeconverter.cpp
+    ${MOD_DIR}/processors/cosmologyparticlerenderer.cpp
+    ${MOD_DIR}/processors/cosmologytimestepanimationprocessor.cpp
+    ${MOD_DIR}/processors/cosmologytracingpath.cpp
+    ${MOD_DIR}/processors/cosmologyhalorenderer.cpp
+    ${MOD_DIR}/processors/cmmergertreerenderer.cpp
+    ${MOD_DIR}/processors/cmhaloidtimesteplinker.cpp
+    ${MOD_DIR}/processors/cmlazylinker.cpp
+    ${MOD_DIR}/processors/cosmologydatasource.cpp
+    ${MOD_DIR}/processors/cosmologyfakedatasource.cpp
+    ${MOD_DIR}/processors/cmhalodatasource.cpp
+    ${MOD_DIR}/processors/cmhalodescriptor.cpp
+    ${MOD_DIR}/processors/cmhalosubstructurerenderer.cpp
+    ${MOD_DIR}/processors/cmhalodistanceoverlay.cpp
+    ${MOD_DIR}/processors/cosmologyarrowrenderer3d.cpp
+    ${MOD_DIR}/processors/cosmologyparticlefilter.cpp
+    ${MOD_DIR}/processors/cosmologyparticleboxfilter.cpp
+    ${MOD_DIR}/processors/cosmologyparticlehalofilter.cpp
+    ${MOD_DIR}/processors/cosmologyparticlecompactor.cpp
+    ${MOD_DIR}/processors/cosmologytimestepoverlay.cpp
+    ${MOD_DIR}/processors/cosmologyorientationoverlay.cpp
+    ${MOD_DIR}/processors/cosmologyoctreevolumepreprocess.cpp
+    ${MOD_DIR}/processors/cminfooverlay.cpp
+    ${MOD_DIR}/processors/cmplotviewer.cpp
+    ${MOD_DIR}/processors/cmplotcreator.cpp
+    ${MOD_DIR}/processors/cosmologyyearprovider.cpp
+    #${MOD_DIR}/processors/cosmologyhaloinfooverlay.cpp
+    #Ports
+    ${MOD_DIR}/ports/cmparticleport.cpp
+    ${MOD_DIR}/ports/cmhaloport.cpp
+    ${MOD_DIR}/ports/cmplotport.cpp
+    #Interaction
+    ${MOD_DIR}/interaction/camera2dinteractionhandler.cpp
+    ${MOD_DIR}/interaction/cmselectionmanager.cpp
+    ${MOD_DIR}/interaction/cmpropertyanimator.cpp
+    #Utils
+)
+
+SET(MOD_CORE_HEADERS
+    #Datastructures
+    ${MOD_DIR}/datastructures/cmparticledata.h
+    ${MOD_DIR}/datastructures/cmmergertree.h
+    ${MOD_DIR}/datastructures/cmplotdata.h
+    #Processors
+    ${MOD_DIR}/processors/cosmologyvolumeconverter.h
+    ${MOD_DIR}/processors/cosmologyparticlerenderer.h
+    ${MOD_DIR}/processors/cosmologytimestepanimationprocessor.h
+    ${MOD_DIR}/processors/cosmologytracingpath.h
+    ${MOD_DIR}/processors/cosmologyhalorenderer.h
+    ${MOD_DIR}/processors/cmmergertreerenderer.h
+    ${MOD_DIR}/processors/cmhaloidtimesteplinker.h
+    ${MOD_DIR}/processors/cmlazylinker.h
+    ${MOD_DIR}/processors/cosmologydatasource.h
+    ${MOD_DIR}/processors/cosmologyfakedatasource.h
+    ${MOD_DIR}/processors/cmhalodatasource.h
+    ${MOD_DIR}/processors/cmhalodescriptor.h
+    ${MOD_DIR}/processors/cmhalosubstructurerenderer.h
+    ${MOD_DIR}/processors/cmhalodistanceoverlay.h
+    ${MOD_DIR}/processors/cosmologyarrowrenderer3d.h
+    ${MOD_DIR}/processors/cosmologyparticlefilter.h
+    ${MOD_DIR}/processors/cosmologyparticleboxfilter.h
+    ${MOD_DIR}/processors/cosmologyparticlehalofilter.h
+    ${MOD_DIR}/processors/cosmologyparticlecompactor.h
+    ${MOD_DIR}/processors/cosmologytimestepoverlay.h
+    ${MOD_DIR}/processors/cosmologyorientationoverlay.h
+    ${MOD_DIR}/processors/cosmologyoctreevolumepreprocess.h
+    ${MOD_DIR}/processors/cminfooverlay.h
+    ${MOD_DIR}/processors/cmplotviewer.h
+    ${MOD_DIR}/processors/cmplotcreator.h
+    ${MOD_DIR}/processors/cosmologyyearprovider.h
+    #${MOD_DIR}/processors/cosmologyhaloinfooverlay.h
+    #Ports
+    ${MOD_DIR}/ports/cmparticleport.h
+    ${MOD_DIR}/ports/cmhaloport.h
+    ${MOD_DIR}/ports/cmplotport.h
+    #Interaction
+    ${MOD_DIR}/interaction/camera2dinteractionhandler.h
+    ${MOD_DIR}/interaction/cmselectionmanager.h
+    ${MOD_DIR}/interaction/cmpropertyanimator.h
+    #Utils
+    ${MOD_DIR}/utils/cmmath.h
+)

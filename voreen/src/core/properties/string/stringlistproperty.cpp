@@ -102,4 +102,14 @@ void StringListProperty::addRow(const std::string& row, const tgt::vec3& color) 
     updateWidgets();
 }
 
+void StringListProperty::removeRow(int index) {
+    // clear selection to avoid crash
+    selectedRows_.clear();
+    neededTableUpdates_ |= UPDATE_SELECTION;
+    values_.erase(values_.begin() + index);
+    neededTableUpdates_ |= UPDATE_ROWS;
+    updateWidgets();
+}
+
+
 }   // namespace
