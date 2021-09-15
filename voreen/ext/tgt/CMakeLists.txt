@@ -20,6 +20,7 @@ FILE(GLOB TGT_HEADERS *.h event/*.h navigation/*.h)
 # sources
 SET(TGT_SOURCES
     assert.cpp
+    arch.cpp
     bspline.cpp
     camera.cpp
     catmullromspline.cpp

@@ -28,6 +28,7 @@
 #include "tgt/tgt_math.h"
 #include <sstream>
 #include <chrono>
+#include <immintrin.h>
 
 #include "tgt/gpucapabilities.h"
 #include "tgt/glmath.h"
@@ -36,6 +37,7 @@
 #include "tgt/textureunit.h"
 #include "tgt/vector.h"
 #include "tgt/memory.h"
+#include "tgt/arch.h"
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/voreenapplication.h"
@@ -511,25 +513,230 @@ struct CacheData {
 };
 
 const int cacheSize = 8;
-struct Cache {
-    std::array<tgt::ivec3, cacheSize> llf {{ tgt::ivec3( 0) }};
-    std::array<tgt::ivec3, cacheSize> urb {{ tgt::ivec3(-1) }};
-    std::array<CacheData,  cacheSize> data {};
-    int nextOut = 0;
-};
+struct CacheFallback {
+    std::array<tgt::ivec3, cacheSize> llf;
+    std::array<tgt::ivec3, cacheSize> urb;
+    std::array<CacheData,  cacheSize> data;
+    int nextOut;
 
-static uint16_t sampleAt(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
+    CacheFallback(tgt::svec3 brickDataSize, size_t numChannels);
+
+    uint16_t sample(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels);
+};
+CacheFallback::CacheFallback(tgt::svec3 brickDataSize, size_t numChannels)
+    : llf {{ tgt::ivec3( 0) }}
+    , urb {{ tgt::ivec3(-1) }}
+    , data {}
+    , nextOut(0)
+{}
+
+BEGIN_STRUCT_WITH_TARGET("avx2")
+struct CacheDataAvx {
+    __m128 voxelToBrickCol0;
+    __m128 voxelToBrickCol1;
+    __m128 voxelToBrickCol2;
+    __m128 voxelToBrickCol3;
+    uint64_t addr_ = OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS;
+    union {
+        const uint16_t* data_;
+        uint16_t mean_;
+    };
+};
+END_STRUCT_WITH_TARGET()
+
+BEGIN_STRUCT_WITH_TARGET("avx2")
+struct CacheAvx {
+    __m256i llfx;
+    __m256i llfy;
+    __m256i llfz;
+    __m256i urbx;
+    __m256i urby;
+    __m256i urbz;
+    std::array<CacheDataAvx,  cacheSize> data;
+    int nextOut;
+    __m128i brickDataSizeMul;
+
+    CacheAvx(tgt::svec3 brickDataSize, size_t numChannels);
+
+    uint16_t sample(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels);
+};
+END_STRUCT_WITH_TARGET()
+
+BEGIN_FUNC_WITH_TARGET("avx2")
+CacheAvx::CacheAvx(tgt::svec3 brickDataSize, size_t numChannels)
+    : llfx { _mm256_set1_epi32(0) }
+    , llfy { _mm256_set1_epi32(0) }
+    , llfz { _mm256_set1_epi32(0) }
+    , urbx { _mm256_set1_epi32(-1) }
+    , urby { _mm256_set1_epi32(-1) }
+    , urbz { _mm256_set1_epi32(-1) }
+    , brickDataSizeMul(_mm_set_epi32(0, numChannels*brickDataSize.x*brickDataSize.y, numChannels*brickDataSize.x, numChannels))
+    , data {}
+    , nextOut(0)
+{
+}
+END_FUNC_WITH_TARGET()
+
+BEGIN_FUNC_WITH_TARGET("avx2")
+uint16_t CacheAvx::sample(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
+    static_assert(cacheSize == 8, "cacheSize must be 8");
+    auto posi_x = _mm256_set1_epi32(posi.x);
+    auto posi_y = _mm256_set1_epi32(posi.y);
+    auto posi_z = _mm256_set1_epi32(posi.z);
+
+    auto outside_lower_x = _mm256_cmpgt_epi32(llfx, posi_x);
+    auto outside_lower_y = _mm256_cmpgt_epi32(llfy, posi_y);
+    auto outside_lower_z = _mm256_cmpgt_epi32(llfz, posi_z);
+
+    auto inside_upper_x = _mm256_cmpgt_epi32(urbx, posi_x);
+    auto inside_upper_y = _mm256_cmpgt_epi32(urby, posi_y);
+    auto inside_upper_z = _mm256_cmpgt_epi32(urbz, posi_z);
+
+    auto inside_x = _mm256_andnot_si256(outside_lower_x, inside_upper_x);
+    auto inside_y = _mm256_andnot_si256(outside_lower_y, inside_upper_y);
+    auto inside_z = _mm256_andnot_si256(outside_lower_z, inside_upper_z);
+
+    __m256 inside = _mm256_castsi256_ps(_mm256_and_si256(_mm256_and_si256(inside_x, inside_y), inside_z));
+    uint32_t mask = _mm256_movemask_ps(inside);
+    int cacheEntry;
+    if(mask == 0) {
+        cacheEntry = -1;
+    } else {
+        int leading_zeros = __builtin_clz(mask);
+        //int cacheEntry = 7-std::countl_zero(mask);
+        cacheEntry = 7-(leading_zeros-24 /*only the last 8 bits are of interest*/);
+    }
+
+
+    if(cacheEntry == -1) {
+        cacheEntry = nextOut;
+        nextOut = (nextOut+1)%cacheSize;
+        auto& d = data[cacheEntry];
+        if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+            brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
+        }
+
+        LocatedVolumeOctreeNodeConst node = root.findChildNode(posi, brickDataSize, level, false);
+        auto& location = node.location();
+        auto voxelToBrick = location.voxelToBrick();
+        d.voxelToBrickCol0 = _mm_set_ps(0, voxelToBrick.t20, voxelToBrick.t10, voxelToBrick.t00);
+        d.voxelToBrickCol1 = _mm_set_ps(0, voxelToBrick.t21, voxelToBrick.t11, voxelToBrick.t01);
+        d.voxelToBrickCol2 = _mm_set_ps(0, voxelToBrick.t22, voxelToBrick.t12, voxelToBrick.t02);
+        d.voxelToBrickCol3 = _mm_set_ps(0, voxelToBrick.t23, voxelToBrick.t13, voxelToBrick.t03);
+        d.addr_ = node.node().getBrickAddress();
+        if(d.addr_ == OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+            d.mean_ = node.node().getAvgValues()[channel];
+        } else {
+            d.data_ = brickPoolManager.getBrick(d.addr_);
+        }
+        auto vllf = location.voxelLLF();
+        auto vurb = location.voxelURB();
+
+        switch (cacheEntry) {
+            case 0:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 0);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 0);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 0);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 0);
+                urby = _mm256_insert_epi32(urby, vurb.y, 0);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 0);
+                break;
+            case 1:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 1);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 1);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 1);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 1);
+                urby = _mm256_insert_epi32(urby, vurb.y, 1);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 1);
+                break;
+            case 2:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 2);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 2);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 2);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 2);
+                urby = _mm256_insert_epi32(urby, vurb.y, 2);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 2);
+                break;
+            case 3:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 3);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 3);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 3);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 3);
+                urby = _mm256_insert_epi32(urby, vurb.y, 3);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 3);
+                break;
+            case 4:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 4);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 4);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 4);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 4);
+                urby = _mm256_insert_epi32(urby, vurb.y, 4);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 4);
+                break;
+            case 5:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 5);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 5);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 5);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 5);
+                urby = _mm256_insert_epi32(urby, vurb.y, 5);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 5);
+                break;
+            case 6:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 6);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 6);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 6);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 6);
+                urby = _mm256_insert_epi32(urby, vurb.y, 6);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 6);
+                break;
+            case 7:
+                llfx = _mm256_insert_epi32(llfx, vllf.x, 7);
+                llfy = _mm256_insert_epi32(llfy, vllf.y, 7);
+                llfz = _mm256_insert_epi32(llfz, vllf.z, 7);
+                urbx = _mm256_insert_epi32(urbx, vurb.x, 7);
+                urby = _mm256_insert_epi32(urby, vurb.y, 7);
+                urbz = _mm256_insert_epi32(urbz, vurb.z, 7);
+                break;
+        }
+    }
+    auto& d = data[cacheEntry];
+
+    uint16_t rawVal;
+    if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
+        __m128 px = _mm_set1_ps(pos.x);
+        __m128 py = _mm_set1_ps(pos.y);
+        __m128 pz = _mm_set1_ps(pos.z);
+        __m128 t = d.voxelToBrickCol3;
+        t = _mm_add_ps(t, _mm_mul_ps(px, d.voxelToBrickCol0));
+        t = _mm_add_ps(t, _mm_mul_ps(py, d.voxelToBrickCol1));
+        t = _mm_add_ps(t, _mm_mul_ps(pz, d.voxelToBrickCol2));
+        //__m128i brickPosi = _mm_round_ps(t, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));
+        //_m128i brickPosi = _mm_cvttps_epi32(_mm_add_ps(0.5f), x);
+        __m128i brickPos = _mm_cvtps_epi32(t); //This already does rounding for us
+        __m128i i = _mm_mullo_epi32(brickPos, brickDataSizeMul);
+        int brickIndex = _mm_extract_epi32(i, 0) + _mm_extract_epi32(i, 1) + _mm_extract_epi32(i, 2);
+        brickIndex = channel+static_cast<size_t>(brickIndex);
+
+        rawVal = d.data_[brickIndex];
+    } else {
+        rawVal = d.mean_;
+    }
+    return rawVal;
+}
+END_FUNC_WITH_TARGET()
+
+uint16_t CacheFallback::sample(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
     int cacheEntry = -1;
     for(int i = 0; i<cacheSize; ++i) {
-        if(tgt::hand(tgt::greaterThanEqual(posi, cache.llf[i])) && tgt::hand(tgt::lessThan(posi, cache.urb[i]))) {
+        if(tgt::hand(tgt::greaterThanEqual(posi, llf[i])) && tgt::hand(tgt::lessThan(posi, urb[i]))) {
             cacheEntry = i;
         }
     }
 
     if(cacheEntry == -1) {
-        cacheEntry = cache.nextOut;
-        cache.nextOut = (cache.nextOut+1)%cacheSize;
-        auto& d = cache.data[cacheEntry];
+        cacheEntry = nextOut;
+        nextOut = (nextOut+1)%cacheSize;
+        auto& d = data[cacheEntry];
         if(d.addr_ != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS) {
             brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
         }
@@ -543,10 +750,10 @@ static uint16_t sampleAt(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, Cach
         } else {
             d.data_ = brickPoolManager.getBrick(d.addr_);
         }
-        cache.llf[cacheEntry] = location.voxelLLF();
-        cache.urb[cacheEntry] = location.voxelURB();
+        llf[cacheEntry] = location.voxelLLF();
+        urb[cacheEntry] = location.voxelURB();
     }
-    auto& d = cache.data[cacheEntry];
+    auto& d = data[cacheEntry];
 
     tgt::svec3 brickPos = tgt::round(d.voxelToBrick_ * pos);
 
@@ -561,7 +768,9 @@ static uint16_t sampleAt(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, Cach
     return rawVal;
 }
 
+template<typename C>
 struct SampleNearest {
+    typedef C Cache;
     static boost::optional<uint16_t> sample(tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
 
         tgt::ivec3 posi = tgt::round(pos);
@@ -571,10 +780,13 @@ struct SampleNearest {
             return boost::none;
         }
 
-        return sampleAt(posi, pos, volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels);
+        return cache.sample(posi, pos, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels);
     }
 };
+
+template<typename C>
 struct SampleLinear {
+    typedef C Cache;
     static boost::optional<uint16_t> sample(tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
 
         tgt::ivec3 l = tgt::floor(pos);
@@ -591,16 +803,30 @@ struct SampleLinear {
         tgt::vec3 p = pos - tgt::vec3(l);
         tgt::vec3 m = tgt::vec3(1.0) - p;
 
-        float v =
-              (m.x)*(m.y)*(m.z)*sampleAt(tgt::ivec3(l.x, l.y, l.z), tgt::vec3(l.x, l.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (m.x)*(m.y)*(p.z)*sampleAt(tgt::ivec3(l.x, l.y, h.z), tgt::vec3(l.x, l.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (m.x)*(p.y)*(m.z)*sampleAt(tgt::ivec3(l.x, h.y, l.z), tgt::vec3(l.x, h.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (m.x)*(p.y)*(p.z)*sampleAt(tgt::ivec3(l.x, h.y, h.z), tgt::vec3(l.x, h.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (p.x)*(m.y)*(m.z)*sampleAt(tgt::ivec3(h.x, l.y, l.z), tgt::vec3(h.x, l.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (p.x)*(m.y)*(p.z)*sampleAt(tgt::ivec3(h.x, l.y, h.z), tgt::vec3(h.x, l.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (p.x)*(p.y)*(m.z)*sampleAt(tgt::ivec3(h.x, h.y, l.z), tgt::vec3(h.x, h.y, l.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            + (p.x)*(p.y)*(p.z)*sampleAt(tgt::ivec3(h.x, h.y, h.z), tgt::vec3(h.x, h.y, h.z), volDim, cache, brickPoolManager, root, brickDataSize, level, channel, numChannels)
-            ;
+        tgt::vec4 xlow(
+              cache.sample(tgt::ivec3(l.x, l.y, l.z), tgt::vec3(l.x, l.y, l.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+              cache.sample(tgt::ivec3(l.x, l.y, h.z), tgt::vec3(l.x, l.y, h.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+              cache.sample(tgt::ivec3(l.x, h.y, l.z), tgt::vec3(l.x, h.y, l.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+              cache.sample(tgt::ivec3(l.x, h.y, h.z), tgt::vec3(l.x, h.y, h.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+                );
+
+        tgt::vec4 xhigh(
+              cache.sample(tgt::ivec3(h.x, l.y, l.z), tgt::vec3(h.x, l.y, l.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+              cache.sample(tgt::ivec3(h.x, l.y, h.z), tgt::vec3(h.x, l.y, h.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+              cache.sample(tgt::ivec3(h.x, h.y, l.z), tgt::vec3(h.x, h.y, l.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+              cache.sample(tgt::ivec3(h.x, h.y, h.z), tgt::vec3(h.x, h.y, h.z), volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+                );
+
+        tgt::vec4 xlow_mul_x(m.x);
+        tgt::vec4 xhigh_mul_x(p.x);
+        tgt::vec4 mul_y(m.y, m.y, p.y, p.y);
+        tgt::vec4 mul_z(m.z, p.z, m.z, p.z);
+        tgt::vec4 mul_yz = mul_y * mul_z;
+
+        xlow = xlow_mul_x * mul_yz * xlow;
+        xhigh = xhigh_mul_x * mul_yz * xhigh;
+
+        float v = tgt::hadd(xlow + xhigh);
 
         return v;
     }
@@ -632,7 +858,7 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
     const tgt::ivec2 begin = tgt::max(pixBegin, tgt::ivec2::zero);
     const tgt::ivec2 end = tgt::min(pixEnd, texture.dimensions());
 
-    Cache cache {};
+    typename SampleFn::Cache cache {brickDataSize, numChannels};
 
     //TODO:
     // multithreading?
@@ -785,10 +1011,18 @@ void SliceViewer::renderFromOctree() {
         DeadlineResult res;
         switch(inport_.getTextureFilterModeProperty().getValue()) {
             case GL_LINEAR:
-                res = renderOctreeSlice<SampleLinear>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                if(tgt::cpuFeatureCheck(tgt::CPU_FEATURE_X86_AVX2)) {
+                    res = renderOctreeSlice<SampleLinear<CacheAvx>>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                } else {
+                    res = renderOctreeSlice<SampleLinear<CacheFallback>>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                }
                     break;
             case GL_NEAREST:
-                res = renderOctreeSlice<SampleNearest>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                if(tgt::cpuFeatureCheck(tgt::CPU_FEATURE_X86_AVX2)) {
+                    res = renderOctreeSlice<SampleNearest<CacheAvx>>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                } else {
+                    res = renderOctreeSlice<SampleNearest<CacheFallback>>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+                }
                     break;
         }
         if(res  == DeadlineResult::Succeeded) {
