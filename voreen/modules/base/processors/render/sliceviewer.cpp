@@ -530,6 +530,10 @@ CacheFallback::CacheFallback(tgt::svec3 brickDataSize, size_t numChannels)
     , nextOut(0)
 {}
 
+#ifndef _mm256_set_m128
+#define _mm256_set_m128(v1, v2) _mm256_insertf128_ps(_mm256_castps128_ps256(_mm_castsi128_ps(v2)), _mm_castsi128_ps(v1), 1)
+#endif
+
 BEGIN_FUNC_WITH_TARGET_FEATURE("avx2")
 template<const int IMM>
 inline float extract_f(__m128 b) {
