@@ -557,8 +557,25 @@ inline tgt::ivec3 extract_ivec3(__m128i b) {
 END_FUNC_WITH_TARGET_FEATURE()
 
 BEGIN_FUNC_WITH_TARGET_FEATURE("avx2")
-inline tgt::ivec3 convert_extract_ivec3(__m128 b) {
-    return extract_ivec3(_mm_cvtps_epi32(b));
+void set_f32_at_index(__m256& vec, int index, float val) {
+    int laneId = index >> 2;
+    int lanePos = index & 0x3;
+
+    __m128 lane;
+    __m128 newVal = _mm_set1_ps(val);
+    __m128i ladder = _mm_set_epi32(3,2,1,0);
+    __m128 indexMask = _mm_castsi128_ps(_mm_cmpeq_epi32(_mm_set1_epi32(lanePos), ladder));
+    if (laneId == 0) {
+        lane = _mm256_extractf128_ps(vec, 0);
+    } else {
+        lane = _mm256_extractf128_ps(vec, 1);
+    }
+    lane = _mm_or_ps(_mm_andnot_ps(indexMask, lane), _mm_and_ps(indexMask, newVal));
+    if (laneId == 0) {
+        vec = _mm256_insertf128_ps(vec, lane, 0);
+    } else {
+        vec = _mm256_insertf128_ps(vec, lane, 1);
+    }
 }
 END_FUNC_WITH_TARGET_FEATURE()
 
@@ -578,30 +595,30 @@ END_STRUCT_WITH_TARGET_FEATURE()
 
 BEGIN_STRUCT_WITH_TARGET_FEATURE("avx2")
 struct CacheAvx {
-    __m256i llfx;
-    __m256i llfy;
-    __m256i llfz;
-    __m256i urbx;
-    __m256i urby;
-    __m256i urbz;
+    __m256 llfx;
+    __m256 llfy;
+    __m256 llfz;
+    __m256 urbx;
+    __m256 urby;
+    __m256 urbz;
     std::array<CacheDataAvx,  cacheSize> data;
     int nextOut;
     __m128i brickDataSizeMul;
 
     CacheAvx(tgt::svec3 brickDataSize, size_t numChannels);
 
-    uint16_t sample(__m128i posi, __m128 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels);
+    float sample(__m128 posi, __m128 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels);
 };
 END_STRUCT_WITH_TARGET_FEATURE()
 
 BEGIN_FUNC_WITH_TARGET_FEATURE("avx2")
 CacheAvx::CacheAvx(tgt::svec3 brickDataSize, size_t numChannels)
-    : llfx { _mm256_set1_epi32(0) }
-    , llfy { _mm256_set1_epi32(0) }
-    , llfz { _mm256_set1_epi32(0) }
-    , urbx { _mm256_set1_epi32(-1) }
-    , urby { _mm256_set1_epi32(-1) }
-    , urbz { _mm256_set1_epi32(-1) }
+    : llfx { _mm256_set1_ps(0) }
+    , llfy { _mm256_set1_ps(0) }
+    , llfz { _mm256_set1_ps(0) }
+    , urbx { _mm256_set1_ps(-1) }
+    , urby { _mm256_set1_ps(-1) }
+    , urbz { _mm256_set1_ps(-1) }
     , brickDataSizeMul(_mm_set_epi32(0, numChannels*brickDataSize.x*brickDataSize.y, numChannels*brickDataSize.x, numChannels))
     , data {}
     , nextOut(0)
@@ -610,28 +627,28 @@ CacheAvx::CacheAvx(tgt::svec3 brickDataSize, size_t numChannels)
 END_FUNC_WITH_TARGET_FEATURE()
 
 BEGIN_FUNC_WITH_TARGET_FEATURE("avx2")
-uint16_t CacheAvx::sample(__m128i posi, __m128 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
+float CacheAvx::sample(__m128 posi, __m128 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
     static_assert(cacheSize == 8, "cacheSize must be 8");
-    __m128i posi_x_128 = _mm_castps_si128(_mm_permute_ps(_mm_castsi128_ps(posi), _MM_SHUFFLE(0,0,0,0)));
-    __m128i posi_y_128 = _mm_castps_si128(_mm_permute_ps(_mm_castsi128_ps(posi), _MM_SHUFFLE(1,1,1,1)));
-    __m128i posi_z_128 = _mm_castps_si128(_mm_permute_ps(_mm_castsi128_ps(posi), _MM_SHUFFLE(2,2,2,2)));
-    __m256i posi_x = _mm256_set_m128i(posi_x_128, posi_x_128);
-    __m256i posi_y = _mm256_set_m128i(posi_y_128, posi_y_128);
-    __m256i posi_z = _mm256_set_m128i(posi_z_128, posi_z_128);
+    __m128 posi_x_128 = _mm_permute_ps(posi, _MM_SHUFFLE(0,0,0,0));
+    __m128 posi_y_128 = _mm_permute_ps(posi, _MM_SHUFFLE(1,1,1,1));
+    __m128 posi_z_128 = _mm_permute_ps(posi, _MM_SHUFFLE(2,2,2,2));
+    __m256 posi_x = _mm256_set_m128(posi_x_128, posi_x_128);
+    __m256 posi_y = _mm256_set_m128(posi_y_128, posi_y_128);
+    __m256 posi_z = _mm256_set_m128(posi_z_128, posi_z_128);
 
-    auto outside_lower_x = _mm256_cmpgt_epi32(llfx, posi_x);
-    auto outside_lower_y = _mm256_cmpgt_epi32(llfy, posi_y);
-    auto outside_lower_z = _mm256_cmpgt_epi32(llfz, posi_z);
+    auto outside_lower_x = _mm256_cmp_ps(llfx, posi_x, _CMP_GT_OQ);
+    auto outside_lower_y = _mm256_cmp_ps(llfy, posi_y, _CMP_GT_OQ);
+    auto outside_lower_z = _mm256_cmp_ps(llfz, posi_z, _CMP_GT_OQ);
 
-    auto inside_upper_x = _mm256_cmpgt_epi32(urbx, posi_x);
-    auto inside_upper_y = _mm256_cmpgt_epi32(urby, posi_y);
-    auto inside_upper_z = _mm256_cmpgt_epi32(urbz, posi_z);
+    auto inside_upper_x = _mm256_cmp_ps(urbx, posi_x, _CMP_GT_OQ);
+    auto inside_upper_y = _mm256_cmp_ps(urby, posi_y, _CMP_GT_OQ);
+    auto inside_upper_z = _mm256_cmp_ps(urbz, posi_z, _CMP_GT_OQ);
 
-    auto inside_x = _mm256_andnot_si256(outside_lower_x, inside_upper_x);
-    auto inside_y = _mm256_andnot_si256(outside_lower_y, inside_upper_y);
-    auto inside_z = _mm256_andnot_si256(outside_lower_z, inside_upper_z);
+    auto inside_x = _mm256_andnot_ps(outside_lower_x, inside_upper_x);
+    auto inside_y = _mm256_andnot_ps(outside_lower_y, inside_upper_y);
+    auto inside_z = _mm256_andnot_ps(outside_lower_z, inside_upper_z);
 
-    __m256 inside = _mm256_castsi256_ps(_mm256_and_si256(_mm256_and_si256(inside_x, inside_y), inside_z));
+    __m256 inside = _mm256_and_ps(_mm256_and_ps(inside_x, inside_y), inside_z);
     uint32_t mask = _mm256_movemask_ps(inside);
     int cacheEntry;
     if(mask == 0) {
@@ -651,7 +668,7 @@ uint16_t CacheAvx::sample(__m128i posi, __m128 pos, tgt::ivec3 volDim, const Oct
             brickPoolManager.releaseBrick(d.addr_, OctreeBrickPoolManagerBase::READ);
         }
 
-        LocatedVolumeOctreeNodeConst node = root.findChildNode(extract_ivec3(posi), brickDataSize, level, false);
+        LocatedVolumeOctreeNodeConst node = root.findChildNode(extract_ivec3(_mm_cvtps_epi32(posi)), brickDataSize, level, false);
         auto& location = node.location();
         auto voxelToBrick = location.voxelToBrick();
         d.voxelToBrickCol0 = _mm_set_ps(0, voxelToBrick.t20, voxelToBrick.t10, voxelToBrick.t00);
@@ -664,75 +681,15 @@ uint16_t CacheAvx::sample(__m128i posi, __m128 pos, tgt::ivec3 volDim, const Oct
         } else {
             d.data_ = brickPoolManager.getBrick(d.addr_);
         }
-        auto vllf = location.voxelLLF();
-        auto vurb = location.voxelURB();
+        tgt::vec3 vllf = location.voxelLLF();
+        tgt::vec3 vurb = location.voxelURB();
 
-        switch (cacheEntry) {
-            case 0:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 0);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 0);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 0);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 0);
-                urby = _mm256_insert_epi32(urby, vurb.y, 0);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 0);
-                break;
-            case 1:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 1);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 1);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 1);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 1);
-                urby = _mm256_insert_epi32(urby, vurb.y, 1);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 1);
-                break;
-            case 2:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 2);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 2);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 2);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 2);
-                urby = _mm256_insert_epi32(urby, vurb.y, 2);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 2);
-                break;
-            case 3:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 3);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 3);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 3);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 3);
-                urby = _mm256_insert_epi32(urby, vurb.y, 3);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 3);
-                break;
-            case 4:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 4);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 4);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 4);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 4);
-                urby = _mm256_insert_epi32(urby, vurb.y, 4);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 4);
-                break;
-            case 5:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 5);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 5);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 5);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 5);
-                urby = _mm256_insert_epi32(urby, vurb.y, 5);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 5);
-                break;
-            case 6:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 6);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 6);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 6);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 6);
-                urby = _mm256_insert_epi32(urby, vurb.y, 6);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 6);
-                break;
-            case 7:
-                llfx = _mm256_insert_epi32(llfx, vllf.x, 7);
-                llfy = _mm256_insert_epi32(llfy, vllf.y, 7);
-                llfz = _mm256_insert_epi32(llfz, vllf.z, 7);
-                urbx = _mm256_insert_epi32(urbx, vurb.x, 7);
-                urby = _mm256_insert_epi32(urby, vurb.y, 7);
-                urbz = _mm256_insert_epi32(urbz, vurb.z, 7);
-                break;
-        }
+        set_f32_at_index(llfx, cacheEntry, vllf.x);
+        set_f32_at_index(llfy, cacheEntry, vllf.y);
+        set_f32_at_index(llfz, cacheEntry, vllf.z);
+        set_f32_at_index(urbx, cacheEntry, vurb.x);
+        set_f32_at_index(urby, cacheEntry, vurb.y);
+        set_f32_at_index(urbz, cacheEntry, vurb.z);
     }
     auto& d = data[cacheEntry];
 
@@ -890,7 +847,7 @@ boost::optional<uint16_t> SampleNearestAvx::sample(tgt::vec3 p, tgt::ivec3 volDi
         return boost::none;
     }
 
-    return cache.sample(_mm_cvtps_epi32(posi), pos, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels);
+    return cache.sample(posi, pos, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels);
 }
 END_FUNC_WITH_TARGET_FEATURE()
 
@@ -940,14 +897,14 @@ boost::optional<uint16_t> SampleLinearAvx::sample(tgt::vec3 pos, tgt::ivec3 volD
     auto hhh = h;
 
     __m256 vals = _mm256_setr_ps(
-          cache.sample(_mm_cvtps_epi32(lll), lll, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(llh), llh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(lhl), lhl, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(lhh), lhh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(hll), hll, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(hlh), hlh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(hhl), hhl, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
-          cache.sample(_mm_cvtps_epi32(hhh), hhh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels)
+          cache.sample(lll, lll, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(llh, llh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(lhl, lhl, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(lhh, lhh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(hll, hll, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(hlh, hlh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(hhl, hhl, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels),
+          cache.sample(hhh, hhh, volDim, brickPoolManager, root, brickDataSize, level, channel, numChannels)
     );
 
     __m128 mulzLow = _mm_shuffle_ps(m, m, _MM_SHUFFLE(2, 2, 2, 2));
