@@ -531,7 +531,7 @@ CacheFallback::CacheFallback(tgt::svec3 brickDataSize, size_t numChannels)
 {}
 
 #ifndef _mm256_set_m128
-#define _mm256_set_m128(v1, v2) _mm256_insertf128_ps(_mm256_castps128_ps256(_mm_castsi128_ps(v2)), _mm_castsi128_ps(v1), 1)
+#define _mm256_set_m128(v1, v2) _mm256_insertf128_ps(_mm256_castps128_ps256(v2), v1, 1)
 #endif
 
 BEGIN_FUNC_WITH_TARGET_FEATURE("avx2")
