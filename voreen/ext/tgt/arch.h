@@ -29,18 +29,18 @@
 /// intrinsics specific to these architectures (see #include <immintrin.h>) and
 /// use the functions below for runtime dispatch. Something like:
 ///
-/// BEGIN_STRUCT_WITH_TARGET("avx2")
+/// BEGIN_STRUCT_WITH_TARGET_FEATURE("avx2")
 /// struct Foo {
 ///     __m256 bar;
 /// };
-/// END_STRUCT_WITH_TARGET()
+/// END_STRUCT_WITH_TARGET_FEATURE()
 ///
-/// BEGIN_FUNC_WITH_TARGET("avx2")
+/// BEGIN_FUNC_WITH_TARGET_FEATURE("avx2")
 /// void myfunc_avx2(float foo) {
 ///     Foo { _mm_set1_ps(foo) };
 ///     // ...
 /// }
-/// END_FUNC_WITH_TARGET()
+/// END_FUNC_WITH_TARGET_FEATURE()
 ///
 /// void myfunc_generic(float foo) {
 ///     if(tgt::cpuFeatureCheck(tgt::CPU_FEATURE_X86_AVX2)) {
@@ -56,22 +56,22 @@
 #define DO_PRAGMA_(x) _Pragma (#x)
 #define DO_PRAGMA(x) DO_PRAGMA_(x)
 #if defined(__clang__)
-#define BEGIN_FUNC_WITH_TARGET(_target)\
+#define BEGIN_FUNC_WITH_TARGET_FEATURE(_target)\
     DO_PRAGMA(clang attribute push (__attribute__((target(_target))), apply_to=function))
-#define END_FUNC_WITH_TARGET()\
+#define END_FUNC_WITH_TARGET_FEATURE()\
     DO_PRAGMA(clang attribute pop)
 #elif defined(__GNUC__)
-#define BEGIN_FUNC_WITH_TARGET(_target)\
+#define BEGIN_FUNC_WITH_TARGET_FEATURE(_target)\
     DO_PRAGMA(GCC push_options)\
     DO_PRAGMA(GCC target(_target))
-#define END_FUNC_WITH_TARGET()\
+#define END_FUNC_WITH_TARGET_FEATURE()\
     DO_PRAGMA(GCC pop_options)
 #elif defined(_MSC_VER)
 // This macro is intended for use with avx intrinsics, but MSVC compiles them
 // fine without activating the target (and apparently there is no way to
 // activate a target for a single function).
-#define BEGIN_FUNC_WITH_TARGET(_target)
-#define END_FUNC_WITH_TARGET
+#define BEGIN_FUNC_WITH_TARGET_FEATURE(_target)
+#define END_FUNC_WITH_TARGET_FEATURE()
 #else
     #warning Compiler could not be detected. Function cannot be compiled for the desired target.
 #endif
@@ -80,34 +80,33 @@
 /// BEGIN_STRUCT_WITH_TARGET macro definition ----------------------------------
 /// ----------------------------------------------------------------------------
 #if defined(__clang__)
-#define BEGIN_STRUCT_WITH_TARGET(_target)\
 // Nothing required for clang
-#define BEGIN_STRUCT_WITH_TARGET(_target)
-#define END_STRUCT_WITH_TARGET()
+#define BEGIN_STRUCT_WITH_TARGET_FEATURE(_target)
+#define END_STRUCT_WITH_TARGET_FEATURE()
 #elif defined(__GNUC__)
-#define BEGIN_STRUCT_WITH_TARGET(_target)\
+#define BEGIN_STRUCT_WITH_TARGET_FEATURE(_target)\
     DO_PRAGMA(GCC push_options)\
     DO_PRAGMA(GCC target(_target))
-#define END_STRUCT_WITH_TARGET()\
+#define END_STRUCT_WITH_TARGET_FEATURE()\
     DO_PRAGMA(GCC pop_options)
 #elif defined(_MSC_VER)
 // This macro is intended for use with avx intrinsics, but MSVC compiles them
 // fine without activating the target (and apparently there is no way to
 // activate a target for a single function).
-#define BEGIN_STRUCT_WITH_TARGET(_target)
-#define END_STRUCT_WITH_TARGET()
+#define BEGIN_STRUCT_WITH_TARGET_FEATURE(_target)
+#define END_STRUCT_WITH_TARGET_FEATURE()
 #else
     #warning Compiler could not be detected. Struct cannot be compiled for the desired target.
 #endif
 
 #if defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
-#  define PSNIP_CPU_ARCH_X86_64
+#  define CPU_ARCH_X86_64
 #elif defined(__i686__) || defined(__i586__) || defined(__i486__) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(_X86_) || defined(__THW_INTEL__)
-#  define PSNIP_CPU_ARCH_X86
+#  define CPU_ARCH_X86
 #elif defined(__arm__) || defined(_M_ARM)
-#  define PSNIP_CPU_ARCH_ARM
+#  define CPU_ARCH_ARM
 #elif defined(__aarch64__)
-#  define PSNIP_CPU_ARCH_ARM64
+#  define CPU_ARCH_ARM64
 #endif
 
 // Taken and adapted from "portable snippets" by Evan Nemerson (licensed CC0).
