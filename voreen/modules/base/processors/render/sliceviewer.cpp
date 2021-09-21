@@ -658,7 +658,11 @@ float CacheAvx::sample(__m128 posi, __m128 pos, tgt::ivec3 volDim, const OctreeB
     if(mask == 0) {
         cacheEntry = -1;
     } else {
+#ifndef WIN32
         int leading_zeros = __builtin_clz(mask);
+#else
+        int leading_zeros = __lzcnt(mask); // Note: System must support SSE4!
+#endif
         //int cacheEntry = 7-std::countl_zero(mask);
         cacheEntry = 7-(leading_zeros-24 /*only the last 8 bits are of interest*/);
     }

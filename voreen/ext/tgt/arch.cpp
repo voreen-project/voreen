@@ -25,8 +25,6 @@
 
 // Taken and adapted from "portable snippets" by Evan Nemerson (licensed CC0).
 
-namespace tgt {
-
 #define ONCE__BACKEND_ATOMIC  1
 #define ONCE__BACKEND_PTHREAD 2
 #define ONCE__BACKEND_NONE    3
@@ -152,6 +150,7 @@ static void once_call(once* flag, void (*func)(void)) {
 
 #if defined(_WIN32)
 #  include <Windows.h>
+#  include <intrin.h>
 #  define CPU__IMPL_WIN32
 #elif defined(unix) || defined(__unix__) || defined(__unix)
 #  include <unistd.h>
@@ -200,6 +199,9 @@ static void cpu_init(void) {
   cpuinfo[1] = getauxval (AT_HWCAP2);
 #endif
 }
+
+
+namespace tgt {
 
 int cpuFeatureCheck (enum PSnipCPUFeature feature) {
 #if defined(CPU_ARCH_X86) || defined(CPU_ARCH_X86_64)
@@ -297,4 +299,4 @@ int cpuCount (void) {
   return count;
 }
 
-} // namespace tgt
+}
