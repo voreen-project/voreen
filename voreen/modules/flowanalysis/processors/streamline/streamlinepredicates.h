@@ -68,11 +68,13 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription("Used to filter streamlines according to length and curvature.");
+        setDescription("Used to filter streamlines according a volume predicate.");
         //ports
         streamlineInport_.setDescription("Streamlines, which shall be filtered.");
         streamlinePredicateVolumeInport_.setDescription("(Optional) Predicate (aka mask) volume. Streamlines that do not intersect this volume will be discarded.");
         streamlineOutport_.setDescription("Filtered streamlines.");
+        //properties
+        predicateVolumeFiltering_.setDescription("A streamline will be kept if its discrete elements satisfy the predicate according to the selected option.");
     }
 
     virtual void adjustPropertiesToInput();

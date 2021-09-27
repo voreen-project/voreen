@@ -52,8 +52,10 @@ StreamlinePredicates::StreamlinePredicates()
     addProperty(enabled_);
     //general
     addProperty(predicateVolumeFiltering_);
-        predicateVolumeFiltering_.addOption("disable", "Disable");
-        predicateVolumeFiltering_.addOption("intersection", "Intersection");
+        predicateVolumeFiltering_.addOption("disable", "Disabled");
+        predicateVolumeFiltering_.addOption("intersection", "Any Element");
+        predicateVolumeFiltering_.addOption("none", "No Element");
+        predicateVolumeFiltering_.addOption("all", "All Elements");
         predicateVolumeFiltering_.setGroupID("filter");
     addProperty(physicalLengthRange_);
         physicalLengthRange_.setTracking(false);
@@ -101,18 +103,40 @@ StreamlinePredicatesComputeInput StreamlinePredicates::prepareComputeInput() {
 
     auto streamlinePredicateVolume = streamlinePredicateVolumeInport_.getThreadSafeData();
 
-    std::function<bool(const Streamline&, const std::function<bool(const tgt::vec3&)>&)> predicateFilter;
+    using PredicateFunc = std::function<bool(const tgt::vec3&)>;
+
+    std::function<bool(const Streamline&, const PredicateFunc&)> predicateFilter;
     if(!streamlinePredicateVolume || predicateVolumeFiltering_.get() == "disable") {
-        predicateFilter = [] (const Streamline&, const std::function<bool(const tgt::vec3&)>&) -> bool { return false; };
+        predicateFilter = [] (const Streamline&, const PredicateFunc&) -> bool { return false; };
     }
     else if(predicateVolumeFiltering_.get() == "intersection") {
-        predicateFilter = [] (const Streamline& streamline, const std::function<bool(const tgt::vec3&)>& predicate) -> bool {
+        predicateFilter = [] (const Streamline& streamline, const PredicateFunc& predicate) -> bool {
             for(size_t i=0; i<streamline.getNumElements(); i++) {
                 if(predicate(streamline.getElementAt(i).position_)) {
                     return false;
                 }
             }
             return true;
+        };
+    }
+    else if(predicateVolumeFiltering_.get() == "none") {
+        predicateFilter = [] (const Streamline& streamline, const PredicateFunc& predicate) -> bool {
+            for(size_t i=0; i<streamline.getNumElements(); i++) {
+                if(predicate(streamline.getElementAt(i).position_)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+    }
+    else if(predicateVolumeFiltering_.get() == "all") {
+        predicateFilter = [] (const Streamline& streamline, const PredicateFunc& predicate) -> bool {
+            for(size_t i=0; i<streamline.getNumElements(); i++) {
+                if(!predicate(streamline.getElementAt(i).position_)) {
+                    return true;
+                }
+            }
+            return false;
         };
     }
     else {
