@@ -24,6 +24,8 @@
 #ifndef TGT_ARCH_H
 #define TGT_ARCH_H
 
+#include "tgt/types.h"
+
 /// Use the following macros to surround structs/functions in order to compile
 /// them with the desired cpu features (e.g., "avx2"). Then, inside, you can use
 /// intrinsics specific to these architectures (see #include <immintrin.h>) and
@@ -266,9 +268,9 @@ enum PSnipCPUFeature {
   CPU_FEATURE_ARM_CRC32           = CPU_FEATURE_ARM | 0x0100 | 5
 };
 
-int cpuCount();
-int cpuFeatureCheck(enum PSnipCPUFeature  feature);
-int cpuFeatureCheckMany(enum PSnipCPUFeature* feature);
+TGT_API int cpuCount();
+TGT_API int cpuFeatureCheck(enum PSnipCPUFeature  feature);
+TGT_API int cpuFeatureCheckMany(enum PSnipCPUFeature* feature);
 
 }
 
