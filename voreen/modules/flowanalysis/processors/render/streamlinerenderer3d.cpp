@@ -72,9 +72,6 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     //properties
         // style
     addProperty(streamlineStyle_);
-        streamlineStyle_.addOption("lines", "Lines", STYLE_LINES);
-        streamlineStyle_.addOption("tubes", "Tubes", STYLE_TUBES);
-        //streamlineStyle_.addOption("arrows", "Arrows", STYLE_ARROWS); // TODO: should use shaders!
         streamlineStyle_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
         // color
     addProperty(color_);
@@ -233,6 +230,14 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
     bool timeWindowEmpty = streamlines->getTemporalRange().x == streamlines->getTemporalRange().y;
     timeWindowStart_.setReadOnlyFlag(timeWindowEmpty);
     timeWindowSize_.setReadOnlyFlag(timeWindowEmpty);
+    std::deque<Option<StreamlineStyle>> styleOptions;
+    styleOptions.emplace_back(Option<StreamlineStyle>("lines", "Lines", STYLE_LINES));
+    if(timeWindowEmpty) {
+        styleOptions.emplace_back(Option<StreamlineStyle>("tubes", "Tubes", STYLE_TUBES));
+        // styleOptions.emplace_back(Option<StreamlineStyle>("arrows", "Arrows", STYLE_ARROWS)); // TODO: should use shaders!
+    }
+    streamlineStyle_.setOptions(styleOptions);
+    streamlineStyle_.invalidate();
 
     bool timeWindowChanged = streamlines->getTemporalRange().x != timeWindowStart_.getMinValue()
             || (streamlines->getTemporalRange().y - streamlines->getTemporalRange().x) != timeWindowSize_.getMaxValue();
