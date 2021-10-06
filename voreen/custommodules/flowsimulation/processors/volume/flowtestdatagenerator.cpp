@@ -36,6 +36,8 @@ FlowTestDataGenerator::FlowTestDataGenerator()
     : VolumeProcessor()
     , outport_(Port::OUTPORT, "flowtestdatagenerator.outport", "Volume Output")
     , type_("type", "Type")
+    , resolutionLength_("resolutionLength", "Resolution Length", 50, 10, 500)
+    , resolutionDiameter_("resolutionDiameter", "Resolution Diameter", 50, 10, 500)
 {
     addPort(outport_);
     addProperty(type_);
@@ -47,6 +49,8 @@ FlowTestDataGenerator::FlowTestDataGenerator()
     type_.addOption("stenotic", "stenotic");
     type_.addOption("soteloVelocity", "Velocity by Sotelo et al.");
     type_.addOption("soteloVorticity", "Vorticity by Sotelo et al.");
+    addProperty(resolutionLength_);
+    addProperty(resolutionDiameter_);
 }
 
 FlowTestDataGenerator::~FlowTestDataGenerator() {
@@ -185,8 +189,8 @@ tgt::vec3 vorticity(size_t diameter, size_t L, const tgt::svec3& pos, float t) {
 
 void FlowTestDataGenerator::process() {
 
-    const size_t diameter = 51;
-    const size_t length = 50;
+    const size_t diameter = resolutionDiameter_.get();
+    const size_t length = resolutionLength_.get();
 
     const tgt::vec3 spacing(2.0f / diameter, 2.0f / diameter, 1.0f / length);
     const tgt::vec3 offset(-spacing.x * diameter * 0.5f, -spacing.y * diameter * 0.5f, 0.0f);

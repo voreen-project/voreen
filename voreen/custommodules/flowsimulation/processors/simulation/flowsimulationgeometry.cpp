@@ -40,7 +40,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
     , radius_("radius", "Radius (mm)", 1.0f, 0.1f, 1000.0f)
     , length_("length", "Length (mm)", 1.0f, 0.1f, 1000.0f)
-    , transformation_("transformation", "Transformation", tgt::mat4::identity)
+    , transformation_("transformation", "Transformation", tgt::mat4::identity, tgt::mat4(-1000.0f), tgt::mat4(+1000.0f))
     , flowProfile_("flowProfile", "Flow Profile")
     , inflowVelocity_("inflowVelocity", "Inflow Velocity (m/s)", 1.0f, 0.0f, 10.0f)
 {
