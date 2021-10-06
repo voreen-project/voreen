@@ -53,24 +53,41 @@ StreamlineCombine::StreamlineCombine()
 StreamlineCombine::~StreamlineCombine() {
 }
 
+bool StreamlineCombine::isReady() const {
+    if(!leftInport_.isReady() && !rightInport_.isReady()) {
+        setNotReadyErrorMessage("No input connected");
+        return false;
+    }
+
+    return true;
+}
+
 void StreamlineCombine::process() {
+    StreamlineListBase* output = nullptr;
     switch(combineProp_.getValue()) {
     case SCB_LEFT:
-        outport_.setData(leftInport_.getData()->clone()); // takes ownership
+        output = leftInport_.hasData() ? leftInport_.getData()->clone() : nullptr;
         break;
     case SCB_RIGHT:
-        outport_.setData(rightInport_.getData()->clone()); // takes ownership
+        output = rightInport_.hasData() ? rightInport_.getData()->clone() : nullptr;
         break;
-    case SCB_COMBINE: {
-        StreamlineListBase* tmp = leftInport_.getData()->clone();
-        tmp->addStreamlineList(*rightInport_.getData());
-        outport_.setData(tmp); // takes ownership
-        } break;
+    case SCB_COMBINE:
+        if(leftInport_.hasData()) {
+            output = leftInport_.getData()->clone();
+            if(rightInport_.hasData()) {
+                output->addStreamlineList(*rightInport_.getData()->clone());
+            }
+            break;
+        }
+        output = rightInport_.getData()->clone();
+        break;
     default:
         LERROR("unknown combine option!");
         tgtAssert(false,"should not get here");
         break;
     }
+
+    outport_.setData(output);
 }
 
 }   // namespace

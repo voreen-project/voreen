@@ -52,6 +52,7 @@ protected:
         setDescription("Processor used to combine two StreamlineLists or pipe through on list.");
     }
 
+    virtual bool isReady() const;
     virtual void process();
 
     //--------------
