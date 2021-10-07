@@ -1066,8 +1066,8 @@ void SliceViewer::renderFromOctree() {
         deadline += std::chrono::milliseconds(renderTimeMs);
     }
 
-    tgt::ivec2 ll = tgt::ivec2(tgt::round(sliceLowerLeft_))/lodDivider;
-    tgt::ivec2 sliceSize = tgt::ivec2(tgt::round(sliceSize_))/lodDivider; //TODO check rounding here is correct
+    tgt::vec2 ll = sliceLowerLeft_/static_cast<float>(lodDivider);
+    tgt::vec2 sliceSize = sliceSize_/static_cast<float>(lodDivider);
 
     sliceComplete_ = true; // Will be reset if we encounter a timeout
 
@@ -1079,8 +1079,8 @@ void SliceViewer::renderFromOctree() {
         if (sliceNumber >= numSlices)
             break;
 
-        tgt::ivec2 begin(ll.x + x*sliceSize.x, ll.y + ((numSlicesRow - (y + 1)) * sliceSize.y));
-        tgt::ivec2 end = begin+sliceSize;
+        tgt::vec2 begin(ll.x + x*sliceSize.x, ll.y + ((numSlicesRow - (y + 1)) * sliceSize.y));
+        tgt::vec2 end = begin+sliceSize;
         tgt::vec3 dimInv = tgt::vec3(1.0)/tgt::max(tgt::vec3(1.0f),tgt::vec3(end-begin, numSlices));
         tgt::vec3 offset = tgt::vec3(-begin, sliceNumber) + tgt::vec3(0.5);
         tgt::mat4 pixelToScreenNorm = tgt::mat4::createScale(dimInv) * tgt::mat4::createTranslation(offset);
