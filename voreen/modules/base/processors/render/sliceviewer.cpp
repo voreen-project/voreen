@@ -153,7 +153,7 @@ SliceViewer::SliceViewer()
     mouseEventShift_ = new EventProperty<SliceViewer>("mouseEvent.Shift", "Slice Shift",
         this, &SliceViewer::shiftEvent,
         tgt::MouseEvent::MOUSE_BUTTON_LEFT,
-        tgt::MouseEvent::PRESSED | tgt::MouseEvent::MOTION, tgt::Event::CTRL);
+        tgt::MouseEvent::PRESSED | tgt::MouseEvent::MOTION | tgt::MouseEvent::RELEASED, tgt::Event::CTRL);
 
     mouseEventMove_ = new EventProperty<SliceViewer>("mouseEvent.cursorPositionMove", "Cursor Position Move",
         this, &SliceViewer::mouseLocalization,
@@ -967,9 +967,6 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
     const tgt::ivec2 end = tgt::min(pixEnd, texture.dimensions());
 
     typename SampleFn::Cache cache {brickDataSize, numChannels};
-
-    //TODO:
-    // multithreading?
 
     tgt::ScopeGuard _releaseBricks{ [&] {
             for(auto d : cache.data) {
@@ -2257,19 +2254,25 @@ void SliceViewer::shiftEvent(tgt::MouseEvent* e) {
         return;
 
     if (e->action() == tgt::MouseEvent::PRESSED) {
-        mousePosition_ = e->coord();
+        if(texMode_.getValue() == OCTREE) {
+            QualityMode.requestQualityMode(VoreenQualityMode::RQ_INTERACTIVE, this);
+        }
+    } else if (e->action() == tgt::MouseEvent::MOTION) {
+        tgt::vec3 volDim = tgt::vec3(inport_.getData()->getDimensions()) - 1.f;
+        tgt::vec2 mouseCoords((float)e->coord().x, (float)e->coord().y);
+
+        tgt::vec2 mouseOffset = mouseCoords - tgt::vec2(mousePosition_);
+        mouseOffset.y *= -1.f;
+        tgt::vec2 voxelOffset = voxelOffset_.get() +
+            (mouseOffset / sliceSize_) * tgt::vec2(volDim[voxelPosPermutation_.x], volDim[voxelPosPermutation_.y]);
+        voxelOffset = tgt::clamp(voxelOffset, voxelOffset_.getMinValue(), voxelOffset_.getMaxValue());
+        voxelOffset_.set(voxelOffset);
+
+    } else if (e->action() == tgt::MouseEvent::RELEASED || e->action() == tgt::MouseEvent::EXIT) {
+        QualityMode.requestQualityMode(VoreenQualityMode::RQ_DEFAULT, this);
+    } else {
         return;
     }
-
-    tgt::vec3 volDim = tgt::vec3(inport_.getData()->getDimensions()) - 1.f;
-    tgt::vec2 mouseCoords((float)e->coord().x, (float)e->coord().y);
-
-    tgt::vec2 mouseOffset = mouseCoords - tgt::vec2(mousePosition_);
-    mouseOffset.y *= -1.f;
-    tgt::vec2 voxelOffset = voxelOffset_.get() +
-        (mouseOffset / sliceSize_) * tgt::vec2(volDim[voxelPosPermutation_.x], volDim[voxelPosPermutation_.y]);
-    voxelOffset = tgt::clamp(voxelOffset, voxelOffset_.getMinValue(), voxelOffset_.getMaxValue());
-    voxelOffset_.set(voxelOffset);
 
     mousePosition_ = e->coord();
     e->accept();
