@@ -846,11 +846,11 @@ boost::optional<uint16_t> SampleNearestAvx::sample(tgt::vec3 p, tgt::ivec3 volDi
     __m128 pos = _mm_set_ps(0.0, p.z, p.y, p.x);
     __m128 posi = _mm_round_ps(pos, _MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC);
 
-    auto less_than_zero = _mm_cmplt_ps(pos, zero);
-    auto less_than_voldim = _mm_cmplt_ps(pos, volDimV);
-    auto outside_volume = _mm_andnot_ps(less_than_voldim, less_than_zero);
-    int mask = _mm_movemask_ps(outside_volume);
-    if(mask != 0) {
+    auto less_than_zero = _mm_cmplt_ps(posi, zero);
+    auto less_than_voldim = _mm_cmplt_ps(posi, volDimV);
+    auto inside_volume = _mm_andnot_ps(less_than_zero, less_than_voldim);
+    int mask = _mm_movemask_ps(inside_volume);
+    if(mask != 15) {
         // This can happen due to channel shift
         return boost::none;
     }
@@ -881,9 +881,9 @@ boost::optional<uint16_t> SampleLinearAvx::sample(tgt::vec3 pos, tgt::ivec3 volD
 
     auto less_than_zero = _mm_cmplt_ps(h, zero);
     auto less_than_voldim = _mm_cmplt_ps(l, volDimV);
-    auto outside_volume = _mm_andnot_ps(less_than_voldim, less_than_zero);
-    int mask = _mm_movemask_ps(outside_volume);
-    if(mask != 0) {
+    auto inside_volume = _mm_andnot_ps(less_than_zero, less_than_voldim);
+    int mask = _mm_movemask_ps(inside_volume);
+    if(mask != 15) {
         // This can happen due to channel shift
         return boost::none;
     }
