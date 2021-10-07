@@ -146,15 +146,6 @@ public:
     tgt::MouseEvent::MouseButtons getMouseButtons() const;
 
     /**
-     * Determines the mouse actions (press, release, move, ...) the property reacts to.
-     *
-     * @see accepts
-     * @see enabled
-     * @see setReceivesMouseEvents
-     */
-    void setMouseAction(int action);
-
-    /**
      * Determines the mouse actions the property reacts to.
      *
      * @see setMouseAction

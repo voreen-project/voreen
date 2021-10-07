@@ -133,13 +133,6 @@ int EventPropertyBase::getMouseAction() const {
     return mouseAction_;
 }
 
-void EventPropertyBase::setMouseAction(int action) {
-    if (mouseAction_ != action) {
-        mouseAction_ = action;
-        notifyChangeListener();
-    }
-}
-
 tgt::KeyEvent::KeyCode EventPropertyBase::getKeyCode() const {
     return keyCode_;
 }
@@ -177,7 +170,6 @@ void EventPropertyBase::serialize(Serializer& s) const {
     Property::serialize(s);
 
     s.serialize("enabled", enabled_);
-    s.serialize("mouseAction", mouseAction_);
     s.serialize("mouseButtons", mouseButtons_);
     s.serialize("keyCode", keyCode_);
     s.serialize("modifier", modifier_);
@@ -202,9 +194,7 @@ void EventPropertyBase::deserialize(Deserializer& s) {
     try {
         int mouseAction = 0;
         int mouseButtons = 0;
-        s.deserialize("mouseAction", mouseAction);
         s.deserialize("mouseButtons", mouseButtons);
-        mouseAction_ = static_cast<tgt::MouseEvent::MouseAction>(mouseAction);
         mouseButtons_ = static_cast<tgt::MouseEvent::MouseButtons>(mouseButtons);
     }
     catch (SerializationNoSuchDataException& /*e*/) {
