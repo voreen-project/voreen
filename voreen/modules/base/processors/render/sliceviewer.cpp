@@ -1019,17 +1019,25 @@ static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, Octree
 }
 
 void SliceViewer::renderFromOctree() {
+    const VolumeBase* volume = inport_.getData();
+    tgtAssert(volume, "No volume");
+    tgtAssert(volume->hasRepresentation<VolumeOctree>(), "No octree");
+    const VolumeOctree& octree = *volume->getRepresentation<VolumeOctree>();
+
     OctreeSliceTextureColor* texture;
     OctreeSliceTextureControl* textureControl;
     int lodDivider;
+    int maxLevel = static_cast<int>(octree.getNumLevels()-1);
     switch(QualityMode.getQuality()) {
         case VoreenQualityMode::RQ_INTERACTIVE:
             lodDivider = 1 << interactionLevelOfDetail_.get();
             texture = octreeTextureInteractive_.get();
             textureControl = octreeTextureInteractiveControl_.get();
             break;
-        case VoreenQualityMode::RQ_DEFAULT:
         case VoreenQualityMode::RQ_HIGH:
+            maxLevel = 0;
+            //Fallthrough
+        case VoreenQualityMode::RQ_DEFAULT:
             lodDivider = 1;
             texture = octreeTexture_.get();
             textureControl = octreeTextureControl_.get();
@@ -1040,12 +1048,6 @@ void SliceViewer::renderFromOctree() {
     texture->updateDimensions(outport_.getSize()/lodDivider);
     textureControl->updateDimensions(outport_.getSize()/lodDivider);
 
-
-    // First update texture buffer (on cpu)
-    const VolumeBase* volume = inport_.getData();
-    tgtAssert(volume, "No volume");
-    tgtAssert(volume->hasRepresentation<VolumeOctree>(), "No octree");
-    const VolumeOctree& octree = *volume->getRepresentation<VolumeOctree>();
     tgt::ivec3 volDim = volume->getDimensions();
 
     RealWorldMapping rwm = volume->getRealWorldMapping();
@@ -1098,23 +1100,7 @@ void SliceViewer::renderFromOctree() {
         float pixelDistY = tgt::distance(pixelToVoxel*tgt::vec3::zero, pixelToVoxel*tgt::vec3(0,1,0));
         int baseLevel = std::floor(std::log2(std::min(pixelDistX, pixelDistY)));
 
-        int rawLevel = baseLevel;
-        switch(QualityMode.getQuality()) {
-            case VoreenQualityMode::RQ_INTERACTIVE:
-                rawLevel += interactionLevelOfDetail_.get();
-                break;
-            case VoreenQualityMode::RQ_DEFAULT:
-                rawLevel += sliceLevelOfDetail_.get();
-                break;
-            case VoreenQualityMode::RQ_HIGH:
-                //no time limit, octree level 0
-                rawLevel = 0;
-                break;
-            default:
-                tgtAssert(false,"unknown rendering quality");
-        }
-
-        size_t level = tgt::clamp(rawLevel, 0, static_cast<int>(octree.getNumLevels()-1));
+        size_t level = tgt::clamp(baseLevel, 0, maxLevel);
 
         DeadlineResult res;
         switch(inport_.getTextureFilterModeProperty().getValue()) {
