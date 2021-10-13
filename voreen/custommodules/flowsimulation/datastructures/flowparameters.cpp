@@ -382,6 +382,7 @@ void FlowParameterSet::deserialize(Deserializer& s) {
     s.deserialize("smagorinskyConstant", smagorinskyConstant_);
     int wallBoundaryCondition = FBC_NONE;
     s.optionalDeserialize("wallBoundaryCondition", wallBoundaryCondition, static_cast<int>(FBC_BOUZIDI));
+    wallBoundaryCondition_ = static_cast<FlowBoundaryCondition>(wallBoundaryCondition);
     s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
 }
 

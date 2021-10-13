@@ -60,6 +60,7 @@ enum FlowProfile {
     FP_POISEUILLE = 1, ///< Poiseuille flow profile
     FP_POWERLAW   = 2, ///< Power law flow profile
     FP_CONSTANT   = 3, ///< constant flow profile
+    FP_VOLUME     = 4, ///< samples from volume
 };
 
 enum FlowBoundaryCondition {

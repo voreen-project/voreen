@@ -193,6 +193,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
         flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
         //flowProfile_.addOption("constant", "constant", FlowProfile::FP_CONSTANT); // Not really useful.
+        flowProfile_.addOption("volume", "Volume", FlowProfile::FP_VOLUME);
         flowProfile_.setGroupID("velocity");
         ON_CHANGE(flowProfile_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(velocityCurveType_);
@@ -549,8 +550,8 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     }
     radius /= (backIdx - frontIdx + 1);
 
-    // Default is candidate. However, we set initial values as if it was a flow generator,
-    // since it might be classified as one later.
+    // Default is candidate. However, we set initial values as if it was a velocity inlet,
+    // since it might be classified as one later on.
     FlowIndicator indicator;
     indicator.id_ = flowIndicators_.size() + FlowParameterSetEnsemble::getFlowIndicatorIdOffset(); // TODO: Should be determined by FlowParameterSetEnsemble.
     indicator.name_ = "Indicator " + std::to_string(indicator.id_);
@@ -586,11 +587,6 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
                 indicator.normal_ = tgt::vec3(0.0f, 0.0f, sign);
             }
         }
-
-    }
-
-    if(settings.invertDirection_) {
-        indicator.normal_ *= -1.0f;
     }
 
     // Estimate velocity(direction) and therefore type.
@@ -603,6 +599,14 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
         maxMagnitudeSq = std::max(maxMagnitudeSq, tgt::lengthSq(sample));
     }
     indicator.type_ = estimateType(indicator, accumDirection);
+
+    if(indicator.type_ == FIT_PRESSURE) {
+        settings.invertDirection_ = true;
+    }
+
+    if(settings.invertDirection_) {
+        indicator.normal_ *= -1.0f;
+    }
 
     // Setup velocity curve.
     settings.targetVelocity_ = std::sqrt(maxMagnitudeSq);

@@ -59,36 +59,44 @@ enum Material {
 // Allow for simulation lattice initialization by volume data.
 class MeasuredDataMapper : public AnalyticalF3D<T, T> {
 public:
-    MeasuredDataMapper(const VolumeBase* volume)
-            : AnalyticalF3D<T, T>(3)
-            , volume_(volume)
+    MeasuredDataMapper(UnitConverter<T, DESCRIPTOR> const& converter, const VolumeBase* volume)
+        : AnalyticalF3D<T, T>(3)
+        , converter_(converter)
+        , volume_(volume)
     {
         tgtAssert(volume_, "No volume");
         tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
         bounds_ = volume_->getBoundingBox().getBoundingBox();
         representation_.reset(new VolumeRAMRepresentationLock(volume_));
         worldToVoxelMatrix_ = volume_->getWorldToVoxelMatrix();
+        rwm_ = volume->getRealWorldMapping();
     }
     virtual bool operator() (T output[], const T input[]) {
-        tgt::vec3 pos = tgt::Vector3<T>::fromPointer(input);
+        // Store simulation positions in world coordinates.
+        tgt::vec3 pos = tgt::Vector3<T>::fromPointer(input) / VOREEN_LENGTH_TO_SI;
         if (!bounds_.containsPoint(pos)) {
             return false;
         }
 
+        // Convert to voxel coordinates to perform the lookup.
         pos = worldToVoxelMatrix_ * pos;
 
         for(size_t i=0; i < (**representation_)->getNumChannels(); i++) {
-            output[i] = (**representation_)->getVoxelNormalized(pos, i);
+            output[i] = (**representation_)->getVoxelNormalizedLinear(pos, i);
+            output[i] = rwm_.normalizedToRealWorld(output[i]);
+            output[i] = converter_.getLatticeVelocity(output[i]);
         }
 
         return true;
     }
 
 private:
+    const UnitConverter<T, DESCRIPTOR>& converter_;
     const VolumeBase* volume_;
     std::unique_ptr<VolumeRAMRepresentationLock> representation_;
     tgt::Bounds bounds_;
     tgt::mat4 worldToVoxelMatrix_;
+    RealWorldMapping rwm_;
 };
 
 
@@ -237,7 +245,7 @@ void prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     }
 
     // Unsteered simulation.
-    if(!measuredData) {
+//    if(!measuredData) {
 
         // Initial conditions
         AnalyticalConst3D<T, T> rhoF(1);
@@ -252,12 +260,12 @@ void prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
             lattice.defineRhoU(superGeometry.getMaterialIndicator(indicator.id_), rhoF, uF);
             lattice.iniEquilibrium(superGeometry.getMaterialIndicator(indicator.id_), rhoF, uF);
         }
-    }
-    // Steered simulation - currently only initializes the first time step!
-    else {
-        MeasuredDataMapper mapper(measuredData->first());
-        lattice.defineU(superGeometry, MAT_FLUID, mapper);
-    }
+//    }
+//    // Steered simulation - currently only initializes the first time step!
+//    else {
+//        MeasuredDataMapper mapper(measuredData->first());
+//        lattice.defineU(superGeometry, MAT_FLUID, mapper);
+//    }
 
     // Lattice initialize
     lattice.initialize();
@@ -268,6 +276,7 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                         UnitConverter<T,DESCRIPTOR> const& converter,
                         int iteration,
                         SuperGeometry3D<T>& superGeometry,
+                        const VolumeList* measuredData,
                         const FlowParameterSetEnsemble& parameterSetEnsemble,
                         const FlowParameterSet& parameters)
 {
@@ -319,6 +328,18 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 applyFlowProfile(profile);
                 break;
             }
+            case FP_VOLUME:
+            {
+                // TODO: interpolation over temporal domain.
+                float time = converter.getPhysTime(iteration);
+
+                size_t idx = 0;
+                while(idx < measuredData->size()-1 && measuredData->at(idx)->getTimestep() < time) idx++;
+
+                MeasuredDataMapper mapper(converter, measuredData->at(idx));
+                applyFlowProfile(mapper);
+                break;
+            }
             case FP_NONE:
             default:
                 // Skip!
@@ -338,7 +359,7 @@ void writeVVDFile(STLreader<T>& stlReader,
                   int iteration, int maxIteration,
                   const FlowParameterSetEnsemble& parameterSetEnsemble,
                   const FlowParameterSet& parameters,
-                  std::string simulationOutputPath,
+                  const std::string& simulationOutputPath,
                   const std::string& name,
                   SuperLatticeF3D<T, DESCRIPTOR>& feature) {
 
@@ -622,8 +643,8 @@ FlowSimulation::FlowSimulation()
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
 {
     addPort(geometryDataPort_);
-    //addPort(measuredDataPort_); // Currently ignored.
-    //measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    addPort(measuredDataPort_);
+    measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
     addPort(parameterPort_);
 
@@ -666,8 +687,6 @@ bool FlowSimulation::isReady() const {
         setNotReadyErrorMessage("Parameter Port not ready.");
         return false;
     }
-
-    // Note: ensemblePort is optional!
 
     return true;
 }
@@ -716,6 +735,12 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         }
     }
     else {
+        for(const auto& indicator : flowParameterSetEnsemble->getFlowIndicators()) {
+            if(indicator.type_ == FIT_VELOCITY && indicator.flowProfile_ == FP_VOLUME) {
+                throw InvalidInputException("Volume input required", InvalidInputException::S_ERROR);
+            }
+        }
+
         measuredData = nullptr;
         LINFO("Configuring an unsteered simulation");
     }
@@ -784,7 +809,7 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
 }
 
 void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
-    // Nothing to do.
+    // Nothing to do (yet).
 }
 
 void FlowSimulation::runSimulation(const FlowSimulationInput& input,
@@ -898,7 +923,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(sLattice, converter, iteration, superGeometry, parameterSetEnsemble, parameters);
+        setBoundaryValues(sLattice, converter, iteration, superGeometry, measuredData, parameterSetEnsemble, parameters);
 
         // === 6th Step: Collide and Stream Execution ===
         sLattice.collideAndStream();

@@ -64,6 +64,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
     flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
     //flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
+    flowProfile_.addOption("volume", "Volume", FlowProfile::FP_VOLUME);
     addProperty(inflowVelocity_);
     inflowVelocity_.setNumDecimals(3);
 }
