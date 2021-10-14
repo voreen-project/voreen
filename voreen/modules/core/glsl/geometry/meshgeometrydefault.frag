@@ -110,6 +110,7 @@ void main() {
                 spcColSet = true;
             }
 
+#if defined(USE_NORMAL)
             // normal map
             // TODO differ from / support simpler one-channel bump-mapping
             if(int(textureFunction & 8) > 0) {
@@ -121,6 +122,7 @@ void main() {
                 mat3 rot = mat3(tang, btang, norm);
                 norm = rot * localNorm;
             }
+#endif
 
             usedTextures = tmp;
             counter++;
