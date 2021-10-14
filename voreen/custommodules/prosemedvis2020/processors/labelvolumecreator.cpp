@@ -24,6 +24,8 @@
  ***********************************************************************************/
 
 #include "labelvolumecreator.h"
+
+#include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "custommodules/flowsimulation/utils/utils.h"
 
 namespace voreen {
