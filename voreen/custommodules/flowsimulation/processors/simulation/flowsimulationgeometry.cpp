@@ -61,6 +61,9 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     addProperty(length_);
     addProperty(transformation_);
     addProperty(flowProfile_);
+    ON_CHANGE_LAMBDA(flowProfile_, [this] {
+        inflowVelocity_.setReadOnlyFlag(flowProfile_.getValue() == FlowProfile::FP_VOLUME);
+    })
     flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
     flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
     //flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);

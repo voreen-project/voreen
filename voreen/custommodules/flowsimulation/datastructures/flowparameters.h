@@ -76,6 +76,7 @@ enum FlowTurbulenceModel {
     FTM_SMAGORINSKY_CONSISTENT          = 3,
     FTM_SMAGORINSKY_CONSISTENT_STRAIN   = 4,
     FTM_SMAGORINSKY_DYNAMIC             = 5,
+    FTM_BGK                             = 6,
 };
 
 class VelocityCurve : public Serializable {

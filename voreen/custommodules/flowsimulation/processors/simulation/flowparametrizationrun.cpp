@@ -90,6 +90,7 @@ FlowParametrizationRun::FlowParametrizationRun()
         turbulenceModel_.addOption("smagorinskyConsistent", "Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT);
         turbulenceModel_.addOption("smagorinskyConsistentStrain", "Strain Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT_STRAIN);
         turbulenceModel_.addOption("smagorinskyDynamic", "Dynamic Smagorinsky", FTM_SMAGORINSKY_DYNAMIC);
+        turbulenceModel_.addOption("BGK", "BGK", FTM_BGK);
         turbulenceModel_.setGroupID("numerical");
     addProperty(smagorinskyConstant_);
         smagorinskyConstant_.setNumDecimals(3);

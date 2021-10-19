@@ -347,9 +347,12 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     setPropertyGroupVisible("velocity", isVelocityBoundary);
     flowProfile_.setReadOnlyFlag(!isVelocityBoundary);
     velocityCurveType_.setReadOnlyFlag(!validSelection);
-    bool simpleCurveType = isVelocityBoundary && velocityCurveType_.get() != "custom" && velocityCurveType_.get() != "heartBeat";
-    velocityCurveDuration_.setReadOnlyFlag(!simpleCurveType);
-    targetVelocity_.setReadOnlyFlag(!simpleCurveType);
+
+    bool isVolumeCondition = flowProfile_.getValue() == FP_VOLUME;
+    bool isSimpleCurveType = isVelocityBoundary && velocityCurveType_.get() != "custom" && velocityCurveType_.get() != "heartBeat";
+
+    velocityCurveDuration_.setReadOnlyFlag(!isSimpleCurveType);
+    targetVelocity_.setReadOnlyFlag(!isSimpleCurveType || isVolumeCondition);
     velocityCurveFile_.setReadOnlyFlag(velocityCurveType_.get() != "custom");
     velocityCurvePeriodicity_.setReadOnlyFlag(!isVelocityBoundary);
 }
