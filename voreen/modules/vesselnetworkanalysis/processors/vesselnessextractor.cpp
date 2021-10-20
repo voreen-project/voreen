@@ -383,8 +383,9 @@ void SymMat3::getEigenValues(float& l1, float& l2, float& l3) const {
     std::complex<double> p = ( b * b - 3.0 * a * c ) / ( 9.0 * a * a );
     std::complex<double> q = ( 9.0 * a * b * c - 27.0 * a * a * d - 2.0 * b * b * b ) / ( 54.0 * a * a * a );
     std::complex<double> delta = q * q - p * p * p;
-    std::complex<double> g1 = pow( q + sqrt( delta ), 1.0 / 3.0 );     // warning: exponents and sqrt of complex
-    std::complex<double> g2 = pow( q - sqrt( delta ), 1.0 / 3.0 );
+    std::complex<double> deltaSqrt = sqrt(delta);
+    std::complex<double> g1 = pow( q + deltaSqrt, 1.0 / 3.0 );     // warning: exponents and sqrt of complex
+    std::complex<double> g2 = pow( q - deltaSqrt, 1.0 / 3.0 );
     std::complex<double> offset = -b / ( 3.0 * a );
     std::complex<double> omega = std::complex<double>( -0.5, 0.5 * sqrt( 3.0 ) );     // complex cube root of unity
     std::complex<double> omega2 = omega * omega;
@@ -451,6 +452,7 @@ VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*
 VesselnessFeatureExtractor::~VesselnessFeatureExtractor() {
 }
 
+//#undef VRN_MODULE_OPENMP
 
 // Filter the slice using the kernel which was separated into three 1D kernels:
 
@@ -464,10 +466,6 @@ static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const
     SimpleSlice<float> z1(dim.xy(), 0);
     SimpleSlice<float> z2(dim.xy(), 0);
 
-    // z
-#ifdef VRN_MODULE_OMP
-    #pragma omp parallel for
-#endif
     for(int dz = -vft.extent_.z; dz <= vft.extent_.z; ++dz) {
         int mz = mirror(z+dz, dim.z);
         auto sliceBase = src->getSlice(mz-z);
@@ -478,9 +476,19 @@ static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const
         float kernelZ0 = vft.xxKernel_.zKernelAt(dz);
         float kernelZ1 = vft.xzKernel_.zKernelAt(dz);
         float kernelZ2 = vft.zzKernel_.zKernelAt(dz);
+        // z
+#ifdef VRN_MODULE_OPENMP
+        #pragma omp parallel for
+#endif
         for(int y = 0; y < dim.y; ++y) {
             size_t posBase = y*dim.x;
+#if defined(WIN32) && _MSC_VER < 1922
+#pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
+#else
+#ifdef VRN_MODULE_OPENMP
 #pragma omp simd
+#endif
+#endif
             for(int x = 0; x < dim.x; ++x) {
                 size_t pos = posBase+x;
                 tgtAssert(pos < slice->getNumVoxels(), "foo");
@@ -503,7 +511,7 @@ static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const
     SimpleSlice<float> zz(dim.xy(), 0);
 
     // y
-#ifdef VRN_MODULE_OMP
+#ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
 #endif
     for(int y = 0; y < dim.y; ++y) {
@@ -515,11 +523,17 @@ static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const
             float y0 = vft.xxKernel_.yKernelAt(dy);
             float y1 = vft.xyKernel_.yKernelAt(dy);
             float y2 = vft.yyKernel_.yKernelAt(dy);
+#if defined(WIN32) && _MSC_VER < 1922
+#pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
+#else
+#ifdef VRN_MODULE_OPENMP
 #pragma omp simd
+#endif
+#endif
             for(int x = 0; x < dim.x; ++x) {
                 size_t pos = posBase+x;
                 size_t mpos = mPosBase+x;
-                //tgtAssert(mpos < z0.size(), "foo");
+                tgtAssert(mpos < z0.size(), "foo");
                 tgtAssert(pos < xx.size(), "foo");
 
                 float sampleZ0 = z0.at(mpos);
@@ -536,41 +550,67 @@ static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const
         }
     }
 
-    std::vector<float> xxFinal(dim.x);
-    std::vector<float> xyFinal(dim.x);
-    std::vector<float> xzFinal(dim.x);
-    std::vector<float> yyFinal(dim.x);
-    std::vector<float> yzFinal(dim.x);
-    std::vector<float> zzFinal(dim.x);
 
     // x
-#ifdef VRN_MODULE_OMP
+#ifdef VRN_MODULE_OPENMP
     #pragma omp parallel for
 #endif
     for(int y = 0; y < dim.y; ++y) {
         size_t posBase = y*dim.x;
-        std::fill(xxFinal.begin(), xxFinal.end(), 0.0f);
-        std::fill(xyFinal.begin(), xyFinal.end(), 0.0f);
-        std::fill(xzFinal.begin(), xzFinal.end(), 0.0f);
-        std::fill(yyFinal.begin(), yyFinal.end(), 0.0f);
-        std::fill(yzFinal.begin(), yzFinal.end(), 0.0f);
-        std::fill(zzFinal.begin(), zzFinal.end(), 0.0f);
+        std::vector<float> xxFinal(dim.x, 0);
+        std::vector<float> xyFinal(dim.x, 0);
+        std::vector<float> xzFinal(dim.x, 0);
+        std::vector<float> yyFinal(dim.x, 0);
+        std::vector<float> yzFinal(dim.x, 0);
+        std::vector<float> zzFinal(dim.x, 0);
         for(int dx = -vft.extent_.x; dx <= vft.extent_.x; ++dx) {
             float x0 = vft.yyKernel_.xKernelAt(dx);
             float x1 = vft.xyKernel_.xKernelAt(dx);
             float x2 = vft.xxKernel_.xKernelAt(dx);
-#pragma omp simd
-            for(int x = 0; x < dim.x; ++x) {
+            for(int x = 0; x < vft.extent_.x; ++x) {
                 int mx = mirror(x+dx, dim.x);
                 size_t mpos = mx+posBase;
                 tgtAssert(mpos < xx.size(), "foo");
 
-                xxFinal.at(x) += x2*xx.at(mpos);
-                xyFinal.at(x) += x1*xy.at(mpos);
-                xzFinal.at(x) += x1*xz.at(mpos);
-                yyFinal.at(x) += x0*yy.at(mpos);
-                yzFinal.at(x) += x0*yz.at(mpos);
-                zzFinal.at(x) += x0*zz.at(mpos);
+                xxFinal[x] += x2*xx.at(mpos);
+                xyFinal[x] += x1*xy.at(mpos);
+                xzFinal[x] += x1*xz.at(mpos);
+                yyFinal[x] += x0*yy.at(mpos);
+                yzFinal[x] += x0*yz.at(mpos);
+                zzFinal[x] += x0*zz.at(mpos);
+            }
+            {
+#if defined(WIN32) && _MSC_VER < 1922
+#pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
+#else
+#ifdef VRN_MODULE_OPENMP
+#pragma omp simd
+#endif
+#endif
+            for(int x = vft.extent_.x; x < dim.x-vft.extent_.x; ++x) {
+                int mx = x+dx;
+                size_t mpos = mx+posBase;
+                tgtAssert(mpos < xx.size(), "foo");
+
+                xxFinal[x] += x2*xx.at(mpos);
+                xyFinal[x] += x1*xy.at(mpos);
+                xzFinal[x] += x1*xz.at(mpos);
+                yyFinal[x] += x0*yy.at(mpos);
+                yzFinal[x] += x0*yz.at(mpos);
+                zzFinal[x] += x0*zz.at(mpos);
+            }
+            }
+            for(int x = dim.x-vft.extent_.x; x < dim.x; ++x) {
+                int mx = mirror(x+dx, dim.x);
+                size_t mpos = mx+posBase;
+                tgtAssert(mpos < xx.size(), "foo");
+
+                xxFinal[x] += x2*xx.at(mpos);
+                xyFinal[x] += x1*xy.at(mpos);
+                xzFinal[x] += x1*xz.at(mpos);
+                yyFinal[x] += x0*yy.at(mpos);
+                yzFinal[x] += x0*yz.at(mpos);
+                zzFinal[x] += x0*zz.at(mpos);
             }
         }
 
@@ -681,15 +721,7 @@ float VesselnessFeatureExtractor::computeVesselness(const SymMat3& H) const {
     H.getEigenValues(l1, l2, l3);
 
     // Do a quick bubble sort so that |l1| <= |l2| <= |l3|
-    if(std::abs(l1) > std::abs(l2)) {
-        std::swap(l1, l2);
-    }
-    if(std::abs(l2) > std::abs(l3)) {
-        std::swap(l2, l3);
-    }
-    if(std::abs(l1) > std::abs(l2)) {
-        std::swap(l1, l2);
-    }
+
     // Unclear in the publication of Frangi et al.: Is c supposed to be computed from global or local hessian norm. Probably global.
     //double hessian_max_norm = std::max(std::abs(H.xx), std::max(std::abs(H.xy), std::max(std::abs(H.xz), std::max(std::abs(H.yy), std::max(std::abs(H.yz), std::abs(H.zz))))));
     //double two_c_squared = 0.5*hessian_max_norm*hessian_max_norm;
