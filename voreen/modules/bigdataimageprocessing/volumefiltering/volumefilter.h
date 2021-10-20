@@ -104,12 +104,30 @@ public:
     {
     }
 
+    SimpleSlice(const tgt::ivec2& dim, T v)
+        : dim_(dim)
+        , data_(tgt::hmul(dim), v)
+    {
+    }
+
     T& at(int x, int y) {
         return data_[x+dim_.x*y];
     }
 
+    T& at(size_t pos) {
+        return data_[pos];
+    }
+
     const T& at(int x, int y) const {
         return data_[x+dim_.x*y];
+    }
+
+    const T& at(size_t pos) const {
+        return data_[pos];
+    }
+
+    const size_t size() const {
+        return data_.size();
     }
 
     typename SamplingStrategy<T>::Sampler toSampler() {

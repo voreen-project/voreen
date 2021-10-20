@@ -125,18 +125,15 @@ private:
 class VesselnessFeatureExtractor : public VolumeFilter {
 public:
 
-    VesselnessFeatureExtractor(float alpha, float beta, float c, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, float scale);
+    VesselnessFeatureExtractor(float alpha, float beta, float c, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, float scale);
     virtual ~VesselnessFeatureExtractor();
 
-    tgt::vec4 computeVesselnessFeatureVector(const SymMat3& hessian) const;
+    float computeVesselness(const SymMat3& hessian) const;
 
     virtual std::unique_ptr<VolumeRAM> getFilteredSlice(const CachingSliceReader* src, int z) const;
     virtual int zExtent() const;
     virtual size_t getNumInputChannels() const;
     virtual size_t getNumOutputChannels() const;
-
-private:
-    SamplingStrategy<float> samplingStrategy_;
 
     tgt::ivec3 extent_;
     //float two_alpha_squared_;
@@ -151,19 +148,6 @@ private:
     SeparableKernel zzKernel_;
 
     float scale_;
-};
-
-// Computes an improved vesselness from a four component vector (e_1, v) of vessel direction vector and vesselness value
-// by combinining v with a value of per-voxel uniformity of vessel directions in the neighborhood of all voxels.
-class VesselnessFinalizer : public ParallelVolumeFilter<ParallelFilterValue4D, ParallelFilterValue1D> {
-public:
-    VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy);
-    virtual ~VesselnessFinalizer();
-
-    ParallelFilterValue1D getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const;
-
-private:
-    tgt::ivec3 extent_;
 };
 
 
@@ -448,9 +432,8 @@ tgt::mat3 SymMat3::toTgtMat() const {
 // VesselnessFeatureExtractor ---------------------------------------------------------------------------------------------------------
 //
 
-VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, const SamplingStrategy<float>& samplingStrategy, float scale)
-    : samplingStrategy_(samplingStrategy)
-    , extent_(extent)
+VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, float scale)
+    : extent_(extent)
     //, two_alpha_squared_(2*alpha*alpha)
     //, two_beta_squared_(2*beta*beta)
     //, two_c_squared_(2*c*c)
@@ -468,100 +451,150 @@ VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*
 VesselnessFeatureExtractor::~VesselnessFeatureExtractor() {
 }
 
-// Filter the slice using the kernel which was separated into three 1D kernels:
-std::unique_ptr<VolumeRAM> VesselnessFeatureExtractor::getFilteredSlice(const CachingSliceReader* src, int z) const {
-    tgtAssert(z >= 0 && z<src->getSignedDimensions().z, "Invalid z pos in slice request");
 
-    typedef SimpleSlice<SymMat3> TempSlice;
+// Filter the slice using the kernel which was separated into three 1D kernels:
+
+template<typename T>
+static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const CachingSliceReader* src, int z, VolumeRAM& outputSlice) {
+    tgtAssert(z >= 0 && z<src->getSignedDimensions().z, "Invalid z pos in slice request");
 
     const tgt::ivec3& dim = src->getSignedDimensions();
 
-    SamplingStrategy<float>::Sampler getValueFromReader = [src] (const tgt::ivec3& p) {
-        return src->getVoxelNormalized(p);
-    };
-
-    TempSlice zOutput(dim.xy());
+    SimpleSlice<float> z0(dim.xy(), 0);
+    SimpleSlice<float> z1(dim.xy(), 0);
+    SimpleSlice<float> z2(dim.xy(), 0);
 
     // z
+#ifdef VRN_MODULE_OMP
     #pragma omp parallel for
-    for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            SymMat3& accumulator = zOutput.at(x, y);
-            accumulator.xx = 0;
-            accumulator.xy = 0;
-            accumulator.xz = 0;
-            accumulator.yy = 0;
-            accumulator.yz = 0;
-            accumulator.zz = 0;
-            for(int dz = -extent_.z; dz <= extent_.z; ++dz) {
-                float sample = samplingStrategy_.sample(tgt::ivec3(x, y, z+dz), dim, getValueFromReader);
-                accumulator.xx += xxKernel_.zKernelAt(dz)*sample;
-                accumulator.xy += xyKernel_.zKernelAt(dz)*sample;
-                accumulator.xz += xzKernel_.zKernelAt(dz)*sample;
-                accumulator.yy += yyKernel_.zKernelAt(dz)*sample;
-                accumulator.yz += yzKernel_.zKernelAt(dz)*sample;
-                accumulator.zz += zzKernel_.zKernelAt(dz)*sample;
+#endif
+    for(int dz = -vft.extent_.z; dz <= vft.extent_.z; ++dz) {
+        int mz = mirror(z+dz, dim.z);
+        auto sliceBase = src->getSlice(mz-z);
+        auto slice = dynamic_cast<const VolumeAtomic<T>*>(sliceBase);
+        const T* sliceData = slice->voxel();
+        tgtAssert(slice, "somehow dispatch is broken");
+
+        float kernelZ0 = vft.xxKernel_.zKernelAt(dz);
+        float kernelZ1 = vft.xzKernel_.zKernelAt(dz);
+        float kernelZ2 = vft.zzKernel_.zKernelAt(dz);
+        for(int y = 0; y < dim.y; ++y) {
+            size_t posBase = y*dim.x;
+#pragma omp simd
+            for(int x = 0; x < dim.x; ++x) {
+                size_t pos = posBase+x;
+                tgtAssert(pos < slice->getNumVoxels(), "foo");
+                tgtAssert(pos < z0.size(), "foo");
+                tgtAssert(pos < z1.size(), "foo");
+                tgtAssert(pos < z2.size(), "foo");
+                float sample = getTypeAsFloat<T>(sliceData[pos]);
+                z0.at(pos) += kernelZ0*sample;
+                z1.at(pos) += kernelZ1*sample;
+                z2.at(pos) += kernelZ2*sample;
             }
         }
     }
 
-    TempSlice yOutput(dim.xy());
-    SamplingStrategy<SymMat3> sliceSamplingStrategy = samplingStrategy_.convert<SymMat3>([] (float f) {
-            return SymMat3 {
-            f, f, f, f, f, f
-            };
-            });
+    SimpleSlice<float> xx(dim.xy(), 0);
+    SimpleSlice<float> xy(dim.xy(), 0);
+    SimpleSlice<float> xz(dim.xy(), 0);
+    SimpleSlice<float> yy(dim.xy(), 0);
+    SimpleSlice<float> yz(dim.xy(), 0);
+    SimpleSlice<float> zz(dim.xy(), 0);
 
     // y
+#ifdef VRN_MODULE_OMP
     #pragma omp parallel for
+#endif
     for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            SymMat3& accumulator = yOutput.at(x, y);
-            accumulator.xx = 0;
-            accumulator.xy = 0;
-            accumulator.xz = 0;
-            accumulator.yy = 0;
-            accumulator.yz = 0;
-            accumulator.zz = 0;
-            for(int dy = -extent_.y; dy <= extent_.y; ++dy) {
-                SymMat3 sample = sliceSamplingStrategy.sample(tgt::ivec3(x, y+dy, 0), dim, zOutput.toSampler());
-                accumulator.xx += xxKernel_.yKernelAt(dy)*sample.xx;
-                accumulator.xy += xyKernel_.yKernelAt(dy)*sample.xy;
-                accumulator.xz += xzKernel_.yKernelAt(dy)*sample.xz;
-                accumulator.yy += yyKernel_.yKernelAt(dy)*sample.yy;
-                accumulator.yz += yzKernel_.yKernelAt(dy)*sample.yz;
-                accumulator.zz += zzKernel_.yKernelAt(dy)*sample.zz;
+        size_t posBase = y*dim.x;
+        for(int dy = -vft.extent_.y; dy <= vft.extent_.y; ++dy) {
+            int my = mirror(y+dy, dim.y);
+            size_t mPosBase = my*dim.x;
+
+            float y0 = vft.xxKernel_.yKernelAt(dy);
+            float y1 = vft.xyKernel_.yKernelAt(dy);
+            float y2 = vft.yyKernel_.yKernelAt(dy);
+#pragma omp simd
+            for(int x = 0; x < dim.x; ++x) {
+                size_t pos = posBase+x;
+                size_t mpos = mPosBase+x;
+                //tgtAssert(mpos < z0.size(), "foo");
+                tgtAssert(pos < xx.size(), "foo");
+
+                float sampleZ0 = z0.at(mpos);
+                float sampleZ1 = z1.at(mpos);
+                float sampleZ2 = z2.at(mpos);
+
+                xx.at(pos) += y0*sampleZ0;
+                xy.at(pos) += y1*sampleZ0;
+                xz.at(pos) += y0*sampleZ1;
+                yy.at(pos) += y2*sampleZ0;
+                yz.at(pos) += y1*sampleZ1;
+                zz.at(pos) += y0*sampleZ2;
             }
         }
     }
 
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(src->getMetaData().getBaseType(), tgt::svec3(dim.xy(), 1)));
+    std::vector<float> xxFinal(dim.x);
+    std::vector<float> xyFinal(dim.x);
+    std::vector<float> xzFinal(dim.x);
+    std::vector<float> yyFinal(dim.x);
+    std::vector<float> yzFinal(dim.x);
+    std::vector<float> zzFinal(dim.x);
 
     // x
+#ifdef VRN_MODULE_OMP
     #pragma omp parallel for
+#endif
     for(int y = 0; y < dim.y; ++y) {
-        for(int x = 0; x < dim.x; ++x) {
-            SymMat3 accumulator {
-                0, 0, 0, 0, 0, 0
-            };
-            for(int dx = -extent_.x; dx <= extent_.x; ++dx) {
-                SymMat3 sample = sliceSamplingStrategy.sample(tgt::ivec3(x+dx, y, 0), dim, yOutput.toSampler());
-                accumulator.xx += xxKernel_.xKernelAt(dx)*sample.xx;
-                accumulator.xy += xyKernel_.xKernelAt(dx)*sample.xy;
-                accumulator.xz += xzKernel_.xKernelAt(dx)*sample.xz;
-                accumulator.yy += yyKernel_.xKernelAt(dx)*sample.yy;
-                accumulator.yz += yzKernel_.xKernelAt(dx)*sample.yz;
-                accumulator.zz += zzKernel_.xKernelAt(dx)*sample.zz;
-            }
-            tgt::vec4 output = computeVesselnessFeatureVector(accumulator);
-            //outputSlice->setVoxelNormalized(output.x, tgt::svec3(x,y,0), 0);
-            //outputSlice->setVoxelNormalized(output.y, tgt::svec3(x,y,0), 1);
-            //outputSlice->setVoxelNormalized(output.z, tgt::svec3(x,y,0), 2);
-            //outputSlice->setVoxelNormalized(output.w, tgt::svec3(x,y,0), 3);
+        size_t posBase = y*dim.x;
+        std::fill(xxFinal.begin(), xxFinal.end(), 0.0f);
+        std::fill(xyFinal.begin(), xyFinal.end(), 0.0f);
+        std::fill(xzFinal.begin(), xzFinal.end(), 0.0f);
+        std::fill(yyFinal.begin(), yyFinal.end(), 0.0f);
+        std::fill(yzFinal.begin(), yzFinal.end(), 0.0f);
+        std::fill(zzFinal.begin(), zzFinal.end(), 0.0f);
+        for(int dx = -vft.extent_.x; dx <= vft.extent_.x; ++dx) {
+            float x0 = vft.yyKernel_.xKernelAt(dx);
+            float x1 = vft.xyKernel_.xKernelAt(dx);
+            float x2 = vft.xxKernel_.xKernelAt(dx);
+#pragma omp simd
+            for(int x = 0; x < dim.x; ++x) {
+                int mx = mirror(x+dx, dim.x);
+                size_t mpos = mx+posBase;
+                tgtAssert(mpos < xx.size(), "foo");
 
-            outputSlice->setVoxelNormalized(output.w * scale_, tgt::svec3(x,y,0));
+                xxFinal.at(x) += x2*xx.at(mpos);
+                xyFinal.at(x) += x1*xy.at(mpos);
+                xzFinal.at(x) += x1*xz.at(mpos);
+                yyFinal.at(x) += x0*yy.at(mpos);
+                yzFinal.at(x) += x0*yz.at(mpos);
+                zzFinal.at(x) += x0*zz.at(mpos);
+            }
+        }
+
+        for(int x = 0; x < dim.x; ++x) {
+            SymMat3 mat {
+                xxFinal.at(x),
+                xyFinal.at(x),
+                xzFinal.at(x),
+                yyFinal.at(x),
+                yzFinal.at(x),
+                zzFinal.at(x),
+            };
+            float output = vft.computeVesselness(mat);
+
+            outputSlice.setVoxelNormalized(output * vft.scale_, tgt::svec3(x,y,0));
         }
     }
+}
+
+std::unique_ptr<VolumeRAM> VesselnessFeatureExtractor::getFilteredSlice(const CachingSliceReader* src, int z) const {
+    const tgt::ivec3& dim = src->getSignedDimensions();
+    std::string basetype = src->getMetaData().getBaseType();
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(basetype, tgt::svec3(dim.xy(), 1)));
+    DISPATCH_FOR_BASETYPE(basetype, getFilteredSliceGeneric, *this, src, z, *outputSlice);
     return outputSlice;
 }
 
@@ -641,7 +674,7 @@ float erdtVesselness(float l1, float l2, float l3) {
     return std::min(1.0f, std::max(0.0f, K*((2.0f/3)*l1 - l2 - l3)));
 }
 
-tgt::vec4 VesselnessFeatureExtractor::computeVesselnessFeatureVector(const SymMat3& H) const {
+float VesselnessFeatureExtractor::computeVesselness(const SymMat3& H) const {
     // Declare eigenvalue variables
     float l1 = 0, l2 = 0, l3 = 0;
 
@@ -657,29 +690,6 @@ tgt::vec4 VesselnessFeatureExtractor::computeVesselnessFeatureVector(const SymMa
     if(std::abs(l1) > std::abs(l2)) {
         std::swap(l1, l2);
     }
-
-    tgt::vec3 vesselDirVector(1,1,1);
-    if(l2 > 0 || l3 > 0) {
-        // Not a bright vessel
-        vesselDirVector = tgt::vec3::zero;
-    } else {
-        vesselDirVector = tgt::normalize(vesselDirVector);
-
-        // Find e_1 using inverse iteration
-        tgt::mat3 A = H.toTgtMat();
-        tgt::mat3 itMat;
-        if((A-l1*tgt::mat3::identity).invert(itMat)) {
-
-            for(int i=0; i<5; ++i) {
-                vesselDirVector = tgt::normalize(itMat*vesselDirVector);
-            }
-        } else {
-            // This can happen by chance, so just set e_1 to zero here
-            vesselDirVector = tgt::vec3::zero;
-            //LWARNINGC("voreen.vesselnetworkanalysis.vesselnessextractor", "Singular Hesse Matrix, setting vessel dir to zero");
-        }
-    }
-
     // Unclear in the publication of Frangi et al.: Is c supposed to be computed from global or local hessian norm. Probably global.
     //double hessian_max_norm = std::max(std::abs(H.xx), std::max(std::abs(H.xy), std::max(std::abs(H.xz), std::max(std::abs(H.yy), std::max(std::abs(H.yz), std::abs(H.zz))))));
     //double two_c_squared = 0.5*hessian_max_norm*hessian_max_norm;
@@ -687,51 +697,9 @@ tgt::vec4 VesselnessFeatureExtractor::computeVesselnessFeatureVector(const SymMa
     //float vesselness = frangiVesselness(l1, l2, l3, two_alpha_squared_, two_beta_squared_, two_c_squared_);
     float vesselness = satoVesselness(l1, l2, l3, 0.5 /* = 2*0.5*0.5 */, 8.0 /* = 2*2*2 */); //Turned out to yield best results
     //float vesselness = erdtVesselness(l1, l2, l3);
-    return tgt::vec4(vesselDirVector, vesselness);
+    return vesselness;
 }
 
-
-// VesselnessFinalizer ---------------------------------------------------------------------------------------------------------
-
-
-
-VesselnessFinalizer::VesselnessFinalizer(const tgt::ivec3& extent, const SamplingStrategy<ParallelFilterValue4D>& samplingStrategy)
-    : ParallelVolumeFilter<ParallelFilterValue4D, ParallelFilterValue1D>(extent.z, samplingStrategy)
-    , extent_(extent)
-{
-}
-
-VesselnessFinalizer::~VesselnessFinalizer() {
-}
-
-ParallelFilterValue1D VesselnessFinalizer::getValue(const Sample& sample, const tgt::ivec3& pos, const SliceReaderMetaData& inputMetadata, const SliceReaderMetaData& outputMetaData) const {
-    int extent = zExtent();
-
-    tgt::vec4 thisVal = sample(pos);
-    float scalarVesselness = thisVal[3];
-
-
-
-    /*
-    float dirAccumulator = 0.0f;
-    tgt::vec3 thisDir = thisVal.xyz();
-    for(int z = pos.z-extent; z <= pos.z+extent; ++z) {
-        for(int y = pos.y-extent; y <= pos.y+extent; ++y) {
-            for(int x = pos.x-extent; x <= pos.x+extent; ++x) {
-                if(x != 0 || y != 0 || z != 0) {
-                    tgt::vec4 val = sample(tgt::ivec3(x,y,z));
-                    dirAccumulator += std::abs(tgt::dot(thisDir, val.xyz()));
-                }
-            }
-        }
-    }
-    dirAccumulator /= hmul(2*extent_+ tgt::ivec3::one) - 1;
-
-
-    return std::sqrt(scalarVesselness * dirAccumulator);
-    */
-    return scalarVesselness;
-}
 
 // VesselnessExtractor ---------------------------------------------------------------------------------------------------------
 
@@ -868,7 +836,7 @@ static std::unique_ptr<SliceReader> buildStack(const VolumeBase& input, const tg
     float scale = tgt::length(standardDeviationVec);
 
     return VolumeFilterStackBuilder(input)
-        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, SamplingStrategy<float>::MIRROR, scale)))
+        .addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFeatureExtractor(PLANE_REJECTOR_WEIGHT, BLOB_REJECTOR_WEIGHT, INTENSITY_THRESHOLD, suitableExtent(standardDeviationVec), standardDeviationVec, scale)))
         //.addLayer(std::unique_ptr<VolumeFilter>(new VesselnessFinalizer(dirVesselnessExtent, SamplingStrategy<ParallelFilterValue4D>::MIRROR)))
         .build(0);
 }
@@ -930,7 +898,8 @@ VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput 
 
     // Write first slices to volume
     {
-        std::unique_ptr<SliceReader> reader = buildStack(input.input, input.minStandardDeviationVec);
+        auto stddev = input.getStandardDeviationForStep(0);
+        std::unique_ptr<SliceReader> reader = buildStack(input.input, stddev);
 
         writeSlicesToHDF5File(*reader, *input.output, &progressReporter);
     }
