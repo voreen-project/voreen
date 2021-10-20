@@ -72,6 +72,8 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     //properties
         // style
     addProperty(streamlineStyle_);
+        streamlineStyle_.addOption("lines", "Lines", STYLE_LINES);
+        streamlineStyle_.addOption("tubes", "Tubes", STYLE_TUBES);
         streamlineStyle_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
         // color
     addProperty(color_);
