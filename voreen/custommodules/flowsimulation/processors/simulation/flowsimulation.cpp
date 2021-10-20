@@ -36,6 +36,8 @@
 #include "olb3D.hh"
 #endif
 
+#include <thread>
+
 using namespace olb;
 using namespace olb::descriptors;
 typedef double T;
@@ -103,9 +105,9 @@ private:
 };
 
 template<typename T>
-struct TypedGeometry {
+struct TypedGeometryPair {
 
-    TypedGeometry(const Geometry* lhs, const Geometry* rhs)
+    TypedGeometryPair(const Geometry* lhs, const Geometry* rhs)
         : lhs_(dynamic_cast<const T*>(lhs)), rhs_(dynamic_cast<const T*>(rhs)) {}
 
     operator bool () {
@@ -124,14 +126,23 @@ std::unique_ptr<GlMeshGeometryBase> mergeGeometriesTyped(const T* lhs, const T* 
     auto merged = lhs->clone().release();
     auto mergedTyped = static_cast<T*>(merged);
 
-    // Copy over all vertices.
+    // Transform all vertex position to world space.
     auto vertices = mergedTyped->getVertices();
-    vertices.insert(mergedTyped->getVertices().end(), rhs->getVertices().begin(), rhs->getVertices().end());
+    for(auto& vertex : vertices) {
+        vertex.pos_ = mergedTyped->getTransformationMatrix() * vertex.pos_;
+    }
+    mergedTyped->setTransformationMatrix(tgt::mat4::identity);
+
+    // Copy over and transform vertices.
+    for(auto vertex : rhs->getVertices()) {
+        vertex.pos_ = rhs->getTransformationMatrix() * vertex.pos_;
+        vertices.emplace_back(vertex);
+    }
     mergedTyped->setVertices(vertices);
 
     // Add and adjust indices, if required.
     if (lhs->usesIndexedDrawing()) {
-        auto indexOffset = mergedTyped->getNumVertices();
+        auto indexOffset = lhs->getNumVertices();
         for (auto index : rhs->getIndices()) {
             mergedTyped->addIndex(index + indexOffset);
         }
@@ -158,7 +169,7 @@ std::unique_ptr<GlMeshGeometryBase> mergeGeometries(const GlMeshGeometryBase* lh
         return nullptr;
     }
 
-    if(auto typedGeometry = TypedGeometry<GlMeshGeometryUInt32Normal>(lhs, rhs)) {
+    if(auto typedGeometry = TypedGeometryPair<GlMeshGeometryUInt32Normal>(lhs, rhs)) {
         return mergeGeometriesTyped(typedGeometry.lhs_, typedGeometry.rhs_);
     }
 
@@ -407,7 +418,7 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                 // because multiplying the measurement by another velocity is confusing.
                 // We keep, however, the velocity multiplier, so that we can basically
                 // amplify the measurement.
-                T multiplier = targetLatticeVelocity / indicator.velocityCurve_.getMaxVelocity();
+                T multiplier = tgt::clamp<T>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 0, 1);
                 MeasuredDataMapper mapper(converter, measuredData->at(idx), multiplier);
                 applyFlowProfile(mapper);
                 break;
@@ -959,7 +970,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights
-    const int noOfCuboids = 1;
+    const int noOfCuboids = std::thread::hardware_concurrency();
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
 
     // Instantiation of a loadBalancer

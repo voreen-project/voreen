@@ -77,10 +77,13 @@ void FlowSimulationGeometry::process() {
     // Add indicators.
     auto* flowParametrizationList = new FlowParameterSetEnsemble(*flowParametrizationInport_.getData());
 
+    // Add a ramp up that lasts half of the simulated time.
+    float rampUpTime = flowParametrizationList->getSimulationTime() * 0.5f;
+
     FlowIndicator inlet;
     inlet.type_ = FIT_VELOCITY;
     inlet.flowProfile_ = flowProfile_.getValue();
-    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.1f, inflowVelocity_.get());
+    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(rampUpTime, inflowVelocity_.get());
     inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
     inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
     inlet.radius_ = radius_.get();
