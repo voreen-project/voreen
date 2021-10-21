@@ -134,6 +134,7 @@ public:
     virtual int zExtent() const;
     virtual size_t getNumInputChannels() const;
     virtual size_t getNumOutputChannels() const;
+    virtual SliceReaderMetaData getMetaData(const SliceReaderMetaData& base) const;
 
     tgt::ivec3 extent_;
     //float two_alpha_squared_;
@@ -430,8 +431,9 @@ tgt::mat3 SymMat3::toTgtMat() const {
             );
 }
 
+const std::string VESSELNESS_BASE_TYPE = "float";
+
 // VesselnessFeatureExtractor ---------------------------------------------------------------------------------------------------------
-//
 
 VesselnessFeatureExtractor::VesselnessFeatureExtractor(float /*alpha*/, float /*beta*/, float /*c*/, const tgt::ivec3& extent, const tgt::vec3 standardDeviation, float scale)
     : extent_(extent)
@@ -632,9 +634,9 @@ static void getFilteredSliceGeneric(const VesselnessFeatureExtractor& vft, const
 
 std::unique_ptr<VolumeRAM> VesselnessFeatureExtractor::getFilteredSlice(const CachingSliceReader* src, int z) const {
     const tgt::ivec3& dim = src->getSignedDimensions();
-    std::string basetype = src->getMetaData().getBaseType();
-    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(basetype, tgt::svec3(dim.xy(), 1)));
-    DISPATCH_FOR_BASETYPE(basetype, getFilteredSliceGeneric, *this, src, z, *outputSlice);
+    std::string inputBasetype = src->getMetaData().getBaseType();
+    std::unique_ptr<VolumeRAM> outputSlice(VolumeFactory().create(VESSELNESS_BASE_TYPE, tgt::svec3(dim.xy(), 1)));
+    DISPATCH_FOR_BASETYPE(inputBasetype, getFilteredSliceGeneric, *this, src, z, *outputSlice);
     return outputSlice;
 }
 
@@ -648,6 +650,16 @@ size_t VesselnessFeatureExtractor::getNumInputChannels() const {
 
 size_t VesselnessFeatureExtractor::getNumOutputChannels() const {
     return 1;
+}
+
+
+SliceReaderMetaData VesselnessFeatureExtractor::getMetaData(const SliceReaderMetaData& base) const {
+    auto md = SliceReaderMetaData::fromBase(base);
+    md.setRealWorldMapping(RealWorldMapping(tgt::vec2(0.0, 1.0), "Vesselness"));
+
+    md.setBaseType(VESSELNESS_BASE_TYPE);
+
+    return md;
 }
 
 float satoVesselness(float l1, float l2, float l3, float two_alpha1_squared, float two_alpha2_squared) {
@@ -893,7 +905,7 @@ VesselnessExtractorInput VesselnessExtractor::prepareComputeInput() {
     // Close the volume output file
     outport_.clear();
 
-    const std::string baseType = inputVol->getBaseType();
+    const std::string baseType = VESSELNESS_BASE_TYPE;
     const std::string volumeLocation = "/vol";
     const size_t numChannels = 1;
     const int deflateLevel = 1;
