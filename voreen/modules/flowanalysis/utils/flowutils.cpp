@@ -91,7 +91,7 @@ SpatioTemporalSampler::SpatioTemporalSampler(const VolumeRAM* volume0,
     tgtAssert(alpha_ >= 0.0f && alpha_ <= 1.0f, "Alpha must be in range [0, 1]");
 }
 
-tgt::vec3 SpatioTemporalSampler::sample(const tgt::vec3& pos) const {
+tgt::vec3 SpatioTemporalSampler::sample(tgt::vec3 pos) const {
     tgt::vec3 voxel0 = filter0_.sample(pos);
     tgt::vec3 voxel1 = filter1_.sample(pos);
     return voxel0 * (1.0f - alpha_) + voxel1 * alpha_;

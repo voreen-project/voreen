@@ -30,7 +30,14 @@
 
 namespace voreen {
 
-class SpatialSampler {
+class VelocitySampler {
+public:
+
+    virtual ~VelocitySampler() {};
+    virtual tgt::vec3 sample(tgt::vec3 pos) const = 0;
+};
+
+class SpatialSampler : public VelocitySampler {
 public:
     SpatialSampler(const VolumeRAM* volume,
                    const RealWorldMapping& rwm,
@@ -41,7 +48,7 @@ public:
      * Samples the given volume at the given specified position.
      * @param pos Position in world space.
      */
-    tgt::vec3 sample(tgt::vec3 pos) const ;
+    tgt::vec3 sample(tgt::vec3 pos) const;
 
 private:
     const VolumeRAM* volume_;
@@ -51,7 +58,7 @@ private:
     const bool transformationSet_;
 };
 
-class SpatioTemporalSampler {
+class SpatioTemporalSampler : public VelocitySampler {
 public:
 
     /**
@@ -73,7 +80,7 @@ public:
      * Samples the given volume at the given specified position.
      * @param pos Position in world space.
      */
-    tgt::vec3 sample(const tgt::vec3& pos) const;
+    tgt::vec3 sample(tgt::vec3 pos) const;
 
 private:
     const SpatialSampler filter0_;
