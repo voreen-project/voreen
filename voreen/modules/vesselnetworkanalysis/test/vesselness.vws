@@ -1,14 +1,14 @@
 <?xml version="1.0" ?>
 <VoreenData version="1">
     <Workspace version="2" readonly="false" GlobalDescription="">
-        <ProcessorNetwork version="20">
+        <ProcessorNetwork version="21">
             <MetaData>
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="VolumeSave" ref="ref3" />
+                        <item type="VolumeSave" ref="ref4" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -55,8 +55,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="161" y="83" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="enabled" name="enabled" value="true" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
                             <value x="39" y="39" z="39" />
@@ -73,9 +73,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/fced3dbe-eec8-4979-aefd-686432f00d6c.h5" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b433440-4c7a-4168-aeac-5f7e472d3697/1fd5276b-eea7-4361-b68f-a22c4f563f40.h5" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b433440-4c7a-4168-aeac-5f7e472d3697/1fd5276b-eea7-4361-b68f-a22c4f563f40.h5" />
+                                    <item value="/nosnapshot/voreen_tmp/5b433440-4c7a-4168-aeac-5f7e472d3697/1fd5276b-eea7-4361-b68f-a22c4f563f40.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -84,7 +84,7 @@
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
-                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001">
+                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001" tracking="true">
                             <value x="0.01" y="0.050000001" />
                         </Property>
                     </Properties>
@@ -117,9 +117,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/single_scale.h5" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/single_scale.h5" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/single_scale.h5" />
+                                    <item value="output/single_scale.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/single_scale.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/single_scale.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -150,9 +150,9 @@
                         <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="output/multi_scale.h5" />
-                                    <item value="../../voreen-testdata/voreen-testdata/output/multi_scale.h5" />
-                                    <item value="/git/voreen-testdata/voreen-testdata/output/multi_scale.h5" />
+                                    <item value="output/multi_scale.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/multi_scale.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/multi_scale.vvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -179,8 +179,8 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="83" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="continuousUpdate_" name="continuousUpdate_" value="true" />
                         <Property mapKey="enabled" name="enabled" value="true" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="maxSmoothingKernelSize" name="maxSmoothingKernelSize">
                             <value x="9" y="9" z="9" />
@@ -197,9 +197,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
-                                    <item value="../../../nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
-                                    <item value="/nosnapshot/tmp/voreentmp/6919ceca-add4-40e0-ab4b-a1f58809f080/c9a0dd18-d945-4bfe-8921-ced29a4068d2.h5" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b433440-4c7a-4168-aeac-5f7e472d3697/40ab7f30-7a08-4290-9cee-feb33fe4232f.h5" />
+                                    <item value="../../../nosnapshot/voreen_tmp/5b433440-4c7a-4168-aeac-5f7e472d3697/40ab7f30-7a08-4290-9cee-feb33fe4232f.h5" />
+                                    <item value="/nosnapshot/voreen_tmp/5b433440-4c7a-4168-aeac-5f7e472d3697/40ab7f30-7a08-4290-9cee-feb33fe4232f.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -208,7 +208,7 @@
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
-                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001">
+                        <Property mapKey="vesselRadiusRangeRW" minValue="0.0078125" maxValue="2" minRange="0" maxRange="2147483648" stepping="0.00001" tracking="false">
                             <value x="0.01" y="0.01001" />
                         </Property>
                     </Properties>
