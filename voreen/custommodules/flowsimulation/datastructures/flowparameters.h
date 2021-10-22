@@ -93,6 +93,8 @@ public:
     float getMinVelocity() const;
     float getMaxVelocity() const;
 
+    float getStartTime() const;
+    float getEndTime() const;
     float getDuration() const;
 
     static VelocityCurve createConstantCurve(float value);

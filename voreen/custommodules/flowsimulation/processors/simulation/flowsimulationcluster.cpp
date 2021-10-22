@@ -192,7 +192,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     addPort(geometryDataPort_);
     addPort(measuredDataPort_); // Currently ignored.
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
-    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
+    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
     addPort(parameterPort_);
 
     addProperty(useLocalInstance_);

@@ -31,6 +31,8 @@
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
+#include "modules/flowanalysis/utils/flowutils.h"
+
 #include <olb3D.h>
 #ifndef OLB_PRECOMPILED
 #include "olb3D.hh"
@@ -61,34 +63,20 @@ enum Material {
 // Allow for simulation lattice initialization by volume data.
 class MeasuredDataMapper : public AnalyticalF3D<T, T> {
 public:
-    MeasuredDataMapper(UnitConverter<T, DESCRIPTOR> const& converter, const VolumeBase* volume, T multiplier = 1.0f)
+    MeasuredDataMapper(UnitConverter<T, DESCRIPTOR> const& converter, const VelocitySampler& sampler, float multiplier = 1.0f)
         : AnalyticalF3D<T, T>(3)
         , converter_(converter)
-        , volume_(volume)
+        , sampler_(sampler)
         , multiplier_(multiplier)
     {
-        tgtAssert(volume_, "No volume");
-        tgtAssert(volume_->getNumChannels() == 3, "Num channels != 3");
-        bounds_ = volume_->getBoundingBox().getBoundingBox();
-        representation_.reset(new VolumeRAMRepresentationLock(volume_));
-        worldToVoxelMatrix_ = volume_->getWorldToVoxelMatrix();
-        rwm_ = volume->getRealWorldMapping();
     }
     virtual bool operator() (T output[], const T input[]) {
         // Store simulation positions in world coordinates.
         tgt::vec3 pos = tgt::Vector3<T>::fromPointer(input) / VOREEN_LENGTH_TO_SI;
-        if (!bounds_.containsPoint(pos)) {
-            return false;
-        }
+        tgt::vec3 vel = sampler_.sample(pos) * multiplier_;
 
-        // Convert to voxel coordinates to perform the lookup.
-        pos = worldToVoxelMatrix_ * pos;
-
-        for(size_t i=0; i < (**representation_)->getNumChannels(); i++) {
-            output[i] = (**representation_)->getVoxelNormalizedLinear(pos, i);
-            output[i] = rwm_.normalizedToRealWorld(output[i]);
-            output[i] = converter_.getLatticeVelocity(output[i]);
-            output[i] = output[i] * multiplier_;
+        for(size_t i=0; i<3; i++) {
+            output[i] = converter_.getLatticeVelocity(vel[i]);
         }
 
         return true;
@@ -96,12 +84,8 @@ public:
 
 private:
     const UnitConverter<T, DESCRIPTOR>& converter_;
-    const VolumeBase* volume_;
-    const T multiplier_;
-    std::unique_ptr<VolumeRAMRepresentationLock> representation_;
-    tgt::Bounds bounds_;
-    tgt::mat4 worldToVoxelMatrix_;
-    RealWorldMapping rwm_;
+    const VelocitySampler& sampler_;
+    const float multiplier_;
 };
 
 template<typename T>
@@ -349,7 +333,7 @@ void prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
     lattice.initialize();
 }
 
-// Generates a slowly increasing sinuidal inflow.
+
 void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
                         UnitConverter<T,DESCRIPTOR> const& converter,
                         int iteration,
@@ -408,19 +392,49 @@ void setBoundaryValues( SuperLattice3D<T, DESCRIPTOR>& sLattice,
             }
             case FP_VOLUME:
             {
-                // TODO: interpolation over temporal domain.
-                float time = converter.getPhysTime(iteration);
-
-                size_t idx = 0;
-                while(idx < measuredData->size()-1 && measuredData->at(idx)->getTimestep() < time) idx++;
-
                 // For volume indicators, we normalize the velocity curve to [0, 1]
                 // because multiplying the measurement by another velocity is confusing.
                 // We keep, however, the velocity multiplier, so that we can basically
                 // amplify the measurement.
-                T multiplier = tgt::clamp<T>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 0, 1);
-                MeasuredDataMapper mapper(converter, measuredData->at(idx), multiplier);
-                applyFlowProfile(mapper);
+                auto multiplier = tgt::clamp<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 0, 1);
+
+                // If a single time step is attached, we use it throughout the entire simulation.
+                if(measuredData->size() == 1) {
+                    const VolumeBase* volume = measuredData->first();
+                    VolumeRAMRepresentationLock data(measuredData->first());
+                    SpatialSampler sampler(*data, volume->getRealWorldMapping(), VolumeRAM::LINEAR, volume->getWorldToVoxelMatrix());
+                    MeasuredDataMapper mapper(converter, sampler, multiplier);
+                    applyFlowProfile(mapper);
+                }
+                else {
+                    // If we have multiple time steps, we need to update the volume we sample from.
+                    tgtAssert(measuredData->size() > 1, "expected more than 1 volume");
+
+                    // Query time.
+                    // Note that we periodically sample the volumes if the simulation time exceeds measurement time.
+                    // TODO: Make adjustable.
+                    float start = measuredData->first()->getTimestep();
+                    float end   = measuredData->at(measuredData->size() - 1)->getTimestep();
+                    float time  = converter.getPhysTime(iteration);
+                    time        = std::fmod(time - start, end - start);
+
+                    // Find the volume whose time step is right before the current time.
+                    size_t idx = 0;
+                    while (idx < measuredData->size() - 1 && measuredData->at(idx + 1)->getTimestep() < time) idx++;
+
+                    const VolumeBase* volume0 = measuredData->at(idx + 0);
+                    VolumeRAMRepresentationLock data0(volume0);
+
+                    const VolumeBase* volume1 = measuredData->at(idx + 1);
+                    VolumeRAMRepresentationLock data1(volume1);
+
+                    float alpha = (time - volume0->getTimestep()) / (volume1->getTimestep() - volume0->getTimestep());
+                    SpatioTemporalSampler sampler(*data0, *data1, alpha, volume0->getRealWorldMapping(),
+                                                            VolumeRAM::LINEAR, volume0->getWorldToVoxelMatrix());
+
+                    MeasuredDataMapper mapper(converter, sampler, multiplier);
+                    applyFlowProfile(mapper);
+                }
                 break;
             }
             case FP_NONE:
@@ -728,7 +742,7 @@ FlowSimulation::FlowSimulation()
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
-    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
+    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
     addPort(parameterPort_);
 
     addProperty(simulationResults_);
@@ -970,7 +984,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights
-    const int noOfCuboids = std::thread::hardware_concurrency();
+    const int noOfCuboids = 1;//std::thread::hardware_concurrency();
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
 
     // Instantiation of a loadBalancer

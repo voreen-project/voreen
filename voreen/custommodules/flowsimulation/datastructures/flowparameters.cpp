@@ -42,9 +42,7 @@ VelocityCurve::VelocityCurve()
 float VelocityCurve::operator()(float t) const {
 
     if(isPeriodic()) {
-        float begin = peakVelocities_.begin()->first;
-        float end = peakVelocities_.rbegin()->first;
-        t = std::fmod(t - begin, end - begin);
+        t = std::fmod(t - getStartTime(), getEndTime() - getStartTime());
     }
     else {
         if(t < peakVelocities_.begin()->first) {
@@ -96,6 +94,14 @@ float VelocityCurve::getMaxVelocity() const {
         max = std::max(iter->second, max);
     }
     return max;
+}
+
+float VelocityCurve::getStartTime() const {
+    return peakVelocities_.begin()->first;
+}
+
+float VelocityCurve::getEndTime() const {
+    return peakVelocities_.rbegin()->first;
 }
 
 float VelocityCurve::getDuration() const {

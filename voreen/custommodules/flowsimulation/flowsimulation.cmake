@@ -2,6 +2,10 @@
 # Core module resources
 ################################################################################
 
+IF(NOT VRN_MODULE_FLOWANALYSIS)
+    MESSAGE(FATAL_ERROR "FlowSimulation Module requires Flow Analysis Module")
+ENDIF()
+
 IF(NOT VRN_MODULE_PYTHON) # for converting
     MESSAGE(WARNING "FlowSimulation Module requires Python Module for converter scripts")
 ENDIF()
