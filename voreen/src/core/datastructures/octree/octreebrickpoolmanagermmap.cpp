@@ -196,7 +196,12 @@ uint16_t* OctreeBrickPoolManagerMmap::getWritableBrick(uint64_t virtualMemoryAdd
                 openParams.length = fileSize;
                 openParams.new_file_size = fileSize; // Option: Do create the file (overwrite if it does exist)!
 
-                storage_.emplace_back(openParams);
+                boost::iostreams::mapped_file file(openParams);
+                if(!file.is_open()) {
+                    throw VoreenException("Unable to create brick file (possibly no space left on device?)");
+                }
+
+                storage_.emplace_back(file);
             }
         }
 
