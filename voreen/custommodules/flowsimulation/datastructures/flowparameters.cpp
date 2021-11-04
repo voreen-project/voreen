@@ -215,6 +215,7 @@ FlowIndicator::FlowIndicator()
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
+    , length_(0.0f)
     , flowProfile_(FP_NONE)
 {
 }
@@ -226,6 +227,7 @@ void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("center", center_);
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
+    s.serialize("length", length_);
     s.serialize("flowProfile", flowProfile_);
     s.serialize("velocityCurve", velocityCurve_);
 }
@@ -239,6 +241,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
     s.deserialize("radius", radius_);
+    s.optionalDeserialize("length", length_, 0.0f);
     int profile = FP_POISEUILLE;
     s.deserialize("flowProfile", profile);
     flowProfile_ = static_cast<FlowProfile>(profile);

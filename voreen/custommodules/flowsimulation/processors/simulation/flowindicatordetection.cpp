@@ -117,6 +117,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , indicatorName_("indicatorName", "Name")
     , centerlinePosition_("position", "Position", 0, 0, 0)
     , radius_("radius", "Radius (mm)", 1.0f, 0.0f, 10.0f)
+    , length_("length", "Length (mm)", 0.0f, 0.0f, 10.0f)
     , relativeRadiusCorrection_("relativeRadiusCorrection", "Relative Radius Correction", 1.0f, 0.1f, 2.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , invertDirection_("invertDirection", "Invert Direction", false)
     , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
@@ -176,6 +177,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(radius_);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onIndicatorConfigChange);
+    addProperty(length_);
+        length_.setGroupID("indicator");
+        ON_CHANGE(length_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(relativeRadiusCorrection_);
         relativeRadiusCorrection_.setGroupID("indicator");
         ON_CHANGE_LAMBDA(relativeRadiusCorrection_, [this] { onIndicatorConfigChange(true); });
@@ -229,6 +233,7 @@ void FlowIndicatorDetection::adjustPropertiesToInput() {
         return;
 
     radius_.setMaxValue(tgt::length(vesselGraphPort_.getData()->getBounds().diagonal() / 2.0f));
+    length_.setMaxValue(tgt::length(vesselGraphPort_.getData()->getBounds().diagonal() / 2.0f));
 }
 
 void FlowIndicatorDetection::serialize(Serializer& s) const {
@@ -317,6 +322,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         centerlinePosition_.set(settings.centerlinePosition_);
         radius_.set(indicator.radius_);
         relativeRadiusCorrection_.set(settings.relativeRadiusCorrection_);
+        length_.set(indicator.length_);
         invertDirection_.set(settings.invertDirection_);
         forceAxisAlignment_.set(settings.forceAxisAlignment_);
         indicatorType_.selectByValue(indicator.type_);
@@ -339,6 +345,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     indicatorName_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
     relativeRadiusCorrection_.setReadOnlyFlag(!validSelection);
+    length_.setReadOnlyFlag(!validSelection);
     invertDirection_.setReadOnlyFlag(!validSelection);
     forceAxisAlignment_.setReadOnlyFlag(!validSelection);
     indicatorType_.setReadOnlyFlag(!validSelection);
@@ -381,17 +388,20 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         FlowIndicator& indicator = flowIndicators_[indicatorIdx];
         indicator.type_ = indicatorType_.getValue();
         indicator.name_ = indicatorName_.get();
+        indicator.length_ = length_.get();
 
         if(needReinitialization) {
-            // Backup id, type and name.
+            // Backup id, type, length and name.
             FlowIndicatorType type = indicator.type_;
             int id = indicator.id_;
             std::string name = indicator.name_;
+            float length = indicator.length_;
 
             indicator = initializeIndicator(settings);
             indicator.type_ = type;
             indicator.id_ = id;
             indicator.name_ = name;
+            indicator.length_ = length;
         }
         else {
             indicator.radius_ = radius_.get();
@@ -592,6 +602,10 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
         }
     }
 
+    if(settings.invertDirection_) {
+        indicator.normal_ *= -1.0f;
+    }
+
     // Estimate velocity(direction) and therefore type.
     std::vector<tgt::vec3> samples = utils::sampleDisk(volumePort_.getData(), indicator.center_, indicator.normal_, indicator.radius_);
 
@@ -602,14 +616,6 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
         maxMagnitudeSq = std::max(maxMagnitudeSq, tgt::lengthSq(sample));
     }
     indicator.type_ = estimateType(indicator, accumDirection);
-
-    if(indicator.type_ == FIT_PRESSURE) {
-        settings.invertDirection_ = true;
-    }
-
-    if(settings.invertDirection_) {
-        indicator.normal_ *= -1.0f;
-    }
 
     // Setup velocity curve.
     settings.targetVelocity_ = std::sqrt(maxMagnitudeSq);

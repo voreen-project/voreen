@@ -121,6 +121,7 @@ struct VRN_CORE_API FlowIndicator : public Serializable {
     tgt::vec3           center_;    ///< Center position of the circle shaped area in world space.
     tgt::vec3           normal_;    ///< (Normalized) Normal vector defining the orientation.
     float               radius_;    ///< Radius of the disk.
+    float               length_;    ///< Length of the disk/cylinder.
 
     // Used by generating flow indicators:
     FlowProfile         flowProfile_;    ///< Flow profile, @see FlowProfile.

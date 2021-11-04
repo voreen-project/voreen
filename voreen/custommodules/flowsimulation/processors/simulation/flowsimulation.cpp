@@ -186,15 +186,16 @@ void prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
 
         // Add one voxel to account for rounding errors.
         T radius = flowIndicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength();
+        T length = flowIndicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
 
         // Define a local disk volume.
         IndicatorCircle3D<T> flow(center[0], center[1], center[2],
                                   normal[0], normal[1], normal[2],
                                   radius);
-        IndicatorCylinder3D<T> layerFlow(flow, 2 * converter.getConversionFactorLength());
+        IndicatorCylinder3D<T> layerFlow(flow, length);
 
         // Rename both, wall and fluid, since the indicator might also be inside the fluid domain.
-        superGeometry.rename(MAT_WALL, flowIndicators[i].id_, MAT_FLUID, layerFlow);
+        superGeometry.rename(MAT_WALL, flowIndicators[i].id_, layerFlow);
         superGeometry.rename(MAT_FLUID, flowIndicators[i].id_,  layerFlow);
 
         // Exclude area behind inlet and in front of outlet - it will otherwise cause unstable simulations.
@@ -202,17 +203,25 @@ void prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
         bool isOutlet = flowIndicators[i].type_ == FIT_PRESSURE;
         if(isInlet || isOutlet) {
             T sign = isInlet ? T(-1) : T(1);
-            center += sign * normal * (converter.getConversionFactorLength() * 2);
-            IndicatorCircle3D<T> capFlow(center[0], center[1], center[2],
+            center += sign * normal * T(length * 0.5 + converter.getConversionFactorLength());
+            IndicatorCircle3D<T> capFlowWall(center[0], center[1], center[2],
                                          normal[0], normal[1], normal[2],
                                          radius);
-            IndicatorCylinder3D<T> layerCapFlow(capFlow, 2 * converter.getConversionFactorLength());
-            superGeometry.rename(MAT_FLUID, MAT_WALL, layerCapFlow);
+
+            IndicatorCylinder3D<T> layerCapFlowWall(capFlowWall, 4 * converter.getConversionFactorLength());
+            superGeometry.rename(MAT_FLUID, MAT_WALL, layerCapFlowWall);
+
+            IndicatorCircle3D<T> capFlowEmpty(center[0], center[1], center[2],
+                                              normal[0], normal[1], normal[2],
+                                              radius);
+            IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 2 * converter.getConversionFactorLength());
+            superGeometry.rename(MAT_WALL, MAT_EMPTY, layerCapFlowEmpty);
         }
     }
 
+    // TODO: clean regions that are isolated from simulation domain.
     // Removes all not needed boundary voxels outside the surface
-    superGeometry.clean();
+    //superGeometry.clean();
     // Removes all not needed boundary voxels inside the surface
     superGeometry.innerClean(MAT_COUNT);
     superGeometry.checkForErrors();

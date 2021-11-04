@@ -158,6 +158,7 @@ private:
     IntProperty centerlinePosition_;
     FloatProperty radius_;
     FloatProperty relativeRadiusCorrection_;
+    FloatProperty length_;
     BoolProperty invertDirection_;
     BoolProperty forceAxisAlignment_;
     OptionProperty<FlowIndicatorType> indicatorType_;

@@ -61,6 +61,9 @@ protected:
 
 private:
 
+    void renderDisk(const FlowIndicator& indicator) const;
+    void renderCone(const FlowIndicator& indicator) const;
+
     FlowParametrizationPort inport_;
 
     BoolProperty enable_;
