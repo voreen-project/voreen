@@ -83,7 +83,7 @@ EnsembleVarianceAnalysisInput EnsembleVarianceAnalysis::prepareComputeInput() {
     }
 
     if(ensemble->getMembers().empty()) {
-        throw InvalidInputException("Need at least a single run", InvalidInputException::S_ERROR);
+        throw InvalidInputException("Empty ensemble", InvalidInputException::S_ERROR);
     }
 
     const VolumeBase* meanVolume = ensembleMeanPort_.getData();
