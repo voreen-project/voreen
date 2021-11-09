@@ -60,6 +60,7 @@
 #endif
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#include "processors/simulation/flowcenterlineanalysis.h"
 #include "processors/simulation/flowindicatordetection.h"
 #endif
 
@@ -117,6 +118,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new FlowSimulationResult());
 #endif
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+    registerProcessor(new FlowCenterlineAnalysis());
     registerProcessor(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_MODULE_PLOTTING

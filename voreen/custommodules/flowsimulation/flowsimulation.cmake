@@ -128,9 +128,11 @@ ENDIF()
 
 IF(VRN_MODULE_VESSELNETWORKANALYSIS)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/simulation/flowcenterlineanalysis.h
         ${MOD_DIR}/processors/simulation/flowindicatordetection.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/simulation/flowcenterlineanalysis.cpp
         ${MOD_DIR}/processors/simulation/flowindicatordetection.cpp
     )
 ENDIF()
