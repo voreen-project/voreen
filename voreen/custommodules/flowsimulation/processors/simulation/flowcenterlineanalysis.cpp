@@ -43,7 +43,9 @@ FlowCenterlineAnalysis::FlowCenterlineAnalysis()
     , vesselGraphPort_(Port::INPORT, "input.vesselgraph", "Vessel Graph Port")
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
     , outputQuantity_("outputQuantity", "Output Quantity")
+    , numSamples_("numSamples", "Num. Samples", 10, 1, 100)
     , transformSamples_("transformSamples", "Transform Samples to Disk", false)
+    , neighborSampleOverlap_("neighborSampleOverlap", "Neighbor Sample Overlap", 0.0f, 0.0f, 1.0f)
     , exportCurvePath_("exportCurvePath", "Export Curve Path", "Choose Path", "", ".csv", FileDialogProperty::SAVE_FILE, Processor::VALID)
     , saveButton_("saveButton", "Save", Processor::VALID)
 {
@@ -60,8 +62,15 @@ FlowCenterlineAnalysis::FlowCenterlineAnalysis()
     outputQuantity_.setGroupID("output");
     outputQuantity_.invalidate();
 
+    addProperty(numSamples_);
+    numSamples_.setGroupID("output");
+
     addProperty(transformSamples_);
     transformSamples_.setGroupID("output");
+
+    addProperty(neighborSampleOverlap_);
+    neighborSampleOverlap_.setNumDecimals(3);
+    neighborSampleOverlap_.setGroupID("output");
     setPropertyGroupGuiName("output", "Output");
 
     addProperty(exportCurvePath_);
@@ -232,9 +241,14 @@ FlowCenterlineAnalysisInput FlowCenterlineAnalysis::prepareComputeInput() {
         throw InvalidInputException("Only 1 and 3 channel volumes supported", InvalidInputException::S_ERROR);
     }
 
+    // Check the vessel graph and perform the matching.
     MatchingResult matchingResult = performMatching();
+
+    // Vessel graph is safe to use now.
     auto vesselGraph = vesselGraphPort_.getThreadSafeData();
-    std::array<std::string, MatchingResult::NUM> indicators;
+
+    std::string labels [] = {"MPA", "RPA", "LPA"};
+    const size_t numSamples = numSamples_.get();
 
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
     std::unique_ptr<PlotData> output;
@@ -253,29 +267,44 @@ FlowCenterlineAnalysisInput FlowCenterlineAnalysis::prepareComputeInput() {
             return output;
         };
 
-        output.reset(new PlotData(1, numChannels));
+        output.reset(new PlotData(1, MatchingResult::NUM*numSamples*numChannels));
+        output->setColumnLabel(0, "Time [s]");
         if(numChannels == 1) {
-            output->setColumnLabel(1, indicators.front());
+            for(size_t i=0; i<MatchingResult::NUM; i++) {
+                for(size_t j=0; j<numSamples; j++) {
+                    output->setColumnLabel(1 + numSamples * i + j, labels[i] + "_" + std::to_string(j));
+                }
+            }
         }
         else if(numChannels == 3) {
             if(transformSamples_.get()) {
-                output->setColumnLabel(1, "InP 1"); // in plane
-                output->setColumnLabel(2, "InP 2"); // in plane
-                output->setColumnLabel(3, "ThP"); // through plane
+                for(size_t i=0; i<MatchingResult::NUM; i++) {
+                    for(size_t j=0; j<numSamples; j++) {
+                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 0, "InP 1"); // in plane
+                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 1, "InP 2"); // in plane
+                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 2, "ThP"); // through plane
+                    }
+                }
             }
             else {
-                output->setColumnLabel(1, "x");
-                output->setColumnLabel(2, "y");
-                output->setColumnLabel(3, "z");
+                for(size_t i=0; i<MatchingResult::NUM; i++) {
+                    for(size_t j=0; j<numSamples; j++) {
+                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 0, "x");
+                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 1, "y");
+                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 2, "z");
+                    }
+                }
             }
         }
     }
     else {
 
-        output.reset(new PlotData(1, indicators.size()));
+        output.reset(new PlotData(1, MatchingResult::NUM*numSamples));
         output->setColumnLabel(0, "Time [s]");
-        for(size_t i=0; i<indicators.size(); i++) {
-            output->setColumnLabel(i+1, indicators[i]);
+        for(size_t i=0; i<MatchingResult::NUM; i++) {
+            for(size_t j=0; j<numSamples; j++) {
+                output->setColumnLabel(1 + numSamples * i + j, labels[i] + "_" + std::to_string(j));
+            }
         }
 
         if (outputQuantity_.get() == "maxMagnitude") {
@@ -319,7 +348,9 @@ FlowCenterlineAnalysisInput FlowCenterlineAnalysis::prepareComputeInput() {
             matchingResult,
             std::move(output),
             std::move(outputFunc),
-            transformSamples_.get()
+            numSamples,
+            transformSamples_.get(),
+            neighborSampleOverlap_.get()
     };
 }
 
@@ -330,6 +361,8 @@ FlowCenterlineAnalysisOutput FlowCenterlineAnalysis::compute(FlowCenterlineAnaly
     auto matching = input.matchingResult;
     std::unique_ptr<PlotData> data = std::move(input.output);
     auto outputFunc = std::move(input.outputFunc);
+    size_t numSamples = input.numSamples;
+    float overlap = input.neighborSampleOverlap;
 
     progressReporter.setProgress(0.0f);
 
@@ -351,24 +384,66 @@ FlowCenterlineAnalysisOutput FlowCenterlineAnalysis::compute(FlowCenterlineAnaly
             values.emplace_back(PlotCellValue(t+1));
         }
 
-        /*
-         * TODO: For all branches (vessel edges):
-         *      - Parametrize length [0, 1]
-         *      - Consider window width (with respect to [0, 1])
-         *      - sample cylinder and add to plot data object
-        for(const FlowIndicator& indicator : indicators) {
-            // Gather samples.
-            std::vector<tgt::vec3> samples = utils::sampleDisk(volume, indicator.center_, indicator.normal_, indicator.radius_, input.transformSamples);
+        for(size_t i=0; i<MatchingResult::NUM; i++) {
 
-            // Generate output.
-            std::vector<float> output = outputFunc(samples);
+            const auto& node = vesselGraph->getNode(matching.nodeMapping[i]);
+            const auto& edge = vesselGraph->getEdge(matching.edgeMapping[i]);
 
-            // Add to plot data.
-            for(size_t i=0; i<output.size(); i++) {
-                values.emplace_back(PlotCellValue(output[i]));
+            const auto& voxels = edge.getVoxels();
+            size_t numVoxels = voxels.size();
+
+            std::function<size_t (size_t)> index;
+            if(edge.getNode1().getID() == node.getID()) {
+                index = [](size_t i) { return i; };
+            }
+            else {
+                index = [numVoxels](size_t i) { return numVoxels - 1 - i;  };
+            }
+
+            //// Parametrize edge.
+            float length = edge.getLength();
+
+            // Calculate the length of a single sample.
+            float spacing = length / (numSamples+1);
+            float lengthPerSample = (length / numSamples) * (1.0f + 2.0f * overlap);
+
+            for(size_t j=0; j<numSamples; j++) {
+
+                size_t centerlinePosition = j * spacing;
+
+                size_t mid = std::min<size_t>(centerlinePosition, numVoxels - 1);
+                size_t num = 2; // Number of reference nodes in both directions.
+
+                size_t frontIdx = mid > num ? (mid - num) : 0;
+                size_t backIdx = std::min(mid + num, numVoxels - 1);
+
+                const VesselSkeletonVoxel* ref   = &edge.getVoxels().at(index(mid));
+                const VesselSkeletonVoxel* front = &edge.getVoxels().at(index(frontIdx));
+                const VesselSkeletonVoxel* back  = &edge.getVoxels().at(index(backIdx));
+
+                // Calculate average radius.
+                float radius = 0.0f;
+                for (size_t k = frontIdx; k <= backIdx; k++) {
+                    radius += edge.getVoxels().at(index(k)).avgDistToSurface_;
+                }
+                radius /= (backIdx - frontIdx + 1);
+
+                tgt::vec3 center = ref->pos_;
+                tgt::vec3 normal = tgt::normalize(back->pos_ - front->pos_);
+
+                std::vector<tgt::vec3> samples = utils::sampleCylinder(volume, center, normal, radius, lengthPerSample,
+                                                                       input.transformSamples);
+
+                // Generate output.
+                std::vector<float> output = outputFunc(samples);
+
+                // Add to plot data.
+                for (size_t k = 0; k < output.size(); k++) {
+                    values.emplace_back(PlotCellValue(output[k]));
+                }
             }
         }
-        */
+
         data->insert(values);
 
         progressReporter.setProgress((t+1.0f) / volumes->size());

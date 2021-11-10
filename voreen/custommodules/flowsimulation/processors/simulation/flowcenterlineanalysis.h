@@ -47,8 +47,6 @@ struct MatchingResult {
         NUM
     };
 
-    //static std::string LABELS [] = {"MPA", "RPA", "LPA"};
-
     std::array<VGNodeID, NUM> nodeMapping;
     std::array<VGEdgeID, NUM> edgeMapping;
 };
@@ -59,7 +57,9 @@ struct FlowCenterlineAnalysisInput {
     MatchingResult matchingResult;
     std::unique_ptr<PlotData> output;
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
+    size_t numSamples;
     bool transformSamples;
+    float neighborSampleOverlap;
 };
 
 struct FlowCenterlineAnalysisOutput {
@@ -102,7 +102,9 @@ private:
     PlotPort outport_;
 
     StringOptionProperty outputQuantity_;
+    IntProperty numSamples_;
     BoolProperty transformSamples_;
+    FloatProperty neighborSampleOverlap_;
 
     FileDialogProperty exportCurvePath_;
     ButtonProperty saveButton_;
