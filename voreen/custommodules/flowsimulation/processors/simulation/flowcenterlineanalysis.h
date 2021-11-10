@@ -31,6 +31,7 @@
 #include "voreen/core/ports/genericport.h"
 #include "modules/plotting/ports/plotport.h"
 #include "modules/plotting/datastructures/plotdata.h"
+#include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 #include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 #include "../../ports/flowparametrizationport.h"
 
@@ -49,17 +50,19 @@ struct MatchingResult {
 
     std::array<VGNodeID, NUM> nodeMapping;
     std::array<VGEdgeID, NUM> edgeMapping;
+
+    std::unique_ptr<VesselGraph> vesselGraph;
 };
 
 struct FlowCenterlineAnalysisInput {
-    PortDataPointer<VolumeList> volumes;
-    PortDataPointer<VesselGraph> vesselGraph;
-    MatchingResult matchingResult;
-    std::unique_ptr<PlotData> output;
+    PortDataPointer<EnsembleDataset> ensemble;
+    std::map<std::string, MatchingResult> vesselGraphs;
+    std::map<std::string, std::unique_ptr<PlotData>> output;
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
     size_t numSamples;
     bool transformSamples;
     float neighborSampleOverlap;
+    std::string basePath;
 };
 
 struct FlowCenterlineAnalysisOutput {
@@ -72,9 +75,8 @@ public:
     virtual Processor* create() const { return new FlowCenterlineAnalysis(); }
 
     virtual std::string getCategory() const  { return "Plotting"; }
-    virtual std::string getClassName() const { return "FlowIndicatorAnalysis"; }
+    virtual std::string getClassName() const { return "FlowCenterlineAnalysis"; }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
-    virtual bool isReady() const;
 
 protected:
 
@@ -91,16 +93,16 @@ protected:
 
 private:
 
-    static bool isTimeSeries(const VolumeList* list);
+    static bool isTimeSeries(const std::vector<const VolumeBase*>& list);
 
-    MatchingResult performMatching();
+    MatchingResult performMatching(std::unique_ptr<VesselGraph> vesselGraph);
 
-    void exportVelocityCurve();
+    void exportVelocityCurve(const std::string& path, PlotData* data) const;
 
-    VolumeListPort volumeListPort_;
-    VesselGraphPort vesselGraphPort_;
+    EnsembleDatasetPort ensembleDatasetPort_;
     PlotPort outport_;
 
+    FileDialogProperty vesselGraphFolder_;
     StringOptionProperty outputQuantity_;
     IntProperty numSamples_;
     BoolProperty transformSamples_;

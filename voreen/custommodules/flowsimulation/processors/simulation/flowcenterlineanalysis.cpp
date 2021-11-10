@@ -25,8 +25,6 @@
 
 #include "flowcenterlineanalysis.h"
 
-#include "voreen/core/ports/conditions/portconditionvolumelist.h"
-
 #include "modules/plotting/datastructures/plotcell.h"
 #include "modules/plotting/datastructures/plotdata.h"
 #include "modules/plotting/datastructures/plotrow.h"
@@ -39,26 +37,27 @@ const std::string FlowCenterlineAnalysis::loggerCat_("voreen.flowsimulation.Flow
 
 FlowCenterlineAnalysis::FlowCenterlineAnalysis()
     : AsyncComputeProcessor()
-    , volumeListPort_(Port::INPORT, "input.volumelist", "Volume List Port")
-    , vesselGraphPort_(Port::INPORT, "input.vesselgraph", "Vessel Graph Port")
+    , ensembleDatasetPort_(Port::INPORT, "input.ensemble", "Ensemble Dataset Port")
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
+    , vesselGraphFolder_("vesselGraphFolder", "Vessel Graph Folder", "Choose Path", "", "", FileDialogProperty::DIRECTORY)
     , outputQuantity_("outputQuantity", "Output Quantity")
     , numSamples_("numSamples", "Num. Samples", 10, 1, 100)
     , transformSamples_("transformSamples", "Transform Samples to Disk", false)
     , neighborSampleOverlap_("neighborSampleOverlap", "Neighbor Sample Overlap", 0.0f, 0.0f, 1.0f)
-    , exportCurvePath_("exportCurvePath", "Export Curve Path", "Choose Path", "", ".csv", FileDialogProperty::SAVE_FILE, Processor::VALID)
+    , exportCurvePath_("exportCurvePath", "Export Curve Path", "Choose Path", "", "", FileDialogProperty::DIRECTORY, Processor::VALID)
     , saveButton_("saveButton", "Save", Processor::VALID)
 {
-    addPort(volumeListPort_);
-    addPort(vesselGraphPort_);
-    volumeListPort_.addCondition(new PortConditionVolumeListEnsemble());
+    addPort(ensembleDatasetPort_);
     addPort(outport_);
+
+    addProperty(vesselGraphFolder_);
+    vesselGraphFolder_.setGroupID("input");
+    setPropertyGroupGuiName("input", "Input");
 
     addProperty(outputQuantity_);
     outputQuantity_.addOption("maxMagnitude", "Max Magnitude");
     outputQuantity_.addOption("meanMagnitude", "Mean Magnitude");
     outputQuantity_.addOption("medianMagnitude", "Median Magnitude");
-    outputQuantity_.addOption("meanComponents", "Mean Components");
     outputQuantity_.setGroupID("output");
     outputQuantity_.invalidate();
 
@@ -75,36 +74,15 @@ FlowCenterlineAnalysis::FlowCenterlineAnalysis()
 
     addProperty(exportCurvePath_);
     exportCurvePath_.setGroupID("export");
-    ON_CHANGE(exportCurvePath_, FlowCenterlineAnalysis, exportVelocityCurve);
-    addProperty(saveButton_);
+    //ON_CHANGE(exportCurvePath_, FlowCenterlineAnalysis, exportVelocityCurve);
+    //addProperty(saveButton_);
     saveButton_.setGroupID("export");
-    ON_CHANGE(saveButton_, FlowCenterlineAnalysis, exportVelocityCurve);
+    //ON_CHANGE(saveButton_, FlowCenterlineAnalysis, exportVelocityCurve);
     setPropertyGroupGuiName("export", "Export");
     //setPropertyGroupVisible("export", false); //TODO: can essentially be replaced by PlotDataExport
 }
 
-bool FlowCenterlineAnalysis::isReady() const {
-    if(!volumeListPort_.isReady()) {
-        setNotReadyErrorMessage("No volume list connected");
-        return false;
-    }
-
-    if(!vesselGraphPort_.isReady()) {
-        setNotReadyErrorMessage("No vessel graph connected");
-        return false;
-    }
-
-    // Note: parametrization is optional
-
-    return true;
-}
-
-MatchingResult FlowCenterlineAnalysis::performMatching() {
-    if(!vesselGraphPort_.hasData()) {
-        throw InvalidInputException("No vessel graph", InvalidInputException::S_ERROR);
-    }
-
-    auto vesselGraph = vesselGraphPort_.getData();
+MatchingResult FlowCenterlineAnalysis::performMatching(std::unique_ptr<VesselGraph> vesselGraph) {
 
     size_t numNodes = vesselGraph->getNodes().size();
     if(numNodes != 4) {
@@ -223,6 +201,7 @@ MatchingResult FlowCenterlineAnalysis::performMatching() {
 
     result.edgeMapping[MatchingResult::RPA] = vesselGraph->getNode(result.nodeMapping[MatchingResult::RPA]).getEdges().front().get().getID();
     result.edgeMapping[MatchingResult::LPA] = vesselGraph->getNode(result.nodeMapping[MatchingResult::LPA]).getEdges().front().get().getID();
+    result.vesselGraph = std::move(vesselGraph);
 
     // Matching done.
     return result;
@@ -230,236 +209,254 @@ MatchingResult FlowCenterlineAnalysis::performMatching() {
 
 FlowCenterlineAnalysisInput FlowCenterlineAnalysis::prepareComputeInput() {
 
-    auto volumes = volumeListPort_.getThreadSafeData();
-    if(!volumes || volumes->empty()) {
-        throw InvalidInputException("No volumes", InvalidInputException::S_IGNORE);
+    if(vesselGraphFolder_.get().empty()) {
+        throw InvalidInputException("Empty vessel graph path", InvalidInputException::S_ERROR);
     }
 
-    const VolumeBase* reference = volumes->first();
-    const size_t numChannels = reference->getNumChannels();
-    if(numChannels != 1 && numChannels != 3) {
-        throw InvalidInputException("Only 1 and 3 channel volumes supported", InvalidInputException::S_ERROR);
+    if(exportCurvePath_.get().empty()) {
+        throw InvalidInputException("Empty export path", InvalidInputException::S_ERROR);
     }
 
-    // Check the vessel graph and perform the matching.
-    MatchingResult matchingResult = performMatching();
+    auto ensemble = ensembleDatasetPort_.getThreadSafeData();
+    if(!ensemble || ensemble->getMembers().empty()) {
+        throw InvalidInputException("No ensemble", InvalidInputException::S_IGNORE);
+    }
 
-    // Vessel graph is safe to use now.
-    auto vesselGraph = vesselGraphPort_.getThreadSafeData();
+    std::map<std::string, MatchingResult> vesselGraphs;
+
+    std::string vesselGraphPath = vesselGraphFolder_.get();
+    std::vector<std::string> vesselGraphFiles = tgt::FileSystem::listFiles(vesselGraphPath, true);
+    for(const std::string& file : vesselGraphFiles) {
+
+        std::string path = vesselGraphPath + "/" + file;
+
+        VesselGraphBuilder builder;
+        auto output = std::move(builder).finalize();
+
+        JsonDeserializer deserializer;
+        try {
+            std::fstream f(path, std::ios::in);
+            bool compressed = tgt::FileSystem::fileExtension(path) == "gz";
+            deserializer.read(f, compressed);
+            deserializer.deserialize("graph", *output);
+
+        } catch(SerializationException& e) {
+            LERROR("Could not deserialize graph: " << e.what());
+
+        } catch(...) {
+            LERROR("Could not load xml file " << path);
+        }
+
+        // Check the vessel graph and perform the matching.
+        std::string animal = tgt::FileSystem::baseName(file);
+        try {
+            vesselGraphs[animal] = performMatching(std::move(output));
+        }
+        catch(InvalidInputException& e) {
+            LWARNING("Matching failed for " << file << ": " << e.msg_);
+        }
+    }
+
 
     std::string labels [] = {"MPA", "RPA", "LPA"};
     const size_t numSamples = numSamples_.get();
 
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
-    std::unique_ptr<PlotData> output;
-
-    if(outputQuantity_.get() == "meanComponents") {
-        outputFunc = [numChannels] (const std::vector<tgt::vec3>& samples) {
-            tgt::vec3 mean = tgt::vec3::zero;
-            for(const auto& sample : samples) {
-                mean += sample;
+    if (outputQuantity_.get() == "maxMagnitude") {
+        outputFunc = [](const std::vector<tgt::vec3>& samples) {
+            float maxMagnitudeSq = 0.0f;
+            for (const auto& sample : samples) {
+                maxMagnitudeSq = std::max(maxMagnitudeSq, tgt::lengthSq(sample));
             }
-
-            std::vector<float> output(numChannels);
-            for(size_t i=0; i<numChannels; i++) {
-                output[i] = mean[i] / static_cast<float>(samples.size());
-            }
-            return output;
+            float magnitude = std::sqrt(maxMagnitudeSq);
+            return std::vector<float>(1, magnitude);
         };
-
-        output.reset(new PlotData(1, MatchingResult::NUM*numSamples*numChannels));
-        output->setColumnLabel(0, "Time [s]");
-        if(numChannels == 1) {
-            for(size_t i=0; i<MatchingResult::NUM; i++) {
-                for(size_t j=0; j<numSamples; j++) {
-                    output->setColumnLabel(1 + numSamples * i + j, labels[i] + "_" + std::to_string(j));
-                }
+    }
+    else if (outputQuantity_.get() == "meanMagnitude") {
+        outputFunc = [](const std::vector<tgt::vec3>& samples) {
+            float meanMagnitude = 0.0f;
+            for (const auto& sample : samples) {
+                meanMagnitude += tgt::length(sample) / static_cast<float>(samples.size());
             }
-        }
-        else if(numChannels == 3) {
-            if(transformSamples_.get()) {
-                for(size_t i=0; i<MatchingResult::NUM; i++) {
-                    for(size_t j=0; j<numSamples; j++) {
-                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 0, "InP 1"); // in plane
-                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 1, "InP 2"); // in plane
-                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 2, "ThP"); // through plane
-                    }
-                }
+            return std::vector<float>(1, meanMagnitude);
+        };
+    }
+    else if(outputQuantity_.get() == "medianMagnitude") {
+        outputFunc = [](const std::vector<tgt::vec3>& samples) {
+            std::vector<float> magnitudes;
+            magnitudes.reserve(samples.size());
+            for (const auto& sample : samples) {
+                magnitudes.emplace_back(tgt::length(sample));
             }
-            else {
-                for(size_t i=0; i<MatchingResult::NUM; i++) {
-                    for(size_t j=0; j<numSamples; j++) {
-                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 0, "x");
-                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 1, "y");
-                        output->setColumnLabel(1 + 3 * (numSamples * i + j) + 2, "z");
-                    }
-                }
-            }
-        }
+            std::nth_element(magnitudes.begin(), magnitudes.begin() + magnitudes.size()/2, magnitudes.end());
+            return std::vector<float>(1, magnitudes[magnitudes.size() / 2]);
+        };
     }
     else {
+        tgtAssert(false, "unhandled output quantity");
+    }
 
-        output.reset(new PlotData(1, MatchingResult::NUM*numSamples));
-        output->setColumnLabel(0, "Time [s]");
-        for(size_t i=0; i<MatchingResult::NUM; i++) {
-            for(size_t j=0; j<numSamples; j++) {
-                output->setColumnLabel(1 + numSamples * i + j, labels[i] + "_" + std::to_string(j));
+    std::map<std::string, std::unique_ptr<PlotData>> output;
+    for(const auto& member : ensemble->getMembers()) {
+        std::unique_ptr<PlotData> plotData(new PlotData(1, MatchingResult::NUM * numSamples));
+        plotData->setColumnLabel(0, "Time [s]");
+        for (size_t i = 0; i < MatchingResult::NUM; i++) {
+            for (size_t j = 0; j < numSamples; j++) {
+                plotData->setColumnLabel(1 + numSamples * i + j, labels[i] + "_" + std::to_string(j));
             }
         }
 
-        if (outputQuantity_.get() == "maxMagnitude") {
-            outputFunc = [](const std::vector<tgt::vec3>& samples) {
-                float maxMagnitudeSq = 0.0f;
-                for (const auto& sample : samples) {
-                    maxMagnitudeSq = std::max(maxMagnitudeSq, tgt::lengthSq(sample));
-                }
-                float magnitude = std::sqrt(maxMagnitudeSq);
-                return std::vector<float>(1, magnitude);
-            };
-        }
-        else if (outputQuantity_.get() == "meanMagnitude") {
-            outputFunc = [](const std::vector<tgt::vec3>& samples) {
-                float meanMagnitude = 0.0f;
-                for (const auto& sample : samples) {
-                    meanMagnitude += tgt::length(sample) / static_cast<float>(samples.size());
-                }
-                return std::vector<float>(1, meanMagnitude);
-            };
-        }
-        else if(outputQuantity_.get() == "medianMagnitude") {
-            outputFunc = [](const std::vector<tgt::vec3>& samples) {
-                std::vector<float> magnitudes;
-                magnitudes.reserve(samples.size());
-                for (const auto& sample : samples) {
-                    magnitudes.emplace_back(tgt::length(sample));
-                }
-                std::nth_element(magnitudes.begin(), magnitudes.begin() + magnitudes.size()/2, magnitudes.end());
-                return std::vector<float>(1, magnitudes[magnitudes.size() / 2]);
-            };
-        }
-        else {
-            tgtAssert(false, "unhandled output quantity");
-        }
+        output[member.getName()] = std::move(plotData);
     }
 
     return FlowCenterlineAnalysisInput {
-            std::move(volumes),
-            std::move(vesselGraph),
-            matchingResult,
+            std::move(ensemble),
+            std::move(vesselGraphs),
             std::move(output),
             std::move(outputFunc),
             numSamples,
             transformSamples_.get(),
-            neighborSampleOverlap_.get()
+            neighborSampleOverlap_.get(),
+            exportCurvePath_.get()
     };
 }
 
 FlowCenterlineAnalysisOutput FlowCenterlineAnalysis::compute(FlowCenterlineAnalysisInput input, ProgressReporter& progressReporter) const {
 
-    auto volumes = std::move(input.volumes);
-    auto vesselGraph = std::move(input.vesselGraph);
-    auto matching = input.matchingResult;
-    std::unique_ptr<PlotData> data = std::move(input.output);
+    auto ensemble = std::move(input.ensemble);
+    auto vesselGraphs = std::move(input.vesselGraphs);
+    std::map<std::string, std::unique_ptr<PlotData>> output = std::move(input.output);
     auto outputFunc = std::move(input.outputFunc);
     size_t numSamples = input.numSamples;
     float overlap = input.neighborSampleOverlap;
 
     progressReporter.setProgress(0.0f);
 
-    bool timeSeries = isTimeSeries(volumes);
-    if(timeSeries) {
-        data->setColumnLabel(0, "Time [s]");
-    }
-    else {
-        data->setColumnLabel(0, "Time Step");
-    }
+    size_t minNumTimeSteps = ensemble->getMinNumTimeSteps();
 
-    for(size_t t = 0; t < volumes->size(); t++) {
-        const VolumeBase* volume = volumes->at(t);
-        std::vector<PlotCellValue> values;
-        if(timeSeries) {
-            values.emplace_back(PlotCellValue(volume->getTimestep()));
-        }
-        else {
-            values.emplace_back(PlotCellValue(t+1));
+    for(const EnsembleMember& member : ensemble->getMembers()) {
+
+        if(vesselGraphs.find(member.getName()) == vesselGraphs.end()) {
+            continue;
         }
 
-        for(size_t i=0; i<MatchingResult::NUM; i++) {
+        const MatchingResult& matching = vesselGraphs[member.getName()];
+        VesselGraph* vesselGraph = matching.vesselGraph.get();
 
-            const auto& node = vesselGraph->getNode(matching.nodeMapping[i]);
-            const auto& edge = vesselGraph->getEdge(matching.edgeMapping[i]);
+        for (const auto& field: ensemble->getCommonFieldNames()) {
 
-            const auto& voxels = edge.getVoxels();
-            size_t numVoxels = voxels.size();
+            PlotData data(*output[member.getName()].get());
 
-            std::function<size_t (size_t)> index;
-            if(edge.getNode1().getID() == node.getID()) {
-                index = [](size_t i) { return i; };
-            }
-            else {
-                index = [numVoxels](size_t i) { return numVoxels - 1 - i;  };
+            std::vector<TimeStep> timeSteps;
+            for(size_t t=0; t<minNumTimeSteps; t++) {
+                timeSteps.push_back(member.getTimeSteps()[t].createSubset({1, field}));
             }
 
-            //// Parametrize edge.
-            float length = edge.getLength();
+            EnsembleDataset tmp;
+            tmp.addMember(EnsembleMember(member.getName(), member.getColor(), timeSteps));
+            auto volumes = tmp.getVolumes();
 
-            // Calculate the length of a single sample.
-            float spacing = length / (numSamples+1);
-            float lengthPerSample = (length / numSamples) * (1.0f + 2.0f * overlap);
+            bool timeSeries = isTimeSeries(volumes);
+            if (timeSeries) {
+                data.setColumnLabel(0, "Time [s]");
+            } else {
+                data.setColumnLabel(0, "Time Step");
+            }
 
-            for(size_t j=0; j<numSamples; j++) {
-
-                size_t centerlinePosition = j * spacing;
-
-                size_t mid = std::min<size_t>(centerlinePosition, numVoxels - 1);
-                size_t num = 2; // Number of reference nodes in both directions.
-
-                size_t frontIdx = mid > num ? (mid - num) : 0;
-                size_t backIdx = std::min(mid + num, numVoxels - 1);
-
-                const VesselSkeletonVoxel* ref   = &edge.getVoxels().at(index(mid));
-                const VesselSkeletonVoxel* front = &edge.getVoxels().at(index(frontIdx));
-                const VesselSkeletonVoxel* back  = &edge.getVoxels().at(index(backIdx));
-
-                // Calculate average radius.
-                float radius = 0.0f;
-                for (size_t k = frontIdx; k <= backIdx; k++) {
-                    radius += edge.getVoxels().at(index(k)).avgDistToSurface_;
+            for (size_t t = 0; t < volumes.size(); t++) {
+                const VolumeBase* volume = volumes.at(t);
+                std::vector<PlotCellValue> values;
+                if (timeSeries) {
+                    values.emplace_back(PlotCellValue(volume->getTimestep()));
+                } else {
+                    values.emplace_back(PlotCellValue(t + 1));
                 }
-                radius /= (backIdx - frontIdx + 1);
 
-                tgt::vec3 center = ref->pos_;
-                tgt::vec3 normal = tgt::normalize(back->pos_ - front->pos_);
+                for (size_t i = 0; i < MatchingResult::NUM; i++) {
 
-                std::vector<tgt::vec3> samples = utils::sampleCylinder(volume, center, normal, radius, lengthPerSample,
-                                                                       input.transformSamples);
+                    const auto& node = vesselGraph->getNode(matching.nodeMapping[i]);
+                    const auto& edge = vesselGraph->getEdge(matching.edgeMapping[i]);
 
-                // Generate output.
-                std::vector<float> output = outputFunc(samples);
+                    const auto& voxels = edge.getVoxels();
+                    size_t numVoxels = voxels.size();
 
-                // Add to plot data.
-                for (size_t k = 0; k < output.size(); k++) {
-                    values.emplace_back(PlotCellValue(output[k]));
+                    std::function<size_t(size_t)> index;
+                    if (edge.getNode1().getID() == node.getID()) {
+                        index = [](size_t i) { return i; };
+                    } else {
+                        index = [numVoxels](size_t i) { return numVoxels - 1 - i; };
+                    }
+
+                    //// Parametrize edge.
+                    float length = edge.getLength();
+
+                    // Calculate the length of a single sample.
+                    float spacing = length / (numSamples + 1);
+                    float lengthPerSample = (length / numSamples) * (1.0f + 2.0f * overlap);
+
+                    for (size_t j = 0; j < numSamples; j++) {
+
+                        size_t centerlinePosition = j * spacing;
+
+                        size_t mid = std::min<size_t>(centerlinePosition, numVoxels - 1);
+                        size_t num = 2; // Number of reference nodes in both directions.
+
+                        size_t frontIdx = mid > num ? (mid - num) : 0;
+                        size_t backIdx = std::min(mid + num, numVoxels - 1);
+
+                        const VesselSkeletonVoxel* ref = &edge.getVoxels().at(index(mid));
+                        const VesselSkeletonVoxel* front = &edge.getVoxels().at(index(frontIdx));
+                        const VesselSkeletonVoxel* back = &edge.getVoxels().at(index(backIdx));
+
+                        // Calculate average radius.
+                        float radius = 0.0f;
+                        for (size_t k = frontIdx; k <= backIdx; k++) {
+                            radius += edge.getVoxels().at(index(k)).avgDistToSurface_;
+                        }
+                        radius /= (backIdx - frontIdx + 1);
+
+                        tgt::vec3 center = ref->pos_;
+                        tgt::vec3 normal = tgt::normalize(back->pos_ - front->pos_);
+
+                        std::vector<tgt::vec3> samples = utils::sampleCylinder(volume, center, normal, radius,
+                                                                               lengthPerSample,
+                                                                               input.transformSamples);
+
+                        // Generate output.
+                        std::vector<float> output = outputFunc(samples);
+
+                        // Add to plot data.
+                        for (size_t k = 0; k < output.size(); k++) {
+                            values.emplace_back(PlotCellValue(output[k]));
+                        }
+                    }
                 }
+
+                data.insert(values);
+
+                progressReporter.setProgress((t + 1.0f) / volumes.size());
             }
+
+            // If we only have a single row, copy and shift to render the line visible.
+            if (data.getRowsCount() == 1) {
+                std::vector<PlotCellValue> copy = data.getRow(0).getCells();
+                copy[0] = PlotCellValue(copy[0].getValue() + 1.0); // Add one second.
+                data.insert(copy);
+            }
+
+            std::string path = input.basePath + "/" + field + "/";
+            tgt::FileSystem::createDirectoryRecursive(path);
+            exportVelocityCurve(path + member.getName() + ".csv", &data);
         }
-
-        data->insert(values);
-
-        progressReporter.setProgress((t+1.0f) / volumes->size());
-    }
-
-    // If we only have a single row, copy and shift to render the line visible.
-    if(data->getRowsCount() == 1) {
-        std::vector<PlotCellValue> copy = data->getRow(0).getCells();
-        copy[0] = PlotCellValue(copy[0].getValue() + 1.0); // Add one second.
-        data->insert(copy);
     }
 
     progressReporter.setProgress(1.0f);
 
+    // TODO: only outputs first dataset.
+    std::unique_ptr<PlotData> representative = std::move(output.begin()->second);
+    output.erase(output.begin());
     return FlowCenterlineAnalysisOutput {
-            std::move(data)
+            std::move(representative)
     };
 }
 
@@ -467,27 +464,13 @@ void FlowCenterlineAnalysis::processComputeOutput(FlowCenterlineAnalysisOutput o
     outport_.setData(output.plotData.release(), true);
 }
 
-void FlowCenterlineAnalysis::exportVelocityCurve() {
+void FlowCenterlineAnalysis::exportVelocityCurve(const std::string& path, PlotData* data) const {
 
-    if(!outport_.hasData()) {
-        LWARNING("No data available");
-        return;
-    }
-
-    const std::string& file = exportCurvePath_.get();
-    if(file.empty()) {
-        LWARNING("Empty path");
-        return;
-    }
-
-    std::ofstream lineStream(file.c_str());
+    std::ofstream lineStream(path.c_str());
     if (lineStream.fail()) {
         LWARNING("CSV file could not be opened");
         return;
     }
-
-    const PlotData* data = dynamic_cast<const PlotData*>(outport_.getData());
-    tgtAssert(data, "Must be of type PlotData");
 
     lineStream << data->getColumnLabel(0);
     for(int i=1; i<data->getColumnCount(); i++) {
@@ -506,18 +489,18 @@ void FlowCenterlineAnalysis::exportVelocityCurve() {
     }
 }
 
-bool FlowCenterlineAnalysis::isTimeSeries(const VolumeList* list) {
+bool FlowCenterlineAnalysis::isTimeSeries(const std::vector<const VolumeBase*>& list) {
     std::set<float> timestamps;
-    for(size_t t = 0; t < list->size(); t++) {
-        if(!list->at(t)->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
+    for(size_t t = 0; t < list.size(); t++) {
+        if(!list[t]->hasMetaData(VolumeBase::META_DATA_NAME_TIMESTEP)) {
             return false;
         }
         else {
-            timestamps.insert(list->at(t)->getTimestep());
+            timestamps.insert(list[t]->getTimestep());
         }
     }
 
-    return timestamps.size() == list->size();
+    return timestamps.size() == list.size();
 }
 
 }
