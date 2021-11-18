@@ -175,28 +175,17 @@ MatchingResult FlowCenterlineAnalysis::performMatching(std::unique_ptr<VesselGra
 
     tgt::vec3 pos = vesselGraph->getNode(n3).pos_ + 0.5f * (vesselGraph->getNode(n4).pos_ - vesselGraph->getNode(n3).pos_);
 
-    tgt::plane mpaPlane(n1.pos_, n2.pos_, pos);
-    tgt::plane nodePlane(p0, p1, p2);
+    tgt::plane nodePlane(vesselGraph->getNode(result.nodeMapping[MatchingResult::MPA]).pos_,
+                         vesselGraph->getNode(n3).pos_,
+                         vesselGraph->getNode(n4).pos_);
 
-    if(nodePlane.distance(vesselGraph->getNode(bifurcationNode).pos_) > 0) {
-        if(mpaPlane.distance(vesselGraph->getNode(n3).pos_) > 0) {
-            result.nodeMapping[MatchingResult::RPA] = n3;
-            result.nodeMapping[MatchingResult::LPA] = n4;
-        }
-        else {
-            result.nodeMapping[MatchingResult::RPA] = n4;
-            result.nodeMapping[MatchingResult::LPA] = n3;
-        }
+    if(tgt::dot(vesselGraph->getNode(bifurcationNode).pos_-vesselGraph->getNode(result.nodeMapping[MatchingResult::MPA]).pos_, nodePlane.n) > 0) {
+        result.nodeMapping[MatchingResult::LPA] = n3;
+        result.nodeMapping[MatchingResult::RPA] = n4;
     }
     else {
-        if(mpaPlane.distance(vesselGraph->getNode(n4).pos_) > 0) {
-            result.nodeMapping[MatchingResult::RPA] = n4;
-            result.nodeMapping[MatchingResult::LPA] = n3;
-        }
-        else {
-            result.nodeMapping[MatchingResult::RPA] = n3;
-            result.nodeMapping[MatchingResult::LPA] = n4;
-        }
+        result.nodeMapping[MatchingResult::RPA] = n3;
+        result.nodeMapping[MatchingResult::LPA] = n4;
     }
 
     result.edgeMapping[MatchingResult::RPA] = vesselGraph->getNode(result.nodeMapping[MatchingResult::RPA]).getEdges().front().get().getID();
