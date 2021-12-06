@@ -58,6 +58,22 @@ tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3&
  */
 std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, bool transformSamples = false, size_t numSamples = 0);
 
+/**
+ * Samples a cylinder randomly inside a 3D vector field volume.
+ * Returns all sampled values.
+ * This function can also be used for single channel volumes, however, transformSamples will have no effect.
+ * @param volume The vector field volume
+ * @param origin The cylinders' center of gravity
+ * @param normal The cylinders' normal
+ * @param radius The cylinders' radius
+ * @param length The cylinders' length
+ * @param transformSamples determines if the samples should be transformed into a plane defined by the cylinder
+ *                         Note that that you can only rely on the through-plane component!
+ * @param numSamples Number of samples to distribute uniformly across the cylinder volume.
+ *                   If set to 0, it will be estimated automatically.
+ */
+std::vector<tgt::vec3> sampleCylinder(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, float length, bool transformSamples = false, size_t numSamples = 0);
+
 }
 
 }

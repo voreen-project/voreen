@@ -49,6 +49,10 @@ tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3&
 }
 
 std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, bool transformSamples, size_t numSamples) {
+    return sampleCylinder(volume, origin, normal, radius, 0.0f, transformSamples, numSamples);
+}
+
+std::vector<tgt::vec3> sampleCylinder(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, float length, bool transformSamples, size_t numSamples) {
 
     using T = tgt::vec3; // Could be quite easy to template..
 
@@ -63,10 +67,12 @@ std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& ori
 
     // Estimate number of samples
     if(numSamples == 0) {
+        length = length > 0.0f ? length : tgt::length(volume->getSpacing());
+        float voxelsPerLength = length / tgt::length(volume->getSpacing());
         float voxelsPerRadius = radius / tgt::length(volume->getSpacing());
-        numSamples = 2.0f * tgt::PIf * voxelsPerRadius * voxelsPerRadius; // Use twice as many samples as minimally required.
+        numSamples = 2.0f * tgt::PIf * voxelsPerRadius * voxelsPerRadius * voxelsPerLength; // Use twice as many samples as minimally required.
         if(numSamples < 1) {
-            LWARNINGC("SampleDisk", "radius might be too small for proper sampling");
+            LWARNINGC("SampleCylinder", "radius might be too small for proper sampling");
             numSamples = 10;
         }
     }
@@ -93,7 +99,7 @@ std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& ori
             };
         }
         else {
-            LWARNINGC("SampleDisk", "Basis transform only applicable for Vector3 volumes");
+            LWARNINGC("SampleCylinder", "Basis transform only applicable for Vector3 volumes");
         }
     }
 
@@ -106,11 +112,12 @@ std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& ori
 
     for(size_t i=0; i<numSamples; i++) {
 
-        float r = radius * std::sqrt(rnd());
+        float r   = radius * std::sqrt(rnd());
         float phi = rnd() * 2.0f * tgt::PIf;
+        float z   = rnd() * length - length * 0.5f;
 
         // Calculate sample point in voxel space.
-        tgt::vec3 pos = worldToIndicatorSpaceMatrix * tgt::vec3(r * std::cos(phi), r * std::sin(phi), 0.0f);
+        tgt::vec3 pos = worldToIndicatorSpaceMatrix * tgt::vec3(r * std::cos(phi), r * std::sin(phi), z);
         samples.push_back(sample(pos));
     }
 
