@@ -60,6 +60,24 @@ enum Material {
     MAT_COUNT,
 };
 
+class LatticePerturber : public AnalyticalF3D<T, T> {
+public:
+    LatticePerturber(T maxNoise=1e-5)
+        : AnalyticalF3D<T, T>(3)
+        , rnd_(std::bind(std::uniform_real_distribution<T>(-maxNoise, maxNoise), std::mt19937(time(nullptr))))
+        {
+        }
+    virtual bool operator() (T output[], const T input[]) {
+        for(size_t i=0; i<3; i++) {
+            output[i] = rnd_();
+        }
+        return true;
+    }
+
+private:
+    std::function<T()> rnd_;
+};
+
 // Allow for simulation lattice initialization by volume data.
 class MeasuredDataMapper : public AnalyticalF3D<T, T> {
 public:
@@ -315,28 +333,25 @@ void prepareLattice( SuperLattice3D<T, DESCRIPTOR>& lattice,
         std::cout << "[fixupLattice] " << errors << " errors have been fixed" << std::endl;
     }
 
-    // Unsteered simulation.
-//    if(!measuredData) {
+    // Initial conditions
+    AnalyticalConst3D<T, T> rhoF(1);
+    std::vector<T> velocity(3, T(0));
+    AnalyticalConst3D<T, T> uF(velocity);
 
-        // Initial conditions
-        AnalyticalConst3D<T, T> rhoF(1);
-        std::vector<T> velocity(3, T(0));
-        AnalyticalConst3D<T, T> uF(velocity);
+    lattice.defineRhoU(superGeometry.getMaterialIndicator(MAT_FLUID), rhoF, uF);
+    lattice.iniEquilibrium(superGeometry.getMaterialIndicator(MAT_FLUID), rhoF, uF);
 
-        lattice.defineRhoU(superGeometry.getMaterialIndicator(MAT_FLUID), rhoF, uF);
-        lattice.iniEquilibrium(superGeometry.getMaterialIndicator(MAT_FLUID), rhoF, uF);
+    // Initialize all values of distribution functions to their local equilibrium.
+    for (const auto& indicator : parameterSetEnsemble.getFlowIndicators()) {
+        lattice.defineRhoU(superGeometry.getMaterialIndicator(indicator.id_), rhoF, uF);
+        lattice.iniEquilibrium(superGeometry.getMaterialIndicator(indicator.id_), rhoF, uF);
+    }
 
-        // Initialize all values of distribution functions to their local equilibrium.
-        for (const auto& indicator : parameterSetEnsemble.getFlowIndicators()) {
-            lattice.defineRhoU(superGeometry.getMaterialIndicator(indicator.id_), rhoF, uF);
-            lattice.iniEquilibrium(superGeometry.getMaterialIndicator(indicator.id_), rhoF, uF);
-        }
-//    }
-//    // Steered simulation - currently only initializes the first time step!
-//    else {
-//        MeasuredDataMapper mapper(measuredData->first());
-//        lattice.defineU(superGeometry, MAT_FLUID, mapper);
-//    }
+    // Add noise to fluid cells to enforce turbulent regime.
+    if(parameters.getLatticePerturbation()) {
+        LatticePerturber perturbation;
+        lattice.defineU(superGeometry, MAT_FLUID, perturbation);
+    }
 
     // Lattice initialize
     lattice.initialize();

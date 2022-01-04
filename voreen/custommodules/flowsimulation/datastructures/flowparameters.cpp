@@ -264,6 +264,7 @@ FlowParameterSet::FlowParameterSet(const std::string& name)
     , turbulenceModel_(FTM_NONE)
     , smagorinskyConstant_(0.0f)
     , wallBoundaryCondition_(FBC_NONE)
+    , latticePerturbation_(false)
     , inletVelocityMultiplier_(0.0f)
 {
 }
@@ -344,6 +345,14 @@ void FlowParameterSet::setWallBoundaryCondition(FlowBoundaryCondition wallBounda
     wallBoundaryCondition_ = wallBoundaryCondition;
 }
 
+bool FlowParameterSet::getLatticePerturbation() const {
+    return latticePerturbation_;
+}
+
+void FlowParameterSet::setLatticePerturbation(bool latticePerturbation) {
+    latticePerturbation_ = latticePerturbation;
+}
+
 float FlowParameterSet::getInletVelocityMultiplier() const {
     return inletVelocityMultiplier_;
 }
@@ -359,7 +368,7 @@ float FlowParameterSet::getReynoldsNumber() const {
 bool FlowParameterSet::isValid() const {
     float dx = (characteristicLength_ / spatialResolution_);
     float convertVelocity = 3.0f / (relaxationTime_ - 0.5f) * viscosity_ / dx;
-    float uLatticeMax = characteristicVelocity_ / convertVelocity;
+    float uLatticeMax = characteristicVelocity_ * inletVelocityMultiplier_ / convertVelocity;
     return uLatticeMax < 0.4f; // Intrinsic property of LBM.
 }
 
@@ -374,6 +383,7 @@ void FlowParameterSet::serialize(Serializer& s) const {
     s.serialize("turbulenceModel", turbulenceModel_);
     s.serialize("smagorinskyConstant", smagorinskyConstant_);
     s.serialize("wallBoundaryCondition", wallBoundaryCondition_);
+    s.serialize("latticePerturbation", latticePerturbation_);
     s.serialize("inletVelocityMultiplier", inletVelocityMultiplier_);
 }
 
@@ -392,6 +402,7 @@ void FlowParameterSet::deserialize(Deserializer& s) {
     int wallBoundaryCondition = FBC_NONE;
     s.optionalDeserialize("wallBoundaryCondition", wallBoundaryCondition, static_cast<int>(FBC_BOUZIDI));
     wallBoundaryCondition_ = static_cast<FlowBoundaryCondition>(wallBoundaryCondition);
+    s.optionalDeserialize("latticePerturbation", latticePerturbation_, false);
     s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
 }
 

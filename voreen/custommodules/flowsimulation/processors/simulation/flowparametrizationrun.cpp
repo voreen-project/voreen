@@ -63,12 +63,13 @@ FlowParametrizationRun::FlowParametrizationRun()
     , turbulenceModel_("turbulenceModel", "Turbulence Model")
     , smagorinskyConstant_("smagorinskyConstant", "Smagorinsky Constant", 0.1f, 0.1f, 5.0f)
     , wallBoundaryCondition_("wallBoundaryCondition", "Wall Boundary Condition")
+    , latticePerturbation_("latticePerturbation", "Lattice Perturbation", false)
     , inletVelocityMultiplier_("inletVelocityMultiplier", "Inlet Velocity Multiplier", 1.0f, 0.1f, 10.0f)
     , samples_("samples", "Samples", 3, 1, 26)
     , addParametrization_("addParametrizations", "Add Parametrizations")
     , removeParametrization_("removeParametrization", "Remove Parametrization")
     , clearParametrizations_("clearParametrizations", "Clear Parametrizations")
-    , parametrizations_("parametrizations", "Parametrizations", 13, Processor::VALID)
+    , parametrizations_("parametrizations", "Parametrizations", 14, Processor::VALID)
     , addInvalidParametrizations_("addInvalidParametrizations", "Add invalid Parametrizations", false)
 {
     addPort(inport_);
@@ -99,6 +100,8 @@ FlowParametrizationRun::FlowParametrizationRun()
         wallBoundaryCondition_.addOption("bouzidi", "Bouzidi", FBC_BOUZIDI);
         wallBoundaryCondition_.addOption("bounceBack", "Bounce-Back", FBC_BOUNCE_BACK);
         wallBoundaryCondition_.setGroupID("numerical");
+    addProperty(latticePerturbation_);
+        latticePerturbation_.setGroupID("numerical");
     setPropertyGroupGuiName("numerical", "Numerical Parameters");
 
     addProperty(fluid_);
@@ -138,7 +141,7 @@ FlowParametrizationRun::FlowParametrizationRun()
     setPropertyGroupGuiName("general", "Edit Run Parameters");
 
     addProperty(parametrizations_);
-    std::string columnLabels[] = {"Valid", "Name", "Re", "N", "τ", "l", "U", "ν", "ρ", "Model", "Cs", "Bound. Cond.", "Mul."};
+    std::string columnLabels[] = {"Valid", "Name", "Re", "N", "τ", "l", "U", "ν", "ρ", "Model", "Cs", "Bound. Cond.", "Mul.", "Pert."};
     for(int i=0; i<parametrizations_.getNumColumns(); i++) {
         parametrizations_.setColumnLabel(i, columnLabels[i]);
     }
@@ -205,6 +208,7 @@ void FlowParametrizationRun::addParametrizations() {
     parameters.setSmagorinskyConstant(smagorinskyConstant);
     parameters.setWallBoundaryCondition(wallBoundaryCondition_.getValue());
     parameters.setInletVelocityMultiplier(inletVelocityMultiplier);
+    parameters.setLatticePerturbation(latticePerturbation_.get());
     flowParameters_.emplace_back(parameters);
 
     std::vector<std::string> row;
@@ -221,6 +225,7 @@ void FlowParametrizationRun::addParametrizations() {
     row.push_back(std::to_string(parameters.getSmagorinskyConstant()));
     row.push_back(wallBoundaryCondition_.getDescription());
     row.push_back(std::to_string(parameters.getInletVelocityMultiplier()));
+    row.push_back(std::to_string(parameters.getLatticePerturbation()));
     parametrizations_.addRow(row);
 
     PARAMETER_DISCRETIZATION_END

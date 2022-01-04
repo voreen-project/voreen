@@ -205,6 +205,13 @@ public:
     void setWallBoundaryCondition(FlowBoundaryCondition wallBoundaryCondition);
 
     /**
+     * Returns if the lattice shall be perturbed.
+     * This is able to enforce the turbulent regime in an otherwise laminar simulation.
+     */
+    bool getLatticePerturbation() const;
+    void setLatticePerturbation(bool latticePerturbation);
+
+    /**
      * Returns a factor that is multiplied with the inlet velocity.
      */
     float getInletVelocityMultiplier() const;
@@ -239,7 +246,8 @@ private:
     FlowTurbulenceModel turbulenceModel_;
     float smagorinskyConstant_;     ///< constant for turbulence model
     FlowBoundaryCondition wallBoundaryCondition_;
-    float inletVelocityMultiplier_; ///< factor to multiply the inlet velocity by
+    bool latticePerturbation_;      ///< enables/disables lattice perturbation
+    float inletVelocityMultiplier_; ///< factor by which the inlet velocity is multiplied
 };
 
 /**

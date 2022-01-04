@@ -89,6 +89,7 @@ private:
     OptionProperty<FlowTurbulenceModel> turbulenceModel_;
     FloatIntervalProperty smagorinskyConstant_;
     OptionProperty<FlowBoundaryCondition> wallBoundaryCondition_;
+    BoolProperty latticePerturbation_;
     FloatIntervalProperty inletVelocityMultiplier_;
     IntProperty samples_;
 
