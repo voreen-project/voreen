@@ -65,7 +65,7 @@ public:
         stream << std::accumulate(swizzle_.begin(), swizzle_.end(), "");
         stream << std::accumulate(negate_.begin(), negate_.end(), "");
 
-        return hash + stream.str();
+        return VoreenHash::getHash(hash + stream.str());
     }
 
     VolumeRAM* loadVolume() const {

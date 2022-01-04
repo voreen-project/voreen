@@ -117,6 +117,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , indicatorName_("indicatorName", "Name")
     , centerlinePosition_("position", "Position", 0, 0, 0)
     , radius_("radius", "Radius (mm)", 1.0f, 0.0f, 10.0f)
+    , length_("length", "Length (mm)", 0.0f, 0.0f, 10.0f)
     , relativeRadiusCorrection_("relativeRadiusCorrection", "Relative Radius Correction", 1.0f, 0.1f, 2.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , invertDirection_("invertDirection", "Invert Direction", false)
     , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
@@ -176,6 +177,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(radius_);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onIndicatorConfigChange);
+    addProperty(length_);
+        length_.setGroupID("indicator");
+        ON_CHANGE(length_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(relativeRadiusCorrection_);
         relativeRadiusCorrection_.setGroupID("indicator");
         ON_CHANGE_LAMBDA(relativeRadiusCorrection_, [this] { onIndicatorConfigChange(true); });
@@ -193,6 +197,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
         flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
         //flowProfile_.addOption("constant", "constant", FlowProfile::FP_CONSTANT); // Not really useful.
+        flowProfile_.addOption("volume", "Volume", FlowProfile::FP_VOLUME);
         flowProfile_.setGroupID("velocity");
         ON_CHANGE(flowProfile_, FlowIndicatorDetection, onIndicatorConfigChange);
     addProperty(velocityCurveType_);
@@ -228,6 +233,7 @@ void FlowIndicatorDetection::adjustPropertiesToInput() {
         return;
 
     radius_.setMaxValue(tgt::length(vesselGraphPort_.getData()->getBounds().diagonal() / 2.0f));
+    length_.setMaxValue(tgt::length(vesselGraphPort_.getData()->getBounds().diagonal() / 2.0f));
 }
 
 void FlowIndicatorDetection::serialize(Serializer& s) const {
@@ -316,6 +322,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         centerlinePosition_.set(settings.centerlinePosition_);
         radius_.set(indicator.radius_);
         relativeRadiusCorrection_.set(settings.relativeRadiusCorrection_);
+        length_.set(indicator.length_);
         invertDirection_.set(settings.invertDirection_);
         forceAxisAlignment_.set(settings.forceAxisAlignment_);
         indicatorType_.selectByValue(indicator.type_);
@@ -338,6 +345,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     indicatorName_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
     relativeRadiusCorrection_.setReadOnlyFlag(!validSelection);
+    length_.setReadOnlyFlag(!validSelection);
     invertDirection_.setReadOnlyFlag(!validSelection);
     forceAxisAlignment_.setReadOnlyFlag(!validSelection);
     indicatorType_.setReadOnlyFlag(!validSelection);
@@ -346,9 +354,12 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     setPropertyGroupVisible("velocity", isVelocityBoundary);
     flowProfile_.setReadOnlyFlag(!isVelocityBoundary);
     velocityCurveType_.setReadOnlyFlag(!validSelection);
-    bool simpleCurveType = isVelocityBoundary && velocityCurveType_.get() != "custom" && velocityCurveType_.get() != "heartBeat";
-    velocityCurveDuration_.setReadOnlyFlag(!simpleCurveType);
-    targetVelocity_.setReadOnlyFlag(!simpleCurveType);
+
+    bool isVolumeCondition = flowProfile_.getValue() == FP_VOLUME;
+    bool isSimpleCurveType = isVelocityBoundary && velocityCurveType_.get() != "custom" && velocityCurveType_.get() != "heartBeat";
+
+    velocityCurveDuration_.setReadOnlyFlag(!isSimpleCurveType);
+    targetVelocity_.setReadOnlyFlag(!isSimpleCurveType || isVolumeCondition);
     velocityCurveFile_.setReadOnlyFlag(velocityCurveType_.get() != "custom");
     velocityCurvePeriodicity_.setReadOnlyFlag(!isVelocityBoundary);
 }
@@ -377,17 +388,20 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         FlowIndicator& indicator = flowIndicators_[indicatorIdx];
         indicator.type_ = indicatorType_.getValue();
         indicator.name_ = indicatorName_.get();
+        indicator.length_ = length_.get();
 
         if(needReinitialization) {
-            // Backup id, type and name.
+            // Backup id, type, length and name.
             FlowIndicatorType type = indicator.type_;
             int id = indicator.id_;
             std::string name = indicator.name_;
+            float length = indicator.length_;
 
             indicator = initializeIndicator(settings);
             indicator.type_ = type;
             indicator.id_ = id;
             indicator.name_ = name;
+            indicator.length_ = length;
         }
         else {
             indicator.radius_ = radius_.get();
@@ -549,8 +563,8 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     }
     radius /= (backIdx - frontIdx + 1);
 
-    // Default is candidate. However, we set initial values as if it was a flow generator,
-    // since it might be classified as one later.
+    // Default is candidate. However, we set initial values as if it was a velocity inlet,
+    // since it might be classified as one later on.
     FlowIndicator indicator;
     indicator.id_ = flowIndicators_.size() + FlowParameterSetEnsemble::getFlowIndicatorIdOffset(); // TODO: Should be determined by FlowParameterSetEnsemble.
     indicator.name_ = "Indicator " + std::to_string(indicator.id_);
@@ -586,7 +600,6 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
                 indicator.normal_ = tgt::vec3(0.0f, 0.0f, sign);
             }
         }
-
     }
 
     if(settings.invertDirection_) {

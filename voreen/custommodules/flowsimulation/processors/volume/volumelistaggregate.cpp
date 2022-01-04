@@ -30,7 +30,7 @@
 namespace voreen {
 
 VolumeListAggregate::VolumeListAggregate()
-    : Processor()
+    : AsyncComputeProcessor<VolumeListAggregateInput, VolumeListAggregateOutput>()
     , inport_(Port::INPORT, "volumelist.input", "Volume Input", false)
     , outport_(Port::OUTPORT, "volume.output", "Volume Output", false)
     , aggregationFunction_("aggregationFunction", "Aggregation Function")
@@ -53,24 +53,32 @@ Processor* VolumeListAggregate::create() const {
     return new VolumeListAggregate();
 }
 
-void VolumeListAggregate::process() {
-    const VolumeList* data = inport_.getData();
-    if(!data || data->empty()) {
-        outport_.setData(nullptr);
-    } else if(data->size() == 1) {
-        outport_.setData(data->first(), false);
-    } else {
-        // Take the first as a reference (we already know we got an ensemble).
-        const VolumeBase* reference = data->first();
+VolumeListAggregateInput VolumeListAggregate::prepareComputeInput() {
 
-        Volume* combined = reference->clone();
-        VolumeRAM* combinedRepresentation = combined->getWritableRepresentation<VolumeRAM>();
+    auto list = inport_.getThreadSafeData();
 
-        // For calculating std. dev., we also need a running mean.
-        std::unique_ptr<VolumeRAM> tmp;
+    if(!list || list->empty()) {
+        throw InvalidInputException("No volume input", InvalidInputException::S_WARNING);
+    }
 
-        AggregationFunction aggregationFunction = aggregationFunction_.getValue();
-        switch(aggregationFunction) {
+    return ComputeInput { std::move(list) };
+}
+
+VolumeListAggregateOutput VolumeListAggregate::compute(ComputeInput input, ProgressReporter& progressReporter) const {
+
+    auto data = std::move(input.inputData);
+
+    // Take the first as a reference (we already know we got an ensemble).
+    const VolumeBase* reference = data->first();
+
+    std::unique_ptr<Volume> combined(reference->clone());
+    VolumeRAM* combinedRepresentation = combined->getWritableRepresentation<VolumeRAM>();
+
+    // For calculating std. dev., we also need a running mean.
+    std::unique_ptr<VolumeRAM> tmp;
+
+    AggregationFunction aggregationFunction = aggregationFunction_.getValue();
+    switch(aggregationFunction) {
         case MEAN:
         case L2_NORM:
             combinedRepresentation->clear();
@@ -85,22 +93,26 @@ void VolumeListAggregate::process() {
             break;
         default:
             tgtAssert(false, "unhandled aggregation function");
-        }
+    }
 
-        tgt::svec3 dim = combined->getDimensions();
-        for(size_t i=0; i<data->size(); i++) {
-            VolumeRAMRepresentationLock representation(data->at(i));
-            for(size_t z=0; z < dim.z; z++) {
-                for(size_t y=0; y < dim.y; y++) {
-                    for(size_t x=0; x < dim.x; x++) {
-                        for(size_t channel=0; channel<combined->getNumChannels(); channel++) {
+    tgt::svec3 dim = combined->getDimensions();
+    for(size_t i=0; i<data->size(); i++) {
+        progressReporter.setProgress(1.0f * i / data->size());
+        VolumeRAMRepresentationLock representation(data->at(i));
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+        for(long z=0; z < static_cast<long>(dim.z); z++) {
+            for(size_t y=0; y < dim.y; y++) {
+                for(size_t x=0; x < dim.x; x++) {
+                    for(size_t channel=0; channel<combined->getNumChannels(); channel++) {
 
-                            float currentValue = representation->getVoxelNormalized(x, y, z, channel);
-                            float aggregatedValue = combinedRepresentation->getVoxelNormalized(x, y, z, channel);
+                        float currentValue = representation->getVoxelNormalized(x, y, z, channel);
+                        float aggregatedValue = combinedRepresentation->getVoxelNormalized(x, y, z, channel);
 
-                            switch(aggregationFunction) {
+                        switch(aggregationFunction) {
                             case MEAN:
-                                aggregatedValue += (currentValue - aggregatedValue) / i;
+                                aggregatedValue += (currentValue - aggregatedValue) / (i+1);
                                 break;
                             case MIN:
                                 aggregatedValue = std::min(aggregatedValue, currentValue);
@@ -125,26 +137,30 @@ void VolumeListAggregate::process() {
                                 break;
                             default:
                                 tgtAssert(false, "unhandled aggregation function");
-                            }
-
-                            combinedRepresentation->setVoxelNormalized(aggregatedValue, x, y, z, channel);
                         }
+
+                        combinedRepresentation->setVoxelNormalized(aggregatedValue, x, y, z, channel);
                     }
                 }
             }
         }
+    }
 
-        if(aggregationFunction == L2_NORM) {
-            for(size_t i=0; i<combinedRepresentation->getNumVoxels(); i++) {
-                for(size_t channel = 0; channel < combinedRepresentation->getNumChannels(); channel++) {
-                    float value = combinedRepresentation->getVoxelNormalized(i, channel);
-                    combinedRepresentation->setVoxelNormalized(std::sqrt(value), i);
-                }
+    if(aggregationFunction == L2_NORM) {
+        for(size_t i=0; i<combinedRepresentation->getNumVoxels(); i++) {
+            for(size_t channel = 0; channel < combinedRepresentation->getNumChannels(); channel++) {
+                float value = combinedRepresentation->getVoxelNormalized(i, channel);
+                combinedRepresentation->setVoxelNormalized(std::sqrt(value), i);
             }
         }
-
-        outport_.setData(combined, true);
     }
+
+    progressReporter.setProgress(1.0f);
+    return ComputeOutput { std::move(combined) };
+}
+
+void VolumeListAggregate::processComputeOutput(ComputeOutput output) {
+    outport_.setData(output.outputData.release(), true);
 }
 
 }   // namespace

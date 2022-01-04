@@ -26,16 +26,24 @@
 #ifndef VRN_VOLUMELISTAGGREGATE_H
 #define VRN_VOLUMELISTAGGREGATE_H
 
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/genericport.h"
 #include "voreen/core/ports/volumeport.h"
 
 namespace voreen {
 
+struct VolumeListAggregateInput {
+    PortDataPointer<VolumeList> inputData;
+};
+
+struct VolumeListAggregateOutput {
+    std::unique_ptr<VolumeBase> outputData;
+};
+
 /**
  * This processor creates a list from incoming volumes.
  */
-class VRN_CORE_API VolumeListAggregate : public Processor {
+class VRN_CORE_API VolumeListAggregate : public AsyncComputeProcessor<VolumeListAggregateInput, VolumeListAggregateOutput> {
 public:
     VolumeListAggregate();
     virtual ~VolumeListAggregate();
@@ -50,7 +58,9 @@ protected:
         setDescription("This processor aggregates all incoming volumes voxel-wise into a single one.");
     }
 
-    virtual void process();
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
 private:
 

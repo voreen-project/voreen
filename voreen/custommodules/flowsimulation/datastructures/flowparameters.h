@@ -60,6 +60,23 @@ enum FlowProfile {
     FP_POISEUILLE = 1, ///< Poiseuille flow profile
     FP_POWERLAW   = 2, ///< Power law flow profile
     FP_CONSTANT   = 3, ///< constant flow profile
+    FP_VOLUME     = 4, ///< samples from volume
+};
+
+enum FlowBoundaryCondition {
+    FBC_NONE        = 0,
+    FBC_BOUNCE_BACK = 1,
+    FBC_BOUZIDI     = 2,
+};
+
+enum FlowTurbulenceModel {
+    FTM_NONE                            = 0,
+    FTM_SMAGORINSKY                     = 1,
+    FTM_SMAGORINSKY_SHEAR_IMPROVED      = 2,
+    FTM_SMAGORINSKY_CONSISTENT          = 3,
+    FTM_SMAGORINSKY_CONSISTENT_STRAIN   = 4,
+    FTM_SMAGORINSKY_DYNAMIC             = 5,
+    FTM_BGK                             = 6,
 };
 
 class VelocityCurve : public Serializable {
@@ -76,6 +93,8 @@ public:
     float getMinVelocity() const;
     float getMaxVelocity() const;
 
+    float getStartTime() const;
+    float getEndTime() const;
     float getDuration() const;
 
     static VelocityCurve createConstantCurve(float value);
@@ -102,6 +121,7 @@ struct VRN_CORE_API FlowIndicator : public Serializable {
     tgt::vec3           center_;    ///< Center position of the circle shaped area in world space.
     tgt::vec3           normal_;    ///< (Normalized) Normal vector defining the orientation.
     float               radius_;    ///< Radius of the disk.
+    float               length_;    ///< Length of the disk/cylinder.
 
     // Used by generating flow indicators:
     FlowProfile         flowProfile_;    ///< Flow profile, @see FlowProfile.
@@ -167,16 +187,29 @@ public:
     void setDensity(float density);
 
     /**
-     * Returns the constant for the Smagorinsky turbulence model.
+     * Returns the turbulence model.
+     */
+    FlowTurbulenceModel getTurbulenceModel() const;
+    void setTurbulenceModel(FlowTurbulenceModel flowTurbulenceModel);
+
+    /**
+     * Returns the constant used by the turbulence model.
      */
     float getSmagorinskyConstant() const;
     void setSmagorinskyConstant(float smagorinskyConstant);
 
     /**
-     * Returns whether Bouzidi boundary condition should be used for unaligned simulation geometries.
+     * Returns the wall boundary condition.
      */
-    bool getBouzidi() const;
-    void setBouzidi(bool bouzidi);
+    FlowBoundaryCondition getWallBoundaryCondition() const;
+    void setWallBoundaryCondition(FlowBoundaryCondition wallBoundaryCondition);
+
+    /**
+     * Returns if the lattice shall be perturbed.
+     * This is able to enforce the turbulent regime in an otherwise laminar simulation.
+     */
+    bool getLatticePerturbation() const;
+    void setLatticePerturbation(bool latticePerturbation);
 
     /**
      * Returns a factor that is multiplied with the inlet velocity.
@@ -210,9 +243,11 @@ private:
     float characteristicVelocity_;  ///< characteristic velocity in m/s
     float viscosity_;               ///< kinematic viscosity in m^2/s
     float density_;                 ///< density in kg/m^3
-    float smagorinskyConstant_;     ///< constant for Smagorinsky turbulence model
-    bool bouzidi_;                  ///< bouzidi boundary condition
-    float inletVelocityMultiplier_; ///< factor to multiply the inlet velocity by
+    FlowTurbulenceModel turbulenceModel_;
+    float smagorinskyConstant_;     ///< constant for turbulence model
+    FlowBoundaryCondition wallBoundaryCondition_;
+    bool latticePerturbation_;      ///< enables/disables lattice perturbation
+    float inletVelocityMultiplier_; ///< factor by which the inlet velocity is multiplied
 };
 
 /**

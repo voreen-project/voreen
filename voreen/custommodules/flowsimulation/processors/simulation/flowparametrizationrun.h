@@ -86,10 +86,12 @@ private:
     OptionProperty<Fluid> fluid_;
     FloatIntervalProperty viscosity_;
     FloatIntervalProperty density_;
+    OptionProperty<FlowTurbulenceModel> turbulenceModel_;
     FloatIntervalProperty smagorinskyConstant_;
-    BoolProperty bouzidi_;
+    OptionProperty<FlowBoundaryCondition> wallBoundaryCondition_;
+    BoolProperty latticePerturbation_;
     FloatIntervalProperty inletVelocityMultiplier_;
-    IntProperty discretization_;
+    IntProperty samples_;
 
     ButtonProperty addParametrization_;
     ButtonProperty removeParametrization_;

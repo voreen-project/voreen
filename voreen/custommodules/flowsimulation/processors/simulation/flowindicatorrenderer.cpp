@@ -54,7 +54,7 @@ void FlowIndicatorRenderer::initialize() {
 
     // Disk.
     diskGeometry_.reset(new GlMeshGeometryUInt16Simple());
-    diskGeometry_->setDiskGeometry(0.0f, 1.0f, numSlices);
+    diskGeometry_->setCylinderGeometry(tgt::vec4::zero, 1.0f, 1.0f, 1.0f, numSlices, 2, true, true);
 
     // Cone.
     coneGeometry_.reset(new GlMeshGeometryUInt16Simple());
@@ -63,7 +63,7 @@ void FlowIndicatorRenderer::initialize() {
     for(size_t i=0; i <= numSlices; ++i) {
         float s = std::sin(tgt::PIf*2*i/numSlices);
         float c = std::cos(tgt::PIf*2*i/numSlices);
-        tgt::vec3 vertPos(s, c, 0);
+        tgt::vec3 vertPos(s, c, 0.0f);
         coneGeometry_->addVertex(vertPos);
     }
 }
@@ -87,31 +87,43 @@ tgt::Bounds FlowIndicatorRenderer::getBoundingBox() const {
     return bounds;
 }
 
+void FlowIndicatorRenderer::renderDisk(const FlowIndicator& indicator) const {
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    MatStack.pushMatrix();
+    MatStack.multMatrix(utils::createTransformationMatrix(indicator.center_ - indicator.normal_ * indicator.length_ * 0.5f , indicator.normal_));
+    MatStack.scale(indicator.radius_, indicator.radius_, indicator.length_);
+    diskGeometry_->render();
+    MatStack.popMatrix();
+}
+
+void FlowIndicatorRenderer::renderCone(const FlowIndicator& indicator) const {
+    MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
+    MatStack.pushMatrix();
+    MatStack.multMatrix(utils::createTransformationMatrix(indicator.center_ + indicator.normal_ * indicator.length_ * 0.5f, indicator.normal_));
+    MatStack.scale(indicator.radius_, indicator.radius_, indicator.radius_);
+    coneGeometry_->render();
+    MatStack.popMatrix();
+}
+
 void FlowIndicatorRenderer::render() {
     if (!inport_.isReady() || !enable_.get())
         return;
 
     for(const FlowIndicator& indicator : inport_.getData()->getFlowIndicators()) {
-
-        MatStack.matrixMode(tgt::MatrixStack::MODELVIEW);
-        MatStack.pushMatrix();
-        MatStack.multMatrix(utils::createTransformationMatrix(indicator.center_, indicator.normal_));
-        MatStack.scale(tgt::vec3(indicator.radius_));
-
         if(indicator.type_ == FIT_VELOCITY) {
             IMode.color(velocityBoundaryColor_.get());
-            coneGeometry_->render();
+            renderDisk(indicator);
+            renderCone(indicator);
         }
         else if(indicator.type_ == FIT_PRESSURE) {
             IMode.color(pressureBoundaryColor_.get());
-            coneGeometry_->render();
+            renderDisk(indicator);
+            renderCone(indicator);
         }
         else if(indicator.type_ == FIT_MEASURE) {
             IMode.color(measureFluxColor_.get());
-            diskGeometry_->render();
+            renderDisk(indicator);
         }
-
-        MatStack.popMatrix();
     }
 
     IMode.color(tgt::vec4::one);

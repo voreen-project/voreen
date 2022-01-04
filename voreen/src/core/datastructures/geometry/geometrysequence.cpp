@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "voreen/core/datastructures/geometry/geometrysequence.h"
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/geometry/trianglemeshgeometry.h"
 
 #include "voreen/core/io/serialization/serialization.h"
@@ -92,7 +93,7 @@ void GeometrySequence::render() const {
     MatStack.multMatrix(getTransformationMatrix());
 
     for(size_t i=0; i<geometries_.size(); i++) {
-        if(dynamic_cast<TriangleMeshGeometryBase*>(geometries_[i])) {
+        if (dynamic_cast<TriangleMeshGeometryBase*>(geometries_[i]) || dynamic_cast<GlMeshGeometryBase*>(geometries_[i])) {
             MatStack.pushMatrix();
             MatStack.multMatrix(geometries_[i]->getTransformationMatrix());
             IMode.setMatstackUniforms();

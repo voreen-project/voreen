@@ -40,7 +40,7 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     , ratio_("ratio", "Ratio", 1.0f, 0.1f, 10.0f)
     , radius_("radius", "Radius (mm)", 1.0f, 0.1f, 1000.0f)
     , length_("length", "Length (mm)", 1.0f, 0.1f, 1000.0f)
-    , transformation_("transformation", "Transformation", tgt::mat4::identity)
+    , transformation_("transformation", "Transformation", tgt::mat4::identity, tgt::mat4(-1000.0f), tgt::mat4(+1000.0f))
     , flowProfile_("flowProfile", "Flow Profile")
     , inflowVelocity_("inflowVelocity", "Inflow Velocity (m/s)", 1.0f, 0.0f, 10.0f)
 {
@@ -61,9 +61,13 @@ FlowSimulationGeometry::FlowSimulationGeometry()
     addProperty(length_);
     addProperty(transformation_);
     addProperty(flowProfile_);
+    ON_CHANGE_LAMBDA(flowProfile_, [this] {
+        inflowVelocity_.setReadOnlyFlag(flowProfile_.getValue() == FlowProfile::FP_VOLUME);
+    })
     flowProfile_.addOption("poiseuille", "Poiseuille", FlowProfile::FP_POISEUILLE);
     flowProfile_.addOption("powerlaw", "Powerlaw", FlowProfile::FP_POWERLAW);
     //flowProfile_.addOption("constant", "CONSTANT", FlowProfile::FP_CONSTANT);
+    flowProfile_.addOption("volume", "Volume", FlowProfile::FP_VOLUME);
     addProperty(inflowVelocity_);
     inflowVelocity_.setNumDecimals(3);
 }
@@ -73,10 +77,13 @@ void FlowSimulationGeometry::process() {
     // Add indicators.
     auto* flowParametrizationList = new FlowParameterSetEnsemble(*flowParametrizationInport_.getData());
 
+    // Add a ramp up that lasts half of the simulated time.
+    float rampUpTime = flowParametrizationList->getSimulationTime() * 0.5f;
+
     FlowIndicator inlet;
     inlet.type_ = FIT_VELOCITY;
     inlet.flowProfile_ = flowProfile_.getValue();
-    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(0.1f, inflowVelocity_.get());
+    inlet.velocityCurve_ = VelocityCurve::createSinusoidalCurve(rampUpTime, inflowVelocity_.get());
     inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
     inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
     inlet.radius_ = radius_.get();

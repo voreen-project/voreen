@@ -53,6 +53,8 @@ private:
     VolumePort outport_;
 
     StringOptionProperty type_;
+    IntProperty resolutionLength_;
+    IntProperty resolutionDiameter_;
 
     static const std::string loggerCat_;
 };

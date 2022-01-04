@@ -65,6 +65,10 @@ EnsembleMeanCreatorInput EnsembleMeanCreator::prepareComputeInput() {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);
     }
 
+    if (ensemble->getMembers().empty()) {
+        throw InvalidInputException("Empty ensemble", InvalidInputException::S_WARNING);
+    }
+
     // Get required information about mean volume format.
     tgt::ivec3 newDims = outputDimensions_.get();
     size_t numChannels = ensemble->getNumChannels(selectedField_.get());

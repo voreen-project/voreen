@@ -47,6 +47,21 @@ enum FlowProfile {
     FP_CONSTANT   = 3,
 };
 
+enum FlowBoundaryCondition {
+    FBC_NONE        = 0,
+    FBC_BOUNCE_BACK = 1,
+    FBC_BOUZIDI     = 2,
+};
+
+enum FlowTurbulenceModel {
+    FTM_NONE                            = 0,
+    FTM_SMAGORINSKY                     = 1,
+    FTM_SMAGORINSKY_SHEAR_IMPROVED      = 2,
+    FTM_SMAGORINSKY_CONSISTENT          = 3,
+    FTM_SMAGORINSKY_CONSISTENT_STRAIN   = 4,
+    FTM_SMAGORINSKY_DYNAMIC             = 5,
+};
+
 class VelocityCurve {
 public:
 
@@ -204,8 +219,9 @@ T characteristicLength = 0.0;
 T characteristicVelocity = 0.0;
 T viscosity = 0.0;
 T density = 0.0;
+FlowTurbulenceModel turbulenceModel = FTM_NONE;
 T smagorinskyConstant = 0.0;
-bool bouzidiOn = false;
+FlowBoundaryCondition wallBoundaryCondition = FBC_NONE;
 T inletVelocityMultiplier = 1.0;
 //////////////////////////////////////
 
@@ -309,26 +325,39 @@ void prepareLattice(SuperLattice3D<T, DESCRIPTOR>& lattice,
     // material=1 --> bulk dynamics
     lattice.defineDynamics(superGeometry.getMaterialIndicator(MAT_FLUID), &bulkDynamics);
 
-    if (bouzidiOn) {
+    switch(wallBoundaryCondition) {
+    case FBC_BOUZIDI:
         // material=2 --> no dynamics + bouzidi zero velocity
         lattice.defineDynamics(superGeometry.getMaterialIndicator(MAT_WALL), &instances::getNoDynamics<T, DESCRIPTOR>());
         setBouzidiZeroVelocityBoundary<T, DESCRIPTOR>(lattice, superGeometry, MAT_WALL, stlReader);
-    } else {
+        break;
+    case FBC_BOUNCE_BACK:
         // material=2 --> bounceBack dynamics
         lattice.defineDynamics(superGeometry.getMaterialIndicator(MAT_WALL), &instances::getBounceBack<T, DESCRIPTOR>());
+        break;
+    case FBC_NONE:
+    default:
+        lattice.defineDynamics(superGeometry.getMaterialIndicator(MAT_WALL), &instances::getNoDynamics<T, DESCRIPTOR>());
+        break;
     }
 
     for(const auto& indicator : flowIndicators) {
         if(indicator.type_ == FIT_VELOCITY) {
-            if(bouzidiOn) {
+            switch(wallBoundaryCondition) {
+            case FBC_BOUZIDI:
                 // no dynamics + bouzidi velocity (inflow)
                 lattice.defineDynamics(superGeometry.getMaterialIndicator(indicator.id_), &instances::getNoDynamics<T, DESCRIPTOR>());
                 setBouzidiVelocityBoundary<T,DESCRIPTOR>(lattice, superGeometry, indicator.id_, stlReader);
-            }
-            else {
+                break;
+            case FBC_BOUNCE_BACK:
                 // bulk dynamics + velocity (inflow)
                 lattice.defineDynamics(superGeometry.getMaterialIndicator(indicator.id_), &bulkDynamics);
                 setInterpolatedVelocityBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
+                break;
+            case FBC_NONE:
+            default:
+                lattice.defineDynamics(superGeometry.getMaterialIndicator(MAT_WALL), &instances::getNoDynamics<T, DESCRIPTOR>());
+                break;
             }
         }
         else if(indicator.type_ == FIT_PRESSURE) {
@@ -386,9 +415,9 @@ void setBoundaryValues(SuperLattice3D<T, DESCRIPTOR>& sLattice,
 
             // This function applies the velocity profile to the boundary condition and the lattice.
             auto applyFlowProfile = [&] (AnalyticalF3D<T,T>& profile) {
-                if (bouzidiOn) {
+                if(wallBoundaryCondition == FBC_BOUZIDI) {
                     defineUBouzidi<T, DESCRIPTOR>(sLattice, superGeometry, indicator.id_, profile);
-                } else {
+                } else if(wallBoundaryCondition == FBC_BOUNCE_BACK) {
                     sLattice.defineU(superGeometry.getMaterialIndicator(indicator.id_), profile);
                 }
             };
@@ -549,8 +578,10 @@ void writeVVDFile(STLreader<T>& stlReader,
             << "<MetaItem name=\"" << "ParameterCharacteristicVelocity" << "\" type=\"FloatMetaData\" value=\"" << characteristicVelocity << "\" />"
             << "<MetaItem name=\"" << "ParameterViscosity" << "\" type=\"FloatMetaData\" value=\"" << viscosity << "\" />"
             << "<MetaItem name=\"" << "ParameterDensity" << "\" type=\"FloatMetaData\" value=\"" << density << "\" />"
+            << "<MetaItem name=\"" << "ParameterTurbulenceModel" << "\" type=\"IntMetaData\" value=\"" << turbulenceModel << "\" />"
             << "<MetaItem name=\"" << "ParameterSmagorinskyConstant" << "\" type=\"FloatMetaData\" value=\"" << smagorinskyConstant << "\" />"
-            << "<MetaItem name=\"" << "ParameterBouzidi" << "\" type=\"BoolMetaData\" value=\"" << (bouzidiOn ? "true" : "false") << "\" />"
+            << "<MetaItem name=\"" << "ParameterWallBoundaryCondition" << "\" type=\"IntMetaData\" value=\"" << wallBoundaryCondition << "\" />"
+            << "<MetaItem name=\"" << "ParameterInletVelocityMultiplier" << "\" type=\"FloatMetaData\" value=\"" << inletVelocityMultiplier << "\" />"
             // Additional meta data.
             << "<MetaItem name=\"" << "StatisticsMaxVelocity" << "\" type=\"FloatMetaData\" value=\"" << statistics.getMaxU() << "\" />"
             << "<MetaItem name=\"" << "StatisticsAvgEnergy" << "\" type=\"FloatMetaData\" value=\"" << statistics.getAverageEnergy() << "\" />"
@@ -754,8 +785,9 @@ int main(int argc, char* argv[]) {
     characteristicVelocity  = std::atof(parameters["characteristicVelocity"].getAttribute("value").c_str());
     viscosity               = std::atof(parameters["viscosity"].getAttribute("value").c_str());
     density                 = std::atof(parameters["density"].getAttribute("value").c_str());
+    turbulenceModel         = static_cast<FlowTurbulenceModel>(std::atof(parameters["turbulenceModel"].getAttribute("value").c_str()));
     smagorinskyConstant     = std::atof(parameters["smagorinskyConstant"].getAttribute("value").c_str());
-    bouzidiOn               = parameters["bouzidi"].getAttribute("value") == "true";
+    wallBoundaryCondition   = static_cast<FlowBoundaryCondition>(std::atof(parameters["wallBoundaryCondition"].getAttribute("value").c_str())); // Replaces: bouzidiOn = parameters["bouzidi"].getAttribute("value") == "true";
     inletVelocityMultiplier = std::atof(parameters["inletVelocityMultiplier"].getAttribute("value").c_str());
 
     XMLreader indicators = config["flowIndicators"];
@@ -819,14 +851,44 @@ int main(int argc, char* argv[]) {
     // === 3rd Step: Prepare Lattice ===
     SuperLattice3D<T, DESCRIPTOR> sLattice(superGeometry);
 
-    SmagorinskyBGKdynamics<T, DESCRIPTOR> bulkDynamics(converter.getLatticeRelaxationFrequency(),
-                                                       instances::getBulkMomenta<T, DESCRIPTOR>(),
-                                                       smagorinskyConstant);
+    auto createTurbulenceModel = [&] (FlowTurbulenceModel model) -> Dynamics<T, DESCRIPTOR>* {
+        switch(model) {
+        case FTM_SMAGORINSKY:
+            return new SmagorinskyBGKdynamics<T, DESCRIPTOR>(converter.getLatticeRelaxationFrequency(),
+                                                             instances::getBulkMomenta<T, DESCRIPTOR>(),
+                                                             smagorinskyConstant);
+        //case FTM_SMAGORINSKY_SHEAR_IMPROVED: // Does not compile in OpenLB 1.4.
+        //    return new ShearSmagorinskyBGKdynamics<T, DESCRIPTOR>(converter.getLatticeRelaxationFrequency(),
+        //                                                          instances::getBulkMomenta<T, DESCRIPTOR>(),
+        //                                                          smagorinskyConstant);
+        case FTM_SMAGORINSKY_CONSISTENT:
+            return new ConSmagorinskyBGKdynamics<T, DESCRIPTOR>(converter.getLatticeRelaxationFrequency(),
+                                                                instances::getBulkMomenta<T, DESCRIPTOR>(),
+                                                                smagorinskyConstant);
+        case FTM_SMAGORINSKY_CONSISTENT_STRAIN:
+            return new ConStrainSmagorinskyBGKdynamics<T, DESCRIPTOR>(converter.getLatticeRelaxationFrequency(),
+                                                                      instances::getBulkMomenta<T, DESCRIPTOR>(),
+                                                                      smagorinskyConstant);
+        case FTM_SMAGORINSKY_DYNAMIC:
+            return new ConSmagorinskyBGKdynamics<T, DESCRIPTOR>(converter.getLatticeRelaxationFrequency(),
+                                                                instances::getBulkMomenta<T, DESCRIPTOR>(),
+                                                                smagorinskyConstant);
+        case FTM_NONE:
+        default:
+            return nullptr;
+        };
+    };
+
+    std::unique_ptr<Dynamics<T, DESCRIPTOR>> bulkDynamics(createTurbulenceModel(turbulenceModel));
+    if(!bulkDynamics) {
+        clout << "Error: No bulk dynamics" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     Timer<T> timer1(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
     timer1.start();
 
-    prepareLattice(sLattice, converter, bulkDynamics, stlReader, superGeometry);
+    prepareLattice(sLattice, converter, *bulkDynamics, stlReader, superGeometry);
 
     timer1.stop();
     timer1.printSummary();
@@ -847,7 +909,7 @@ int main(int argc, char* argv[]) {
         sLattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        getResults(sLattice, converter, iteration, maxIteration, bulkDynamics, superGeometry, timer, stlReader);
+        getResults(sLattice, converter, iteration, maxIteration, *bulkDynamics, superGeometry, timer, stlReader);
 
         // === 8th Step: Check for convergence.
         converge.takeValue(sLattice.getStatistics().getAverageEnergy(), true);

@@ -30,6 +30,7 @@
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "modules/core/io/rawvolumereader.h"
+#include "modules/core/io/vvdvolumewriter.h"
 
 #include <boost/process.hpp>
 
@@ -172,8 +173,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , toolchain_("toolchain", "Toolchain")
     , simulationType_("simulationType", "Simulation Type")
     , configNodes_("configNodes", "Nodes", 1, 1, 2)
-    , configTasksPerNode_("configTasksPerNode", "Tasks per Node", 18, 1, 72)
-    , configCPUsPerTask_("configCPUsPerTask", "CPUs per Task", 4, 1, 72)
+    , configTasksPerNode_("configTasksPerNode", "Tasks per Node", 18, 1, 36)
+    , configCPUsPerTask_("configCPUsPerTask", "CPUs per Task", 4, 1, 36)
     , configMemory_("configMemory", "Memory (GB/Node)", 16, 1, 92)
     , configPartition_("configPartition", "Partition")
     , configTimeDays_("configTimeDays", "Max. Time Days", 0, 0, 6)
@@ -189,9 +190,9 @@ FlowSimulationCluster::FlowSimulationCluster()
     , numFinishedThreads_(0)
 {
     addPort(geometryDataPort_);
-    //addPort(measuredDataPort_); // Currently ignored.
+    addPort(measuredDataPort_); // Currently ignored.
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
-    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeType3xFloat()));
+    measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
     addPort(parameterPort_);
 
     addProperty(useLocalInstance_);
@@ -438,19 +439,15 @@ void FlowSimulationCluster::enqueueSimulations() {
             // Enumerate volumes.
             std::ostringstream suffix;
             suffix << std::setw(nrLength) << std::setfill('0') << i;
-            std::string volumeName = "velocity" + suffix.str() + ".raw";
-
+            std::string volumeName = "velocity" + suffix.str() + ".vvd";
             std::string velocityFilename = simulationPathSource + "velocity/ " + volumeName;
-            std::fstream velocityFile(velocityFilename.c_str(), std::ios::out | std::ios::binary);
 
-            VolumeRAMRepresentationLock volume(volumeList->at(i));
-            velocityFile.write(reinterpret_cast<const char*>(volume->getData()), volume->getNumBytes());
-            if (!velocityFile.good()) {
+            try {
+                VvdVolumeWriter().write(velocityFilename, volumeList->at(i));
+            } catch(SerializationException& e) {
                 LERROR("Could not write velocity file");
                 continue;
             }
-
-            velocityFile.close();
         }
     }
 

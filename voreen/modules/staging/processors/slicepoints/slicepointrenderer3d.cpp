@@ -30,6 +30,10 @@
 #include "tgt/vector.h"
 #include "tgt/immediatemode/immediatemode.h"
 
+namespace {
+    tgt::ivec3 INVISIBLE = -tgt::ivec3::one;
+}
+
 namespace voreen {
 
 SlicePointRenderer3D::SlicePointRenderer3D()
@@ -43,19 +47,19 @@ SlicePointRenderer3D::SlicePointRenderer3D()
     // points
     , renderPoint0_("renderPoint0", "Render Point1", false)
     , pointColor0_("pointColor0", "Point1 Color", tgt::vec4(1.0f, 0.0f, 0.0f, 1.0f))
-    , pointPos0_("pointPos0", "Point1 Position", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(INT_MAX),
+    , pointPos0_("pointPos0", "Point1 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , renderPoint1_("renderPoint1", "Render Point2", false)
     , pointColor1_("pointColor1", "Point2 Color", tgt::vec4(0.0f, 1.0f, 0.0f, 1.0f))
-    , pointPos1_("pointPos1", "Point2 Position", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(INT_MAX),
+    , pointPos1_("pointPos1", "Point2 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , renderPoint2_("renderPoint2", "Render Point3", false)
     , pointColor2_("pointColor2", "Point3 Color", tgt::vec4(0.0f, 0.0f, 1.0f, 1.0f))
-    , pointPos2_("pointPos2", "Point3 Position", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(INT_MAX),
+    , pointPos2_("pointPos2", "Point3 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , renderPoint3_("renderPoint3", "Render Point4", false)
     , pointColor3_("pointColor3", "Point4 Color", tgt::vec4(1.0f, 1.0f, 0.0f, 1.0f))
-    , pointPos3_("pointPos3", "Point4 Position", tgt::ivec3::zero, tgt::ivec3::zero, tgt::ivec3(INT_MAX),
+    , pointPos3_("pointPos3", "Point4 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , shaderProp_("geometry.prg", "Shader", "trianglemesh.frag", "trianglemesh.vert", "trianglemesh.geom",
                   Processor::INVALID_PROGRAM,Property::LOD_DEBUG)
@@ -163,13 +167,13 @@ void SlicePointRenderer3D::render() {
     // check which speheres should be rendered
     bool visiblePoint0, visiblePoint1, visiblePoint2, visiblePoint3;
     tgt::vec3 pointWolrdPos0, pointWolrdPos1, pointWolrdPos2, pointWolrdPos3;
-    if((visiblePoint0 = renderPoint0_.get()) && pointColor0_.get().a > 0.f)
+    if((visiblePoint0 = renderPoint0_.get() && pointPos0_.get() != INVISIBLE) && pointColor0_.get().a > 0.f)
         pointWolrdPos0 = pointPos0_.get();
-    if((visiblePoint1 = renderPoint1_.get()) && pointColor1_.get().a > 0.f)
+    if((visiblePoint1 = renderPoint1_.get() && pointPos1_.get() != INVISIBLE) && pointColor1_.get().a > 0.f)
         pointWolrdPos1 = pointPos1_.get();
-    if((visiblePoint2 = renderPoint2_.get()) && pointColor2_.get().a > 0.f)
+    if((visiblePoint2 = renderPoint2_.get() && pointPos2_.get() != INVISIBLE) && pointColor2_.get().a > 0.f)
         pointWolrdPos2 = pointPos2_.get();
-    if((visiblePoint3 = renderPoint3_.get()) && pointColor3_.get().a > 0.f)
+    if((visiblePoint3 = renderPoint3_.get() && pointPos3_.get() != INVISIBLE) && pointColor3_.get().a > 0.f)
         pointWolrdPos3 = pointPos3_.get();
 
 

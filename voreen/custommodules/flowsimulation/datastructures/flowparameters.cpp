@@ -42,9 +42,7 @@ VelocityCurve::VelocityCurve()
 float VelocityCurve::operator()(float t) const {
 
     if(isPeriodic()) {
-        float begin = peakVelocities_.begin()->first;
-        float end = peakVelocities_.rbegin()->first;
-        t = std::fmod(t - begin, end - begin);
+        t = std::fmod(t - getStartTime(), getEndTime() - getStartTime());
     }
     else {
         if(t < peakVelocities_.begin()->first) {
@@ -96,6 +94,14 @@ float VelocityCurve::getMaxVelocity() const {
         max = std::max(iter->second, max);
     }
     return max;
+}
+
+float VelocityCurve::getStartTime() const {
+    return peakVelocities_.begin()->first;
+}
+
+float VelocityCurve::getEndTime() const {
+    return peakVelocities_.rbegin()->first;
 }
 
 float VelocityCurve::getDuration() const {
@@ -209,6 +215,7 @@ FlowIndicator::FlowIndicator()
     , center_(tgt::vec3::zero)
     , normal_(tgt::vec3::zero)
     , radius_(0.0f)
+    , length_(0.0f)
     , flowProfile_(FP_NONE)
 {
 }
@@ -220,6 +227,7 @@ void FlowIndicator::serialize(Serializer& s) const {
     s.serialize("center", center_);
     s.serialize("normal", normal_);
     s.serialize("radius", radius_);
+    s.serialize("length", length_);
     s.serialize("flowProfile", flowProfile_);
     s.serialize("velocityCurve", velocityCurve_);
 }
@@ -233,6 +241,7 @@ void FlowIndicator::deserialize(Deserializer& s) {
     s.deserialize("center", center_);
     s.deserialize("normal", normal_);
     s.deserialize("radius", radius_);
+    s.optionalDeserialize("length", length_, 0.0f);
     int profile = FP_POISEUILLE;
     s.deserialize("flowProfile", profile);
     flowProfile_ = static_cast<FlowProfile>(profile);
@@ -252,8 +261,11 @@ FlowParameterSet::FlowParameterSet(const std::string& name)
     , characteristicVelocity_(0.0f)
     , viscosity_(0.0f)
     , density_(0.0f)
+    , turbulenceModel_(FTM_NONE)
     , smagorinskyConstant_(0.0f)
-    , bouzidi_(false)
+    , wallBoundaryCondition_(FBC_NONE)
+    , latticePerturbation_(false)
+    , inletVelocityMultiplier_(0.0f)
 {
 }
 
@@ -309,6 +321,14 @@ void FlowParameterSet::setDensity(float density) {
     density_ = density;
 }
 
+FlowTurbulenceModel FlowParameterSet::getTurbulenceModel() const {
+    return turbulenceModel_;
+}
+
+void FlowParameterSet::setTurbulenceModel(FlowTurbulenceModel turbulenceModel) {
+    turbulenceModel_ = turbulenceModel;
+}
+
 float FlowParameterSet::getSmagorinskyConstant() const {
     return smagorinskyConstant_;
 }
@@ -317,12 +337,20 @@ void FlowParameterSet::setSmagorinskyConstant(float smagorinskyConstant) {
     smagorinskyConstant_ = smagorinskyConstant;
 }
 
-bool FlowParameterSet::getBouzidi() const {
-    return bouzidi_;
+FlowBoundaryCondition FlowParameterSet::getWallBoundaryCondition() const {
+    return wallBoundaryCondition_;
 }
 
-void FlowParameterSet::setBouzidi(bool bouzidi) {
-    bouzidi_ = bouzidi;
+void FlowParameterSet::setWallBoundaryCondition(FlowBoundaryCondition wallBoundaryCondition) {
+    wallBoundaryCondition_ = wallBoundaryCondition;
+}
+
+bool FlowParameterSet::getLatticePerturbation() const {
+    return latticePerturbation_;
+}
+
+void FlowParameterSet::setLatticePerturbation(bool latticePerturbation) {
+    latticePerturbation_ = latticePerturbation;
 }
 
 float FlowParameterSet::getInletVelocityMultiplier() const {
@@ -340,7 +368,7 @@ float FlowParameterSet::getReynoldsNumber() const {
 bool FlowParameterSet::isValid() const {
     float dx = (characteristicLength_ / spatialResolution_);
     float convertVelocity = 3.0f / (relaxationTime_ - 0.5f) * viscosity_ / dx;
-    float uLatticeMax = characteristicVelocity_ / convertVelocity;
+    float uLatticeMax = characteristicVelocity_ * inletVelocityMultiplier_ / convertVelocity;
     return uLatticeMax < 0.4f; // Intrinsic property of LBM.
 }
 
@@ -352,8 +380,10 @@ void FlowParameterSet::serialize(Serializer& s) const {
     s.serialize("characteristicVelocity", characteristicVelocity_);
     s.serialize("viscosity", viscosity_);
     s.serialize("density", density_);
+    s.serialize("turbulenceModel", turbulenceModel_);
     s.serialize("smagorinskyConstant", smagorinskyConstant_);
-    s.serialize("bouzidi", bouzidi_);
+    s.serialize("wallBoundaryCondition", wallBoundaryCondition_);
+    s.serialize("latticePerturbation", latticePerturbation_);
     s.serialize("inletVelocityMultiplier", inletVelocityMultiplier_);
 }
 
@@ -365,8 +395,14 @@ void FlowParameterSet::deserialize(Deserializer& s) {
     s.deserialize("characteristicVelocity", characteristicVelocity_);
     s.deserialize("viscosity", viscosity_);
     s.deserialize("density", density_);
+    int turbulenceModel = FTM_NONE;
+    s.optionalDeserialize("turbulenceModel", turbulenceModel, static_cast<int>(FTM_SMAGORINSKY));
+    turbulenceModel_ = static_cast<FlowTurbulenceModel>(turbulenceModel);
     s.deserialize("smagorinskyConstant", smagorinskyConstant_);
-    s.deserialize("bouzidi", bouzidi_);
+    int wallBoundaryCondition = FBC_NONE;
+    s.optionalDeserialize("wallBoundaryCondition", wallBoundaryCondition, static_cast<int>(FBC_BOUZIDI));
+    wallBoundaryCondition_ = static_cast<FlowBoundaryCondition>(wallBoundaryCondition);
+    s.optionalDeserialize("latticePerturbation", latticePerturbation_, false);
     s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
 }
 
