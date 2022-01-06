@@ -317,6 +317,7 @@ private:
     BoolProperty synchronousComputation_;
     OptionProperty<InvalidationBehavior> invalidationBehavior_;
     bool invalidationBehaviorPropertyIsSetUp_;
+    BoolProperty suppressErrorMessages_;
     ButtonProperty manualUpdateButton_;
     ButtonProperty stopUpdateButton_;
     ProgressProperty progressDisplay_;
@@ -484,6 +485,7 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     , synchronousComputation_("synchronousComputation", "Wait for Result", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , invalidationBehavior_("invalidationMode", "Invalidation Behavior", Processor::VALID, false, Property::LOD_ADVANCED)
     , invalidationBehaviorPropertyIsSetUp_(false)
+    , suppressErrorMessages_("suppressErrorMessages", "Suppress Error Messages", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , manualUpdateButton_("manualUpdateButton_", "Start", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , stopUpdateButton_("stopUpdateButton", "Stop", Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , progressDisplay_("progressDisplay", "Progress")
@@ -499,6 +501,9 @@ AsyncComputeProcessor<I,O>::AsyncComputeProcessor()
     addProperty(invalidationBehavior_);
         invalidationBehavior_.setGroupID("ac_processing");
         // Options are added at a later stage! See trySetUpInvalidationBehavior for more info.
+
+    addProperty(suppressErrorMessages_);
+        suppressErrorMessages_.setGroupID("ac_processing");
 
     addProperty(manualUpdateButton_);
         manualUpdateButton_.setGroupID("ac_processing");
@@ -824,12 +829,16 @@ void AsyncComputeProcessor<I,O>::process() {
             switch(e.severity_) {
                 case InvalidInputException::S_ERROR:
 
-                    VoreenApplication::app()->showMessageBox(header, msg, true);
+                    if(!suppressErrorMessages_.get()) {
+                        VoreenApplication::app()->showMessageBox(header, msg, true);
+                    }
                     LERROR(msg);
                     break;
                 case InvalidInputException::S_WARNING:
 
-                    VoreenApplication::app()->showMessageBox(header, msg, false);
+                    if(!suppressErrorMessages_.get()) {
+                        VoreenApplication::app()->showMessageBox(header, msg, false);
+                    }
                     LWARNING(msg);
                     break;
                 case InvalidInputException::S_IGNORE:
