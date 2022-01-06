@@ -83,7 +83,7 @@ void SimilarityMatrixSave::saveSimilarityMatrix() {
         Serializer s(json);
         s.serialize("similarity", data);
         json.write(stream, true, false);
-        LINFO(filenameProp_.get() << " saved sucessfully!");
+        LINFO(filenameProp_.get() << " saved successfully!");
     } catch(tgt::Exception& e) {
         LERROR(e.what());
         filenameProp_.set("");

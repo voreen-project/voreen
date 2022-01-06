@@ -243,6 +243,33 @@ SimilarityMatrixCreatorInput SimilarityMatrixCreator::prepareComputeInput() {
 SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixCreatorInput input, ProgressReporter& progress) const {
 
     std::unique_ptr<SimilarityMatrixList> similarityMatrices = std::move(input.outputMatrices);
+
+    // First, try to load from cache.
+    std::string cachePath = getCachePath() + "/" + input.hash + ".vsm";
+    if(tgt::FileSystem::fileExists(cachePath)) {
+        try {
+            std::ifstream stream(cachePath);
+            if (!stream)
+                throw tgt::CorruptedFileException("Could not read file: " + cachePath);
+
+            JsonDeserializer json;
+            json.read(stream, true);
+            Deserializer s(json);
+            s.deserialize("similarity", *similarityMatrices);
+            LINFO("Cache loaded successfully!");
+
+            return SimilarityMatrixCreatorOutput{
+                    std::move(similarityMatrices)
+            };
+        } catch (std::exception& e) {
+            LWARNING("Could not load cache: " << e.what());
+        }
+    }
+    else {
+        LINFO("No cache file found.");
+    }
+
+    // Create similarity matrix.
     std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
 
     progress.setProgress(0.0f);
@@ -594,6 +621,18 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         if (aborted) {
             throw boost::thread_interrupted();
         }
+    }
+
+    // Save to cache.
+    try {
+        std::ofstream stream(cachePath);
+        JsonSerializer json;
+        Serializer s(json);
+        s.serialize("similarity", *similarityMatrices);
+        json.write(stream, false, true);
+        LINFO("Cache saved successfully!");
+    } catch(std::exception& e) {
+        LWARNING("Could not store cache: " << e.what());
     }
 
     progress.setProgress(1.0f);
