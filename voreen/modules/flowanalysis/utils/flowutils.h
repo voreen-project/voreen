@@ -51,11 +51,9 @@ public:
     tgt::vec3 sample(tgt::vec3 pos) const;
 
 private:
-    const VolumeRAM* volume_;
-    const RealWorldMapping rwm_;
-    const VolumeRAM::Filter filter_;
     const tgt::mat4 toVoxelMatrix_;
     const bool transformationSet_;
+    std::function<tgt::vec3(tgt::vec3)> sampleFunction_;
 };
 
 class SpatioTemporalSampler : public VelocitySampler {

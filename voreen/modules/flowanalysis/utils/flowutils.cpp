@@ -31,12 +31,40 @@ SpatialSampler::SpatialSampler(const VolumeRAM* volume,
                                const RealWorldMapping& rwm,
                                VolumeRAM::Filter filter,
                                const tgt::mat4& toVoxelMatrix)
-    : volume_(volume)
-    , rwm_(rwm)
-    , filter_(filter)
-    , toVoxelMatrix_(toVoxelMatrix)
+    : toVoxelMatrix_(toVoxelMatrix)
     , transformationSet_(toVoxelMatrix_ != tgt::mat4::identity)
 {
+    switch(filter) {
+    case VolumeRAM::NEAREST:
+        sampleFunction_ = [volume, rwm] (const tgt::vec3& pos) {
+            tgt::vec3 voxel = tgt::vec3::zero;
+            for (size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                voxel[channel] = rwm.normalizedToRealWorld(volume->getVoxelNormalized(pos, channel));
+            }
+            return voxel;
+        };
+        break;
+    case VolumeRAM::LINEAR:
+        sampleFunction_ = [volume, rwm] (const tgt::vec3& pos) {
+            tgt::vec3 voxel = tgt::vec3::zero;
+            for (size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                voxel[channel] = rwm.normalizedToRealWorld(volume->getVoxelNormalizedLinear(pos, channel));
+            }
+            return voxel;
+        };
+            break;
+    case VolumeRAM::CUBIC:
+        sampleFunction_ = [volume, rwm] (const tgt::vec3& pos) {
+            tgt::vec3 voxel = tgt::vec3::zero;
+            for (size_t channel = 0; channel < volume->getNumChannels(); channel++) {
+                voxel[channel] = rwm.normalizedToRealWorld(volume->getVoxelNormalizedCubic(pos, channel));
+            }
+            return voxel;
+        };
+            break;
+    default:
+        tgtAssert(false, "unhandled filter mode");
+    }
 }
 
 tgt::vec3 SpatialSampler::sample(tgt::vec3 pos) const {
@@ -46,35 +74,7 @@ tgt::vec3 SpatialSampler::sample(tgt::vec3 pos) const {
         pos = toVoxelMatrix_ * pos;
     }
 
-    // Would we sample out of bounds?
-    if(!tgt::hand(tgt::lessThan(tgt::svec3(pos), volume_->getDimensions()))) {
-        return tgt::vec3::zero;
-    }
-
-    tgt::vec3 voxel = tgt::vec3::zero;
-    if(filter_ == VolumeRAM::NEAREST) {
-        for (size_t channel = 0; channel < volume_->getNumChannels(); channel++) {
-            voxel[channel] = rwm_.normalizedToRealWorld(
-                    volume_->getVoxelNormalized(pos, channel));
-        }
-    }
-    else if(filter_ == VolumeRAM::LINEAR) {
-        for (size_t channel = 0; channel < volume_->getNumChannels(); channel++) {
-            voxel[channel] = rwm_.normalizedToRealWorld(
-                    volume_->getVoxelNormalizedLinear(pos, channel));
-        }
-    }
-    else if(filter_ == VolumeRAM::CUBIC) {
-        for (size_t channel = 0; channel < volume_->getNumChannels(); channel++) {
-            voxel[channel] = rwm_.normalizedToRealWorld(
-                    volume_->getVoxelNormalizedCubic(pos, channel));
-        }
-    }
-    else {
-        tgtAssert(false, "unhandled filter mode")
-    }
-
-    return voxel;
+    return sampleFunction_(pos);
 }
 
 
