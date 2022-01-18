@@ -73,6 +73,7 @@ protected:
                 );
     }
 
+    virtual void beforeProcess();
     virtual void process();
     virtual void initialize();
     virtual void deinitialize();
@@ -120,6 +121,7 @@ private:
     CameraProperty camera_;
     CameraInteractionHandler* cameraHandler_;
     ShaderProperty composeShader_;
+    BoolProperty useFloatRenderTargets_;
 
     RenderPort inport_;
     RenderPort outport_;

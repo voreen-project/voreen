@@ -148,8 +148,6 @@ OptimizedProxyGeometry::OptimizedProxyGeometry()
     setPropertyGroupGuiName("clipping", "Clipping Planes");
     adjustClipPropertiesVisibility();
 
-    oldVolumeDimensions_ = tgt::ivec3(0,0,0);
-
     updatePropertyVisibility();
 
     mode_.onChange(MemberFunctionCallback<OptimizedProxyGeometry>(this, &OptimizedProxyGeometry::onModeChange));

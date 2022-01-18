@@ -242,8 +242,6 @@ private:
     ButtonProperty resetClipPlanes_;        ///< Reset clipping plane parameters to extremal values.
     BoolProperty waitForOptimization_;      ///< if set, no temporary cube is used while computing the optimized proxy geometry, but the processor waits for the computation to finish
 
-    tgt::ivec3 oldVolumeDimensions_;
-
     bool structureInvalid_;  ///< determines if the spatial subdivision of the volume has to be updated (e.g. volume or resolution changed)
 
     bool geometryInvalid_;   ///< determines if the mesh geometry has to be updated, e.g. because of a transfer function change

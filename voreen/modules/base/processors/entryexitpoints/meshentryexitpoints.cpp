@@ -27,6 +27,7 @@
 
 #include "voreen/core/interaction/camerainteractionhandler.h"
 
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/geometry/trianglemeshgeometry.h"
 
 #include "tgt/glmath.h"
@@ -214,6 +215,9 @@ void MeshEntryExitPoints::process() {
 
     if(const TriangleMeshGeometryBase* tmgb = dynamic_cast<const TriangleMeshGeometryBase*>(inport_.getData())) {
         MatStack.multMatrix(tmgb->getTransformationMatrix());
+    }
+    else if(const GlMeshGeometryBase* gmgb = dynamic_cast<const GlMeshGeometryBase*>(inport_.getData())) {
+        MatStack.multMatrix(gmgb->getTransformationMatrix());
     }
 
     if (cameraInsideVolumeTechnique_.isSelected("gpu")) {

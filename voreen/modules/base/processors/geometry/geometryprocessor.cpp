@@ -56,6 +56,7 @@ GeometryProcessor::GeometryProcessor()
     , cpPort_(Port::INPORT, "coprocessor.geometryrenderers", "GeometryRenderers", true)
     , oirAddImageShader_("oirAddImageShader", "OIT Add Image Shader", "oit_addimage.frag", "oit_passthrough.vert", "", Processor::INVALID_PROGRAM,Property::LOD_DEBUG)
     , oirBlendShader_("oirBlendShader", "OIT Blend Shader", "oit_blend.frag", "oit_passthrough.vert", "", Processor::INVALID_PROGRAM,Property::LOD_DEBUG)
+    , useFloatRenderTargets_("useFloatRenderTargets", "Use float rendertargets", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , headPointerTexture_(0)
     , headPointerInitializer_(0)
     , atomicFragmentCounterBuffer_(0)
@@ -90,6 +91,8 @@ GeometryProcessor::GeometryProcessor()
     addProperty(composeShader_);
     addProperty(oirAddImageShader_);
     addProperty(oirBlendShader_);
+
+    addProperty(useFloatRenderTargets_);
 
     cameraHandler_ = new CameraInteractionHandler("cameraHandler", "Camera", &camera_);
     addInteractionHandler(cameraHandler_);
@@ -152,6 +155,26 @@ Processor* GeometryProcessor::create() const {
 bool GeometryProcessor::isReady() const {
     return outport_.isReady();
 }
+
+void GeometryProcessor::beforeProcess() {
+    RenderProcessor::beforeProcess();
+
+    if (useFloatRenderTargets_.get()) {
+        if (outport_.getRenderTarget()->getColorTexture()->getGLDataType() != GL_FLOAT) {
+            outport_.changeFormat(GL_RGBA16F);
+            tempPort_.changeFormat(GL_RGBA16F);
+            oitImageAddTargetPort_.changeFormat(GL_RGBA16F);
+        }
+    }
+    else {
+        if (outport_.getRenderTarget()->getColorTexture()->getGLDataType() == GL_FLOAT) {
+            outport_.changeFormat(GL_RGBA16);
+            tempPort_.changeFormat(GL_RGBA16);
+            oitImageAddTargetPort_.changeFormat(GL_RGBA16);
+        }
+    }
+}
+
 void GeometryProcessor::process() {
 
     // Update enclosing Bounding Box and adapt to scene.
