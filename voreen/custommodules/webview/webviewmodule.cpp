@@ -29,6 +29,7 @@
 
 #include "voreen/core/voreenapplication.h"
 
+#include "processors/qtsplitter.h"
 #include "processors/webviewprocessor.h"
 
 namespace voreen {
@@ -41,6 +42,7 @@ WebViewModule::WebViewModule(const std::string& modulePath)
     setID("WebView");
     setGuiName("WebView");
 
+    registerProcessor(new QtSplitter());
     registerProcessor(new WebViewProcessor());
 }
 

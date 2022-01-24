@@ -23,34 +23,35 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "webviewprocessorwidgetfactory.h"
+#ifndef VRN_QTSPLITTERWIDGET_H
+#define VRN_QTSPLITTERWIDGET_H
 
 #include "../processors/qtsplitter.h"
-#include "../qt/qtsplitterwidget.h"
+#include "voreen/qt/widgets/processor/qprocessorwidget.h"
 
-#include "../processors/webviewprocessor.h"
-#include "../qt/webviewwidget.h"
-
-#include "voreen/qt/voreenapplicationqt.h"
-#include "voreen/qt/mainwindow/voreenqtmainwindow.h"
+#include <QSplitter>
 
 namespace voreen {
 
-ProcessorWidget* WebViewProcessorWidgetFactory::createWidget(Processor* processor) const {
+class QtSplitterWidget : public QProcessorWidget {
+Q_OBJECT
+public:
+    QtSplitterWidget(QWidget* parent, QtSplitter* pyProcessor);
 
-    if (!VoreenApplicationQt::qtApp()) {
-        LERRORC("voreen.pythonProcessorWidgetFactory", "VoreenApplicationQt not instantiated");
-        return 0;
-    }
-    QWidget* parent = VoreenApplicationQt::qtApp()->getMainWindow();
+    void initialize();
 
-    if (dynamic_cast<QtSplitter*>(processor)) {
-        return new QtSplitterWidget(parent, static_cast<QtSplitter*>(processor));
-    }
-    else if (dynamic_cast<WebViewProcessor*>(processor)) {
-        return new WebViewWidget(parent, static_cast<WebViewProcessor*>(processor));
-    }
+    virtual void updateFromProcessor();
 
-    return 0;
-}
+private:
+
+    QtSplitter* processor_;
+
+    QSplitter* splitter_;
+
+    static const std::string loggerCat_;
+};
+
 } // namespace voreen
+
+#endif // VRN_QTSPLITTERWIDGET_H
+

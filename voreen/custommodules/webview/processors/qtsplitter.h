@@ -23,34 +23,67 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "webviewprocessorwidgetfactory.h"
+#ifndef VRN_QTSPLITTER_H
+#define VRN_QTSPLITTER_H
 
-#include "../processors/qtsplitter.h"
-#include "../qt/qtsplitterwidget.h"
+#include "voreen/core/processors/processor.h"
+#include "voreen/core/network/networkevaluator.h"
 
-#include "../processors/webviewprocessor.h"
-#include "../qt/webviewwidget.h"
-
-#include "voreen/qt/voreenapplicationqt.h"
-#include "voreen/qt/mainwindow/voreenqtmainwindow.h"
+#include "voreen/core/properties/buttonproperty.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "modules/base/properties/interactivelistproperty.h"
 
 namespace voreen {
 
-ProcessorWidget* WebViewProcessorWidgetFactory::createWidget(Processor* processor) const {
+class QtSplitter : public Processor, public ProcessorNetworkObserver {
+public:
 
-    if (!VoreenApplicationQt::qtApp()) {
-        LERRORC("voreen.pythonProcessorWidgetFactory", "VoreenApplicationQt not instantiated");
-        return 0;
-    }
-    QWidget* parent = VoreenApplicationQt::qtApp()->getMainWindow();
+    enum Orientation {
+        HORIZONTAL,
+        VERTICAL,
+        HORIZONTAL_OVERLAY,
+        VERTICAL_OVERLAY
+    };
 
-    if (dynamic_cast<QtSplitter*>(processor)) {
-        return new QtSplitterWidget(parent, static_cast<QtSplitter*>(processor));
-    }
-    else if (dynamic_cast<WebViewProcessor*>(processor)) {
-        return new WebViewWidget(parent, static_cast<WebViewProcessor*>(processor));
+    QtSplitter();
+    ~QtSplitter();
+
+    virtual Processor* create() const;
+
+    virtual std::string getClassName() const  { return "QtSplitter";             }
+    virtual std::string getCategory() const   { return "WebView";                }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
+
+    virtual bool isReady() const;
+
+    Orientation getOrientation() const;
+    std::vector<std::string> getInstances() const;
+
+protected:
+
+    virtual void setDescriptions() {
+        setDescription("This processor allows to merge processor widgets similar to the Voreen splitter.");
     }
 
-    return 0;
-}
-} // namespace voreen
+    virtual void process();
+    virtual void initialize();
+    virtual void deinitialize();
+
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
+    virtual void networkChanged();
+
+private:
+
+    OptionProperty<Orientation> orientation_;
+
+    InteractiveListProperty widgets_;
+    ButtonProperty updateWidgets_;
+
+    static const std::string loggerCat_;
+};
+
+} // namespace
+
+#endif // VRN_QTSPLITTER_H

@@ -39,8 +39,8 @@ public:
 
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "WebViewProcessor"; }
-    virtual std::string getCategory() const   { return "Python";                 }
+    virtual std::string getClassName() const  { return "WebViewProcessor";       }
+    virtual std::string getCategory() const   { return "WebView";                }
     virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;  }
 
     virtual bool isReady() const;
@@ -50,7 +50,7 @@ public:
 protected:
 
     virtual void setDescriptions() {
-        setDescription("This processor allows to make use of a python script to process incoming data. ");
+        setDescription("This processor provides a web browser interface.");
     }
 
     virtual void process();
@@ -69,4 +69,4 @@ private:
 
 } // namespace
 
-#endif // VRN_DYNAMICGLSLPROCESSOR_H
+#endif // VRN_WEBVIEWPROCESSOR_H
