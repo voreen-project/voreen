@@ -110,21 +110,26 @@ void QtSplitter::networkChanged() {
         }
     }
 
-    // Gather orphaned items.
-    std::vector<std::string> keptWidgets;
+    // Bookkeeping of already added instances (item and position).
+    std::vector<std::pair<std::string, int>> keptWidgets;
     for(const std::string& processor : processors) {
-        if(widgets_.hasInstance(processor)) {
-            keptWidgets.push_back(processor);
+        const auto& instances = widgets_.getInstances();
+        for(int i=0, num=static_cast<int>(instances.size()); i<num; i++) {
+            if(widgets_.getItems()[instances[i].getItemId()] == processor) {
+                keptWidgets.emplace_back(std::pair<std::string, int>(processor, i));
+            }
         }
     }
 
     // Setting items will reset instances.
+    widgets_.blockCallbacks(true);
     widgets_.setItems(processors);
 
     // So we re-add them.
     for(const auto& item : keptWidgets) {
-        widgets_.addInstance(item);
+        widgets_.addInstance(item.first, item.second);
     }
+    widgets_.blockCallbacks(false);
 
     getProcessorWidget()->updateFromProcessor();
 }

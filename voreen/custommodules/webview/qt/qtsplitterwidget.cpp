@@ -122,6 +122,7 @@ void QtSplitterWidget::updateFromProcessor() {
             break;
     }
 
+    update();
 }
 
 } //namespace voreen
