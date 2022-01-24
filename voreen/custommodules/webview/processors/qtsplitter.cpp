@@ -67,8 +67,6 @@ void QtSplitter::initialize() {
         auto* network = app->getNetworkEvaluator()->getProcessorNetwork();
         network->addObserver(this);
     }
-
-    networkChanged();
 }
 
 void QtSplitter::deinitialize() {
@@ -86,12 +84,27 @@ bool QtSplitter::isReady() const {
 }
 
 void QtSplitter::process() {
+    // Right after deserialization, when widgets have already been created
+    // we trigger the networkChange event manually to update the widgets.
+    if(firstProcessAfterDeserialization()) {
+        networkChanged();
+    }
 }
 
 void QtSplitter::serialize(Serializer& s) const {
     Processor::serialize(s);
+    s.serialize("items", widgets_.getItems());
 }
 void QtSplitter::deserialize(Deserializer& s) {
+    // First, we deserialize the widgets that were available at the point of serialization.
+    // We set them to the widgets interactive list property as it will only deserialize instances of
+    // items that still exists. At the moment of deserialization, however, widget have not necessarily been
+    // created yet. So we need to store them separately.
+    std::vector<std::string> items;
+    s.deserialize("items", items);
+    widgets_.blockCallbacks(true);
+    widgets_.setItems(items);
+    widgets_.blockCallbacks(false);
     Processor::deserialize(s);
 }
 

@@ -41,8 +41,6 @@ public:
     enum Orientation {
         HORIZONTAL,
         VERTICAL,
-        HORIZONTAL_OVERLAY,
-        VERTICAL_OVERLAY
     };
 
     QtSplitter();
