@@ -56,7 +56,7 @@ void DynamicOpenCLWidget::initialize() {
 
     DynamicCLProcessor* clProcessor = dynamic_cast<DynamicCLProcessor*>(processor_);
 
-    plugin_ = new OpenCLPlugin(clProcessor->getOpenCLProperty(), parentWidget());
+    plugin_ = new OpenCLPlugin(clProcessor->getOpenCLProperty());
     //OpenCLPropertyWidget* clWidget = (OpenCLPropertyWidget*)(*(clProcessor->getOpenCLProperty()->getPropertyWidgets().begin()));
     //plugin_ = clWidget->getPlugin();
     plugin_->createWidgets();
