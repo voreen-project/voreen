@@ -35,7 +35,7 @@
 
 namespace voreen {
 
-class QtSplitter : public Processor, public ProcessorNetworkObserver {
+class VRN_CORE_API QtSplitter : public Processor, public ProcessorNetworkObserver {
 public:
 
     enum Orientation {

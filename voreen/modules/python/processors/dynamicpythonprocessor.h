@@ -36,7 +36,7 @@
 
 namespace voreen {
 
-class DynamicPythonProcessor : public RenderProcessor {
+class VRN_CORE_API DynamicPythonProcessor : public RenderProcessor {
 public:
     DynamicPythonProcessor();
     ~DynamicPythonProcessor();

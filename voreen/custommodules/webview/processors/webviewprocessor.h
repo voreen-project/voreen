@@ -32,7 +32,7 @@
 
 namespace voreen {
 
-class WebViewProcessor : public Processor {
+class VRN_CORE_API WebViewProcessor : public Processor {
 public:
     WebViewProcessor();
     ~WebViewProcessor();
