@@ -76,7 +76,7 @@ class VRN_CORE_API LoopPortTypeCheck : public PortTypeCheck {
                 return p->isLoopPort();
         }
         virtual bool hasA(const Processor* p) const {
-            bool hasPort = false;
+            bool hasPort = inverse_;
             for (size_t i=0; i<p->getPorts().size(); ++i) {
                 if (inverse_) {
                     if (!p->getPorts()[i]->isLoopPort())
