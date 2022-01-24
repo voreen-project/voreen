@@ -67,9 +67,17 @@ void QtSplitter::initialize() {
         auto* network = app->getNetworkEvaluator()->getProcessorNetwork();
         network->addObserver(this);
     }
+
+    // As we need to do a "first time initialization", we simply reuse the deserialization flag.
+    firstProcessAfterDeserialization_ = true;
 }
 
 void QtSplitter::deinitialize() {
+
+    // We explicitly need to reset the widget's parents before deletion of the processor widget.
+    // Otherwise, these widgets would be deleted by Qt and leave dangling pointers.
+    // The following call will also update the processor widget.
+    widgets_.clear();
 
     if(auto* app = VoreenApplication::app()) {
         auto* network = app->getNetworkEvaluator()->getProcessorNetwork();

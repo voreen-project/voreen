@@ -40,7 +40,9 @@ WebViewProcessor::WebViewProcessor()
     addProperty(url_);
     url_.setInstantUpdate(false);
     ON_CHANGE_LAMBDA(url_, [this] {
-        getProcessorWidget()->updateFromProcessor();
+        if (getProcessorWidget()) {
+            getProcessorWidget()->updateFromProcessor();
+        }
     });
 }
 
