@@ -52,6 +52,13 @@ Property* FontProperty::create() const {
     return new FontProperty();
 }
 
+void FontProperty::set(const T& font) {
+    if(font != value_) {
+        delete value_;
+        TemplateProperty<T>::set(font);
+    }
+}
+
 void FontProperty::serialize(Serializer& s) const {
     Property::serialize(s);
 

@@ -115,7 +115,12 @@ Font::~Font() {
         glDeleteBuffers(1, &vbo_);
 }
 
-
+Font* Font::clone() const {
+    Font* font = new Font(fontName_, fontSize_, lineWidth_, alignment_);
+    font->setFontColor(color_);
+    font->setPadding(padding_);
+    return font;
+}
 
 float Font::getLineWidth() {
     return lineWidth_;

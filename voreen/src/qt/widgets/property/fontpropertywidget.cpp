@@ -41,6 +41,9 @@
 #include <QLCDNumber>
 //#include <QColorGroup>
 #include <QLabel>
+#include <QStandardPaths>
+#include <QDirIterator>
+#include <QFontDatabase>
 
 namespace voreen {
 
@@ -60,8 +63,18 @@ FontPropertyWidget::FontPropertyWidget(FontProperty* prop, QWidget* parent)
     tgtFontLayout->addWidget(colorPropertyWidget_);
 
     tgtFontName_ = new QComboBox();
-    tgtFontName_->addItem("VeraMono", "VeraMono.ttf");
-    tgtFontName_->addItem("Vera", "Vera.ttf");
+    QStringList fontPath = QStandardPaths::standardLocations(QStandardPaths::StandardLocation::FontsLocation);
+    fontPath << QString::fromStdString(VoreenApplication::app()->getFontPath());
+    for(const auto& path : fontPath) {
+        QDirIterator it(path, QDirIterator::IteratorFlag::Subdirectories);
+        while(it.hasNext()) {
+            QFileInfo info(it.next());
+            if(info.isFile()) {
+                tgtFontName_->addItem(info.baseName(), info.filePath());
+            }
+        }
+    }
+    tgtFontName_->setCurrentText(QString::fromStdString(tgt::FileSystem::baseName(prop->get()->getFontName())));
     tgtFontLayout->addWidget(tgtFontName_);
 
     QLabel* fontSizeLabel = new QLabel("Fontsize:");
@@ -109,7 +122,7 @@ void FontPropertyWidget::updateFromPropertySlot() {
 
 void FontPropertyWidget::updateProperty() {
     property_->get()->setFontSize(fontSizeSlider_->getValue());
-    property_->get()->setFontName(VoreenApplication::app()->getFontPath(tgtFontName_->itemData(tgtFontName_->currentIndex()).toString().toStdString()));
+    property_->get()->setFontName(tgtFontName_->itemData(tgtFontName_->currentIndex()).toString().toStdString());
     property_->get()->setFontColor(colorProperty_.get());
     property_->invalidate();
 }

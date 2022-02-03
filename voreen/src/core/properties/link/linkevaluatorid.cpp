@@ -26,6 +26,7 @@
 #include "voreen/core/properties/link/linkevaluatorid.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/floatproperty.h"
+#include "voreen/core/properties/fontproperty.h"
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/vectorproperty.h"
@@ -356,6 +357,20 @@ bool LinkEvaluatorLightSourceId::arePropertiesLinkable(const Property* p1, const
     tgtAssert(p2, "null pointer");
 
     return (dynamic_cast<const FloatVec4Property*>(p1) && dynamic_cast<const LightSourceProperty*>(p2));
+}
+
+//-----------------------------------------------------------------------------
+
+void LinkEvaluatorFontId::eval(Property* src, Property* dst) {
+    // "set" is overloaded in LightSourceProperty, but not virtual; we have to explicitly call this function
+    static_cast<FontProperty*>(dst)->set(static_cast<FontProperty*>(src)->get()->clone());
+}
+
+bool LinkEvaluatorFontId::arePropertiesLinkable(const Property* p1, const Property* p2) const {
+    tgtAssert(p1, "null pointer");
+    tgtAssert(p2, "null pointer");
+
+    return (dynamic_cast<const FontProperty*>(p1) && dynamic_cast<const FontProperty*>(p2));
 }
 
 } // namespace

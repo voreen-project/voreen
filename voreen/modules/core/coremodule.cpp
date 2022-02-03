@@ -298,6 +298,7 @@ CoreModule::CoreModule(const std::string& modulePath)
     registerSerializableType(new LinkEvaluatorMat3Id());
     registerSerializableType(new LinkEvaluatorMat4Id());
 
+    registerSerializableType(new LinkEvaluatorFontId());
     registerSerializableType(new LinkEvaluatorIntListId());
 
     // id conversion

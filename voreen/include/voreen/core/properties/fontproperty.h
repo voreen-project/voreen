@@ -31,7 +31,12 @@
 
 namespace voreen {
 
+/**
+ * Property storing a font.
+ * Note: The property is owner of the font object!
+ */
 class FontProperty : public TemplateProperty<tgt::Font*> {
+    using T = tgt::Font*;
 public:
     FontProperty(const std::string& id, const std::string& guiText, tgt::Font* value = 0,
                  int invalidationLevel = Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT);
@@ -46,6 +51,12 @@ public:
      * Frees the font object represented by this property.
      */
     virtual ~FontProperty();
+
+    /**
+     * Sets a new font object.
+     * Note: Frees the former font object represented by this property.
+     */
+    virtual void set(const T& font) override;
 
     /**
      * @see Property::serialize

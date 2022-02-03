@@ -82,6 +82,12 @@ public:
     virtual ~Font();
 
     /**
+     * Creates a clone of this font.
+     * OpenGL related data will not be copied.
+     */
+    Font* clone() const;
+
+    /**
      * Get the width of one line.
      */
     float getLineWidth();

@@ -861,7 +861,21 @@ public:
     virtual LinkEvaluatorBase* create() const { return new LinkEvaluatorIntBoundingBoxIdWithLimits(); }
 };
 
+//---------------------------------------------------------------------------------------------------------
 
+class VRN_CORE_API LinkEvaluatorFontId : public LinkEvaluatorBase {
+public:
+    virtual std::string getClassName() const { return "LinkEvaluatorFontId"; }
+    virtual LinkEvaluatorBase* create() const { return new LinkEvaluatorFontId(); }
+    virtual std::string getGuiName() const { return "Font"; }
+
+    ///Special implementation to make sure light source property widgets are updated
+    virtual void eval(Property* src, Property* dst);
+
+    bool arePropertiesLinkable(const Property* p1, const Property* p2) const;
+};
+
+//---------------------------------------------------------------------------------------------------------
 
 } // namespace
 
