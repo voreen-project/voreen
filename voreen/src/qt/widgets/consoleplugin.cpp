@@ -69,49 +69,48 @@ public:
 protected:
     void logFiltered(const std::string &cat, tgt::LogLevel level, const std::string &msg, const std::string & /*extendedInfo*/ ="") {
 
-        // Create convenience log function.
-        auto logFunc = [this, cat, level, msg] {
-            std::string output;
+        std::string output;
 
-            std::string style;
-            if (level == tgt::Debug)
-                style = debugStyle_;
-            else if (level == tgt::Info)
-                style = infoStyle_;
-            else if (level == tgt::Warning)
-                style = warnStyle_;
-            else if (level == tgt::Error)
-                style = errorStyle_;
+        std::string style;
+        if (level == tgt::Debug)
+            style = debugStyle_;
+        else if (level == tgt::Info)
+            style = infoStyle_;
+        else if (level == tgt::Warning)
+            style = warnStyle_;
+        else if (level == tgt::Error)
+            style = errorStyle_;
 
-            if (dateStamping_)
-                output += "[" + getDateString() + "] ";
-            if (timeStamping_)
-                output += "[" + getTimeString() + "] ";
-            if (showCat_)
-                output += cat + " ";
-            if (showLevel_)
-                output += "(" + getLevelString(level) + ")";
+        if (dateStamping_)
+            output += "[" + getDateString() + "] ";
+        if (timeStamping_)
+            output += "[" + getTimeString() + "] ";
+        if (showCat_)
+            output += cat + " ";
+        if (showLevel_)
+            output += "(" + getLevelString(level) + ")";
 
-            output += "&nbsp;&nbsp;";
+        output += "&nbsp;&nbsp;";
 
-            output += "<span style=\"" + style + "\">";
+        output += "<span style=\"" + style + "\">";
 
-            size_t lookHere = 0;
-            size_t foundHere;
-            std::string s = msg;
-            const std::string br = "<br/>";
-            while ((foundHere = s.find("\n", lookHere)) != std::string::npos) {
-                s.replace(foundHere, 1, br);
-                lookHere = foundHere + br.size();
-            }
+        size_t lookHere = 0;
+        size_t foundHere;
+        std::string s = msg;
+        const std::string br = "<br/>";
+        while ((foundHere = s.find("\n", lookHere)) != std::string::npos) {
+            s.replace(foundHere, 1, br);
+            lookHere = foundHere + br.size();
+        }
 
-            output += s;
-            output += "</span>";
+        output += s;
+        output += "</span>";
 
+        auto logFunc = [=] {
             plugin_->log(output);
         };
 
-        // accessing Qt widgets is only allowed in the GUI thread
+        // Accessing Qt widgets is only allowed in the GUI thread.
         bool isGuiThread = (QThread::currentThread() == QCoreApplication::instance()->thread());
         if (isGuiThread) // log immediatly
             logFunc();
