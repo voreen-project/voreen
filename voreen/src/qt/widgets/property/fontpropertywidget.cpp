@@ -63,7 +63,9 @@ FontPropertyWidget::FontPropertyWidget(FontProperty* prop, QWidget* parent)
     tgtFontLayout->addWidget(colorPropertyWidget_);
 
     tgtFontName_ = new QComboBox();
-    QStringList fontPath = QStandardPaths::standardLocations(QStandardPaths::StandardLocation::FontsLocation);
+    // We could add standard paths, however, many font's contained in these (at least on windows) seem to be broken.
+    // Hence, the user can simply add (working) fonts by copying respective .ttf files to the voreen font directory.
+    QStringList fontPath;// = QStandardPaths::standardLocations(QStandardPaths::StandardLocation::FontsLocation);
     fontPath << QString::fromStdString(VoreenApplication::app()->getFontPath());
     for(const auto& path : fontPath) {
         QDirIterator it(path, QDirIterator::IteratorFlag::Subdirectories);

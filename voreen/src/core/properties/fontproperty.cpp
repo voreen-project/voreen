@@ -89,7 +89,6 @@ void FontProperty::deserialize(Deserializer& s) {
     s.optionalDeserialize("fontColor", fontColor, tgt::vec4(1.0f));
 
     if (!fontName.empty()) {
-        delete value_;
         set(new tgt::Font(VoreenApplication::app()->getFontPath(fontName), fontSize, lineWidth,
             static_cast<tgt::Font::TextAlignment>(textAlignment)));
         get()->setFontColor(fontColor);
