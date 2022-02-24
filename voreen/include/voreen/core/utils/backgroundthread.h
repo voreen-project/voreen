@@ -32,6 +32,7 @@
 #include "voreen/core/datastructures/callback/lambdacallback.h"
 
 #include <boost/thread.hpp>
+#include <atomic>
 
 namespace voreen {
 
@@ -123,8 +124,8 @@ protected:
 
     boost::thread internalThread_; ///< the actual boost::thread object
 
-    bool finished_; ///< indicates if background computation is complete
-    bool running_; ///< indicates if background computation is currently running
+    std::atomic<bool> finished_; ///< indicates if background computation is complete
+    std::atomic<bool> running_; ///< indicates if background computation is currently running
 
     ThreadProgressState state_; ///< current state, can be set using setProgress() by the thread or queried by using getProgress (e.g. from the processor)
     mutable boost::mutex stateMutex_;   ///< mutex for synchronizing setProgress() and getProgress()
