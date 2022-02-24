@@ -27,6 +27,7 @@
 
 #include "voreen/core/io/serialization/serializer.h"
 #include "voreen/core/io/serialization/deserializer.h"
+#include "voreen/core/utils/stringutils.h"
 
 #include <iostream>
 #include <sstream>
@@ -60,31 +61,31 @@ std::vector<SamplePointConfig> SamplePointConfigLoader::loadSamplepointConfigFil
         std::string name;
         std::getline(ls, name, ',');
         if (ls.bad()) { continue; }
-        trim(name);
+        name = trim(name);
 
         // Read xPos
         std::string xPos;
         std::getline(ls, xPos, ',');
         if (ls.bad()) { continue; }
-        trim(xPos);
+        xPos = trim(xPos);
 
         // Read yPos
         std::string yPos;
         std::getline(ls, yPos, ',');
         if (ls.bad()) { continue; }
-        trim(yPos);
+        yPos = trim(yPos);
 
         // Read zPos
         std::string zPos;
         std::getline(ls, zPos, ',');
         if (ls.bad()) { continue; }
-        trim(zPos);
+        zPos = trim(zPos);
 
         // Read Texture-Filename:
         std::string texFilename;
         std::getline(ls, texFilename);
         if (ls.bad()) { continue; }
-        trim(texFilename);
+        texFilename = trim(texFilename);
 
         SamplePointConfig currentConfig;
         currentConfig.name_ = name;
@@ -99,12 +100,6 @@ std::vector<SamplePointConfig> SamplePointConfigLoader::loadSamplepointConfigFil
     infile.close();
 
     return result;
-}
-
-void voreen::SamplePointConfigLoader::trim(std::string& str){
-    // Remove spaces
-    str.erase(0, str.find_first_not_of(" "));
-    str.erase(str.find_last_not_of(" ") + 1);
 }
 
 void SamplePointConfig::serialize(Serializer& s) const {

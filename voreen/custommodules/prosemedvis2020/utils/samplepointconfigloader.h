@@ -52,9 +52,6 @@ class VRN_CORE_API SamplePointConfigLoader {
 
 public:
     std::vector<SamplePointConfig> loadSamplepointConfigFile(const std::string& filepath);
-
-private:
-    void trim(std::string& str);
 };
 
 

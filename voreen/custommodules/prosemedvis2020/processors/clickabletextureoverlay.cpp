@@ -132,7 +132,6 @@ void ClickableTextureOverlay::process() {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			std::string currentTexturePath = "";
-			tgt::Texture* texture = NULL;
 			for (SamplePointConfig& region : regions_) {
 				// Get color for region:
 				try {
@@ -147,7 +146,7 @@ void ClickableTextureOverlay::process() {
 				}
 
 				currentTexturePath = mouseDirectory + "/" + region.textureFilename_;
-				texture = TexMgr.load(currentTexturePath);
+                tgt::Texture* texture = TexMgr.load(currentTexturePath);
 				texture->setFilter(tgt::Texture::Filter::NEAREST);
 				texture->enable();
 				texture->bind();
@@ -201,6 +200,7 @@ void ClickableTextureOverlay::mouseEvent(tgt::MouseEvent* e) {
 			texture->enable();
 			texture->bind();
 			renderQuad();
+            texture->disable();
 			RenderTarget* targetPicking = pickingBuffer_.getRenderTarget();
 			targetPicking->getColorTexture()->setFilter(tgt::Texture::Filter::NEAREST);
 			//get coordinates and map them
