@@ -1,6 +1,7 @@
 #include "trimesh.h"
 
 // needed for implementation
+#include <algorithm>
 #include <cassert>
 #include <set>
 #include <iostream>

@@ -34,7 +34,9 @@
 
 // SSE 3 Header
 #include <pmmintrin.h>
-#ifndef WIN32
+#ifdef WIN32
+#include <intrin.h>
+#else
 #include <immintrin.h>
 #endif
 
