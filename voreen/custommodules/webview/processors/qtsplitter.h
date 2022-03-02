@@ -44,7 +44,7 @@ public:
     };
 
     QtSplitter();
-    ~QtSplitter();
+    virtual ~QtSplitter();
 
     virtual Processor* create() const;
 
@@ -56,6 +56,8 @@ public:
 
     Orientation getOrientation() const;
     std::vector<std::string> getInstances() const;
+    const std::list<int>& getSizes() const;
+    void setSizes(const std::list<int>& sizes);
 
 protected:
 
@@ -78,6 +80,8 @@ private:
 
     InteractiveListProperty widgets_;
     ButtonProperty updateWidgets_;
+
+    std::list<int> sizes_;
 
     static const std::string loggerCat_;
 };

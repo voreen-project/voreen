@@ -42,6 +42,9 @@ public:
 
     virtual void updateFromProcessor();
 
+protected slots:
+    virtual void splitterMoved();
+
 private:
 
     QtSplitter* processor_;

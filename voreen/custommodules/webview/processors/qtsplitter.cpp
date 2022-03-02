@@ -102,6 +102,7 @@ void QtSplitter::process() {
 void QtSplitter::serialize(Serializer& s) const {
     Processor::serialize(s);
     s.serialize("items", widgets_.getItems());
+    s.serialize("sizes", sizes_);
 }
 void QtSplitter::deserialize(Deserializer& s) {
     // First, we deserialize the widgets that were available at the point of serialization.
@@ -113,7 +114,9 @@ void QtSplitter::deserialize(Deserializer& s) {
     widgets_.blockCallbacks(true);
     widgets_.setItems(items);
     widgets_.blockCallbacks(false);
+
     Processor::deserialize(s);
+    s.optionalDeserialize("sizes", sizes_, std::list<int>());
 }
 
 void QtSplitter::networkChanged() {
@@ -167,5 +170,12 @@ std::vector<std::string> QtSplitter::getInstances() const {
     return instances;
 }
 
+const std::list<int>& QtSplitter::getSizes() const {
+    return sizes_;
+}
+
+void QtSplitter::setSizes(const std::list<int>& sizes) {
+    sizes_ = sizes;
+}
 
 } // namespace voreen

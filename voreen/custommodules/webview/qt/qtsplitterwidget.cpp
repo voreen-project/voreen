@@ -59,6 +59,8 @@ void QtSplitterWidget::initialize() {
     layout->addWidget(splitter_);
     setLayout(layout);
 
+    connect(splitter_, SIGNAL(splitterMoved(int, int )), this, SLOT(splitterMoved()));
+
     if(isVisible())
         show();
 
@@ -71,6 +73,11 @@ void QtSplitterWidget::updateFromProcessor() {
     if(!app) {
         LERROR("No GUI application");
         return;
+    }
+
+    // First update size. At this point, there still is a match between processor and widget.
+    if(processor_->getSizes().size() == static_cast<size_t>(splitter_->count())) {
+        splitter_->setSizes(QList<int>::fromStdList(processor_->getSizes()));
     }
 
     std::set<QWidget*> orphanedWidgets;
@@ -123,6 +130,10 @@ void QtSplitterWidget::updateFromProcessor() {
     }
 
     update();
+}
+
+void QtSplitterWidget::splitterMoved() {
+    processor_->setSizes(splitter_->sizes().toStdList());
 }
 
 } //namespace voreen
