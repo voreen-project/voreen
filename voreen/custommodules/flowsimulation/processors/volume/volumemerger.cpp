@@ -116,9 +116,16 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, globalBounds.getLLF()));
     outputVolume->setRealWorldMapping(rwm);
 
+    // As per default, take maximum value when two are colliding.
+    // TODO: Make user-defined.
+    auto collisionFunction = [] (float lhs, float rhs) {
+        return std::max(lhs, rhs);
+    };
+
     return VolumeMergerComputeInput{
             std::move(inputList),
             padding_.get(),
+            collisionFunction,
             std::move(outputVolume)
     };
 }
@@ -140,7 +147,7 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
         VolumeRAMRepresentationLock volumeData(volume);
 
         const tgt::Vector3<long> dim = volumeData->getDimensions();
-        tgt::mat4 voxelToWorldMatrix = volume->getVoxelToWorldMatrix();
+        tgt::mat4 mat = worldToVoxelMatrix * volume->getVoxelToWorldMatrix();
 
 #ifdef VRN_MODULE_OPENMP
         #pragma omp parallel for
@@ -150,8 +157,10 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
                 for(long x=padding; x<dim.x-padding; x++) {
                     for(size_t channel=0; channel < volumeData->getNumChannels(); channel++) {
                         float value = volumeData->getVoxelNormalized(x, y, z, channel);
-                        tgt::vec3 pos = worldToVoxelMatrix * (voxelToWorldMatrix * tgt::vec3(x, y, z));
-                        outputVolumeData->setVoxelNormalized(value, pos, channel);
+                        tgt::vec3 pos = mat * tgt::vec3(x, y, z);
+                        float outputValue = outputVolumeData->getVoxelNormalized(pos, channel);
+                        outputValue = input.collisionFunction_(outputValue, value);
+                        outputVolumeData->setVoxelNormalized(outputValue, pos, channel);
                     }
                 }
             }

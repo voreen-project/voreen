@@ -37,6 +37,7 @@ namespace voreen {
 struct VolumeMergerComputeInput {
     PortDataPointer<VolumeList> inputVolumes;
     int padding_;
+    std::function<float(float, float)> collisionFunction_;
     std::unique_ptr<Volume> outputVolume;
 };
 
