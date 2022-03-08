@@ -144,10 +144,10 @@ tgt::Vector4<GLubyte> TransFunc1DKeys::getMappingForValueUByte(float value) {
         tgt::Vector4<GLubyte> leftDest = leftKey->getColorR();
         tgt::Vector4<GLubyte> rightDest = rightKey->getColorL();
         color = leftDest;
-        color.r += static_cast<uint8_t>((rightDest.r - leftDest.r) * fraction);
-        color.g += static_cast<uint8_t>((rightDest.g - leftDest.g) * fraction);
-        color.b += static_cast<uint8_t>((rightDest.b - leftDest.b) * fraction);
-        color.a += static_cast<uint8_t>((rightDest.a - leftDest.a) * fraction);
+        color.r += (rightDest.r - leftDest.r) * fraction;
+        color.g += (rightDest.g - leftDest.g) * fraction;
+        color.b += (rightDest.b - leftDest.b) * fraction;
+        color.a += (rightDest.a - leftDest.a) * fraction;
     }
 
     return color;
