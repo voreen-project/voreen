@@ -274,21 +274,30 @@ static void growRegion(const VolumeAtomic<float>& vol, VolumeAtomic<SuperVoxelID
 
     do {
         for(auto& p : voxelQueue) {
-            labels.voxel(p) = label;
-            numVoxels += 1;
+            if(labels.voxel(p) != UNLABELED) {
+                continue;
+            }
             float intensity = rwm.normalizedToRealWorld(vol.voxel(p));
             intensitySum += intensity;
 
-            for(int d=0; d<3; ++d) {
-                for(int o : {-1, 1}) {
-                    tgt::ivec3 neighbor = p;
-                    neighbor[d] += o;
+            labels.voxel(p) = label;
+            numVoxels += 1;
 
-                    if(neighbor[d] >= 0 && neighbor[d] < dim[d]
-                            && labels.voxel(neighbor) == UNLABELED
-                            && tgt::abs(rwm.normalizedToRealWorld(vol.voxel(neighbor)) - intensity) < maxDiff) {
 
-                        neighborQueue.push_back(neighbor);
+            for(int oz : {-1, 0, 1}) {
+                for(int oy : {-1, 0, 1}) {
+                    for(int ox : {-1, 0, 1}) {
+                        tgt::ivec3 neighbor = p;
+                        neighbor.x += ox;
+                        neighbor.y += oy;
+                        neighbor.z += oz;
+
+                        if(tgt::hand(tgt::greaterThanEqual(neighbor, tgt::ivec3::zero)) && tgt::hand(tgt::lessThan(neighbor, dim))
+                                && labels.voxel(neighbor) == UNLABELED
+                                && tgt::abs(rwm.normalizedToRealWorld(vol.voxel(neighbor)) - intensity) < maxDiff) {
+
+                            neighborQueue.push_back(neighbor);
+                        }
                     }
                 }
             }
@@ -579,9 +588,14 @@ SuperVoxelWalker::ComputeOutput SuperVoxelWalker::compute(ComputeInput input, Pr
 
     auto conn = preprocessingResult->maxConnectivity_;
     auto numSuperVoxels = preprocessingResult->edges_.size() - 1;
+    auto totalNumEntries = 0;
+    for(const auto& e : preprocessingResult->edges_) {
+        totalNumEntries += e.size();
+    }
     LINFO("Total number of supervoxels: " << numSuperVoxels);
     LINFO("Maximum supervoxel connectivity: " << conn);
     LINFO("Estimated memory for matrix: " << formatMemorySize(conn * numSuperVoxels * 4));
+    LINFO("Total number of matrix entries: " << totalNumEntries);
 
     //std::unique_ptr<VolumeBase> output = nullptr;
 
