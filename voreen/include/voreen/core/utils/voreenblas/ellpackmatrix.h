@@ -43,6 +43,12 @@ public:
     EllpackMatrix(size_t numRows, size_t numCols, size_t numColsPerRow);
     ~EllpackMatrix();
 
+    EllpackMatrix(const EllpackMatrix& other) = delete;
+    EllpackMatrix& operator=(const EllpackMatrix& other) = delete;
+
+    EllpackMatrix(EllpackMatrix&& other);
+    EllpackMatrix& operator=(EllpackMatrix&& other);
+
     /**
      * Initializes the data buffers and throws an exception on failure (bad allocation).
      */
@@ -119,6 +125,27 @@ voreen::EllpackMatrix<T>::EllpackMatrix(size_t numRows, size_t numCols, size_t n
     M_(0),
     indices_(0)
 {}
+
+template<class T>
+voreen::EllpackMatrix<T>::EllpackMatrix(voreen::EllpackMatrix<T>&& other) :
+    numRows_(other.numRows_),
+    numCols_(other.numCols_),
+    numColsPerRow_(other.numColsPerRow_),
+    M_(other.M_),
+    indices_(other.indices_)
+{
+    M_ = nullptr;
+    indices_ = nullptr;
+}
+
+template<class T>
+voreen::EllpackMatrix<T>& voreen::EllpackMatrix<T>::operator=(voreen::EllpackMatrix<T>&& other) {
+    if(&other != this) {
+        this->~EllpackMatrix();
+        new(this) EllpackMatrix(std::move(other));
+    }
+    return *this;
+}
 
 template<class T>
 voreen::EllpackMatrix<T>::~EllpackMatrix() {

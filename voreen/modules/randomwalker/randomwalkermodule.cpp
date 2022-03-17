@@ -28,6 +28,7 @@
 #include "processors/octreewalker.h"
 #include "processors/randomwalker.h"
 #include "processors/randomwalkeranalyzer.h"
+#include "processors/supervoxelwalker.h"
 
 #include "processors/rwmultilabelloopinitializer.h"
 #include "processors/rwmultilabelloopfinalizer.h"
@@ -43,6 +44,7 @@ RandomWalkerModule::RandomWalkerModule(const std::string& modulePath)
     registerSerializableType(new OctreeWalker());
     registerSerializableType(new RandomWalker());
     registerSerializableType(new RandomWalkerAnalyzer());
+    registerSerializableType(new SuperVoxelWalker());
 
     registerSerializableType(new RWMultiLabelLoopInitializer());
     registerSerializableType(new RWMultiLabelLoopFinalizer());

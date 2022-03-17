@@ -31,7 +31,7 @@
 
 namespace voreen {
 
-void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometryVec3& seeds);
+void getSeedListsFromPorts(const std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometryVec3& seeds);
 
 }
 

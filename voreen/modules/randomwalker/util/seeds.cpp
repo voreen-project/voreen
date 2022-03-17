@@ -30,7 +30,7 @@
 
 namespace voreen {
 
-void getSeedListsFromPorts(std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometryVec3& seeds) {
+void getSeedListsFromPorts(const std::vector<PortDataPointer<Geometry>>& geom, PointSegmentListGeometryVec3& seeds) {
     auto mat = tgt::mat4::createIdentity();
     for (size_t i=0; i<geom.size(); i++) {
         if(!seeds.collectSegmentsFromGeometry(*geom.at(i).get())) {

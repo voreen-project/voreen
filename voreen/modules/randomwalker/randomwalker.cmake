@@ -10,6 +10,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/randomwalkeranalyzer.cpp
     ${MOD_DIR}/processors/rwmultilabelloopfinalizer.cpp
     ${MOD_DIR}/processors/rwmultilabelloopinitializer.cpp
+    ${MOD_DIR}/processors/supervoxelwalker.cpp
 
     ${MOD_DIR}/solver/randomwalkersolver.cpp
     ${MOD_DIR}/solver/randomwalkerseeds.cpp
@@ -26,6 +27,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/randomwalkeranalyzer.h
     ${MOD_DIR}/processors/rwmultilabelloopinitializer.h
     ${MOD_DIR}/processors/rwmultilabelloopfinalizer.h
+    ${MOD_DIR}/processors/supervoxelwalker.h
 
     ${MOD_DIR}/solver/randomwalkersolver.h
     ${MOD_DIR}/solver/randomwalkerseeds.h
