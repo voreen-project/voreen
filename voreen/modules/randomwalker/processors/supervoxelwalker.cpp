@@ -97,7 +97,7 @@ SuperVoxelWalker::SuperVoxelWalker()
     , outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false)
     , outportSuperVoxels_(Port::OUTPORT, "volume.supervoxels", "volume.supervoxels", false)
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
-    , beta_("beta", "Beta: 2^v", 0, -30, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , beta_("beta", "Beta: 2^v", 0, 0, 20, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
@@ -396,14 +396,14 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
 }
 static std::unique_ptr<VolumeBase> createSuperVoxelVolume(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult) {
     tgt::svec3 dim = input.volume_.getDimensions();
-    //auto meanvol = tgt::make_unique<VolumeAtomic<float>>(dim);
-    //VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
-    //    meanvol->voxel(p) = preprocessingResult.regionMeans_[preprocessingResult.labels_.voxel(p)];
-    //}
-    //auto output = tgt::make_unique<Volume>(meanvol.release(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
+    auto meanvol = tgt::make_unique<VolumeAtomic<float>>(dim);
+    VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
+        meanvol->voxel(p) = preprocessingResult.regionMeans_[preprocessingResult.labels_.voxel(p)];
+    }
+    auto output = tgt::make_unique<Volume>(meanvol.release(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
 
-    auto output = tgt::make_unique<Volume>(preprocessingResult.labels_.clone(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
-    output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<SuperVoxelID>());
+    //auto output = tgt::make_unique<Volume>(preprocessingResult.labels_.clone(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
+    //output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<SuperVoxelID>());
     return output;
 }
 
@@ -411,21 +411,21 @@ static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalke
     Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>> btms(vec, mat.rows());
     Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>> init_eigen(init, mat.rows());
 
-    //Eigen::ConjugateGradient<Eigen::SparseMatrix<float>, Eigen::Lower|Eigen::Upper> solver;
-    //solver.setTolerance(input.errorThreshold_);
-    //solver.setMaxIterations(input.maxIterations_);
-    //solver.compute(mat);
+    Eigen::ConjugateGradient<Eigen::SparseMatrix<float>, Eigen::Lower|Eigen::Upper> solver;
+    solver.setTolerance(input.errorThreshold_);
+    solver.setMaxIterations(input.maxIterations_);
+    solver.compute(mat);
 
-    //Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solveWithGuess(btms, init_eigen);
-    //std::cout << "#iterations:     " << solver.iterations() << std::endl;
-    //std::cout << "estimated error: " << solver.error()      << std::endl;
+    Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solveWithGuess(btms, init_eigen);
+    std::cout << "#iterations:     " << solver.iterations() << std::endl;
+    std::cout << "estimated error: " << solver.error()      << std::endl;
 
 
-    Eigen::SimplicialLDLT<Eigen::SparseMatrix<float, Eigen::RowMajor>> solver;
-    solver.analyzePattern(mat);
-    solver.factorize(mat);
+    //Eigen::SimplicialLDLT<Eigen::SparseMatrix<float, Eigen::RowMajor>> solver;
+    //solver.analyzePattern(mat);
+    //solver.factorize(mat);
 
-    Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solve(btms);
+    //Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solve(btms);
 
 
     return solution;
@@ -493,6 +493,33 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
     size_t seeded = seededIndex;
     tgtAssert(seeded + unseeded == numSuperVoxels, "Seeded/Unseeded/total count mismatch");
 
+
+    float squareDiffStd;
+    {
+        // Find normalization factor:
+        std::vector<float> squareDifferences;
+        float sum = 0.0f;
+        for(size_t i = 1; i < superVoxelSeedClasses.size(); ++i) {
+            const std::vector<SuperVoxelID>& edges = preprocessingResult.edges_[i];
+
+            float weightSum = 0;
+            for(auto j : edges) {
+                float diff = preprocessingResult.regionMeans_[i] - preprocessingResult.regionMeans_[j];
+                float diffSquared = diff*diff;
+                squareDifferences.push_back(diffSquared);
+                sum += diffSquared;
+            }
+        }
+        float mean = sum/squareDifferences.size();
+        float varsum = 0.0f;
+        for(float val : squareDifferences) {
+            float diff = mean-val;
+            varsum += diff*diff;
+        }
+        float variance = varsum/(squareDifferences.size() -1);
+        squareDiffStd = std::sqrt(variance);
+    }
+
     std::vector<Eigen::Triplet<float>> triplets_lu;
     std::vector<float> diagonal(unseeded, 0.0f);
 
@@ -510,7 +537,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
             }
             int jSeed = superVoxelSeedClasses[j];
             float diff = preprocessingResult.regionMeans_[i] - preprocessingResult.regionMeans_[j];
-            float w = std::max(std::exp(-input.beta_*diff*diff), input.minWeight_);
+            float w = std::max(std::exp(-input.beta_*diff*diff / squareDiffStd), input.minWeight_);
 
             tgtAssert(!std::isnan(w) && std::isfinite(w), "Invalid weight");
 
