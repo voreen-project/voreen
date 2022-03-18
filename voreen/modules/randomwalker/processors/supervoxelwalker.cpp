@@ -41,6 +41,7 @@
 
 #include <climits>
 #include <random>
+#include <eigen3/Eigen/Eigen>
 
 #ifdef VRN_MODULE_OPENMP
 #include <omp.h>
@@ -394,9 +395,40 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
     };
 }
 static std::unique_ptr<VolumeBase> createSuperVoxelVolume(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult) {
+    tgt::svec3 dim = input.volume_.getDimensions();
+    //auto meanvol = tgt::make_unique<VolumeAtomic<float>>(dim);
+    //VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
+    //    meanvol->voxel(p) = preprocessingResult.regionMeans_[preprocessingResult.labels_.voxel(p)];
+    //}
+    //auto output = tgt::make_unique<Volume>(meanvol.release(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
+
     auto output = tgt::make_unique<Volume>(preprocessingResult.labels_.clone(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
     output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<SuperVoxelID>());
     return output;
+}
+
+static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalkerInput& input, const Eigen::SparseMatrix<float, Eigen::ColMajor>& mat, float* vec, float* init) {
+    Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>> btms(vec, mat.rows());
+    Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>> init_eigen(init, mat.rows());
+
+    //Eigen::ConjugateGradient<Eigen::SparseMatrix<float>, Eigen::Lower|Eigen::Upper> solver;
+    //solver.setTolerance(input.errorThreshold_);
+    //solver.setMaxIterations(input.maxIterations_);
+    //solver.compute(mat);
+
+    //Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solveWithGuess(btms, init_eigen);
+    //std::cout << "#iterations:     " << solver.iterations() << std::endl;
+    //std::cout << "estimated error: " << solver.error()      << std::endl;
+
+
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<float, Eigen::RowMajor>> solver;
+    solver.analyzePattern(mat);
+    solver.factorize(mat);
+
+    Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solve(btms);
+
+
+    return solution;
 }
 
 static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult, ProgressReporter& progressReporter) {
@@ -410,6 +442,8 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
     const int UNSEEDED = -1;
     const int SEED_FG = 1;
     const int SEED_BG = 0;
+
+    size_t numSuperVoxels = preprocessingResult.edges_.size() - 1;
 
     std::vector<int> superVoxelSeedClasses(preprocessingResult.edges_.size(), UNSEEDED);
     {
@@ -446,7 +480,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
 
     size_t seededIndex = 0;
     size_t unseededIndex = 0;
-    for(int i = 0; i < superVoxelSeedClasses.size(); ++i) {
+    for(int i = 1; i < superVoxelSeedClasses.size(); ++i) {
         if(superVoxelSeedClasses[i] != UNSEEDED) {
             superVoxelToMatTable[i] = seededIndex;
             ++seededIndex;
@@ -457,10 +491,12 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
     }
     size_t unseeded = unseededIndex;
     size_t seeded = seededIndex;
-    tgtAssert(seeded + unseeded == superVoxelSeedClasses.size(), "Seeded/Unseeded/total count mismatch");
+    tgtAssert(seeded + unseeded == numSuperVoxels, "Seeded/Unseeded/total count mismatch");
 
-    EllpackMatrix<float> mat(unseeded, unseeded, preprocessingResult.maxConnectivity_+1);
-    mat.initializeBuffers();
+    std::vector<Eigen::Triplet<float>> triplets_lu;
+    std::vector<float> diagonal(unseeded, 0.0f);
+
+
     std::vector<float> vec(unseeded, 0.0f);
     for(size_t i = 1; i < superVoxelSeedClasses.size(); ++i) {
         const std::vector<SuperVoxelID>& edges = preprocessingResult.edges_[i];
@@ -485,30 +521,35 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
             } else {
                 size_t jRow = superVoxelToMatTable[j];
                 if(iSeed == UNSEEDED) {
-                    tgtAssert(mat.getIndex(iRow, jRow) == -1, "foo");
-                    tgtAssert(mat.getIndex(jRow, iRow) == -1, "foo");
-                    mat.getWritableValue(iRow, jRow) = -w;
-                    mat.getWritableValue(jRow, iRow) = -w;
+                    triplets_lu.emplace_back(iRow, jRow, -w);
+                    triplets_lu.emplace_back(jRow, iRow, -w);
                 } else {
                     vec[jRow] += w * iSeed;
                 }
 
-                tgtAssert(mat.getIndex(jRow, jRow) != -1, "foo");
                 // Update weight sum of neighbor with smaller index.
-                mat.getWritableValue(jRow, jRow) += w;
+                diagonal[jRow] += w;
             }
             weightSum += w;
         }
 
         if(iSeed == UNSEEDED) {
             // This is the first time writing to mat at this location, so overwriting is fine.
-            tgtAssert(mat.getIndex(iRow, iRow) == -1, "foo");
-            mat.getWritableValue(iRow, iRow) = weightSum;
+            diagonal[iRow] += weightSum;
         }
     }
 
-    auto solution = tgt::make_unique<float[]>(unseeded);
-    std::fill_n(solution.get(), unseeded, 0.5f);
+    for(int i=0; i<unseeded; ++i) {
+        triplets_lu.emplace_back(i,i,diagonal[i]);
+    }
+    diagonal.clear();
+
+    Eigen::SparseMatrix<float, Eigen::ColMajor> lu(unseeded,unseeded);
+
+    lu.setFromTriplets(triplets_lu.begin(), triplets_lu.end());
+    triplets_lu.clear();
+
+    lu.makeCompressed();
 
     std::vector<float> initialization(unseeded);
     if(input.previousSolution_) {
@@ -523,16 +564,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
         std::fill(initialization.begin(), initialization.end(), 0.5f);
     }
 
-    int iterations;
-    {
-        iterations = input.blas_->sSpConjGradEll(mat, vec.data(), solution.get(), initialization.data(),
-                input.precond_, input.errorThreshold_, input.maxIterations_, &progressReporter);
-    }
-    if(iterations == input.maxIterations_) {
-        LWARNINGC(SuperVoxelWalker::loggerCat_, "MAX ITER NOT SUFFICIENT");
-    }
-    // Free mat storage
-    { auto _ = std::move(mat); }
+    auto solution = solveSystem(input, lu, vec.data(), initialization.data());
 
     auto outvol = tgt::make_unique<VolumeAtomic<float>>(dim);
 
