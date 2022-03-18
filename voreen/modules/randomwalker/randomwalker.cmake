@@ -4,6 +4,28 @@
 ################################################################################
 SET(MOD_CORE_MODULECLASS RandomWalkerModule)
 
+OPTION(VRN_RW_MAGMA_SOLVER "Build magma solver? (Requires cuda)" OFF)
+IF(VRN_RW_MAGMA_SOLVER)
+    add_definitions(-DVRN_RW_USE_MAGMA)
+
+    find_package(CUDA)
+    IF(BOOST_FOUND)
+	LIST(APPEND MOD_INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS})
+	LIST(APPEND MOD_LIBRARIES ${CUDA_LIBRARIES})
+    ELSE()
+        MESSAGE(ERROR "Cuda not found")
+    ENDIF()
+
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(MAGMA REQUIRED magma)
+    IF(MAGMA_FOUND)
+	LIST(APPEND MOD_INCLUDE_DIRECTORIES ${MAGMA_INCLUDE_DIRS})
+	LIST(APPEND MOD_LIBRARIES ${MAGMA_LIBRARIES})
+    ELSE()
+        MESSAGE(ERROR "Magma not found")
+    ENDIF()
+ENDIF()
+
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/octreewalker.cpp
     ${MOD_DIR}/processors/randomwalker.cpp

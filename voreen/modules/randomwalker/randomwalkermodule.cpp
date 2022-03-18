@@ -33,6 +33,11 @@
 #include "processors/rwmultilabelloopinitializer.h"
 #include "processors/rwmultilabelloopfinalizer.h"
 
+#ifdef VRN_RW_USE_MAGMA
+#include "magma_v2.h"
+#endif
+
+
 namespace voreen {
 
 RandomWalkerModule::RandomWalkerModule(const std::string& modulePath)
@@ -48,6 +53,10 @@ RandomWalkerModule::RandomWalkerModule(const std::string& modulePath)
 
     registerSerializableType(new RWMultiLabelLoopInitializer());
     registerSerializableType(new RWMultiLabelLoopFinalizer());
+
+#ifdef VRN_RW_USE_MAGMA
+    magma_init();
+#endif
 }
 
 } // namespace

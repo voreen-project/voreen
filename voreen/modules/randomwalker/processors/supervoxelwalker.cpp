@@ -43,8 +43,9 @@
 #include <random>
 #include <eigen3/Eigen/Eigen>
 
-#ifdef VRN_MODULE_OPENMP
-#include <omp.h>
+#ifdef VRN_RW_USE_MAGMA
+#include "magma_v2.h"
+#include "magmasparse.h"
 #endif
 
 namespace voreen {
@@ -98,13 +99,13 @@ SuperVoxelWalker::SuperVoxelWalker()
     , outportSuperVoxels_(Port::OUTPORT, "volume.supervoxels", "volume.supervoxels", false)
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
     , beta_("beta", "Beta", 50, 1, 5000, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
-    , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
     , conjGradImplementation_("conjGradImplementation", "Implementation")
     , maxSuperVoxelVolume_("maxSuperVoxelVolume", "Max Super Voxel Volume", 10000, 1, INT_MAX)
     , maxSuperVoxelIntensityDifference_("maxSuperVoxelIntensityDifference", "Max Super Voxel Intensity Difference", 1.0, 0.0, 10000000000.0)
     , clearResult_("clearResult", "Clear Result", Processor::INVALID_RESULT, Property::LOD_DEBUG)
+    , generateDebugVolume_("generateDebugVolume", "Generate Debug Output", false, Processor::INVALID_RESULT, Property::LOD_DEBUG)
     , preprocessingResult_(boost::none)
     , previousSolution_(boost::none)
 {
@@ -143,14 +144,12 @@ SuperVoxelWalker::SuperVoxelWalker()
         maxSuperVoxelIntensityDifference_.adaptDecimalsToRange(5);
         maxSuperVoxelIntensityDifference_.setTracking(false);
         ON_CHANGE(maxSuperVoxelIntensityDifference_, SuperVoxelWalker, clearPreviousResults);
+    addProperty(generateDebugVolume_);
+        generateDebugVolume_.setGroupID("rwparam");
+        ON_CHANGE(generateDebugVolume_, SuperVoxelWalker, clearPreviousResults);
     setPropertyGroupGuiName("rwparam", "Random Walker Parametrization");
 
     // conjugate gradient solver
-    addProperty(preconditioner_);
-        preconditioner_.addOption("none", "None");
-        preconditioner_.addOption("jacobi", "Jacobi");
-        preconditioner_.select("jacobi");
-        preconditioner_.setGroupID("conjGrad");
     addProperty(errorThreshold_);
         errorThreshold_.setGroupID("conjGrad");
         errorThreshold_.setTracking(false);
@@ -158,14 +157,9 @@ SuperVoxelWalker::SuperVoxelWalker()
         maxIterations_.setGroupID("conjGrad");
         maxIterations_.setTracking(false);
     addProperty(conjGradImplementation_);
-        conjGradImplementation_.addOption("blasCPU", "CPU");
-#ifdef VRN_MODULE_OPENMP
-        conjGradImplementation_.addOption("blasMP", "OpenMP");
-        conjGradImplementation_.select("blasMP");
-#endif
-#ifdef VRN_MODULE_OPENCL
-        conjGradImplementation_.addOption("blasCL", "OpenCL");
-        conjGradImplementation_.select("blasCL");
+        conjGradImplementation_.addOption("eigen", "Eigen (CPU)");
+#ifdef VRN_RW_USE_MAGMA
+        conjGradImplementation_.addOption("magma", "Magma (GPU)");
 #endif
         conjGradImplementation_.setGroupID("conjGrad");
     setPropertyGroupGuiName("conjGrad", "Conjugate Gradient Solver");
@@ -189,10 +183,6 @@ Processor* SuperVoxelWalker::create() const {
 
 void SuperVoxelWalker::initialize() {
     AsyncComputeProcessor::initialize();
-
-#ifdef VRN_MODULE_OPENCL
-    voreenBlasCL_.initialize();
-#endif
 }
 
 void SuperVoxelWalker::deinitialize() {
@@ -231,10 +221,7 @@ SuperVoxelWalker::ComputeInput SuperVoxelWalker::prepareComputeInput() {
     }
 
     // select BLAS implementation and preconditioner
-    const VoreenBlas* voreenBlas = getVoreenBlasFromProperties();
-    VoreenBlas::ConjGradPreconditioner precond = VoreenBlas::NoPreconditioner;
-    if (preconditioner_.isSelected("jacobi"))
-        precond = VoreenBlas::Jacobi;
+    bool useMagma = conjGradImplementation_.isSelected("magma");
 
     float errorThresh = 1.f / pow(10.f, static_cast<float>(errorThreshold_.get()));
     int maxIterations = maxIterations_.get();
@@ -251,12 +238,12 @@ SuperVoxelWalker::ComputeInput SuperVoxelWalker::prepareComputeInput() {
         inportBackgroundSeeds_.getThreadSafeAllData(),
         minWeight,
         beta,
-        voreenBlas,
-        precond,
         errorThresh,
         maxIterations,
         maxSuperVoxelVolume_.get(),
         maxSuperVoxelIntensityDifference_.get(),
+        generateDebugVolume_.get(),
+        useMagma,
     };
 }
 
@@ -395,19 +382,19 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
     };
 }
 static std::unique_ptr<VolumeBase> createSuperVoxelVolume(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult) {
-    tgt::svec3 dim = input.volume_.getDimensions();
-    auto meanvol = tgt::make_unique<VolumeAtomic<float>>(dim);
-    VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
-        meanvol->voxel(p) = preprocessingResult.regionMeans_[preprocessingResult.labels_.voxel(p)];
-    }
-    auto output = tgt::make_unique<Volume>(meanvol.release(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
+    //tgt::svec3 dim = input.volume_.getDimensions();
+    //auto meanvol = tgt::make_unique<VolumeAtomic<float>>(dim);
+    //VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
+    //    meanvol->voxel(p) = preprocessingResult.regionMeans_[preprocessingResult.labels_.voxel(p)];
+    //}
+    //auto output = tgt::make_unique<Volume>(meanvol.release(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
 
-    //auto output = tgt::make_unique<Volume>(preprocessingResult.labels_.clone(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
-    //output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<SuperVoxelID>());
+    auto output = tgt::make_unique<Volume>(preprocessingResult.labels_.clone(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
+    output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<SuperVoxelID>());
     return output;
 }
 
-static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalkerInput& input, const Eigen::SparseMatrix<float, Eigen::ColMajor>& mat, float* vec, float* init) {
+static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystemEigen(const SuperVoxelWalkerInput& input, const Eigen::SparseMatrix<float, Eigen::ColMajor>& mat, float* vec, float* init) {
     Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>> btms(vec, mat.rows());
     Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>> init_eigen(init, mat.rows());
 
@@ -417,8 +404,8 @@ static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalke
     solver.compute(mat);
 
     Eigen::Matrix<float, Eigen::Dynamic, 1> solution = solver.solveWithGuess(btms, init_eigen);
-    std::cout << "#iterations:     " << solver.iterations() << std::endl;
-    std::cout << "estimated error: " << solver.error()      << std::endl;
+    LINFOC(SuperVoxelWalker::loggerCat_, "#iterations:     " << solver.iterations());
+    LINFOC(SuperVoxelWalker::loggerCat_, "estimated error: " << solver.error());
 
 
     //Eigen::SimplicialLDLT<Eigen::SparseMatrix<float, Eigen::RowMajor>> solver;
@@ -429,6 +416,101 @@ static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalke
 
 
     return solution;
+}
+
+#ifdef VRN_RW_USE_MAGMA
+
+#define CHECK_MAGMA_ERROR(val) { magma_int_t e = val; if(e > 0) throw VoreenException(magma_strerror(e)); }
+
+static magma_s_matrix eigen_to_magma_sparse(Eigen::SparseMatrix<float, Eigen::ColMajor, magma_index_t>& mat, magma_queue_t queue) {
+    magma_index_t* rows_ptr = mat.outerIndexPtr();
+    magma_index_t* cols_ptr = mat.innerIndexPtr();
+    float* data_ptr = mat.valuePtr();
+    //static_assert(sizeof(magma_index_t) == sizeof(*mat.outerIndexPtr()));
+
+    magma_s_matrix mat_m;
+    CHECK_MAGMA_ERROR(magma_scsrset(mat.rows(), mat.cols(), rows_ptr, cols_ptr, data_ptr, &mat_m, queue));
+    return mat_m;
+}
+
+static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystemMagma(const SuperVoxelWalkerInput& input, Eigen::SparseMatrix<float, Eigen::ColMajor>& mat, float* vec, float* init) {
+
+    magma_queue_t queue;
+    int device;
+    magma_getdevice(&device);
+    magma_queue_create(device, &queue);
+
+    magma_s_matrix lu_d;
+    magma_s_matrix lu_m = eigen_to_magma_sparse(mat, queue);
+    CHECK_MAGMA_ERROR(magma_s_vtransfer(lu_m, &lu_d, Magma_CPU, Magma_DEV, queue));
+
+    int vec_cols = 1;
+    int rows = mat.rows();
+    Eigen::Matrix<float, Eigen::Dynamic, 1, Eigen::ColMajor> res_x(rows);
+
+    magma_s_matrix btms_m, btms_d;
+
+    CHECK_MAGMA_ERROR(magma_svset(rows, vec_cols, vec, &btms_m, queue));
+    CHECK_MAGMA_ERROR(magma_s_mtransfer(btms_m, &btms_d, Magma_CPU, Magma_DEV, queue));
+
+    magma_s_matrix init_m, res_d;
+    CHECK_MAGMA_ERROR(magma_svset(rows, vec_cols, init, &init_m, queue));
+    CHECK_MAGMA_ERROR(magma_s_mtransfer(init_m, &res_d, Magma_CPU, Magma_DEV, queue));
+
+    magma_sopts dopts;
+
+    dopts.solver_par.solver = Magma_PCGMERGE;
+    dopts.solver_par.rtol = input.errorThreshold_;
+    dopts.solver_par.maxiter = input.maxIterations_;
+    dopts.solver_par.verbose = 0;
+    CHECK_MAGMA_ERROR(magma_ssolverinfo_init(&dopts.solver_par, &dopts.precond_par, queue));
+
+    dopts.precond_par.solver = Magma_JACOBI;
+    CHECK_MAGMA_ERROR(magma_s_precondsetup(lu_m, btms_m, &dopts.solver_par, &dopts.precond_par, queue));
+
+    CHECK_MAGMA_ERROR(magma_s_solver(lu_d, btms_d, &res_d, &dopts, queue ));
+
+    LINFOC(SuperVoxelWalker::loggerCat_, "#iterations:     " << dopts.solver_par.numiter);
+    LINFOC(SuperVoxelWalker::loggerCat_, "estimated error: " << dopts.solver_par.final_res);
+
+    magma_s_matrix res_m;
+    CHECK_MAGMA_ERROR(magma_s_mtransfer(res_d, &res_m, Magma_DEV, Magma_CPU, queue));
+
+    magma_int_t res_rows, res_cols;
+    float* res_data;
+    CHECK_MAGMA_ERROR(magma_svget(res_m, &res_rows, &res_cols, &res_data, queue));
+    assert(res_cols == vec_cols);
+
+    float* res_x_data = res_x.data();
+    std::copy_n(res_data, res_rows, res_x_data);
+
+    CHECK_MAGMA_ERROR(magma_ssolverinfo_free(&dopts.solver_par, &dopts.precond_par, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&btms_m, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&btms_d, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&res_m, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&res_d, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&init_m, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&lu_m, queue));
+    CHECK_MAGMA_ERROR(magma_s_mfree(&lu_d, queue));
+
+    magma_queue_destroy( queue );
+
+    return res_x;
+}
+#endif
+
+static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalkerInput& input, Eigen::SparseMatrix<float, Eigen::ColMajor>& mat, float* vec, float* init) {
+
+#ifdef VRN_RW_USE_MAGMA
+    if(input.useMagmaSolver_) {
+        LINFOC(SuperVoxelWalker::loggerCat_, "Using Magma solver");
+        return solveSystemMagma(input, mat, vec, init);
+    } else
+#endif
+    {
+        LINFOC(SuperVoxelWalker::loggerCat_, "Using eigen solver");
+        return solveSystemEigen(input, mat, vec, init);
+    }
 }
 
 static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult, ProgressReporter& progressReporter) {
@@ -658,7 +740,10 @@ SuperVoxelWalker::ComputeOutput SuperVoxelWalker::compute(ComputeInput input, Pr
 
     //std::unique_ptr<VolumeBase> output = nullptr;
 
-    auto outputSuperVoxels = createSuperVoxelVolume(input, *preprocessingResult);
+    std::unique_ptr<VolumeBase> outputSuperVoxels(nullptr);
+    if(input.generateDebugVolume_) {
+        outputSuperVoxels = createSuperVoxelVolume(input, *preprocessingResult);
+    }
     auto output = runRW(input, *preprocessingResult, globalProgressSteps.get<1>());
     auto finish = clock::now();
 
@@ -685,22 +770,6 @@ void SuperVoxelWalker::processComputeOutput(ComputeOutput output) {
 void SuperVoxelWalker::clearPreviousResults() {
     preprocessingResult_ = boost::none;
     previousSolution_ = boost::none;
-}
-
-const VoreenBlas* SuperVoxelWalker::getVoreenBlasFromProperties() const {
-
-#ifdef VRN_MODULE_OPENMP
-    if (conjGradImplementation_.isSelected("blasMP")) {
-        return &voreenBlasMP_;
-    }
-#endif
-#ifdef VRN_MODULE_OPENCL
-    if (conjGradImplementation_.isSelected("blasCL")) {
-        return &voreenBlasCL_;
-    }
-#endif
-
-    return &voreenBlasCPU_;
 }
 
 SuperVoxelWalkerPreprocessingResult::~SuperVoxelWalkerPreprocessingResult() {

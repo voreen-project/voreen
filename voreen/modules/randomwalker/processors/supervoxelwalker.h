@@ -86,12 +86,12 @@ struct SuperVoxelWalkerInput {
     std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
     float minWeight_;
     float beta_;
-    const VoreenBlas* blas_;
-    VoreenBlas::ConjGradPreconditioner precond_;
     float errorThreshold_;
     int maxIterations_;
     int maxSuperVoxelVolume_;
     float maxSuperVoxelIntensityDifference_;
+    bool generateDebugVolume_;
+    bool useMagmaSolver_;
 };
 
 struct SuperVoxelWalkerOutput {
@@ -136,8 +136,6 @@ protected:
     void clearPreviousResults();
 
 private:
-    const VoreenBlas* getVoreenBlasFromProperties() const;
-
     VolumePort inportVolume_;
     GeometryPort inportForegroundSeeds_;
     GeometryPort inportBackgroundSeeds_;
@@ -146,20 +144,12 @@ private:
 
     IntProperty minEdgeWeight_;
     IntProperty beta_;
-    StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;
     IntProperty maxIterations_;
     StringOptionProperty conjGradImplementation_;
     IntProperty maxSuperVoxelVolume_;
     FloatProperty maxSuperVoxelIntensityDifference_;
-
-    VoreenBlasCPU voreenBlasCPU_;
-#ifdef VRN_MODULE_OPENMP
-    VoreenBlasMP voreenBlasMP_;
-#endif
-#ifdef VRN_MODULE_OPENCL
-    VoreenBlasCL voreenBlasCL_;
-#endif
+    BoolProperty generateDebugVolume_;
 
     ButtonProperty clearResult_;
 
