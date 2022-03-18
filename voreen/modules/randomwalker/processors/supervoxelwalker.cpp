@@ -97,7 +97,7 @@ SuperVoxelWalker::SuperVoxelWalker()
     , outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false)
     , outportSuperVoxels_(Port::OUTPORT, "volume.supervoxels", "volume.supervoxels", false)
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
-    , beta_("beta", "Beta: 2^v", 0, 0, 20, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , beta_("beta", "Beta", 50, 1, 5000, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
     , maxIterations_("conjGradIterations", "Max Iterations", 1000, 1, 5000)
@@ -239,7 +239,7 @@ SuperVoxelWalker::ComputeInput SuperVoxelWalker::prepareComputeInput() {
     float errorThresh = 1.f / pow(10.f, static_cast<float>(errorThreshold_.get()));
     int maxIterations = maxIterations_.get();
 
-    float beta = std::pow(2.0f, beta_.get());
+    float beta = beta_.get();
     float minWeight = std::pow(10.0f, -minEdgeWeight_.get());
 
     return ComputeInput {
