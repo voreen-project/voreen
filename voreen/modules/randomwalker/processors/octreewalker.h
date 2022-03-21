@@ -49,6 +49,7 @@
 #endif
 
 #include "../util/noisemodel.h"
+#include "../util/memprofiler.h"
 
 #include <string>
 #include <chrono>
@@ -182,6 +183,9 @@ private:
 #ifdef VRN_MODULE_OPENCL
     VoreenBlasCL voreenBlasCL_;
 #endif
+
+    ProfileDataCollector ramProfiler_;
+    ProfileDataCollector vramProfiler_;
 
     ButtonProperty clearResult_;
     TempPathProperty resultPath_;

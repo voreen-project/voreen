@@ -302,11 +302,14 @@ done:
     regionMeans.push_back(intensitySum/numVoxels);
 }
 
-static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInput& input, ProgressReporter& progressReporter) {
+static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInput& input, ProgressReporter& progressReporter, const ProfileDataCollector& ramProfiler) {
     SubtaskProgressReporterCollection<2> globalProgressSteps(progressReporter, {0.5, 1.0});
     VolumeAtomic<float> vol = toVolumeAtomicFloat(input.volram_);
+    ProfileAllocation volAllocation(ramProfiler, vol.getNumBytes());
+
     tgt::svec3 dim = vol.getDimensions();
     VolumeAtomic<SuperVoxelID> labels(vol.getDimensions());
+    ProfileAllocation labelsallocation(ramProfiler, labels.getNumBytes());
     labels.fill(UNLABELED);
     std::vector<float> regionMeans;
     regionMeans.push_back(0.0); //Dummy for UNLABELED
@@ -335,11 +338,16 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
         }
         globalProgressSteps.get<0>().setProgress(static_cast<float>(i++)/numVoxels);
     }
+    ProfileAllocation regionMeansAllocation(ramProfiler, regionMeans.size() * sizeof(float));
+    {
+        ProfileAllocation indicesAllocation(ramProfiler, indices.size() * sizeof(float));
+    }
     indices.clear();
 
     size_t numSuperVoxels = regionMeans.size() - 1;
 
     std::vector<std::vector<SuperVoxelID>> edges(numSuperVoxels+1);
+    ProfileAllocation edgesAllocation(ramProfiler, edges.size() * sizeof(SuperVoxelID));
 
     i=0;
     VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
@@ -513,7 +521,7 @@ static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystem(const SuperVoxelWalke
     }
 }
 
-static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult, ProgressReporter& progressReporter) {
+static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult, ProgressReporter& progressReporter, const ProfileDataCollector& ramProfiler, const ProfileDataCollector& vramProfiler) {
     tgt::svec3 dim = input.volume_.getDimensions();
 
     PointSegmentListGeometryVec3 foregroundSeeds;
@@ -528,9 +536,11 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
     size_t numSuperVoxels = preprocessingResult.edges_.size() - 1;
 
     std::vector<int> superVoxelSeedClasses(preprocessingResult.edges_.size(), UNSEEDED);
+    ProfileAllocation superVoxelAllocation(ramProfiler, superVoxelSeedClasses.size() * sizeof(UNSEEDED));
     {
         RandomWalkerTwoLabelSeeds seeds(dim,foregroundSeeds,backgroundSeeds);
         seeds.initialize();
+        ProfileAllocation superVoxelAllocation(ramProfiler, tgt::hmul(dim));
 
         if(seeds.getNumSeeds() == 0) {
             LERRORC(SuperVoxelWalker::loggerCat_, "No seeds");
@@ -559,6 +569,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
 
     std::vector<int> superVoxelToMatTable;
     superVoxelToMatTable.reserve(superVoxelSeedClasses.size());
+    ProfileAllocation matTableAllocation(ramProfiler, superVoxelToMatTable.size() * sizeof(int));
 
     size_t seededIndex = 0;
     size_t unseededIndex = 0;
@@ -598,6 +609,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
             float diff = mean-val;
             varsum += diff*diff;
         }
+        ProfileAllocation matTableAllocation(ramProfiler, squareDifferences.size() * sizeof(float));
         float variance = varsum/(squareDifferences.size() -1);
         squareDiffStd = std::sqrt(variance);
     }
@@ -607,6 +619,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
 
 
     std::vector<float> vec(unseeded, 0.0f);
+    ProfileAllocation vecAllocation(ramProfiler, unseeded * sizeof(float));
     for(size_t i = 1; i < superVoxelSeedClasses.size(); ++i) {
         const std::vector<SuperVoxelID>& edges = preprocessingResult.edges_[i];
         int iSeed = superVoxelSeedClasses[i];
@@ -652,15 +665,20 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
         triplets_lu.emplace_back(i,i,diagonal[i]);
     }
     diagonal.clear();
+    ProfileAllocation tripletsAllocation(ramProfiler, triplets_lu.size() * sizeof(Eigen::Triplet<float>));
+    size_t numEntries = triplets_lu.size();
 
     Eigen::SparseMatrix<float, Eigen::ColMajor> lu(unseeded,unseeded);
+    ProfileAllocation matAllocation(ramProfiler, (sizeof(float) + sizeof(size_t)) * numEntries + sizeof(size_t) * (unseeded+1)); //csr format
 
     lu.setFromTriplets(triplets_lu.begin(), triplets_lu.end());
     triplets_lu.clear();
+    tripletsAllocation.release();
 
     lu.makeCompressed();
 
     std::vector<float> initialization(unseeded);
+    ProfileAllocation initializationAllocation(ramProfiler, initialization.size() * sizeof(float));
     if(input.previousSolution_) {
         for(size_t i = 1; i < superVoxelSeedClasses.size(); ++i) {
             size_t iRow = superVoxelToMatTable[i];
@@ -674,10 +692,16 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
     }
 
     auto solution = solveSystem(input, lu, vec.data(), initialization.data());
-
-    auto outvol = tgt::make_unique<VolumeAtomic<float>>(dim);
+    {
+        cgSystemFloatCSR(vramProfiler, unseeded, numEntries);
+    }
+    initialization.clear();
+    initializationAllocation.release();
+    vec.clear();
+    vecAllocation.release();
 
     std::vector<float> futurePrevSolution(preprocessingResult.edges_.size());
+    ProfileAllocation prevSolutionAllocation(ramProfiler, futurePrevSolution.size() * sizeof(float));
     for(size_t i = 1; i < superVoxelSeedClasses.size(); ++i) {
         size_t row = superVoxelToMatTable[i];
         int seed = superVoxelSeedClasses[i];
@@ -690,6 +714,8 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
         }
     }
 
+    auto outvol = tgt::make_unique<VolumeAtomic<float>>(dim);
+    ProfileAllocation outvolAllocation(ramProfiler, outvol->getNumBytes());
     VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
         SuperVoxelID cls = preprocessingResult.labels_.voxel(p);
         tgtAssert(cls != UNLABELED, "All voxels should be labeled");
@@ -700,8 +726,8 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
     return std::make_pair(std::move(outvol), futurePrevSolution);
 }
 
-static std::pair<std::unique_ptr<VolumeBase>, std::vector<float>> runRW(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult, ProgressReporter& progressReporter) {
-    auto o = solve(input, preprocessingResult, progressReporter);
+static std::pair<std::unique_ptr<VolumeBase>, std::vector<float>> runRW(const SuperVoxelWalkerInput& input, const SuperVoxelWalkerPreprocessingResult& preprocessingResult, ProgressReporter& progressReporter, const ProfileDataCollector& ramProfiler, const ProfileDataCollector& vramProfiler) {
+    auto o = solve(input, preprocessingResult, progressReporter, ramProfiler, vramProfiler);
     auto output = tgt::make_unique<Volume>(o.first.release(), input.volume_.getSpacing(), input.volume_.getOffset(), input.volume_.getPhysicalToWorldMatrix());
     return std::make_pair(std::move(output), o.second);
 }
@@ -717,13 +743,14 @@ SuperVoxelWalker::ComputeOutput SuperVoxelWalker::compute(ComputeInput input, Pr
     const size_t numChannels = 1;
 
     boost::optional<SuperVoxelWalkerPreprocessingResult> ppNew = boost::none;
+    ProfileAllocation inputVolram(ramProfiler_, input.volram_.getNumBytes());
 
 
     const SuperVoxelWalkerPreprocessingResult* preprocessingResult;
     if(input.preprocessingResult_) {
         preprocessingResult = input.preprocessingResult_;
     } else {
-        ppNew = preprocess(input, globalProgressSteps.get<0>());
+        ppNew = preprocess(input, globalProgressSteps.get<0>(), ramProfiler_);
         preprocessingResult = &*ppNew;
     }
 
@@ -733,8 +760,11 @@ SuperVoxelWalker::ComputeOutput SuperVoxelWalker::compute(ComputeInput input, Pr
     for(const auto& e : preprocessingResult->edges_) {
         totalNumEntries += e.size();
     }
-    LINFO("Total number of supervoxels: " << numSuperVoxels);
-    LINFO("Maximum supervoxel connectivity: " << conn);
+    ProfileAllocation edgesAllocation1(ramProfiler_, preprocessingResult->edges_.size() * sizeof(std::vector<SuperVoxelID>));
+    ProfileAllocation edgesAllocation2(ramProfiler_, totalNumEntries * sizeof(SuperVoxelID));
+    ProfileAllocation labelsAllocation(ramProfiler_, preprocessingResult->labels_.getNumBytes());
+    ProfileAllocation meansAllocation(ramProfiler_, preprocessingResult->regionMeans_.size() * sizeof(float));
+
     LINFO("Estimated memory for matrix: " << formatMemorySize(conn * numSuperVoxels * 4));
     LINFO("Total number of matrix entries: " << totalNumEntries);
 
@@ -744,7 +774,7 @@ SuperVoxelWalker::ComputeOutput SuperVoxelWalker::compute(ComputeInput input, Pr
     if(input.generateDebugVolume_) {
         outputSuperVoxels = createSuperVoxelVolume(input, *preprocessingResult);
     }
-    auto output = runRW(input, *preprocessingResult, globalProgressSteps.get<1>());
+    auto output = runRW(input, *preprocessingResult, globalProgressSteps.get<1>(), ramProfiler_, vramProfiler_);
     auto finish = clock::now();
 
     progressReporter.setProgress(1.0);
@@ -759,6 +789,12 @@ SuperVoxelWalker::ComputeOutput SuperVoxelWalker::compute(ComputeInput input, Pr
 
 void SuperVoxelWalker::processComputeOutput(ComputeOutput output) {
     LINFO("Total runtime: " << output.duration_.count() << " sec");
+#ifdef VRN_MODULE_RANDOMWALKER_PROFILING_ENABLED
+    LINFO("Total ram: " << ramProfiler_.peak());
+    LINFO("Total vram: " << vramProfiler_.peak());
+    ramProfiler_.reset();
+    vramProfiler_.reset();
+#endif
 
     if(output.preprocessingResult_) {
         preprocessingResult_ = std::move(output.preprocessingResult_);

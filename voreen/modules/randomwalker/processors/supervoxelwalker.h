@@ -48,7 +48,7 @@
 #include "modules/opencl/utils/voreenblascl.h"
 #endif
 
-#include "../util/noisemodel.h"
+#include "../util/memprofiler.h"
 
 #include <string>
 #include <chrono>
@@ -152,6 +152,9 @@ private:
     BoolProperty generateDebugVolume_;
 
     ButtonProperty clearResult_;
+
+    ProfileDataCollector ramProfiler_;
+    ProfileDataCollector vramProfiler_;
 
     boost::optional<SuperVoxelWalkerPreprocessingResult> preprocessingResult_;
     boost::optional<std::vector<float>> previousSolution_;

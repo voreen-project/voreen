@@ -52,6 +52,7 @@
 #endif
 
 #include "../util/noisemodel.h"
+#include "../util/memprofiler.h"
 
 #include <string>
 #include <chrono>
@@ -204,6 +205,9 @@ private:
 
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;
+
+    ProfileDataCollector ramProfiler_;
+    ProfileDataCollector vramProfiler_;
 
     std::vector<const Volume*> lodVolumes_;
     std::vector<float> prevProbabilities_;

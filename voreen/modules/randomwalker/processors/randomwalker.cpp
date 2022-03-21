@@ -487,6 +487,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
 
     const VolumeBase* inputHandle = input.inputHandle_;
     const VolumeRAM* inputVolume = inputHandle->getRepresentation<VolumeRAM>();
+    ProfileAllocation a1(ramProfiler_, inputVolume->getNumBytes());
 
     // create lod volumes, if not present
     bool computeLODs = false;
@@ -626,6 +627,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
 
         std::unique_ptr<RandomWalkerSeeds> seeds(new RandomWalkerTwoLabelSeeds(workVolume->getDimensions(),
                     foregroundSeeds, backgroundSeeds, foregroundSeedVol.get(), backgroundSeedVol.get(), clipLLF, clipURB));
+        ProfileAllocation a3(ramProfiler_, workVolume->getNumVoxels());
 
         /*
          * 2. Set up Random Walker system.
@@ -633,6 +635,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
 
         const RandomWalkerSeeds* seedsRef = seeds.get(); // only valid until solver is deleted.
         auto weights = getEdgeWeightsFromProperties(input);
+        ProfileAllocation weightAllocation(ramProfiler_, inputVolume->getNumVoxels() * sizeof(float)); //Assuming an extra buffer for means
         solver.reset(new RandomWalkerSolver(workVolume, seeds.release(), *weights));
         try {
             auto start = clock::now();
@@ -651,6 +654,11 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             loopRecord.numBackgroundSeeds = twoLabelSeeds->getNumBackgroundSeeds();
         }
 
+        ProfileAllocation profmatvalues(ramProfiler_, 7 * solver->getSystemSize() * sizeof(float));
+        ProfileAllocation profmatrows(ramProfiler_, 7 * solver->getSystemSize() * sizeof(size_t));
+        ProfileAllocation profbsize(ramProfiler_, solver->getSystemSize() * sizeof(float));
+        ProfileAllocation profindextable(ramProfiler_, inputVolume->getNumVoxels() * sizeof(size_t));
+
         /*
          * 3. Compute Random Walker solution.
          */
@@ -660,6 +668,8 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             float* initialization = nullptr;
             std::vector<float> initializationStorage;
             initializationStorage.reserve(solver->getSystemSize());
+            ProfileAllocation profInit(ramProfiler_,  solver->getSystemSize() * sizeof(float));
+
             if(!input.prevProbabilities_.empty()) {
                 tgtAssert(input.prevProbabilities_.size() == solver->getNumVoxels(), "Old and new probalities size missmatch");
                 // This is highly depends on the implementation of RandomWalkerSolver!
@@ -673,6 +683,7 @@ RandomWalker::ComputeOutput RandomWalker::compute(ComputeInput input, ProgressRe
             }
 
             auto start = clock::now();
+            auto _ = cgSystemFloatEllpack(vramProfiler_, solver->getSystemSize());
             int iterations = solver->solve(input.blas_, initialization, input.precond_, input.errorThreshold_, input.maxIterations_, iterationProgressSteps.get<2>());
             auto finish = clock::now();
             loopRecord.timeSolving = finish - start;
@@ -788,6 +799,13 @@ void RandomWalker::processComputeOutput(ComputeOutput output) {
         lodVolumes_ = output.lodVolumes_;
 
         LINFO("Total runtime: " << output.duration_.count() << " sec");
+
+#ifdef VRN_MODULE_RANDOMWALKER_PROFILING_ENABLED
+        LINFO("Total ram: " << ramProfiler_.peak());
+        LINFO("Total vram: " << vramProfiler_.peak());
+        ramProfiler_.reset();
+        vramProfiler_.reset();
+#endif
 
         // put out results
         if (outportSegmentation_.isConnected())
