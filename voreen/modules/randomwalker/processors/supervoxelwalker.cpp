@@ -468,7 +468,7 @@ static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystemMagma(const SuperVoxel
     magma_sopts dopts;
 
     dopts.solver_par.solver = Magma_PCGMERGE;
-    dopts.solver_par.rtol = input.errorThreshold_;
+    dopts.solver_par.atol = input.errorThreshold_;
     dopts.solver_par.maxiter = input.maxIterations_;
     dopts.solver_par.verbose = 0;
     CHECK_MAGMA_ERROR(magma_ssolverinfo_init(&dopts.solver_par, &dopts.precond_par, queue));
