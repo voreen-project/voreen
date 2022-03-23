@@ -116,7 +116,6 @@ SuperVoxelWalker::SuperVoxelWalker()
     addPort(outportProbabilities_);
     addPort(outportSuperVoxels_);
     ON_CHANGE_LAMBDA(inportVolume_, [this] () {
-            clearPreviousResults();
             if(inportVolume_.hasData()) {
                 auto vol = inportVolume_.getData();
                 auto rwm = vol->getRealWorldMapping();
@@ -203,6 +202,14 @@ bool SuperVoxelWalker::isReady() const {
 
 SuperVoxelWalker::ComputeInput SuperVoxelWalker::prepareComputeInput() {
     tgtAssert(inportVolume_.hasData(), "no input volume");
+
+    if (inportVolume_.hasChanged()) {
+        if(preprocessingResult_ && preprocessingResult_->labels_.getDimensions() != inportVolume_.getData()->getDimensions()) {
+            LINFO("Input volume has changed. Clearing previous results.");
+            // Previous and new volume are definitely not compatible, so we cannot reuse the previous result.
+            clearPreviousResults();
+        }
+    }
 
     // clear previous results and update property ranges, if input volume has changed
     if (inportVolume_.hasChanged()) {

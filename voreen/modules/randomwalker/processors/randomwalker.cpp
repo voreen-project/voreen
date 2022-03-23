@@ -373,6 +373,7 @@ RandomWalker::ComputeInput RandomWalker::prepareComputeInput() {
         lodMaxResolution_.set(maxDim);
 
         if(prevProbabilities_.size() != tgt::hmul(inportVolume_.getData()->getDimensions())) {
+            LINFO("Input volume has changed. Clearing previous results.");
             // Previous and new volume are definitely not compatible, so we cannot reuse the previous result.
             prevProbabilities_ = std::vector<float>();
         }
