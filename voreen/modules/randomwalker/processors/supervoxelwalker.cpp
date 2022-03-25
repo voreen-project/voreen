@@ -347,7 +347,7 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
     }
     ProfileAllocation regionMeansAllocation(ramProfiler, regionMeans.size() * sizeof(float));
     {
-        ProfileAllocation indicesAllocation(ramProfiler, indices.size() * sizeof(float));
+        ProfileAllocation indicesAllocation(ramProfiler, indices.size() * sizeof(size_t));
     }
     indices.clear();
 
@@ -487,6 +487,10 @@ static Eigen::Matrix<float, Eigen::Dynamic, 1> solveSystemMagma(const SuperVoxel
 
     LINFOC(SuperVoxelWalker::loggerCat_, "#iterations:     " << dopts.solver_par.numiter);
     LINFOC(SuperVoxelWalker::loggerCat_, "estimated error: " << dopts.solver_par.final_res);
+    if(dopts.solver_par.info == -1) {
+        LERRORC(SuperVoxelWalker::loggerCat_, "Failed to converge");
+        exit(1);
+    }
 
     magma_s_matrix res_m;
     CHECK_MAGMA_ERROR(magma_s_mtransfer(res_d, &res_m, Magma_DEV, Magma_CPU, queue));
