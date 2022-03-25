@@ -79,7 +79,6 @@ public:
         if(VolumeElement<T>::isInteger()) {
             if(VolumeElement<T>::isSigned()) {
                 scale = (VolumeElement<T>::rangeMaxElement() - VolumeElement<T>::rangeMinElement()) / 2.0f;
-                offset = (VolumeElement<T>::rangeMaxElement() + VolumeElement<T>::rangeMinElement()) / 2.0f;
             }
             else {
                 scale = VolumeElement<T>::rangeMaxElement();
