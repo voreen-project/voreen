@@ -329,6 +329,8 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
     for(size_t i=0; i<numVoxels; ++i) {
         indices.push_back(i);
     }
+    indices.shrink_to_fit();
+    ProfileAllocation indicesAllocation(ramProfiler, indices.capacity() * sizeof(size_t));
 
     //TODO make random seed configurable?
     int randomSeed = 0;
@@ -345,16 +347,17 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
         }
         globalProgressSteps.get<0>().setProgress(static_cast<float>(i++)/numVoxels);
     }
-    ProfileAllocation regionMeansAllocation(ramProfiler, regionMeans.size() * sizeof(float));
-    {
-        ProfileAllocation indicesAllocation(ramProfiler, indices.size() * sizeof(size_t));
-    }
+    regionMeans.shrink_to_fit();
+    ProfileAllocation regionMeansAllocation(ramProfiler, regionMeans.capacity() * sizeof(float));
+    indicesAllocation.release();
     indices.clear();
+    indices.shrink_to_fit();
 
     size_t numSuperVoxels = regionMeans.size() - 1;
 
     std::vector<std::vector<SuperVoxelID>> edges(numSuperVoxels+1);
-    ProfileAllocation edgesAllocation(ramProfiler, edges.size() * sizeof(SuperVoxelID));
+    ProfileAllocation edgesAllocation(ramProfiler, edges.capacity() * sizeof(std::vector<SuperVoxelID>));
+    ProfileAllocation edgesEntryAllocation(ramProfiler, edges.capacity() * sizeof(std::vector<SuperVoxelID>));
 
     i=0;
     VRN_FOR_EACH_VOXEL(p, tgt::ivec3(0,0,0), tgt::ivec3(dim)) {
@@ -382,6 +385,7 @@ static SuperVoxelWalkerPreprocessingResult preprocess(const SuperVoxelWalkerInpu
                     }
                 }
                 if(!found) {
+                    edgesEntryAllocation.increaseBy(2*sizeof(SuperVoxelID));
                     clsEdges.push_back(neighCls);
                     edges[neighCls].push_back(cls);
                 }
@@ -676,6 +680,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
         triplets_lu.emplace_back(i,i,diagonal[i]);
     }
     diagonal.clear();
+    diagonal.shrink_to_fit();
     ProfileAllocation tripletsAllocation(ramProfiler, triplets_lu.size() * sizeof(Eigen::Triplet<float>));
     size_t numEntries = triplets_lu.size();
 
@@ -684,6 +689,7 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
 
     lu.setFromTriplets(triplets_lu.begin(), triplets_lu.end());
     triplets_lu.clear();
+    triplets_lu.shrink_to_fit();
     tripletsAllocation.release();
 
     lu.makeCompressed();
@@ -707,8 +713,10 @@ static std::pair<std::unique_ptr<VolumeAtomic<float>>, std::vector<float>> solve
         cgSystemFloatCSR(vramProfiler, unseeded, numEntries);
     }
     initialization.clear();
+    initialization.shrink_to_fit();
     initializationAllocation.release();
     vec.clear();
+    vec.shrink_to_fit();
     vecAllocation.release();
 
     std::vector<float> futurePrevSolution(preprocessingResult.edges_.size());
