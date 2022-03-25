@@ -1247,7 +1247,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 &outputRootNode.node_,
                 tgt::svec3::zero,
                 volumeDim,
-                false,
                 }
             );
     }
@@ -1354,7 +1353,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                         break;
                     }
                     case RW_NOISE_POISSON:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasSeedsConflicts, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     default:
                         tgtAssert(false, "Invalid noise model selected");
