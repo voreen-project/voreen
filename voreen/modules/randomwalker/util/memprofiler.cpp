@@ -45,7 +45,7 @@ void ProfileDataCollector::allocate(size_t size) const {
     while(prev < newval && !maximum_.compare_exchange_weak(prev, newval)) {}
 }
 void ProfileDataCollector::deallocate(size_t size) const {
-    tgtAssert(current_ > size, "Invalid deallocation");
+    tgtAssert(current_ >= size, "Invalid deallocation");
     current_.fetch_sub(size);
 }
 size_t ProfileDataCollector::peak() const {
