@@ -1097,7 +1097,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
     auto rwm = input.volume_.getRealWorldMapping();
 
     auto model = NoiseModel::prepare(inputNeighborhood.data_, rwm);
-    ProfileAllocation noiseModelSize(ramProfiler, volIndexToRow.size() * sizeof(float)); //Assuming mean volume
+    ProfileAllocation noiseModelSize(ramProfiler, volIndexToRow.size() * sizeof(float) * 4); //Assuming worst case: ttest
 
     auto vec = std::vector<float>(systemSize, 0.0f);
     ProfileAllocation vecAllocation(ramProfiler, vec.size() * sizeof(float));
