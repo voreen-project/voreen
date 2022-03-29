@@ -59,6 +59,8 @@ protected:
 
     BoolProperty volumesDetected_;
     IntProperty numVolumesRequiredForDetection_;
+    IntProperty numDetectionsRequired_;
+    IntProperty numDetections_;
     ButtonProperty reset_;
 
     VolumePort volumePort_;
