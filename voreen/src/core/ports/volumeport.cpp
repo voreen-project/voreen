@@ -143,8 +143,9 @@ void VolumePort::setData(const VolumeBase* handle, bool takeOwnership) {
 
         if (handle)
             handle->Observable<VolumeObserver>::addObserver(this);
+    } else {
+        invalidatePort();
     }
-    invalidatePort();
 }
 
 void VolumePort::volumeDelete(const VolumeBase* source) {
