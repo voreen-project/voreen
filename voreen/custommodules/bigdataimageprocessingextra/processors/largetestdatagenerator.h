@@ -47,6 +47,7 @@
 
 
 namespace voreen {
+
 struct LargeTestDataGeneratorInput {
     enum Scenario {
         CELLS,
@@ -56,12 +57,18 @@ struct LargeTestDataGeneratorInput {
         GAUSSIAN,
         POISSON,
     };
+    enum LargeTestDataInvalidation {
+        All,
+        Seeds,
+    };
     typedef std::mt19937 random_engine_type;
 
     Scenario scenario;
+    LargeTestDataInvalidation invalidation;
     std::unique_ptr<HDF5FileVolume> outputVolumeNoisy;
     std::unique_ptr<HDF5FileVolume> outputVolumeGT;
     random_engine_type randomEngine;
+    tgt::ivec3 dimensions;
     uint16_t foregroundMean;
     uint16_t backgroundMean;
     NoiseType noiseType;
@@ -72,9 +79,11 @@ struct LargeTestDataGeneratorInput {
 
     LargeTestDataGeneratorInput(
             Scenario scenario
+            , LargeTestDataInvalidation invalidation
             , std::unique_ptr<HDF5FileVolume>&& outputVolumeNoisy
             , std::unique_ptr<HDF5FileVolume>&& outputVolumeGT
             , random_engine_type randomEngine
+            , tgt::ivec3 dimensions
             , uint16_t foregroundMean
             , uint16_t backgroundMean
             , NoiseType noiseType
@@ -84,9 +93,11 @@ struct LargeTestDataGeneratorInput {
             , bool retainLabel
             )
         : scenario(scenario)
+        , invalidation(invalidation)
         , outputVolumeNoisy(std::move(outputVolumeNoisy))
         , outputVolumeGT(std::move(outputVolumeGT))
         , randomEngine(randomEngine)
+        , dimensions(dimensions)
         , foregroundMean(foregroundMean)
         , backgroundMean(backgroundMean)
         , noiseType(noiseType)
@@ -100,9 +111,11 @@ struct LargeTestDataGeneratorInput {
     LargeTestDataGeneratorInput(const LargeTestDataGeneratorInput&) = delete;
     LargeTestDataGeneratorInput(LargeTestDataGeneratorInput&& old)
         : scenario(old.scenario)
+        , invalidation(old.invalidation)
         , outputVolumeNoisy(std::move(old.outputVolumeNoisy))
         , outputVolumeGT(std::move(old.outputVolumeGT))
         , randomEngine(old.randomEngine)
+        , dimensions(old.dimensions)
         , foregroundMean(old.foregroundMean)
         , backgroundMean(old.backgroundMean)
         , noiseType(old.noiseType)
@@ -138,6 +151,9 @@ public:
     virtual LargeTestDataGeneratorOutput compute(LargeTestDataGeneratorInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(LargeTestDataGeneratorOutput output);
 
+    void invalidateAll();
+    void invalidateSeeds();
+
     static const std::string loggerCat_;
 private:
     // Ports
@@ -159,6 +175,7 @@ private:
     IntIntervalProperty structureSizeRange_;
     OptionProperty<LargeTestDataGeneratorInput::Scenario> scenario_;
     BoolProperty retainLabel_;
+    boost::optional<LargeTestDataGeneratorInput::LargeTestDataInvalidation> invalidation_;
 
     std::random_device randomDevice;
 };

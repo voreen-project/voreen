@@ -68,6 +68,7 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     , outputVolumeGTFilePath_("outputVolumeFilePathgt", "GT Volume Output", "Path", "", "HDF5 (*.h5)", FileDialogProperty::SAVE_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT)
     , scenario_("scenario", "Test Data Scenario")
     , retainLabel_("retainLabel", "Retain a foreground label from the output", false)
+    , invalidation_(LargeTestDataGeneratorInput::LargeTestDataInvalidation::All)
 {
     addPort(outportNoisy_);
     addPort(outportGT_);
@@ -77,92 +78,113 @@ LargeTestDataGenerator::LargeTestDataGenerator()
     addProperty(volumeDimensions_);
         ON_CHANGE_LAMBDA(volumeDimensions_, [this] () {
             structureSizeRange_.setMaxValue(tgt::min(volumeDimensions_.get()));
+            invalidateAll();
         });
         volumeDimensions_.setTracking(false);
     addProperty(structureSizeRange_);
         structureSizeRange_.setMaxValue(tgt::min(volumeDimensions_.get()));
+        ON_CHANGE(structureSizeRange_, LargeTestDataGenerator, invalidateAll);
     addProperty(foregroundMean_);
         foregroundMean_.setTracking(false);
+        ON_CHANGE(foregroundMean_, LargeTestDataGenerator, invalidateAll);
     addProperty(backgroundMean_);
         backgroundMean_.setTracking(false);
+        ON_CHANGE(backgroundMean_, LargeTestDataGenerator, invalidateAll);
     addProperty(noiseType_);
         noiseType_.addOption("gaussian", "Gaussian", LargeTestDataGeneratorInput::GAUSSIAN);
         noiseType_.addOption("poisson", "Poisson", LargeTestDataGeneratorInput::POISSON);
         ON_CHANGE_LAMBDA(noiseType_, [this] () {
             gaussianNoiseSD_.setVisibleFlag(noiseType_.getValue() == LargeTestDataGeneratorInput::GAUSSIAN);
+            invalidateAll();
         });
         noiseType_.selectByValue(LargeTestDataGeneratorInput::GAUSSIAN);
     addProperty(gaussianNoiseSD_);
         gaussianNoiseSD_.setTracking(false);
+        ON_CHANGE(gaussianNoiseSD_, LargeTestDataGenerator, invalidateAll);
     addProperty(density_);
         density_.setTracking(false);
+        ON_CHANGE(density_, LargeTestDataGenerator, invalidateAll);
     addProperty(seed_);
         seed_.setTracking(false);
+        ON_CHANGE(seed_, LargeTestDataGenerator, invalidateAll);
     addProperty(scenario_);
         scenario_.addOption("cells", "Cells", LargeTestDataGeneratorInput::CELLS);
         scenario_.addOption("vessels", "Vessels", LargeTestDataGeneratorInput::VESSELS);
         scenario_.selectByValue(LargeTestDataGeneratorInput::CELLS);
+        ON_CHANGE(scenario_, LargeTestDataGenerator, invalidateAll);
     addProperty(outputVolumeNoisyFilePath_);
+        ON_CHANGE(outputVolumeNoisyFilePath_, LargeTestDataGenerator, invalidateAll);
     addProperty(outputVolumeGTFilePath_);
+        ON_CHANGE(outputVolumeGTFilePath_, LargeTestDataGenerator, invalidateAll);
     addProperty(retainLabel_);
+        ON_CHANGE(retainLabel_, LargeTestDataGenerator, invalidateSeeds);
 }
 
 LargeTestDataGeneratorInput LargeTestDataGenerator::prepareComputeInput() {
-    // Reset output volume to make sure it (and the hdf5filevolume) are not used any more
-    outportGT_.setData(nullptr);
-    outportNoisy_.setData(nullptr);
-
-    const std::string volumeNoisyFilePath = outputVolumeNoisyFilePath_.get();
-    const std::string volumeGTFilePath = outputVolumeGTFilePath_.get();
-    const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
+    if(!invalidation_){
+        LINFO("Data is not invalid.");
+        throw InvalidInputException("Data is not invalid.", InvalidInputException::S_IGNORE);
+    }
+    std::unique_ptr<HDF5FileVolume> outputVolumeNoisy = nullptr;
+    std::unique_ptr<HDF5FileVolume> outputVolumeGT = nullptr;
 
     tgt::svec3 dim = volumeDimensions_.get();
-
     float gaussianNoiseSD = gaussianNoiseSD_.get();
-
     LargeTestDataGeneratorInput::random_engine_type randomEngine {};
     randomEngine.seed(seed_.get());
 
-    const std::string baseTypeNoisy = "uint16";
-    const std::string baseTypeGT = "uint8";
-    const tgt::vec3 spacing = tgt::vec3::one;
-    const tgt::vec3 offset = tgt::vec3::zero;
-    const RealWorldMapping rwmNoisy = RealWorldMapping::createDenormalizingMapping(baseTypeNoisy);
-    const RealWorldMapping rwmGT = RealWorldMapping(1,0,"");
-    const int deflateLevelNoisy = 0;
-    const int deflateLevelGT = 1;
+    // Reset output volume to make sure it (and the hdf5filevolume) are not used any more
+    if(*invalidation_ == LargeTestDataGeneratorInput::LargeTestDataInvalidation::All) {
+        outportGT_.setData(nullptr);
+        outportNoisy_.setData(nullptr);
 
-    if(volumeNoisyFilePath.empty() || volumeGTFilePath.empty()) {
-        throw InvalidInputException("No volume file path specified!", InvalidInputException::S_ERROR);
+        const std::string volumeNoisyFilePath = outputVolumeNoisyFilePath_.get();
+        const std::string volumeGTFilePath = outputVolumeGTFilePath_.get();
+        const std::string volumeLocation = HDF5VolumeWriter::VOLUME_DATASET_NAME;
+
+        const std::string baseTypeNoisy = "uint16";
+        const std::string baseTypeGT = "uint8";
+        const tgt::vec3 spacing = tgt::vec3::one;
+        const tgt::vec3 offset = tgt::vec3::zero;
+        const RealWorldMapping rwmNoisy = RealWorldMapping::createDenormalizingMapping(baseTypeNoisy);
+        const RealWorldMapping rwmGT = RealWorldMapping(1,0,"");
+        const int deflateLevelNoisy = 0;
+        const int deflateLevelGT = 1;
+
+        if(volumeNoisyFilePath.empty() || volumeGTFilePath.empty()) {
+            throw InvalidInputException("No volume file path specified!", InvalidInputException::S_ERROR);
+        }
+
+        try {
+            outputVolumeNoisy = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeNoisyFilePath, volumeLocation, baseTypeNoisy, dim, 1, true, deflateLevelNoisy, tgt::svec3(dim.x, dim.y, 1), false));
+            outputVolumeGT = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeGTFilePath, volumeLocation, baseTypeGT, dim, 1, true, deflateLevelGT, tgt::svec3(dim.x, dim.y, 1), false));
+        } catch(tgt::IOException& e) {
+            throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
+        }
+
+        outputVolumeNoisy->writeSpacing(spacing);
+        outputVolumeNoisy->writeOffset(offset);
+        outputVolumeNoisy->writeRealWorldMapping(rwmNoisy);
+
+        outputVolumeGT->writeSpacing(spacing);
+        outputVolumeGT->writeOffset(offset);
+        outputVolumeGT->writeRealWorldMapping(rwmGT);
+
+        LINFO("Using structure size range: " << structureSizeRange_.get());
+        LINFO("Using voldim: " << dim);
+        LINFO("Using noise SD: " << gaussianNoiseSD);
+        LINFO("Using seed: " << seed_.get());
+    } else {
+        LINFO("Only regenerating seeds. Volumes are kept.");
     }
-
-    std::unique_ptr<HDF5FileVolume> outputVolumeNoisy = nullptr;
-    std::unique_ptr<HDF5FileVolume> outputVolumeGT = nullptr;
-    try {
-        outputVolumeNoisy = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeNoisyFilePath, volumeLocation, baseTypeNoisy, dim, 1, true, deflateLevelNoisy, tgt::svec3(dim.x, dim.y, 1), false));
-        outputVolumeGT = std::unique_ptr<HDF5FileVolume>(HDF5FileVolume::createVolume(volumeGTFilePath, volumeLocation, baseTypeGT, dim, 1, true, deflateLevelGT, tgt::svec3(dim.x, dim.y, 1), false));
-    } catch(tgt::IOException& e) {
-        throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
-    }
-
-    outputVolumeNoisy->writeSpacing(spacing);
-    outputVolumeNoisy->writeOffset(offset);
-    outputVolumeNoisy->writeRealWorldMapping(rwmNoisy);
-
-    outputVolumeGT->writeSpacing(spacing);
-    outputVolumeGT->writeOffset(offset);
-    outputVolumeGT->writeRealWorldMapping(rwmGT);
-
-    LINFO("Using structure size range: " << structureSizeRange_.get());
-    LINFO("Using voldim: " << dim);
-    LINFO("Using noise SD: " << gaussianNoiseSD);
-    LINFO("Using seed: " << seed_.get());
 
     return LargeTestDataGeneratorInput(
         scenario_.getValue(),
+        *invalidation_,
         std::move(outputVolumeNoisy),
         std::move(outputVolumeGT),
         randomEngine,
+        dim,
         foregroundMean_.get(),
         backgroundMean_.get(),
         noiseType_.getValue(),
@@ -403,7 +425,10 @@ static bool clipLineToBB(const tgt::Bounds& bb, tgt::vec3& p0, tgt::vec3& p1) {
 static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels, ProgressReporter& progress) {
     SubtaskProgressReporterCollection<2> progressSteps(progress, {0.5, 0.5});
 
-    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
+    const tgt::svec3 dim = input.dimensions;
+    tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
+    tgtAssert(input.outputVolumeNoisy->getDimensions() == dim, "Dimension mismatch");
+
     float avgDim = tgt::hadd(dim)/3.0f;
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
@@ -648,7 +673,7 @@ static void initCylinders(LargeTestDataGeneratorInput& input, Balls& balls, Cyli
 static void initCells(LargeTestDataGeneratorInput& input, Balls& balls, Cylinders& cylinders, std::vector<std::vector<tgt::vec3>>& foregroundLabels, std::vector<std::vector<tgt::vec3>>& backgroundLabels, ProgressReporter& progress) {
     SubtaskProgressReporterCollection<2> progressSteps(progress, {0.5, 0.5});
 
-    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
+    const tgt::svec3 dim = input.dimensions;
     int minRadius = std::max(1, input.structureSizeRange.x/2);
     int maxRadius = std::max(1, input.structureSizeRange.y/2);
 
@@ -763,8 +788,9 @@ static void rasterize(
         Cylinders& cylinders,
         ProgressReporter& progress
         ) {
-    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
+    const tgt::svec3 dim = input.dimensions;
     tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
+    tgtAssert(input.outputVolumeNoisy->getDimensions() == dim, "Dimension mismatch");
 
     std::mutex intervalWalkerMutex;
     std::vector<Interval<int, size_t>> ballIntervals;
@@ -933,10 +959,6 @@ struct PoissonNoiseGenerator {
 LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGeneratorInput input, ProgressReporter& progressReporter) const {
     SubtaskProgressReporterCollection<2> globalProgressSteps(progressReporter, {0.02, 0.98});
 
-    tgtAssert(input.outputVolumeNoisy, "No outputVolume");
-    tgtAssert(input.outputVolumeGT, "No outputVolume");
-    const tgt::svec3 dim = input.outputVolumeNoisy->getDimensions();
-    tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
     Balls balls{};
     Cylinders cylinders{};
 
@@ -959,14 +981,22 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
         }
     }
 
-    auto& p = globalProgressSteps.template get<1>();
-    switch(input.noiseType) {
-        case LargeTestDataGeneratorInput::GAUSSIAN:
-            rasterize(input, GaussianNoiseGenerator { input.gaussianNoiseSD }, balls, cylinders, p);
-            break;
-        case LargeTestDataGeneratorInput::POISSON:
-            rasterize(input, PoissonNoiseGenerator {}, balls, cylinders, p);
-            break;
+    if(input.invalidation == LargeTestDataGeneratorInput::LargeTestDataInvalidation::All) {
+        tgtAssert(input.outputVolumeNoisy, "No outputVolume");
+        tgtAssert(input.outputVolumeGT, "No outputVolume");
+        const tgt::svec3 dim = input.dimensions;
+        tgtAssert(input.outputVolumeGT->getDimensions() == dim, "Dimension mismatch");
+        tgtAssert(input.outputVolumeNoisy->getDimensions() == dim, "Dimension mismatch");
+
+        auto& p = globalProgressSteps.template get<1>();
+        switch(input.noiseType) {
+            case LargeTestDataGeneratorInput::GAUSSIAN:
+                rasterize(input, GaussianNoiseGenerator { input.gaussianNoiseSD }, balls, cylinders, p);
+                break;
+            case LargeTestDataGeneratorInput::POISSON:
+                rasterize(input, PoissonNoiseGenerator {}, balls, cylinders, p);
+                break;
+        }
     }
 
     if(input.retainLabel) {
@@ -994,26 +1024,39 @@ LargeTestDataGeneratorOutput LargeTestDataGenerator::compute(LargeTestDataGenera
     fg->setData(foregroundLabels);
     std::unique_ptr<PointSegmentListGeometryVec3> bg(new PointSegmentListGeometryVec3());
     bg->setData(backgroundLabels);
-    return {
-        std::move(fg),
-        std::move(bg),
-        input.outputVolumeNoisy->getFileName(),
-        input.outputVolumeGT->getFileName(),
-    };
+    if(input.invalidation == LargeTestDataGeneratorInput::LargeTestDataInvalidation::All) {
+        return {
+            std::move(fg),
+            std::move(bg),
+            input.outputVolumeNoisy->getFileName(),
+            input.outputVolumeGT->getFileName(),
+        };
+    } else {
+        return {
+            std::move(fg),
+            std::move(bg),
+            "",
+            "",
+        };
+    }
     //outputVolume will be destroyed and thus closed now.
 }
 
 void LargeTestDataGenerator::processComputeOutput(LargeTestDataGeneratorOutput output) {
-    // outputVolume has been destroyed and thus closed by now.
-    // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-    const VolumeBase* volNoisy = HDF5VolumeReader().read(output.outputVolumeNoisyFilePath)->at(0);
-    const VolumeBase* volGT = HDF5VolumeReader().read(output.outputVolumeGTFilePath)->at(0);
+    if(invalidation_ && *invalidation_ == LargeTestDataGeneratorInput::LargeTestDataInvalidation::All) {
+        // outputVolume has been destroyed and thus closed by now.
+        // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
+        const VolumeBase* volNoisy = HDF5VolumeReader().read(output.outputVolumeNoisyFilePath)->at(0);
+        const VolumeBase* volGT = HDF5VolumeReader().read(output.outputVolumeGTFilePath)->at(0);
 
-    outportNoisy_.setData(volNoisy);
-    outportGT_.setData(volGT);
+        outportNoisy_.setData(volNoisy);
+        outportGT_.setData(volGT);
+    }
 
     foregroundLabelsPort_.setData(output.foregroundLabels.release());
     backgroundLabelsPort_.setData(output.backgroundLabels.release());
+
+    invalidation_ = boost::none;
 }
 
 bool LargeTestDataGenerator::isReady() const {
@@ -1022,6 +1065,16 @@ bool LargeTestDataGenerator::isReady() const {
         return false;
     }
     return true;
+}
+
+void LargeTestDataGenerator::invalidateAll() {
+    invalidation_ = LargeTestDataGeneratorInput::LargeTestDataInvalidation::All;
+    invalidate();
+}
+
+void LargeTestDataGenerator::invalidateSeeds() {
+    invalidation_ = LargeTestDataGeneratorInput::LargeTestDataInvalidation::Seeds;
+    invalidate();
 }
 
 LargeTestDataGenerator::~LargeTestDataGenerator() {
