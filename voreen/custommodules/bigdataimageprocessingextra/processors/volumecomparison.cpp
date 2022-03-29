@@ -51,6 +51,8 @@ VolumeComparison::VolumeComparison()
     addPort(firstSegmentationVolume_);
     addPort(secondSegmentationVolume_);
 
+    addProperty(enabled_);
+
     addProperty(useClipRegion_);
     clipRegion_.setVisibleFlag(false);
     addProperty(clipRegion_);
