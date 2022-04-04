@@ -127,7 +127,7 @@ static void sliceArgmax(const VolumeBase& vol, size_t z, uint8_t id, VolumeAtomi
             float curVal = rwm.normalizedToRealWorld(inputSlice->getVoxelNormalized(x,y,0));
             float maxVal = maxVals.voxel(x,y,0);
             if(curVal > maxVal) {
-                maxVals.setVoxelNormalized(x,y,0);
+                maxVals.setVoxelNormalized(curVal, x,y,0);
                 ids.voxel(x,y,0) = id;
             }
         }
