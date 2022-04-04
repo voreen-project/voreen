@@ -23,48 +23,64 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include "bigdataimageprocessingmodule.h"
+#ifndef VRN_VOLUMEARGMAX_H
+#define VRN_VOLUMEARGMAX_H
 
-#include "processors/connectedcomponentanalysis.h"
-#include "processors/largevolumeformatconversion.h"
-#include "processors/volumeargmax.h"
-#include "processors/volumefilterlist.h"
-#include "processors/volumeresampletransformation.h"
-#include "io/lz4slicevolumefilereader.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
+#include "voreen/core/ports/volumeport.h"
+#include "voreen/core/properties/temppathproperty.h"
 
-// nuclei cluster splitting
-#include "operators/volumeoperatordistancetransform.h"
-#include "operators/volumeoperatorwatershed.h"
-#include "operators/volumeoperatorgradientdescent.h"
-#include "operators/volumeoperatorfastvolumecombine.h"
+#include "modules/hdf5/io/hdf5filevolume.h"
 
-#include "processors/nucleiclustersplitting.h"
+#include <string>
 
 namespace voreen {
 
-BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& modulePath)
-    : VoreenModule(modulePath)
-{
-    setID("Big Data Image Processing");
-    setGuiName("Big Data Image Processing");
+struct VolumeArgMaxInput {
+    const VolumeBase& vol0_;
+    const VolumeBase* vol1_;
+    const VolumeBase* vol2_;
+    const VolumeBase* vol3_;
+    std::unique_ptr<HDF5FileVolume> outputVolume_;
+};
 
-    registerProcessor(new ConnectedComponentAnalysis());
-    registerProcessor(new LargeVolumeFormatConversion());
-    registerProcessor(new NucleiClusterSplitting());
-    registerProcessor(new VolumeArgMax());
-    registerProcessor(new VolumeFilterList());
-    registerProcessor(new VolumeResampleTransformation());
+struct VolumeArgMaxOutput {
+    std::string outputVolumePath_;
+};
 
-    registerVolumeReader(new LZ4SliceVolumeFileReader());
+class VolumeArgMax : public AsyncComputeProcessor<VolumeArgMaxInput, VolumeArgMaxOutput> {
+public:
+    VolumeArgMax();
+    virtual ~VolumeArgMax();
+    virtual Processor* create() const;
 
-    // instantiate volume operators (nuclei cluster splitting)
-    INST_SCALAR_TYPES(VolumeOperatorSquaredEuclideanDistanceTransform, VolumeOperatorSquaredEuclideanDistanceTransformGeneric)
-    INST_SCALAR_TYPES(VolumeOperatorEuclideanDistanceTransform, VolumeOperatorEuclideanDistanceTransformGeneric)
-    //INST_SCALAR_TYPES(VolumeOperatorManhattanDistanceTransform, VolumeOperatorManhattanDistanceTransformGeneric)
-    //INST_SCALAR_TYPES(VolumeOperatorChebychevDistanceTransform, VolumeOperatorChebychevDistanceTransformGeneric)
-    INST_SCALAR_TYPES(VolumeOperatorWatershedTransform, VolumeOperatorWatershedTransformGeneric);
-    INST_SCALAR_TYPES(VolumeOperatorGradientDescent, VolumeOperatorGradientDescentGeneric);
-    INST_SCALAR_TYPES(VolumeOperatorFastVolumeCombine, VolumeOperatorFastVolumeCombineGeneric);
-}
+    virtual std::string getCategory() const             { return "Volume Processing"; }
+    virtual std::string getClassName() const            { return "VolumeArgMax";      }
+    virtual Processor::CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
 
-} // namespace
+    virtual bool isReady() const;
+
+    static const std::string loggerCat_; ///< category used in logging
+
+protected:
+    virtual void setDescriptions() {
+        setDescription("Sets each voxel to the id of the input volume with the highest voxel value");
+    }
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
+private:
+    VolumePort inportVolume0_;
+    VolumePort inportVolume1_;
+    VolumePort inportVolume2_;
+    VolumePort inportVolume3_;
+    VolumePort outportIds_;
+
+    ButtonProperty clearResult_;
+    TempPathProperty outputVolumePath_;
+};
+
+} //namespace
+
+#endif
