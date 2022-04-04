@@ -27,10 +27,6 @@
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
 
-#ifdef VRN_MODULE_OPENMP
-#include <omp.h>
-#endif
-
 namespace voreen {
 
 
@@ -171,6 +167,7 @@ VolumeArgMax::ComputeOutput VolumeArgMax::compute(ComputeInput input, ProgressRe
         }
 
         input.outputVolume_->writeSlices(&sliceId, z);
+        progressReporter.setProgress(static_cast<float>(z+1)/dim.z);
     }
 
     return {
