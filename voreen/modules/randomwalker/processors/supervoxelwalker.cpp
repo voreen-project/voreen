@@ -41,7 +41,7 @@
 
 #include <climits>
 #include <random>
-#include <eigen3/Eigen/Eigen>
+#include <Eigen/Eigen>
 
 #ifdef VRN_RW_USE_MAGMA
 #include "magma_v2.h"
