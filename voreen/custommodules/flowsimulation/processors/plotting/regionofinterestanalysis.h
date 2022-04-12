@@ -23,8 +23,8 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_ROIANALYSIS_H
-#define VRN_ROIANALYSIS_H
+#ifndef VRN_REGIONOFINTERESTANALYSIS_H
+#define VRN_REGIONOFINTERESTANALYSIS_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
@@ -35,34 +35,32 @@
 
 namespace voreen {
 
-struct RoiAnalysisInput {
+struct RegionOfInterestAnalysisInput {
     PortDataPointer<VolumeList> volumes;
-    std::vector<tgt::vec3> seedPoints;
-    std::unique_ptr<PlotData> output;
-    std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
+    std::vector<std::vector<tgt::vec3>> segments;
 };
 
-struct RoiAnalysisOutput {
-    std::unique_ptr<PlotData> plotData;
+struct RegionOfInterestAnalysisOutput {
+    std::vector<std::unique_ptr<PlotData>> output;
 };
 
-class VRN_CORE_API RoiAnalysis : public AsyncComputeProcessor<RoiAnalysisInput, RoiAnalysisOutput> {
+class VRN_CORE_API RegionOfInterestAnalysis : public AsyncComputeProcessor<RegionOfInterestAnalysisInput, RegionOfInterestAnalysisOutput> {
 public:
-    RoiAnalysis();
-    virtual Processor* create() const { return new RoiAnalysis(); }
+    RegionOfInterestAnalysis();
+    virtual Processor* create() const { return new RegionOfInterestAnalysis(); }
 
     virtual std::string getCategory() const  { return "Plotting"; }
-    virtual std::string getClassName() const { return "RoiAnalysis"; }
+    virtual std::string getClassName() const { return "RegionOfInterestAnalysis"; }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
-
-    virtual bool isReady() const;
 
 protected:
 
     virtual void setDescriptions() override {
-        setDescription("This processors allows to sample a roi defined by a Volume mask. "
+        setDescription("This processors allows to sample a roi defined by RegionOfInterest2D processor. "
                        "The output can be plotted e.g. using a LinePlot processor.");
     }
+
+    virtual void beforeProcess();
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
@@ -70,13 +68,16 @@ protected:
 
 private:
 
-    static bool isTimeSeries(const VolumeList* list);
+    void onInputDataChange();
+    void onSelectedSegmentChange();
 
     VolumeListPort volumeListPort_;
-    VolumePort maskPort_;
+    GeometryPort regionOfInterestPort_;
     PlotPort outport_;
 
-    StringOptionProperty outputQuantity_;
+    IntProperty selectedSegment_;
+
+    std::vector<std::unique_ptr<PlotData>> plotData_;
 
     static const std::string loggerCat_;
 };
