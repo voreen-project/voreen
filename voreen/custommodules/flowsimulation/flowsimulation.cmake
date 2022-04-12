@@ -31,7 +31,6 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/features/wallshearstress.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
-    ${MOD_DIR}/processors/plotting/roianalysis.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
     ${MOD_DIR}/processors/simulation/flowensemblecreator.cpp
@@ -73,7 +72,6 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/features/wallshearstress.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
-    ${MOD_DIR}/processors/plotting/roianalysis.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h
     ${MOD_DIR}/processors/simulation/flowensemblecreator.h
@@ -113,10 +111,14 @@ ENDIF()
 
 IF(VRN_MODULE_PLOTTING)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/simulation/flowindicatoranalysis.h
+        ${MOD_DIR}/processors/plotting/flowindicatoranalysis.h
+        ${MOD_DIR}/processors/plotting/regionofinterestanalysis.h
+        ${MOD_DIR}/processors/plotting/roianalysis.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/simulation/flowindicatoranalysis.cpp
+        ${MOD_DIR}/processors/plotting/flowindicatoranalysis.cpp
+        ${MOD_DIR}/processors/plotting/regionofinterestanalysis.cpp
+        ${MOD_DIR}/processors/plotting/roianalysis.cpp
     )
 ENDIF()
 
