@@ -55,7 +55,7 @@ EnsembleDataSource::EnsembleDataSource()
     , colorMap_("colorMap", "Color Map", ColorMap::createPET(), Processor::VALID)
     , overrideTime_("overrideTime", "Override Time", false, Processor::VALID, Property::LOD_ADVANCED)
     , overrideFieldName_("overrideFieldName", "Override Field Name", false, Processor::VALID, Property::LOD_ADVANCED)
-    , showProgressDialog_("showProgressDialog", "Show Progress Dialog", true, Processor::VALID, Property::LOD_ADVANCED)
+    , showProgressDialog_("showProgressDialog", "Show Progress Dialog", false, Processor::VALID, Property::LOD_ADVANCED)
     , hash_("hash", "Hash", "", Processor::VALID, Property::LOD_DEBUG)
     , clearCache_("clearCache", "Clear Cache", Processor::VALID, Property::LOD_ADVANCED)
 {
