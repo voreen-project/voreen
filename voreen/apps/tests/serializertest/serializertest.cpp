@@ -528,6 +528,10 @@ void testSequenceContainers() {
     vec_uint64.push_back(2);
     vec_uint64.push_back(1<<30);
 
+    std::vector<bool> vec_bool;
+    vec_bool.push_back(true);
+    vec_bool.push_back(false);
+
     std::vector<int> numbers;
     numbers.push_back(4);
     numbers.push_back(5);
@@ -551,6 +555,7 @@ void testSequenceContainers() {
     serializer.serialize("vec_int8", vec_int8);
     serializer.serialize("vec_uint16", vec_uint16);
     serializer.serialize("vec_uint64", vec_uint64);
+    serializer.serialize("vec_bool", vec_bool);
     serializer.serialize("numbers", numbers, "number");
     serializer.serialize("deque", deque);
     serializer.serialize("list", list);
@@ -568,6 +573,8 @@ void testSequenceContainers() {
     test(vec_uint16.size() == 0, "vector vec_uint16 is not empty");
     vec_uint64.clear();
     test(vec_uint64.size() == 0, "vector vec_uint64 is not empty");
+    vec_bool.clear();
+    test(vec_bool.size() == 0, "vector vec_bool is not empty");
 
     numbers.clear();
     test(numbers.size() == 0, "vector numbers is not empty");
@@ -584,6 +591,7 @@ void testSequenceContainers() {
     deserializer.deserialize("vec_int8", vec_int8);
     deserializer.deserialize("vec_uint16", vec_uint16);
     deserializer.deserialize("vec_uint64", vec_uint64);
+    deserializer.deserialize("vec_bool", vec_bool);
     deserializer.deserialize("numbers", numbers, "number");
     deserializer.deserialize("deque", deque);
     deserializer.deserialize("list", list);
@@ -612,6 +620,11 @@ void testSequenceContainers() {
     test(vec_uint64[0], (uint64_t)1, "vec_uint64: first item incorrect deserialized");
     test(vec_uint64[1], (uint64_t)2, "vec_uint64: second item incorrect deserialized");
     test(vec_uint64[2], (uint64_t)(1<<30), "vec_uint64: third item incorrect deserialized");
+
+// TODO: does not work since std::vector<bool> has a specialization using bitset (using gcc).
+//    test(vec_bool.size() == 2, "vec_bool: not all vector items deserialized");
+//    test(vec_bool[0], true, "vec_bool: not all vector items deserialized");
+//    test(vec_bool[1], false, "vec_bool: not all vector items deserialized");
 
     test(numbers.size() == 2, "numbers: not all vector items deserialized");
     test(numbers[0], 4, "numbers: first item incorrect deserialized");
