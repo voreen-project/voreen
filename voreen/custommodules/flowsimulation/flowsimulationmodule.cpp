@@ -58,8 +58,9 @@
 #endif
 
 #ifdef VRN_MODULE_PLOTTING
+#include "processors/plotting/flowindicatoranalysis.h"
+#include "processors/plotting/regionofinterestanalysis.h"
 #include "processors/plotting/roianalysis.h"
-#include "processors/simulation/flowindicatoranalysis.h"
 #endif
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
@@ -107,8 +108,9 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_MODULE_PLOTTING
-    registerProcessor(new RoiAnalysis());
     registerProcessor(new FlowIndicatorAnalysis());
+    registerProcessor(new RegionOfInterestAnalysis());
+    registerProcessor(new RoiAnalysis());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
     registerProcessor(new GeometryInsideTest());
