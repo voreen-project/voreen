@@ -1718,12 +1718,19 @@ inline void XmlDeserializer::deserializeCollection(const std::string& key, T& co
     TemporaryNodeChanger nodeChanger(*this, element);
 
     for (typename T::iterator it = collection.begin(); it != collection.end(); ++it) {
+
+        // We have to use a copy here for all types of T whose iterator does not return a reference to the data.
+        // This is first and foremost the case for std::vector<bool>.
+        typename T::value_type item(*it);
+
         // Deserialize primitive type from XML attribute?
         if (useAttributes_ && isPrimitiveType(typeid(typename T::value_type))) {
-            deserializeAttributeFromNode(itemKey, XmlSerializationConstants::VALUEATTRIBUTE, *it);
+            deserializeAttributeFromNode(itemKey, XmlSerializationConstants::VALUEATTRIBUTE, item);
         }
         else
-            Deserializer(*this).deserialize(itemKey, *it);
+            Deserializer(*this).deserialize(itemKey, item);
+
+        *it = item;
     }
 
     try {
