@@ -53,87 +53,87 @@ namespace descriptors {
 
 /// D2Q9 lattice
 template <typename... FIELDS>
-struct D2Q9 : public DESCRIPTOR_BASE<2,9,FIELDS...> {
+struct D2Q9 : public LATTICE_DESCRIPTOR<2,9,POPULATION,FIELDS...> {
   D2Q9() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<2,9> = 1;
+platform_constant_definition int vicinity<2,9> = 1;
 
 template <>
-constexpr int c<2,9>[9][2] = {
+platform_constant_definition int c<2,9>[9][2] = {
   { 0, 0},
   {-1, 1}, {-1, 0}, {-1,-1}, { 0,-1},
   { 1,-1}, { 1, 0}, { 1, 1}, { 0, 1}
 };
 
 template <>
-constexpr int opposite<2,9>[9] = {
+platform_constant_definition int opposite<2,9>[9] = {
   0, 5, 6, 7, 8, 1, 2, 3, 4
 };
 
 template <>
-constexpr Fraction t<2,9>[9] = {
+platform_constant_definition Fraction t<2,9>[9] = {
   {4, 9}, {1, 36}, {1, 9}, {1, 36}, {1, 9},
   {1, 36}, {1, 9}, {1, 36}, {1, 9}
 };
 
 template <>
-constexpr Fraction cs2<2,9> = {1, 3};
+platform_constant_definition Fraction cs2<2,9> = {1, 3};
 
 }
 
 
 /// D2Q5 lattice
 template <typename... FIELDS>
-struct D2Q5 : public DESCRIPTOR_BASE<2,5,FIELDS...> {
+struct D2Q5 : public LATTICE_DESCRIPTOR<2,5,POPULATION,FIELDS...> {
   D2Q5() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<2,5> = 1;
+platform_constant_definition int vicinity<2,5> = 1;
 
 template <>
-constexpr int c<2,5>[5][2] = {
+platform_constant_definition int c<2,5>[5][2] = {
   { 0, 0},
   {-1, 0}, {0, -1}, {1,0}, { 0,1}
 };
 
 template <>
-constexpr int opposite<2,5>[5] = {
+platform_constant_definition int opposite<2,5>[5] = {
   0, 3, 4, 1, 2
 };
 
 template <>
-constexpr Fraction t<2,5>[5] = {
+platform_constant_definition Fraction t<2,5>[5] = {
   {1, 3},
   {1, 6}, {1, 6},
   {1, 6}, {1, 6}
 };
 
 template <>
-constexpr Fraction cs2<2,5> = {1, 3};
+platform_constant_definition Fraction cs2<2,5> = {1, 3};
 
 }
 
 
 /// D3Q19 lattice
 template <typename... FIELDS>
-struct D3Q19 : public DESCRIPTOR_BASE<3,19,FIELDS...> {
+struct D3Q19 : public LATTICE_DESCRIPTOR<3,19,POPULATION,FIELDS...> {
   D3Q19() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<3,19> = 1;
+platform_constant_definition int vicinity<3,19> = 1;
 
 template <>
-constexpr int c<3,19>[19][3] = {
+platform_constant_definition int c<3,19>[19][3] = {
   { 0, 0, 0},
 
   {-1, 0, 0}, { 0,-1, 0}, { 0, 0,-1},
@@ -146,12 +146,12 @@ constexpr int c<3,19>[19][3] = {
 };
 
 template <>
-constexpr int opposite<3,19>[19] = {
+platform_constant_definition int opposite<3,19>[19] = {
   0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 1, 2, 3, 4, 5, 6, 7, 8, 9
 };
 
 template <>
-constexpr Fraction t<3,19>[19] = {
+platform_constant_definition Fraction t<3,19>[19] = {
   {1, 3},
 
   {1, 18}, {1, 18}, {1, 18},
@@ -164,24 +164,24 @@ constexpr Fraction t<3,19>[19] = {
 };
 
 template <>
-constexpr Fraction cs2<3,19> = {1, 3};
+platform_constant_definition Fraction cs2<3,19> = {1, 3};
 
 }
 
 
 /// D3Q7 lattice
 template <typename... FIELDS>
-struct D3Q7 : public DESCRIPTOR_BASE<3,7,FIELDS...> {
+struct D3Q7 : public LATTICE_DESCRIPTOR<3,7,POPULATION,FIELDS...> {
   D3Q7() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<3,7> = 1;
+platform_constant_definition int vicinity<3,7> = 1;
 
 template <>
-constexpr int c<3,7>[7][3] = {
+platform_constant_definition int c<3,7>[7][3] = {
   { 0, 0, 0},
 
   {-1, 0, 0}, {0,-1, 0},
@@ -190,15 +190,15 @@ constexpr int c<3,7>[7][3] = {
 };
 
 template <>
-constexpr int opposite<3,7>[7] = {
+platform_constant_definition int opposite<3,7>[7] = {
   0, 4, 5, 6, 1, 2, 3
 };
 
 template <>
-constexpr Fraction cs2<3,7> = {1, 4};
+platform_constant_definition Fraction cs2<3,7> = {1, 4};
 
 template <>
-constexpr Fraction t<3,7>[7] = {
+platform_constant_definition Fraction t<3,7>[7] = {
   {1, 4},
 
   {1, 8}, {1, 8}, {1, 8},
@@ -210,17 +210,17 @@ constexpr Fraction t<3,7>[7] = {
 
 /// D3Q13 lattice
 template <typename... FIELDS>
-struct D3Q13 : public DESCRIPTOR_BASE<3,13,FIELDS...> {
+struct D3Q13 : public LATTICE_DESCRIPTOR<3,13,POPULATION,FIELDS...> {
   D3Q13() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<3,13> = 1;
+platform_constant_definition int vicinity<3,13> = 1;
 
 template <>
-constexpr int c<3,13>[13][3] = {
+platform_constant_definition int c<3,13>[13][3] = {
   { 0, 0, 0},
 
   {-1,-1, 0}, {-1, 1, 0}, {-1, 0,-1},
@@ -231,15 +231,15 @@ constexpr int c<3,13>[13][3] = {
 };
 
 template <>
-constexpr int opposite<3,13>[13] = {
+platform_constant_definition int opposite<3,13>[13] = {
   0, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6
 };
 
 template <>
-constexpr Fraction cs2<3,13> = {1, 3};
+platform_constant_definition Fraction cs2<3,13> = {1, 3};
 
 template <>
-constexpr Fraction t<3,13>[13] = {
+platform_constant_definition Fraction t<3,13>[13] = {
   {1, 2},
 
   {1, 24}, {1, 24}, {1, 24},
@@ -250,27 +250,27 @@ constexpr Fraction t<3,13>[13] = {
 };
 
 template <>
-constexpr Fraction lambda_e<3,13> = {3, 2};
+platform_constant_definition Fraction lambda_e<3,13> = {3, 2};
 
 template <>
-constexpr Fraction lambda_h<3,13> = {9, 5};
+platform_constant_definition Fraction lambda_h<3,13> = {9, 5};
 
 }
 
 
 /// D3Q15 lattice
 template <typename... FIELDS>
-struct D3Q15 : public DESCRIPTOR_BASE<3,15,FIELDS...> {
+struct D3Q15 : public LATTICE_DESCRIPTOR<3,15,POPULATION,FIELDS...> {
   D3Q15() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<3,15> = 1;
+platform_constant_definition int vicinity<3,15> = 1;
 
 template <>
-constexpr int c<3,15>[15][3] = {
+platform_constant_definition int c<3,15>[15][3] = {
   { 0, 0, 0},
 
   {-1, 0, 0}, { 0,-1, 0}, { 0, 0,-1},
@@ -281,15 +281,15 @@ constexpr int c<3,15>[15][3] = {
 };
 
 template <>
-constexpr int opposite<3,15>[15] = {
+platform_constant_definition int opposite<3,15>[15] = {
   0, 8, 9, 10, 11, 12, 13, 14, 1, 2, 3, 4, 5, 6, 7
 };
 
 template <>
-constexpr Fraction cs2<3,15> = {1, 3};
+platform_constant_definition Fraction cs2<3,15> = {1, 3};
 
 template <>
-constexpr Fraction t<3,15>[15] = {
+platform_constant_definition Fraction t<3,15>[15] = {
   {2, 9},
 
   {1, 9}, {1, 9}, {1, 9},
@@ -304,17 +304,17 @@ constexpr Fraction t<3,15>[15] = {
 
 /// D3Q27 lattice
 template <typename... FIELDS>
-struct D3Q27 : public DESCRIPTOR_BASE<3,27,FIELDS...> {
+struct D3Q27 : public LATTICE_DESCRIPTOR<3,27,POPULATION,FIELDS...> {
   D3Q27() = delete;
 };
 
 namespace data {
 
 template <>
-constexpr int vicinity<3,27> = 1;
+platform_constant_definition int vicinity<3,27> = 1;
 
 template <>
-constexpr int c<3,27>[27][3] = {
+platform_constant_definition int c<3,27>[27][3] = {
   { 0, 0, 0},
 
   {-1, 0, 0}, { 0,-1, 0}, { 0, 0,-1},
@@ -329,16 +329,16 @@ constexpr int c<3,27>[27][3] = {
 };
 
 template <>
-constexpr int opposite<3,27>[27] = {
+platform_constant_definition int opposite<3,27>[27] = {
   0, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 };
 
 template <>
-constexpr Fraction cs2<3,27> = {1, 3};
+platform_constant_definition Fraction cs2<3,27> = {1, 3};
 
 template <>
-constexpr Fraction t<3,27>[27] = {
+platform_constant_definition Fraction t<3,27>[27] = {
   {8, 27},
 
   {2, 27},  {2, 27},  {2, 27},

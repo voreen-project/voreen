@@ -28,7 +28,9 @@
 #include <stdexcept>
 
 #include "descriptorTag.h"
+
 #include "utilities/fraction.h"
+#include "core/meta.h"
 
 namespace olb {
 
@@ -49,72 +51,72 @@ namespace data {
 using utilities::Fraction;
 
 template <unsigned D, unsigned Q>
-constexpr int vicinity = {};
+platform_constant int vicinity = {};
 
 template <unsigned D, unsigned Q>
-constexpr int c[Q][D] = {};
+platform_constant int c[Q][D] = {};
 
 template <unsigned D, unsigned Q>
-constexpr int opposite[Q] = {};
+platform_constant int opposite[Q] = {};
 
 template <unsigned D, unsigned Q>
-constexpr Fraction t[Q] = {};
+platform_constant Fraction t[Q] = {};
 
 template <unsigned D, unsigned Q>
-constexpr Fraction cs2 = {};
+platform_constant Fraction cs2 = {};
 
 template <unsigned D, unsigned Q>
-constexpr Fraction lambda_e = {};
+platform_constant Fraction lambda_e = {};
 
 template <unsigned D, unsigned Q>
-constexpr Fraction lambda_h = {};
+platform_constant Fraction lambda_h = {};
 
 }
 
 template <unsigned D, unsigned Q>
-constexpr int vicinity()
+constexpr int vicinity() any_platform
 {
   return data::vicinity<D,Q>;
 }
 
 template <unsigned D, unsigned Q>
-constexpr int c(unsigned iPop, unsigned iDim)
+constexpr int c(unsigned iPop, unsigned iDim) any_platform
 {
   return data::c<D,Q>[iPop][iDim];
 }
 
 template <unsigned D, unsigned Q>
-constexpr Vector<int,D> c(unsigned iPop)
+constexpr Vector<int,D> c(unsigned iPop) any_platform
 {
   return Vector<int,D>(data::c<D,Q>[iPop]);
 }
 
 template <unsigned D, unsigned Q>
-constexpr int opposite(unsigned iPop)
+constexpr int opposite(unsigned iPop) any_platform
 {
   return data::opposite<D,Q>[iPop];
 }
 
 template <typename T, unsigned D, unsigned Q>
-constexpr T t(unsigned iPop, tag::DEFAULT)
+constexpr T t(unsigned iPop, tag::DEFAULT) any_platform
 {
   return data::t<D,Q>[iPop].template as<T>();
 }
 
 template <typename T, unsigned D, unsigned Q>
-constexpr T invCs2()
+constexpr T invCs2() any_platform
 {
   return data::cs2<D,Q>.template inverseAs<T>();
 }
 
 template <typename T, unsigned D, unsigned Q>
-constexpr T lambda_e()
+constexpr T lambda_e() any_platform
 {
   return data::lambda_e<D,Q>.template inverseAs<T>();
 }
 
 template <typename T, unsigned D, unsigned Q>
-constexpr T lambda_h()
+constexpr T lambda_h() any_platform
 {
   return data::lambda_h<D,Q>.template inverseAs<T>();
 }
@@ -122,63 +124,77 @@ constexpr T lambda_h()
 //@}
 
 template <typename DESCRIPTOR>
-constexpr int d()
+constexpr int d() any_platform
 {
   return DESCRIPTOR::d;
 }
 
+struct dimension {
+  template <typename DESCRIPTOR>
+  constexpr auto operator()(meta::id<DESCRIPTOR> = meta::id<DESCRIPTOR>{}) const {
+    return d<DESCRIPTOR>;
+  }
+};
+
 template <typename DESCRIPTOR>
-constexpr int q()
+constexpr int q() any_platform
 {
   return DESCRIPTOR::q;
 }
 
 template <typename DESCRIPTOR>
-constexpr int vicinity()
+constexpr int vicinity() any_platform
 {
   return vicinity<DESCRIPTOR::d, DESCRIPTOR::q>();
 }
 
 template <typename DESCRIPTOR>
-constexpr int c(unsigned iPop, unsigned iDim)
+constexpr int c(unsigned iPop, unsigned iDim) any_platform
 {
   return c<DESCRIPTOR::d, DESCRIPTOR::q>(iPop, iDim);
 }
 
 template <typename DESCRIPTOR>
-constexpr Vector<int,DESCRIPTOR::d> c(unsigned iPop)
+constexpr Vector<int,DESCRIPTOR::d> c(unsigned iPop) any_platform
 {
   return c<DESCRIPTOR::d, DESCRIPTOR::q>(iPop);
 }
 
 template <typename DESCRIPTOR>
-constexpr int opposite(unsigned iPop)
+constexpr int opposite(unsigned iPop) any_platform
 {
   return opposite<DESCRIPTOR::d, DESCRIPTOR::q>(iPop);
 }
 
 template <typename T, typename DESCRIPTOR>
-constexpr T t(unsigned iPop)
+constexpr T t(unsigned iPop) any_platform
 {
   return t<T, DESCRIPTOR::d, DESCRIPTOR::q>(iPop, typename DESCRIPTOR::category_tag());
 }
 
 template <typename T, typename DESCRIPTOR>
-constexpr T invCs2()
+constexpr T invCs2() any_platform
 {
   return invCs2<T, DESCRIPTOR::d, DESCRIPTOR::q>();
 }
 
 template <typename T, typename DESCRIPTOR>
-constexpr T lambda_e()
+constexpr T lambda_e() any_platform
 {
   return lambda_e<T, DESCRIPTOR::d, DESCRIPTOR::q>();
 }
 
 template <typename T, typename DESCRIPTOR>
-constexpr T lambda_h()
+constexpr T lambda_h() any_platform
 {
   return lambda_h<T, DESCRIPTOR::d, DESCRIPTOR::q>();
+}
+
+/// Return array of population indices of DESCRIPTOR matching PREDICATE
+template <typename DESCRIPTOR, typename PREDICATE>
+constexpr auto filter_population_indices(PREDICATE predicate) any_platform {
+  return meta::filter_index_sequence(predicate,
+                                     std::make_index_sequence<DESCRIPTOR::q>());
 }
 
 //@}

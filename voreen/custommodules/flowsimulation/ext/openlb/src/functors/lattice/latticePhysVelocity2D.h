@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,15 +41,20 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysVelocity2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysVelocity2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysVelocity2D(SuperLattice<T,DESCRIPTOR>& sLattice,
                              const UnitConverter<T,DESCRIPTOR>& converter);
 };
+
+template <typename T, typename DESCRIPTOR>
+SuperLatticePhysVelocity2D(SuperLattice<T,DESCRIPTOR>&,
+                           const UnitConverter<T,DESCRIPTOR>&)
+  -> SuperLatticePhysVelocity2D<T,DESCRIPTOR>;
 
 /// BlockLatticePhysVelocity2D returns pointwise phys velocity on local lattice.
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysVelocity2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticePhysVelocity2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysVelocity2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                              const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };

@@ -37,9 +37,9 @@ namespace olb {
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry2D<T>&           geometry,
+  SuperGeometry<T,2>&           geometry,
   const HyperplaneLattice2D<T>& hyperplaneLattice,
   FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
   FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -58,9 +58,9 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry2D<T>&    geometry,
+  SuperGeometry<T,2>&    geometry,
   const Hyperplane2D<T>& hyperplane,
   FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
   FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -79,9 +79,9 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry2D<T>&    geometry,
+  SuperGeometry<T,2>&    geometry,
   const Hyperplane2D<T>& hyperplane,
   FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
   BlockDataReductionMode             mode)
@@ -98,9 +98,9 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry2D<T>& geometry,
+  SuperGeometry<T,2>& geometry,
   const Vector<T,2>& origin, const Vector<T,2>& u,
   std::vector<int> materials,
   BlockDataReductionMode mode)
@@ -117,9 +117,9 @@ SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF2D<T, F>::SuperPlaneIntegralFluxF2D(
-  SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry2D<T>& geometry,
+  SuperGeometry<T,2>& geometry,
   const Vector<T,2>& origin, const Vector<T,2>& u,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF2D<T>(
@@ -142,21 +142,25 @@ void SuperPlaneIntegralFluxPressure2D<T>::print(
   this->operator()(output, input);
   if ( regionName != "" ) {
     clout << "regionName=" << regionName << "; regionSize[m]=" << output[1] << std::flush;
-  } else {
+  }
+  else {
     clout << "regionSize[m]=" << output[1] << std::flush;
   }
   if ( singleton::mpi().isMainProcessor() ) {
     if ( fluxSiScaleName == "MN" ) {
       std::cout << "; force[MN]=" << output[0]/T(1.e6) << std::flush;
-    } else if ( fluxSiScaleName == "kN") {
+    }
+    else if ( fluxSiScaleName == "kN") {
       std::cout << "; force[kN]=" << output[0]/T(1.e3) << std::flush;
-    } else {
+    }
+    else {
       std::cout << "; force[N]=" << output[0] << std::flush;
     }
     if ( meanSiScaleName == "mmHg" ) {
-      std::cout << "; meanPressure[mmHg]=" << fabs(output[0])/output[1]/T(133.322) << std::endl;
-    } else {
-      std::cout << "; meanPressure[Pa]=" << fabs(output[0])/output[1] << std::endl;
+      std::cout << "; meanPressure[mmHg]=" << util::fabs(output[0])/output[1]/T(133.322) << std::endl;
+    }
+    else {
+      std::cout << "; meanPressure[Pa]=" << util::fabs(output[0])/output[1] << std::endl;
     }
   }
 }
@@ -172,14 +176,16 @@ void SuperPlaneIntegralFluxVelocity2D<T>::print(
   this->operator()(output, input);
   if ( regionName != "" ) {
     clout << "regionName=" << regionName << "; regionSize[m]=" << output[1] << std::flush;
-  } else {
+  }
+  else {
     clout << "regionSize[m]=" << output[1] << std::flush;
   }
   if ( singleton::mpi().isMainProcessor() ) {
     std::cout << "; flowRate[m^2/s]=" << output[0] << std::flush;
     if ( meanSiScaleName == "mm/s" ) {
       std::cout << "; meanVelocity[mm/s]=" << output[0]/output[1]*T(1.e3) << std::endl;
-    } else {
+    }
+    else {
       std::cout << "; meanVelocity[m/s]=" << output[0]/output[1] << std::endl;
     }
   }

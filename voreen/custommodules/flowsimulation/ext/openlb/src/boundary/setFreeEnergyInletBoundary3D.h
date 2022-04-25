@@ -21,44 +21,43 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the FreeEnergyInlet Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the FreeEnergyInlet Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_FREE_ENERGY_INLET_BOUNDARY_3D_H
 #define SET_FREE_ENERGY_INLET_BOUNDARY_3D_H
 
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
-#include "core/superLattice3D.h"
+#include "core/superLattice.h"
 #include "dynamics/dynamics.h"
-#include "momentaOnBoundaries3D.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
 #include "dynamics/freeEnergyDynamics.h"
 #include "wallFunctionBoundaryPostProcessors3D.h"
 #include "boundaryPostProcessors3D.h"
+#include "setBoundary3D.h"
 
 
 
 namespace olb {
-////////// SuperLattice Domain  /////////////////////////////////////////
 
 ///Initialising the FreeEnergyInletBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T,DESCRIPTOR>>
-void setFreeEnergyInletBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry3D<T>& superGeometry, int material, std::string type, int latticeNumber);
+void setFreeEnergyInletBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry<T,3>& superGeometry, int material, 
+                                std::string type, int latticeNumber);
 
 ///Initialising the FreeEnergyInletBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T,DESCRIPTOR>>
-void setFreeEnergyInletBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice,T omega,FunctorPtr<SuperIndicatorF3D<T>>&& indicator,std::string type, int latticeNumber);
+void setFreeEnergyInletBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega,FunctorPtr<SuperIndicatorF3D<T>>&& indicator,
+                                std::string type, int latticeNumber);
 
 
-////////// BlockLattice Domain  /////////////////////////////////////////
-
-/// Set FreeEnergyInletBoundary for any indicated cells inside the block domain
+///Set FreeEnergyInletBoundary for any indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setFreeEnergyInletBoundary(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, T omega, BlockIndicatorF3D<T>& indicator, std::string type,
+void setFreeEnergyInletBoundary(BlockLattice<T,DESCRIPTOR>& _block, T omega, BlockIndicatorF3D<T>& indicator, std::string type,
                                 int latticeNumber, bool includeOuterCells=false);
 
 }//namespace olb

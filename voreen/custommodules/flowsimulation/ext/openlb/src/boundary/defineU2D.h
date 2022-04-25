@@ -27,44 +27,43 @@
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/blockGeometryStatistics2D.h"
 #include "core/superLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
 #include "dynamics/dynamics.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 
 //defineU for offLatticeBoundaryConditions
 namespace olb {
 ////////// SuperLattice Domain  /////////////////////////////////////////
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry, int material,
+void defineUBouzidi(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry, int material,
                     AnalyticalF2D<T,T>& u,
-                    std::vector<int> bulkMaterials = std::vector<int>(1,1));
+                    olb::Vector<int, 2> bulkMaterials = olb::Vector<int, 2>(1,1));
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
+void defineUBouzidi(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
                     FunctorPtr<SuperIndicatorF2D<T>>&& bulkIndicator,
                     AnalyticalF2D<T,T>& u);
 
 ////////// BlockLattice Domain  /////////////////////////////////////////
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator, BlockIndicatorF2D<T>& bulkIndicator, AnalyticalF2D<T,T>& u);
+void defineUBouzidi(BlockLattice<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator, BlockIndicatorF2D<T>& bulkIndicator, AnalyticalF2D<T,T>& u);
 
 
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY, int iPop, const T u[DESCRIPTOR::d]);
+void defineUBouzidi(BlockLattice<T,DESCRIPTOR>& block, int iX, int iY, int iPop, const T u[DESCRIPTOR::d]);
 
 
 template<typename T, typename DESCRIPTOR>
-bool getBoundaryIntersection(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T point[DESCRIPTOR::d]);
+bool getBoundaryIntersection(BlockLattice<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T point[DESCRIPTOR::d]);
 
 template<typename T, typename DESCRIPTOR>
-void setBoundaryIntersection(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T distance);
+void setBoundaryIntersection(BlockLattice<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T distance);
 
 }//namespace olb
 

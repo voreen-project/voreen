@@ -1,0 +1,58 @@
+<Param>
+  <Application>
+    <Name>cavity2d</Name>
+    <dim>2</dim>
+    <OlbDir>../../</OlbDir>
+    <Discretization>
+      <Resolution>128</Resolution>
+     <LatticeRelaxationTime>0.5384</LatticeRelaxationTime>
+    </Discretization>
+    <PhysParameters>
+      <PhysMaxTime>100</PhysMaxTime>
+      <CharPhysLength>1</CharPhysLength>
+      <CharPhysPressure> 1. </CharPhysPressure>
+      <CharPhysVelocity>1</CharPhysVelocity>
+      <PhysViscosity>0.001</PhysViscosity>
+      <PhysDensity>1</PhysDensity>
+      <BoundaryValueUpdateTime> 1 </BoundaryValueUpdateTime>
+    </PhysParameters>
+    <ConvergenceCheck>
+      <Type>AverageEnergy</Type>
+      <Interval>1</Interval>
+      <Residuum>1e-3</Residuum>
+    </ConvergenceCheck>
+    <Mesh>
+      <noCuboidsPerProcess> 1 </noCuboidsPerProcess>
+    </Mesh>
+  </Application>
+  <Output>
+    <OutputDir>./tmp/</OutputDir>
+    <MultiOutput>false</MultiOutput>
+    <Log>
+      <VerboseLog> true </VerboseLog>
+      <Filename>cavity2d.log</Filename>
+      <SaveTime>1</SaveTime>
+    </Log>
+    <VisualizationGnuplot>
+      <Output> true </Output>
+      <Filename>centerVelocityX</Filename>
+      <SaveTime>0</SaveTime>
+    </VisualizationGnuplot>
+    <VisualizationImages>
+      <Output> true </Output>
+      <Filename>cavity2d</Filename>
+      <SaveTime>5</SaveTime>
+    </VisualizationImages>
+    <VisualizationVTK>
+      <Output> true </Output>
+      <Filename>cavity2d</Filename>
+      <SaveTime>1</SaveTime>
+    </VisualizationVTK>
+    <Timer>
+      <PrintMode>0</PrintMode>
+      <SkipType>0</SkipType>
+      <PhysTime>1</PhysTime>
+      <PrintSummary>true</PrintSummary>
+    </Timer>
+  </Output>
+</Param>

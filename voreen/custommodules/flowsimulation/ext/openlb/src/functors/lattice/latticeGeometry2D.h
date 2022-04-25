@@ -31,37 +31,37 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
 namespace olb {
 
-template<typename T> class SuperGeometry2D;
+template<typename T, unsigned D> class SuperGeometry;
 
 /// functor to get pointwise the material no. presenting the geometry on local lattice
-template <typename T, typename DESCRIPTOR>
-class SuperLatticeGeometry2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
+template <typename T, typename DESCRIPTOR=void>
+class SuperLatticeGeometry2D final : public SuperF2D<T> {
 private:
-  SuperGeometry2D<T>& _superGeometry;
+  SuperGeometry<T,2>& _superGeometry;
   const int _material;
 public:
-  SuperLatticeGeometry2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                         SuperGeometry2D<T>& superGeometry, const int material = -1);
+  SuperLatticeGeometry2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                         SuperGeometry<T,2>& superGeometry, const int material = -1);
+  SuperLatticeGeometry2D(SuperGeometry<T,2>& superGeometry, const int material = -1);
 };
 
 /// BlockLatticeGeometry2D returns pointwise the material no. presenting the geometry on local lattice.
-template <typename T, typename DESCRIPTOR>
-class BlockLatticeGeometry2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
+template <typename T, typename DESCRIPTOR=void>
+class BlockLatticeGeometry2D final : public BlockF2D<T> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
-  int _material;
+  BlockGeometry<T,2>& _blockGeometry;
+  const int _material;
 public:
-  BlockLatticeGeometry2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                         BlockGeometryStructure2D<T>& blockGeometry, int material = -1);
+  BlockLatticeGeometry2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                         BlockGeometry<T,2>& blockGeometry, int material = -1);
+  BlockLatticeGeometry2D(BlockGeometry<T,2>& blockGeometry, int material = -1);
   bool operator() (T output[], const int input[]) override;
 };
 

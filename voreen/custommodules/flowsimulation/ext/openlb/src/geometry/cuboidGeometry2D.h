@@ -34,7 +34,7 @@
 #include "io/ostreamManager.h"
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 template<typename T> class IndicatorF2D;
@@ -95,9 +95,9 @@ public:
   bool getLatticeR(std::vector<T> physR, std::vector<int>& latticeR) const;
   bool getLatticeR(int latticeR[], const T physR[]) const;
   bool getLatticeR(const Vector<T,2>& physR, Vector<int,3>& latticeR) const;
-  /// Returns true and the floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
+  /// Returns true and the util::floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getFloorLatticeR(std::vector<T> physR, std::vector<int>& latticeR) const;
-  /// Returns true and the floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
+  /// Returns true and the util::floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getFloorLatticeR(const Vector<T,2>& physR, Vector<int,3>& latticeR) const;
   /// Returns the physical position to the given lattice position respecting periodicity for the overlap nodes which are not in the mother cuboid for the case the flag periodicityOn[iDim]=true if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   std::vector<T> getPhysR(int iCglob, int iX, int iY) const;
@@ -105,6 +105,8 @@ public:
   std::vector<T> getPhysR(std::vector<int> latticeR) const;
   void getPhysR(T output[2], const int latticeR[3]) const;
   void getPhysR(T output[2], const int iCglob, const int iX, const int iY) const;
+  void getPhysR(T output[2], const int iCglob, LatticeR<2> latticeR) const;
+  void getPhysR(T output[3], LatticeR<3> latticeR) const;
 
   /// Returns the number of cuboids in t < 2he structure
   int getNc() const;
@@ -135,7 +137,7 @@ public:
   /// (globX + orientationX/delta /globY + orientationY/delta) is in
   /// a cuboid. It gives the related cuboidID and _p if the points are
   /// not in any of the cuboids.
-  /// abs(orientationX) = abs(orientationY) = 1 must be satisfied
+  /// util::abs(orientationX) = util::abs(orientationY) = 1 must be satisfied
   int get_iC(T globX, T globY, int orientationX, int orientationY) const;
 
   /// Adds a cuboid
@@ -150,7 +152,7 @@ public:
   void shrink(IndicatorF2D<T>& indicatorF);
 
   /// stores the neighbouring cuboids in array neighbours;
-  void getNeighbourhood(int cuboid, std::vector<int> neighbours, int offset = 0);
+  void getNeighbourhood(int cuboid, std::vector<int>& neighbours, int offset = 0);
 
   void refineArea(T x0, T x1, T y0, T y1, int coarse_level);
 

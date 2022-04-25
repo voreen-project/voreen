@@ -38,7 +38,7 @@ class SuperRelativeErrorLpNorm3D : public SuperIdentity3D<T,W> {
 public:
   template <typename DESCRIPTOR>
   SuperRelativeErrorLpNorm3D(
-    SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+    SuperLattice<T,DESCRIPTOR>&      sLattice,
     FunctorPtr<SuperF3D<T,W>>&&        f,
     FunctorPtr<AnalyticalF3D<T,W>>&&   wantedF,
     FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF);
@@ -68,7 +68,7 @@ class SuperAbsoluteErrorLpNorm3D : public SuperIdentity3D<T,W> {
 public:
   template <typename DESCRIPTOR>
   SuperAbsoluteErrorLpNorm3D(
-    SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+    SuperLattice<T,DESCRIPTOR>&      sLattice,
     FunctorPtr<SuperF3D<T,W>>&&        f,
     FunctorPtr<AnalyticalF3D<T,W>>&&   wantedF,
     FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF);

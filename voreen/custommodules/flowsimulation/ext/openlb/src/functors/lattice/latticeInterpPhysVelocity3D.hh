@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>::SuperLatticeInterpPhysVelocity3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR> const& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR> const& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3)
 {
   this->getName() = "InterpVelocity";
@@ -55,10 +54,9 @@ SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>::SuperLatticeInterpPhysVelocity3
 
     this->_blockF.emplace_back(
       new BlockLatticeInterpPhysVelocity3D<T, DESCRIPTOR>(
-        sLattice.getExtendedBlockLattice(lociC),
+        sLattice.getBlock(lociC),
         converter,
-        &sLattice.getCuboidGeometry().get(globiC),
-        sLattice.getOverlap())
+        &sLattice.getCuboidGeometry().get(globiC))
     );
   }
 }
@@ -82,10 +80,9 @@ void SuperLatticeInterpPhysVelocity3D<T, DESCRIPTOR>::operator()(T output[],
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeInterpPhysVelocity3D<T, DESCRIPTOR>::BlockLatticeInterpPhysVelocity3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, UnitConverter<T,DESCRIPTOR> const& converter, Cuboid3D<T>* c, int overlap)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, UnitConverter<T,DESCRIPTOR> const& converter, Cuboid3D<T>* c)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 3),
-    _cuboid(c),
-    _overlap(overlap)
+    _cuboid(c)
 {
   this->getName() = "BlockLatticeInterpVelocity3D";
 }
@@ -116,10 +113,6 @@ void BlockLatticeInterpPhysVelocity3D<T, DESCRIPTOR>::operator()(T output[3], co
   e[0] = 1. - d[0];
   e[1] = 1. - d[1];
   e[2] = 1. - d[2];
-
-  latIntPos[0]+=_overlap;
-  latIntPos[1]+=_overlap;
-  latIntPos[2]+=_overlap;
 
   this->_blockLattice.get(latIntPos[0], latIntPos[1],
                           latIntPos[2]).computeRhoU(rho, u);

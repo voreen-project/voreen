@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -49,14 +49,14 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename FIELD>
 class SuperLatticePhysExternalScalar3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysExternalScalar3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysExternalScalar3D(SuperLattice<T,DESCRIPTOR>& sLattice,
                                    T convFactorToPhysUnits);
 };
 
 template <typename T, typename DESCRIPTOR, typename FIELD>
 class BlockLatticePhysExternalScalar3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 public:
-  BlockLatticePhysExternalScalar3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysExternalScalar3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                    T convFactorToPhysUnits);
   bool operator() (T output[], const int input[]) override;
 private:

@@ -64,6 +64,9 @@ public:
   ///  put functor to _pointerVec
   ///  to simplify writing process of several functors
   void addFunctor(SuperF3D<T,W>& f);
+  ///  put functor with specific name to _pointerVec 
+  ///  to simplify writing process of several functors
+  void addFunctor(SuperF3D<T,W>& f, const std::string& functorName);
   ///  to clear stored functors, not yet used due to lack of necessity
   void clearAddedFunctors();
   /// getter for _name

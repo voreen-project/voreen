@@ -39,6 +39,126 @@
 
 namespace olb {
 
+////////// class Serializer //////////////////
+
+Serializer::Serializer(Serializable& serializable, std::string fileName)
+  : _serializable(serializable), _iBlock(0), _size(0), _fileName(fileName)
+{ }
+
+
+void Serializer::resetCounter()
+{
+  _iBlock = 0;
+}
+
+std::size_t Serializer::getSize() const
+{
+  return _size;
+}
+
+bool* Serializer::getNextBlock(std::size_t& sizeBlock, bool loadingMode)
+{
+  return _serializable.getBlock(_iBlock++, sizeBlock, loadingMode);
+}
+
+bool Serializer::load(std::string fileName, bool enforceUint)
+{
+  validateFileName(fileName);
+
+  std::ifstream istr(getFullFileName(fileName).c_str());
+  if (istr) {
+    istr2serializer(*this, istr, enforceUint);
+    istr.close();
+    _serializable.postLoad();
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+bool Serializer::save(std::string fileName, bool enforceUint)
+{
+  validateFileName(fileName);
+
+  // Determine binary size through `getSerializableSize()` method
+  computeSize();
+
+  std::ofstream ostr (getFullFileName(fileName).c_str());
+  if (ostr) {
+    serializer2ostr(*this, ostr, enforceUint);
+    ostr.close();
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+bool Serializer::load(const std::uint8_t* buffer)
+{
+  buffer2serializer(*this, buffer);
+  _serializable.postLoad();
+  return true;
+}
+
+bool Serializer::save(std::uint8_t* buffer)
+{
+  serializer2buffer(*this, buffer);
+  return true;
+}
+
+void Serializer::computeSize(bool enforceRecompute)
+{
+  // compute size (only if it wasn't computed yet or is enforced)
+  if (enforceRecompute || _size == 0) {
+    _size = _serializable.getSerializableSize();
+  }
+}
+
+void Serializer::validateFileName(std::string &fileName)
+{
+  if (fileName == "") {
+    fileName = _fileName;
+  }
+  if (fileName == "") {
+    fileName = "Serializable";
+  }
+}
+
+const std::string Serializer::getFullFileName(const std::string& fileName)
+{
+  return singleton::directories().getLogOutDir() + createParallelFileName(fileName) + ".dat";
+}
+
+
+
+/////////////// Serializable //////////////////////////
+
+bool Serializable::save(std::string fileName, const bool enforceUint)
+{
+  Serializer tmpSerializer(*this, fileName);
+  return tmpSerializer.save();
+}
+
+bool Serializable::load(std::string fileName, const bool enforceUint)
+{
+  Serializer tmpSerializer(*this, fileName);
+  return tmpSerializer.load();
+}
+
+bool Serializable::save(std::uint8_t* buffer)
+{
+  Serializer tmpSerializer(*this);
+  return tmpSerializer.save(buffer);
+}
+
+bool Serializable::load(const std::uint8_t* buffer)
+{
+  Serializer tmpSerializer(*this);
+  return tmpSerializer.load(buffer);
+}
+
 }  // namespace olb
 
 #endif

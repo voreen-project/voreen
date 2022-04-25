@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -51,7 +51,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysPermeability3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysPermeability3D(SuperLattice3D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter);
+  SuperLatticePhysPermeability3D(SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
 /**
@@ -62,7 +62,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysPermeability3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 public:
-  BlockLatticePhysPermeability3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter);
+  BlockLatticePhysPermeability3D(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]);
 };
 
@@ -71,11 +71,11 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysPermeability3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometry3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   int _material;
 public:
-  BlockLatticePhysPermeability3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-                                 BlockGeometry3D<T>& blockGeometry,
+  BlockLatticePhysPermeability3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                 BlockGeometry<T,3>& blockGeometry,
                                  int material, const UnitConverter<T>& converter);
   bool operator() (T output[], const int input[]);
 };*/

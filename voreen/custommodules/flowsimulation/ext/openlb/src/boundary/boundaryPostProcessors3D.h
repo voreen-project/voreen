@@ -28,8 +28,8 @@
 #define BOUNDARY_POST_PROCESSORS_3D_H
 
 #include "core/postProcessing.h"
-#include "momentaOnBoundaries.h"
-#include "core/blockLattice3D.h"
+
+#include "core/operator.h"
 
 namespace olb {
 
@@ -39,35 +39,21 @@ namespace olb {
 * equilibrium distributions (i.e. only the Q_i : Pi term)
 */
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
-class PlaneFdBoundaryProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
+class PlaneFdBoundaryProcessor3D {
 public:
-  PlaneFdBoundaryProcessor3D (int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
-  int extent() const override
-  {
-    return 1;
-  }
-  int extent(int whichDirection) const override
-  {
-    return 1;
-  }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                        int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
-private:
-  template<int deriveDirection>
-  void interpolateGradients (
-    BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
-    T velDeriv[DESCRIPTOR::d], int iX, int iY, int iZ ) const;
-private:
-  int x0, x1, y0, y1, z0, z1;
-};
+  static constexpr OperatorScope scope = OperatorScope::PerCell;
 
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-class PlaneFdBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,DESCRIPTOR> {
-public:
-  PlaneFdBoundaryProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
-  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
+  int getPriority() const {
+    return 0;
+  }
+
+  template <typename CELL>
+  void apply(CELL& cell) any_platform;
+
+private:
+  template <int deriveDirection, typename CELL>
+  void interpolateGradients(CELL& cell, T velDeriv[DESCRIPTOR::d]) const any_platform;
+
 };
 
 
@@ -87,8 +73,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int x0, x1, y0, y1, z0, z1;
@@ -111,82 +97,39 @@ private:
 * on a convex edge wall in 3D but with a limited number of terms added to the
 * equilibrium distributions (i.e. only the Q_i : Pi term)
 */
-template<typename T, typename DESCRIPTOR,
-         int plane, int normal1, int normal2>
-class OuterVelocityEdgeProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
+template <typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+class OuterVelocityEdgeProcessor3D {
 public:
-  enum { direction1 = (plane+1)%3, direction2 = (plane+2)%3 };
-public:
-  OuterVelocityEdgeProcessor3D (
-    int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ );
-  int extent() const override
-  {
-    return 2;
-  }
-  int extent(int whichDirection) const override
-  {
-    return 2;
-  }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                        int x0_, int x1_, int y0_, int y1_,
-                        int z0_, int z1_ ) override;
-private:
-  T getNeighborRho(int x, int y, int z, int step1, int step2,
-                   BlockLattice3D<T,DESCRIPTOR> const& blockLattice);
-  template<int deriveDirection, int orientation>
-  bool canInterpolateGradients (
-    BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
-    int iX, int iY, int iZ ) const;
-  template<int deriveDirection, int orientation>
-  void interpolateGradients (
-    BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
-    T velDeriv[DESCRIPTOR::d], int iX, int iY, int iZ ) const;
-private:
-  int x0, x1, y0, y1, z0, z1;
-};
+  static constexpr OperatorScope scope = OperatorScope::PerCell;
 
-template<typename T, typename DESCRIPTOR,
-         int plane, int normal1, int normal2>
-class OuterVelocityEdgeProcessorGenerator3D
-  : public PostProcessorGenerator3D<T,DESCRIPTOR> {
-public:
-  OuterVelocityEdgeProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_,
-                                        int z0_, int z1_);
-  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
+  int getPriority() const {
+    return 0;
+  }
+
+  template <typename CELL>
+  void apply(CELL& cell) any_platform;
+
+private:
+  template <typename CELL>
+  T getNeighborRho(CELL& cell, int step1, int step2) any_platform;
+
+  template <int deriveDirection, int orientation, typename CELL>
+  void interpolateGradients(CELL& cell, T velDeriv[DESCRIPTOR::d]) const any_platform;
+
 };
 
 
 template<typename T, typename DESCRIPTOR,
          int xNormal, int yNormal, int zNormal>
-class OuterVelocityCornerProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
-public:
-  OuterVelocityCornerProcessor3D(int x_, int y_, int z_);
-  int extent() const override
-  {
-    return 2;
-  }
-  int extent(int whichDirection) const override
-  {
-    return 2;
-  }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                        int x0_, int x1_, int y0_, int y1_,
-                        int z0_, int z1_ ) override;
-private:
-  int x,y,z;
-};
+struct OuterVelocityCornerProcessor3D {
+  static constexpr OperatorScope scope = OperatorScope::PerCell;
 
-template<typename T, typename DESCRIPTOR,
-         int xNormal, int yNormal, int zNormal>
-class OuterVelocityCornerProcessorGenerator3D
-  : public PostProcessorGenerator3D<T,DESCRIPTOR> {
-public:
-  OuterVelocityCornerProcessorGenerator3D(int x_, int y_, int z_);
-  PostProcessor3D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
+  int getPriority() const {
+    return 1;
+  }
+
+  template <typename CELL>
+  void apply(CELL& cell) any_platform;
 };
 
 /**
@@ -205,8 +148,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int reflectionPop[DESCRIPTOR::q];
@@ -242,8 +185,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int reflectionPop[DESCRIPTOR::q];
@@ -282,8 +225,8 @@ public:
   {
     return 2;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x0, x1, y0, y1, z0, z1;
@@ -328,8 +271,8 @@ public:
   {
     return 2;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x0, x1, y0, y1, z0, z1;
@@ -369,8 +312,8 @@ public:
   {
     return 2;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x0, x1, y0, y1, z0, z1;

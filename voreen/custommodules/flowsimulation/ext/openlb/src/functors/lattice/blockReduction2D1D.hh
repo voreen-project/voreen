@@ -27,7 +27,7 @@
 #include "blockReduction2D1D.h"
 
 #include <limits>
-#include <cmath>
+#include "utilities/omath.h"
 
 #include "utilities/vectorHelpers.h"
 #include "functors/analytical/interpolationF2D.h"
@@ -39,7 +39,7 @@ namespace olb {
 
 
 template <typename T>
-void BlockReduction2D1D<T>::updateBlockAnalytical(BlockData2D<T,T>& block)
+void BlockReduction2D1D<T>::updateBlockAnalytical(BlockData<2,T,T>& block)
 {
   AnalyticalFfromSuperF2D<T> analyticalF(*_f);
 
@@ -48,7 +48,7 @@ void BlockReduction2D1D<T>::updateBlockAnalytical(BlockData2D<T,T>& block)
     const Vector<T,2> physR = this->getPhysR(i);
 
     for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
-      block.get(i, 0, iSize) = T();
+      block.get({i, 0}, iSize) = T();
     }
 
     T output[_f->getTargetDim()];
@@ -56,14 +56,14 @@ void BlockReduction2D1D<T>::updateBlockAnalytical(BlockData2D<T,T>& block)
 
     if (analyticalF(output, input)) {
       for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
-        block.get(i, 0, iSize) += output[iSize];
+        block.get({i, 0}, iSize) += output[iSize];
       }
     }
   }
 }
 
 template <typename T>
-void BlockReduction2D1D<T>::updateBlockDiscrete(BlockData2D<T,T>& block)
+void BlockReduction2D1D<T>::updateBlockDiscrete(BlockData<2,T,T>& block)
 {
   CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
 
@@ -73,7 +73,7 @@ void BlockReduction2D1D<T>::updateBlockDiscrete(BlockData2D<T,T>& block)
     const Vector<T,2> physR = this->getPhysR(i);
 
     for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
-      block.get(i, 0, iSize) = T();
+      block.get({i, 0}, iSize) = T();
     }
 
     T output[_f->getTargetDim()];
@@ -82,7 +82,7 @@ void BlockReduction2D1D<T>::updateBlockDiscrete(BlockData2D<T,T>& block)
 
     if (_f(output, input)) {
       for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
-        block.get(i, 0, iSize) += output[iSize];
+        block.get({i, 0}, iSize) += output[iSize];
       }
     }
   }
@@ -95,8 +95,7 @@ BlockReduction2D1D<T>::BlockReduction2D1D(
   BlockDataSyncMode      syncMode,
   BlockDataReductionMode reductionMode)
   : HyperplaneLattice2D<T>(lattice),
-    BlockDataF2D<T,T>(1, 1, f->getTargetDim()),
-    _blockDataMemory(new BlockData2D<T,T>(lattice.getN(), 1, f->getTargetDim())),
+    BlockDataF2D<T,T>(lattice.getN(), 1, f->getTargetDim()),
     _f(std::move(f)),
     _syncMode(syncMode),
     _reductionMode(reductionMode)
@@ -120,8 +119,6 @@ BlockReduction2D1D<T>::BlockReduction2D1D(
     }
   }
 
-  // expose block data fields
-  this->_blockData = *_blockDataMemory;
   // intialize list of relevant rank local points making up the reduced line
   initialize();
   // first update of data
@@ -200,45 +197,50 @@ void BlockReduction2D1D<T>::update()
   _f->getSuperStructure().communicate();
 
 #ifdef PARALLEL_MODE_MPI
-  BlockData2D<T,T> localBlockData(this->getN(), 1, _f->getTargetDim());
+  std::unique_ptr<BlockData<2,T,T>> localBlockData(
+    new BlockData<2,T,T>({{this->getN(), 1}, 0}, _f->getTargetDim()));
 
   switch ( _reductionMode ) {
   case BlockDataReductionMode::Analytical:
-    updateBlockAnalytical(localBlockData);
+    updateBlockAnalytical(*localBlockData);
     break;
   case BlockDataReductionMode::Discrete:
-    updateBlockDiscrete(localBlockData);
+    updateBlockDiscrete(*localBlockData);
     break;
   }
 
   switch ( _syncMode ) {
   case BlockDataSyncMode::ReduceAndBcast:
-    singleton::mpi().reduce(localBlockData, this->getBlockData(), MPI_SUM);
+    singleton::mpi().reduce(*localBlockData, this->getBlockData(), MPI_SUM);
     singleton::mpi().bCast(this->getBlockData());
     break;
   case BlockDataSyncMode::ReduceOnly:
-    singleton::mpi().reduce(localBlockData, this->getBlockData(), MPI_SUM);
+    singleton::mpi().reduce(*localBlockData, this->getBlockData(), MPI_SUM);
     break;
   case BlockDataSyncMode::None:
-    this->_blockData.swap(localBlockData);
+    if (this->_owning) {
+      delete this->_blockData;
+    }
+    this->_blockData = localBlockData.release();
+    this->_owning = true;
     break;
   }
 #else
   switch ( _reductionMode ) {
   case BlockDataReductionMode::Analytical:
-    updateBlockAnalytical(this->_blockData);
+    updateBlockAnalytical(this->getBlockData());
     break;
   case BlockDataReductionMode::Discrete:
-    updateBlockDiscrete(this->_blockData);
+    updateBlockDiscrete(this->getBlockData());
     break;
   }
 #endif
 }
 
 template <typename T>
-BlockStructure2D& BlockReduction2D1D<T>::getBlockStructure()
+BlockStructureD<2>& BlockReduction2D1D<T>::getBlockStructure()
 {
-  return this->_blockData;
+  return *this->_blockData;
 }
 
 template <typename T>

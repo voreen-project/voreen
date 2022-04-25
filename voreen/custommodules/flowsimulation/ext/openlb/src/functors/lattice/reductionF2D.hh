@@ -27,7 +27,7 @@
 
 #include "functors/lattice/reductionF2D.h"
 #include "core/superLattice2D.h"
-#include "dynamics/lbHelpers.h"
+#include "dynamics/lbm.h"
 
 namespace olb {
 
@@ -35,7 +35,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::SuperLatticeFfromAnalyticalF2D(
   FunctorPtr<AnalyticalF2D<T,T>>&& f,
-  SuperLattice2D<T, DESCRIPTOR>&   sLattice)
+  SuperLattice<T, DESCRIPTOR>&   sLattice)
   : SuperLatticeF2D<T, DESCRIPTOR>(sLattice, f->getTargetDim()),
     _f(std::move(f))
 {
@@ -48,7 +48,7 @@ SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::SuperLatticeFfromAnalyticalF2D(
     this->_blockF.emplace_back(
       new BlockLatticeFfromAnalyticalF2D<T,DESCRIPTOR>(
         *_f,
-        sLattice.getExtendedBlockLattice(iC),
+        sLattice.getBlock(iC),
         cuboid.get(load.glob(iC)))
     );
   }
@@ -66,7 +66,7 @@ bool SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>::operator()(T output[], const 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeFfromAnalyticalF2D<T, DESCRIPTOR>::BlockLatticeFfromAnalyticalF2D(
   AnalyticalF2D<T, T>&                    f,
-  BlockLatticeStructure2D<T, DESCRIPTOR>& lattice,
+  BlockLattice<T, DESCRIPTOR>& lattice,
   Cuboid2D<T>&                            cuboid)
   : BlockLatticeF2D<T, DESCRIPTOR>(lattice, f.getTargetDim()),
     _f(f),

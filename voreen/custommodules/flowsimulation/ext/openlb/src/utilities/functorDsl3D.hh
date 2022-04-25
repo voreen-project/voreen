@@ -100,10 +100,17 @@ std::shared_ptr<SuperF3D<T,W>> norm(std::shared_ptr<SuperF3D<T,W>>        f,
 
 template<typename T, typename W, typename DESCRIPTOR>
 std::shared_ptr<SuperF3D<T,W>> restrict(std::shared_ptr<AnalyticalF3D<T,W>> f,
-                                        SuperLattice3D<T, DESCRIPTOR>& sLattice)
+                                        SuperLattice<T, DESCRIPTOR>& sLattice)
 {
   return std::shared_ptr<SuperF3D<T,W>>(
            new SuperLatticeFfromAnalyticalF3D<T,DESCRIPTOR>(std::move(f), sLattice));
+}
+
+template<typename T,typename DESCRIPTOR, typename FIELD>
+std::enable_if_t<DESCRIPTOR::d == 3, std::shared_ptr<SuperF3D<T>>>
+field(SuperLattice<T,DESCRIPTOR>& sLattice)
+{
+  return std::make_shared<SuperLatticeField3D<T,DESCRIPTOR,FIELD>>(sLattice);
 }
 
 }

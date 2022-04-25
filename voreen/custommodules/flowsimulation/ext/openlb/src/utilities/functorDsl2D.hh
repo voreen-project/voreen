@@ -99,10 +99,17 @@ std::shared_ptr<SuperF2D<T,W>> norm(std::shared_ptr<SuperF2D<T,W>>        f,
 
 template<typename T, typename W, typename DESCRIPTOR>
 std::shared_ptr<SuperF2D<T,W>> restrict(std::shared_ptr<AnalyticalF2D<T,W>> f,
-                                        SuperLattice2D<T, DESCRIPTOR>& sLattice)
+                                        SuperLattice<T, DESCRIPTOR>& sLattice)
 {
   return std::shared_ptr<SuperF2D<T,W>>(
            new SuperLatticeFfromAnalyticalF2D<T,DESCRIPTOR>(std::move(f), sLattice));
+}
+
+template<typename T,typename DESCRIPTOR, typename FIELD>
+std::enable_if_t<DESCRIPTOR::d == 2, std::shared_ptr<SuperF2D<T>>>
+field(SuperLattice<T,DESCRIPTOR>& sLattice)
+{
+  return std::make_shared<SuperLatticeField2D<T,DESCRIPTOR,FIELD>>(sLattice);
 }
 
 }

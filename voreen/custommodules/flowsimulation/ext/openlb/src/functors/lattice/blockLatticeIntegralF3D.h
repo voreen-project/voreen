@@ -27,7 +27,7 @@
 
 #include "functors/genericF.h"
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "latticePhysBoundaryForce3D.h"
 #include "latticePhysCorrBoundaryForce3D.h"
 #include "blockGeometryFaces3D.h"
@@ -35,7 +35,7 @@
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "functors/analytical/indicator/smoothIndicatorBaseF3D.h"
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -43,19 +43,17 @@
 namespace olb {
 
 
-template<typename T, typename DESCRIPTOR> class BlockLattice3D;
 template<typename T> class BlockIndicatorF3D;
-template<typename T, typename DESCRIPTOR> class BlockLattice3D;
 
 /// BlockL1Norm3D returns componentwise the l1 norm
 template <typename T, typename DESCRIPTOR>
 class BlockL1Norm3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   BlockLatticeF3D<T,DESCRIPTOR>& _f;
-  BlockGeometry3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   int _material;
 public:
-  BlockL1Norm3D(BlockLatticeF3D<T,DESCRIPTOR>& f, BlockGeometry3D<T>& blockGeometry, int material);
+  BlockL1Norm3D(BlockLatticeF3D<T,DESCRIPTOR>& f, BlockGeometry<T,3>& blockGeometry, int material);
   bool operator() (T output[], const int input[]) override;
 };
 
@@ -65,11 +63,11 @@ template <typename T, typename DESCRIPTOR>
 class BlockL223D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   BlockLatticeF3D<T,DESCRIPTOR>& _f;
-  BlockGeometry3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   int _material;
 public:
   BlockL223D(BlockLatticeF3D<T,DESCRIPTOR>& f,
-             BlockGeometry3D<T>& blockGeometry,
+             BlockGeometry<T,3>& blockGeometry,
              int material);
   bool operator() (T output[], const int input[]) override;
 };
@@ -86,7 +84,7 @@ private:
 
   const T _factor;
 public:
-  BlockLatticePhysDrag3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysDrag3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                          BlockIndicatorF3D<T>&                  indicatorF,
                          const UnitConverter<T,DESCRIPTOR>&     converter);
   bool operator() (T output[], const int input[]) override;
@@ -107,7 +105,7 @@ private:
 
   const T _factor;
 public:
-  BlockLatticePhysCorrDrag3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysCorrDrag3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                              BlockIndicatorF3D<T>&                  indicatorF,
                              const UnitConverter<T,DESCRIPTOR>&     converter);
   bool operator() (T output[], const int input[]) override;

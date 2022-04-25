@@ -25,8 +25,6 @@
 #define BLOCK_LATTICE_REFINEMENT_METRIC_F_2D_H
 
 #include "blockBaseF2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
 
 namespace olb {
 
@@ -34,7 +32,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeKnudsen2D : public BlockLatticeF2D<T, DESCRIPTOR> {
 public:
-  BlockLatticeKnudsen2D(BlockLatticeStructure2D<T, DESCRIPTOR>& blockLattice);
+  BlockLatticeKnudsen2D(BlockLattice<T, DESCRIPTOR>& blockLattice);
 
   bool operator() (T output[], const int input[]) override;
 };
@@ -45,9 +43,9 @@ private:
   const T _knudsen;
 public:
   BlockLatticeRefinementMetricKnudsen2D(
-    BlockLatticeStructure2D<T, DESCRIPTOR>& blockLattice,
+    BlockLattice<T, DESCRIPTOR>& blockLattice,
     const UnitConverter<T, DESCRIPTOR>&     converter);
-  
+
   bool operator() (T output[]);
   bool operator() (T output[], const int input[]) override;
 };

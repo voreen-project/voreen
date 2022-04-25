@@ -25,7 +25,7 @@
 #define BLOCK_REDUCTION_2D2D_HH
 
 #include <limits>
-#include <cmath>
+#include "utilities/omath.h"
 
 #include "blockReduction2D2D.h"
 #include "utilities/vectorHelpers.h"
@@ -56,20 +56,25 @@ void BlockReduction2D2D<T>::updateToWantedResolution(int resolution)
       _nx = (int)(_nx*_h/newH) + 1;
       _h = newH;
     }
-    _blockDataMemory.reset(new BlockData2D<T,T>(_nx, _ny, _f->getTargetDim()));
+    if (this->_owning) {
+      delete this->_blockData;
+    }
+    this->_blockData = new BlockData<2,T,T>({{_nx, _ny}, 0}, _f->getTargetDim());
+    this->_owning = true;
   }
 }
 
 template <typename T>
 BlockReduction2D2D<T>::BlockReduction2D2D(
   FunctorPtr<SuperF2D<T>>&& f, int resolution, BlockDataSyncMode mode)
-  : BlockDataF2D<T,T>(1, 1, f->getTargetDim()),
+  : BlockDataF2D<T,T>(f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getNx(),
+                      f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getNy(),
+                      f->getTargetDim()),
     _f(std::move(f)),
     _origin(_f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getOrigin()),
     _h(_f->getSuperStructure().getCuboidGeometry().getMinDeltaR()),
     _nx(_f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getNx()),
     _ny(_f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getNy()),
-    _blockDataMemory(new BlockData2D<T,T>(_nx, _ny, _f->getTargetDim())),
     _syncMode(mode)
 {
   this->getName() = "planeReduction(" + _f->getName() + ")";
@@ -79,8 +84,6 @@ BlockReduction2D2D<T>::BlockReduction2D2D(
 
   // changes _h, _nx, _ny to match resolution
   updateToWantedResolution(resolution);
-  // expose block data fields
-  this->_blockData = *_blockDataMemory;
   // intialize list of relevant rank local points
   initialize();
   // first update of data
@@ -90,7 +93,7 @@ BlockReduction2D2D<T>::BlockReduction2D2D(
 template <typename T>
 Vector<T,2> BlockReduction2D2D<T>::getPhysR(const int& iX, const int& iY) const
 {
-  return Vector<T,2>{
+  return Vector<T,2> {
     _origin[0] + double(iX) * _h,
     _origin[1] + double(iY) * _h
   };
@@ -100,10 +103,10 @@ template <typename T>
 HyperplaneLattice3D<T> BlockReduction2D2D<T>::getPlaneDiscretizationIn3D() const
 {
   return HyperplaneLattice3D<T>(
-      Hyperplane3D<T>()
-      .originAt({_origin[0], _origin[1], 0})
-      .spannedBy({1,0,0}, {0,1,0}),
-      _h, _nx, _ny);
+           Hyperplane3D<T>()
+           .originAt({_origin[0], _origin[1], 0})
+           .spannedBy({1,0,0}, {0,1,0}),
+           _h, _nx, _ny);
 }
 
 template <typename T>
@@ -139,7 +142,8 @@ void BlockReduction2D2D<T>::update()
   AnalyticalFfromSuperF2D<T> analyticalF(*_f);
 
 #ifdef PARALLEL_MODE_MPI
-  BlockData2D<T,T> localBlockData(_nx, _ny, this->getTargetDim());
+  std::unique_ptr<BlockData<2,T,T>> localBlockData(
+    new BlockData<2,T,T>({{_nx, _ny}, 0}, this->getTargetDim()));
 #endif
 
   for ( std::tuple<int,int,int>& pos : _rankLocalSubplane ) {
@@ -148,7 +152,7 @@ void BlockReduction2D2D<T>::update()
     const Vector<T,2> physR = getPhysR(iX, iY);
 
     for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
-      this->_blockData.get(iX, iY, iSize) = T();
+      this->_blockData->get({iX, iY}, iSize) = T();
     }
 
     T output[_f->getTargetDim()];
@@ -157,9 +161,9 @@ void BlockReduction2D2D<T>::update()
     if (analyticalF(output, input)) {
       for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
 #ifdef PARALLEL_MODE_MPI
-        localBlockData.get(iX, iY, iSize) += output[iSize];
+        localBlockData->get({iX, iY}, iSize) += output[iSize];
 #else
-        this->_blockData.get(iX, iY, iSize) += output[iSize];
+        this->_blockData->get({iX, iY}, iSize) += output[iSize];
 #endif
       }
     }
@@ -168,23 +172,27 @@ void BlockReduction2D2D<T>::update()
 #ifdef PARALLEL_MODE_MPI
   switch ( _syncMode ) {
   case BlockDataSyncMode::ReduceAndBcast:
-    singleton::mpi().reduce(localBlockData, this->getBlockData(), MPI_SUM);
+    singleton::mpi().reduce(*localBlockData, this->getBlockData(), MPI_SUM);
     singleton::mpi().bCast(this->getBlockData());
     break;
   case BlockDataSyncMode::ReduceOnly:
-    singleton::mpi().reduce(localBlockData, this->getBlockData(), MPI_SUM);
+    singleton::mpi().reduce(*localBlockData, this->getBlockData(), MPI_SUM);
     break;
   case BlockDataSyncMode::None:
-    this->_blockData.swap(localBlockData);
+    if (this->_owning) {
+      delete this->_blockData;
+    }
+    this->_blockData = localBlockData.release();
+    this->_owning = true;
     break;
   }
 #endif
 }
 
 template <typename T>
-BlockStructure2D& BlockReduction2D2D<T>::getBlockStructure()
+BlockStructureD<2>& BlockReduction2D2D<T>::getBlockStructure()
 {
-  return this->_blockData;
+  return *this->_blockData;
 }
 
 

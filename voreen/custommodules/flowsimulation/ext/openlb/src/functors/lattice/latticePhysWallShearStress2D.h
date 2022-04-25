@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -44,11 +42,11 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysWallShearStress2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  SuperGeometry2D<T>& _superGeometry;
+  SuperGeometry<T,2>& _superGeometry;
   const int _material;
 public:
-  SuperLatticePhysWallShearStress2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                                    SuperGeometry2D<T>& superGeometry, const int material,
+  SuperLatticePhysWallShearStress2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                    SuperGeometry<T,2>& superGeometry, const int material,
                                     const UnitConverter<T,DESCRIPTOR>& converter,
                                     IndicatorF2D<T>& indicator);
 };
@@ -58,16 +56,14 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysWallShearStress2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
-  const int _overlap;
+  BlockGeometry<T,2>& _blockGeometry;
   const int _material;
   std::vector<std::vector<std::vector<int>>> _discreteNormal;
   std::vector<std::vector<std::vector<T>>> _normal;
   T _physFactor;
 public:
-  BlockLatticePhysWallShearStress2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                                    BlockGeometryStructure2D<T>& blockGeometry,
-                                    int overlap,
+  BlockLatticePhysWallShearStress2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                    BlockGeometry<T,2>& blockGeometry,
                                     int material,
                                     const UnitConverter<T,DESCRIPTOR>& converter,
                                     IndicatorF2D<T>& indicator);

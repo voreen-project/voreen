@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -72,7 +71,7 @@ bool BlockEuklidNorm3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
   for (int i = 0; i < _f.getTargetDim(); ++i) {
     output[0] += data[i] * data[i];
   }
-  output[0] = sqrt(output[0]);
+  output[0] = util::sqrt(output[0]);
   return true;
 }
 

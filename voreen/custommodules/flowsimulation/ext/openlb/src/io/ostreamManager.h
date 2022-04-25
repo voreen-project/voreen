@@ -96,7 +96,7 @@ public:
   // Copy assignment
   OstreamManager& operator=(const OstreamManager& rhs);
   // Destructor
-  ~OstreamManager() override;
+  ~OstreamManager() override { };
   /// enable message output for all MPI processes, disabled by default
   void setMultiOutput(bool b);
 };

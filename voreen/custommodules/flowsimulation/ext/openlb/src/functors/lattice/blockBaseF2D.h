@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2013 Albert Mink, Lukas Baron, Mathias J. Krause
+ *  Copyright (C) 2012 Lukas Baron, Mathias J. Krause, Albert Mink
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -19,44 +19,43 @@
  *  License along with this program; if not, write to the Free
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA  02110-1301, USA.
- */
-
+*/
 
 #ifndef BLOCK_BASE_F_2D_H
 #define BLOCK_BASE_F_2D_H
 
 #include "functors/genericF.h"
-#include "core/blockStructure2D.h"
-#include "core/blockData2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "core/blockData.h"
+#include "core/blockStructure.h"
 #include "core/unitConverter.h"
 
 #include <fstream>
 #include <memory>
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
 
 namespace olb {
 
+template <typename T> class BlockIndicatorF2D;
+
+
 /// represents all functors that operate on a cuboid in general, mother class of BlockLatticeF, ..
 template <typename T>
 class BlockF2D : public GenericF<T,int> {
 protected:
-  BlockF2D(BlockStructure2D& blockStructure, int targetDim);
-  BlockF2D(int targetDim);
-  BlockStructure2D* _blockStructure;
+  BlockF2D(BlockStructureD<2>& blockStructure, int targetDim);
+  BlockF2D(int targetDim); //added from old
+  BlockStructureD<2>* _blockStructure;  //* instead of &
 public:
-  // virtual due to BlockReduction2D1D
-  virtual BlockStructure2D& getBlockStructure();
-  void setBlockStructure(BlockStructure2D* blockStructure);
+  /// virtual destructor for defined behaviour
+  //~BlockF2D() override {};
+  virtual BlockStructureD<2>& getBlockStructure(); // const;
+  void setBlockStructure(BlockStructureD<2>* blockStructure);
 
-  // not used anymore? blockData2D computes min/max as well
-  /// computes min/maxValue of blockStructure, [iDim]
-  //  std::vector<T> getMinValue();
-  //  std::vector<T> getMaxValue();
+  using GenericF<T,int>::operator();
 
   BlockF2D<T>& operator-(BlockF2D<T>& rhs);
   BlockF2D<T>& operator+(BlockF2D<T>& rhs);
@@ -64,34 +63,23 @@ public:
   BlockF2D<T>& operator/(BlockF2D<T>& rhs);
 };
 
-/// BlockDataF2D can store data of any BlockF2D
-template <typename T,typename BaseType>
-class BlockDataF2D : public BlockF2D<T> {
+/// BlockDataF2D can store data of any BlockFunctor2D
+template <typename T, typename BaseType>
+class BlockDataF2D : public BlockF2D<BaseType> {
 protected:
-  /// used for BlockReduction2D1D to build BlockData2D by the constructor
   BlockDataF2D(int nx, int ny, int size=1);
-
-  std::unique_ptr<BlockData2D<T,BaseType>> _blockDataStorage;
-  BlockData2D<T,BaseType>&                 _blockData;
+  BlockData<2,T,BaseType>* _blockData;
+  bool _owning;
 public:
-  BlockDataF2D(BlockData2D<T,BaseType>& blockData);
+  /// Constructor
+  BlockDataF2D(BlockData<2,T,BaseType>& blockData);
+  ~BlockDataF2D();
   /// to store functor data, constuctor creates _blockData with functor data
   BlockDataF2D(BlockF2D<BaseType>& f);
   /// returns _blockData
-  BlockData2D<T,BaseType>& getBlockData();
+  BlockData<2,T,BaseType>& getBlockData();
   /// access to _blockData via its get()
-  bool operator() (T output[], const int input[]) override;
-};
-
-/// Overlap-aware version of BlockDataF2D for usage in SuperDataF2D
-template <typename T, typename BaseType>
-class BlockDataViewF2D : public BlockDataF2D<T,BaseType> {
-private:
-  const int _overlap;
-public:
-  BlockDataViewF2D(BlockData2D<T,BaseType>& blockData, int overlap);
-  /// access to _blockData shifted by overlap
-  bool operator() (T output[], const int input[]) override;
+  bool operator() (BaseType output[], const int input[]) override;
 };
 
 /// identity functor
@@ -105,31 +93,87 @@ public:
   bool operator() (T output[], const int input[]) override;
 };
 
+/// functor to extract one component
+template <typename T>
+class BlockExtractComponentF2D : public BlockF2D<T> {
+protected:
+  BlockF2D<T>& _f;
+  int _extractDim;
+public:
+  BlockExtractComponentF2D(BlockF2D<T>& f, int extractDim);
+  int getExtractDim();
+  bool operator() (T output[], const int input[]);
+};
+
+/// functor to extract one component inside an indicator
+template <typename T>
+class BlockExtractComponentIndicatorF2D : public BlockExtractComponentF2D<T> {
+protected:
+  BlockIndicatorF2D<T>& _indicatorF;
+public:
+  BlockExtractComponentIndicatorF2D(BlockF2D<T>& f, int extractDim,
+                                    BlockIndicatorF2D<T>& indicatorF);
+  bool operator() (T output[], const int input[]) override;
+};
+
+/// functor to extract data inside an indicator
+template <typename T>
+class BlockExtractIndicatorF2D : public BlockF2D<T> {
+protected:
+  BlockF2D<T>&          _f;
+  BlockIndicatorF2D<T>& _indicatorF;
+public:
+  BlockExtractIndicatorF2D(BlockF2D<T>& f,
+                           BlockIndicatorF2D<T>& indicatorF);
+  bool operator() (T output[], const int input[]);
+};
+
 /// represents all functors that operate on a DESCRIPTOR in general, e.g. getVelocity(), getForce(), getPressure()
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeF2D : public BlockF2D<T> {
 protected:
-  BlockLatticeF2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, int targetDim);
-  BlockLatticeStructure2D<T,DESCRIPTOR>& _blockLattice;
+  BlockLatticeF2D(BlockLattice<T,DESCRIPTOR>& blockLattice, int targetDim);
+  BlockLattice<T,DESCRIPTOR>& _blockLattice;
 public:
-  BlockLatticeStructure2D<T,DESCRIPTOR>& getBlockLattice();
+  /// Copy Constructor
+  //BlockLatticeF2D(BlockLatticeF2D<T,DESCRIPTOR> const& rhs);
+  /// Assignment Operator
+  //BlockLatticeF2D<T,DESCRIPTOR>& operator=(BlockLatticeF2D<T,DESCRIPTOR> const& rhs);
+
+  BlockLattice<T,DESCRIPTOR>& getBlock();
 };
+
+
+/// identity functor
+template <typename T, typename DESCRIPTOR>
+class BlockLatticeIdentity2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
+protected:
+  BlockLatticeF2D<T,DESCRIPTOR>& _f;
+public:
+  BlockLatticeIdentity2D(BlockLatticeF2D<T,DESCRIPTOR>& f);
+  bool operator() (T output[], const int input[]) override;
+};
+
 
 /// represents all functors that operate on a DESCRIPTOR with output in Phys, e.g. physVelocity(), physForce(), physPressure()
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysF2D : public BlockLatticeF2D<T,DESCRIPTOR> {
 protected:
-  BlockLatticePhysF2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                      const UnitConverter<T,DESCRIPTOR>& converter, int targetDim);
   const UnitConverter<T,DESCRIPTOR>& _converter;
+  BlockLatticePhysF2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                      const UnitConverter<T,DESCRIPTOR>& converter, int targetDim);
+public:
+  /// Copy Constructor
+  //BlockLatticePhysF2D(BlockLatticePhysF2D<T,DESCRIPTOR> const& rhs);
+  /// Assignment Operator
+  //BlockLatticePhysF2D<T,DESCRIPTOR>& operator=(BlockLatticePhysF2D<T,DESCRIPTOR> const& rhs);
 };
-
 
 /// represents all thermal functors that operate on a DESCRIPTOR with output in Phys, e.g. physTemperature(), physHeatFlux()
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class BlockLatticeThermalPhysF2D : public BlockLatticeF2D<T,TDESCRIPTOR> {
 protected:
-  BlockLatticeThermalPhysF2D(BlockLatticeStructure2D<T,TDESCRIPTOR>& blockLattice,
+  BlockLatticeThermalPhysF2D(BlockLattice<T,TDESCRIPTOR>& blockLattice,
                              const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim);
   const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& _converter;
 };

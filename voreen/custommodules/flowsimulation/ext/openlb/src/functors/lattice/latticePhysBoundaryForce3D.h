@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -52,11 +52,11 @@ class SuperLatticePhysBoundaryForce3D : public SuperLatticePhysF3D<T,DESCRIPTOR>
 private:
   FunctorPtr<SuperIndicatorF3D<T>> _indicatorF;
 public:
-  SuperLatticePhysBoundaryForce3D(SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+  SuperLatticePhysBoundaryForce3D(SuperLattice<T,DESCRIPTOR>&      sLattice,
                                   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
                                   const UnitConverter<T,DESCRIPTOR>& converter);
-  SuperLatticePhysBoundaryForce3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                                  SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLatticePhysBoundaryForce3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                  SuperGeometry<T,3>& superGeometry, const int material,
                                   const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
@@ -65,9 +65,9 @@ template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysBoundaryForce3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
   BlockIndicatorF3D<T>&        _indicatorF;
-  BlockGeometryStructure3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
 public:
-  BlockLatticePhysBoundaryForce3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysBoundaryForce3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                   BlockIndicatorF3D<T>& indicatorF,
                                   const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;

@@ -24,9 +24,8 @@
 #ifndef SHAN_CHEN_FORCED_POST_PROCESSOR_2D_H
 #define SHAN_CHEN_FORCED_POST_PROCESSOR_2D_H
 
-#include "core/spatiallyExtendedObject2D.h"
+#include "core/blockStructure.h"
 #include "core/postProcessing.h"
-#include "core/blockLattice2D.h"
 
 
 namespace olb {
@@ -44,10 +43,10 @@ class ShanChenForcedPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> 
 public:
   ShanChenForcedPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
                                 std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-                                std::vector<SpatiallyExtendedObject2D*> partners_);
+                                std::vector<BlockStructureD<2>*> partners_);
   ShanChenForcedPostProcessor2D(T G_,
                                 std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-                                std::vector<SpatiallyExtendedObject2D*> partners_);
+                                std::vector<BlockStructureD<2>*> partners_);
   int extent() const override
   {
     return 1;
@@ -56,16 +55,16 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_) override;
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_) override;
 private:
-  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<2, 0, 0>;
+  using RHO_CACHE = descriptors::FIELD_BASE<2, 0, 0>;
   int x0, x1, y0, y1;
   T G;
   std::vector<T> rho0;
   AnalyticalF<1,T,T>& interactionPotential;
-  std::vector<SpatiallyExtendedObject2D*> partners;
+  std::vector<BlockStructureD<2>*> partners;
 };
 
 template<typename T, typename DESCRIPTOR>
@@ -73,7 +72,7 @@ class ShanChenForcedGenerator2D : public LatticeCouplingGenerator2D<T,DESCRIPTOR
 public:
   ShanChenForcedGenerator2D(int x0_, int x1_, int y0_, int y1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
   ShanChenForcedGenerator2D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
-  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<2>*> partners) const override;
   LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const override;
 private:
   T G;

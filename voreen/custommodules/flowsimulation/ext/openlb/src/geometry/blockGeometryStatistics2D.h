@@ -34,7 +34,7 @@
 
 #include "io/ostreamManager.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 /// Representation of a statistic for a 2D geometry
@@ -46,22 +46,20 @@ namespace olb {
  * This class is not intended to be derived from.
  */
 
-template<typename T>
-class BlockGeometryStructure2D;
+template<typename T, unsigned D>
+class BlockGeometry;
 
 template<typename T>
 class BlockGeometryStatistics2D {
-
 private:
-
   /// Points to the underlying data from which the statistics is taken
-  BlockGeometryStructure2D<T>* _blockGeometry;
+  BlockGeometry<T,2>* _blockGeometry{};
   /// Specifies if an update is needed
-  bool _statisticsUpdateNeeded;
+  bool _statisticsUpdateNeeded{};
   /// Number of voxels in each direction
-  int _nX, _nY;
+  int _nX{}, _nY{};
   /// Spacing
-  T _h;
+  T _h{};
 
   /// Number of different material numbers
   int _nMaterials;
@@ -78,7 +76,7 @@ private:
   const BlockGeometryStatistics2D<T>* const_this;
 
 public:
-  BlockGeometryStatistics2D(BlockGeometryStructure2D<T>* blockGeometry);
+  BlockGeometryStatistics2D(BlockGeometry<T,2>* blockGeometry);
 
   /// Read and write access to a flag, which indicates if an uptate is needed (=true)
   bool& getStatisticsStatus();
@@ -123,6 +121,7 @@ public:
   std::vector<T> getCenterPhysR(int material);
   std::vector<T> getCenterPhysR(int material) const;
   /// Returns the boundary type which is characterized by a discrete normal (c.f. Zimny)
+  std::vector<int> getType(const int* input) const;
   std::vector<int> getType(int iX, int iY) const;
 
   /// Returns normal that points into the fluid for paraxial surfaces

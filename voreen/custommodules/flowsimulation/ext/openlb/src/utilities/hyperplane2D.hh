@@ -34,8 +34,8 @@ namespace olb {
 template <typename T>
 Hyperplane2D<T>& Hyperplane2D<T>::originAt(const Vector<T,2>& o)
 {
-  origin[0] = o[0] - 2*std::numeric_limits<T>::epsilon()*fabs(o[0]);
-  origin[1] = o[1] - 2*std::numeric_limits<T>::epsilon()*fabs(o[1]);
+  origin[0] = o[0] - 2*std::numeric_limits<T>::epsilon()*util::fabs(o[0]);
+  origin[1] = o[1] - 2*std::numeric_limits<T>::epsilon()*util::fabs(o[1]);
 
   return *this;
 }
@@ -44,13 +44,13 @@ template <typename T>
 Hyperplane2D<T>& Hyperplane2D<T>::centeredIn(const Cuboid2D<T>& cuboid)
 {
   const Vector<T,2>& cuboidOrigin = cuboid.getOrigin();
-  const Vector<int,2>& extend     = cuboid.getExtend();
+  const Vector<int,2>& extend     = cuboid.getExtent();
   const T deltaR = cuboid.getDeltaR();
 
   origin[0] = (cuboidOrigin[0] + 0.5 * deltaR * extend[0]);
   origin[1] = (cuboidOrigin[1] + 0.5 * deltaR * extend[1]);
-  origin[0] -= 2*std::numeric_limits<T>::epsilon()*fabs(origin[0]);
-  origin[1] -= 2*std::numeric_limits<T>::epsilon()*fabs(origin[1]);
+  origin[0] -= 2*std::numeric_limits<T>::epsilon()*util::fabs(origin[0]);
+  origin[1] -= 2*std::numeric_limits<T>::epsilon()*util::fabs(origin[1]);
 
   return *this;
 }

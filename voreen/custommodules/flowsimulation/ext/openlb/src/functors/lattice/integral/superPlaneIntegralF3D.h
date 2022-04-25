@@ -24,9 +24,9 @@
 #ifndef SUPER_PLANE_INTEGRAL_F_3D_H
 #define SUPER_PLANE_INTEGRAL_F_3D_H
 
-#include "core/superLattice3D.h"
+
 #include "core/vector.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "functors/lattice/superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "functors/lattice/indicator/superIndicatorF3D.h"
@@ -44,7 +44,7 @@ namespace olb {
 template<typename T>
 class SuperPlaneIntegralF3D : public SuperF3D<T> {
 protected:
-  SuperGeometry3D<T>& _geometry;
+  SuperGeometry<T,3>& _geometry;
 
   /// Functor to be integrated on the plane
   FunctorPtr<SuperF3D<T>> _f;
@@ -105,7 +105,7 @@ public:
    *        definition and a discretization.
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>&       geometry,
+                        SuperGeometry<T,3>&       geometry,
                         const HyperplaneLattice3D<T>& hyperplaneLattice,
                         FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
                         FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -128,7 +128,7 @@ public:
    *        i.e. if they are interpolated or read directly from lattice points.
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>&       geometry,
+                        SuperGeometry<T,3>&       geometry,
                         const Hyperplane3D<T>&    hyperplane,
                         FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
                         FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -150,7 +150,7 @@ public:
    *        i.e. if they are interpolated or read directly from lattice points.
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>&       geometry,
+                        SuperGeometry<T,3>&       geometry,
                         const Hyperplane3D<T>&    hyperplane,
                         FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -165,7 +165,7 @@ public:
    * \param mode      defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const Vector<T,3>& origin,
                         const Vector<T,3>& u, const Vector<T,3>& v,
                         std::vector<int> materials,
@@ -179,7 +179,7 @@ public:
    * \param mode   Defines how the values of the discrete hyperplane are determined.
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const Vector<T,3>& origin,
                         const Vector<T,3>& u, const Vector<T,3>& v,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -193,7 +193,7 @@ public:
    * \param mode      defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const Vector<T,3>& origin,
                         const Vector<T,3>& normal,
                         std::vector<int> materials,
@@ -206,7 +206,7 @@ public:
    * \param mode   defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const Vector<T,3>& origin,
                         const Vector<T,3>& normal,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -219,7 +219,7 @@ public:
    * \param mode      defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const Vector<T,3>& normal,
                         std::vector<int> materials,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -230,7 +230,7 @@ public:
    * \param mode   defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const Vector<T,3>& normal,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
@@ -242,7 +242,7 @@ public:
    * \param mode      defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const IndicatorCircle3D<T>& circle,
                         std::vector<int> materials,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -253,7 +253,7 @@ public:
    * \param mode   defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF3D(FunctorPtr<SuperF3D<T>>&& f,
-                        SuperGeometry3D<T>& geometry,
+                        SuperGeometry<T,3>& geometry,
                         const IndicatorCircle3D<T>& circle,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 

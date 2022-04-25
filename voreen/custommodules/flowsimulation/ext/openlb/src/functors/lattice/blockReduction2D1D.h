@@ -24,7 +24,7 @@
 #ifndef BLOCK_REDUCTION_2D1D_H
 #define BLOCK_REDUCTION_2D1D_H
 
-#include "core/blockData2D.h"
+#include "core/blockData.h"
 #include "core/vector.h"
 #include "blockBaseF2D.h"
 #include "superBaseF2D.h"
@@ -53,8 +53,6 @@ namespace olb {
 template <typename T>
 class BlockReduction2D1D final : public HyperplaneLattice2D<T>, public BlockDataF2D<T,T> {
 private:
-  /// Data fields to hold the reduced data
-  std::unique_ptr<BlockData2D<T,T>> _blockDataMemory;
   /// Functor to be reduced
   FunctorPtr<SuperF2D<T>> _f;
   /// Plane points scheduled for storage in _blockData
@@ -67,8 +65,8 @@ private:
   /// Reduction mode, see BlockDataReductionMode enum for further information.
   const BlockDataReductionMode _reductionMode;
 
-  void updateBlockAnalytical(BlockData2D<T,T>& block);
-  void updateBlockDiscrete(BlockData2D<T,T>& block);
+  void updateBlockAnalytical(BlockData<2,T,T>& block);
+  void updateBlockDiscrete(BlockData<2,T,T>& block);
 
 public:
   /// Construction using functor and hyperplane lattice
@@ -133,7 +131,7 @@ public:
   /// Updates and writes the data to _blockData using _rankLocalSubplane
   void update();
   /// Overload of virtual function from class BlockF2D
-  BlockStructure2D& getBlockStructure() override;
+  BlockStructureD<2>& getBlockStructure() override;
   /// \return reference to the rank local list of discrete line points, cuboid ids
   const std::vector<std::tuple<int,int>>& getRankLocalSubplane() const;
 

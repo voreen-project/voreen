@@ -166,7 +166,7 @@ void BaseVTIreader3D<T,BaseType>::readCuboid(Cuboid3D<T>& cuboid, XMLreader* pie
 }
 
 template<typename T, typename BaseType>
-bool BaseVTIreader3D<T,BaseType>::readBlockData(BlockData3D<T,BaseType>& blockData,
+bool BaseVTIreader3D<T,BaseType>::readBlockData(BlockData<3,T,BaseType>& blockData,
     const XMLreader& pieceTag, const std::string dName)
 {
   /*** This is the main data reader method. All other methods use this one for accessing data ***/
@@ -186,11 +186,11 @@ bool BaseVTIreader3D<T,BaseType>::readBlockData(BlockData3D<T,BaseType>& blockDa
         for (int iz = 0; iz < blockData.getNz(); iz++) {
           for (int iy = 0; iy < blockData.getNy(); iy++) {
             for (int ix = 0; ix < blockData.getNx(); ix++) {
-              for (int iSize=0; iSize < blockData.getSize(); iSize++) {
+              for (unsigned iSize=0; iSize < blockData.getSize(); iSize++) {
                 BaseType tmp;
                 stream_val >> tmp;
                 // write tmp into blockData
-                blockData.get(ix, iy, iz, iSize) = tmp;
+                blockData.get({ix, iy, iz}, iSize) = tmp;
               }
             }
           }
@@ -210,10 +210,10 @@ bool BaseVTIreader3D<T,BaseType>::readBlockData(BlockData3D<T,BaseType>& blockDa
 /* ---------------- BlockVTIreader3D -------------------*/
 
 template<typename T,typename BaseType>
-BlockVTIreader3D<T,BaseType>::BlockVTIreader3D(const std::string& fName, const std::string dName )
+BlockVTIreader3D<T,BaseType>::BlockVTIreader3D(const std::string& fName, const std::string& dName )
   : BaseVTIreader3D<T,BaseType>(fName, dName, "BlockVTIreader3D"),
     _cuboid(this->_origin, this->_delta, this->_extent),
-    _blockData(_cuboid, this->_size)
+    _blockData(_cuboid, 0, this->_size)
 {
   // Only read the first <Piece> tag in the XML file
   this->readBlockData(_blockData, this->_xmlReader["ImageData"]["Piece"], dName);
@@ -221,7 +221,7 @@ BlockVTIreader3D<T,BaseType>::BlockVTIreader3D(const std::string& fName, const s
 
 
 template<typename T,typename BaseType>
-BlockData3D<T,BaseType>& BlockVTIreader3D<T,BaseType>::getBlockData()
+BlockData<3,T,BaseType>& BlockVTIreader3D<T,BaseType>::getBlockData()
 {
   return _blockData;
 }
@@ -264,7 +264,7 @@ SuperVTIreader3D<T,BaseType>::SuperVTIreader3D(const std::string& fName, const s
   _loadBalancer = new HeuristicLoadBalancer<T> (*_cGeometry);
 
   // Create SuperData (allocation of the data, this->_size is already known!)
-  _superData = new SuperData3D<T,BaseType> ( *_cGeometry, *_loadBalancer, 2, this->_size);
+  _superData = new SuperData<3,T,BaseType> ( *_cGeometry, *_loadBalancer, 2, this->_size);
 
   this->clout << "* Reading BlockData..." << std::endl;
 
@@ -302,14 +302,14 @@ void SuperVTIreader3D<T,BaseType>::readSuperData(const std::string dName)
   // Iterate over all <Piece> tags
   for (auto & piece : this->_xmlReader["ImageData"]) {
     if (piece->getName() == "Piece") {
-      this->readBlockData(_superData->get(counter), *piece, dName);
+      this->readBlockData(_superData->getBlock(counter), *piece, dName);
       counter++;
     }
   }
 }
 
 template<typename T,typename BaseType>
-SuperData3D<T,BaseType>& SuperVTIreader3D<T,BaseType>::getSuperData()
+SuperData<3,T,BaseType>& SuperVTIreader3D<T,BaseType>::getSuperData()
 {
   return *_superData;
 }

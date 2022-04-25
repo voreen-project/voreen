@@ -31,17 +31,21 @@ precompiled    := blockBaseF2D \
                   blockLatticeIntegralF3D \
                   blockLocalAverage2D \
                   blockLocalAverage3D \
-                  blockReduction2D2D \
-                  blockReduction2D1D \
-                  blockReduction3D2D \
+                  blockMin2D \
+                  blockMax2D \
                   blockMin3D \
                   blockMax3D \
+                  blockAverage2D \
                   blockAverage3D \
+                  blockGeometryFaces2D \
                   blockGeometryFaces3D \
                   blockLatticeRefinementMetricF2D \
                   blockLatticeRefinementMetricF3D \
                   blockRoundingF2D \
                   blockRoundingF3D \
+                  blockReduction2D1D \
+                  blockReduction2D2D \
+                  blockReduction3D2D \
                   blockDiscretizationF2D \
                   blockDiscretizationF3D \
                   superBaseF2D \
@@ -53,16 +57,22 @@ precompiled    := blockBaseF2D \
                   superLatticeIntegralF2D \
                   superLatticeIntegralF3D \
                   latticeLocalF2D \
-		  latticeLocalF3D \
+                  latticeDiscreteNormal2D \
+                  latticeDiscreteNormal3D \
+		              latticeLocalF3D \
                   superLocalAverage2D \
                   superLocalAverage3D \
                   reductionF2D \
                   reductionF3D \
                   turbulentF3D \
                   latticeFrameChangeF3D \
+                  superMin2D \
+                  superMax2D \
                   superMin3D \
                   superMax3D \
+                  superAverage2D \
                   superAverage3D \
+                  superGeometryFaces2D \
                   superGeometryFaces3D \
                   superRoundingF2D \
                   superRoundingF3D \

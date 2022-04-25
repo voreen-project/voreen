@@ -32,11 +32,12 @@
 #include <math.h>
 
 #include "core/serializer.h"
+#include "core/blockStructure.h"
 #include "io/ostreamManager.h"
 #include "functors/analytical/indicator/indicatorF3D.h"
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 
@@ -97,7 +98,7 @@ public:
   /// Read access to cuboid depth
   int getNz() const;
   /// Read only access to the number of voxels in every dimension
-  Vector<int,3> const getExtend() const;
+  Vector<int,3> const getExtent() const;
   /// Returns the volume of the cuboid
   T getPhysVolume() const;
   /// Returns the actual value of weight (-1 for getLatticeVolume())
@@ -132,6 +133,7 @@ public:
 
   void getPhysR(T physR[3], const int latticeR[3]) const;
   void getPhysR(T physR[3], const int& iX, const int& iY, const int& iZ) const;
+  void getPhysR(T physR[3], LatticeR<3> latticeR) const;
 
   void getLatticeR(int latticeR[3], const T physR[3]) const;
   void getLatticeR(int latticeR[3], const Vector<T,3>& physR) const;
@@ -147,7 +149,8 @@ public:
   /// Checks whether a point (globX/gloxY/globZ) is contained and is a node
   /// in the cuboid extended with an layer of size overlap*delta and
   /// returns the local active node
-  bool checkPoint(T globX, T globY, T globZ, int &locX, int &locY, int &locZ, int overlap = 0) const; //TODO globX-> x + additional interface: with (std::vector<T> physR, std::vector<int>& latticeR, int overlap=0)
+  // TODO: adapt to use only sum operation (cf. #204)
+  [[deprecated]] bool checkPoint(T globX, T globY, T globZ, int &locX, int &locY, int &locZ, int overlap = 0) const; //TODO globX-> x + additional interface: with (std::vector<T> physR, std::vector<int>& latticeR, int overlap=0)
   /// Checks whether there is an intersection with the cuboid extended
   /// with an layer of size overlap*delta
   bool checkInters(T globX0, T globX1, T globY0, T globY1, T globZ0, T globZ1, int overlap = 0) const;

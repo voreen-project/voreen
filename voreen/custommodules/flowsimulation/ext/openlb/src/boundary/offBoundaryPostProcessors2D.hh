@@ -25,23 +25,13 @@
 #define OFF_BOUNDARY_POST_PROCESSORS_2D_HH
 
 #include "offBoundaryPostProcessors2D.h"
-#include "core/blockLattice2D.h"
+
 #include "core/util.h"
 #include "core/cell.h"
+#include "dynamics/dynamics.h"
 
 namespace olb {
 
-/////////// LinearBouzidiPostProcessor2D /////////////////////////////////////
-
-/* Bouzidi Interpolation scheme of first order
- *
- * fluid nodes               wall  solid node
- * --o-------<-o->-----<-o->--|----x----
- *            xB         x        xN
- * directions: --> iPop
- *             <-- opp
- *
-*/
 
 template<typename T, typename DESCRIPTOR>
 ZeroVelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>::
@@ -81,7 +71,7 @@ ZeroVelocityBouzidiLinearPostProcessor2D(int x_, int y_, int iPop_, T dist_)
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   if (util::contained(x, y, x0_, x1_, y0_, y1_) ) {
     process(blockLattice);
@@ -90,7 +80,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   blockLattice.get(x, y)[opp] = q*blockLattice.get(xN, yN)[iPop] +
                                 (1-q)*blockLattice.get(xB, yB)[iPop2];
@@ -136,7 +126,7 @@ VelocityBouzidiLinearPostProcessor2D(int x_, int y_, int iPop_, T dist_)
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   if (util::contained(x, y, x0_, x1_, y0_, y1_) ) {
     process(blockLattice);
@@ -145,7 +135,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   auto cell = blockLattice.get(x, y);
   auto cellN = blockLattice.get(xN, yN);
@@ -155,15 +145,13 @@ process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
   cell[opp] = q*cellN[iPop] + (1-q)*blockLattice.get(xB, yB)[iPop2] + velCoeff;
 }
 
-
-//////// CornerBouzidiPostProcessor2D ///////////////////
-
 template<typename T, typename DESCRIPTOR>
 ZeroVelocityBounceBackPostProcessor2D<T,DESCRIPTOR>::
 ZeroVelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_)
   : x(x_), y(y_), iPop(iPop_), dist(dist_)
 {
   this->getName() = "ZeroVelocityBounceBackPostProcessor2D";
+  this->_priority = -1;
 #ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << "): "
@@ -182,7 +170,7 @@ ZeroVelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_)
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBounceBackPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   if (util::contained(x, y, x0_, x1_, y0_, y1_) ) {
     process(blockLattice);
@@ -191,7 +179,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBounceBackPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   blockLattice.get(x, y)[opp] = blockLattice.get(xN, yN)[iPop];
 }
@@ -203,6 +191,7 @@ VelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_)
   : x(x_), y(y_), iPop(iPop_), dist(dist_)
 {
   this->getName() = "VelocityBounceBackPostProcessor2D";
+  this->_priority = -1;
 #ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << "): "
@@ -222,7 +211,7 @@ VelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_)
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBounceBackPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   if (util::contained(x, y, x0_, x1_, y0_, y1_) ) {
     process(blockLattice);
@@ -231,7 +220,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBounceBackPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   auto cell = blockLattice.get(x, y);
   auto cellN = blockLattice.get(xN, yN);
@@ -262,7 +251,7 @@ AntiBounceBackPostProcessor2D(int x_, int y_, int iPop_)
 
 template<typename T, typename DESCRIPTOR>
 void AntiBounceBackPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   if (util::contained(x, y, x0_, x1_, y0_, y1_) ) {
     process(blockLattice);
@@ -271,7 +260,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void AntiBounceBackPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   /*Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(xN, yN);
   T velCoeff = dynamics->getVelocityCoefficient(iPop);
@@ -296,7 +285,7 @@ BoundaryStreamPostProcessor2D(int x_, int y_, const bool streamDirection[DESCRIP
 
 template<typename T, typename DESCRIPTOR>
 void BoundaryStreamPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   if (util::contained(x, y, x0_, x1_, y0_, y1_) ) {
     process(blockLattice);
@@ -305,7 +294,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void BoundaryStreamPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   auto cell = blockLattice.get(x, y);
   for (int iPop = 1; iPop < DESCRIPTOR::q ; ++iPop) {
@@ -316,55 +305,6 @@ process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
 }
 
 
-////////  LinearBouzidiBoundaryPostProcessorGenerator ////////////////////////////////
-
-template<typename T, typename DESCRIPTOR>
-ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::
-ZeroVelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_)
-  : PostProcessorGenerator2D<T,DESCRIPTOR>(x_, x_, y_, y_),
-    x(x_), y(y_), iPop(iPop_), dist(dist_)
-{ }
-
-template<typename T, typename DESCRIPTOR>
-PostProcessor2D<T,DESCRIPTOR>*
-ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::generate() const
-{
-  return new ZeroVelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>
-         ( this->x, this->y, this->iPop, this->dist);
-}
-
-template<typename T, typename DESCRIPTOR>
-PostProcessorGenerator2D<T,DESCRIPTOR>*
-ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::clone() const
-{
-  return new ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>
-         (this->x, this->y, this->iPop, this->dist);
-}
-
-template<typename T, typename DESCRIPTOR>
-VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::
-VelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_)
-  : PostProcessorGenerator2D<T,DESCRIPTOR>(x_, x_, y_, y_),
-    x(x_), y(y_), iPop(iPop_), dist(dist_)
-{ }
-
-template<typename T, typename DESCRIPTOR>
-PostProcessor2D<T,DESCRIPTOR>*
-VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::generate() const
-{
-  return new VelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>
-         ( this->x, this->y, this->iPop, this->dist);
-}
-
-template<typename T, typename DESCRIPTOR>
-PostProcessorGenerator2D<T,DESCRIPTOR>*
-VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::clone() const
-{
-  return new VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>
-         (this->x, this->y, this->iPop, this->dist);
-}
-
-/////////// CornerBouzidiBoundaryPostProcessorGenerator /////////////////////////////////////
 
 template<typename T, typename DESCRIPTOR>
 ZeroVelocityBounceBackPostProcessorGenerator2D<T,DESCRIPTOR>::
@@ -462,6 +402,56 @@ BoundaryStreamPostProcessorGenerator2D<T,DESCRIPTOR>::clone() const
   return new BoundaryStreamPostProcessorGenerator2D<T,DESCRIPTOR>
          (this->x, this->y, this->_streamDirections);
 }
+
+////////  LinearBouzidiBoundaryPostProcessorGenerator ////////////////////////////////
+
+template<typename T, typename DESCRIPTOR>
+ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::
+ZeroVelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_)
+  : PostProcessorGenerator2D<T,DESCRIPTOR>(x_, x_, y_, y_),
+    x(x_), y(y_), iPop(iPop_), dist(dist_)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor2D<T,DESCRIPTOR>*
+ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::generate() const
+{
+  return new ZeroVelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>
+         ( this->x, this->y, this->iPop, this->dist);
+}
+
+template<typename T, typename DESCRIPTOR>
+PostProcessorGenerator2D<T,DESCRIPTOR>*
+ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::clone() const
+{
+  return new ZeroVelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>
+         (this->x, this->y, this->iPop, this->dist);
+}
+
+template<typename T, typename DESCRIPTOR>
+VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::
+VelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_)
+  : PostProcessorGenerator2D<T,DESCRIPTOR>(x_, x_, y_, y_),
+    x(x_), y(y_), iPop(iPop_), dist(dist_)
+{ }
+
+template<typename T, typename DESCRIPTOR>
+PostProcessor2D<T,DESCRIPTOR>*
+VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::generate() const
+{
+  return new VelocityBouzidiLinearPostProcessor2D<T,DESCRIPTOR>
+         ( this->x, this->y, this->iPop, this->dist);
+}
+
+template<typename T, typename DESCRIPTOR>
+PostProcessorGenerator2D<T,DESCRIPTOR>*
+VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>::clone() const
+{
+  return new VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>
+         (this->x, this->y, this->iPop, this->dist);
+}
+
+
 }  // namespace olb
 
 #endif

@@ -28,8 +28,10 @@
 #include "blockGifWriter.hh"
 #include "blockVtkWriter2D.hh"
 #include "colormaps.hh"
+#include "fileName.hh"
 #include "gnuplotHeatMapWriter.hh"
 #include "gnuplotWriter.hh"
 #include "serializerIO.hh"
 #include "superVtmWriter2D.hh"
+#include "ostreamManager.hh"
 

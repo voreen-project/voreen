@@ -27,14 +27,5 @@ precompiled    := boundaryPostProcessors2D \
                   boundaryPostProcessors3D \
                   extendedFiniteDifferenceBoundary2D \
                   extendedFiniteDifferenceBoundary3D \
-                  inamuroAnalyticalDynamics \
-                  inamuroNewtonRaphsonDynamics \
-                  momentaOnBoundaries2D \
-                  momentaOnBoundaries3D \
                   offBoundaryPostProcessors2D \
                   offBoundaryPostProcessors3D \
-                  zouHeDynamics \
-                  setBoundaryCondition2D \
-                  setBoundaryCondition3D \
-                  
-

@@ -54,13 +54,13 @@ public:
    * \param v              std::vector to be copied to output by operator.
    *                       Size determines target dimension.
    **/
-  SuperConst2D(SuperStructure2D<T>& superStructure, std::vector<W> v);
+  SuperConst2D(SuperStructure<T,2>& superStructure, std::vector<W> v);
 
   /// Constructor accepting single scalar
-  SuperConst2D(SuperStructure2D<T>& superStructure, W scalar);
+  SuperConst2D(SuperStructure<T,2>& superStructure, W scalar);
   /// Constructor template accepting vectors
   template <unsigned Size>
-  SuperConst2D(SuperStructure2D<T>& superStructure, Vector<W,Size> v)
+  SuperConst2D(SuperStructure<T,2>& superStructure, Vector<W,Size> v)
     : SuperConst2D(superStructure, v.toStdVector()) { };
 
   bool operator() (W output[], const int input[]) override;

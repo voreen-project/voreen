@@ -27,6 +27,8 @@
 
 #include "superLpNorm2D.hh"
 #include "blockLpNorm2D.hh"
+#include "blockIntegralF2D.hh"
+#include "superIntegralF2D.hh"
 #include "superPlaneIntegralF2D.hh"
 #include "superPlaneIntegralFluxF2D.hh"
 #include "superPlaneIntegralFluxMass2D.hh"

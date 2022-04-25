@@ -28,8 +28,8 @@
 #define FD_BOUNDARIES_2D_H
 
 #include "core/postProcessing.h"
-#include "momentaOnBoundaries.h"
-#include "core/blockLattice2D.h"
+
+#include "core/operator.h"
 
 namespace olb {
 
@@ -39,35 +39,21 @@ namespace olb {
 * equilibrium distributions (i.e. only the Q_i : Pi term)
 */
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
-class StraightFdBoundaryProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
+class StraightFdBoundaryProcessor2D  {
 public:
-  StraightFdBoundaryProcessor2D(int x0_, int x1_, int y0_, int y1_);
-  int extent() const override
-  {
-    return 1;
-  }
-  int extent(int whichDirection) const override
-  {
-    return 1;
-  }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                          int x0_, int x1_, int y0_, int y1_ ) override;
-private:
-  template<int deriveDirection>
-  void interpolateGradients (
-    BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
-    T velDeriv[DESCRIPTOR::d], int iX, int iY ) const;
-private:
-  int x0, x1, y0, y1;
-};
+  static constexpr OperatorScope scope = OperatorScope::PerCell;
 
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-class StraightFdBoundaryProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
-public:
-  StraightFdBoundaryProcessorGenerator2D(int x0_, int x1_, int y0_, int y1_);
-  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
+  int getPriority() const {
+    return 0;
+  }
+
+  template <typename CELL>
+  void apply(CELL& cell) any_platform;
+
+private:
+  template<int deriveDirection, typename CELL>
+  void interpolateGradients(CELL& blockLattice, T velDeriv[DESCRIPTOR::d]) const any_platform;
+
 };
 
 /**
@@ -86,8 +72,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x0, x1, y0, y1;
@@ -121,8 +107,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int reflectionPop[DESCRIPTOR::q];
@@ -157,8 +143,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int reflectionPop[DESCRIPTOR::q];
@@ -185,32 +171,18 @@ private:
 * equilibrium distributions (i.e. only the Q_i : Pi term)
 */
 template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-class OuterVelocityCornerProcessor2D : public LocalPostProcessor2D<T, DESCRIPTOR> {
+class OuterVelocityCornerProcessor2D  {
 public:
-  OuterVelocityCornerProcessor2D(int x_, int y_);
-  int extent() const override
-  {
-    return 2;
-  }
-  int extent(int whichDirection) const override
-  {
-    return 2;
-  }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                        int x0_,int x1_,int y0_,int y1_ ) override;
-private:
-  int x, y;
-};
+  static constexpr OperatorScope scope = OperatorScope::PerCell;
 
-template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-class OuterVelocityCornerProcessorGenerator2D : public PostProcessorGenerator2D<T, DESCRIPTOR> {
-public:
-  OuterVelocityCornerProcessorGenerator2D(int x_, int y_);
-  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
-};
+  int getPriority() const {
+    return 1;
+  }
 
+  template <typename CELL>
+  void apply(CELL& cell) any_platform;
+
+};
 
 /// PostProcessor for the wetting boundary condition in the free energy model. This is
 /// required to set rho on the boundary (using the denisty of the neighbouring cell in
@@ -229,8 +201,8 @@ public:
   {
     return 2;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_,int x1_,int y0_,int y1_ ) override;
 private:
   int x0, x1, y0, y1;
@@ -274,8 +246,8 @@ public:
   {
     return 2;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_,int x1_,int y0_,int y1_ ) override;
 private:
   int x0, x1, y0, y1;
@@ -314,8 +286,8 @@ public:
   {
     return 2;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_,int x1_,int y0_,int y1_ ) override;
 private:
   int x0, x1, y0, y1;

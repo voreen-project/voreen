@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,8 +43,8 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR, bool HLBM>
 SuperLatticeIndicatorSmoothIndicatorIntersection3D<T,DESCRIPTOR,HLBM>::SuperLatticeIndicatorSmoothIndicatorIntersection3D (
-  SuperLattice3D<T,DESCRIPTOR>& sLattice,
-  SuperGeometry3D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice,
+  SuperGeometry<T,3>& superGeometry,
   IndicatorF3D<T>& normalInd, SmoothIndicatorF3D<T,T,HLBM>& smoothInd )
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice, 1)
 {
@@ -53,7 +52,7 @@ SuperLatticeIndicatorSmoothIndicatorIntersection3D<T,DESCRIPTOR,HLBM>::SuperLatt
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticeIndicatorSmoothIndicatorIntersection3D<T,DESCRIPTOR,HLBM>(this->_sLattice.getExtendedBlockLattice(iC), superGeometry.getBlockGeometry(iC), normalInd, smoothInd));
+    this->_blockF.emplace_back( new BlockLatticeIndicatorSmoothIndicatorIntersection3D<T,DESCRIPTOR,HLBM>(this->_sLattice.getBlock(iC), superGeometry.getBlockGeometry(iC), normalInd, smoothInd));
   }
 }
 
@@ -77,8 +76,8 @@ bool SuperLatticeIndicatorSmoothIndicatorIntersection3D<T,DESCRIPTOR,HLBM>::oper
 
 template<typename T, typename DESCRIPTOR, bool HLBM>
 BlockLatticeIndicatorSmoothIndicatorIntersection3D<T, DESCRIPTOR, HLBM>::BlockLatticeIndicatorSmoothIndicatorIntersection3D (
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-  BlockGeometryStructure3D<T>& blockGeometry,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
+  BlockGeometry<T,3>& blockGeometry,
   IndicatorF3D<T>& normalInd,
   SmoothIndicatorF3D<T,T,HLBM>& smoothInd )
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1),
@@ -110,8 +109,8 @@ bool BlockLatticeIndicatorSmoothIndicatorIntersection3D<T, DESCRIPTOR, HLBM>::op
         start[k] = 0;
       }
       end[k] += 2;
-      if (end[k] > _blockGeometry.getExtend()[k]) {
-        end[k] = _blockGeometry.getExtend()[k];
+      if (end[k] > _blockGeometry.getExtent()[k]) {
+        end[k] = _blockGeometry.getExtent()[k];
       }
     }
 
@@ -123,9 +122,9 @@ bool BlockLatticeIndicatorSmoothIndicatorIntersection3D<T, DESCRIPTOR, HLBM>::op
           // check if cell belongs to particle
           T insideT[1] = {0.};
           T posIn[3] = {0.};
-          _blockGeometry.getPhysR(posIn, iX, iY, iZ);
+          _blockGeometry.getPhysR(posIn, {iX, iY, iZ});
           _smoothInd( insideT, posIn);
-          if ( !util::nearZero(insideT[0]) && this->_blockGeometry.get(iX,iY,iZ)==1) {
+          if ( !util::nearZero(insideT[0]) && this->_blockGeometry.get({iX,iY,iZ})==1) {
             // Return true if at least one cell is found to be inside both A and B
             bool insideBool[1] = {false};
             _normalInd(insideBool, posIn);

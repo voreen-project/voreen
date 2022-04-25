@@ -25,13 +25,8 @@
 #define OFF_BOUNDARY_POST_PROCESSORS_2D_H
 
 #include "core/postProcessing.h"
-#include "core/blockLattice2D.h"
 
 namespace olb {
-
-/**
-* This class computes the Linear Bouzidi BC
-*/
 
 template<typename T, typename DESCRIPTOR>
 class ZeroVelocityBouzidiLinearPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
@@ -45,36 +40,14 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   int xN, yN, xB, yB;
   int iPop, opp, iPop2;
   T q, dist;
-};
-
-template<typename T, typename DESCRIPTOR>
-class ZeroVelocityBounceBackPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
-public:
-  ZeroVelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_);
-  int extent() const override
-  {
-    return 1;
-  }
-  int extent(int whichDirection) const override
-  {
-    return 1;
-  }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                        int x0_, int x1_, int y0_, int y1_ ) override;
-private:
-  int x, y;
-  int xN, yN;
-  int iPop, opp;
-  T dist;
 };
 
 template<typename T, typename DESCRIPTOR>
@@ -89,8 +62,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
@@ -98,6 +71,28 @@ private:
   int iPop, opp, iPop2;
   T q, dist;
   T ufrac;
+};
+
+template<typename T, typename DESCRIPTOR>
+class ZeroVelocityBounceBackPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
+public:
+  ZeroVelocityBounceBackPostProcessor2D(int x_, int y_, int iPop_, T dist_);
+  int extent() const override
+  {
+    return 1;
+  }
+  int extent(int whichDirection) const override
+  {
+    return 1;
+  }
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_ ) override;
+private:
+  int x, y;
+  int xN, yN;
+  int iPop, opp;
+  T dist;
 };
 
 template<typename T, typename DESCRIPTOR>
@@ -112,8 +107,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
@@ -121,6 +116,7 @@ private:
   int iPop, opp;
   T dist;
 };
+
 
 template<typename T, typename DESCRIPTOR>
 class AntiBounceBackPostProcessor2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
@@ -134,8 +130,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
@@ -155,46 +151,18 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   int x, y;
   bool _streamDirections[DESCRIPTOR::q];
 };
 
-/**
-* Linear Bouzidi BC Generator
-*/
-
-template<typename T, typename DESCRIPTOR>
-class ZeroVelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
-public:
-  ZeroVelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
-  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
-private:
-  int x, y;
-  int iPop;
-  T dist;
-};
-
 template<typename T, typename DESCRIPTOR>
 class ZeroVelocityBounceBackPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
 public:
   ZeroVelocityBounceBackPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
-  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
-  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
-private:
-  int x, y;
-  int iPop;
-  T dist;
-};
-
-template<typename T, typename DESCRIPTOR>
-class VelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
-public:
-  VelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
   PostProcessor2D<T,DESCRIPTOR>* generate() const override;
   PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
 private:
@@ -235,6 +203,30 @@ public:
 private:
   int x, y;
   bool _streamDirections[DESCRIPTOR::q];
+};
+
+template<typename T, typename DESCRIPTOR>
+class VelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
+public:
+  VelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
+private:
+  int x, y;
+  int iPop;
+  T dist;
+};
+
+template<typename T, typename DESCRIPTOR>
+class ZeroVelocityBouzidiLinearPostProcessorGenerator2D : public PostProcessorGenerator2D<T,DESCRIPTOR> {
+public:
+  ZeroVelocityBouzidiLinearPostProcessorGenerator2D(int x_, int y_, int iPop_, T dist_);
+  PostProcessor2D<T,DESCRIPTOR>* generate() const override;
+  PostProcessorGenerator2D<T,DESCRIPTOR>*  clone() const override;
+private:
+  int x, y;
+  int iPop;
+  T dist;
 };
 
 }

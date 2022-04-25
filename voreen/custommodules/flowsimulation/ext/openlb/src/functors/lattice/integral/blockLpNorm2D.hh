@@ -47,10 +47,10 @@ BlockLpNorm2D<T,W,P>::BlockLpNorm2D(BlockF2D<W>&          f,
 template <typename T, typename W, int P>
 bool BlockLpNorm2D<T,W,P>::operator()(W output[], const int input[])
 {
-  const auto& blockGeometry = _indicatorF.getBlockGeometryStructure();
+  const auto& blockGeometry = _indicatorF.getBlockGeometry();
   const int nX = blockGeometry.getNx();
   const int nY = blockGeometry.getNy();
-  const T weight = pow(blockGeometry.getDeltaR(), 2);
+  const T weight = util::pow(blockGeometry.getDeltaR(), 2);
 
   output[0] = W(0);
   W outputTmp[_f.getTargetDim()];

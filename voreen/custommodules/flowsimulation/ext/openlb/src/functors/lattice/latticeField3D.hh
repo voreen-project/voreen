@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR, typename FIELD>
 SuperLatticeField3D<T,DESCRIPTOR,FIELD>::SuperLatticeField3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice)
+  SuperLattice<T, DESCRIPTOR>& sLattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, DESCRIPTOR::template size<FIELD>())
 {
   this->getName() = "externalField";
@@ -52,13 +51,13 @@ SuperLatticeField3D<T,DESCRIPTOR,FIELD>::SuperLatticeField3D(
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; ++iC) {
     this->_blockF.emplace_back(
-      new BlockLatticeField3D<T,DESCRIPTOR,FIELD>(this->_sLattice.getBlockLattice(iC)));
+      new BlockLatticeField3D<T,DESCRIPTOR,FIELD>(this->_sLattice.getBlock(iC)));
   }
 }
 
 template<typename T, typename DESCRIPTOR, typename FIELD>
 BlockLatticeField3D<T,DESCRIPTOR,FIELD>::BlockLatticeField3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, DESCRIPTOR::template size<FIELD>())
 {
   this->getName() = "externalField";

@@ -1,75 +1,46 @@
-#  This file is part of the OpenLB library
-#
-#  Copyright (C) 2017 Markus Mohrhard
-#  E-mail contact: info@openlb.net
-#  The most recent release of OpenLB can be downloaded at
-#  <http://www.openlb.net/>
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public
-#  License along with this program; if not, write to the Free
-#  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-#  Boston, MA  02110-1301, USA.
-
 ###########################################################################
+## conditional settings
 
-include global.mk
+ifeq ($(PARALLEL_MODE), MPI)
+   CXXFLAGS := -DPARALLEL_MODE_MPI $(MPIFLAGS) $(CXXFLAGS)
+   LDFLAGS  := $(MPIFLAGS) $(LDFLAGS)
+endif
 
-###############################################################
-## Handling of our samples
+ifeq ($(PARALLEL_MODE), OMP)
+   CXXFLAGS := -DPARALLEL_MODE_OMP $(OMPFLAGS) $(CXXFLAGS)
+   LDFLAGS  := $(OMPFLAGS) $(LDFLAGS)
+endif
 
-# documentation of the arguments:
-# $(1) the source file name
-# $(2) the object file name
-define sample_object
-$(2) : $(1)
-	$(CXX) $(CXXFLAGS) $(INCLUDEDIR) -c $$< -o $$@
+ifeq ($(PARALLEL_MODE), HYBRID)
+   CXXFLAGS := -DPARALLEL_MODE_OMP -DPARALLEL_MODE_MPI $(OMPFLAGS) $(MPIFLAGS) $(CXXFLAGS)
+   LDFLAGS  := $(MPIFLAGS) $(OMPFLAGS) $(LDFLAGS)
+endif
 
-$(DEPENDDIR)/$(2:.o=.d) : $(1)
-	@mkdir -p $$(dir $$@)
-	@$(SHELL) -ec '$(CXX) -M $(CXXFLAGS) $(INCLUDEDIR) $(EXTRA_IDIR) $$< \
-	    | sed -e "s!$(notdir $(2))!$(2)!1" > $$@;'
+LDFLAGS += $(if $(filter $(FEATURES), OPENBLAS),-lopenblas)
+LDFLAGS += -lz -ltinyxml
 
-include $(wildcard $(DEPENDDIR)/$(2:.o=.d))
+ifneq ($(filter CPU_SIMD,$(PLATFORMS)),)
+	LDFLAGS += -lrt
+endif
 
-endef
+ifneq ($(filter GPU_CUDA,$(PLATFORMS)),)
+## | CUDA Architecture | Version    |
+## |-------------------+------------|
+## | Fermi             | 20         |
+## | Kepler            | 30, 35, 37 |
+## | Maxwell           | 50, 52, 53 |
+## | Pascal            | 60, 61, 62 |
+## | Volta             | 70, 72     |
+## | Turing            | 75         |
+## | Ampere            | 80, 86, 87 |
+	CUDA_ARCH ?= 60
 
-# documentation of the arguments:
-# $(1) the sample name
-# $(2) the list of source files
-# $(3) the directory name
-define sample
+	LDFLAGS += -lcuda -lcudadevrt -lcudart
+	CXXFLAGS += --generate-code=arch=compute_$(CUDA_ARCH),code=[compute_$(CUDA_ARCH),sm_$(CUDA_ARCH)]
+	CXXFLAGS += --extended-lambda --expt-relaxed-constexpr -x cu
+	CXXFLAGS += -Xcudafe "--diag_suppress=implicit_return_from_non_void_function --display_error_number --diag_suppress=20014 --diag_suppress=20011"
+endif
 
-$(foreach source,$(2),$(eval $(call sample_object,$(source),$(source:.cpp=.o))))
+CXXFLAGS += $(foreach platform,$(PLATFORMS),-DPLATFORM_$(platform))
 
-$(1) : $(2:.cpp=.o) $(LIBDIR)/lib$(LIB).a $(LIBDIR)/libz.a | $(DEPENDDIR)/$(2:.cpp=.d)
-	$(CXX) $(LDFLAGS) $(2:.cpp=.o) -L./$(LIBDIR) $(LIBS) -o $$@
-
-$(1)_clean :
-	@rm -f $(2:.cpp=.o) &> /dev/null || true
-	@rm -f $(1) &> /dev/null || true
-	@rm -f $(DIR)*.d
-
-$(1)_samples_clean :
-	$(eval DIR=$(dir $(2)))
-	@rm -f $(DIR)core $(DIR).tmpfile $(DIR)tmp/*.*
-	@rm -f $(DIR)tmp/vtkData/*.* $(DIR)tmp/vtkData/data/*.* $(DIR)tmp/imageData/*.* $(DIR)tmp/gnuplotData/*.*
-	@rm -f $(DIR)*.d
-
-CLEANTARGETS += $(1)_clean
-
-SAMPLESCLEAN += $(1)_clean \
-								$(1)_samples_clean
-
-SAMPLES += $(1)
-
-endef
+CXXFLAGS += $(foreach feature,$(FEATURES),-DFEATURE_$(feature))

@@ -54,55 +54,49 @@ Vector<S,3>& IndicatorF3D<S>::getMax()
 }
 
 template <typename S>
+bool IndicatorF3D<S>::distance(S& distance, const Vector<S,3>& origin, S precision, const Vector<S,3>& direction)
+{
+  return util::distance(distance, origin, direction, precision,
+  [&](const Vector<S,3> input) {
+    return this->signedDistance(input);
+  },
+  [&](const Vector<S,3>& pos) {
+    return isInsideBox(pos);
+  });
+}
+
+template <typename S>
+bool IndicatorF3D<S>::distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, S precision, S pitch)
+{
+  return util::distance(distance, origin, direction, precision, pitch,
+  [&](bool output[1], const S input[3]) {
+    return (*this)(output, input);
+  },
+  [&](const Vector<S,3>& pos) {
+    return isInsideBox(pos);
+  });
+}
+
+template <typename S>
 bool IndicatorF3D<S>::distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, int iC)
 {
-  bool originValue;
-  bool currentValue;
   S precision = .0001;
   S pitch = 0.5;
 
-  // start at origin and move into given direction
-  Vector<S,3> currentPoint(origin);
-
-  (*this)(&originValue, origin.data());
-  (*this)(&currentValue, currentPoint.data());
-
-  while (currentValue == originValue && isInsideBox(currentPoint)) {
-    currentPoint += direction;
-    // update currentValue until the first point on the other side (inside/outside) is found
-    (*this)(&currentValue, currentPoint.data());
-  }
-
-  // return false if no point was found in given direction
-  if (!isInsideBox(currentPoint) && !originValue) {
-    return false;
-  }
-
-
-  while (pitch >= precision) {
-    if (!isInsideBox(currentPoint) && originValue) {
-      currentPoint -= pitch * direction;
-      pitch /= 2.;
-    } else {
-      (*this)(&currentValue, currentPoint.data());
-      if (currentValue == originValue) {
-        currentPoint += pitch * direction;
-        pitch /= 2.;
-      } else {
-        currentPoint -= pitch * direction;
-        pitch /= 2.;
-      }
-    }
-  }
-
-  distance = norm(currentPoint - origin);
-  return true;
+  return this->distance(distance, origin, direction, precision, pitch);
 }
 
 template <typename S>
 bool IndicatorF3D<S>::distance(S& distance, const Vector<S,3>& origin)
 {
-  std::cout << "you should not be here!" << std::endl;
+  S input[3] = {origin[0],origin[1],origin[2]};
+  return this->distance(distance, input);
+}
+
+template <typename S>
+bool IndicatorF3D<S>::distance(S& distance, const S input[])
+{
+  distance = util::abs(signedDistance(input));
   return true;
 }
 
@@ -124,8 +118,8 @@ bool IndicatorF3D<S>::rotOnAxis(Vector<S,3>& vec_rot, const Vector<S,3>& vec, co
 
   S dotProd = axisN[0]*vec[0] + axisN[1]*vec[1] + axisN[2]*vec[2];
 
-  //v_rot = std::cos(theta)*vec + (crossProd)*std::sin(theta) + axisN*(dotProduct3D(axisN,vec))*(1 - std::cos(theta));
-  vec_rot = std::cos(theta)*vec + (crossProd)*std::sin(theta) + axisN*(dotProd)*(1 - std::cos(theta));
+  //v_rot = util::cos(theta)*vec + (crossProd)*util::sin(theta) + axisN*(dotProduct3D(axisN,vec))*(1 - util::cos(theta));
+  vec_rot = util::cos(theta)*vec + (crossProd)*util::sin(theta) + axisN*(dotProd)*(1 - util::cos(theta));
 
   return true;
 
@@ -147,7 +141,7 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
 
   S dist;
   distance(dist, origin, direction, iC);
-  
+
   S dirMag = norm(direction);
 #ifdef OLB_DEBUG
   std::cout << "magnitude = " << dirMag << std::endl;
@@ -165,19 +159,23 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
     directionPerp[0] = 1;
     directionPerp[1] = 0;
     directionPerp[2] = 0;
-  } else if ( !util::nearZero(directionN[0]) && util::nearZero(directionN[1]) && util::nearZero(directionN[2]) ) {
+  }
+  else if ( !util::nearZero(directionN[0]) && util::nearZero(directionN[1]) && util::nearZero(directionN[2]) ) {
     directionPerp[0] = 0;
     directionPerp[1] = 0;
     directionPerp[2] = 1;
-  } else if ( ( !util::nearZero(directionN[0]) || !util::nearZero(directionN[1]) ) && !util::nearZero(directionN[2]) ) {
+  }
+  else if ( ( !util::nearZero(directionN[0]) || !util::nearZero(directionN[1]) ) && !util::nearZero(directionN[2]) ) {
     directionPerp[0] = directionN[0];
     directionPerp[1] = directionN[1];
     directionPerp[2] = -(directionN[0] + directionN[1])/directionN[2];
-  } else if ( ( !util::nearZero(directionN[0]) || !util::nearZero(directionN[1]) ) && util::nearZero(directionN[2]) ) {
+  }
+  else if ( ( !util::nearZero(directionN[0]) || !util::nearZero(directionN[1]) ) && util::nearZero(directionN[2]) ) {
     directionPerp[0] = directionN[0];
     directionPerp[1] = -(directionN[0] + directionN[2])/directionN[1];
     directionPerp[2] = directionN[2];
-  } else {
+  }
+  else {
     std::cout << "Error: unknown case for perpendicular check" << std::endl;
     return false;
   }
@@ -208,7 +206,7 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
     //std::cout << "perp = [" << perp[0] << "," << perp[1]  << "," << perp[2] << "]" << std::endl;
 
     //S rotate = 90.;
-	S rotate = 179.;
+    S rotate = 179.;
     S pitch = rotate/2.;
 
     Vector<S,3> vec(perp);
@@ -238,11 +236,12 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
     S mod = 0;
     if (distTestPoint < distPerpPoint) { // pos. angle rotates towards
       mod = -1;
-    } else {
+    }
+    else {
       mod = 1;
     }
 
-    while (std::abs(pitch) >= precision) {
+    while (util::abs(pitch) >= precision) {
 
       S theta(pitch*M_PI/180);
 
@@ -253,7 +252,8 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
       if (currentValue == originValue) {
         temp = mod*theta;
         rotOnAxis(vec, vec, rotAxis, temp);
-      }  else {
+      }
+      else {
         temp = -mod*theta;
         rotOnAxis(vec, vec, rotAxis, temp);
       }
@@ -265,11 +265,14 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
 
     if (n == 0) {
       point1 = currentPoint;
-    } else if (n == 120) {
+    }
+    else if (n == 120) {
       point2 = currentPoint;
-    } else if (n == 240) {
+    }
+    else if (n == 240) {
       point3 = currentPoint;
-    } else {
+    }
+    else {
       std::cout << "Something broke" << std::endl;
       return false;
     }
@@ -283,7 +286,7 @@ bool IndicatorF3D<S>::normal(Vector<S,3>& normal, const Vector<S,3>& origin, con
   normal[0] = -(vec1[1]*vec2[2] - vec1[2]*vec2[1]);
   normal[1] = -(vec1[2]*vec2[0] - vec1[0]*vec2[2]);
   normal[2] = -(vec1[0]*vec2[1] - vec1[1]*vec2[0]);
-  
+
   normalize(normal);
 
 
@@ -304,6 +307,35 @@ bool IndicatorF3D<S>::isInsideBox(Vector<S,3> point)
   return point >= _myMin && point <= _myMax;
 }
 
+template <typename S>
+S IndicatorF3D<S>::signedDistance(const Vector<S,3>& input)
+{
+  // TODO: Add fallback algorithm here
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename S>
+Vector<S,3> IndicatorF3D<S>::surfaceNormal(const Vector<S,3>& pos, const S meshSize)
+{
+  return util::surfaceNormal(pos, meshSize, [&](const Vector<S,3>& pos) {
+    return this->signedDistance(pos);
+  });
+}
+
+template <typename S>
+Vector<S,3> IndicatorF3D<S>::surfaceNormal(const Vector<S,3>& pos, const S meshSize,
+    std::function<Vector<S,3>(const Vector<S,3>&)> transformPos)
+{
+  return this->surfaceNormal(transformPos(pos), meshSize);
+}
+
+template <typename S>
+bool IndicatorF3D<S>::operator() (bool output[1], const S input[3])
+{
+  output[0] = this->signedDistance(input) <= 0;
+  return output[0];
+}
 
 template <typename S>
 IndicatorIdentity3D<S>::IndicatorIdentity3D(std::shared_ptr<IndicatorF3D<S>> f)

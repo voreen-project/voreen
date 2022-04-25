@@ -42,19 +42,23 @@ namespace olb {
  * \param omega             change into beta the extinction coefficient
  * \param singleScatAlbedo  is the single scattering albedo, given by \f$ \frac{\sigma_s}{\sigma_a + \sigma_s} \f$
  */
-template<typename T, typename DESCRIPTOR>
-class RTLBMdynamicsMcHardy : public BasicDynamics<T, DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class RTLBMdynamicsMcHardy : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = RTLBMdynamicsMcHardy<T,DESCRIPTOR,M>;
+
+
   /// Constructor
-  RTLBMdynamicsMcHardy( Momenta<T,DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix );
+  RTLBMdynamicsMcHardy( T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix );
   /// Compute equilibrium distribution function
   T computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const override;
   /// Collision step
-  void collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
+  CellStatistic<T> collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega( T omega ) override;
+  void setOmega( T omega );
   T getSink() const;
 
 protected:
@@ -63,21 +67,24 @@ protected:
   std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& _anisoMatrix;
 };
 
-template<typename T, typename DESCRIPTOR>
-class RTLBMdynamicsMcHardyRK : public BasicDynamics<T, DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class RTLBMdynamicsMcHardyRK : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
   static_assert(DESCRIPTOR::template provides<descriptors::tag::RTLBM>(), "Must be RTLBM");
 
+  template<typename M>
+  using exchange_momenta = RTLBMdynamicsMcHardyRK<T,DESCRIPTOR,M>;
+
   /// Constructor
-  RTLBMdynamicsMcHardyRK( Momenta<T,DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix );
+  RTLBMdynamicsMcHardyRK( T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix );
   /// Compute equilibrium distribution function
   T computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const override;
   /// Collision step
-  void collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
+  CellStatistic<T> collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega( T omega ) override;
+  void setOmega( T omega );
 private:
   void computeEquilibriumAniso( Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq );
   std::array<T,DESCRIPTOR::q> doCollision( Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq );

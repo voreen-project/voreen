@@ -67,13 +67,14 @@ public:
   bool* getNextBlock(std::size_t& sizeBlock, const bool loadingMode);
 
   /// Loads a file and pushes the data into the serialized class. Always in parallel, i.e. one file per rank.
-  /**
-   * \todo implement similar methods for sending and receiving data through MPI
-   */
   bool load(std::string fileName = "", const bool enforceUint=false);
-
   /// Save `_serializable` into file `filename`. Always in parallel, i.e. one file per rank.
   bool save(std::string fileName = "", const bool enforceUint=false);
+
+  /// Loads serialized class from buffer
+  bool load(const std::uint8_t* buffer);
+  /// Saves serialized class to buffer
+  bool save(std::uint8_t* buffer);
 
   /// computes `_size` based on the individual definition of `getBlock()`
   void computeSize(const bool enforceRecompute=false);
@@ -91,9 +92,6 @@ private:
  * All serializable classes have to implement their individual `getBlock()` method.
  * An individual `getNblock()` method must also be provided. An individual `getSerializableSize()` method should
  * also be provided for efficiency reasons.
- *
- * The `sumNblock` and `sumSerializableSize` operator structs can be used for accumulation of `getNblock()` methods
- * (and `getSerializableSize()` respectively), e.g. with an array or a `std::vector<Serializable>`.
  *
  * All `Serializable` subclasses with _dynamic size_ (unknown at compile time, e.g. holding `std::vector` or `std::map`
  * members) have to inherit from `BufferSerializable`. _Note: If the dynamic size is computable through __constant__
@@ -143,6 +141,8 @@ private:
  */
 class Serializable {
 public:
+  virtual ~Serializable() = default;
+
   /// Returns the address of the i-th block and its size.
   /**
    * \param iBlock      Index of the block to be returned
@@ -175,35 +175,15 @@ public:
 
   /// Save `Serializable` into file `fileName`
   bool save(std::string fileName = "", const bool enforceUint=false);
-
   /// Load `Serializable` from file `fileName`
   bool load(std::string fileName = "", const bool enforceUint=false);
 
-  /// Sum functor for `getNblock()` of `std::vector<Serializable>` (for `std::accumulate`)
-  /**
-   * _Usage_: If you have `std::vector<Serializable> v`, then use accumulate as follows:
-   *
-   *     std::accumulate(v.begin(), v.end(), size_t(0), Serializable::sumNblock());
-   */
-  struct sumNblock : public std::binary_function<size_t, Serializable, size_t> {
-    std::size_t operator()(std::size_t sum, const Serializable& s)
-    {
-      return sum + s.getNblock();
-    }
-  };
+  /// Save `Serializable` into buffer of length `getSerializableSize`
+  bool save(std::uint8_t* buffer);
+  /// Load `Serializable` from buffer of length `getSerializableSize`
+  bool load(const std::uint8_t* buffer);
 
-  /// Sum functor for `getSerializableSize()` of `std::vector<Serializable>` (for `std::accumulate`)
-  /**
-   * _Usage_: If you have `std::vector<Serializable> v`, then use accumulate as follows:
-   *
-   *     std::accumulate(v.begin(), v.end(), size_t(0), Serializable::sumSerializableSize());
-   */
-  struct sumSerializableSize : public std::binary_function<size_t, Serializable, size_t> {
-    std::size_t operator()(std::size_t sum, const Serializable& s)
-    {
-      return sum + s.getSerializableSize();
-    }
-  };
+  virtual void postLoad() { };
 
 protected:
   /// Register _primitive data types_ (`int`, `double`, ...) or arrays of those
@@ -245,13 +225,15 @@ protected:
    *
    * Since those `Serializable` objects __must(!)__ have constant return value from `Serializable.getNblock()`,
    * the number of blocks is known both in reading and writing mode.
+   *
+   * Note that `DataType` must only provide `Serializable`-equivalent methods and not
+   * necessarily inherit. E.g. `Vector<T,D>` is serializable despite not being derived
+   * from `Serializable`.
    */
   template<typename DataType>
   void registerSerializableOfConstSize(const std::size_t iBlock, std::size_t &sizeBlock, std::size_t &currentBlock,
                                        bool *&dataPtr, DataType &data, const bool loadingMode=false)
   {
-    static_assert(std::is_base_of<Serializable, DataType>::value, "DataType must be a Serializable.");
-
     if (iBlock >= currentBlock && iBlock < currentBlock + data.getNblock()) {
       dataPtr = data.getBlock(iBlock - currentBlock, sizeBlock, loadingMode);
     }
@@ -348,9 +330,10 @@ protected:
     size_t dataBlockCount = 0;
 
     // hold getNblock() in sizeBuffer
-    if (loadingMode) { // loading -> set to 0 and wait for reading next round
+    if (loadingMode) { // loading -> set to 0 and wait for reading next util::round
       dataBlockCount = addSizeToBuffer(iBlock, sizeBlock, currentBlock, sizeBufferIndex, dataPtr, 0);
-    } else { // saving -> save getNblock from data object
+    }
+    else {   // saving -> save getNblock from data object
       dataBlockCount = addSizeToBuffer(iBlock, sizeBlock, currentBlock, sizeBufferIndex, dataPtr, data.getNblock());
     }
 
@@ -526,7 +509,7 @@ protected:
    *
    * __Note:__ In _writing mode_, `dataPtr` holds a pointer to the `i-th` map element (which is a `std::pair`).
    * In _reading mode_, `dataPtr` holds a pointer to the bool* buffer, which holds a newly created `std::pair` to be
-   * filled and that pair is inserted into `data` in the following round.
+   * filled and that pair is inserted into `data` in the following util::round.
    *
    * For information about the other parameters of this method, see `registerVar()` documentation.
    */
@@ -574,11 +557,11 @@ protected:
   }
 
 
-  /// Add a `size_t` to the `sizeBuffer` in the `n-th` round and return that `size_t` in all successive rounds
+  /// Add a `size_t` to the `sizeBuffer` in the `n-th` util::round and return that `size_t` in all successive rounds
   /**
    *   - increase `currentBlock` by one
    *   - increase `sizeBufferIndex` by one.
-   *   - `n-th` round: push given size_t to sizeBuffer and provide pointer to it.
+   *   - `n-th` util::round: push given size_t to sizeBuffer and provide pointer to it.
    */
   size_t addSizeToBuffer(const std::size_t iBlock, std::size_t& sizeBlock, std::size_t&currentBlock,
                          size_t& sizeBufferIndex, bool*& dataPtr, const size_t data) const

@@ -36,16 +36,16 @@
 #include "functors/analytical/interpolationF3D.h"
 #include "functors/lattice/reductionF3D.h"
 #include "integral/superIntegralF3D.h"
-#include "core/superLattice3D.h"
+
 #include "core/vector.h"
 #include "io/ostreamManager.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "superGeometryFaces3D.h"
 #include "utilities/functorPtr.h"
 #include "latticePhysBoundaryForce3D.h"
 #include "latticePhysCorrBoundaryForce3D.h"
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -68,11 +68,11 @@ private:
 
   const T _factor;
 public:
-  SuperLatticePhysDrag3D(SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+  SuperLatticePhysDrag3D(SuperLattice<T,DESCRIPTOR>&      sLattice,
                          FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
                          const UnitConverter<T,DESCRIPTOR>& converter);
-  SuperLatticePhysDrag3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                         SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLatticePhysDrag3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                         SuperGeometry<T,3>& superGeometry, const int material,
                          const UnitConverter<T,DESCRIPTOR>& converter);
 
   bool operator() (T output[], const int input[]) override;
@@ -92,11 +92,11 @@ private:
 
   const T _factor;
 public:
-  SuperLatticePhysCorrDrag3D(SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+  SuperLatticePhysCorrDrag3D(SuperLattice<T,DESCRIPTOR>&      sLattice,
                              FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
                              const UnitConverter<T,DESCRIPTOR>& converter);
-  SuperLatticePhysCorrDrag3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                             SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLatticePhysCorrDrag3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                             SuperGeometry<T,3>& superGeometry, const int material,
                              const UnitConverter<T,DESCRIPTOR>& converter);
 
   bool operator() (T output[], const int input[]) override;

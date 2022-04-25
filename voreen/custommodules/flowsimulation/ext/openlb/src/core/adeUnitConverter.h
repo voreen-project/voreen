@@ -201,7 +201,7 @@ public:
     T physDiffusivity,
     T physDensity) : AdeUnitConverter<T, DESCRIPTOR>(
         (charPhysLength/resolution),
-        (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * pow((charPhysLength/resolution),2) / physDiffusivity,
+        (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * util::pow((charPhysLength/resolution),2) / physDiffusivity,
         charPhysLength,
         charPhysVelocity,
         physDiffusivity,

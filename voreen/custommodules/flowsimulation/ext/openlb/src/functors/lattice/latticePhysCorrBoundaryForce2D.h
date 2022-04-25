@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2019 Albert Mink, Mathias J. Krause, Lukas Baron
+ *  Copyright (C) 2012 Lukas Baron, Tim Dornieden, Mathias J. Krause,
+ *  Albert Mink
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,18 +25,24 @@
 #ifndef LATTICE_PHYS_CORR_BOUNDARY_FORCE_2D_H
 #define LATTICE_PHYS_CORR_BOUNDARY_FORCE_2D_H
 
-#include <vector>
+#include<vector>
 
 #include "superBaseF2D.h"
+#include "superCalcF2D.h"
+#include "functors/analytical/indicator/indicatorBaseF2D.h"
 #include "core/superLattice2D.h"
-#include "indicator/superIndicatorBaseF2D.h"
-#include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
-#include "indicator/blockIndicatorF2D.h"
+#include "geometry/blockGeometry.h"
+#include "functors/analytical/indicator/indicatorBaseF2D.h"
+#include "indicator/blockIndicatorBaseF2D.h"
+#include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
+
+
+/* Note: Throughout the whole source code directory genericFunctions, the
+ *  template parameters for i/o dimensions are:
+ *           F: S^m -> T^n  (S=source, T=target)
+ */
 
 namespace olb {
 
@@ -44,28 +51,28 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysCorrBoundaryForce2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
+  FunctorPtr<SuperIndicatorF2D<T>> _indicatorF;
 public:
-  SuperLatticePhysCorrBoundaryForce2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                                      SuperGeometry2D<T>& superGeometry, const int material,
+  SuperLatticePhysCorrBoundaryForce2D(SuperLattice<T,DESCRIPTOR>&      sLattice,
+                                      FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF,
                                       const UnitConverter<T,DESCRIPTOR>& converter);
-  bool operator() (T output[], const int input[]) override;
+  SuperLatticePhysCorrBoundaryForce2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                      SuperGeometry<T,2>& superGeometry, const int material,
+                                      const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
 /**
- *  BlockLatticePhysCorrBoundaryForce2D returns pointwise phys force acting on a
- *  boundary with a given material on local lattice.
+ *  functor returns pointwise phys force acting on a indicated boundary on local lattice
  *  see: Caiazzo, Junk: Boundary Forces in lattice Boltzmann: Analysis of MEA
  */
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysCorrBoundaryForce2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometry2D<T>& _blockGeometry;
-  int _material;
+  BlockIndicatorF2D<T>&        _indicatorF;
+  const BlockGeometry<T,2>& _blockGeometry;
 public:
-  BlockLatticePhysCorrBoundaryForce2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                                      BlockGeometry2D<T>& blockGeometry, int material,
+  BlockLatticePhysCorrBoundaryForce2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                      BlockIndicatorF2D<T>& indicatorF,
                                       const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };

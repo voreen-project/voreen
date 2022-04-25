@@ -31,10 +31,10 @@ namespace olb {
 
 template <typename T, typename W>
 BlockVarianceF3D<T,W>::BlockVarianceF3D(BlockF3D<W>&          f,
-											  BlockIndicatorF3D<T>& indicatorF,
-											  Cuboid3D<T>&			cuboid,
-											  T expectedValue)
-  : BlockAverage3D<T,W>(f, indicatorF),
+                                        BlockIndicatorF3D<T>& indicatorF,
+                                        Cuboid3D<T>&      cuboid,
+                                        T expectedValue)
+  : BlockSum3D<T,W>(f, indicatorF),
     _f(f),
     _indicatorF(indicatorF),
     _cuboid(cuboid),
@@ -52,13 +52,10 @@ bool BlockVarianceF3D<T,W>::operator() (W output[], const int input[])
   std::size_t voxels(0);
 
   W outputTmp[_f.getTargetDim()];
-
-  int inputTmp[_f.getSourceDim()];
-
-  for (int i = 0; i < this->getTargetDim(); ++i) {
-	output[i] = W(0);
+  for(unsigned i=0; i<_f.getTargetDim(); ++i) {
+    outputTmp[i] = W(0);
   }
-
+  int inputTmp[_f.getSourceDim()];
 
   for (inputTmp[0] = 0; inputTmp[0] < _cuboid.getNx(); ++inputTmp[0]) {
     for (inputTmp[1] = 0; inputTmp[1] < _cuboid.getNy(); ++inputTmp[1]) {
@@ -66,7 +63,7 @@ bool BlockVarianceF3D<T,W>::operator() (W output[], const int input[])
         if (_indicatorF(inputTmp)) {
           _f(outputTmp,inputTmp);
           for (int i = 0; i < _f.getTargetDim(); ++i) {
-        	output[i] += std::pow((outputTmp[i]), 2);
+            output[i] += util::pow(outputTmp[i] - _expectedValue, 2);
           }
           voxels += 1;
         }
@@ -81,13 +78,12 @@ bool BlockVarianceF3D<T,W>::operator() (W output[], const int input[])
 }
 
 
-/*
 template <typename T, typename W>
 BlockStdDeviationF3D<T,W>::BlockStdDeviationF3D(BlockF3D<W>&          f,
-											  BlockIndicatorF3D<T>& indicatorF,
-											  Cuboid3D<T>&			cuboid,
-											  T expectedValue)
-  : BlockVariance3D<T,W>(f, indicatorF),
+    BlockIndicatorF3D<T>& indicatorF,
+    Cuboid3D<T>&      cuboid,
+    T expectedValue)
+  : BlockSum3D<T,W>(f, indicatorF),
     _f(f),
     _indicatorF(indicatorF),
     _cuboid(cuboid),
@@ -105,13 +101,10 @@ bool BlockStdDeviationF3D<T,W>::operator() (W output[], const int input[])
   std::size_t voxels(0);
 
   W outputTmp[_f.getTargetDim()];
-
-  int inputTmp[_f.getSourceDim()];
-
-  for (int i = 0; i < this->getTargetDim(); ++i) {
-	output[i] = W(0);
+  for(unsigned i=0; i<_f.getTargetDim(); ++i) {
+    outputTmp[i] = W(0);
   }
-
+  int inputTmp[_f.getSourceDim()];
 
   for (inputTmp[0] = 0; inputTmp[0] < _cuboid.getNx(); ++inputTmp[0]) {
     for (inputTmp[1] = 0; inputTmp[1] < _cuboid.getNy(); ++inputTmp[1]) {
@@ -119,7 +112,7 @@ bool BlockStdDeviationF3D<T,W>::operator() (W output[], const int input[])
         if (_indicatorF(inputTmp)) {
           _f(outputTmp,inputTmp);
           for (int i = 0; i < _f.getTargetDim(); ++i) {
-        	output[i] += std::pow((outputTmp[i]), 2);
+            output[i] += util::pow(outputTmp[i] - _expectedValue, 2);
           }
           voxels += 1;
         }
@@ -127,13 +120,11 @@ bool BlockStdDeviationF3D<T,W>::operator() (W output[], const int input[])
     }
   }
 
-//  std::cout << output[0] << "   " << voxels << "   " << _expectedValue << "\n";
 
   output[_f.getTargetDim()] += voxels;
 
   return true;
 }
-*/
 
 }
 

@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,14 +41,14 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename FIELD>
 class SuperLatticeExternalScalarField2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeExternalScalarField2D(SuperLattice2D<T,DESCRIPTOR>& sLattice);
+  SuperLatticeExternalScalarField2D(SuperLattice<T,DESCRIPTOR>& sLattice);
 };
 
 /// BlockLatticeExternalScalarField2D returns pointwise density rho on local lattices.
 template <typename T, typename DESCRIPTOR, typename FIELD>
 class BlockLatticeExternalScalarField2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeExternalScalarField2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice);
+  BlockLatticeExternalScalarField2D(BlockLattice<T,DESCRIPTOR>& blockLattice);
   bool operator() (T output[], const int input[]) override;
 };
 

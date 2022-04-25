@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,21 +43,21 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeEffevtiveDissipation3D<T, DESCRIPTOR>::SuperLatticeEffevtiveDissipation3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst, LESDynamics<T, DESCRIPTOR>& LESdynamics)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst, LESDynamics<T, DESCRIPTOR>& LESdynamics)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1), _converter(converter)
 {
   this->getName() = "EffevtiveDissipation";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeEffevtiveDissipation3D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back(new BlockLatticeEffevtiveDissipation3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC),
                                this->_converter, smagoConst, LESdynamics));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeEffevtiveDissipation3D<T, DESCRIPTOR>::BlockLatticeEffevtiveDissipation3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
+  BlockLattice<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
   LESDynamics<T, DESCRIPTOR>& LESdynamics)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1),
     _converter(converter), _smagoConst(smagoConst), _LESdynamics(LESdynamics)
@@ -85,7 +84,7 @@ bool BlockLatticeEffevtiveDissipation3D<T, DESCRIPTOR>::operator()(T output[], c
   T nuEff = ((1./omegaEff)-0.5)/descriptors::invCs2<T,DESCRIPTOR>();
 
   output[0] = PiNeqNormSqr * (nuEff)
-              * pow(omegaEff * descriptors::invCs2<T,DESCRIPTOR>() / rho, 2)  / 2.;
+              * util::pow(omegaEff * descriptors::invCs2<T,DESCRIPTOR>() / rho, 2)  / 2.;
 
   return true;
 }

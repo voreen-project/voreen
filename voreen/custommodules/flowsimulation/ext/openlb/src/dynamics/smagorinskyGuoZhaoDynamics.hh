@@ -34,7 +34,7 @@
 #include "dynamics/dynamics.h"
 #include "core/cell.h"
 #include "dynamics/guoZhaoLbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
+#include "dynamics/lbm.h"
 
 namespace olb {
 
@@ -43,15 +43,15 @@ namespace olb {
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, typename DESCRIPTOR>
-SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::SmagorinskyGuoZhaoBGKdynamics (T omega_,
-    Momenta<T,DESCRIPTOR>& momenta_, T smagoConst_, T dx_, T dt_ )
-  : GuoZhaoBGKdynamics<T,DESCRIPTOR>(omega_,momenta_), smagoConst(smagoConst_),
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::SmagorinskyGuoZhaoBGKdynamics (
+  T omega_, T smagoConst_, T dx_, T dt_ )
+  : GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>(omega_), smagoConst(smagoConst_),
     preFactor(computePreFactor(omega_,smagoConst_) )
 { }
 
-template<typename T, typename DESCRIPTOR>
-void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+CellStatistic<T> SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::collide (
   Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
@@ -59,7 +59,7 @@ void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
   // external to member variable to provide access for computeEquilibrium.
   this->updateEpsilon(cell);
   T rho, u[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
-  this->_momenta.computeAllMomenta(cell, rho, u, pi);
+  MOMENTA().computeAllMomenta(cell, rho, u, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
   T* force = cell.template getFieldPointer<descriptors::FORCE>();
   for (int iVel=0; iVel<DESCRIPTOR::d; ++iVel) {
@@ -67,46 +67,46 @@ void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
   }
   T uSqr = GuoZhaoLbHelpers<T,DESCRIPTOR>::bgkCollision(cell, this->getEpsilon(), rho, u, newOmega);
   GuoZhaoLbHelpers<T,DESCRIPTOR>::updateGuoZhaoForce(cell, u);
-  lbHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, newOmega, rho);
+  lbm<DESCRIPTOR>::addExternalForce(cell, u, newOmega, rho);
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, typename DESCRIPTOR>
-T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell )
 {
   T rho, uTemp[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
-  this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
+  MOMENTA().computeAllMomenta(cell, rho, uTemp, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi);
   return newOmega;
 }
 
-template<typename T, typename DESCRIPTOR>
-T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::computePreFactor(T omega_, T smagoConst_)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::computePreFactor(T omega_, T smagoConst_)
 {
-  return (T)smagoConst_*smagoConst_*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*sqrt(2);
+  return (T)smagoConst_*smagoConst_*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*util::sqrt(2);
 }
 
-template<typename T, typename DESCRIPTOR>
-void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::setOmega(T omega)
 {
 //  _omega = omega;
-  GuoZhaoBGKdynamics<T,DESCRIPTOR>::setOmega(omega);
+  GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::setOmega(omega);
   preFactor = computePreFactor(omega, smagoConst);
 }
 
-template<typename T, typename DESCRIPTOR>
-T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR>::computeOmega(T omega0, T preFactor_, T rho,
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::computeOmega(T omega0, T preFactor_, T rho,
     T pi[util::TensorVal<DESCRIPTOR >::n] )
 {
   T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
   if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
-  T PiNeqNorm    = sqrt(PiNeqNormSqr);
+  T PiNeqNorm    = util::sqrt(PiNeqNormSqr);
   /// Molecular realaxation time
   T tau_mol = 1. /omega0;
   /// Turbulent realaxation time
-  T tau_turb = 0.5*(sqrt(tau_mol*tau_mol + preFactor_/rho*PiNeqNorm) - tau_mol);
+  T tau_turb = 0.5*(util::sqrt(tau_mol*tau_mol + preFactor_/rho*PiNeqNorm) - tau_mol);
   /// Effective realaxation time
   tau_eff = tau_mol+tau_turb;
   T omega_new= 1./tau_eff;

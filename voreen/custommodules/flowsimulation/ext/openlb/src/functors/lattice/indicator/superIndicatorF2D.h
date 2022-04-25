@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerlaender
+ *  Copyright (C) 2016-2018 Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -26,27 +26,24 @@
 
 #include "functors/analytical/indicator/indicatorBaseF2D.h"
 #include "superIndicatorBaseF2D.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "functors/analytical/indicator/smoothIndicatorBaseF2D.h"
 
 namespace olb {
 
 
 /// SuperIndicatorF2D from IndicatorF2D
-/**
- * Maintains block level BlockIndicatorFfromIndicatorF2D instances in SuperF2D::_blockF.
- **/
 template <typename T>
 class SuperIndicatorFfromIndicatorF2D : public SuperIndicatorF2D<T> {
 protected:
-  IndicatorF2D<T>& _indicatorF;
+  FunctorPtr<IndicatorF2D<T>> _indicatorF;
 public:
   /**
    * \param indicatorF Indicator to be converted into a super indicator
    * \param geometry   Super geometry required for block indicator construction
    **/
-  SuperIndicatorFfromIndicatorF2D(IndicatorF2D<T>&    indicatorF,
-                                  SuperGeometry2D<T>& geometry);
+  SuperIndicatorFfromIndicatorF2D(FunctorPtr<IndicatorF2D<T>>&& indicatorF,
+                                  SuperGeometry<T,2>&           geometry);
 
   using SuperIndicatorF2D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -55,10 +52,7 @@ public:
 
 /// SuperIndicatorF2D from SmoothIndicatorF2D
 /**
- * Returns true if SmoothIndicatorF2D output is not near zero.
- *
- * Exposes block level indicators via SuperIndicatorF2D::getBlockIndicatorF
- * respectively SuperIndicatorF2D::getExtendedBlockIndicatorF
+ * Returns true iff SmoothIndicatorF2D output is not near zero.
  **/
 template <typename T, bool HLBM>
 class SuperIndicatorFfromSmoothIndicatorF2D : public SuperIndicatorF2D<T> {
@@ -70,7 +64,7 @@ public:
    * \param geometry   Super geometry required for block indicator construction
    **/
   SuperIndicatorFfromSmoothIndicatorF2D(FunctorPtr<SmoothIndicatorF2D<T,T,HLBM>>&& indicatorF,
-                                          SuperGeometry2D<T>&                     geometry);
+                                        SuperGeometry<T,2>&                     geometry);
 
   using SuperIndicatorF2D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -79,7 +73,7 @@ public:
 
 /// Indicator functor from material numbers
 /**
- * Maintains block level BlockIndicatorMaterial2D instances in SuperF2D::_blockF.
+ * Material number comparsion is implemented in BlockIndicatorMaterial2D.
  **/
 template <typename T>
 class SuperIndicatorMaterial2D : public SuperIndicatorF2D<T> {
@@ -89,7 +83,13 @@ public:
    *                  and global material number queries
    * \param materials Vector of material numbers to be indicated
    **/
-  SuperIndicatorMaterial2D(SuperGeometry2D<T>& geometry, std::vector<int> materials);
+  SuperIndicatorMaterial2D(SuperGeometry<T,2>& geometry, std::vector<int> materials);
+  /**
+   * \param geometry  Super geometry required for block indicator construction
+   *                  and global material number queries
+   * \param materials List of material numbers to be indicated
+   **/
+  SuperIndicatorMaterial2D(SuperGeometry<T,2>& geometry, std::list<int> materials);
 
   using SuperIndicatorF2D<T>::operator();
   bool operator() (bool output[], const int input[]) override;

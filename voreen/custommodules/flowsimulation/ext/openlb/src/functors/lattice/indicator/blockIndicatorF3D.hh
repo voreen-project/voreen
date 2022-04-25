@@ -33,7 +33,7 @@ namespace olb {
 
 template <typename T>
 BlockIndicatorFfromIndicatorF3D<T>::BlockIndicatorFfromIndicatorF3D(
-  IndicatorF3D<T>& indicatorF, BlockGeometryStructure3D<T>& blockGeometry)
+  IndicatorF3D<T>& indicatorF, BlockGeometry<T,3>& blockGeometry)
   : BlockIndicatorF3D<T>(blockGeometry),
     _indicatorF(indicatorF)
 { }
@@ -42,7 +42,7 @@ template <typename T>
 bool BlockIndicatorFfromIndicatorF3D<T>::operator() (bool output[], const int input[])
 {
   T physR[3];
-  this->_blockGeometryStructure.getPhysR(physR,input);
+  this->_block.getPhysR(physR,input);
   return _indicatorF(output,physR);
 }
 
@@ -51,9 +51,9 @@ Vector<int,3> BlockIndicatorFfromIndicatorF3D<T>::getMin()
 {
   const Vector<T,3> min = _indicatorF.getMin();
   return Vector<int,3> {
-    static_cast<int>(floor(min[0])),
-    static_cast<int>(floor(min[1])),
-    static_cast<int>(floor(min[2]))
+    static_cast<int>(util::floor(min[0])),
+    static_cast<int>(util::floor(min[1])),
+    static_cast<int>(util::floor(min[2]))
   };
 }
 
@@ -62,16 +62,16 @@ Vector<int,3> BlockIndicatorFfromIndicatorF3D<T>::getMax()
 {
   const Vector<T,3> max = _indicatorF.getMax();
   return Vector<int,3> {
-    static_cast<int>(ceil(max[0])),
-    static_cast<int>(ceil(max[1])),
-    static_cast<int>(ceil(max[2]))
+    static_cast<int>(util::ceil(max[0])),
+    static_cast<int>(util::ceil(max[1])),
+    static_cast<int>(util::ceil(max[2]))
   };
 }
 
 
 template <typename T, bool HLBM>
 BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>::BlockIndicatorFfromSmoothIndicatorF3D(
-  SmoothIndicatorF3D<T,T,HLBM>& indicatorF, BlockGeometryStructure3D<T>& blockGeometry)
+  SmoothIndicatorF3D<T,T,HLBM>& indicatorF, BlockGeometry<T,3>& blockGeometry)
   : BlockIndicatorF3D<T>(blockGeometry),
     _indicatorF(indicatorF)
 { }
@@ -81,7 +81,7 @@ bool BlockIndicatorFfromSmoothIndicatorF3D<T,HLBM>::operator() (bool output[], c
 {
   T physR[3];
   T inside[1];
-  this->_blockGeometryStructure.getPhysR(physR,input);
+  this->_block.getPhysR(physR,input);
   _indicatorF(inside, physR);
   return !util::nearZero(inside[0]);
 }
@@ -91,9 +91,9 @@ Vector<int,3> BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>::getMin()
 {
   const T min = -_indicatorF.getCircumRadius();
   return Vector<int,3> {
-    static_cast<int>(floor(min)),
-    static_cast<int>(floor(min)),
-    static_cast<int>(floor(min))
+    static_cast<int>(util::floor(min)),
+    static_cast<int>(util::floor(min)),
+    static_cast<int>(util::floor(min))
   };
 }
 
@@ -102,30 +102,30 @@ Vector<int,3> BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>::getMax()
 {
   const T max = _indicatorF.getCircumRadius();
   return Vector<int,3> {
-    static_cast<int>(ceil(max)),
-    static_cast<int>(ceil(max)),
-    static_cast<int>(ceil(max))
+    static_cast<int>(util::ceil(max)),
+    static_cast<int>(util::ceil(max)),
+    static_cast<int>(util::ceil(max))
   };
 }
 
 
 template <typename T>
 BlockIndicatorMaterial3D<T>::BlockIndicatorMaterial3D(
-  BlockGeometryStructure3D<T>& blockGeometry, std::vector<int> materials)
+  BlockGeometry<T,3>& blockGeometry, std::vector<int> materials)
   : BlockIndicatorF3D<T>(blockGeometry),
     _materials(materials)
 { }
 
 template <typename T>
 BlockIndicatorMaterial3D<T>::BlockIndicatorMaterial3D(
-  BlockGeometryStructure3D<T>& blockGeometry, std::list<int> materials)
+  BlockGeometry<T,3>& blockGeometry, std::list<int> materials)
   : BlockIndicatorMaterial3D(blockGeometry,
                              std::vector<int>(materials.begin(), materials.end()))
 { }
 
 template <typename T>
 BlockIndicatorMaterial3D<T>::BlockIndicatorMaterial3D(
-  BlockGeometryStructure3D<T>& blockGeometry, int material)
+  BlockGeometry<T,3>& blockGeometry, int material)
   : BlockIndicatorMaterial3D(blockGeometry, std::vector<int>(1,material))
 { }
 
@@ -133,13 +133,15 @@ template <typename T>
 bool BlockIndicatorMaterial3D<T>::operator() (bool output[], const int input[])
 {
   // read material number explicitly using the const version
-  // of BlockGeometry3D<T>::get to avoid resetting geometry
+  // of BlockGeometry<T,3>::get to avoid resetting geometry
   // statistics:
-  const BlockGeometryStructure3D<T>& blockGeometry = this->_blockGeometryStructure;
-  const int current = blockGeometry.getMaterial(input[0], input[1], input[2]);
+  const auto& blockGeometry = this->getBlockGeometry();
+  const int current = blockGeometry.getMaterial({input[0], input[1], input[2]});
   output[0] = std::any_of(_materials.cbegin(),
                           _materials.cend(),
-                          [current](int material) { return current == material; });
+  [current](int material) {
+    return current == material;
+  });
 
   return true;
 }
@@ -147,7 +149,7 @@ bool BlockIndicatorMaterial3D<T>::operator() (bool output[], const int input[])
 template <typename T>
 bool BlockIndicatorMaterial3D<T>::isEmpty()
 {
-  auto& statistics = this->getBlockGeometryStructure().getStatistics();
+  auto& statistics = this->getBlockGeometry().getStatistics();
 
   return std::none_of(_materials.cbegin(), _materials.cend(),
   [&statistics](int material) -> bool {
@@ -158,13 +160,13 @@ bool BlockIndicatorMaterial3D<T>::isEmpty()
 template <typename T>
 Vector<int,3> BlockIndicatorMaterial3D<T>::getMin()
 {
-  auto& blockGeometry = this->getBlockGeometryStructure();
+  auto& blockGeometry = this->getBlockGeometry();
   auto& statistics    = blockGeometry.getStatistics();
 
   Vector<int,3> globalMin{
-    blockGeometry.getNx()-1,
-    blockGeometry.getNy()-1,
-    blockGeometry.getNz()-1,
+    blockGeometry.getNx()+blockGeometry.getPadding()-1,
+    blockGeometry.getNy()+blockGeometry.getPadding()-1,
+    blockGeometry.getNz()+blockGeometry.getPadding()-1,
   };
 
   for ( int material : _materials ) {
@@ -182,9 +184,9 @@ Vector<int,3> BlockIndicatorMaterial3D<T>::getMin()
 template <typename T>
 Vector<int,3> BlockIndicatorMaterial3D<T>::getMax()
 {
-  auto& statistics = this->getBlockGeometryStructure().getStatistics();
+  auto& statistics = this->getBlockGeometry().getStatistics();
 
-  Vector<int,3> globalMax{ 0, 0, 0 };
+  Vector<int,3> globalMax = -this->getBlockGeometry().getPadding();
 
   for ( int material : _materials ) {
     if ( statistics.getNvoxel(material) > 0 ) {
@@ -201,7 +203,7 @@ Vector<int,3> BlockIndicatorMaterial3D<T>::getMax()
 
 template <typename T>
 BlockIndicatorIdentity3D<T>::BlockIndicatorIdentity3D(BlockIndicatorF3D<T>& indicatorF)
-  : BlockIndicatorF3D<T>(indicatorF.getBlockGeometryStructure()),
+  : BlockIndicatorF3D<T>(indicatorF.getBlockGeometry()),
     _indicatorF(indicatorF)
 { }
 

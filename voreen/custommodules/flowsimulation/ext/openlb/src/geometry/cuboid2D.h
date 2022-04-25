@@ -30,11 +30,13 @@
 
 #include <vector>
 #include <math.h>
+
 #include "io/ostreamManager.h"
 #include "core/vector.h"
 #include "core/olbDebug.h"
+#include "core/blockStructure.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 /// A regular single 2D cuboid is the basic component of a 2D cuboid
@@ -88,7 +90,7 @@ public:
   /// Read access to cuboid height
   int getNy() const;
   /// Read only access to the number of voxels in every dimension
-  Vector<int,2> const getExtend() const;
+  Vector<int,2> const getExtent() const;
 
   /// Returns the volume of the cuboid
   T getPhysVolume() const;
@@ -103,6 +105,7 @@ public:
 
   void getPhysR(T physR[2], const int latticeR[2]) const;
   void getPhysR(T physR[2], const int& iX, const int& iY) const;
+  void getPhysR(T physR[3], LatticeR<2> latticeR) const;
 
   void getLatticeR(int latticeR[2], const T physR[2]) const;
   void getLatticeR(int latticeR[2], const Vector<T,2>& physR) const;
@@ -114,8 +117,8 @@ public:
 
   void getFloorLatticeR(int latticeR[2], const T physR[2]) const
   {
-    latticeR[0] = (int)floor( (physR[0] - _globPosX)/_delta);
-    latticeR[1] = (int)floor( (physR[1] - _globPosY)/_delta);
+    latticeR[0] = (int)util::floor( (physR[0] - _globPosX)/_delta);
+    latticeR[1] = (int)util::floor( (physR[1] - _globPosY)/_delta);
   }
 
   /// Returns the number of full cells
@@ -129,7 +132,8 @@ public:
   /// Checks whether a point (globX/gloxY) is contained and is a node
   /// in the cuboid extended with an layer of size overlap*delta and
   /// returns the local active node
-  bool checkPoint(T globX, T globY, int &locX, int &locY, int overlap = 0) const;
+  // TODO: adapt to use only sum operation (cf. #204)
+  [[deprecated]] bool checkPoint(T globX, T globY, int &locX, int &locY, int overlap = 0) const;
   /// Checks whether there is an intersection with the cuboid extended
   /// with an layer of size overlap*delta
   bool checkInters(T globX0, T globX1, T globY0, T globY1, int overlap = 0) const;

@@ -1,0 +1,96 @@
+/*  This file is part of the OpenLB library
+ *
+ *  Copyright (C) 2021 Adrian Kummerlaender
+ *  E-mail contact: info@openlb.net
+ *  The most recent release of OpenLB can be downloaded at
+ *  <http://www.openlb.net/>
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License along with this program; if not, write to the Free
+ *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ *  Boston, MA  02110-1301, USA.
+*/
+
+#ifndef DYNAMICS_LBM_CSE_H
+#define DYNAMICS_LBM_CSE_H
+
+<%! from bindings import descriptors, olb %>\
+<%! from generator import cell_operator_cse %>\
+<%! from data import Cell, Scalar, Vector %>\
+
+#ifndef DISABLE_CSE
+
+#include "lbm.h"
+#include "latticeDescriptors.h"
+
+namespace olb {
+
+% for name, DESCRIPTOR in descriptors.items():
+<%
+q = DESCRIPTOR.q
+d = DESCRIPTOR.d
+piDim = olb.util.TensorVal[DESCRIPTOR].n
+%>
+template <typename... FIELDS>
+struct lbm<descriptors::${name}<FIELDS...>> {
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeRho", cell=Cell(DESCRIPTOR))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeJ", cell=Cell(DESCRIPTOR), j=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeRhoU", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeRhoJ", cell=Cell(DESCRIPTOR), rho=Scalar(), j=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeStress", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), pi=Vector(piDim))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeAllMomenta", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), pi=Vector(piDim))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeFeq", cell=Cell(DESCRIPTOR), fEq=Vector(q))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeFneq", cell=Cell(DESCRIPTOR), fNeq=Vector(q), rho=Scalar(), u=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computeFneq", cell=Cell(DESCRIPTOR), fNeq=Vector(q))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "bgkCollision", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), omega=Scalar())}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "adeBgkCollision", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), omega=Scalar())}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "incBgkCollision", cell=Cell(DESCRIPTOR), pressure=Scalar(), j=Vector(d), omega=Scalar())}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "constRhoBgkCollision", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), ratioRho=Scalar(), omega=Scalar())}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "rlbCollision", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), omega=Scalar())}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "rlbCollision", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), pi=Vector(piDim), omega=Scalar())}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "defineEqFirstOrder", cell=Cell(DESCRIPTOR), newRho=Scalar(), newU=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "defineNEq", cell=Cell(DESCRIPTOR), oldRho=Scalar(), oldU=Vector(d), newRho=Scalar(), newU=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "defineNEqFromPi", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), pi=Vector(piDim))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computePiNeqNormSqr", cell=Cell(DESCRIPTOR), force=Vector(d))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "computePiNeqNormSqr", cell=Cell(DESCRIPTOR))}
+
+${cell_operator_cse(DESCRIPTOR, olb.lbm[DESCRIPTOR], "addExternalForce", cell=Cell(DESCRIPTOR), rho=Scalar(), u=Vector(d), omega=Scalar(), force=Vector(d))}
+
+};
+% endfor
+
+}
+
+#endif
+
+#endif

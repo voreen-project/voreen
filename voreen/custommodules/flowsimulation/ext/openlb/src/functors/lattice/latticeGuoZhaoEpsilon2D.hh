@@ -25,40 +25,38 @@
 #define LATTICE_GUO_ZHAO_EPSILON_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeGuoZhaoEpsilon2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeGuoZhaoEpsilon2D<T, DESCRIPTOR>::SuperLatticeGuoZhaoEpsilon2D(
-  SuperLattice2D<T, DESCRIPTOR>& sLattice)
+  SuperLattice<T, DESCRIPTOR>& sLattice)
   : SuperLatticeF2D<T, DESCRIPTOR>(sLattice, 1)
 {
   this->getName() = "epsilon";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeGuoZhaoEpsilon2D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC)));
+    this->_blockF.emplace_back(new BlockLatticeGuoZhaoEpsilon2D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC)));
   }
 }
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeGuoZhaoEpsilon2D<T,DESCRIPTOR>::BlockLatticeGuoZhaoEpsilon2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice)
+(BlockLattice<T,DESCRIPTOR>& blockLattice)
   : BlockLatticeF2D<T,DESCRIPTOR>(blockLattice, 1)
 {
   this->getName() = "epsilon";
@@ -67,7 +65,7 @@ BlockLatticeGuoZhaoEpsilon2D<T,DESCRIPTOR>::BlockLatticeGuoZhaoEpsilon2D
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticeGuoZhaoEpsilon2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  output[0] = *this->_blockLattice.get( input[0], input[1] ).template getFieldPointer<descriptors::EPSILON>();
+  output[0] = this->_blockLattice.get( input[0], input[1] ).template getField<descriptors::EPSILON>();
   return true;
 }
 

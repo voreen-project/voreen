@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysBoundaryForce3D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3),
@@ -54,7 +53,7 @@ SuperLatticePhysBoundaryForce3D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce3D(
   for (int iC = 0; iC < this->_sLattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticePhysBoundaryForce3D<T, DESCRIPTOR>(
-        this->_sLattice.getBlockLattice(iC),
+        this->_sLattice.getBlock(iC),
         _indicatorF->getBlockIndicatorF(iC),
         this->_converter));
   }
@@ -62,8 +61,8 @@ SuperLatticePhysBoundaryForce3D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce3D(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysBoundaryForce3D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice,
-  SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLattice<T, DESCRIPTOR>& sLattice,
+  SuperGeometry<T,3>& superGeometry, const int material,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysBoundaryForce3D(sLattice,
                                     superGeometry.getMaterialIndicator(material),
@@ -72,12 +71,12 @@ SuperLatticePhysBoundaryForce3D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce3D(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysBoundaryForce3D<T,DESCRIPTOR>::BlockLatticePhysBoundaryForce3D(
-  BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   BlockIndicatorF3D<T>&                  indicatorF,
   const UnitConverter<T,DESCRIPTOR>&     converter)
   : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice, converter, 3),
     _indicatorF(indicatorF),
-    _blockGeometry(indicatorF.getBlockGeometryStructure())
+    _blockGeometry(indicatorF.getBlockGeometry())
 {
   this->getName() = "physBoundaryForce";
 }
@@ -95,7 +94,7 @@ bool BlockLatticePhysBoundaryForce3D<T, DESCRIPTOR>::operator()(T output[], cons
       const Vector<int,3> c = descriptors::c<DESCRIPTOR>(iPop);
       // Get next cell located in the current direction
       // Check if the next cell is a fluid node
-      if (_blockGeometry.get(input[0] + c[0], input[1] + c[1], input[2] + c[2]) == 1) {
+      if (_blockGeometry.get({input[0] + c[0], input[1] + c[1], input[2] + c[2]}) == 1) {
         // Get f_q of next fluid cell where l = opposite(q)
         T f = this->_blockLattice.get(input[0] + c[0], input[1] + c[1], input[2] + c[2])[iPop];
         // Get f_l of the boundary cell

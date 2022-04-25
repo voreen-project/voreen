@@ -41,7 +41,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeKnudsen2D final : public SuperLatticeF2D<T, DESCRIPTOR> {
 public:
-  SuperLatticeKnudsen2D(SuperLattice2D<T, DESCRIPTOR>& lattice);
+  SuperLatticeKnudsen2D(SuperLattice<T, DESCRIPTOR>& lattice);
 
 };
 
@@ -60,7 +60,7 @@ public:
    * \param rounding  Configures the quality of the grid by rounding the output
    **/
   SuperLatticeRefinementMetricKnudsen2D(
-    SuperLattice2D<T, DESCRIPTOR>&      lattice,
+    SuperLattice<T, DESCRIPTOR>&      lattice,
     const UnitConverter<T, DESCRIPTOR>& converter);
 
   /**

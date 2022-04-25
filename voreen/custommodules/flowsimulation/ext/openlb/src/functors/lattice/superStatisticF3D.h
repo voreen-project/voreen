@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2019 Jakob Mangold, Mathias J. Krause 
+ *  Copyright (C) 2019 Jakob Mangold, Mathias J. Krause
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -54,23 +54,23 @@ public:
    * \param material      number of the relevant material
    **/
 //  SuperStdDeviationF3D(FunctorPtr<SuperF3D<T,W>>&& f,
-//                 SuperGeometry3D<T>& superGeometry,
+//                 SuperGeometry<T,3>& superGeometry,
 //                const int material);
 
 
 
 
   SuperVarianceF3D(FunctorPtr<SuperF3D<T,W>>&& f,
-		  	  	  	  SuperGeometry3D<T>& superGeometry,
-		  	  	  	  const int material,
-                	  T expectedValue);
+                   SuperGeometry<T,3>& superGeometry,
+                   const int material,
+                   T expectedValue);
 
 
 
 
   SuperVarianceF3D(FunctorPtr<SuperF3D<T,W>>&&        f,
-                 FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
-           	  T expectedValue);
+                   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
+                   T expectedValue);
 
 
   /// Global average operator
@@ -112,23 +112,23 @@ public:
    * \param material      number of the relevant material
    **/
 //  SuperStdDeviationF3D(FunctorPtr<SuperF3D<T,W>>&& f,
-//                 SuperGeometry3D<T>& superGeometry,
+//                 SuperGeometry<T,3>& superGeometry,
 //                const int material);
 
 
 
 
   SuperStdDeviationF3D(FunctorPtr<SuperF3D<T,W>>&& f,
-		  	  	  	  SuperGeometry3D<T>& superGeometry,
-		  	  	  	  const int material,
-                	  T expectedValue);
+                       SuperGeometry<T,3>& superGeometry,
+                       const int material,
+                       T expectedValue);
 
 
 
 
   SuperStdDeviationF3D(FunctorPtr<SuperF3D<T,W>>&&        f,
-                 FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
-           	  T expectedValue);
+                       FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
+                       T expectedValue);
 
 
   bool operator() (W output[], const int input[]) override;

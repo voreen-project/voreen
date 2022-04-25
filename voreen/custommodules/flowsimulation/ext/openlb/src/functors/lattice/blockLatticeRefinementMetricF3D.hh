@@ -25,8 +25,7 @@
 #define BLOCK_LATTICE_REFINEMENT_METRIC_F_3D_HH
 
 #include "blockLatticeRefinementMetricF3D.h"
-#include "dynamics/lbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
+#include "dynamics/lbm.h"
 
 
 namespace olb {
@@ -34,7 +33,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeKnudsen3D<T, DESCRIPTOR>::BlockLatticeKnudsen3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1)
 {
   this->getName() = "knudsen";
@@ -54,9 +53,9 @@ bool BlockLatticeKnudsen3D<T, DESCRIPTOR>::operator()(T output[], const int inpu
   T sum = 0.;
 
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-    const T fEq = olb::lbHelpers<T, DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
+    const T fEq = olb::equilibrium<DESCRIPTOR>::secondOrder(iPop, rho, u, uSqr);
 
-    sum += std::abs((cell[iPop] - fEq) / (fEq + descriptors::t<T,DESCRIPTOR>(iPop)));
+    sum += util::abs((cell[iPop] - fEq) / (fEq + descriptors::t<T,DESCRIPTOR>(iPop)));
   }
 
   output[0] = sum / (DESCRIPTOR::q);
@@ -67,7 +66,7 @@ bool BlockLatticeKnudsen3D<T, DESCRIPTOR>::operator()(T output[], const int inpu
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::BlockLatticeRefinementMetricKnudsen3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
   const UnitConverter<T, DESCRIPTOR>&     converter)
   : BlockLatticeKnudsen3D<T, DESCRIPTOR>(blockLattice),
     _knudsen(converter.getKnudsenNumber())
@@ -87,10 +86,10 @@ bool BlockLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::operator()(T output[]
 
   for (localInput[0] = 0; localInput[0] < this->_blockLattice.getNx(); ++localInput[0]) {
     for (localInput[1] = 0; localInput[1] < this->_blockLattice.getNy(); ++localInput[1]) {
-        for (localInput[2]=0; localInput[2] < this->_blockLattice.getNz(); ++localInput[2]) {
-      BlockLatticeKnudsen3D<T, DESCRIPTOR>::operator()(localOutput, localInput);
+      for (localInput[2]=0; localInput[2] < this->_blockLattice.getNz(); ++localInput[2]) {
+        BlockLatticeKnudsen3D<T, DESCRIPTOR>::operator()(localOutput, localInput);
 
-      blockSum += localOutput[0];
+        blockSum += localOutput[0];
       }
     }
   }
@@ -98,7 +97,7 @@ bool BlockLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::operator()(T output[]
   const T blockC = blockSum / cellCount;
 
   output[0] = std::log2(blockC / _knudsen);
-  
+
   if ( output[0] <= 0. || blockC <= 0. ) {
     output[0] = 0.;
   }
@@ -114,8 +113,8 @@ bool BlockLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::operator()(
   BlockLatticeKnudsen3D<T, DESCRIPTOR>::operator()(measuredKnudsen, input);
 
   output[0] = std::log2(measuredKnudsen[0] / _knudsen);
-  
-  
+
+
   if ( output[0] <= 0. || measuredKnudsen[0] <= 0. ) {
     output[0] = 0.;
   }
@@ -127,7 +126,7 @@ bool BlockLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::operator()(
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeHighOrderKnudsen3D<T, DESCRIPTOR>::BlockLatticeHighOrderKnudsen3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1)
 {
   this->getName() = "high_order_knudsen";
@@ -148,10 +147,10 @@ bool BlockLatticeHighOrderKnudsen3D<T, DESCRIPTOR>::operator()(T output[], const
   T sum = 0.;
 
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-    const T fEq = olb::lbHelpers<T, DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
-    const T fNeqFromPi = olb::firstOrderLbHelpers<T, DESCRIPTOR>::fromPiToFneq(iPop, pi);
+    const T fEq = olb::equilibrium<DESCRIPTOR>::secondOrder(iPop, rho, u, uSqr);
+    const T fNeqFromPi = olb::lbm< DESCRIPTOR>::fromPiToFneq(iPop, pi);
 
-    sum += std::abs((cell[iPop] - fEq - fNeqFromPi) / (fEq + descriptors::t<T,DESCRIPTOR>(iPop)));
+    sum += util::abs((cell[iPop] - fEq - fNeqFromPi) / (fEq + descriptors::t<T,DESCRIPTOR>(iPop)));
   }
 
   output[0] = sum / (DESCRIPTOR::q);

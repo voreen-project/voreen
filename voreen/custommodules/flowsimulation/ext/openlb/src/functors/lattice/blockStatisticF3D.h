@@ -35,36 +35,35 @@ namespace olb {
 
 /// BlockVarianceF3D returns the Variance in each component of f on a indicated subset calcutalted with Steiner translation theorem
 template <typename T, typename W = T>
-class BlockVarianceF3D final : public BlockAverage3D<W> {
+class BlockVarianceF3D final : public BlockSum3D<W> {
 private:
   BlockF3D<W>&          _f;
   BlockIndicatorF3D<T>& _indicatorF;
-  Cuboid3D<T>&			_cuboid;
+  Cuboid3D<T>&      _cuboid;
   T _expectedValue;
 public:
   BlockVarianceF3D(BlockF3D<W>&          f,
-		  	  	  	  BlockIndicatorF3D<T>& indicatorF,
-		  	  	  	  Cuboid3D<T>&			cuboid,
-		  	  	  	  T expectedValue);
+                   BlockIndicatorF3D<T>& indicatorF,
+                   Cuboid3D<T>&      cuboid,
+                   T expectedValue);
   bool operator() (W output[], const int input[]) override;
 };
 
-/*
 /// BlockStdDeviationF3D returns the Deviation in each component of f on a indicated subset calcutalted with Steiner translation theorem
 template <typename T, typename W = T>
-class BlockStdDeviationF3D final : public BlockVariance3D<W> {
+class BlockStdDeviationF3D final : public BlockSum3D<W> {
 private:
   BlockF3D<W>&          _f;
   BlockIndicatorF3D<T>& _indicatorF;
-  Cuboid3D<T>&			_cuboid;
+  Cuboid3D<T>&      _cuboid;
   T _expectedValue;
 public:
   BlockStdDeviationF3D(BlockF3D<W>&          f,
-		  	  	  	  BlockIndicatorF3D<T>& indicatorF,
-		  	  	  	  Cuboid3D<T>&			cuboid,
-		  	  	  	  T expectedValue);
+                       BlockIndicatorF3D<T>& indicatorF,
+                       Cuboid3D<T>&      cuboid,
+                       T expectedValue);
   bool operator() (W output[], const int input[]) override;
-};*/
+};
 
 }
 

@@ -31,7 +31,7 @@
 #include "core/singleton.h"
 #include "io/fileName.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 template <typename T, typename DESCRIPTOR>
@@ -78,12 +78,12 @@ void PowerLawUnitConverter<T, DESCRIPTOR>::write(std::string const& fileName) co
 {
   std::string dataFile = singleton::directories().getLogOutDir() + fileName + ".dat";
 
-  if (singleton::mpi().isMainProcessor())
-  {
+  if (singleton::mpi().isMainProcessor()) {
     std::ofstream fout(dataFile.c_str(), std::ios::trunc);
-    if(!fout) {
+    if (!fout) {
       clout << "error write() function: can not open std::ofstream" << std::endl;
-    } else {
+    }
+    else {
       print( fout );
       fout.close();
     }
@@ -119,7 +119,7 @@ PowerLawUnitConverter<T, DESCRIPTOR>* createPowerLawUnitConverter(XMLreader cons
   params["Application"]["PhysParameters"]["PhysDensity"].read(physDensity);
   params["Application"]["PhysParameters"]["CharPhysPressure"].read(charPhysPressure);
 
-  physViscosity = physConsistencyCoeff * pow(charPhysVelocity / (2*charPhysLength), powerLawIndex-1);
+  physViscosity = physConsistencyCoeff * util::pow(charPhysVelocity / (2*charPhysLength), powerLawIndex-1);
 
   if (!params["Application"]["Discretization"]["PhysDeltaX"].read(physDeltaX,false)) {
     if (!params["Application"]["Discretization"]["Resolution"].read<int>(resolution,false)) {
@@ -182,9 +182,9 @@ PowerLawUnitConverterFrom_Resolution_RelaxationTime_Reynolds_PLindex(
     T charPhysPressure)
 {
   T physDeltaX = (charPhysLength/resolution);
-  T physConsistencyCoeff = charPhysLength * charPhysVelocity * pow( charPhysVelocity / ( 2 * charPhysLength ), 1 - powerLawIndex ) / Re;
-  T physViscosity = physConsistencyCoeff * pow( charPhysVelocity / (2 * charPhysLength ), powerLawIndex - 1 );
-  T physDeltaT = (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * pow((charPhysLength/resolution),2) / physViscosity;
+  T physConsistencyCoeff = charPhysLength * charPhysVelocity * util::pow( charPhysVelocity / ( 2 * charPhysLength ), 1 - powerLawIndex ) / Re;
+  T physViscosity = physConsistencyCoeff * util::pow( charPhysVelocity / (2 * charPhysLength ), powerLawIndex - 1 );
+  T physDeltaT = (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * util::pow((charPhysLength/resolution),2) / physViscosity;
 
 PowerLawUnitConverter<T, DESCRIPTOR>( physDeltaX, physDeltaT, charPhysLength, charPhysVelocity,
               physConsistencyCoeff, powerLawIndex, physDensity, charPhysPressure );

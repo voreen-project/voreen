@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,20 +43,20 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticePhysTemperature3D<T,DESCRIPTOR,TDESCRIPTOR>::SuperLatticePhysTemperature3D(
-  SuperLattice3D<T,TDESCRIPTOR>& sLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
+  SuperLattice<T,TDESCRIPTOR>& sLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
   : SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physTemperature";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticePhysTemperature3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlockLattice(iC), this->_converter));
+    this->_blockF.emplace_back(new BlockLatticePhysTemperature3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlock(iC), this->_converter));
   }
 }
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticePhysTemperature3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysTemperature3D
-(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
+(BlockLattice<T,TDESCRIPTOR>& blockLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
   : BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(blockLattice,converter,1)
 {
   this->getName() = "physTemperature";

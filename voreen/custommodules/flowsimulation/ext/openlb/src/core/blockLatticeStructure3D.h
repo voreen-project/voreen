@@ -186,22 +186,11 @@ public:
   virtual Dynamics<T,DESCRIPTOR>* getDynamics(int iX, int iY, int iZ) = 0;
 
   virtual void collide(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
-  virtual void collideAndStream(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
   virtual void collide() =0;
-  virtual void collideAndStream() =0;
-
-  virtual T computeAverageDensity(int x0_, int x1_, int y0_, int y1_, int z0_,
-                                  int z1_) const =0;
-  virtual T computeAverageDensity() const =0;
-  virtual void computeStress(int iX, int iY, int iZ, T pi[util::TensorVal<DESCRIPTOR >::n]) = 0;
 
   virtual void stripeOffDensityOffset(int x0_, int x1_, int y0_, int y1_, int z0_,
                                       int z1_, T offset) =0;
   virtual void stripeOffDensityOffset(T offset) =0;
-
-  virtual void forAll(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                      WriteCellFunctional<T,DESCRIPTOR> const& application) =0;
-  virtual void forAll(WriteCellFunctional<T,DESCRIPTOR> const& application) =0;
 
   virtual void addPostProcessor(PostProcessorGenerator3D<T,DESCRIPTOR> const& ppGen) =0;
   virtual void resetPostProcessors() =0;
@@ -215,6 +204,11 @@ public:
 
   virtual LatticeStatistics<T>& getStatistics() =0;
   virtual LatticeStatistics<T> const& getStatistics() const =0;
+
+  virtual void freeSurfacePostProcess(size_t i, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) =0;
+  virtual void freeSurfacePostProcess(size_t i) =0;
+
+  virtual void freeSurfaceInitialize() = 0;
 };
 
 ////////// FREE FUNCTIONS //////////

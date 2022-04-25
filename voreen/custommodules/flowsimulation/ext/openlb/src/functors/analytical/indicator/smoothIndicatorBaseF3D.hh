@@ -24,7 +24,7 @@
 #ifndef SMOOTH_INDICATOR_BASE_F_3D_HH
 #define SMOOTH_INDICATOR_BASE_F_3D_HH
 
-#include <cmath>
+#include "utilities/omath.h"
 
 #include "smoothIndicatorBaseF3D.h"
 #include "utilities/vectorHelpers.h"
@@ -40,16 +40,17 @@ SmoothIndicatorF3D<T, S, false>::SmoothIndicatorF3D()
 { }
 
 template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,false>::init(Vector<S,3> theta, Vector<S,3> vel, T mass, Vector<S,3> mofi) {
-  this->_rotMat[0] = std::cos(theta[1])*std::cos(theta[2]);
-  this->_rotMat[1] = std::sin(theta[0])*std::sin(theta[1])*std::cos(theta[2]) - std::cos(theta[0])*std::sin(theta[2]);
-  this->_rotMat[2] = std::cos(theta[0])*std::sin(theta[1])*std::cos(theta[2]) + std::sin(theta[0])*std::sin(theta[2]);
-  this->_rotMat[3] = std::cos(theta[1])*std::sin(theta[2]);
-  this->_rotMat[4] = std::sin(theta[0])*std::sin(theta[1])*std::sin(theta[2]) + std::cos(theta[0])*std::cos(theta[2]);
-  this->_rotMat[5] = std::cos(theta[0])*std::sin(theta[1])*std::sin(theta[2]) - std::sin(theta[0])*std::cos(theta[2]);
-  this->_rotMat[6] = -std::sin(theta[1]);
-  this->_rotMat[7] = std::sin(theta[0])*std::cos(theta[1]);
-  this->_rotMat[8] = std::cos(theta[0])*std::cos(theta[1]);
+void SmoothIndicatorF3D<T,S,false>::init(Vector<S,3> theta)
+{
+  this->_rotMat[0] = util::cos(theta[1])*util::cos(theta[2]);
+  this->_rotMat[1] = util::sin(theta[0])*util::sin(theta[1])*util::cos(theta[2]) - util::cos(theta[0])*util::sin(theta[2]);
+  this->_rotMat[2] = util::cos(theta[0])*util::sin(theta[1])*util::cos(theta[2]) + util::sin(theta[0])*util::sin(theta[2]);
+  this->_rotMat[3] = util::cos(theta[1])*util::sin(theta[2]);
+  this->_rotMat[4] = util::sin(theta[0])*util::sin(theta[1])*util::sin(theta[2]) + util::cos(theta[0])*util::cos(theta[2]);
+  this->_rotMat[5] = util::cos(theta[0])*util::sin(theta[1])*util::sin(theta[2]) - util::sin(theta[0])*util::cos(theta[2]);
+  this->_rotMat[6] = -util::sin(theta[1]);
+  this->_rotMat[7] = util::sin(theta[0])*util::cos(theta[1]);
+  this->_rotMat[8] = util::cos(theta[0])*util::cos(theta[1]);
 }
 
 template <typename T, typename S>
@@ -65,59 +66,201 @@ const Vector<S,3>& SmoothIndicatorF3D<T, S, false>::getMax() const
 }
 
 template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,false>::getPos() const {
+const Vector<S,3>& SmoothIndicatorF3D<T,S,false>::getPos() const
+{
   return _pos;
 }
 
 template <typename T, typename S>
-const S& SmoothIndicatorF3D<T,S,false>::getCircumRadius() const 
+const S& SmoothIndicatorF3D<T,S,false>::getCircumRadius() const
 {
   return _circumRadius;
 }
 
 template <typename T, typename S>
-const Vector<S,9>& SmoothIndicatorF3D<T,S,false>::getRotationMatrix() const {
+const Vector<S,9>& SmoothIndicatorF3D<T,S,false>::getRotationMatrix() const
+{
   return _rotMat;
 }
 
 template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,false>::getTheta() const {
+const Vector<S,3>& SmoothIndicatorF3D<T,S,false>::getTheta() const
+{
   return _theta;
 }
 
 template <typename T, typename S>
-const S& SmoothIndicatorF3D<T,S,false>::getEpsilon() const {
+const S& SmoothIndicatorF3D<T,S,false>::getEpsilon() const
+{
   return _epsilon;
 }
 
 template <typename T, typename S>
-std::string SmoothIndicatorF3D<T,S,false>::name() {
+std::string SmoothIndicatorF3D<T,S,false>::name()
+{
   return _name;
 }
 
 template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,false>::setTheta(Vector<S,3> theta) {
-  _theta[0] = theta[0];
-  _theta[1] = theta[1];
-  _theta[2] = theta[2];
+void SmoothIndicatorF3D<T,S,false>::setPos(Vector<S,3> pos)
+{
+  _pos = pos;
 }
 
 template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,false>::setEpsilon(S epsilon) {
+void SmoothIndicatorF3D<T,S,false>::setTheta(Vector<S,3> theta)
+{
+  _theta[0] = theta[0];
+  _theta[1] = theta[1];
+  _theta[2] = theta[2];
+
+  T const cos0 = util::cos(theta[0]);
+  T const cos1 = util::cos(theta[1]);
+  T const cos2 = util::cos(theta[2]);
+  T const sin0 = util::sin(theta[0]);
+  T const sin1 = util::sin(theta[1]);
+  T const sin2 = util::sin(theta[2]);
+
+  this->_rotMat[0] = cos1 * cos2;
+  this->_rotMat[1] = sin0*sin1*cos2 - cos0*sin2;
+  this->_rotMat[2] = cos0*sin1*cos2 + sin0*sin2;
+  this->_rotMat[3] = cos1*sin2;
+  this->_rotMat[4] = sin0*sin1*sin2 + cos0*cos2;
+  this->_rotMat[5] = cos0*sin1*sin2 - sin0*cos2;
+  this->_rotMat[6] = -sin1;
+  this->_rotMat[7] = sin0*cos1;
+  this->_rotMat[8] = cos0*cos1;
+}
+
+template <typename T, typename S>
+void SmoothIndicatorF3D<T,S,false>::setEpsilon(S epsilon)
+{
   _epsilon = epsilon;
 }
+
+template <typename T, typename S>
+S SmoothIndicatorF3D<T, S, false>::getVolume( )
+{
+  // TODO: Fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+Vector<S,4> SmoothIndicatorF3D<T, S, false>::calcMofiAndMass( S density )
+{
+  // TODO: Fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+Vector<S,3> SmoothIndicatorF3D<T, S, false>::calcCenterOfMass( )
+{
+  // TODO: Fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+bool SmoothIndicatorF3D<T, S, false>::operator()( T output[], const S input[] )
+{
+  T const signedDist = this->signedDistance(input);
+  return sdf::evalPorosity(output, signedDist, this->getEpsilon());
+}
+
+template <typename T, typename S>
+bool SmoothIndicatorF3D<T, S, false>::isInsideCircumRadius( const PhysR<S,3>& input )
+{
+  return norm(input-this->getPos()) <= this->getCircumRadius();
+}
+
+template <typename T, typename S>
+Vector<S,3> SmoothIndicatorF3D<T, S, false>::surfaceNormal( const Vector<S,3>& pos, const S meshSize )
+{
+  return surfaceNormal(pos, meshSize, [&](const Vector<S,3>& pos) {
+    return pos;
+  });
+}
+
+template <typename T, typename S>
+Vector<S,3> SmoothIndicatorF3D<T, S, false>::surfaceNormal( const Vector<S,3>& pos, const S meshSize,
+    std::function<Vector<S,3>(const Vector<S,3>&)> transformPos )
+{
+  return util::surfaceNormal(pos, meshSize, [&](const Vector<S,3>& pos) {
+    return this->signedDistance( transformPos(pos) );
+  });
+}
+
+template <typename T, typename S>
+const S SmoothIndicatorF3D<T, S, false>::signedDistance( const PhysR<T,3> input )
+{
+  // TODO: Raymarching as fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+bool SmoothIndicatorF3D<T, S, false>::distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, S precision, S pitch)
+{
+  S const halfEps = this->getEpsilon() * 0.5;
+  bool originValue;
+  bool currentValue;
+
+  // start at origin and move into given direction
+  PhysR<S,3> currentPoint(origin);
+
+  originValue = this->signedDistance(origin) <= halfEps;
+  currentValue = this->signedDistance(currentPoint) <= halfEps;
+
+  while (currentValue == originValue && this->isInsideCircumRadius(currentPoint)) {
+    currentPoint += direction;
+    // update currentValue until the first point on the other side (inside/outside) is found
+    currentValue = this->signedDistance(currentPoint) <= halfEps;
+  }
+
+  // return false if no point was found in given direction
+  if (!this->isInsideCircumRadius(currentPoint) && !originValue) {
+    return false;
+  }
+
+
+  while (pitch >= precision) {
+    if (!this->isInsideCircumRadius(currentPoint) && originValue) {
+      currentPoint -= pitch * direction;
+      pitch /= 2.;
+    }
+    else {
+      currentValue = this->signedDistance(currentPoint) <= halfEps;
+      if (currentValue == originValue) {
+        currentPoint += pitch * direction;
+        pitch /= 2.;
+      }
+      else {
+        currentPoint -= pitch * direction;
+        pitch /= 2.;
+      }
+    }
+  }
+
+  distance = norm(currentPoint - origin);
+  return true;
+}
+
 
 // identity to "store results"
 template <typename T, typename S>
 SmoothIndicatorIdentity3D<T,S>::SmoothIndicatorIdentity3D(SmoothIndicatorF3D<T,S,false>& f)
-  : _f(f) {
+  : _f(f)
+{
   this->_myMin = _f.getMin();
   this->_myMax = _f.getMax();
   std::swap( _f._ptrCalcC, this->_ptrCalcC );
 }
 
 template <typename T, typename S>
-bool SmoothIndicatorIdentity3D<T,S>::operator() (T output[], const S input[]) {
+bool SmoothIndicatorIdentity3D<T,S>::operator() (T output[], const S input[])
+{
   _f(output, input);
   return true;
 }
@@ -127,213 +270,144 @@ bool SmoothIndicatorIdentity3D<T,S>::operator() (T output[], const S input[]) {
 template <typename T, typename S>
 SmoothIndicatorF3D<T,S,true>::SmoothIndicatorF3D()
   : AnalyticalF3D<T,S>(1),
-    _myMin(S()), _myMax(S()), _pos(S()), _vel(S()), _acc(S()), _acc2(S()), _force(S()), 
-    _rotMat(S()), _circumRadius(S()), _theta(S()), _omega(S()), _alpha(S()), 
-    _alpha2(S()), _mass(S()), _mofi(S()), _epsilon(S())
+    _circumRadius(S()), _epsilon(S())
 { }
 
 template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::init(Vector<S,3> theta, Vector<S,3> vel, T mass, Vector<S,3> mofi) {
-  this->_rotMat[0] = std::cos(theta[1])*std::cos(theta[2]);
-  this->_rotMat[1] = std::sin(theta[0])*std::sin(theta[1])*std::cos(theta[2]) - std::cos(theta[0])*std::sin(theta[2]);
-  this->_rotMat[2] = std::cos(theta[0])*std::sin(theta[1])*std::cos(theta[2]) + std::sin(theta[0])*std::sin(theta[2]);
-  this->_rotMat[3] = std::cos(theta[1])*std::sin(theta[2]);
-  this->_rotMat[4] = std::sin(theta[0])*std::sin(theta[1])*std::sin(theta[2]) + std::cos(theta[0])*std::cos(theta[2]);
-  this->_rotMat[5] = std::cos(theta[0])*std::sin(theta[1])*std::sin(theta[2]) - std::sin(theta[0])*std::cos(theta[2]);
-  this->_rotMat[6] = -std::sin(theta[1]);
-  this->_rotMat[7] = std::sin(theta[0])*std::cos(theta[1]);
-  this->_rotMat[8] = std::cos(theta[0])*std::cos(theta[1]);
-  _vel = vel;
-  _mass = mass;
-  _mofi = mofi;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,true>::getMin() const {
-  return _myMin;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,true>::getMax() const {
-  return _myMax;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,true>::getPos() const {
-  return _pos;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,true>::getVel() const {
-   return _vel;
- }
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T, S, true>::getAcc() const
+bool SmoothIndicatorF3D<T, S, true>::operator()( T output[], const S input[] )
 {
-  return _acc;
+#ifdef OLB_DEBUG
+  OstreamManager clout(std::cout, "SmoothIndicator3D");
+  clout << "WARNING: SmoothIndicatorF3D::operator() a particle (= true) SmoothIndicator does not consider the current position of the particle. Please use the evalPorosity method for this." << std::endl;
+#endif
+  T const signedDist = this->signedDistance(input);
+  return sdf::evalPorosity(output, signedDist, this->getEpsilon());
 }
 
 template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T, S, true>::getAcc2() const
+bool SmoothIndicatorF3D<T, S, true>::isInsideCircumRadius( const PhysR<S,3>& input )
 {
-  return _acc2;
+  return norm(input) <= this->getCircumRadius();
 }
 
 template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,true>::getHydrodynamicForce() const {
-  return _force;
+Vector<S,3> SmoothIndicatorF3D<T, S, true>::surfaceNormal( const Vector<S,3>& pos, const S meshSize )
+{
+  return surfaceNormal(pos, meshSize, [&](const Vector<S,3>& pos) {
+    return pos;
+  });
 }
 
 template <typename T, typename S>
-const Vector<S,9>& SmoothIndicatorF3D<T,S,true>::getRotationMatrix() const {
-  return _rotMat;
+Vector<S,3> SmoothIndicatorF3D<T, S, true>::surfaceNormal( const Vector<S,3>& pos, const S meshSize,
+    std::function<Vector<S,3>(const Vector<S,3>&)> transformPos )
+{
+  return util::surfaceNormal(pos, meshSize, [&](const Vector<S,3>& pos) {
+    return this->signedDistance( transformPos(pos) );
+  });
 }
 
 template <typename T, typename S>
-const S& SmoothIndicatorF3D<T,S,true>::getCircumRadius() const {
+const S SmoothIndicatorF3D<T, S, true>::signedDistance( const PhysR<T,3> input )
+{
+  // TODO: Raymarching as fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+bool SmoothIndicatorF3D<T, S, true>::distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, S precision, S pitch)
+{
+  S const halfEps = this->getEpsilon() * 0.5;
+  bool originValue;
+  bool currentValue;
+
+  // start at origin and move into given direction
+  PhysR<S,3> currentPoint(origin);
+
+  originValue = this->signedDistance(origin) <= halfEps;
+  currentValue = this->signedDistance(currentPoint) <= halfEps;
+
+  while (currentValue == originValue && this->isInsideCircumRadius(currentPoint)) {
+    currentPoint += direction;
+    // update currentValue until the first point on the other side (inside/outside) is found
+    currentValue = this->signedDistance(currentPoint) <= halfEps;
+  }
+
+  // return false if no point was found in given direction
+  if (!this->isInsideCircumRadius(currentPoint) && !originValue) {
+    return false;
+  }
+
+
+  while (pitch >= precision) {
+    if (!this->isInsideCircumRadius(currentPoint) && originValue) {
+      currentPoint -= pitch * direction;
+      pitch /= 2.;
+    }
+    else {
+      currentValue = this->signedDistance(currentPoint) <= halfEps;
+      if (currentValue == originValue) {
+        currentPoint += pitch * direction;
+        pitch /= 2.;
+      }
+      else {
+        currentPoint -= pitch * direction;
+        pitch /= 2.;
+      }
+    }
+  }
+
+  distance = norm(currentPoint - origin);
+  return true;
+}
+
+template <typename T, typename S>
+const S& SmoothIndicatorF3D<T,S,true>::getCircumRadius() const
+{
   return _circumRadius;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T, S, true>::getTheta() const
-{
-  return _theta;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T, S, true>::getOmega() const
-{
-  return _omega;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T, S, true>::getAlpha() const
-{
-  return _alpha;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T,S,true>::getAlpha2() const {
-  return _alpha2;
-}
-
-template <typename T, typename S>
-const S& SmoothIndicatorF3D<T, S, true>::getMass() const
-{
-  return _mass;
-}
-
-template <typename T, typename S>
-const Vector<S,3>& SmoothIndicatorF3D<T, S, true>::getMofi() const
-{
-  return _mofi;
 }
 
 template <typename T, typename S>
 const S& SmoothIndicatorF3D<T, S, true>::getEpsilon() const
 {
   return _epsilon;
-} 
+}
 
 template <typename T, typename S>
-std::string SmoothIndicatorF3D<T,S,true>::name() {
+std::string SmoothIndicatorF3D<T,S,true>::name()
+{
   return _name;
 }
 
-// identity to "store results"
 template <typename T, typename S>
-void SmoothIndicatorF3D<T, S, true>::setPos(Vector<S, 3> pos) {
-  _pos[0] = pos[0];
-  _pos[1] = pos[1];
-  _pos[2] = pos[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setVel(Vector<S,3> vel) {
-  _vel[0] = vel[0];
-  _vel[1] = vel[1];
-  _vel[2] = vel[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setAcc(Vector<S,3> acc) {
-  _acc[0] = acc[0];
-  _acc[1] = acc[1];
-  _acc[2] = acc[2];
-} 
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setAcc2(Vector<S,3> acc2) {
-  _acc2[0] = acc2[0];
-  _acc2[1] = acc2[1];
-  _acc2[2] = acc2[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setHydrodynamicForce(Vector<S,3> force) {
-  _force[0] = force[0];
-  _force[1] = force[1];
-  _force[2] = force[2];
-}
-
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setRotationMatrix(Vector<S,9> rotMat) {
-  _rotMat[0] = rotMat[0];
-  _rotMat[1] = rotMat[1];
-  _rotMat[2] = rotMat[2];
-  _rotMat[3] = rotMat[3];
-  _rotMat[4] = rotMat[4];
-  _rotMat[5] = rotMat[5];
-  _rotMat[6] = rotMat[6];
-  _rotMat[7] = rotMat[7];
-  _rotMat[8] = rotMat[8];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setTheta(Vector<S,3> theta) {
-  _theta[0] = theta[0];
-  _theta[1] = theta[1];
-  _theta[2] = theta[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setOmega(Vector<S,3> omega) {
-  _omega[0] = omega[0];
-  _omega[1] = omega[1];
-  _omega[2] = omega[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setAlpha(Vector<S,3> alpha) {
-  _alpha[0] = alpha[0];
-  _alpha[1] = alpha[1];
-  _alpha[2] = alpha[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setAlpha2(Vector<S,3> alpha2) {
-  _alpha2[0] = alpha2[0];
-  _alpha2[1] = alpha2[1];
-  _alpha2[2] = alpha2[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setMass(S mass) {
-  _mass = mass;
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setMofi(Vector<S, 3> mofi) {
-  _mofi[0] = mofi[0];
-  _mofi[1] = mofi[1];
-  _mofi[2] = mofi[2];
-}
-
-template <typename T, typename S>
-void SmoothIndicatorF3D<T,S,true>::setEpsilon(S epsilon) {
+void SmoothIndicatorF3D<T,S,true>::setEpsilon(S epsilon)
+{
   _epsilon = epsilon;
+}
+
+template <typename T, typename S>
+S SmoothIndicatorF3D<T, S, true>::getVolume( )
+{
+  // TODO: Fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+Vector<S,4> SmoothIndicatorF3D<T, S, true>::calcMofiAndMass( S density )
+{
+  // TODO: Fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
+}
+
+template <typename T, typename S>
+Vector<S,3> SmoothIndicatorF3D<T, S, true>::calcCenterOfMass( )
+{
+  // TODO: Fallback
+  assert(false);
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 } // namespace olb

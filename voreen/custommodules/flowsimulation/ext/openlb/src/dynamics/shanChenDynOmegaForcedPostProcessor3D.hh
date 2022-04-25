@@ -27,7 +27,6 @@
 
 #include "shanChenDynOmegaForcedPostProcessor3D.h"
 #include "interactionPotential.h"
-#include "core/blockLattice3D.h"
 #include "core/util.h"
 #include "core/finiteDifference3D.h"
 
@@ -40,36 +39,36 @@ template<typename T, typename DESCRIPTOR>
 ShanChenDynOmegaForcedPostProcessor3D <T,DESCRIPTOR>::
 ShanChenDynOmegaForcedPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
                                       T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-                                      std::vector<SpatiallyExtendedObject3D*> partners_)
+                                      std::vector<BlockStructureD<3>*> partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenDynOmegaForcedPostProcessor3D";  
+  this->getName() = "ShanChenDynOmegaForcedPostProcessor3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 ShanChenDynOmegaForcedPostProcessor3D <T,DESCRIPTOR>::
 ShanChenDynOmegaForcedPostProcessor3D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-                                      std::vector<SpatiallyExtendedObject3D*> partners_)
+                                      std::vector<BlockStructureD<3>*> partners_)
   :  x0(0), x1(0), y0(0), y1(0), z0(0), z1(0), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenDynOmegaForcedPostProcessor3D";  
+  this->getName() = "ShanChenDynOmegaForcedPostProcessor3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenDynOmegaForcedPostProcessor3D<T,DESCRIPTOR>::
-processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+processSubDomain( BlockLattice<T,DESCRIPTOR>& blockLattice,
                   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   typedef DESCRIPTOR L;
 
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[0]);
+  BlockLattice<T,DESCRIPTOR> *partnerLattice = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
 
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
   if ( util::intersect ( x0, x1, y0, y1, z0, z1,
                          x0_, x1_, y0_, y1_, z0_, z1_,
                          newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
 
-    auto& rhoField = blockLattice.template getDynamicFieldArray<RHO_CACHE>();
+    auto& rhoField = blockLattice.template getField<RHO_CACHE>();
 
     // Compute density and velocity on every site of first lattice, and store result
     //   in external scalars; envelope cells are included, because they are needed
@@ -103,10 +102,10 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
 
           FieldD<T,DESCRIPTOR,descriptors::VELOCITY> j;
 
-          lbHelpers<T,DESCRIPTOR>::computeJ(blockCell,j.data());
+          lbm<DESCRIPTOR>::computeJ(blockCell,j);
           blockCell.template setField<descriptors::VELOCITY>(j);
 
-          lbHelpers<T,DESCRIPTOR>::computeJ(partnerCell,j.data());
+          lbm<DESCRIPTOR>::computeJ(partnerCell,j);
           partnerCell.template setField<descriptors::VELOCITY>(j);
 
 
@@ -149,9 +148,9 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
           blockCell.template setField<descriptors::VELOCITY>(uTot);
           partnerCell.template setField<descriptors::VELOCITY>(uTot);
           blockCell.template setField<descriptors::FORCE>(externalBlockForce
-            - G*rhoPartnerContribution/rhoField[0][blockCell.getCellId()]);
+              - G*rhoPartnerContribution/rhoField[0][blockCell.getCellId()]);
           partnerCell.template setField<descriptors::FORCE>(externalPartnerForce
-            - G*rhoBlockContribution/rhoField[1][blockCell.getCellId()]);
+              - G*rhoBlockContribution/rhoField[1][blockCell.getCellId()]);
         }
       }
     }
@@ -160,7 +159,7 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenDynOmegaForcedPostProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -182,7 +181,7 @@ ShanChenDynOmegaForcedGenerator3D<T,DESCRIPTOR>::ShanChenDynOmegaForcedGenerator
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor3D<T,DESCRIPTOR>* ShanChenDynOmegaForcedGenerator3D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject3D*> partners) const
+  std::vector<BlockStructureD<3>*> partners) const
 {
   return new ShanChenDynOmegaForcedPostProcessor3D<T,DESCRIPTOR>(
            this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, G, rho0, interactionPotential, partners);

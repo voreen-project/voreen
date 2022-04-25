@@ -27,9 +27,7 @@
 #include <vector>
 
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -39,7 +37,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeStrainRate2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeStrainRate2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticeStrainRate2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                            const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]);
 };

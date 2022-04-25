@@ -33,7 +33,7 @@ namespace olb {
 
 template <typename T>
 BlockIndicatorFfromIndicatorF2D<T>::BlockIndicatorFfromIndicatorF2D(
-  IndicatorF2D<T>& indicatorF, BlockGeometryStructure2D<T>& blockGeometry)
+  IndicatorF2D<T>& indicatorF, BlockGeometry<T,2>& blockGeometry)
   : BlockIndicatorF2D<T>(blockGeometry),
     _indicatorF(indicatorF)
 { }
@@ -51,8 +51,8 @@ Vector<int,2> BlockIndicatorFfromIndicatorF2D<T>::getMin()
 {
   const Vector<T,2> min = _indicatorF.getMin();
   return Vector<int,2> {
-    static_cast<int>(floor(min[0])),
-    static_cast<int>(floor(min[1]))
+    static_cast<int>(util::floor(min[0])),
+    static_cast<int>(util::floor(min[1]))
   };
 }
 
@@ -61,15 +61,15 @@ Vector<int,2> BlockIndicatorFfromIndicatorF2D<T>::getMax()
 {
   const Vector<T,2> max = _indicatorF.getMax();
   return Vector<int,2> {
-    static_cast<int>(ceil(max[0])),
-    static_cast<int>(ceil(max[1]))
+    static_cast<int>(util::ceil(max[0])),
+    static_cast<int>(util::ceil(max[1]))
   };
 }
 
 
 template <typename T, bool HLBM>
 BlockIndicatorFfromSmoothIndicatorF2D<T,HLBM>::BlockIndicatorFfromSmoothIndicatorF2D(
-  SmoothIndicatorF2D<T,T,HLBM>& indicatorF, BlockGeometryStructure2D<T>& blockGeometry)
+  SmoothIndicatorF2D<T,T,HLBM>& indicatorF, BlockGeometry<T,2>& blockGeometry)
   : BlockIndicatorF2D<T>(blockGeometry),
     _indicatorF(indicatorF)
 { }
@@ -87,33 +87,33 @@ bool BlockIndicatorFfromSmoothIndicatorF2D<T,HLBM>::operator() (bool output[], c
 template <typename T, bool HLBM>
 Vector<int,2> BlockIndicatorFfromSmoothIndicatorF2D<T,HLBM>::getMin()
 {
-  return Vector<int,2>{0,0};
+  return Vector<int,2> {0,0};
 }
 
 template <typename T, bool HLBM>
 Vector<int,2> BlockIndicatorFfromSmoothIndicatorF2D<T,HLBM>::getMax()
 {
-  return this->_blockGeometryStructure.getExtend() - Vector<int,2>{1,1};
+  return this->_blockGeometryStructure.getExtent() - Vector<int,2> {1,1};
 }
 
 
 template <typename T>
 BlockIndicatorMaterial2D<T>::BlockIndicatorMaterial2D(
-  BlockGeometryStructure2D<T>& blockGeometry, std::vector<int> materials)
+  BlockGeometry<T,2>& blockGeometry, std::vector<int> materials)
   : BlockIndicatorF2D<T>(blockGeometry),
     _materials(materials)
 { }
 
 template <typename T>
 BlockIndicatorMaterial2D<T>::BlockIndicatorMaterial2D(
-  BlockGeometryStructure2D<T>& blockGeometry, std::list<int> materials)
+  BlockGeometry<T,2>& blockGeometry, std::list<int> materials)
   : BlockIndicatorMaterial2D(blockGeometry,
                              std::vector<int>(materials.begin(), materials.end()))
 { }
 
 template <typename T>
 BlockIndicatorMaterial2D<T>::BlockIndicatorMaterial2D(
-  BlockGeometryStructure2D<T>& blockGeometry, int material)
+  BlockGeometry<T,2>& blockGeometry, int material)
   : BlockIndicatorMaterial2D(blockGeometry, std::vector<int>(1,material))
 { }
 
@@ -121,13 +121,15 @@ template <typename T>
 bool BlockIndicatorMaterial2D<T>::operator() (bool output[], const int input[])
 {
   // read material number explicitly using the const version
-  // of BlockGeometry2D<T>::get to avoid resetting geometry
+  // of BlockGeometry<T,2>::get to avoid resetting geometry
   // statistics:
-  const BlockGeometryStructure2D<T>& blockGeometry = this->_blockGeometryStructure;
-  const int current = blockGeometry.getMaterial(input[0], input[1]);
+  const BlockGeometry<T,2>& blockGeometry = this->_blockGeometryStructure;
+  const int current = blockGeometry.getMaterial({input[0], input[1]});
   output[0] = std::any_of(_materials.cbegin(),
                           _materials.cend(),
-                          [current](int material) { return current == material; });
+  [current](int material) {
+    return current == material;
+  });
 
   return true;
 }
@@ -135,23 +137,23 @@ bool BlockIndicatorMaterial2D<T>::operator() (bool output[], const int input[])
 template <typename T>
 bool BlockIndicatorMaterial2D<T>::isEmpty()
 {
-  auto& statistics = this->getBlockGeometryStructure().getStatistics();
+  auto& statistics = this->getBlockGeometry().getStatistics();
 
   return std::none_of(_materials.cbegin(), _materials.cend(),
-  [&statistics](int material) -> bool {
-    return statistics.getNvoxel(material) > 0;
-  });
+                      [&statistics](int material) -> bool {
+                        return statistics.getNvoxel(material) > 0;
+                      });
 }
 
 template <typename T>
 Vector<int,2> BlockIndicatorMaterial2D<T>::getMin()
 {
-  auto& blockGeometry = this->getBlockGeometryStructure();
+  auto& blockGeometry = this->getBlockGeometry();
   auto& statistics    = blockGeometry.getStatistics();
 
   Vector<int,2> globalMin{
-    blockGeometry.getNx()-1,
-    blockGeometry.getNy()-1
+    blockGeometry.getNx()+blockGeometry.getPadding()-1,
+    blockGeometry.getNy()+blockGeometry.getPadding()-1
   };
 
   for ( int material : _materials ) {
@@ -169,12 +171,13 @@ Vector<int,2> BlockIndicatorMaterial2D<T>::getMin()
 template <typename T>
 Vector<int,2> BlockIndicatorMaterial2D<T>::getMax()
 {
-  auto& statistics = this->getBlockGeometryStructure().getStatistics();
+  const auto& statistics = this->getBlockGeometry().getStatistics();
 
-  Vector<int,2> globalMax{ 0, 0 };
+  Vector<int,2> globalMax = -this->getBlockGeometry().getPadding();
 
   for ( int material : _materials ) {
     if ( statistics.getNvoxel(material) > 0 ) {
+
       const Vector<int,2> localMax = statistics.getMaxLatticeR(material);
       for ( int d = 0; d < 2; ++d ) {
         globalMax[d] = localMax[d] > globalMax[d] ? localMax[d] : globalMax[d];
@@ -188,7 +191,7 @@ Vector<int,2> BlockIndicatorMaterial2D<T>::getMax()
 
 template <typename T>
 BlockIndicatorIdentity2D<T>::BlockIndicatorIdentity2D(BlockIndicatorF2D<T>& indicatorF)
-  : BlockIndicatorF2D<T>(indicatorF.getBlockGeometryStructure()),
+  : BlockIndicatorF2D<T>(indicatorF.getBlockGeometry()),
     _indicatorF(indicatorF)
 { }
 

@@ -40,3 +40,4 @@
 #include "vtiWriter.h"
 #include "xmlReader.h"
 #include "octree.h"
+#include "vtkWriter.h"

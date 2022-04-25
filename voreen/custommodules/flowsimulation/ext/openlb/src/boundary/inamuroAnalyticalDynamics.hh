@@ -27,29 +27,28 @@
 #include "inamuroAnalyticalDynamics.h"
 #include "dynamics/latticeDescriptors.h"
 #include "core/util.h"
-#include "dynamics/lbHelpers.h"
-#include <cmath>
+#include "dynamics/lbm.h"
+#include "utilities/omath.h"
 
 namespace olb {
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::InamuroAnalyticalDynamics (
-  T omega_, Momenta<T,DESCRIPTOR>& momenta_ )
-  : BasicDynamics<T,DESCRIPTOR>(momenta_),
-    boundaryDynamics(omega_, momenta_)
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::InamuroAnalyticalDynamics (T omega_)
+  : legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA>(),
+    boundaryDynamics(omega_)
 {
   this->getName() = "InamuroAnalyticalDynamics";
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-T InamuroAnalyticalDynamics<T,DESCRIPTOR, Dynamics, direction, orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+T InamuroAnalyticalDynamics<T,DESCRIPTOR, Dynamics,MOMENTA, direction, orientation>::
 computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
   return boundaryDynamics.computeEquilibrium(iPop, rho, u, uSqr);
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::collide (
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+CellStatistic<T> InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::collide (
   Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
@@ -72,7 +71,7 @@ void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::col
   for (unsigned iPop = 0; iPop < missInd.size(); ++iPop) {
     int numOfNonNullComp = 0;
     for (int iDim = 0; iDim < L::d; ++iDim) {
-      numOfNonNullComp += abs(descriptors::c<L>(missInd[iPop],iDim));
+      numOfNonNullComp += util::abs(descriptors::c<L>(missInd[iPop],iDim));
     }
 
     if (numOfNonNullComp == 1) {
@@ -83,7 +82,7 @@ void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::col
 
   // Will contain the populations normal to the wall's normal vector.
   // (directions 2,6)
-  std::vector<int> perpInd = util::subIndex<L,direction,0>();
+  std::vector<std::size_t> perpInd = util::populationsContributingToVelocity<L,direction,0>();
   for (unsigned iPop = 0; iPop < perpInd.size(); ++iPop) {
     if (descriptors::c<L>(perpInd[iPop],0) == 0 && descriptors::c<L>(perpInd[iPop],1) == 0) {
       perpInd.erase(perpInd.begin() + iPop);
@@ -92,7 +91,7 @@ void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::col
   }
 
   T rho, u[L::d];
-  this->_momenta.computeRhoU(cell, rho, u);
+  MOMENTA().computeRhoU(cell, rho, u);
 
   T rhoCs = T();
   T uCs[L::d];
@@ -142,14 +141,14 @@ void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::col
   boundaryDynamics.collide(cell, statistics);
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-T InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+T InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::getOmega() const
 {
   return boundaryDynamics.getOmega();
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::setOmega(T omega_)
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+void InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::setOmega(T omega_)
 {
   boundaryDynamics.setOmega(omega_);
 }

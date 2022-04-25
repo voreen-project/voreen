@@ -36,6 +36,10 @@ class Serializer;
 void serializer2ostr(Serializer& serializer, std::ostream& ostr, bool enforceUint=false);
 /// processes an istr to a serializer, always in parallel
 void istr2serializer(Serializer& serializer, std::istream& istr, bool enforceUint=false);
+/// processes data from a serializer to a given buffer
+void serializer2buffer(Serializer& serializer, std::uint8_t* buffer);
+/// processes a buffer to a serializer
+void buffer2serializer(Serializer& serializer, const std::uint8_t* buffer);
 
 } // namespace olb
 

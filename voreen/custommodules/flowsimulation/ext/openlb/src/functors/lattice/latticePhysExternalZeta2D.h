@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,7 +41,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysExternalZeta2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysExternalZeta2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysExternalZeta2D(SuperLattice<T,DESCRIPTOR>& sLattice,
                                  const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
@@ -51,11 +49,8 @@ public:
 /// Zeta-Field (Geng2019)
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysExternalZeta2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
-private:
-  const int _overlap;
 public:
-  BlockLatticePhysExternalZeta2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                                 int overlap,
+  BlockLatticePhysExternalZeta2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                  const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]);
 };

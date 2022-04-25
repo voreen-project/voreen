@@ -30,7 +30,7 @@
 
 #include "rtlbmDynamics.h"
 #include "rtlbmDescriptors.h"
-#include "lbHelpers.h"
+#include "lbm.h"
 
 namespace olb {
 
@@ -40,23 +40,23 @@ namespace olb {
 //============= BGK Model for Advection diffusion anisotropic ===//
 //==================================================================//
 
-template<typename T, typename DESCRIPTOR>
-RTLBMdynamicsMcHardy<T, DESCRIPTOR>::RTLBMdynamicsMcHardy
-(Momenta<T, DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix)
-  : BasicDynamics<T, DESCRIPTOR>(momenta), _absorption(latticeAbsorption), _scattering(latticeScattering), _anisoMatrix(anisoMatrix)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+RTLBMdynamicsMcHardy<T, DESCRIPTOR, MOMENTA>::RTLBMdynamicsMcHardy
+(T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix)
+  : legacy::BasicDynamics<T, DESCRIPTOR, MOMENTA>(), _absorption(latticeAbsorption), _scattering(latticeScattering), _anisoMatrix(anisoMatrix)
 {
-  this->getName() = "RTLBMdynamicsMcHardy";  
+  this->getName() = "RTLBMdynamicsMcHardy";
 }
 
-template<typename T, typename DESCRIPTOR>
-T RTLBMdynamicsMcHardy<T, DESCRIPTOR>::computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T RTLBMdynamicsMcHardy<T, DESCRIPTOR, MOMENTA>::computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const
 {
   return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
 }
 
 
-template<typename T, typename DESCRIPTOR>
-void RTLBMdynamicsMcHardy<T, DESCRIPTOR>::collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+CellStatistic<T> RTLBMdynamicsMcHardy<T, DESCRIPTOR, MOMENTA>::collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics )
 {
   std::array<double, DESCRIPTOR::q> feq = {};
   for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
@@ -68,41 +68,42 @@ void RTLBMdynamicsMcHardy<T, DESCRIPTOR>::collide( Cell<T,DESCRIPTOR>& cell, Lat
   // execute collision
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
     cell[iPop] = (cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))
-               - descriptors::norm_c<T,DESCRIPTOR>(iPop)*(_absorption+_scattering) * ( (cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))- feq[iPop] )
-               - _absorption*descriptors::norm_c<T,DESCRIPTOR>(iPop) *(cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))
-               - descriptors::t<T,DESCRIPTOR>(iPop);
+                 - descriptors::norm_c<T,DESCRIPTOR>(iPop)*(_absorption+_scattering) * ( (cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))- feq[iPop] )
+                 - _absorption*descriptors::norm_c<T,DESCRIPTOR>(iPop) *(cell[iPop]+descriptors::t<T,DESCRIPTOR>(iPop))
+                 - descriptors::t<T,DESCRIPTOR>(iPop);
   }
-  T temperature = lbHelpers<T,DESCRIPTOR>::computeRho(cell);
+  T temperature = lbm<DESCRIPTOR>::computeRho(cell);
   statistics.incrementStats( temperature, T() );
 }
 
-template<typename T, typename DESCRIPTOR>
-T RTLBMdynamicsMcHardy<T, DESCRIPTOR>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T RTLBMdynamicsMcHardy<T, DESCRIPTOR, MOMENTA>::getOmega() const
 {
   return -1;
 }
 
-template<typename T, typename DESCRIPTOR>
-void RTLBMdynamicsMcHardy<T, DESCRIPTOR>::setOmega( T omega )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void RTLBMdynamicsMcHardy<T, DESCRIPTOR, MOMENTA>::setOmega( T omega )
 {
 }
 
 //==================================================================================//
-template<typename T, typename DESCRIPTOR>
-RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::RTLBMdynamicsMcHardyRK
-(Momenta<T, DESCRIPTOR>& momenta, T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix)
-  : BasicDynamics<T, DESCRIPTOR>(momenta), _absorption(latticeAbsorption), _scattering(latticeScattering), _anisoMatrix(anisoMatrix)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+RTLBMdynamicsMcHardyRK<T, DESCRIPTOR, MOMENTA>::RTLBMdynamicsMcHardyRK
+(T latticeAbsorption, T latticeScattering, std::array<std::array<T,DESCRIPTOR::q>, DESCRIPTOR::q>& anisoMatrix)
+  : legacy::BasicDynamics<T, DESCRIPTOR, MOMENTA>(), _absorption(latticeAbsorption), _scattering(latticeScattering), _anisoMatrix(anisoMatrix)
 {
-  this->getName() = "RTLBMdynamicsMcHardyRK";  
+  this->getName() = "RTLBMdynamicsMcHardyRK";
 }
-template<typename T, typename DESCRIPTOR>
-T RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const
+
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T RTLBMdynamicsMcHardyRK<T, DESCRIPTOR, MOMENTA>::computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const
 {
   return rho*descriptors::t<T,DESCRIPTOR>(iPop) - descriptors::t<T,DESCRIPTOR>(iPop);
 }
 
-template<typename T, typename DESCRIPTOR>
-void RTLBMdynamicsMcHardyRK<T,DESCRIPTOR>::computeEquilibriumAniso(Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void RTLBMdynamicsMcHardyRK<T,DESCRIPTOR,MOMENTA>::computeEquilibriumAniso(Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq)
 {
   feq.fill( T() );
   for ( int iPop = 0; iPop < DESCRIPTOR::q; ++iPop ) {
@@ -113,8 +114,8 @@ void RTLBMdynamicsMcHardyRK<T,DESCRIPTOR>::computeEquilibriumAniso(Cell<T,DESCRI
   }
 }
 
-template<typename T, typename DESCRIPTOR>
-std::array<T,DESCRIPTOR::q> RTLBMdynamicsMcHardyRK<T,DESCRIPTOR>::doCollision(Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+std::array<T,DESCRIPTOR::q> RTLBMdynamicsMcHardyRK<T,DESCRIPTOR,MOMENTA>::doCollision(Cell<T,DESCRIPTOR>& cell, std::array<T,DESCRIPTOR::q>& feq)
 {
   std::array<T,DESCRIPTOR::q> k;
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
@@ -124,8 +125,8 @@ std::array<T,DESCRIPTOR::q> RTLBMdynamicsMcHardyRK<T,DESCRIPTOR>::doCollision(Ce
   return k;
 }
 
-template<typename T, typename DESCRIPTOR>
-void RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+CellStatistic<T> RTLBMdynamicsMcHardyRK<T, DESCRIPTOR, MOMENTA>::collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics )
 {
   std::array<T,DESCRIPTOR::q> feq;
   std::array<T,DESCRIPTOR::q> f_pre_collision;
@@ -166,18 +167,18 @@ void RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::collide( Cell<T,DESCRIPTOR>& cell, L
     cell[iPop] = f_pre_collision[iPop] + 1/6.*(k1[iPop] + 2*k2[iPop] + 2*k3[iPop] + k4[iPop])
                  - descriptors::t<T,DESCRIPTOR>(iPop); // back shift for OpenLB
   }
-  T temperature = lbHelpers<T,DESCRIPTOR>::computeRho(cell);
+  T temperature = lbm<DESCRIPTOR>::computeRho(cell);
   statistics.incrementStats( temperature, T() );
 }
 
-template<typename T, typename DESCRIPTOR>
-T RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T RTLBMdynamicsMcHardyRK<T, DESCRIPTOR, MOMENTA>::getOmega() const
 {
   return -1;
 }
 
-template<typename T, typename DESCRIPTOR>
-void RTLBMdynamicsMcHardyRK<T, DESCRIPTOR>::setOmega( T omega )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void RTLBMdynamicsMcHardyRK<T, DESCRIPTOR, MOMENTA>::setOmega( T omega )
 {
 }
 

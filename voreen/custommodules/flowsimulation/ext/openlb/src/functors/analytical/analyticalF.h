@@ -28,8 +28,11 @@
 #include <random>
 
 #include "analyticalBaseF.h"
+#include "geometry/superGeometry.h"
 #include "indicator/smoothIndicatorF2D.h"
 #include "indicator/smoothIndicatorF3D.h"
+#include "utilities/adHelpers.h"
+#include "utilities/dimensionConverter.h"
 
 
 /**
@@ -60,7 +63,7 @@ public:
   }
   template <unsigned otherD=D, typename = typename std::enable_if_t<otherD==3>>
   AnalyticalComposed(AnalyticalF<D,T,S>& f0, AnalyticalF<D,T,S>& f1, AnalyticalF<D,T,S>& f2)
-  : AnalyticalF<D,T,S>(3), _f{f0, f1, f2}
+    : AnalyticalF<D,T,S>(3), _f{f0, f1, f2}
   {
     this->getName() = "composed";
   }
@@ -79,9 +82,18 @@ public:
   AnalyticalConst(T value);
   AnalyticalConst(T value0, T value1);
   AnalyticalConst(T value0, T value1, T value2);
+  AnalyticalConst(const Vector<T,2>& value);
   AnalyticalConst(const Vector<T,3>& value);
   AnalyticalConst(const std::vector<T>& value);
   bool operator() (T output[], const S x[]) override;
+
+  template<typename V, typename U>
+  using exchange_type = AnalyticalConst<D,V,U>;
+
+  template<typename V, typename U>
+  auto copyAs() const {
+    return exchange_type<V,U>(util::copyAs<V,T>(_c));
+  }
 };
 
 /// AnalyticalNormal: DD -> XD, where XD is defined by value.size()
@@ -146,6 +158,183 @@ public:
   bool operator() (T output[], const S x[]) override;
 };
 
+
+/** Computes resulting velocity of an object from translational and rotational velocity.
+ * \param position the rotation center
+ * \param velocity translational velocity of the object - expected in lattice units
+ * \param angularVelocity rotational velocity of the object - expected in lattice units
+ */
+template <typename T, typename S, typename DESCRIPTOR>
+class EccentricVelocityField : public AnalyticalF<DESCRIPTOR::d,T,S> {
+protected:
+  Vector<T,DESCRIPTOR::d> _position;
+  Vector<T,DESCRIPTOR::d> _velocity;
+  Vector<T,utilities::dimensions::convert<DESCRIPTOR::d>::rotation> _angularVelocity;
+public:
+  EccentricVelocityField( Vector<T,DESCRIPTOR::d> position,
+                          Vector<T,DESCRIPTOR::d> velocity,
+                          Vector<T,utilities::dimensions::convert<DESCRIPTOR::d>::rotation> angularVelocity );
+  bool operator()(T output[], const S input[]) override;
+};
+
+/** Computes resulting lattice velocity of an object from translational and rotational velocity.
+ * \param position the rotation center
+ * \param velocity translational velocity of the object - expected in lattice units
+ * \param angularVelocity rotational velocity of the object - expected in lattice units
+ * \param converter unit converter to convert to lattice velocity
+ */
+template <typename T, typename S, typename DESCRIPTOR>
+class EccentricLatticeVelocityField : public AnalyticalF<DESCRIPTOR::d,T,S> {
+protected:
+  Vector<T,DESCRIPTOR::d> _position;
+  Vector<T,DESCRIPTOR::d> _velocity;
+  Vector<T,utilities::dimensions::convert<DESCRIPTOR::d>::rotation> _angularVelocity;
+  UnitConverter<T,DESCRIPTOR> const& _converter;
+public:
+  EccentricLatticeVelocityField( Vector<T,DESCRIPTOR::d> position,
+                          Vector<T,DESCRIPTOR::d> velocity,
+                          Vector<T,utilities::dimensions::convert<DESCRIPTOR::d>::rotation> angularVelocity,
+                          UnitConverter<T,DESCRIPTOR> const& converter );
+  bool operator()(T output[], const S input[]) override;
+};
+
+
+
+/// Square wave with given period length, amplitude, difference
+/// (= length of positive time / length of period)
+template <unsigned D, typename T, typename S>
+class AnalyticalSquareWave : public AnalyticalF<D,T,S> {
+public:
+  AnalyticalSquareWave(T period=1, T amplitude=1, T difference=0.5);
+  bool operator() (T output[], const S x[]) override;
+protected:
+  T _period;
+  T _amplitude;
+  T _difference;
+};
+
+
+/// Smoothed square wave. epsilon = width of the mollified interval
+template <unsigned D, typename T, typename S>
+class AnalyticalSmoothedSquareWave : public AnalyticalSquareWave<D,T,S> {
+public:
+  AnalyticalSmoothedSquareWave(T period=1, T amplitude=1, T difference=0.5, T epsilon=1.e-3);
+  bool operator() (T output[], const S x[]) override;
+protected:
+  T _epsilon;
+};
+
+
+/** Concatenate an analytical functor with any other function.
+ * \param _f: an analytical functor S^D -> T^n
+ * \param _g: a function T^n -> U^k or T -> U
+ * g can be e.g. a lambda expression or a free function.
+ * If g: T -> U, then g is applied to each component of the result of f.
+ * If g: T* -> U*, then g is applied to the complete vector. The user is
+ * responsible for ensuring that the dimensions of f and g fit together.
+ *
+ * \example: Apply cosine to linearly transformed values:
+ * AnalyticalLinear1D<double,double> f(1.1, 1.5);
+ * AnalyticalConcatenation conc(f, std::cos);
+ */
+template <unsigned D, typename U, typename T, typename S,
+  bool ComponentWise, bool ReturnArray>
+class AnalyticalConcatenation : public AnalyticalF<D,U,S> {
+protected:
+  using return_type_g = std::conditional_t<ReturnArray,U*,U>;
+  using function_t = std::conditional_t<ComponentWise,
+    std::function<return_type_g(T)>, std::function<return_type_g(T*)>>;
+
+  AnalyticalF<D,T,S>& _f;
+  function_t _g;
+
+public:
+  /** concatenate functor f and some lambda expression g.
+   * targetDim needs to be specified if g is vector (array)-valued
+   */
+  template <typename G>
+  AnalyticalConcatenation(AnalyticalF<D,T,S>& f, G g, unsigned targetDim=1)
+  : AnalyticalF<D,U,S>((ComponentWise) ? f.getTargetDim() : targetDim),
+    _f(f), _g(g) { }
+
+  /** concatenate functor f and some function g.
+   * g maps value to value (no pointer) and is applied component-wise
+   */
+  AnalyticalConcatenation(AnalyticalF<D,T,S>& f, U (*g)(T))
+  : AnalyticalF<D,U,S>(f.getTargetDim()), _f(f), _g(g) {
+    static_assert(ComponentWise);
+    static_assert(! std::is_pointer_v<U>);
+  }
+
+  /** concatenate functor f and some function g.
+   * targetDim needs to be specified if g is vector (array)-valued
+   */
+  // wrapped_U equals U or a pointer to U
+  template<typename wrapped_U>
+  AnalyticalConcatenation(
+    AnalyticalF<D,T,S>& f, wrapped_U (*g)(T*), unsigned targetDim=1)
+  : AnalyticalF<D,U,S>(targetDim),
+    _f(f), _g(g) {
+    static_assert(! ComponentWise);
+  }
+
+  /** concatenate functor f and some function g.
+   * targetDim needs to be specified if g is vector (array)-valued
+   */
+  // wrapped_U equals U or a pointer to U
+  template<typename wrapped_U>
+  AnalyticalConcatenation(
+    AnalyticalF<D,T,S>& f, wrapped_U (*g)(const T*), unsigned targetDim=1)
+  : AnalyticalF<D,U,S>(targetDim),
+    _f(f), _g(g) {
+    static_assert(! ComponentWise);
+  }
+
+  bool operator() (U output[], const S x[]) override {
+    T outputTmp[_f.getTargetDim()];
+    _f(outputTmp, x);
+    if constexpr (ComponentWise) {
+      for (int i = 0; i < _f.getTargetDim(); ++i) {
+        output[i] = _g(outputTmp[i]);
+      }
+    } else {  // g works on the vector
+      if constexpr (ReturnArray) {
+        for (int i = 0; i < this->getTargetDim(); ++i) {
+          const auto* outputTmp2 = _g(outputTmp);
+          output[i] = outputTmp2[i];
+        }
+      } else {  // g returns value
+        output[0] = _g(outputTmp);
+      }
+    }
+    return true;
+  }
+};
+
+template <unsigned D, typename T, typename S, typename G>
+AnalyticalConcatenation(AnalyticalF<D,T,S>&, G g, unsigned _=1)
+ -> AnalyticalConcatenation<D,
+      std::remove_pointer_t<decltype(
+        g(std::conditional_t<std::is_invocable_v<G,T>,T,T*>{}))>,T,S,
+      std::is_invocable_v<G,T>,
+      std::is_pointer_v<decltype(
+        g(std::conditional_t<std::is_invocable_v<G,T>,T,T*>{}))>>;
+
+// default for U seems to be necessary for multiply overloaded functions
+template <unsigned D, typename T, typename S, typename U=T>
+AnalyticalConcatenation(AnalyticalF<D,T,S>&, U (*g)(T))
+ -> AnalyticalConcatenation<D,U,T,S,true,false>;
+
+template <unsigned D, typename wrapped_U, typename T, typename S>
+AnalyticalConcatenation(AnalyticalF<D,T,S>&, wrapped_U(T*), unsigned)
+ -> AnalyticalConcatenation<D,std::remove_pointer_t<wrapped_U>,T,S,
+      false,std::is_pointer_v<wrapped_U>>;
+
+template <unsigned D, typename wrapped_U, typename T, typename S>
+AnalyticalConcatenation(AnalyticalF<D,T,S>&, wrapped_U(const T*), unsigned)
+ -> AnalyticalConcatenation<D,std::remove_pointer_t<wrapped_U>,T,S,
+      false,std::is_pointer_v<wrapped_U>>;
+
 ////////////// CONVERSION FROM NEW TO OLD IMPLEMENTATION //////////////////////////
 
 template <typename T, typename S>
@@ -188,6 +377,14 @@ public:
   AnalyticalLinear1D(T a, T b);
   AnalyticalLinear1D(S x0, T v0, S x1, T v1);
   bool operator() (T output[], const S x[]) override; ///< returns line _a*x + _b
+
+  template<typename V, typename U>
+  using exchange_type = AnalyticalLinear1D<V,U>;
+
+  template<typename V, typename U>
+  auto copyAs() const {
+    return exchange_type<V,U>(_a, _b);
+  }
 };
 
 
@@ -211,7 +408,6 @@ class SinusStartScale : public AnalyticalF1D<T,S> {
 protected:
   S _numTimeSteps;
   T _maxValue;
-  T _pi;
 public:
   SinusStartScale(int numTimeSteps=1, T maxValue=1);
   bool operator() (T output[], const S x[]) override;
@@ -229,27 +425,34 @@ public:
   bool operator() (T output[], const S x[]) override;
 };
 
-/// Derivative of a given 1D functor computed with a finite difference
-template <typename T>
-class AnalyticalDiffFD1D : public AnalyticalF1D<T,T> {
+/// Sinus: Sinus with period and amplitude
+template <typename T, typename S>
+class Sinus : public AnalyticalF1D<T,S> {
 protected:
-  AnalyticalF1D<T,T>& _f;
-  T _eps;
+  T _period;
+  T _amplitude;
 public:
-  AnalyticalDiffFD1D(AnalyticalF1D<T,T>& f, T eps = 1.e-10);
-  bool operator() (T output[], const T input[]) override;
+  Sinus (T period=1, T amplitude=1);
+  bool operator() (T output[], const S x[]) override;
 };
 
-/// Coisnus: Coisnus with period and amplitude
+/// Cosinus: Cosinus with period and amplitude
 template <typename T, typename S>
 class Cosinus : public AnalyticalF1D<T,S> {
 protected:
   T _period;
   T _amplitude;
-  T _pi;
 public:
-  Cosinus (T period=1, T amplitude=1);
+  Cosinus(T period=1, T amplitude=1);
   bool operator() (T output[], const S x[]) override;
+
+  template<typename V, typename U>
+  using exchange_type = Cosinus<V,U>;
+
+  template<typename V, typename U>
+  auto copyAs() const {
+    return exchange_type<V,U>(_period, _amplitude);
+  }
 };
 
 /// CosinusComposite: Composition of two Cosinus to shift the low point within a period - difference denotes the share of the period in which the low point is located. Calculated with case discrimination (x%period < d or d <= x%period)
@@ -259,9 +462,8 @@ protected:
   T _period;
   T _difference;
   T _amplitude;
-  T _pi;
 public:
-  CosinusComposite(T period=1, T difference = 1, T amplitude=1);
+  CosinusComposite(T period=1, T amplitude=1, T difference = 1);
   bool operator() (T output[], const S x[]) override;
 };
 
@@ -280,6 +482,14 @@ public:
   AnalyticalLinear2D(T a, T b, T c);
   AnalyticalLinear2D(S x0, S y0, T v0, S x1, S y1, T v1, S x2, S y2, T v2);
   bool operator() (T output[], const S x[]) override;
+
+  template<typename V, typename U>
+  using exchange_type = AnalyticalLinear2D<V,U>;
+
+  template<typename V, typename U>
+  auto copyAs() const {
+    return exchange_type<V,U>(_a, _b, _c);
+  }
 };
 
 /// AnalyticalRandom2D: 2D -> 1D with maxValue in the center decreasing linearly with the distrance to the center to zero at the radius and zero outside
@@ -294,6 +504,7 @@ public:
   bool operator() (T output[], const S x[]);
 };
 
+//TODO: to be removed
 /** Computes resulting velocity of an object from translational and rotational velocity.
  * \param indicator Class defining the object (needs to be a SmoothIndicatorF2D<T,T,true>)
  * \param u translational velocity of the object - expected in lattice units
@@ -403,6 +614,8 @@ public:
   bool operator()(T output[1], const S x[2]) override;
 };
 
+
+//TODO: to be removed
 /** Computes resulting velocity of an object from translational and rotational velocity.
  * \param indicator Class defining the object (needs to be a SmoothIndicatorF3D)
  * \param u translational velocity of the object - expected in lattice units
@@ -416,6 +629,44 @@ protected:
 public:
   ParticleU3D(SmoothIndicatorF3D<T, T, true>& indicator, UnitConverter<T,DESCRIPTOR> const& converter);
   bool operator()(T output[], const S input[]) override;
+};
+
+/** Returns a constant value on every cuboids.
+ * The cuboid decomposition is independent of the simulation geometry.
+ * SuperStructure etc. are only needed because our functor stucture requires
+ * this.
+ * Scaling of this functor is problematic because of a primitive underlying
+ * search algorithm. Hence, this functor should not be applied in any
+ * performance critical context.
+ */
+template <unsigned D, typename T, typename S>
+class AnalyticalCuboidwiseConst final : public AnalyticalF<D,T,S>{
+private:
+  const unsigned _numberOfCuboids;
+
+  std::shared_ptr<const CuboidGeometry<T,D>>  _cuboids;
+  const std::vector<T>                        _values;
+
+public:
+  AnalyticalCuboidwiseConst(SuperGeometry<T,D>& sGeometry,
+    const std::vector<T>& values, unsigned targetDim=D)
+  : AnalyticalF<D,T,S>(targetDim),
+    _numberOfCuboids(values.size()),
+    _cuboids(std::make_shared<CuboidGeometry<T,D>>(
+      sGeometry.getCuboidGeometry().getMotherCuboid(),
+      _numberOfCuboids)),
+    _values(values)
+  {
+    this->getName() = "cuboidwiseConst";
+  }
+
+  bool operator() (T output[], const S input[]) override {
+    const auto index = _cuboids->get_iC(input[0], input[1], input[2]);
+    for (int i = 0; i < this->getTargetDim(); ++i) {
+      output[i] = _values[index];
+    }
+    return true;
+  }
 };
 
 } // end namespace olb

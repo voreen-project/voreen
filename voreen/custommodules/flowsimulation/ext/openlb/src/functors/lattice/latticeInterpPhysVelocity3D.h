@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -49,7 +49,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeInterpPhysVelocity3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticeInterpPhysVelocity3D(SuperLattice3D<T,DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR> const& converter);
+  SuperLatticeInterpPhysVelocity3D(SuperLattice<T,DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR> const& converter);
   bool operator()(T output[], const int input[]) override;
   void operator()(T output[], const T input[], const int iC);
 };
@@ -58,10 +58,9 @@ template <typename T, typename DESCRIPTOR>
 class BlockLatticeInterpPhysVelocity3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 protected:
   Cuboid3D<T>* _cuboid;
-  int _overlap;
 public:
-  BlockLatticeInterpPhysVelocity3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-                                   const UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c, int overlap);
+  BlockLatticeInterpPhysVelocity3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                   const UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c);
   BlockLatticeInterpPhysVelocity3D(const BlockLatticeInterpPhysVelocity3D<T,DESCRIPTOR>& rhs);
   bool operator() (T output[3], const int input[3]) override
   {

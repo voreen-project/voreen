@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,19 +43,19 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR, typename FIELD>
 SuperLatticeExternalScalarField3D<T, DESCRIPTOR,FIELD>::SuperLatticeExternalScalarField3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice) : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1)
+  SuperLattice<T, DESCRIPTOR>& sLattice) : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1)
 {
   this->getName() = "externalScalarField";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeExternalScalarField3D<T, DESCRIPTOR,FIELD>(this->_sLattice.getBlockLattice(iC)));
+    this->_blockF.emplace_back(new BlockLatticeExternalScalarField3D<T, DESCRIPTOR,FIELD>(this->_sLattice.getBlock(iC)));
   }
 }
 
 template<typename T, typename DESCRIPTOR, typename FIELD>
 BlockLatticeExternalScalarField3D<T, DESCRIPTOR,FIELD>::BlockLatticeExternalScalarField3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1)
 {
   this->getName() = "externalScalarField";
@@ -65,7 +64,7 @@ BlockLatticeExternalScalarField3D<T, DESCRIPTOR,FIELD>::BlockLatticeExternalScal
 template<typename T, typename DESCRIPTOR, typename FIELD>
 bool BlockLatticeExternalScalarField3D<T, DESCRIPTOR,FIELD>::operator()(T output[], const int input[])
 {
-  output[0] = this->_blockLattice.get(input[0], input[1], input[2]).template getFieldPointer<FIELD>()[0];
+  output[0] = static_cast<T>(this->_blockLattice.get(input[0], input[1], input[2]).template getField<FIELD>());
   return true;
 }
 

@@ -59,7 +59,8 @@ bool Fringe3D<T,S>::operator()(T output[12], const S input[3])
     output[7] = scaleLambda;
     output[11] = scaleLambda;
     return true;
-  } else {
+  }
+  else {
     output[0] = T();
     output[1] = T();
     output[2] = T();
@@ -75,10 +76,12 @@ T Fringe3D<T,S>::s(const T& x) const
 {
   if ( x < std::numeric_limits<T>::epsilon() ) {
     return 0.;
-  } else if (x > T(1)-std::numeric_limits<T>::epsilon() ) {
+  }
+  else if (x > T(1)-std::numeric_limits<T>::epsilon() ) {
     return T(1);
-  } else {
-    return T(1)/(T(1) + exp( T(1)/(x - T(1) ) + T(1)/x ) );
+  }
+  else {
+    return T(1)/(T(1) + util::exp( T(1)/(x - T(1) ) + T(1)/x ) );
   }
 }
 

@@ -32,7 +32,7 @@
 #include "io/fileName.h"
 #include "unitConverter.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 template <typename T, typename DESCRIPTOR>
@@ -79,12 +79,12 @@ void UnitConverter<T, DESCRIPTOR>::write(std::string const& fileName) const
 {
   std::string dataFile = singleton::directories().getLogOutDir() + fileName + ".dat";
 
-  if (singleton::mpi().isMainProcessor())
-  {
+  if (singleton::mpi().isMainProcessor()) {
     std::ofstream fout(dataFile.c_str(), std::ios::trunc);
-    if(!fout) {
+    if (!fout) {
       clout << "error write() function: can not open std::ofstream" << std::endl;
-    } else {
+    }
+    else {
       print( fout );
       fout.close();
     }
@@ -97,18 +97,18 @@ UnitConverter<T, DESCRIPTOR>* createUnitConverter(XMLreader const& params)
   OstreamManager clout(std::cout,"createUnitConverter");
   params.setWarningsOn(false);
 
-  T physDeltaX;
-  T physDeltaT;
+  T physDeltaX{};
+  T physDeltaT{};
 
-  T charPhysLength;
-  T charPhysVelocity;
-  T physViscosity;
-  T physDensity;
+  T charPhysLength{};
+  T charPhysVelocity{};
+  T physViscosity{};
+  T physDensity{};
   T charPhysPressure = 0;
 
-  int resolution;
-  T latticeRelaxationTime;
-  T charLatticeVelocity;
+  int resolution{};
+  T latticeRelaxationTime{};
+  T charLatticeVelocity{};
 
   // params[parameter].read(value) sets the value or returns false if the parameter can not be found
   params["Application"]["PhysParameters"]["CharPhysLength"].read(charPhysLength);
@@ -132,6 +132,11 @@ UnitConverter<T, DESCRIPTOR>* createUnitConverter(XMLreader const& params)
         }
         else if (params["Application"]["Discretization"]["LatticeRelaxationTime"].read(latticeRelaxationTime,false)) {
           physDeltaX = physViscosity * charLatticeVelocity / charPhysVelocity * descriptors::invCs2<T,DESCRIPTOR>() / (latticeRelaxationTime - 0.5);
+        }
+        else {
+          clout << "Error: Only found CharLatticeVelocity, missing PhysDeltaT or LatticeRelaxationTime"
+                << std::endl;
+          exit (1);
         }
       }
     }

@@ -25,7 +25,7 @@
 #define BLOCK_REDUCTION_2D2D_H
 
 #include "io/ostreamManager.h"
-#include "core/blockData2D.h"
+#include "core/blockData.h"
 #include "core/vector.h"
 #include "blockBaseF2D.h"
 #include "superBaseF2D.h"
@@ -38,8 +38,6 @@
 
 namespace olb {
 
-
-class BlockStructure2D;
 
 /// BlockReduction2D2D interpolates the data of a SuperF2D functor in a given resolution.
 /**
@@ -59,8 +57,6 @@ private:
   T _h;                /// spacing according to given resolution
   int _nx;             /// horizontal size of the reduced cuboid
   int _ny;             /// vertical size of the reduced cuboid
-  /// Data fields which hold the reduced data
-  std::unique_ptr<BlockData2D<T,T>> _blockDataMemory;
   /// Synchronization mode, see BlockDataSyncMode enum for further information.
   /// This value only matters when PARALLEL_MODE_MPI is defined.
   const BlockDataSyncMode _syncMode;
@@ -89,7 +85,7 @@ public:
   /// Updates and writes the data to _blockData using _rankLocalSubplane
   void update();
   /// Overload of virtual function from class BlockF2D
-  BlockStructure2D& getBlockStructure() override;
+  BlockStructureD<2>& getBlockStructure() override;
 
 };
 

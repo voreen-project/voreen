@@ -25,40 +25,38 @@
 #define LATTICE_RANK_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeRank2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticeRank2D<T,DESCRIPTOR>::SuperLatticeRank2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice)
+  SuperLattice<T,DESCRIPTOR>& sLattice)
   : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, 1)
 {
   this->getName() = "rank";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticeRank2D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC)) );
+    this->_blockF.emplace_back( new BlockLatticeRank2D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC)) );
   }
 }
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeRank2D<T,DESCRIPTOR>::BlockLatticeRank2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice)
+(BlockLattice<T,DESCRIPTOR>& blockLattice)
   : BlockLatticeF2D<T,DESCRIPTOR>(blockLattice,1)
 {
   this->getName() = "rank";

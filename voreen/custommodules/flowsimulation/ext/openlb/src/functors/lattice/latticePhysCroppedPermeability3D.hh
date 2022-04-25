@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,19 +43,19 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysCroppedPermeability3D<T, DESCRIPTOR>::SuperLatticePhysCroppedPermeability3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "cropped_permeability";
   for (int iC = 0; iC < this->_sLattice.getLoadBalancer().size(); iC++ ) {
     this->_blockF.emplace_back( new BlockLatticePhysCroppedPermeability3D<T, DESCRIPTOR>(
-                                  this->_sLattice.getBlockLattice(iC), this->getConverter() ) );
+                                  this->_sLattice.getBlock(iC), this->getConverter() ) );
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysCroppedPermeability3D<T, DESCRIPTOR>::BlockLatticePhysCroppedPermeability3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 1)
 {
   this->getName() = "cropped_permeability";

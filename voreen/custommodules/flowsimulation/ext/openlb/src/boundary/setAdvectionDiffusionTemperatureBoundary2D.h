@@ -21,8 +21,8 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the AdvectionDiffusionTemperature Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the AdvectionDiffusionTemperature Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_ADVECTION_DIFFUSION_TEMPERATURE_BOUNDARY_2D_H
 #define SET_ADVECTION_DIFFUSION_TEMPERATURE_BOUNDARY_2D_H
 
@@ -31,17 +31,16 @@
 #include "geometry/blockGeometryStatistics2D.h"
 #include "core/superLattice2D.h"
 #include "io/ostreamManager.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "utilities/functorPtr.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
-#include "core/blockLatticeStructure2D.h"
-#include "advectionDiffusionMomentaOnBoundaries.h"
 #include "boundaryPostProcessors2D.h"
 #include "dynamics/dynamics.h"
 #include "dynamics/advectionDiffusionDynamics.h"
 #include "advectionDiffusionBoundaries.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
+#include "setBoundary2D.h"
 
 
 namespace olb {
@@ -49,18 +48,16 @@ namespace olb {
 ///Initialising the AdvectionDiffusionTemperatureBoundary on the superLattice domain
 ///This is an advection diffusion boundary -->MixinDynamics = AdvectionDiffusionRLBdynamics
 template<typename T, typename DESCRIPTOR, typename MixinDynamics=AdvectionDiffusionRLBdynamics<T,DESCRIPTOR>>
-void setAdvectionDiffusionTemperatureBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega,SuperGeometry2D<T>& superGeometry, int material);
+void setAdvectionDiffusionTemperatureBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega,SuperGeometry<T,2>& superGeometry, int material);
 
 ///Initialising the AdvectionDiffusionTemperatureBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics=AdvectionDiffusionRLBdynamics<T,DESCRIPTOR>>
-void setAdvectionDiffusionTemperatureBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega,FunctorPtr<SuperIndicatorF2D<T>>&& indicator);
+void setAdvectionDiffusionTemperatureBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega,FunctorPtr<SuperIndicatorF2D<T>>&& indicator);
 
-/// Set AdvectionDiffusionTemperatureBoundary for indicated cells inside the block domain
+///Set AdvectionDiffusionTemperatureBoundary for indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setAdvectionDiffusionTemperatureBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator,
-    bool includeOuterCells=false);
-
-
+void setAdvectionDiffusionTemperatureBoundary(BlockLattice<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator,
+                                              bool includeOuterCells=false);
 
 }//namespace olb
 

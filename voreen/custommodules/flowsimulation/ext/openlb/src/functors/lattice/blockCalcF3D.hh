@@ -75,7 +75,8 @@ bool BlockCalcF3D<T,F>::operator()(T output[], const int input[])
   if ( this->_fIsBlock && this->_gIsBlock ) {
     this->_f(outputF, input);
     this->_g(outputG, input);
-  } else {
+  }
+  else {
     const int superInput[4] = {
       this->_glob,
       input[0], input[1], input[2]
@@ -84,7 +85,8 @@ bool BlockCalcF3D<T,F>::operator()(T output[], const int input[])
     if ( this->_fIsBlock ) {
       this->_f(outputF, input);
       this->_g(outputG, superInput);
-    } else {
+    }
+    else {
       this->_f(outputF, superInput);
       this->_g(outputG, input);
     }
@@ -97,7 +99,8 @@ bool BlockCalcF3D<T,F>::operator()(T output[], const int input[])
       for (int i = 1; i < this->getTargetDim(); i++) {
         outputF[i] = outputF[0];
       }
-    } else if ( _g.getTargetDim() == 1 ) {
+    }
+    else if ( _g.getTargetDim() == 1 ) {
       // apply scalar g to possibly multidimensional f
       for (int i = 1; i < this->getTargetDim(); i++) {
         outputG[i] = outputG[0];

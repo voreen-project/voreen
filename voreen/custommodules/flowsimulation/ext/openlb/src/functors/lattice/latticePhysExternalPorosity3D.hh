@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR>
 SuperLatticePhysExternalPorosity3D<T,DESCRIPTOR>::SuperLatticePhysExternalPorosity3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T,DESCRIPTOR>(sLattice,converter,1)
 {
   this->getName() = "ExtPorosityField";
@@ -53,8 +52,7 @@ SuperLatticePhysExternalPorosity3D<T,DESCRIPTOR>::SuperLatticePhysExternalPorosi
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysExternalPorosity3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -62,11 +60,9 @@ SuperLatticePhysExternalPorosity3D<T,DESCRIPTOR>::SuperLatticePhysExternalPorosi
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysExternalPorosity3D<T,DESCRIPTOR>::BlockLatticePhysExternalPorosity3D(
-  BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter)
-  : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice,converter,2),
-    _overlap(overlap)
+  : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice,converter,2)
 {
   this->getName() = "ExtPorosityField";
 }
@@ -74,9 +70,7 @@ BlockLatticePhysExternalPorosity3D<T,DESCRIPTOR>::BlockLatticePhysExternalPorosi
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysExternalPorosity3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  this->_blockLattice.get(
-    input[0]+_overlap, input[1]+_overlap, input[2]+_overlap
-  ).template computeField<descriptors::POROSITY>(output);
+  this->_blockLattice.get(input).template computeField<descriptors::POROSITY>(output);
   return true;
 }
 

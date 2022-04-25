@@ -1,46 +1,34 @@
 # OpenLB - Open Source Lattice Boltzmann Code
 
 The OpenLB project is a C++ package for the implementation of lattice Boltzmann
-methods addressing a vast range of transport problems.
+methods adressing a vast range of tansport problems.
+
+## Dependencies
+
+The only mandatory external dependency of OpenLB is GNU Make and a C++ compiler
+with C++17 support. This includes all reasonably recent versions of GCC, Clang
+and ICC.
+
+GPU support depends on Nvidia CUDA 10.2 or later.
+
+## Installation
+
+1. Adjust the `config.mk` file to fit your local compiler environment
+   (examples for some common configurations are available in `config/`
+2. Build the embedded dependencies using `make`
+3. Switch to any of the examples and compile it using `make`
 
 ## Documentation
 
-A comprehensive user guide is available at [0].
+A comprehensive user guide is available in `doc/userGuide`.
 
 Papers featuring OpenLB are collected at [1].
 
 Up-to-date Doxygen documentation can be generated via `make doxygen`
 or accessed at [2].
 
-[0]: https://www.openlb.net/user-guide/
 [1]: https://www.openlb.net/articles/
 [2]: https://www.openlb.net/DoxyGen/html/index.html
-
-## Dependencies
-
-The only mandatory external dependency of OpenLB is GNU Make and a C++ compiler
-with C++14 support. This includes all reasonably recent versions of GCC, Clang
-and ICC.
-
-ParaView and gnuplot are optional dependencies for visualizing simulation results.
-
-## Build
-
-1. Adjust the `config.mk` file to fit your local compiler environment.
-   Preset values are for GCC compilation without parallelization support.
-2. Build the library core using `make`
-
-### Examples
-
-All examples may be compiled in one go using `make samples`.
-
-To compile an individual example such as a basic flow around a cylinder:
-
-1. Switch to `examples/laminar/cylinder2d`
-2. Execute `make`
-3. Run the program via `./cylinder2d`
-4. Follow the program output while it is running
-5. VTK and gnuplot results can be found in the `tmp/` folder
 
 ## Community
 
@@ -55,10 +43,12 @@ OpenLB directly from the developer team and invited guest lecturers.
 A list of all present and past contributors is available at [5].
 
 [3]: https://www.openlb.net/forum/
-[4]: https://www.openlb.net/spring-school-2021/
+[4]: https://www.openlb.net/spring-school-2022/
 [5]: https://www.openlb.net/authors/
 
 ## How to cite OpenLB
+
+To cite OpenLB in general instead of a specific release we suggest:
 
 ```
 @article{OpenLB2020,

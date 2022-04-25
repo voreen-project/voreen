@@ -25,118 +25,60 @@
 #define FD_BOUNDARIES_2D_HH
 
 #include "boundaryPostProcessors2D.h"
+
 #include "core/finiteDifference2D.h"
-#include "core/blockLattice2D.h"
 #include "core/util.h"
-#include "dynamics/lbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
+
+#include "dynamics/dynamics.h"
+#include "dynamics/lbm.h"
 
 namespace olb {
 
 ///////////  StraightFdBoundaryProcessor2D ///////////////////////////////////
 
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-StraightFdBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
-StraightFdBoundaryProcessor2D(int x0_, int x1_, int y0_, int y1_)
-  : x0(x0_), x1(x1_), y0(y0_), y1(y1_)
-{
-  OLB_PRECONDITION(x0==x1 || y0==y1);
-  this->getName() = "StraightFdBoundaryProcessor2D";
-}
-
 template<typename T, typename DESCRIPTOR, int direction,int orientation>
-void StraightFdBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+template<typename CELL>
+void StraightFdBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::apply(CELL& cell)
 {
   using namespace olb::util::tensorIndices2D;
 
-  int newX0, newX1, newY0, newY1;
-  if ( util::intersect (
-         x0, x1, y0, y1,
-         x0_, x1_, y0_, y1_,
-         newX0, newX1, newY0, newY1 ) ) {
+  T dx_u[DESCRIPTOR::d], dy_u[DESCRIPTOR::d];
+  T rho, u[DESCRIPTOR::d];
 
-    int iX;
+  auto& dynamics = cell.getDynamics();
 
-#ifdef PARALLEL_MODE_OMP
-    #pragma omp parallel for
-#endif
-    for (iX=newX0; iX<=newX1; ++iX) {
-      T dx_u[DESCRIPTOR::d], dy_u[DESCRIPTOR::d];
-      for (int iY=newY0; iY<=newY1; ++iY) {
-        Cell<T,DESCRIPTOR> cell = blockLattice.get(iX,iY);
-        Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(iX, iY);
+  cell.computeRhoU(rho,u);
 
-        T rho, u[DESCRIPTOR::d];
-        cell.computeRhoU(rho,u);
+  interpolateGradients<0>(cell, dx_u);
+  interpolateGradients<1>(cell, dy_u);
 
-        interpolateGradients<0>(blockLattice, dx_u, iX, iY);
-        interpolateGradients<1>(blockLattice, dy_u, iX, iY);
-        T dx_ux = dx_u[0];
-        T dy_ux = dy_u[0];
-        T dx_uy = dx_u[1];
-        T dy_uy = dy_u[1];
-        T omega = dynamics->getOmega();
-        T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
-        T pi[util::TensorVal<DESCRIPTOR >::n];
-        pi[xx] = (T)2 * dx_ux * sToPi;
-        pi[yy] = (T)2 * dy_uy * sToPi;
-        pi[xy] = (dx_uy + dy_ux) * sToPi;
+  T dx_ux = dx_u[0];
+  T dy_ux = dy_u[0];
+  T dx_uy = dx_u[1];
+  T dy_uy = dy_u[1];
+  T omega = dynamics.getOmegaOrFallback(std::numeric_limits<T>::signaling_NaN());
+  T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
+  T pi[util::TensorVal<DESCRIPTOR >::n];
+  pi[xx] = (T)2 * dx_ux * sToPi;
+  pi[yy] = (T)2 * dy_uy * sToPi;
+  pi[xy] = (dx_uy + dy_ux) * sToPi;
 
-        // Computation of the particle distribution functions
-        // according to the regularized formula
-
-        T uSqr = util::normSqr<T,2>(u);
-        for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-          cell[iPop] = dynamics -> computeEquilibrium(iPop,rho,u,uSqr) +
-                       firstOrderLbHelpers<T,DESCRIPTOR>::fromPiToFneq(iPop, pi);
-        }
-      }
-    }
+  // Computation of the particle distribution functions
+  // according to the regularized formula
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = dynamics.computeEquilibrium(iPop,rho,u)
+               + equilibrium<DESCRIPTOR>::template fromPiToFneq<T>(iPop, pi);
   }
 }
 
 template<typename T, typename DESCRIPTOR, int direction,int orientation>
+template<int deriveDirection, typename CELL>
 void StraightFdBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+interpolateGradients(CELL& cell, T velDeriv[DESCRIPTOR::d]) const
 {
-  processSubDomain(blockLattice, x0, x1, y0, y1);
+  fd::DirectedGradients2D<T,DESCRIPTOR,direction,orientation,direction==deriveDirection>
+    ::interpolateVector(velDeriv, cell);
 }
-
-template<typename T, typename DESCRIPTOR, int direction,int orientation>
-template<int deriveDirection>
-void StraightFdBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
-interpolateGradients(BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
-                     T velDeriv[DESCRIPTOR::d], int iX, int iY) const
-{
-  fd::DirectedGradients2D<T,DESCRIPTOR,direction,orientation,direction==deriveDirection>::
-  interpolateVector(velDeriv, blockLattice, iX, iY);
-}
-
-////////  StraightFdBoundaryProcessorGenerator2D ////////////////////////////////
-
-template<typename T, typename DESCRIPTOR, int direction,int orientation>
-StraightFdBoundaryProcessorGenerator2D<T,DESCRIPTOR, direction,orientation>::
-StraightFdBoundaryProcessorGenerator2D(int x0_, int x1_, int y0_, int y1_)
-  : PostProcessorGenerator2D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_)
-{ }
-
-template<typename T, typename DESCRIPTOR, int direction,int orientation>
-PostProcessor2D<T,DESCRIPTOR>*
-StraightFdBoundaryProcessorGenerator2D<T,DESCRIPTOR,direction,orientation>::generate() const
-{
-  return new StraightFdBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>
-         ( this->x0, this->x1, this->y0, this->y1);
-}
-
-template<typename T, typename DESCRIPTOR, int direction,int orientation>
-PostProcessorGenerator2D<T,DESCRIPTOR>*
-StraightFdBoundaryProcessorGenerator2D<T,DESCRIPTOR,direction,orientation>::clone() const
-{
-  return new StraightFdBoundaryProcessorGenerator2D<T,DESCRIPTOR,direction,orientation>
-         (this->x0, this->x1, this->y0, this->y1);
-}
-
 
 ////////  StraightConvectionBoundaryProcessor2D ////////////////////////////////
 
@@ -176,7 +118,7 @@ StraightConvectionBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
 
 template<typename T, typename DESCRIPTOR, int direction,int orientation>
 void StraightConvectionBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   using namespace olb::util::tensorIndices2D;
 
@@ -238,7 +180,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR, int direction,int orientation>
 void StraightConvectionBoundaryProcessor2D<T,DESCRIPTOR,direction,orientation>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -306,7 +248,7 @@ SlipBoundaryProcessor2D(int x0_, int x1_, int y0_, int y1_, int discreteNormalX,
 
 template<typename T, typename DESCRIPTOR>
 void SlipBoundaryProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   int newX0, newX1, newY0, newY1;
   if ( util::intersect (
@@ -333,7 +275,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void SlipBoundaryProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -399,7 +341,7 @@ PartialSlipBoundaryProcessor2D(T tuner_, int x0_, int x1_, int y0_, int y1_, int
 
 template<typename T, typename DESCRIPTOR>
 void PartialSlipBoundaryProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   int newX0, newX1, newY0, newY1;
   if ( util::intersect (
@@ -432,7 +374,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void PartialSlipBoundaryProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -464,39 +406,29 @@ PartialSlipBoundaryProcessorGenerator2D<T,DESCRIPTOR>::clone() const
 /////////// OuterVelocityCornerProcessor2D /////////////////////////////////////
 
 template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-OuterVelocityCornerProcessor2D<T, DESCRIPTOR, xNormal, yNormal>::
-OuterVelocityCornerProcessor2D(int x_, int y_)
-  : x(x_), y(y_)
-{
-  this->_priority = 1;
-  this->getName() = "OuterVelocityCornerProcessor2D";
-}
-
-template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-void OuterVelocityCornerProcessor2D<T, DESCRIPTOR, xNormal, yNormal>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+template<typename CELL>
+void OuterVelocityCornerProcessor2D<T,DESCRIPTOR,xNormal,yNormal>::apply(CELL& cell)
 {
   using namespace olb::util::tensorIndices2D;
 
-  T rho10 = blockLattice.get(x-1*xNormal, y-0*yNormal).computeRho();
-  T rho01 = blockLattice.get(x-0*xNormal, y-1*yNormal).computeRho();
+  T rho10 = cell.neighbor({-1*xNormal, -0*yNormal}).computeRho();
+  T rho01 = cell.neighbor({-0*xNormal, -1*yNormal}).computeRho();
 
-  T rho20 = blockLattice.get(x-2*xNormal, y-0*yNormal).computeRho();
-  T rho02 = blockLattice.get(x-0*xNormal, y-2*yNormal).computeRho();
+  T rho20 = cell.neighbor({-2*xNormal, -0*yNormal}).computeRho();
+  T rho02 = cell.neighbor({-0*xNormal, -2*yNormal}).computeRho();
 
   T rho = (T)2/(T)3*(rho01+rho10) - (T)1/(T)6*(rho02+rho20);
 
   T dx_u[DESCRIPTOR::d], dy_u[DESCRIPTOR::d];
-  fd::DirectedGradients2D<T, DESCRIPTOR, 0, xNormal, true>::interpolateVector(dx_u, blockLattice, x,y);
-  fd::DirectedGradients2D<T, DESCRIPTOR, 1, yNormal, true>::interpolateVector(dy_u, blockLattice, x,y);
+  fd::DirectedGradients2D<T, DESCRIPTOR, 0, xNormal, true>::interpolateVector(dx_u, cell);
+  fd::DirectedGradients2D<T, DESCRIPTOR, 1, yNormal, true>::interpolateVector(dy_u, cell);
   T dx_ux = dx_u[0];
   T dy_ux = dy_u[0];
   T dx_uy = dx_u[1];
   T dy_uy = dy_u[1];
 
-  Cell<T,DESCRIPTOR> cell = blockLattice.get(x,y);
-  Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(x, y);
-  T omega = dynamics -> getOmega();
+  auto& dynamics = cell.getDynamics();
+  T omega = dynamics.getOmegaOrFallback(std::numeric_limits<T>::signaling_NaN());
 
   T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
   T pi[util::TensorVal<DESCRIPTOR >::n];
@@ -507,50 +439,12 @@ process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
   // Computation of the particle distribution functions
   // according to the regularized formula
   T u[DESCRIPTOR::d];
-  blockLattice.get(x,y).computeU(u);
+  cell.computeU(u);
 
-  T uSqr = util::normSqr<T,2>(u);
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-    cell[iPop] =
-      dynamics -> computeEquilibrium(iPop,rho,u,uSqr) +
-      firstOrderLbHelpers<T,DESCRIPTOR>::fromPiToFneq(iPop, pi);
+    cell[iPop] = dynamics.computeEquilibrium(iPop,rho,u)
+               + equilibrium<DESCRIPTOR>::template fromPiToFneq<T>(iPop, pi);
   }
-}
-
-template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-void OuterVelocityCornerProcessor2D<T, DESCRIPTOR, xNormal, yNormal>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                 int x0_, int x1_, int y0_, int y1_ )
-{
-  if (util::contained(x, y, x0_, x1_, y0_, y1_)) {
-    process(blockLattice);
-  }
-}
-
-
-////////  OuterVelocityCornerProcessorGenerator2D ////////////////////////////
-
-template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-OuterVelocityCornerProcessorGenerator2D<T, DESCRIPTOR, xNormal, yNormal>::
-OuterVelocityCornerProcessorGenerator2D(int x_, int y_)
-  : PostProcessorGenerator2D<T,DESCRIPTOR>(x_, x_, y_, y_)
-{ }
-
-template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-PostProcessor2D<T,DESCRIPTOR>*
-OuterVelocityCornerProcessorGenerator2D<T, DESCRIPTOR, xNormal, yNormal>::generate() const
-{
-  return new OuterVelocityCornerProcessor2D<T, DESCRIPTOR, xNormal, yNormal>
-         ( this->x0, this->y0);
-}
-
-template<typename T, typename DESCRIPTOR, int xNormal,int yNormal>
-PostProcessorGenerator2D<T,DESCRIPTOR>*
-OuterVelocityCornerProcessorGenerator2D<T, DESCRIPTOR, xNormal, yNormal>::
-clone() const
-{
-  return new OuterVelocityCornerProcessorGenerator2D<T, DESCRIPTOR, xNormal, yNormal>
-         ( this->x0, this->y0);
 }
 
 
@@ -566,7 +460,7 @@ FreeEnergyWallProcessor2D(int x0_, int x1_, int y0_, int y1_, int discreteNormal
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyWallProcessor2D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   int newX0, newX1, newY0, newY1;
   if ( util::intersect (
@@ -591,7 +485,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyWallProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -635,7 +529,7 @@ FreeEnergyChemPotBoundaryProcessor2D(
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyChemPotBoundaryProcessor2D<T,DESCRIPTOR>::
 processSubDomain(
-  BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+  BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   int newX0, newX1, newY0, newY1;
   if ( util::intersect (
@@ -663,7 +557,7 @@ processSubDomain(
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyChemPotBoundaryProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -710,7 +604,7 @@ FreeEnergyConvectiveProcessor2D(
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyConvectiveProcessor2D<T,DESCRIPTOR>::
 processSubDomain(
-  BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+  BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   int newX0, newX1, newY0, newY1;
   if ( util::intersect (
@@ -739,7 +633,7 @@ processSubDomain(
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyConvectiveProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }

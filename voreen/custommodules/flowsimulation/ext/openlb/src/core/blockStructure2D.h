@@ -28,6 +28,7 @@
 #define BLOCK_STRUCTURE_2D_H
 
 #include <cstdint>
+#include <array>
 
 #include "core/olbDebug.h"
 #include "core/vector.h"
@@ -40,6 +41,9 @@ namespace olb {
  * \param _ny extension in y direction
  *
  */
+
+  static int foo_x = 0;
+  static int foo_y = 0;
 class BlockStructure2D {
 protected:
   /// Block width
@@ -50,6 +54,7 @@ public:
   BlockStructure2D(int nx, int ny) : _nx(nx), _ny(ny) {};
   BlockStructure2D(int nx, int ny, int overlap):
     _nx(nx+2*overlap), _ny(ny+2*overlap) { };
+  BlockStructure2D(): BlockStructure2D(1,1) {};
   /// Read only access to block width
   int getNx() const
   {
@@ -67,11 +72,22 @@ public:
     // Nx and Ny are of type int, which might be 32-bit types, even on
     // 64-bit platforms. Therefore, Nx*Ny may lead to a type overflow.
     return static_cast<std::size_t>(getNx())
-         * static_cast<std::size_t>(getNy());
+           * static_cast<std::size_t>(getNy());
   }
+
   /// Get 1D cell ID
   std::size_t getCellId(int iX, int iY) const
   {
+
+
+    if(!(iX >= 0 && iX < this->_nx && iY >= 0 && iY < this->_ny)){
+      throw std::runtime_error{"Bad access at: " + std::to_string(iX) + " " + std::to_string(iY) + " " + std::to_string(foo_x) + " " + std::to_string(foo_y) + " "+ std::to_string(_nx) + " " + std::to_string(_ny)};
+
+    }
+
+    foo_x = iX;
+    foo_y = iY;
+
     OLB_PRECONDITION(iX >= 0 && iX < this->_nx);
     OLB_PRECONDITION(iY >= 0 && iY < this->_ny);
     return iX*_ny + iY;

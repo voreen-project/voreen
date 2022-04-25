@@ -38,7 +38,8 @@ private:
 
 public:
   constexpr Fraction(int num, int denum):
-    _numerator(num), _denominator(denum) {
+    _numerator(num), _denominator(denum)
+  {
     if (_denominator == 0) {
       throw std::invalid_argument("denominator must not be zero");
     }

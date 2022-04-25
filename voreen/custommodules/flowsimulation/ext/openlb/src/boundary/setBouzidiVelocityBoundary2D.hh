@@ -21,9 +21,9 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Bouzidi Velocity Boundary
-///This is an offLattice Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Bouzidi Velocity Boundary
+//This is an offLattice Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_BOUZIDI_VELOCITY_BOUNDARY_2D_HH
 #define SET_BOUZIDI_VELOCITY_BOUNDARY_2D_HH
 
@@ -36,7 +36,7 @@ namespace olb {
 
 ///Initialising the BouzidiVelocityBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry, int material, IndicatorF2D<T>& geometryIndicator,
+void setBouzidiVelocityBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry, int material, IndicatorF2D<T>& geometryIndicator,
                                 std::vector<int> bulkMaterials)
 {
 
@@ -47,7 +47,7 @@ void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGe
 
 ///Initialising the BouzidiVelocityBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& boundaryIndicator,
+void setBouzidiVelocityBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& boundaryIndicator,
                                 FunctorPtr<SuperIndicatorF2D<T>>&& bulkIndicator,
                                 IndicatorF2D<T>& geometryIndicator)
 {
@@ -66,8 +66,8 @@ void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, Functor
   for (int iCloc = 0; iCloc < sLattice.getLoadBalancer().size(); ++iCloc) {
     clout << "Cuboid globiC " << sLattice.getLoadBalancer().glob(iCloc)
           << " starts to read distances for Velocity Boundary..." << std::endl;
-    setBouzidiVelocityBoundary<T,DESCRIPTOR,MixinDynamics>(sLattice.getExtendedBlockLattice(iCloc),boundaryIndicator->getExtendedBlockIndicatorF(iCloc),
-        bulkIndicator->getExtendedBlockIndicatorF(iCloc),
+    setBouzidiVelocityBoundary<T,DESCRIPTOR,MixinDynamics>(sLattice.getBlock(iCloc),boundaryIndicator->getBlockIndicatorF(iCloc),
+        bulkIndicator->getBlockIndicatorF(iCloc),
         geometryIndicator);
     clout << "Cuboid globiC " << sLattice.getLoadBalancer().glob(iCloc)
           << " finished reading distances for Velocity Boundary." << std::endl;
@@ -82,25 +82,21 @@ void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, Functor
 
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& boundaryIndicator, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator)
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& boundaryIndicator, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator)
 {
-  if ( !boundaryIndicator.isEmpty() ) {
-    const Vector<int,2> min = boundaryIndicator.getMin();
-    const Vector<int,2> max = boundaryIndicator.getMax();
-
-    for (int iX = min[0]; iX <= max[0]; ++iX) {
-      for (int iY = min[1]; iY <= max[1]; ++iY) {
-        if (boundaryIndicator(iX, iY)) {
-          setBouzidiVelocityBoundary<T,DESCRIPTOR,MixinDynamics>(block, bulkIndicator.getBlockGeometryStructure(), iX, iY,
-              bulkIndicator, geometryIndicator);
-        }
-      }
+  block.forSpatialLocations([&](auto iX, auto iY) {
+    if (boundaryIndicator(iX,iY)) {
+      setBouzidiVelocityBoundary<T,DESCRIPTOR,MixinDynamics>(block,
+                                                             bulkIndicator.getBlockGeometry(),
+                                                             iX, iY,
+                                                             bulkIndicator,
+                                                             geometryIndicator);
     }
-  }
+  });
 }
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockGeometryStructure2D<T>& blockGeometryStructure, int iX, int iY, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator)
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockGeometry<T,2>& blockGeometryStructure, int iX, int iY, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator)
 {
   T _epsFraction = 0.0001;
   OstreamManager clout(std::cout, "setBouzidiVelocityBoundary");
@@ -112,15 +108,15 @@ void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, Bl
   for (int iPop = 1; iPop < DESCRIPTOR::q ; ++iPop) {
     const int iXn = iX + descriptors::c<DESCRIPTOR >(iPop,0);
     const int iYn = iY + descriptors::c<DESCRIPTOR >(iPop,1);
-    if (bulkIndicator(iXn,iYn)) {
+    if (blockGeometryStructure.isInside(iXn,iYn) && bulkIndicator(iXn,iYn)) {
       T dist = -1;
       T physR[2];
-      blockGeometryStructure.getPhysR(physR,iXn,iYn);
+      blockGeometryStructure.getPhysR(physR,{iXn,iYn});
       T voxelSize=blockGeometryStructure.getDeltaR();
       Vector<T,2> physC(physR);
 
       Vector<T,2> direction(-voxelSize*descriptors::c<DESCRIPTOR >(iPop,0),-voxelSize*descriptors::c<DESCRIPTOR >(iPop,1));
-      T cPhysNorm = voxelSize*sqrt(descriptors::c<DESCRIPTOR >(iPop,0)*descriptors::c<DESCRIPTOR >(iPop,0)+descriptors::c<DESCRIPTOR >(iPop,1)*descriptors::c<DESCRIPTOR >(iPop,1));
+      T cPhysNorm = voxelSize*util::sqrt(descriptors::c<DESCRIPTOR >(iPop,0)*descriptors::c<DESCRIPTOR >(iPop,0)+descriptors::c<DESCRIPTOR >(iPop,1)*descriptors::c<DESCRIPTOR >(iPop,1));
 
       if (!geometryIndicator.distance(dist,physC,direction,blockGeometryStructure.getIcGlob() ) ) {
         T epsX = voxelSize*descriptors::c<DESCRIPTOR >(iPop,0)*_epsFraction;
@@ -139,7 +135,7 @@ void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, Bl
                 << "in direction " << util::opposite<DESCRIPTOR >(iPop)
                 << std::endl;
         }
-        T distNew = (dist - sqrt(epsX*epsX+epsY*epsY))/cPhysNorm;
+        T distNew = (dist - util::sqrt(epsX*epsX+epsY*epsY))/cPhysNorm;
         if (distNew < 0.5) {
           dist = 0;
         }
@@ -162,11 +158,11 @@ void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, Bl
 }
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockGeometryStructure2D<T>& blockGeometryStructure, int x, int y, T distances[DESCRIPTOR::q])
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockGeometry<T,2>& blockGeometryStructure, int x, int y, T distances[DESCRIPTOR::q])
 {
   typedef DESCRIPTOR L;
   T location[DESCRIPTOR::d];
-  blockGeometryStructure.getPhysR(location, x,y);
+  blockGeometryStructure.getPhysR(location, {x,y});
 
   T distancesCopy[L::q];
   T spacing = blockGeometryStructure.getDeltaR();
@@ -189,36 +185,31 @@ void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, Bl
 
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockGeometryStructure2D<T>& blockGeometryStructure, int x, int y, int iPop, T dist)
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockGeometry<T,2>& blockGeometryStructure, int x, int y, int iPop, T dist)
 {
-  if (blockGeometryStructure.getMaterial(x-descriptors::c<DESCRIPTOR >(iPop,0), y-descriptors::c<DESCRIPTOR >(iPop,1)) != 1) {
+  PostProcessorGenerator2D<T, DESCRIPTOR>* postProcessor{};
+  if (blockGeometryStructure.getMaterial({x-descriptors::c<DESCRIPTOR >(iPop,0), y-descriptors::c<DESCRIPTOR >(iPop,1)}) != 1) {
     /// Using Bouzidi BC OnePoint. This corresponds to Bounce Back
-    PostProcessorGenerator2D<T, DESCRIPTOR>* postProcessor = new VelocityBounceBackPostProcessorGenerator2D
-    <T, DESCRIPTOR>(x, y, iPop, dist);
-    if (postProcessor) {
-      block.addPostProcessor(*postProcessor);
-    }
+    postProcessor = new VelocityBounceBackPostProcessorGenerator2D<T,DESCRIPTOR>(x, y, iPop, dist);
 
   }
   else {
     ///Using Bouzidi BC TwoPoint. This corresponds to Linear Interpolation
-    PostProcessorGenerator2D<T, DESCRIPTOR>* postProcessor =new VelocityBouzidiLinearPostProcessorGenerator2D
-    <T, DESCRIPTOR>(x, y, iPop, dist);
-    if (postProcessor) {
-      block.addPostProcessor(*postProcessor);
-    }
+    postProcessor =new VelocityBouzidiLinearPostProcessorGenerator2D<T,DESCRIPTOR>(x, y, iPop, dist);
+  }
+
+  if (postProcessor && !block.isPadding({x,y})) {
+    block.addPostProcessor(*postProcessor);
   }
 }
 
 //set Dynamics for indicated Bouzidi and BounceBackVelocityBoundary cells
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setOffDynamics(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int x, int y, T location[DESCRIPTOR::d], T distances[DESCRIPTOR::q])
+void setOffDynamics(BlockLattice<T,DESCRIPTOR>& block, int x, int y, T location[DESCRIPTOR::d], T distances[DESCRIPTOR::q])
 {
   //Dynamics<T,DESCRIPTOR>* dynamics = BoundaryManager::getOffDynamics(location, distances);
-  Dynamics<T,DESCRIPTOR>* dynamics = new OffDynamics<T, DESCRIPTOR>(location, distances);
-  block.defineDynamics(x,x,y,y, dynamics);
-  block.dynamicsVector.push_back(dynamics);
-
+  Dynamics<T,DESCRIPTOR>* dynamics = new legacy::OffDynamics<T, DESCRIPTOR>(location, distances);
+  block.defineDynamics({x,y}, dynamics);
 }
 
 

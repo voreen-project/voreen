@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,7 +50,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeVolumeFractionApproximation3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticeVolumeFractionApproximation3D(SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
+  SuperLatticeVolumeFractionApproximation3D(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
       IndicatorF3D<T>& indicator, int refinementLevel, const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut = false);
 };
 
@@ -60,7 +60,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeVolumeFractionApproximation3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   IndicatorF3D<T>& _indicator;
   int _refinementLevel;
   const UnitConverter<T,DESCRIPTOR>& _converter;
@@ -69,8 +69,8 @@ private:
   T _physSubGridDeltaX;
   T _latticeSubGridVolume;
 public:
-  BlockLatticeVolumeFractionApproximation3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-      BlockGeometryStructure3D<T>& blockGeometry,
+  BlockLatticeVolumeFractionApproximation3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+      BlockGeometry<T,3>& blockGeometry,
       IndicatorF3D<T>& indicator,
       int refinementLevel,
       const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut);

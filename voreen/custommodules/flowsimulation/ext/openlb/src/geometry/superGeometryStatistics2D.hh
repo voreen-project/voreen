@@ -26,25 +26,26 @@
  */
 
 #include <iostream>
-#include <cmath>
+#include "utilities/omath.h"
 #include <math.h>
 #include <sstream>
 
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/superGeometryStatistics2D.h"
 #include "core/olbDebug.h"
 
 namespace olb {
 
 template<typename T>
-SuperGeometryStatistics2D<T>::SuperGeometryStatistics2D(SuperGeometry2D<T>* superGeometry)
-  : _superGeometry(superGeometry), _statisticsUpdateNeeded(true), _overlap(superGeometry->getOverlap()), clout(std::cout,"SuperGeometryStatistics2D")
+SuperGeometryStatistics2D<T>::SuperGeometryStatistics2D(SuperGeometry<T,2>* superGeometry)
+  : _superGeometry(superGeometry), _statisticsUpdateNeeded(true), clout(std::cout,"SuperGeometryStatistics2D")
 {
 }
 
 template<typename T>
 SuperGeometryStatistics2D<T>::SuperGeometryStatistics2D(SuperGeometryStatistics2D const& rhs)
-  : _superGeometry(rhs._superGeometry), _statisticsUpdateNeeded(true), _overlap(rhs._superGeometry->getOverlap() ), clout(std::cout,"SuperGeometryStatistics2D")
+  : _superGeometry(rhs._superGeometry), _statisticsUpdateNeeded(true),
+    clout(std::cout,"SuperGeometryStatistics2D")
 {
 }
 
@@ -53,7 +54,6 @@ SuperGeometryStatistics2D<T>& SuperGeometryStatistics2D<T>::operator=(SuperGeome
 {
   _superGeometry = rhs._superGeometry;
   _statisticsUpdateNeeded = true;
-  _overlap = rhs._overlap;
   return *this;
 }
 
@@ -93,7 +93,7 @@ void SuperGeometryStatistics2D<T>::update(bool verbose)
     int updateReallyNeeded = 0;
     for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
       if (_superGeometry->getBlockGeometry(iCloc).getStatistics().getStatisticsStatus() ) {
-        auto& blockGeometry = const_cast<BlockGeometryView2D<T>&>(_superGeometry->getBlockGeometry(iCloc));
+        auto& blockGeometry = const_cast<BlockGeometry<T,2>&>(_superGeometry->getBlockGeometry(iCloc));
         blockGeometry.getStatistics(false).update(false);
         updateReallyNeeded++;
       }
@@ -297,7 +297,7 @@ std::vector<T> SuperGeometryStatistics2D<T>::getMinPhysR(int material) const
     return _material2min.at(material);
   }
   catch (std::out_of_range& ex) {
-    return std::vector<T> {};
+    return {0, 0};
   }
 }
 
@@ -315,7 +315,7 @@ std::vector<T> SuperGeometryStatistics2D<T>::getMaxPhysR(int material) const
     return _material2max.at(material);
   }
   catch (std::out_of_range& ex) {
-    return std::vector<T> {};
+    return {0, 0};
   }
 }
 
@@ -386,7 +386,7 @@ template<typename T>
 std::vector<int> SuperGeometryStatistics2D<T>::getType(int iC, int iX, int iY) const
 {
   int iCloc=_superGeometry->getLoadBalancer().loc(iC);
-  std::vector<int> discreteNormal = _superGeometry->getExtendedBlockGeometry(iCloc).getStatistics(false).getType(iX+_overlap, iY+_overlap);
+  std::vector<int> discreteNormal = _superGeometry->getBlockGeometry(iCloc).getStatistics(false).getType(iX, iY);
   return discreteNormal;
 }
 
@@ -423,7 +423,7 @@ std::vector<T> SuperGeometryStatistics2D<T>::computeNormal(int material) const
   }
   OLB_ASSERT(nVoxel || (normal[0] == 0 && normal[1] == 0), "if no voxels found we expect the normal to be zero");
 
-  T norm = sqrt(normal[0]*normal[0]+normal[1]*normal[1]);
+  T norm = util::sqrt(normal[0]*normal[0]+normal[1]*normal[1]);
   if (norm>0.) {
     normal[0]/=norm;
     normal[1]/=norm;
@@ -447,7 +447,7 @@ std::vector<int> SuperGeometryStatistics2D<T>::computeDiscreteNormal(int materia
   T smallestAngle = T(0);
   for (int iX = -1; iX<=1; iX++) {
     for (int iY = -1; iY<=1; iY++) {
-      T norm = sqrt(iX*iX+iY*iY);
+      T norm = util::sqrt(iX*iX+iY*iY);
       if (norm>0.&& norm<maxNorm) {
         T angle = (iX*normal[0] + iY*normal[1])/norm;
         if (angle>=smallestAngle) {

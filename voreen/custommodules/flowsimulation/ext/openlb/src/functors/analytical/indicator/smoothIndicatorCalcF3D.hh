@@ -35,8 +35,8 @@ SmoothIndicCalc3D<T, S>::SmoothIndicCalc3D(SmoothIndicatorF3D<T, S>& f, SmoothIn
   : _f(f), _g(g)
 {
   for ( int i=0; i<3; i++) {
-    this->_myMin[i] = std::min(f.getMin()[i], g.getMin()[i]);
-    this->_myMax[i] = std::max(f.getMax()[i], g.getMax()[i]);
+    this->_myMin[i] = util::min(f.getMin()[i], g.getMin()[i]);
+    this->_myMax[i] = util::max(f.getMax()[i], g.getMax()[i]);
   }
   std::swap(f._ptrCalcC, this->_ptrCalcC);
 }
@@ -54,7 +54,7 @@ bool SmoothIndicPlus3D<T, S>::operator()(T output[], const S input[])
   this->_f(output, input);
   T tmp;
   this->_g(&tmp, input);
-  output[0] = std::max(output[0], tmp);
+  output[0] = util::max(output[0], tmp);
   return true;
 }
 

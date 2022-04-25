@@ -34,15 +34,79 @@
 #include "geometry/cuboid3D.h"
 #include "geometry/cuboidGeometry2D.h"
 #include "geometry/cuboidGeometry3D.h"
-//#include "geometry/cuboid3D.hh"
-#include "communication/cuboidNeighbourhood2D.h"
-#include "communication/cuboidNeighbourhood3D.h"
 
 namespace olb {
 
 template <typename T> class Cuboid2D;
 template <typename T> class Cuboid3D;
 
+/// Single 2D cuboid neighbourhoods are the basic component of a
+/// 2D communicator
+/** For each cuboid a cuboid neighbourhood is defined. It stores the
+ * needed cell coordinates (Cell2D) of other cuboids. Futhermore this
+ * class provides basic initialization and communication methods
+ * for the class Communicator2D.
+ *
+ * WARNING: For unstructured grids there is an interpolation needed
+ * for the method buffer_outData which is not yet implemented!
+ *
+ * This class is not intended to be derived from.
+ */
+template<typename T>
+struct Cell2D {
+  Cell2D() : latticeR {0,0,0} {};
+  // local position latticeR: iC, iX, iY;
+  int latticeR[3];
+  std::size_t latticeCellId;
+  // global position physR: x, y;
+  T physR[2];
+
+  bool operator==(Cell2D const& rhs) const
+  {
+    return latticeR == rhs.latticeR;
+  };
+
+  /// Copy constructor
+  Cell2D(Cell2D const& rhs) = default;
+
+  /// Copy assignment
+  Cell2D& operator=(Cell2D const& rhs) = default;
+
+};
+
+/// Single 3D cuboid neighbourhoods are the basic component of a
+/// 3D communicator
+/** For each cuboid a cuboid neighbourhood is defined. It stores the
+ * needed cell coordinates (Cell3D) of other cuboids. Futhermore this
+ * class provides basic initialization and communication methods
+ * for the class Communicator3D.
+ *
+ * WARNING: For unstructured grids there is an interpolation needed
+ * for the method buffer_outData which is not yet implemented!
+ *
+ * This class is not intended to be derived from.
+ */
+template<typename T>
+struct Cell3D {
+  Cell3D() : latticeR {0,0,0,0} {};
+  // local position latticeR: iC, iX, iY, iZ;
+  int latticeR[4];
+  std::size_t latticeCellId;
+  // global position physR: x, y, z;
+  T physR[3];
+
+  bool operator==(Cell3D const& rhs) const
+  {
+    return latticeR == rhs.latticeR;
+  };
+
+  /// Copy constructor
+  Cell3D(Cell3D const& rhs) = default;
+
+  /// Copy assignment
+  Cell3D& operator=(Cell3D const& rhs) = default;
+
+};
 
 template<typename T>
 HeuristicLoadBalancer<T>::HeuristicLoadBalancer(CuboidGeometry3D<T>& cGeometry3d,
@@ -90,7 +154,7 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry3D<T>& cGeometry3d, const do
   int nC = _cGeometry3d->getNc();
 #ifdef PARALLEL_MODE_MPI
   rank = singleton::mpi().getRank();
-  size = std::max<int>(singleton::mpi().getSize(), 1);
+  size = util::max<int>(singleton::mpi().getSize(), 1);
 #endif
   std::vector<Cell3D<T> > inCells;
   //int xN, yN, zN;
@@ -145,7 +209,8 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry3D<T>& cGeometry3d, const do
         currentLoad[minJ] += maxLoad;
         partitionResult[maxIC] = minJ;
       }
-    } while (maxLoad != -1);
+    }
+    while (maxLoad != -1);
 #if 0
     std::cout << "vwgt" << std::endl;
     for (int i = 0; i < nC; i++)  {
@@ -200,7 +265,8 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry3D<T>& cGeometry3d, const do
                              nC, i, &_mpiNbHelper.get_mpiRequest()[i-1], 0);
     }
     singleton::mpi().waitAll(_mpiNbHelper);
-  } else {
+  }
+  else {
     int *tmpCuboids = new int[nC];
     singleton::mpi().receive(tmpCuboids, nC, 0, 0);
     int count = 0;
@@ -232,7 +298,7 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry2D<T>& cGeometry2d, const do
   int nC = _cGeometry2d->getNc();
 #ifdef PARALLEL_MODE_MPI
   rank = singleton::mpi().getRank();
-  size = std::max<int>(singleton::mpi().getSize(), 1);
+  size = util::max<int>(singleton::mpi().getSize(), 1);
 #endif
   std::vector<Cell2D<T> > inCells;
   //int xN, yN;
@@ -288,7 +354,8 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry2D<T>& cGeometry2d, const do
         currentLoad[minJ] += maxLoad;
         partitionResult[maxIC] = minJ;
       }
-    } while (maxLoad != -1);
+    }
+    while (maxLoad != -1);
 #if 0
     std::cout << "vwgt" << std::endl;
     for (int i = 0; i < nC; i++)  {
@@ -343,7 +410,8 @@ void HeuristicLoadBalancer<T>::reInit(CuboidGeometry2D<T>& cGeometry2d, const do
                              nC, i, &_mpiNbHelper.get_mpiRequest()[i-1], 0);
     }
     singleton::mpi().waitAll(_mpiNbHelper);
-  } else {
+  }
+  else {
     int *tmpCuboids = new int[nC];
     singleton::mpi().receive(tmpCuboids, nC, 0, 0);
     int count = 0;

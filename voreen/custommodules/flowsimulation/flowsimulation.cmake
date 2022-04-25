@@ -40,6 +40,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/connectedcomponentselector.cpp
+    ${MOD_DIR}/processors/volume/debugvolumes.cpp
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.cpp
     ${MOD_DIR}/processors/volume/phaseunwrapping.cpp
     ${MOD_DIR}/processors/volume/vectordecompose.cpp
@@ -81,6 +82,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/connectedcomponentselector.h
+    ${MOD_DIR}/processors/volume/debugvolumes.h
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.h
     ${MOD_DIR}/processors/volume/phaseunwrapping.h
     ${MOD_DIR}/processors/volume/vectordecompose.h
@@ -139,8 +141,8 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
         MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
     ENDIF()
 
-    # OpenLB requires c++14 standard.
-    SET(CMAKE_CXX_STANDARD 14)
+    # OpenLB requires c++17 standard.
+    SET(CMAKE_CXX_STANDARD 17)
     SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     IF(VRN_MODULE_OPENMP)
@@ -149,17 +151,36 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
         MESSAGE(WARNING "OpenMP module strongly recommended!")
     ENDIF()
 
+    SET(OLB_CXX_FLAGS "-std=c++17")
+    IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        LIST(APPEND OLB_CXX_FLAGS "-g -DOLB_DEBUG")
+    ELSEIF(CMAKE_BUILD_TYPE STREQUAL "Release")
+        LIST(APPEND OLB_CXX_FLAGS "-O3 -Wall -march=native -mtune=native")
+    ENDIF()
+
+    SET(OLB_PARALLEL_MODE "OFF" CACHE STRING "OpenLB Parallel Mode")
+    SET_PROPERTY(CACHE OLB_PARALLEL_MODE PROPERTY STRINGS "OFF" "MPI" "OMP" "HYBRID")
+#    IF(${OLB_PARALLEL_MODE} MATCHES "OMP")
+#        ADD_DEFINITIONS("-DOLB_PRECOMPILED")
+#    ENDIF()
+
+    SET(OLB_PLATFORMS "CPU_SISD") # mandatory
+    OPTION(OLB_PLATFORM_CPU_SIMD "Enable OpenLB SIMD Platform?" OFF)
+    IF(OLB_PLATFORM_CPU_SIMD)
+        LIST(APPEND OLB_PLATFORMS "CPU_SIMD")
+    ENDIF()
+    OPTION(OLB_PLATFORM_GPU_CUDA "Enable OpenLB CUDA Platform?" OFF)
+    IF(OLB_PLATFORM_GPU_CUDA)
+        LIST(APPEND OLB_PLATFORMS "GPU_CUDA")
+        # TODO: Possible to auto-detect arch?
+        SET(OLB_PLATFORM_CUDA_ARCH 60 CACHE STRING "CUDA ARCH - see rules.mk")
+        SET_PROPERTY(CACHE OLB_PLATFORM_CUDA_ARCH PROPERTY STRINGS 20 30 35 37 50 52 53 60 61 62 70 72 75 80 86 87)
+    ENDIF()
+
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
 
-    SET(OLB_BUILDTYPE "generic" CACHE STRING "OpenLB Build Type")
-    SET_PROPERTY(CACHE OLB_BUILDTYPE PROPERTY STRINGS "generic" "precompiled")
-    SET(OpenLB_LIBRARY_PATH ${OpenLB_DIR}/build/${OLB_BUILDTYPE}/lib/libolb.a)
-    IF(${OLB_BUILDTYPE} MATCHES "precompiled")
-        ADD_DEFINITIONS("-DOLB_PRECOMPILED")
-    ENDIF()
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_INCLUDE_DIR})
-    LIST(APPEND MOD_LIBRARIES ${OpenLB_LIBRARY_PATH})
 
     # It currently seems to be not possible to execute the build before all other builds,
     # so the user needs to manually build the OpenLB target first..

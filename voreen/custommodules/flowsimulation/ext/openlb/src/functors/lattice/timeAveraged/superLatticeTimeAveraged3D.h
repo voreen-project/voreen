@@ -40,8 +40,8 @@ class SuperLatticeTimeAveragedF3D final:  public SuperF3D<T,T> {
 private:
   int _ensembles;
   SuperF3D<T,T>& _sFunctor;
-  SuperData3D<T, T> _sData;
-  SuperData3D<T, T> _sDataP2;
+  SuperData<3,T, T> _sData;
+  SuperData<3,T, T> _sDataP2;
 
 public:
   SuperLatticeTimeAveragedF3D(SuperF3D<T,T>& sFunctor);
@@ -65,9 +65,9 @@ private:
   int _ensembles;
   SuperF3D<T,T>& _sFunctorM;
   SuperF3D<T,T>& _sFunctorN;
-  SuperData3D<T, T> _sDataM;
-  SuperData3D<T, T> _sDataN;
-  SuperData3D<T, T> _sDataMN;
+  SuperData<3,T, T> _sDataM;
+  SuperData<3,T, T> _sDataN;
+  SuperData<3,T, T> _sDataMN;
 
 public:
   SuperLatticeTimeAveragedCrossCorrelationF3D(SuperF3D<T,T>& sFunctorM, SuperF3D<T,T>& sFunctorN);
@@ -82,11 +82,11 @@ class SuperLatticeTimeAveraged3DL2Norm final: public SuperF3D<T,T> {
 private:
   SuperF3D<T,T>&_sFunctorM;
   SuperF3D<T,T>&_sFunctorN;
-  SuperGeometry3D<T>& _sGeometry;
+  SuperGeometry<T,3>& _sGeometry;
   int _material;
 
 public:
-  SuperLatticeTimeAveraged3DL2Norm(SuperF3D<T,T>& sFunctorM,SuperF3D<T,T>& sFunctorN,SuperGeometry3D<T>& sGeometry,int material);
+  SuperLatticeTimeAveraged3DL2Norm(SuperF3D<T,T>& sFunctorM,SuperF3D<T,T>& sFunctorN,SuperGeometry<T,3>& sGeometry,int material);
 
   bool operator() (T output[], const int input[]);
 

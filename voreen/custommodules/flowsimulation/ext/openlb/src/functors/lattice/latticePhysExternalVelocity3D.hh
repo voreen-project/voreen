@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysExternalVelocity3D<T, DESCRIPTOR>::SuperLatticePhysExternalVelocity3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3)
 {
   this->getName() = "physVelExtField";
@@ -53,7 +52,7 @@ SuperLatticePhysExternalVelocity3D<T, DESCRIPTOR>::SuperLatticePhysExternalVeloc
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysExternalVelocity3D<T, DESCRIPTOR>(
-        this->_sLattice.getBlockLattice(iC), this->_converter)
+        this->_sLattice.getBlock(iC), this->_converter)
     );
   }
 }
@@ -61,7 +60,7 @@ SuperLatticePhysExternalVelocity3D<T, DESCRIPTOR>::SuperLatticePhysExternalVeloc
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysExternalVelocity3D<T, DESCRIPTOR>::BlockLatticePhysExternalVelocity3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 3)
 {
   this->getName() = "physVelExtField";

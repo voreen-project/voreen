@@ -1,22 +1,22 @@
-{ cxx, cc, flags, ldflags ? "", arprg ? "ar", parallel_mode, ... }:
+{ cxx, cc, flags, ldflags ? "", parallel_mode, platform ? "", ... }:
 
 ''
 CXX             := ${cxx}
 CC              := ${cc}
 
 CXXFLAGS        := ${flags}
-CXXFLAGS        += -std=c++14
+CXXFLAGS        += -std=c++17
 
 LDFLAGS         := ${ldflags}
-
-ARPRG           := ${arprg}
 
 PARALLEL_MODE   := ${parallel_mode}
 
 MPIFLAGS        :=
 OMPFLAGS        := -fopenmp
 
-BUILDTYPE       := generic
+PLATFORMS       := CPU_SISD ${platform}
 
 FEATURES        :=
+
+USE_EMBEDDED_DEPENDENCIES := ON
 ''

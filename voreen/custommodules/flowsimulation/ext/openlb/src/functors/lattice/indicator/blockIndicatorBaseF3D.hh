@@ -25,21 +25,21 @@
 #define BLOCK_INDICATOR_BASE_F_3D_HH
 
 #include "blockIndicatorBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 
 namespace olb {
 
 template <typename T>
-BlockIndicatorF3D<T>::BlockIndicatorF3D(BlockGeometryStructure3D<T>& geometry)
+BlockIndicatorF3D<T>::BlockIndicatorF3D(BlockGeometry<T,3>& geometry)
   : BlockF3D<bool>(geometry, 1),
-    _blockGeometryStructure(geometry),
+    _block(geometry),
     _cachedData{nullptr}
 { }
 
 template <typename T>
-BlockGeometryStructure3D<T>& BlockIndicatorF3D<T>::getBlockGeometryStructure()
+BlockGeometry<T,3>& BlockIndicatorF3D<T>::getBlockGeometry()
 {
-  return _blockGeometryStructure;
+  return _block;
 }
 
 template <typename T>
@@ -50,7 +50,7 @@ bool BlockIndicatorF3D<T>::operator() (const int input[])
     this->operator()(&output, input);
   }
   else {
-    _cachedData->get(input[0], input[1], input[2]);
+    _cachedData->get(input);
   }
   return output;
 }
@@ -58,18 +58,18 @@ bool BlockIndicatorF3D<T>::operator() (const int input[])
 template <typename T>
 bool BlockIndicatorF3D<T>::operator() (int iX, int iY, int iZ)
 {
-  bool output{};
-  if (_cachedData == nullptr) {
-    this->operator()(&output, iX, iY, iZ);
-  }
-  else {
-    _cachedData->get(iX, iY, iZ);
-  }
-  return output;
+  int latticeR[3] { iX, iY, iZ };
+  return this->operator()(latticeR);
 }
 
 template <typename T>
-void BlockIndicatorF3D<T>::setCache(const BlockData3D<T,bool>& cache)
+bool BlockIndicatorF3D<T>::operator() (LatticeR<3> loc)
+{
+  return operator()(loc[0], loc[1], loc[2]);
+}
+
+template <typename T>
+void BlockIndicatorF3D<T>::setCache(const BlockData<3,T,bool>& cache)
 {
   _cachedData = &cache;
 }

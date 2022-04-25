@@ -57,12 +57,12 @@ bool BlockRoundingF2D<T>::operator()(T output[], const int input[])
     break;
   case RoundingMode::Floor:
     for ( int i=0; i < _f.getTargetDim(); i++ ) {
-      output[i] = floor(output[i]);
+      output[i] = util::floor(output[i]);
     }
     break;
   case RoundingMode::Ceil:
     for ( int i=0; i < _f.getTargetDim(); i++ ) {
-      output[i] = std::ceil(output[i]);
+      output[i] = util::ceil(output[i]);
     }
     break;
   }

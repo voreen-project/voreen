@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2006, 2007 Jonas Latt
+ *  Copyright (C) 2006, 2007 Jonas Latt, 2020 Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -34,44 +34,19 @@
 #include <numeric>
 #include <type_traits>
 
+#include "core/baseType.h"
+#include "core/vector.h"
 #include "utilities/vectorHelpers.h"
-#include "utilities/meta.h"
+#include "meta.h"
+#include "utilities/omath.h"
+#include "utilities/oalgorithm.h"
 #include "dynamics/descriptorFunction.h"
-
-// patch due to ploblems with older compilers
-namespace std {
-template<typename T>
-std::string to_string(const T &n)
-{
-  std::ostringstream s;
-  s << n;
-  return s.str();
-}
-}
 
 namespace olb {
 
 namespace util {
 
-template <typename T>
-struct BaseTypeHelper {
-  using type = typename T::base_t;
-};
-
-template <>
-struct BaseTypeHelper<double> {
-  using type = double;
-};
-
-template <>
-struct BaseTypeHelper<float> {
-  using type = float;
-};
-
-template <>
-struct BaseTypeHelper<int> {
-  using type = int;
-};
+// *INDENT-OFF*
 
 template<typename T> T norm(const std::vector<T>& a);
 
@@ -116,11 +91,11 @@ inline bool intersect (
   int x0_, int x1_, int y0_, int y1_,
   int& newX0, int& newX1, int& newY0, int& newY1 )
 {
-  newX0 = std::max(x0,x0_);
-  newY0 = std::max(y0,y0_);
+  newX0 = util::max(x0,x0_);
+  newY0 = util::max(y0,y0_);
 
-  newX1 = std::min(x1,x1_);
-  newY1 = std::min(y1,y1_);
+  newX1 = util::min(x1,x1_);
+  newY1 = util::min(y1,y1_);
 
   return newX1>=newX0 && newY1>=newY0;
 }
@@ -130,13 +105,13 @@ inline bool intersect (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
   int& newX0, int& newX1, int& newY0, int& newY1, int& newZ0, int& newZ1 )
 {
-  newX0 = std::max(x0,x0_);
-  newY0 = std::max(y0,y0_);
-  newZ0 = std::max(z0,z0_);
+  newX0 = util::max(x0,x0_);
+  newY0 = util::max(y0,y0_);
+  newZ0 = util::max(z0,z0_);
 
-  newX1 = std::min(x1,x1_);
-  newY1 = std::min(y1,y1_);
-  newZ1 = std::min(z1,z1_);
+  newX1 = util::min(x1,x1_);
+  newY1 = util::min(y1,y1_);
+  newZ1 = util::min(z1,z1_);
 
   return newX1>=newX0 && newY1>=newY0 && newZ1>=newZ0;
 }
@@ -164,10 +139,26 @@ T sqr(T arg)
 }
 
 /// Compute norm square of a d-dimensional vector
-template<typename T, unsigned D>
-T normSqr(const T u[D])
+template<typename ARRAY_LIKE, unsigned D>
+auto normSqr(const ARRAY_LIKE& u) any_platform
 {
-  T uSqr = T();
+  auto uSqr = decltype(u[0]){};
+  for (unsigned iD=0; iD < D; ++iD) {
+    uSqr += u[iD]*u[iD];
+  }
+  return uSqr;
+}
+
+template<unsigned D, typename ARRAY_LIKE>
+auto norm(const ARRAY_LIKE& u)
+{
+  return sqrt(normSqr<ARRAY_LIKE,D>(u));
+}
+
+template<typename T, unsigned D>
+T normSqr(const T* u) any_platform
+{
+  auto uSqr = T{};
   for (unsigned iD=0; iD < D; ++iD) {
     uSqr += u[iD]*u[iD];
   }
@@ -183,7 +174,7 @@ T normSqr(std::initializer_list<T> data)
 
 /// Compute norm square of a d-dimensional vector
 template<typename T, unsigned D, typename IMPL>
-T normSqr(const ScalarVector<T,D,IMPL>& u)
+T normSqr(const ScalarVector<T,D,IMPL>& u) any_platform
 {
   T uSqr = T();
   for (unsigned iD=0; iD < D; ++iD) {
@@ -215,9 +206,9 @@ T scalarProduct(const std::vector<T>& u1, const std::vector<T>& u2)
 }
 
 /// Compute number of elements of a symmetric d-dimensional tensor
-template <typename DESCRIPTORBASE> struct TensorVal {
-  static const int n =
-    (DESCRIPTORBASE::d*(DESCRIPTORBASE::d+1))/2; ///< result stored in n
+template <typename DESCRIPTORBASE>
+struct TensorVal {
+  static constexpr int n = (DESCRIPTORBASE::d*(DESCRIPTORBASE::d+1))/2; ///< result stored in n
 };
 
 /// Compute the opposite of a given direction
@@ -226,33 +217,30 @@ template <typename DESCRIPTORBASE> inline int opposite(int iPop)
   return descriptors::opposite<DESCRIPTORBASE>(iPop);
 }
 
-template <typename DESCRIPTORBASE, int index, int value>
-class SubIndex {
-private:
-  SubIndex()
-  {
-    for (int iVel=0; iVel<DESCRIPTORBASE::q; ++iVel) {
-      if (descriptors::c<DESCRIPTORBASE>(iVel,index)==value) {
-        indices.push_back(iVel);
-      }
-    }
-  }
-
-  std::vector<int> indices;
-
-  template <typename DESCRIPTORBASE_, int index_, int value_>
-  friend std::vector<int> const& subIndex();
+/// Return array of population indices where c[iVel] == value
+template <typename DESCRIPTOR, unsigned iVel, int value>
+constexpr auto populationsContributingToVelocity() any_platform {
+  constexpr auto velocity_matches_value = [](unsigned iPop) -> bool {
+    return descriptors::c<DESCRIPTOR>(iPop,iVel) == value;
+  };
+  return meta::array_from_index_sequence(
+    descriptors::filter_population_indices<DESCRIPTOR>(velocity_matches_value));
 };
 
-template <typename DESCRIPTORBASE, int index, int value>
-std::vector<int> const& subIndex()
-{
-  static SubIndex<DESCRIPTORBASE, index, value> subIndexSingleton;
-  return subIndexSingleton.indices;
-}
+/// Return array of population indices where c[iPop][iD] == NORMAL[iD]
+template <typename DESCRIPTOR, int... NORMAL>
+constexpr auto populationsContributingToDirection() any_platform {
+  constexpr auto velocity_matches_direction = [](unsigned iPop) -> bool {
+    return meta::indexed_pack_contains<NORMAL...>([iPop](unsigned iD, int x) -> bool {
+      return x != 0 && x == descriptors::c<DESCRIPTOR>(iPop,iD);
+    });
+  };
+  return meta::array_from_index_sequence(
+    descriptors::filter_population_indices<DESCRIPTOR>(velocity_matches_direction));
+};
 
 template <typename DESCRIPTORBASE>
-int findVelocity(const int v[DESCRIPTORBASE::d])
+int findVelocity(const int v[DESCRIPTORBASE::d]) any_platform
 {
   for (int iPop=0; iPop<DESCRIPTORBASE::q; ++iPop) {
     bool fit = true;
@@ -269,35 +257,21 @@ int findVelocity(const int v[DESCRIPTORBASE::d])
   return DESCRIPTORBASE::q;
 }
 
-/**
-* finds distributions incoming into the wall
-* but we want the ones outgoing from the wall,
-* therefore we have to take the opposite ones.
-*/
-template <typename DESCRIPTORBASE, int direction, int orientation>
-class SubIndexOutgoing {
-private:
-  SubIndexOutgoing()   // finds the indexes outgoing from the walls
-  {
-    indices = util::subIndex<DESCRIPTORBASE,direction,orientation>();
-
-    for (unsigned iPop = 0; iPop < indices.size(); ++iPop) {
-      indices[iPop] = util::opposite<DESCRIPTORBASE>(indices[iPop]);
-    }
-
-  }
-
-  std::vector<int> indices;
-
-  template <typename DESCRIPTORBASE_, int direction_, int orientation_>
-  friend std::vector<int> const& subIndexOutgoing();
-};
-
-template <typename DESCRIPTORBASE, int direction, int orientation>
-std::vector<int> const& subIndexOutgoing()
-{
-  static SubIndexOutgoing<DESCRIPTORBASE, direction, orientation> subIndexOutgoingSingleton;
-  return subIndexOutgoingSingleton.indices;
+/// Compute opposites of wall-incoming population indices
+template <typename DESCRIPTOR, int direction, int orientation>
+constexpr auto subIndexOutgoing() {
+  // Should be expressed in terms of populationsContributingToVelocity
+  // but std::array / std::index_sequence distinction makes this ugly
+  // To be revisitited
+  constexpr auto velocity_matches_value = [](unsigned iPop) {
+    return descriptors::c<DESCRIPTOR>(iPop,direction) == orientation;
+  };
+  constexpr auto opposite_population = [](unsigned iPop) {
+    return descriptors::opposite<DESCRIPTOR>(iPop);
+  };
+  return meta::array_from_index_sequence(
+    meta::map_index_sequence(opposite_population,
+                                        descriptors::filter_population_indices<DESCRIPTOR>(velocity_matches_value)));
 }
 
 ///finds all the remaining indexes of a lattice given some other indexes
@@ -332,12 +306,14 @@ private:
       normalX=0;
       if (normal1==1) {
         normalY= 1;
-      } else {
+      }
+      else {
         normalY=-1;
       }
       if (normal2==1) {
         normalZ= 1;
-      } else {
+      }
+      else {
         normalZ=-1;
       }
     }
@@ -345,12 +321,14 @@ private:
       normalY=0;
       if (normal1==1) {
         normalX= 1;
-      } else {
+      }
+      else {
         normalX=-1;
       }
       if (normal2==1) {
         normalZ= 1;
-      } else {
+      }
+      else {
         normalZ=-1;
       }
     }
@@ -358,12 +336,14 @@ private:
       normalZ=0;
       if (normal1==1) {
         normalX= 1;
-      } else {
+      }
+      else {
         normalX=-1;
       }
       if (normal2==1) {
         normalY= 1;
-      } else {
+      }
+      else {
         normalY=-1;
       }
     }
@@ -498,12 +478,12 @@ T pressureFromDensity( T latticeDensity )
 }  // namespace util
 
 template <typename T>
-using BaseType = typename util::BaseTypeHelper<T>::type;
-
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::type::value, T> abs(T x) {
-  return std::fabs(x);
+std::enable_if_t<std::is_arithmetic<T>::type::value, T> abs(T x)
+{
+  return util::fabs(x);
 }
+
+// *INDENT-OFF*
 
 }  // namespace olb
 

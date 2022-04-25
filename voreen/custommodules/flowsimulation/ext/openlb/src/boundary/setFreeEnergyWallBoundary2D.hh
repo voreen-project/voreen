@@ -21,8 +21,8 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Free Energy Wall Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Free Energy Wall Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_FREE_ENERGY_WALL_BOUNDARY_2D_HH
 #define SET_FREE_ENERGY_WALL_BOUNDARY_2D_HH
 
@@ -38,26 +38,20 @@ namespace olb {
 /// \param[in] h1_ - Parameter related to resulting contact angle of the boundary. [lattice units]
 /// \param[in] h2_ - Parameter related to resulting contact angle of the boundary. [lattice units]
 
-////////// SuperLattice Domain  /////////////////////////////////////////
 ///Initialising the Free Energy Wall Boundary on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+void setFreeEnergyWallBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
                                int material, T alpha, T kappa1, T kappa2, T h1, T h2, int latticeNumber)
 {
   setFreeEnergyWallBoundary<T,DESCRIPTOR>(sLattice, superGeometry.getMaterialIndicator(material),
                                           alpha, kappa1, kappa2, h1, h2, latticeNumber);
 }
+
 ///Initialising the Free Energy Wall Boundary on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
+void setFreeEnergyWallBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
                                T alpha, T kappa1, T kappa2, T h1, T h2, int latticeNumber)
 {
-  /*  local boundaries: _overlap = 0;
-   *  interp boundaries: _overlap = 1;
-   *  bouzidi boundaries: _overlap = 1;
-   *  extField boundaries: _overlap = 1;
-   *  advectionDiffusion boundaries: _overlap = 1;
-   */
   int _overlap = 1;
   OstreamManager clout(std::cout, "setFreeEnergyWallBoundary");
   bool includeOuterCells = false;
@@ -76,8 +70,8 @@ void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorP
     addend = 1./(alpha*alpha) * ( (h1/kappa1) + (h2/kappa2) );
   }
   for (int iCloc = 0; iCloc < sLattice.getLoadBalancer().size(); ++iCloc) {
-    setFreeEnergyWallBoundary<T,DESCRIPTOR>(sLattice.getExtendedBlockLattice(iCloc),
-                                            indicator->getExtendedBlockIndicatorF(iCloc), addend, latticeNumber, includeOuterCells);
+    setFreeEnergyWallBoundary<T,DESCRIPTOR>(sLattice.getBlock(iCloc),
+                                            indicator->getBlockIndicatorF(iCloc), addend, latticeNumber, includeOuterCells);
   }
   /// Adds needed Cells to the Communicator _commBC in SuperLattice
   addPoints2CommBC<T,DESCRIPTOR>(sLattice, std::forward<decltype(indicator)>(indicator), _overlap);
@@ -96,18 +90,19 @@ void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorP
 /// \param[in] h2_ - Parameter related to resulting contact angle of the boundary. [lattice units]
 /// \param[in] h3_ - Parameter related to resulting contact angle of the boundary. [lattice units]
 
-////////// SuperLattice Domain  /////////////////////////////////////////
+
 ///Initialising the Free Energy Wall Boundary on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+void setFreeEnergyWallBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
                                int material, T alpha, T kappa1, T kappa2, T kappa3, T h1, T h2, T h3, int latticeNumber)
 {
   setFreeEnergyWallBoundary<T,DESCRIPTOR>(sLattice, superGeometry.getMaterialIndicator(material),
                                           alpha, kappa1, kappa2, kappa3, h1, h2, h3, latticeNumber);
 }
+
 ///Initialising the Free Energy Wall Boundary on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
+void setFreeEnergyWallBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
                                T alpha, T kappa1, T kappa2, T kappa3, T h1, T h2, T h3, int latticeNumber)
 {
 
@@ -129,70 +124,55 @@ void setFreeEnergyWallBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorP
     addend = 1./(alpha*alpha) * ( (h3/kappa3) );
   }
   for (int iCloc = 0; iCloc < sLattice.getLoadBalancer().size(); ++iCloc) {
-    setFreeEnergyWallBoundary<T,DESCRIPTOR>(sLattice.getExtendedBlockLattice(iCloc),
-                                            indicator->getExtendedBlockIndicatorF(iCloc), addend, latticeNumber, includeOuterCells);
+    setFreeEnergyWallBoundary<T,DESCRIPTOR>(sLattice.getBlock(iCloc),
+                                            indicator->getBlockIndicatorF(iCloc), addend, latticeNumber, includeOuterCells);
   }
   /// Adds needed Cells to the Communicator _commBC in SuperLattice
   addPoints2CommBC<T,DESCRIPTOR>(sLattice, std::forward<decltype(indicator)>(indicator), _overlap);
 }
 
-////////// BlockLattice Domain  /////////////////////////////////////////
+
 //set FreeEnergyWallBoundary on block domain.
 //This function works for the setFreeEnergyWallBoundary with h1,h2,h3 Parameters and h1,h2 Parameters
 template<typename T, typename DESCRIPTOR>
-void setFreeEnergyWallBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator,
+void setFreeEnergyWallBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator,
                                T addend, int latticeNumber, bool includeOuterCells)
 {
   OstreamManager clout(std::cout, "setFreeEnergyWallBoundary");
-  bool _output = false;
-  auto& blockGeometryStructure = indicator.getBlockGeometryStructure();
+  auto& blockGeometryStructure = indicator.getBlockGeometry();
   const int margin = includeOuterCells ? 0 : 1;
-  /*
-   *x0,x1,y0,y1 Range of cells to be traversed
-   **/
-  int x0 = margin;
-  int y0 = margin;
-  int x1 = blockGeometryStructure.getNx()-1 -margin;
-  int y1 = blockGeometryStructure.getNy()-1 -margin;
   std::vector<int> discreteNormal(3, 0);
-  for (int iX = x0; iX <= x1; ++iX) {
-    for (int iY = y0; iY <= y1; ++iY) {
-      ///set dynamics and post Processors on indicated cells
-      if (indicator(iX,iY)) {
-        discreteNormal = blockGeometryStructure.getStatistics().getType(iX,iY);
-        if (discreteNormal[1]!=0 || discreteNormal[2]!=0) {
-
-          Dynamics<T, DESCRIPTOR>* dynamics = NULL;
-          if (latticeNumber == 1) {
-            dynamics = &instances::getBounceBack<T, DESCRIPTOR>();
-          }
-          else {
-            dynamics = new FreeEnergyWallDynamics<T, DESCRIPTOR>;
-            block.dynamicsVector.push_back(dynamics);
-          }
-          block.get(iX,iY).defineDynamics(dynamics);
-          block.dynamicsVector.push_back(dynamics);
-
-          PostProcessorGenerator2D<T, DESCRIPTOR>* wettingPostProcessor =
-            new FreeEnergyWallProcessorGenerator2D<T, DESCRIPTOR> (
-            iX, iX, iY, iY, discreteNormal[1], discreteNormal[2], addend );
-          PostProcessorGenerator2D<T, DESCRIPTOR>* chemPotPostProcessor =
-            new FreeEnergyChemPotBoundaryProcessorGenerator2D<T, DESCRIPTOR> (
-            iX, iX, iY, iY, discreteNormal[1], discreteNormal[2], latticeNumber );
-          if (wettingPostProcessor) {
-            block.addPostProcessor(*wettingPostProcessor);
-          }
-          if (chemPotPostProcessor) {
-            block.addPostProcessor(*chemPotPostProcessor);
-          }
+  blockGeometryStructure.forSpatialLocations([&](auto iX, auto iY) {
+    if (blockGeometryStructure.getNeighborhoodRadius({iX, iY}) >= margin
+        && indicator(iX, iY)) {
+      discreteNormal = blockGeometryStructure.getStatistics().getType(iX,iY);
+      if (discreteNormal[1]!=0 || discreteNormal[2]!=0) {
+        if (latticeNumber == 1) {
+          block.template defineDynamics<BounceBackBulkDensity>({iX,iY});
         }
-        if (_output) {
-          clout << "setFreeEnergyWallBoundary<" << "," << ">("  << x0 << ", "<< x1 << ", " << y0 << ", " << y1 << ", " << " )" << std::endl;
+        else {
+          block.template defineDynamics<FreeEnergyWallDynamics>({iX,iY});
+        }
+
+        auto wettingPostProcessor = std::unique_ptr<PostProcessorGenerator2D<T, DESCRIPTOR>>{
+          new FreeEnergyWallProcessorGenerator2D<T, DESCRIPTOR>(
+          iX, iX, iY, iY, discreteNormal[1], discreteNormal[2], addend )
+        };
+
+        auto chemPotPostProcessor = std::unique_ptr<PostProcessorGenerator2D<T, DESCRIPTOR>>{
+          new FreeEnergyChemPotBoundaryProcessorGenerator2D<T, DESCRIPTOR> (
+          iX, iX, iY, iY, discreteNormal[1], discreteNormal[2], latticeNumber )
+        };
+
+        if (wettingPostProcessor) {
+          block.addPostProcessor(*wettingPostProcessor);
+        }
+        if (chemPotPostProcessor) {
+          block.addPostProcessor(*chemPotPostProcessor);
         }
       }
     }
-  }
-
+  });
 }
 
 }//namespace olb

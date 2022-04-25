@@ -54,13 +54,13 @@ public:
    * \param v              std::vector to be copied to output by operator.
    *                       Size determines target dimension.
    **/
-  SuperConst3D(SuperStructure3D<T>& superStructure, std::vector<W> v);
+  SuperConst3D(SuperStructure<T,3>& superStructure, std::vector<W> v);
 
   /// Constructor accepting single scalar
-  SuperConst3D(SuperStructure3D<T>& superStructure, W scalar);
+  SuperConst3D(SuperStructure<T,3>& superStructure, W scalar);
   /// Constructor template accepting vectors
   template <unsigned Size>
-  SuperConst3D(SuperStructure3D<T>& superStructure, Vector<W,Size> v)
+  SuperConst3D(SuperStructure<T,3>& superStructure, Vector<W,Size> v)
     : SuperConst3D(superStructure, v.toStdVector()) { };
 
   bool operator() (W output[], const int input[]) override;

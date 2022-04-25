@@ -24,11 +24,13 @@
 #ifndef DESCRIPTOR_TAG_H
 #define DESCRIPTOR_TAG_H
 
-#include "utilities/meta.h"
+#include "core/meta.h"
 
 namespace olb {
 
 namespace descriptors {
+
+// *INDENT-OFF*
 
 /// \defgroup descriptor
 //@{
@@ -46,10 +48,7 @@ struct DESCRIPTOR_TAG {
 };
 
 template <typename FIELD>
-using is_tag_field = typename std::is_base_of<DESCRIPTOR_TAG, FIELD>::type;
-
-template <typename FIELD>
-using is_data_field = typename std::integral_constant<bool, !is_tag_field<FIELD>::value>::type;
+using is_tag_field = std::is_base_of<DESCRIPTOR_TAG, FIELD>;
 
 namespace tag {
 
@@ -68,9 +67,9 @@ struct DEFAULT : public CATEGORY, public DESCRIPTOR_TAG { };
  **/
 template <typename BASE, typename FALLBACK, typename... FIELDS>
 using field_with_base = typename std::conditional<
-  std::is_void<typename utilities::meta::list_item_with_base<BASE, FIELDS...>::type>::value,
+  std::is_void<typename meta::first_type_with_base<BASE, FIELDS...>::type>::value,
   FALLBACK,
-  typename utilities::meta::list_item_with_base<BASE, FIELDS...>::type
+  typename meta::first_type_with_base<BASE, FIELDS...>::type
 >::type;
 
 }

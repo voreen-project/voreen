@@ -26,44 +26,31 @@
 
 #include "functors/lattice/superBaseF3D.h"
 #include "functors/lattice/blockBaseF3D.h"
-#include "core/blockData3D.h"
-#include "core/blockStructure3D.h"
+#include "core/blockData.h"
+#include "core/blockStructure.h"
+#include "geometry/blockGeometry.h"
 
 namespace olb {
 
 /// Base block indicator functor
 /**
- * Derived functors implement a indicator function on the full domain given by
- * BlockGeometryStructure3D. Note the distinction between normal and extended
- * block geometries exposed by SuperGeometry3D.
- *
- * By convention SuperIndicatorF3D::_blockF functors are expected to operate on
- * overlap-less domains i.e. BlockGeometryView3D instances.
- *
- * Block indicators to be queried on a full block including its overlap must be
- * constructed on extended BlockGeometry3D  instances such as  those exposed by
- * SuperGeometry3D::getExtendedBlockGeometry
+ * Derived functors implement a indicator function on the full domain given by BlockGeometry3D.
  **/
 template <typename T>
 class BlockIndicatorF3D : public BlockF3D<bool> {
 protected:
-  BlockGeometryStructure3D<T>& _blockGeometryStructure;
-  const BlockData3D<T,bool>*   _cachedData;
+  BlockGeometry<T,3>& _block;
+  const BlockData<3,T,bool>* _cachedData;
 public:
   using BlockF3D<bool>::operator();
 
-  /// Constructor
-  /**
-   * \param geometry Any implementation of BlockGeometryStructure3D
-   *                 e.g. BlockGeometry3D or BlockGeometryView3D
-   **/
-  BlockIndicatorF3D(BlockGeometryStructure3D<T>& geometry);
+  BlockIndicatorF3D(BlockGeometry<T,3>& geometry);
 
   /// Get underlying block geometry structure
   /**
-   * \returns _blockGeometryStructure
+   * \returns _block
    **/
-  BlockGeometryStructure3D<T>& getBlockGeometryStructure();
+  BlockGeometry<T,3>& getBlockGeometry();
 
   /// Block indicator specific function operator overload
   /**
@@ -73,17 +60,11 @@ public:
    * \return Domain indicator i.e. `true` iff the input lies within the described subset.
    **/
   bool operator() (const int input[]);
-  /// Block indicator specific function operator overload
-  /**
-   * The boolean return value of `operator()(T output[], S input[])` describes
-   * the call's success and by convention must not describe the indicated domain.
-   *
-   * \return Domain indicator i.e. `true` iff the input lies within the described subset.
-   **/
   bool operator() (int iX, int iY, int iZ);
+  bool operator() (LatticeR<3> loc);
 
   /// Set bool-mask cache to be used by indicator operator overloads
-  void setCache(const BlockData3D<T,bool>& cache);
+  void setCache(const BlockData<3,T,bool>& cache);
 
   /// Returns true only if the indicated domain subset is empty
   /**

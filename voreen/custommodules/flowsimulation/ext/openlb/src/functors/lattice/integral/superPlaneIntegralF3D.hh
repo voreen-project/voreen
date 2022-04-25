@@ -59,7 +59,7 @@ bool SuperPlaneIntegralF3D<T>::isToBeIntegrated(const Vector<T,3>& physR, int iC
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   const HyperplaneLattice3D<T>& hyperplaneLattice,
   FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
   FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -116,7 +116,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   const Hyperplane3D<T>&    hyperplane,
   FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
   FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -133,7 +133,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   const Hyperplane3D<T>&    hyperplane,
   FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
   BlockDataReductionMode             mode)
@@ -149,7 +149,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& u, const Vector<T,3>& v,
   std::vector<int>       materials,
   BlockDataReductionMode mode)
@@ -164,7 +164,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& u, const Vector<T,3>& v,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D(
@@ -178,7 +178,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& normal,
   std::vector<int>       materials,
   BlockDataReductionMode mode)
@@ -193,7 +193,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& normal,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D(
@@ -207,7 +207,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>&  normal,
   std::vector<int>    materials,
   BlockDataReductionMode mode)
@@ -224,7 +224,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>&  normal,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D(
@@ -238,7 +238,7 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const IndicatorCircle3D<T>& circle, std::vector<int> materials,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D(
@@ -247,13 +247,13 @@ SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
       Hyperplane3D<T>().originAt(circle.getCenter()).normalTo(circle.getNormal()),
       geometry.getMaterialIndicator(std::forward<std::vector<int>>(materials)),
       std::unique_ptr<IndicatorF2D<T>>(new IndicatorCircle2D<T>({0,0}, circle.getRadius())),
-      mode)
+mode)
 { }
 
 template<typename T>
 SuperPlaneIntegralF3D<T>::SuperPlaneIntegralF3D(
   FunctorPtr<SuperF3D<T>>&& f,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const IndicatorCircle3D<T>& circle,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D(

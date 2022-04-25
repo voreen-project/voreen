@@ -79,7 +79,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass2D(FunctorPtr<SuperF2D<T>>&& velocityF,
                                FunctorPtr<SuperF2D<T>>&& densityF,
-                               SuperGeometry2D<T>&       geometry,
+                               SuperGeometry<T,2>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const HyperplaneLattice2D<T>& hyperplaneLattice,
@@ -111,7 +111,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass2D(FunctorPtr<SuperF2D<T>>&& velocityF,
                                FunctorPtr<SuperF2D<T>>&& densityF,
-                               SuperGeometry2D<T>&       geometry,
+                               SuperGeometry<T,2>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Hyperplane2D<T>& hyperplane,
@@ -142,7 +142,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass2D(FunctorPtr<SuperF2D<T>>&& velocityF,
                                FunctorPtr<SuperF2D<T>>&& densityF,
-                               SuperGeometry2D<T>&       geometry,
+                               SuperGeometry<T,2>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Hyperplane2D<T>&  hyperplane,
@@ -162,7 +162,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass2D(FunctorPtr<SuperF2D<T>>&& velocityF,
                                FunctorPtr<SuperF2D<T>>&& densityF,
-                               SuperGeometry2D<T>&       geometry,
+                               SuperGeometry<T,2>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Vector<T,2>& origin,
@@ -181,7 +181,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass2D(FunctorPtr<SuperF2D<T>>&& velocityF,
                                FunctorPtr<SuperF2D<T>>&& densityF,
-                               SuperGeometry2D<T>&       geometry,
+                               SuperGeometry<T,2>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Vector<T,2>& origin,

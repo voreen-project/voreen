@@ -25,13 +25,13 @@
 #define SUPER_INDICATOR_BASE_F_3D_HH
 
 #include "superIndicatorBaseF3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 
 namespace olb {
 
 
 template <typename T>
-SuperIndicatorF3D<T>::SuperIndicatorF3D(SuperGeometry3D<T>& geometry)
+SuperIndicatorF3D<T>::SuperIndicatorF3D(SuperGeometry<T,3>& geometry)
   : SuperF3D<T, bool>(geometry, 1),
     _superGeometry(geometry)
 { }
@@ -47,15 +47,7 @@ BlockIndicatorF3D<T>& SuperIndicatorF3D<T>::getBlockIndicatorF(int iCloc)
 }
 
 template <typename T>
-BlockIndicatorF3D<T>& SuperIndicatorF3D<T>::getExtendedBlockIndicatorF(int iCloc)
-{
-  OLB_ASSERT(iCloc < int(this->_extendedBlockF.size()) && iCloc >= 0,
-             "block functor index within bounds");
-  return *(this->_extendedBlockF[iCloc]);
-}
-
-template <typename T>
-SuperGeometry3D<T>& SuperIndicatorF3D<T>::getSuperGeometry()
+SuperGeometry<T,3>& SuperIndicatorF3D<T>::getSuperGeometry()
 {
   return this->_superGeometry;
 }
@@ -65,7 +57,7 @@ bool SuperIndicatorF3D<T>::operator() (const int input[])
 {
   bool output{};
   if (_cachedData) {
-    output = _cachedData->get(input[0], input[1], input[2], input[3]);
+    output = _cachedData->getBlock(input[0]).get(input+1);
   }
   else {
     this->operator()(&output, input);
@@ -78,7 +70,7 @@ bool SuperIndicatorF3D<T>::operator() (int iC, int iX, int iY, int iZ)
 {
   bool output{};
   if (_cachedData) {
-    output = _cachedData->get(iC, iX, iY, iZ);
+    output = _cachedData->getBlock(iC).get({iX, iY, iZ});
   }
   else {
     this->operator()(&output, iC, iX, iY, iZ);
@@ -89,10 +81,10 @@ bool SuperIndicatorF3D<T>::operator() (int iC, int iX, int iY, int iZ)
 template <typename T>
 void SuperIndicatorF3D<T>::cache()
 {
-  _cachedData = std::unique_ptr<SuperData3D<T,bool>>(
-                  new SuperData3D<T,bool>(*this));
+  _cachedData = std::unique_ptr<SuperData<3,T,bool>>(
+                  new SuperData<3,T,bool>(*this));
   for (unsigned iC = 0; iC < this->_blockF.size(); ++iC) {
-    getExtendedBlockIndicatorF(iC).setCache(_cachedData->get(iC));
+    getBlockIndicatorF(iC).setCache(_cachedData->getBlock(iC));
   }
 }
 

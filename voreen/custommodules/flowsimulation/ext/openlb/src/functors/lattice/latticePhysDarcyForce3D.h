@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,11 +50,11 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysDarcyForce3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  SuperGeometry3D<T>& _superGeometry;
+  SuperGeometry<T,3>& _superGeometry;
   const int _material;
 public:
-  SuperLatticePhysDarcyForce3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                               SuperGeometry3D<T>& superGeometry,
+  SuperLatticePhysDarcyForce3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                               SuperGeometry<T,3>& superGeometry,
                                const int material, const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]);
 };
@@ -63,11 +63,11 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysDarcyForce3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometry3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   int _material;
 public:
-  BlockLatticePhysDarcyForce3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-                               BlockGeometry3D<T>& blockGeometry,
+  BlockLatticePhysDarcyForce3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                               BlockGeometry<T,3>& blockGeometry,
                                int material, const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]);
 };

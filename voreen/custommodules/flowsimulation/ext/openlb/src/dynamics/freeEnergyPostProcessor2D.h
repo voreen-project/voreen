@@ -24,12 +24,11 @@
 #ifndef FREE_ENERGY_POST_PROCESSOR_2D_H
 #define FREE_ENERGY_POST_PROCESSOR_2D_H
 
-#include "core/spatiallyExtendedObject2D.h"
+#include "core/blockStructure.h"
 #include "core/postProcessing.h"
-#include "core/blockLattice2D.h"
 
 /* \file
- * PostProcessor classes organising the coupling between the lattices for the free energy 
+ * PostProcessor classes organising the coupling between the lattices for the free energy
  * model.
  *
  * The PostProcessor for the calculation of the chemical potential needs to be applied first,
@@ -52,16 +51,16 @@ public:
   /// \param[in] kappa2_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] kappa3_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  FreeEnergyChemicalPotentialCoupling2D(int x0_, int x1_, int y0_, int y1_, T alpha_, 
-                                T kappa1_, T kappa2_, T kappa3_,
-                                std::vector<SpatiallyExtendedObject2D*> partners_);
+  FreeEnergyChemicalPotentialCoupling2D(int x0_, int x1_, int y0_, int y1_, T alpha_,
+                                        T kappa1_, T kappa2_, T kappa3_,
+                                        std::vector<BlockStructureD<2>*> partners_);
   /// \param[in] alpha_ - Parameter related to the interface width. [lattice units]
   /// \param[in] kappa1_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] kappa2_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] kappa3_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyChemicalPotentialCoupling2D(T alpha_, T kappa1_, T kappa2_, T kappa3_,
-                                std::vector<SpatiallyExtendedObject2D*> partners_);
+                                        std::vector<BlockStructureD<2>*> partners_);
   int extent() const override
   {
     return 1;
@@ -70,14 +69,14 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_) override;
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_) override;
 private:
-  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<3, 0, 0>;
+  using RHO_CACHE = descriptors::FIELD_BASE<3, 0, 0>;
   int x0, x1, y0, y1;
   T alpha, kappa1, kappa2, kappa3;
-  std::vector<SpatiallyExtendedObject2D*> partners;
+  std::vector<BlockStructureD<2>*> partners;
 };
 
 /// PostProcessor calculating the interfacial force in the free energy model. On the fist
@@ -89,9 +88,9 @@ class FreeEnergyForceCoupling2D : public LocalPostProcessor2D<T,DESCRIPTOR> {
 public:
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyForceCoupling2D(int x0_, int x1_, int y0_, int y1_,
-                                std::vector<SpatiallyExtendedObject2D*> partners_);
+                            std::vector<BlockStructureD<2>*> partners_);
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  FreeEnergyForceCoupling2D(std::vector<SpatiallyExtendedObject2D*> partners_);
+  FreeEnergyForceCoupling2D(std::vector<BlockStructureD<2>*> partners_);
   int extent() const override
   {
     return 1;
@@ -100,12 +99,12 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                                int x0_, int x1_, int y0_, int y1_) override;
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                        int x0_, int x1_, int y0_, int y1_) override;
 private:
   int x0, x1, y0, y1;
-  std::vector<SpatiallyExtendedObject2D*> partners;
+  std::vector<BlockStructureD<2>*> partners;
 };
 
 /// PostProcessor for assigning the velocity at inlet and outlets to lattice two and three.
@@ -116,9 +115,9 @@ class FreeEnergyInletOutletCoupling2D : public LocalPostProcessor2D<T,DESCRIPTOR
 public:
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyInletOutletCoupling2D(int x0_, int x1_, int y0_, int y1_,
-                                       std::vector<SpatiallyExtendedObject2D*> partners_);
+                                  std::vector<BlockStructureD<2>*> partners_);
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  FreeEnergyInletOutletCoupling2D(std::vector<SpatiallyExtendedObject2D*> partners_);
+  FreeEnergyInletOutletCoupling2D(std::vector<BlockStructureD<2>*> partners_);
   int extent() const override
   {
     return 0;
@@ -127,12 +126,12 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_) override;
 private:
   int x0, x1, y0, y1;
-  std::vector<SpatiallyExtendedObject2D*> partners;
+  std::vector<BlockStructureD<2>*> partners;
 };
 
 /// PostProcessor for setting a constant density outlet.
@@ -144,10 +143,10 @@ public:
   /// \param[in] rho_ - Gives the value of the density constraint.
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyDensityOutletCoupling2D(int x0_, int x1_, int y0_, int y1_, T rho_,
-                                  std::vector<SpatiallyExtendedObject2D*> partners_);
+                                    std::vector<BlockStructureD<2>*> partners_);
   /// \param[in] rho_ - Gives the value of the density constraint.
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  FreeEnergyDensityOutletCoupling2D(T rho_, std::vector<SpatiallyExtendedObject2D*> partners_);
+  FreeEnergyDensityOutletCoupling2D(T rho_, std::vector<BlockStructureD<2>*> partners_);
   int extent() const override
   {
     return 0;
@@ -156,13 +155,13 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_) override;
 private:
   int x0, x1, y0, y1;
   T rho;
-  std::vector<SpatiallyExtendedObject2D*> partners;
+  std::vector<BlockStructureD<2>*> partners;
 };
 
 
@@ -175,7 +174,7 @@ public:
   /// \param[in] kappa1_ - Parameter related to the surface tension (need to be >0). [lattice units]
   /// \param[in] kappa2_ - Parameter related to the surface tension (need to be >0). [lattice units]
   FreeEnergyChemicalPotentialGenerator2D(int x0_, int x1_, int y0_, int y1_, T alpha_,
-                            T kappa1_, T kappa2_);
+                                         T kappa1_, T kappa2_);
   /// Two component free energy model
   /// \param[in] alpha_ - Parameter related to the interface width. [lattice units]
   /// \param[in] kappa1_ - Parameter related to the surface tension (need to be >0). [lattice units]
@@ -195,7 +194,7 @@ public:
   /// \param[in] kappa3_ - Parameter related to the surface tension (need to be >0). [lattice units]
   FreeEnergyChemicalPotentialGenerator2D(T alpha_, T kappa1_, T kappa2_, T kappa3_);
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<2>*> partners) const override;
   LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const override;
 private:
   T alpha, kappa1, kappa2, kappa3;
@@ -208,7 +207,7 @@ public:
   FreeEnergyForceGenerator2D(int x0_, int x1_, int y0_, int y1_ );
   FreeEnergyForceGenerator2D( );
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<2>*> partners) const override;
   LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const override;
 };
 
@@ -219,7 +218,7 @@ public:
   FreeEnergyInletOutletGenerator2D(int x0_, int x1_, int y0_, int y1_);
   FreeEnergyInletOutletGenerator2D( );
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<2>*> partners) const override;
   LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const override;
 };
 
@@ -232,7 +231,7 @@ public:
   /// \param[in] rho_ - Gives the value of the density constraint.
   FreeEnergyDensityOutletGenerator2D(T rho_);
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const override;
+  PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<2>*> partners) const override;
   LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const override;
 private:
   T rho;

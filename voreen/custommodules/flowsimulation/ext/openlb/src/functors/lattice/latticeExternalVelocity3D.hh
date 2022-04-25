@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,20 +43,20 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeExternalVelocity3D<T, DESCRIPTOR>::SuperLatticeExternalVelocity3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice)
+  SuperLattice<T, DESCRIPTOR>& sLattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 3)
 {
   this->getName() = "externalVelocity";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeExternalVelocity3D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC)));
+    this->_blockF.emplace_back(new BlockLatticeExternalVelocity3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC)));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeExternalVelocity3D<T, DESCRIPTOR>::BlockLatticeExternalVelocity3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 3)
 {
   this->getName() = "externalVelocity";
@@ -66,7 +65,7 @@ BlockLatticeExternalVelocity3D<T, DESCRIPTOR>::BlockLatticeExternalVelocity3D(
 template<typename T, typename DESCRIPTOR>
 bool BlockLatticeExternalVelocity3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
-  T* ExtVel = this->_blockLattice.get(input[0], input[1], input[2]).template getFieldPointer<descriptors::VELOCITY>();
+  auto ExtVel = this->_blockLattice.get(input[0], input[1], input[2]).template getField<descriptors::VELOCITY>();
   for (int iVel=0; iVel<DESCRIPTOR::d; ++iVel) {
     output[iVel] = ExtVel[iVel];
   }

@@ -43,7 +43,7 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include "zlib.h"
+#include <zlib.h>
 
 
 
@@ -66,25 +66,29 @@ void SuperVTMwriter3D<T,W>::write(int iT)
   //  !!!!!!!!!!! check whether _pointerVec is empty
   if ( _pointerVec.empty() ) {
     clout << "Error: Did you add a Functor ?";
-  } else {
+  }
+  else {
+    // no gaps between vti files (cuboids)
+    for (SuperF3D<T,W>* f : _pointerVec) {
+      f->getSuperStructure().communicate();
+    }
+
     // to get first element _pointerVec
     // problem if functors with different SuperStructure are stored
     // since till now, there is only one origin
     const auto it_begin = _pointerVec.cbegin();
     CuboidGeometry3D<T> const& cGeometry = (**it_begin).getSuperStructure().getCuboidGeometry();
-    // no gaps between vti files (cuboids)
-    (**it_begin).getSuperStructure().communicate();
     LoadBalancer<T>& load = (**it_begin).getSuperStructure().getLoadBalancer();
     const T delta = cGeometry.getMotherCuboid().getDeltaR();
 
     // PVD, owns all
     if ( rank == 0 ) {
       const std::string pathPVD = singleton::directories().getVtkOutDir()
-                            + createFileName( _name ) + ".pvd";
+                                  + createFileName( _name ) + ".pvd";
       dataPVDmaster( iT, pathPVD,  "data/" + createFileName( _name, iT ) + ".vtm" );
 
       const std::string pathVTM = singleton::directories().getVtkOutDir()
-                            + "data/" + createFileName( _name, iT ) + ".vtm";
+                                  + "data/" + createFileName( _name, iT ) + ".vtm";
       preambleVTM(pathVTM);
       for (int iC = 0; iC < cGeometry.getNc(); iC++) {
         dataVTM( iC, pathVTM, createFileName( _name, iT, iC) + ".vti" );
@@ -93,12 +97,12 @@ void SuperVTMwriter3D<T,W>::write(int iT)
     }
     // VTI, each process writes its cuboids
     for (int iCloc = 0; iCloc < load.size(); iCloc++) {
-    // get piece/whole extent
+      // get piece/whole extent
       const Vector<int,3> extent0(-1,-1,-1);
-      const Vector<int,3> extent1( cGeometry.get(load.glob(iCloc)).getExtend() );
+      const Vector<int,3> extent1( cGeometry.get(load.glob(iCloc)).getExtent() );
 
       const std::string fullNameVTI = singleton::directories().getVtkOutDir() + "data/"
-                                + createFileName( _name, iT, load.glob(iCloc) ) + ".vti";
+                                      + createFileName( _name, iT, load.glob(iCloc) ) + ".vti";
 
       // get dimension/extent for each cuboid
       const int originLatticeR[4] = {load.glob(iCloc),0,0,0};
@@ -134,7 +138,7 @@ void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT)
   if ( rank == 0 ) {
     // master only
     const std::string pathVTM = singleton::directories().getVtkOutDir()
-                          + createFileName( f.getName(), iT )  + ".vtm";
+                                + createFileName( f.getName(), iT )  + ".vtm";
 
     preambleVTM(pathVTM);
     for (int iC = 0; iC < cGeometry.getNc(); iC++) {
@@ -148,10 +152,10 @@ void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT)
   for (int iCloc = 0; iCloc < load.size(); iCloc++) {
     // get piece/whole extent
     const Vector<int,3> extent0(-1,-1,-1);
-    const Vector<int,3> extent1( cGeometry.get(load.glob(iCloc)).getExtend() );
+    const Vector<int,3> extent1( cGeometry.get(load.glob(iCloc)).getExtent() );
 
     const std::string fullNameVTI = singleton::directories().getVtkOutDir() + "data/"
-                              + createFileName( f.getName(), iT, load.glob(iCloc) ) + ".vti";
+                                    + createFileName( f.getName(), iT, load.glob(iCloc) ) + ".vti";
 
     // get dimension/extent for each cuboid
     const int originLatticeR[4] = {load.glob(iCloc),0,0,0};
@@ -182,7 +186,7 @@ void SuperVTMwriter3D<T,W>::createMasterFile()
 #endif
   if ( rank == 0 ) {
     const std::string fullNamePVDmaster = singleton::directories().getVtkOutDir()
-                                    + createFileName( _name ) + ".pvd";
+                                          + createFileName( _name ) + ".pvd";
     preamblePVD(fullNamePVDmaster);
     closePVD(fullNamePVDmaster);
     _createFile = true;
@@ -192,6 +196,13 @@ void SuperVTMwriter3D<T,W>::createMasterFile()
 template<typename T, typename W>
 void SuperVTMwriter3D<T,W>::addFunctor(SuperF3D<T,W>& f)
 {
+  _pointerVec.push_back(&f);
+}
+
+template<typename T, typename W>
+void SuperVTMwriter3D<T,W>::addFunctor(SuperF3D<T,W>& f, const std::string& functorName)
+{
+  f.getName() = functorName;
   _pointerVec.push_back(&f);
 }
 
@@ -226,7 +237,8 @@ void SuperVTMwriter3D<T,W>::preambleVTI (const std::string& fullName,
   fout << "<VTKFile type=\"ImageData\" version=\"0.1\" ";
   if (_compress) {
     fout << "byte_order=\"LittleEndian\" compressor=\"vtkZLibDataCompressor\">\n";
-  } else {
+  }
+  else {
     fout << "byte_order=\"LittleEndian\">\n";
   }
   fout << "<ImageData WholeExtent=\""
@@ -336,7 +348,8 @@ void SuperVTMwriter3D<T,W>::dataPVDmaster(int iT,
          << "file=\"" << namePiece << "\"/>\n";
     fout.close();
     closePVD(fullNamePVDMaster);
-  } else {
+  }
+  else {
     clout << "Error: could not open " << fullNamePVDMaster << std::endl;
   }
 }
@@ -353,7 +366,8 @@ void SuperVTMwriter3D<T,W>::dataArray(const std::string& fullName,
   fout << "<DataArray type=\"Float32\" Name=\"" << f.getName() << "\" NumberOfComponents=\"" << f.getTargetDim() << "\" ";
   if (_compress || _binary) {
     fout << "format=\"binary\" encoding=\"base64\">\n";
-  } else {
+  }
+  else {
     fout << ">\n";
   }
 
@@ -399,15 +413,17 @@ void SuperVTMwriter3D<T,W>::dataArray(const std::string& fullName,
     // encode compressed data to base64
     Base64Encoder<unsigned char> dataEncoder( fout, sizeCompr );
     dataEncoder.encode(comprData.get(), sizeCompr);
-  } else if(_binary) {
+  }
+  else if (_binary) {
     // encode prefix to base64 documented in  http://www.earthmodels.org/software/vtk-and-paraview/vtk-file-formats
     Base64Encoder<uint32_t> prefixEncoder(fout, 1);
     prefixEncoder.encode(&binarySize, 1);
     //  write numbers from functor
     Base64Encoder<float> dataEncoder(fout, numberOfFloats);
     dataEncoder.encode(streamFloat.get(),numberOfFloats);
-  } else {
-    for( size_t iOut = 0; iOut < numberOfFloats; ++iOut ) {
+  }
+  else {
+    for ( size_t iOut = 0; iOut < numberOfFloats; ++iOut ) {
       fout << streamFloat[iOut] << " ";
     }
   }

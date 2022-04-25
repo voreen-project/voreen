@@ -40,13 +40,13 @@ struct LpNormImpl {
 template <typename T, typename W, int P>
 inline W LpNormImpl<T,W,P>::operator()(W output, W tmp, T weight)
 {
-  return output + pow(fabs(tmp), P)*weight;
+  return output + util::pow(util::fabs(tmp), P)*weight;
 }
 
 template <typename T, typename W, int P>
 inline W LpNormImpl<T,W,P>::enclose(W output)
 {
-  return pow(output, 1. / P);
+  return util::pow(output, 1. / P);
 }
 
 /// Linf norm functor implementation details
@@ -54,7 +54,7 @@ template <typename T, typename W>
 struct LpNormImpl<T,W,0> {
   inline W operator()(W output, W tmp, T weight)
   {
-    return std::max(output, fabs(tmp));
+    return util::max(output, util::fabs(tmp));
   }
   inline W enclose(W output)
   {
@@ -67,7 +67,7 @@ template <typename T, typename W>
 struct LpNormImpl<T,W,1> {
   inline W operator()(W output, W tmp, T weight)
   {
-    return output + fabs(tmp)*weight;
+    return output + util::fabs(tmp)*weight;
   }
   inline W enclose(W output)
   {
@@ -84,7 +84,7 @@ struct LpNormImpl<T,W,2> {
   }
   inline W enclose(W output)
   {
-    return sqrt(output);
+    return util::sqrt(output);
   }
 };
 

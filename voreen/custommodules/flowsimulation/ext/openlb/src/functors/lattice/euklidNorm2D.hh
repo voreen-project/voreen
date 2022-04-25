@@ -25,20 +25,18 @@
 #define EUKLID_NORM_2D_HH
 
 #include <vector>
-#include <cmath>     
+#include "utilities/omath.h"
 #include <limits>
 
 #include "euklidNorm2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
@@ -72,7 +70,7 @@ bool BlockEuklidNorm2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
   for ( int i = 0; i < _f.getTargetDim(); ++i) {
     output[0] += data[i]*data[i];
   }
-  output[0] = sqrt(output[0]);
+  output[0] = util::sqrt(output[0]);
   return true;
 }
 

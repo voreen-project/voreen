@@ -23,19 +23,13 @@
 
 generic        :=
 
-precompiled    := blockGeometry2D \
-                  blockGeometry3D \
+precompiled    := blockGeometry \
                   blockGeometryStatistics2D \
                   blockGeometryStatistics3D \
-                  blockGeometryStructure2D \
-                  blockGeometryStructure3D \
-                  blockGeometryView2D \
-                  blockGeometryView3D \
                   cuboid2D \
                   cuboid3D \
                   cuboidGeometry2D \
                   cuboidGeometry3D \
-                  superGeometry2D \
-                  superGeometry3D \
+                  superGeometry \
                   superGeometryStatistics2D \
                   superGeometryStatistics3D

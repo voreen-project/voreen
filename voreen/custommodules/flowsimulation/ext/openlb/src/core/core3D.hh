@@ -25,22 +25,6 @@
  * Groups all the generic implementation files for basic 3D dynamics.
  */
 
-#include "blockData2D.hh"
-#include "blockData3D.hh"
-#include "blockStaticPopulationD3D.hh"
-#include "blockStaticFieldsD3D.hh"
-#include "blockDynamicFieldsD3D.hh"
-#include "fieldArrayD.hh"
-#include "blockLattice3D.hh"
-#include "blockLatticeStructure3D.hh"
-#include "blockLatticeView3D.hh"
-#include "cell.hh"
-#include "latticeStatistics.hh"
-#include "postProcessing.hh"
-#include "powerLawUnitConverter.hh"
-#include "serializer.hh"
-#include "superData3D.hh"
-#include "superLattice3D.hh"
-#include "superField3D.hh"
-#include "unitConverter.hh"
-#include "thermalUnitConverter.hh"
+#include "core.hh"
+
+

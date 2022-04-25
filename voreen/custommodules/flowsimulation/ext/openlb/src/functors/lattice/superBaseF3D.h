@@ -30,11 +30,13 @@
 #include "functors/genericF.h"
 #include "blockBaseF3D.h"
 #include "indicator/superIndicatorBaseF3D.h"
-#include "communication/superStructure3D.h"
-#include "core/superData3D.h"
-#include "core/superLattice3D.h"
+#include "communication/superStructure.h"
+#include "utilities/functorPtr.h"
+#include "core/superData.h"
+#include "core/superLattice.h"
 
-/** Note: Throughout the whole source code directory functors, the
+
+/* Note: Throughout the whole source code directory functors, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -42,20 +44,20 @@
 namespace olb {
 
 template<typename T, typename BaseType> class SuperData3D;
-template<typename T, typename DESCRIPTOR> class SuperLattice3D;
+template<typename T, typename DESCRIPTOR> class SuperLattice;
 template<typename T> class SuperStructure3D;
 template<typename T> class BlockF3D;
 template<typename T> class SuperIndicatorF3D;
 template<typename T, typename W> class SuperIdentity3D;
 template<typename T, typename DESCRIPTOR> class SuperLatticeIdentity3D;
 
-/// represents all functors that operate on a SuperStructure3D<T> in general
+/// represents all functors that operate on a SuperStructure<T,3> in general
 template <typename T, typename W = T>
 class SuperF3D : public GenericF<W,int> {
 protected:
-  SuperF3D(SuperStructure3D<T>& superStructure, int targetDim);
+  SuperF3D(SuperStructure<T,3>& superStructure, int targetDim);
 
-  SuperStructure3D<T>& _superStructure;
+  SuperStructure<T,3>& _superStructure;
   /// Super functors may consist of several BlockF3D<W> derived functors
   /**
    * By convention: If block level functors are used at all they should
@@ -64,6 +66,8 @@ protected:
   std::vector<std::unique_ptr<BlockF3D<W>>> _blockF;
 public:
   using identity_functor_type = SuperIdentity3D<T,W>;
+  static constexpr bool isSuper = true;
+  static constexpr unsigned d = 3;
 
   SuperF3D<T,W>& operator-(SuperF3D<T,W>& rhs);
   SuperF3D<T,W>& operator+(SuperF3D<T,W>& rhs);
@@ -71,14 +75,14 @@ public:
   SuperF3D<T,W>& operator/(SuperF3D<T,W>& rhs);
 
   /// \return SuperF3D<T,W>::_superStructure
-  SuperStructure3D<T>& getSuperStructure();
+  SuperStructure<T,3>& getSuperStructure();
   /// \return Size of SuperF3D<T,W>::_blockF vector
   int getBlockFSize() const;
   /// \return SuperF3D<T,W>::_blockF[iCloc]
   BlockF3D<W>& getBlockF(int iCloc);
-  
+
   bool operator() (W output[], const int input []);
-  
+
   using GenericF<W,int>::operator();
 };
 
@@ -88,14 +92,14 @@ template<typename T, typename BaseType>
 class SuperDataF3D : public SuperF3D<T,BaseType> {
 protected:
   /// `SuperData3D` object this functor was created from
-  SuperData3D<T,BaseType>& _superData;
+  SuperData<3,T,BaseType>& _superData;
 public:
   /// Constructor from `SuperData3D` - stores `_superData` reference
-  SuperDataF3D(SuperData3D<T,BaseType>& superData);
+  SuperDataF3D(SuperData<3,T,BaseType>& superData);
   /// Operator for this functor - copies data from `_superData` object into output
   bool operator() (BaseType output[], const int input[]);
   /// Getter for `_superData`
-  SuperData3D<T,BaseType>& getSuperData();
+  SuperData<3,T,BaseType>& getSuperData();
 };
 
 
@@ -148,18 +152,6 @@ public:
 };
 
 
-/// functor to extract one component
-template <typename T, typename W=T>
-class SuperDotProductF3D : public SuperF3D<T,W> {
-protected:
-  SuperF3D<T,W>& _f;
-  T _vector[];
-public:
-  SuperDotProductF3D(SuperF3D<T,W>& f, T vector[]);
-  bool operator() (W output[], const int input[]);
-};
-
-
 /// identity functor for memory management
 template <typename T, typename W=T>
 class SuperIdentityOnSuperIndicatorF3D : public SuperF3D<T,W> {
@@ -176,16 +168,16 @@ public:
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeF3D : public SuperF3D<T,T> {
 protected:
-  SuperLatticeF3D(SuperLattice3D<T,DESCRIPTOR>& superLattice, int targetDim);
+  SuperLatticeF3D(SuperLattice<T,DESCRIPTOR>& superLattice, int targetDim);
 
-  SuperLattice3D<T,DESCRIPTOR>& _sLattice;
+  SuperLattice<T,DESCRIPTOR>& _sLattice;
 public:
   using identity_functor_type = SuperLatticeIdentity3D<T,DESCRIPTOR>;
 
-  SuperLattice3D<T,DESCRIPTOR>& getSuperLattice();
-  
+  SuperLattice<T,DESCRIPTOR>& getSuperLattice();
+
   bool operator() (T output [], const int input []);
-  
+
   using GenericF<T,int>::operator();
 };
 
@@ -203,7 +195,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysF3D : public SuperLatticeF3D<T,DESCRIPTOR> {
 protected:
-  SuperLatticePhysF3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysF3D(SuperLattice<T,DESCRIPTOR>& sLattice,
                       const UnitConverter<T,DESCRIPTOR>& converter, int targetDim);
   const UnitConverter<T,DESCRIPTOR>& _converter;
 public:
@@ -214,7 +206,7 @@ public:
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class SuperLatticeThermalPhysF3D : public SuperLatticeF3D<T,TDESCRIPTOR> {
 protected:
-  SuperLatticeThermalPhysF3D(SuperLattice3D<T,TDESCRIPTOR>& sLattice,
+  SuperLatticeThermalPhysF3D(SuperLattice<T,TDESCRIPTOR>& sLattice,
                              const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim);
   const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& _converter;
 public:

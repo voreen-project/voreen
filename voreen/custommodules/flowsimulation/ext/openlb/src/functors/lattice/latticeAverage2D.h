@@ -27,9 +27,7 @@
 #include <vector>
 
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -44,12 +42,12 @@ template <typename T, typename DESCRIPTOR>
 class BlockLatticeAverage2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
-  BlockGeometry2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   int _material;
   T _radius;
 public:
   BlockLatticeAverage2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
-                        BlockGeometry2D<T>& blockGeometry, int material, T radius);
+                        BlockGeometry<T,2>& blockGeometry, int material, T radius);
   bool operator() (T output[], const int input[]) override;
 };
 

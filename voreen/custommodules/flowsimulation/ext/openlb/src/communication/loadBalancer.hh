@@ -97,6 +97,12 @@ int LoadBalancer<T>::size() const
 }
 
 template<typename T>
+int LoadBalancer<T>::getRankSize() const
+{
+  return _rank.size();
+}
+
+template<typename T>
 bool LoadBalancer<T>::operator==(const LoadBalancer<T>& rhs) const
 {
   return _size == rhs._size &&

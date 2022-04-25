@@ -21,38 +21,40 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Slip Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Slip Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_SLIP_BOUNDARY_2D_H
 #define SET_SLIP_BOUNDARY_2D_H
 
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/blockGeometryStatistics2D.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "core/superLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
 #include "dynamics/dynamics.h"
-#include "momentaOnBoundaries2D.h"
 #include "boundaryPostProcessors2D.h"
+#include "setBoundary2D.h"
 
 
 namespace olb {
-///Initialising the SlipBoundary on the superLattice domain
-template<typename T, typename DESCRIPTOR>
-void setSlipBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry, int material);
 
 ///Initialising the SlipBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setSlipBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator);
+void setSlipBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry, int material);
 
-///Set slip boundary on blockLattice domain
+///Initialising the SlipBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setSlipBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator, bool includeOuterCells=false);
+void setSlipBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator);
+
+
+///set slipBoundary for any indicated cells inside the block domain
+template<typename T, typename DESCRIPTOR>
+void setSlipBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator, bool includeOuterCells=false);
+
 }//namespace olb
 
 #endif

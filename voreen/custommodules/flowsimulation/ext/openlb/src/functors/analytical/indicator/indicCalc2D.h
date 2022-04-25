@@ -27,6 +27,7 @@
 
 #include "indicatorBaseF2D.h"
 #include "utilities/arithmetic.h"
+#include "sdf.h"
 
 namespace olb {
 
@@ -78,24 +79,40 @@ public:
 
 //////////////////////////////// indicCalc2D ////////////////////////////////
 /// arithmetic helper class for Indicator 2D functors
-template <typename S, template<typename U> class F>
+template <typename S, template<typename> class F>
 class IndicCalc2D : public IndicatorF2D<S> {
 protected:
+  IndicCalc2D( std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g );
   std::shared_ptr<IndicatorF2D<S>> _f;
   std::shared_ptr<IndicatorF2D<S>> _g;
 public:
-  IndicCalc2D( std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g );
-
-  bool operator() (bool output[], const S input[2]) override;
+  virtual S signedDistance( const Vector<S,2>& input )=0;
+  bool operator() (bool output[], const S input[3]);
 };
 
-/// Addition functor (W==bool: Union)
+/// Union
 template <typename S>
-using IndicPlus2D = IndicCalc2D<S,util::plus>;
+class IndicPlus2D : public IndicCalc2D<S,util::plus> {
+public:
+  IndicPlus2D( std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g );
+  S signedDistance( const Vector<S,2>& input ) override;
+};
+
+/// Subtraction
 template <typename S>
-using IndicMinus2D = IndicCalc2D<S,util::minus>;
+class IndicMinus2D : public IndicCalc2D<S,util::minus> {
+public:
+  IndicMinus2D( std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g );
+  S signedDistance( const Vector<S,2>& input ) override;
+};
+
+/// Intersection
 template <typename S>
-using IndicMultiplication2D = IndicCalc2D<S,util::multiplies>;
+class IndicMultiplication2D : public IndicCalc2D<S,util::multiplies> {
+public:
+  IndicMultiplication2D( std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g );
+  S signedDistance( const Vector<S,2>& input ) override;
+};
 
 template<typename S, template <typename U> class F1, template <typename V> class F2,
          typename=typename std::enable_if<std::is_base_of<IndicatorF2D<S>, F1<S>>::value>::type>

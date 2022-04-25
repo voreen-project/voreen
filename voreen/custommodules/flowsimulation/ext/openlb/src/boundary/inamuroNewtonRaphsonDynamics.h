@@ -33,23 +33,23 @@ namespace olb {
 * This class computes the inamuro BC with general dynamics. It uses the formula from the
  * paper by Inamuro et al. but since there is no explict solution
  * for a lattice different from the D2Q9 and for a speed of sound
- * c_s=q/sqrt(3), we have to use a Newton-Raphson algorithm to
+ * c_s=q/util::sqrt(3), we have to use a Newton-Raphson algorithm to
  * implement these boundary conditions.
 */
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-class InamuroNewtonRaphsonDynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+class InamuroNewtonRaphsonDynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
   /// Constructor
-  InamuroNewtonRaphsonDynamics(T omega, Momenta<T,DESCRIPTOR>& momenta);
+  InamuroNewtonRaphsonDynamics(T omega);
   /// Compute equilibrium distribution function
   T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell,
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell,
                LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega) override;
+  void setOmega(T omega);
 private:
   void computeApproxMomentum(T approxMomentum[DESCRIPTOR::d],
                              ConstCell<T,DESCRIPTOR>& cell,

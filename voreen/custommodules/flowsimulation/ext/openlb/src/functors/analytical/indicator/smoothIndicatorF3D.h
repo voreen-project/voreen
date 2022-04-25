@@ -28,135 +28,152 @@
 
 #include "smoothIndicatorBaseF3D.h"
 #include "io/xmlReader.h"
+#include "utilities/functorPtr.h"
 
-#include "core/blockData3D.h"
+#include "core/blockData.h"
 #include "core/unitConverter.h"
 #include "functors/analytical/indicator/indicatorBaseF2D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
+#include "functors/analytical/indicator/indicatorF3D.h"
+#include "particles/functions/bodyMotionFunctions.h"
+#include "sdf.h"
 
 namespace olb {
 
 /// implements a smooth particle cuboid in 3D with an _epsilon sector.
-template <typename T, typename S, bool HLBM=false>
-class SmoothIndicatorCuboid3D final: public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorCuboid3D final: public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  S _xLength;
-  S _yLength;
-  S _zLength;
+  IndicatorCuboid3D<S> _ind;
+
 public:
-  SmoothIndicatorCuboid3D(Vector<S,3> center, S xLength, S yLength, S zLength, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.), S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
-  bool operator()(T output[],const S input[]) override;
+  SmoothIndicatorCuboid3D(IndicatorCuboid3D<S>& ind, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorCuboid3D(S xLength, S yLength, S zLength, Vector<S,3> center, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  S getVolume( ) override;
+  Vector<S,4> calcMofiAndMass(const S density) override;
 };
 
 /// implements a smooth particle ellipsoid in 3D with an _epsilon sector.
-template <typename T, typename S, bool HLBM=false>
-class SmoothIndicatorEllipsoid3D final: public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorEllipsoid3D final: public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  S _xHalfAxis;
-  S _yHalfAxis;
-  S _zHalfAxis;
+  IndicatorEllipsoid3D<S> _ind;
+
 public:
-  SmoothIndicatorEllipsoid3D(Vector<S,3> center, S xHalfAxis, S yHalfAxis, S zHalfAxis, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.), S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorEllipsoid3D(IndicatorEllipsoid3D<S>& ind, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorEllipsoid3D(Vector<S,3> center, Vector<S,3> radius, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  S getVolume( ) override;
+  Vector<S,4> calcMofiAndMass(const S density) override;
   bool operator()(T output[],const S input[]) override;
 };
 
 /// implements a smooth particle super-ellipsoid in 3D. The epsilon sector is currently missing.
-template <typename T, typename S, bool HLBM=false>
-class SmoothIndicatorSuperEllipsoid3D final: public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorSuperEllipsoid3D final: public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  S _xHalfAxis;
-  S _yHalfAxis;
-  S _zHalfAxis;
-  S _exp1;
-  S _exp2;
+  IndicatorSuperEllipsoid3D<S> _ind;
 public:
-  SmoothIndicatorSuperEllipsoid3D(Vector<S,3> center, S xHalfAxis, S yHalfAxis, S zHalfAxis, S exponent1, S exponent2, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.), S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorSuperEllipsoid3D(IndicatorSuperEllipsoid3D<S>& ind, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorSuperEllipsoid3D(Vector<S,3> center, S xHalfAxis, S yHalfAxis, S zHalfAxis, S exponent1, S exponent2,
+                                  S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
   // this implements the beta function from the gamma function and will be deprecated when switching to c++17
   S beta(S arg1, S arg2);
   // calculates cartesian moments
   S moments(S p, S q, S r);
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  S getVolume( ) override;
+  Vector<S,4> calcMofiAndMass(const S density) override;
   bool operator()(T output[],const S input[]) override;
 };
 
 /// implements a smooth sphere in 3D with an _epsilon sector
-template <typename T, typename S, bool HLBM=false>
-class SmoothIndicatorSphere3D final: public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorSphere3D final: public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  S _radius;
+  IndicatorSphere3D<S> _ind;
 public:
-  SmoothIndicatorSphere3D(Vector<S, 3> center, S radius, S epsilon, S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
-  bool operator()(T output[], const S input[]) override;
+  SmoothIndicatorSphere3D(IndicatorSphere3D<S>& ind, S epsilon);
+  SmoothIndicatorSphere3D(Vector<S,3> center, S radius, S epsilon);
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  S getVolume( ) override;
+  Vector<S,4> calcMofiAndMass(const S density) override;
 };
 
 /// implements a smooth particle cylinder in 3D with an _epsilon sector.
-template <typename T, typename S, bool HLBM=false>
-class SmoothIndicatorCylinder3D final: public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorCylinder3D final: public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  S _radius;
-  S _length;
-  void initIndicatorCylinder3D(Vector<S,3> normal, Vector<S,3> theta, S density, Vector<S,3> vel);
+  IndicatorCylinder3D<S> _ind;
+  void initIndicatorCylinder3D(Vector<S,3> theta, S length);
+
 public:
-  SmoothIndicatorCylinder3D(Vector<S,3> pointA, Vector<S,3> pointB, S radius, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.), S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
-  SmoothIndicatorCylinder3D(Vector<S,3> center, Vector<S,3> normal, S radius, S length, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.), S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
-  bool operator()(T output[], const S input[]) override;
+  SmoothIndicatorCylinder3D(IndicatorCylinder3D<S>& ind, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorCylinder3D(Vector<S,3> center1, Vector<S,3> center2, S radius, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorCylinder3D(Vector<S,3> center, Vector<S,3> normal, S radius, S height, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  S getVolume( ) override;
+  Vector<S,4> calcMofiAndMass(const S density) override;
 };
 
 /// implements a smooth particle cone in 3D with an _epsilon sector
-template <typename T, typename S, bool HLBM=false>
-class SmoothIndicatorCone3D : public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorCone3D : public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  S _length;
-  S _radiusA;
-  S _radiusB;
-  void initIndicatorCone3D(Vector<S,3> normal, Vector<S,3> theta, S density, Vector<S,3> vel);
+  Vector<S,3> _startPos;
+  void initIndicatorCone3D(Vector<S,3> theta, S length);
+  IndicatorCone3D<S> _ind;
 public:
-  SmoothIndicatorCone3D(Vector<S,3> pointA, Vector<S,3> pointB,
-                        S radiusA, S radiusB, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.), S density=0,
-                        Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
-  SmoothIndicatorCone3D(Vector<S,3> center, Vector<S,3> normal, S lenght,
-                        S radiusA, S radiusB, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.),
-                        S density=0, Vector<S,3> vel = Vector<S,3> (0.,0.,0.));
-  bool operator() (T output[], const S input[]) override;
+  SmoothIndicatorCone3D(IndicatorCone3D<S>& indPtr, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  SmoothIndicatorCone3D(Vector<S,3> center1, Vector<S,3> center2, S radius1, S radius2, S epsilon, Vector<S,3> theta = Vector<S,3> (0.,0.,0.));
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  S getVolume( ) override;
+  Vector<S,4> calcMofiAndMass(const S density) override;
+  Vector<S,3> calcCenterOfMass() override;
 };
 
 
 //implements a custom shaped smooth particle //TODO: Check for consistency
 //ALSO: adap .hh
-template <typename T, typename S, typename DESCRIPTOR, bool HLBM=false>
-class SmoothIndicatorCustom3D final: public SmoothIndicatorF3D<T, S, HLBM> {
+template <typename T, typename S, bool PARTICLE=false>
+class SmoothIndicatorCustom3D final: public SmoothIndicatorF3D<T, S, PARTICLE> {
 private:
-  /// Turn on/off additional output
-  const bool _verbose;
-  /// Turn on/off to use real boundary with eps = 0.5
-  const bool _useRealBoudnary;
+  std::shared_ptr<IndicatorF3D<T>> _indPtr;
   /// Lattice spacing (in m) for the particle lattice (should be smaller or equal to the fluid lattice for best results)
   const T _latticeSpacing;
-  /// Important parameter for the Gaussian point spread Function (standard deviations)
-  const T _sigma;
   /// Local center
-  std::vector<T> _center;
-  /// Smoothed block data to store porosity
-  BlockData3D<T, T> _blockData;
+  PhysR<T,3> _center;
+  /// Block data to store signed distance
+  std::unique_ptr<BlockData<3,T,BaseType<T>>> _blockData;
+  /// Cached particle volume (to avoid reiteration)
+  T _volume;
 
   void initRotationMatrix();
   void initBlockData(IndicatorF3D<T>& ind);
   void calcCenter();
-  void calcMofi(T rhoP);
   void calcCircumRadius();
 
 public:
+  // TODO: Add specialized constructors (for PARTICLE = true and PARTICLE = false)
   SmoothIndicatorCustom3D(T latticeSpacing,
-                          IndicatorF3D<T>& ind, Vector<T,3> pos, T density, T epsilon,
-                          Vector<T,3> theta, Vector<T,3> vel = Vector<T,3> (0.,0.,0.),
-                          T sigma = 1., bool verbose=false, bool useRealBoundary=false);
-  SmoothIndicatorCustom3D(UnitConverter<T,DESCRIPTOR> const& converter,
-                          IndicatorF3D<T>& ind, Vector<T,3> pos, T density, T epsilon,
-                          Vector<T,3> theta, Vector<T,3> vel = Vector<T,3> (0.,0.,0.),
-                          T sigma = 1., bool verbose=false, bool useRealBoundary=false);
+                          std::shared_ptr<IndicatorF3D<T>> indPtr, Vector<T,3> pos, T epsilon,
+                          Vector<T,3> theta=Vector<T,3>(0.));
+
   Vector<T,3> getLocalCenter();
-  Vector<T,3> getMofi();
-  bool regardCell(BlockData3D<T,T>& blockData, int x, int y, int z);
-  bool operator() (T output[], const S input[]);
+  S getVolume( ) override;
+  Vector<T,4> calcMofiAndMass(T rhoP);
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize) override;
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize,
+                            std::function<Vector<S,3>(const Vector<S,3>&)> transformPos) override;
+  const S signedDistance( const PhysR<S,3> input ) override;
+  bool regardCell(int input[3]);
 };
 
 

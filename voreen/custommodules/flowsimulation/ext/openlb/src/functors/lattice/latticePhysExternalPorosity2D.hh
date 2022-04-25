@@ -25,27 +25,25 @@
 #define LATTICE_PHYS_EXTERNAL_POROSITY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysExternalPorosity2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template <typename T,typename DESCRIPTOR>
 SuperLatticePhysExternalPorosity2D<T,DESCRIPTOR>::SuperLatticePhysExternalPorosity2D
-(SuperLattice2D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "ExtPorosityField";
@@ -54,8 +52,7 @@ SuperLatticePhysExternalPorosity2D<T,DESCRIPTOR>::SuperLatticePhysExternalPorosi
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysExternalPorosity2D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -63,11 +60,9 @@ SuperLatticePhysExternalPorosity2D<T,DESCRIPTOR>::SuperLatticePhysExternalPorosi
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysExternalPorosity2D<T,DESCRIPTOR>::BlockLatticePhysExternalPorosity2D(
-  BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter)
-  : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice, converter, 2),
-    _overlap(overlap)
+  : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice, converter, 2)
 {
   this->getName() = "ExtPorosityField";
 }
@@ -75,9 +70,7 @@ BlockLatticePhysExternalPorosity2D<T,DESCRIPTOR>::BlockLatticePhysExternalPorosi
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysExternalPorosity2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  this->_blockLattice.get(
-    input[0]+_overlap, input[1]+_overlap
-  ).template computeField<descriptors::POROSITY>(output);
+  this->_blockLattice.get(input).template computeField<descriptors::POROSITY>(output);
   return true;
 }
 

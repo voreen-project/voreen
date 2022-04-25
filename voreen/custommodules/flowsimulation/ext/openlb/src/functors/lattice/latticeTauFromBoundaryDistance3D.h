@@ -30,9 +30,9 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
@@ -40,7 +40,7 @@
 #include "latticePhysBoundaryDistance3D.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -52,8 +52,8 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class SuperLatticePhysTauFromBoundaryDistance3D final : public SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR> {
 public:
-  SuperLatticePhysTauFromBoundaryDistance3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-      SuperGeometry3D<T>& sGeometry,
+  SuperLatticePhysTauFromBoundaryDistance3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+      SuperGeometry<T,3>& sGeometry,
       XMLreader const& xmlReader,
       ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter,
       const T p, const T T_avg, const T c_p, const T beta, const T lambda_0, const T sigma, const T p_0, const T n_0);
@@ -62,12 +62,12 @@ public:
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class BlockLatticePhysTauFromBoundaryDistance3D final  : public BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR> {
 private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   BlockLatticePhysBoundaryDistance3D<T,DESCRIPTOR> _distanceFunctor;
   const T _tmp1, _tmp2;
 public:
-  BlockLatticePhysTauFromBoundaryDistance3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-      BlockGeometryStructure3D<T>& blockGeometry,
+  BlockLatticePhysTauFromBoundaryDistance3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+      BlockGeometry<T,3>& blockGeometry,
       XMLreader const& xmlReader,
       ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter,
       const T p, const T T_avg, const T c_p, const T beta, const T lambda_0, const T sigma, const T p_0, const T n_0);

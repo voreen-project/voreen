@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeGuoZhaoPhysK3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoPhysK3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physK";
@@ -53,8 +52,7 @@ SuperLatticeGuoZhaoPhysK3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoPhysK3D(
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticeGuoZhaoPhysK3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -62,7 +60,7 @@ SuperLatticeGuoZhaoPhysK3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoPhysK3D(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeGuoZhaoPhysK3D<T,DESCRIPTOR>::BlockLatticeGuoZhaoPhysK3D
-(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice, converter, 1)
 {
   this->getName() = "physK";
@@ -71,8 +69,7 @@ BlockLatticeGuoZhaoPhysK3D<T,DESCRIPTOR>::BlockLatticeGuoZhaoPhysK3D
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticeGuoZhaoPhysK3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  output[0] = *this->_blockLattice.get( input[0], input[1], input[2] )
-              .template getFieldPointer<descriptors::K>()
+  output[0] = this->_blockLattice.get(input).template getField<descriptors::K>()
               * this->_converter.getConversionFactorLength()
               * this->_converter.getConversionFactorLength();
   return true;

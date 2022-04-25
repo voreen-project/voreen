@@ -33,11 +33,11 @@
 #include <string>
 #include <vector>
 
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "io/ostreamManager.h"
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 /// Representation of a statistic for a parallel 2D geometry
@@ -49,20 +49,16 @@ namespace olb {
  * This class is not intended to be derived from.
  */
 
-template<typename T>
-class SuperGeometry2D;
+template<typename T, unsigned D>
+class SuperGeometry;
 
 template<typename T>
 class SuperGeometryStatistics2D {
-
 private:
-
   /// Points to the underlying data from which the statistics is taken
-  const SuperGeometry2D<T>* _superGeometry;
+  const SuperGeometry<T,2>* _superGeometry;
   /// Specifies if an update is needed
   bool _statisticsUpdateNeeded;
-  /// Size of ghost voxel layer
-  int _overlap;
 
   /// Number of different material numbers
   int _nMaterials;
@@ -81,7 +77,7 @@ private:
 public:
 
   /// Constructor
-  SuperGeometryStatistics2D(SuperGeometry2D<T>* superGeometry);
+  SuperGeometryStatistics2D(SuperGeometry<T,2>* superGeometry);
   /// Copy constructor
   SuperGeometryStatistics2D(SuperGeometryStatistics2D const& rhs);
   /// Copy assignment

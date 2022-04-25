@@ -25,10 +25,19 @@
  * Groups all the 2D include files in the directory utilities.
  */
 
+#include "aDiff.h"
+#include "adHelpers.h"
 #include "benchmarkUtil.h"
+#include "calc.h"
 #include "timer.h"
 #include "functorPtr.h"
 #include "functorDsl2D.h"
 #include "vectorHelpers.h"
 #include "hyperplane2D.h"
 #include "hyperplaneLattice2D.h"
+#include "omath.h"
+#include "oalgorithm.h"
+#include "random.h"
+#include "typeIndexedContainers.h"
+#include "integrationTestUtils.h"
+#include "geometricOperations.h"

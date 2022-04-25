@@ -78,6 +78,10 @@ public:
     createDirectory(gnuplotOutDir_+"data/");
     gnuplotOutDir = gnuplotOutDir_;
   }
+  void makeCustomDir(std::string customDir)
+  {
+    createDirectory(customDir);
+  }
   std::string getOlbDir() const
   {
     return olbDir;
@@ -161,9 +165,9 @@ inline void checkValue(T input)
 inline void exit(int exitcode)
 {
 #ifdef PARALLEL_MODE_MPI
-        MPI_Abort(MPI_COMM_WORLD, exitcode);
+  MPI_Abort(MPI_COMM_WORLD, exitcode);
 #else
-        std::exit(exitcode);
+  std::exit(exitcode);
 #endif
 }
 

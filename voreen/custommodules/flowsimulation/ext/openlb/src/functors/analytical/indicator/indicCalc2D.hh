@@ -35,8 +35,8 @@ template <typename S>
 IndicCalc1D<S>::IndicCalc1D(IndicatorF1D<S>& f, IndicatorF1D<S>& g)
   : _f(f), _g(g)
 {
-  this->_myMin[0] = std::min(f.getMin()[0], g.getMin()[0]);
-  this->_myMax[0] = std::max(f.getMax()[0], g.getMax()[0]);
+  this->_myMin[0] = util::min(f.getMin()[0], g.getMin()[0]);
+  this->_myMax[0] = util::max(f.getMax()[0], g.getMax()[0]);
   std::swap(f._ptrCalcC, this->_ptrCalcC);
 }
 
@@ -125,12 +125,7 @@ IndicatorF1D<S>& IndicatorF1D<S>::operator*(IndicatorF1D<S>& rhs)
 template <typename S, template<typename U> class F>
 IndicCalc2D<S,F>::IndicCalc2D(std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g)
   : _f(f), _g(g)
-{
-  for ( int i=0; i<2; i++) {
-    this->_myMin[i] = std::min(_f->getMin()[i], _g->getMin()[i]);
-    this->_myMax[i] = std::max(_f->getMax()[i], _g->getMax()[i]);
-  }
-}
+{ }
 
 template <typename S, template<typename U> class F>
 bool IndicCalc2D<S,F>::operator()( bool output[], const S input[2])
@@ -146,6 +141,57 @@ bool IndicCalc2D<S,F>::operator()( bool output[], const S input[2])
     output[i] = F<S>()(outputF[i], outputG[i]);
   }
   return output;
+}
+
+template <typename S>
+IndicPlus2D<S>::IndicPlus2D(std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g)
+  : IndicCalc2D<S,util::plus>(f, g)
+{
+  for ( int i=0; i<2; i++) {
+    this->_myMin[i] = util::min(this->_f->getMin()[i], this->_g->getMin()[i]);
+    this->_myMax[i] = util::max(this->_f->getMax()[i], this->_g->getMax()[i]);
+  }
+}
+
+template <typename S>
+S IndicPlus2D<S>::signedDistance( const Vector<S,2>& input )
+{
+  return sdf::unify(this->_f->signedDistance(input), this->_g->signedDistance(input));
+}
+
+
+template <typename S>
+IndicMinus2D<S>::IndicMinus2D(std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g)
+  : IndicCalc2D<S,util::minus>(f, g)
+{
+  // TODO: Improve
+  for ( int i=0; i<2; i++) {
+    this->_myMin[i] = this->_f->getMin()[i];
+    this->_myMax[i] = this->_f->getMax()[i];
+  }
+}
+
+template <typename S>
+S IndicMinus2D<S>::signedDistance( const Vector<S,2>& input )
+{
+  return sdf::subtraction(this->_f->signedDistance(input), this->_g->signedDistance(input));
+}
+
+
+template <typename S>
+IndicMultiplication2D<S>::IndicMultiplication2D(std::shared_ptr<IndicatorF2D<S>> f, std::shared_ptr<IndicatorF2D<S>> g)
+  : IndicCalc2D<S,util::multiplies>(f, g)
+{
+  for ( int i=0; i<2; i++) {
+    this->_myMin[i] = util::max(this->_f->getMin()[i], this->_g->getMin()[i]);
+    this->_myMax[i] = util::min(this->_f->getMax()[i], this->_g->getMax()[i]);
+  }
+}
+
+template <typename S>
+S IndicMultiplication2D<S>::signedDistance( const Vector<S,2>& input )
+{
+  return sdf::intersection(this->_f->signedDistance(input), this->_g->signedDistance(input));
 }
 
 

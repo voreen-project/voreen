@@ -1,0 +1,131 @@
+/*  This file is part of the OpenLB library
+ *
+ *  Copyright (C) 2021 Adrian Kummerlaender
+ *  E-mail contact: info@openlb.net
+ *  The most recent release of OpenLB can be downloaded at
+ *  <http://www.openlb.net/>
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License along with this program; if not, write to the Free
+ *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ *  Boston, MA  02110-1301, USA.
+*/
+
+#ifndef DYNAMICS_COLLISION_LES_CSE_H
+#define DYNAMICS_COLLISION_LES_CSE_H
+
+<%! from bindings import olb %>\
+<%! from generator import collision_cse, cell_method_cse %>\
+<%! from data import Cell, Parameters %>\
+<%
+def effective_omega_cse(collision, descriptor, momenta, equilibrium):
+    return cell_method_cse(descriptor, collision.type[descriptor,momenta,equilibrium], "computeEffectiveOmega", cell=Cell(descriptor), parameters=Parameters(descriptor,collision.parameters))
+
+descriptors = {
+    'D2Q9' : olb.descriptors.D2Q9[olb.descriptors.FORCE,olb.descriptors.AV_SHEAR],
+    'D3Q19': olb.descriptors.D3Q19[olb.descriptors.FORCE,olb.descriptors.AV_SHEAR],
+    'D3Q27': olb.descriptors.D3Q27[olb.descriptors.FORCE,olb.descriptors.AV_SHEAR],
+}
+%>\
+
+#ifndef DISABLE_CSE
+
+#include "equilibrium.h"
+#include "collision.h"
+#include "latticeDescriptors.h"
+
+namespace olb {
+
+namespace collision {
+
+namespace detail {
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct SmagorinskyEffectiveOmega<BGK,descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.SmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+${effective_omega_cse(olb.collision.SmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct SmagorinskyEffectiveOmega<BGK,descriptors::${name}<FIELDS...>,momenta::ForcedWithStress<momenta::BulkTuple>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.SmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.ForcedWithStress[olb.momenta.BulkTuple], olb.equilibria.SecondOrder)}
+
+${effective_omega_cse(olb.collision.SmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.ForcedWithStress[olb.momenta.BulkTuple], olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct ShearSmagorinskyEffectiveOmega<BGK,descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ShearSmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+${effective_omega_cse(olb.collision.ShearSmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct ConSmagorinskyEffectiveOmega<BGK,descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConSmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+${effective_omega_cse(olb.collision.ConSmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct ConStrainSmagorinskyEffectiveOmega<BGK,descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConStrainSmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+${effective_omega_cse(olb.collision.ConStrainSmagorinskyEffectiveOmega[olb.collision.BGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct KrauseEffectiveOmega<PerPopulationBGK,descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.KrauseEffectiveOmega[olb.collision.PerPopulationBGK], DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+}
+
+}
+
+}
+
+#endif
+
+#endif

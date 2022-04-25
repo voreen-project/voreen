@@ -33,14 +33,14 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeKnudsen2D<T, DESCRIPTOR>::SuperLatticeKnudsen2D(
-  SuperLattice2D<T, DESCRIPTOR>& lattice)
+  SuperLattice<T, DESCRIPTOR>& lattice)
   : SuperLatticeF2D<T, DESCRIPTOR>(lattice, 1)
 {
   this->getName() = "knudsen";
 
   for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
-      new BlockLatticeKnudsen2D<T, DESCRIPTOR>(lattice.getBlockLattice(iC))
+      new BlockLatticeKnudsen2D<T, DESCRIPTOR>(lattice.getBlock(iC))
     );
   }
 }
@@ -50,7 +50,7 @@ SuperLatticeKnudsen2D<T, DESCRIPTOR>::SuperLatticeKnudsen2D(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeRefinementMetricKnudsen2D<T, DESCRIPTOR>::SuperLatticeRefinementMetricKnudsen2D(
-  SuperLattice2D<T, DESCRIPTOR>&      lattice,
+  SuperLattice<T, DESCRIPTOR>&      lattice,
   const UnitConverter<T, DESCRIPTOR>& converter)
   : SuperLatticeF2D<T, DESCRIPTOR>(lattice, 1)
 {
@@ -59,7 +59,7 @@ SuperLatticeRefinementMetricKnudsen2D<T, DESCRIPTOR>::SuperLatticeRefinementMetr
   for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticeRefinementMetricKnudsen2D<T, DESCRIPTOR>(
-        lattice.getBlockLattice(iC), converter)
+        lattice.getBlock(iC), converter)
     );
   }
 }

@@ -1,0 +1,269 @@
+/*  This file is part of the OpenLB library
+ *
+ *  Copyright (C) 2021 Adrian Kummerlaender
+ *  E-mail contact: info@openlb.net
+ *  The most recent release of OpenLB can be downloaded at
+ *  <http://www.openlb.net/>
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License along with this program; if not, write to the Free
+ *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ *  Boston, MA  02110-1301, USA.
+*/
+
+#ifndef DYNAMICS_COLLISION_CSE_H
+#define DYNAMICS_COLLISION_CSE_H
+
+<%! from bindings import descriptors, rtlbmDescriptors, freeEnergyDescriptors, olb %>\
+<%! from generator import collision_cse %>\
+
+#ifndef DISABLE_CSE
+
+#include "equilibrium.h"
+#include "latticeDescriptors.h"
+
+namespace olb {
+
+namespace collision {
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::Incompressible> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.Incompressible)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct PerPopulationBGK::type<descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.PerPopulationBGK, DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct TRT::type<descriptors::${name}<FIELDS...>,momenta::BulkTuple,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.TRT, DESCRIPTOR, olb.momenta.BulkTuple, olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in descriptors.items():
+template <typename... FIELDS>
+struct Poisson::type<descriptors::${name}<FIELDS...>,momenta::PoissonTuple,equilibria::ZerothOrder> {
+
+${collision_cse(olb.collision.Poisson, DESCRIPTOR, olb.momenta.PoissonTuple, olb.equilibria.ZerothOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in rtlbmDescriptors.items():
+template <typename... FIELDS>
+struct P1::type<descriptors::${name}<FIELDS...>,momenta::P1Tuple,equilibria::P1> {
+
+${collision_cse(olb.collision.P1, DESCRIPTOR, olb.momenta.P1Tuple, olb.equilibria.P1)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in {"D3Q19": olb.descriptors.D3Q19[olb.momenta.FixedVelocityMomentumGeneric.VELOCITY]}.items():
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<0,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[0,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<0,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[0,1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<1,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[1,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<1,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[1,1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<2,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[2,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct BGK::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<2,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.BGK, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[2,1], olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in {"D3Q19": olb.descriptors.D3Q19[olb.momenta.FixedVelocityMomentumGeneric.VELOCITY]}.items():
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<0,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[0,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<0,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[0,1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<1,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[1,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<1,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[1,1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<2,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[2,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct RLB::type<descriptors::${name}<FIELDS...>,momenta::RegularizedVelocityBoundaryTuple<2,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.RLB, DESCRIPTOR, olb.momenta.RegularizedVelocityBoundaryTuple[2,1], olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+% for name, DESCRIPTOR in {"D3Q19": olb.descriptors.D3Q19[olb.momenta.FixedVelocityMomentumGeneric.VELOCITY]}.items():
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BasicDirichletVelocityBoundaryTuple<0,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BasicDirichletVelocityBoundaryTuple[0,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BasicDirichletVelocityBoundaryTuple<0,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BasicDirichletVelocityBoundaryTuple[0,1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BasicDirichletVelocityBoundaryTuple<1,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BasicDirichletVelocityBoundaryTuple[1,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BasicDirichletVelocityBoundaryTuple<1,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BasicDirichletVelocityBoundaryTuple[1,1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BasicDirichletVelocityBoundaryTuple<2,-1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BasicDirichletVelocityBoundaryTuple[2,-1], olb.equilibria.SecondOrder)}
+
+};
+
+template <typename... FIELDS>
+struct ConstRhoBGK::type<descriptors::${name}<FIELDS...>,momenta::BasicDirichletVelocityBoundaryTuple<2,1>,equilibria::SecondOrder> {
+
+${collision_cse(olb.collision.ConstRhoBGK, DESCRIPTOR, olb.momenta.BasicDirichletVelocityBoundaryTuple[2,1], olb.equilibria.SecondOrder)}
+
+};
+
+% endfor
+
+
+##% for name, DESCRIPTOR in descriptors.items():
+##template <>
+##template <typename... FIELDS>
+##struct Forced<BGK>::type<descriptors::${name}<FIELDS...>,momenta::Forced<momenta::BulkTuple>,equilibria::SecondOrder> {
+##
+##${collision_cse(olb.collision.Forced[olb.collision.BGK], DESCRIPTOR, olb.momenta.Forced[olb.momenta.BulkTuple], olb.equilibria.SecondOrder)}
+##
+##};
+##
+##% endfor
+
+}
+
+}
+
+#endif
+
+#endif

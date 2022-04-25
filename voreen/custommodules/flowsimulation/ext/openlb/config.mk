@@ -1,65 +1,25 @@
-#  This file is part of the OpenLB library
+# Example build config for OpenLB using CUDA on single GPU systems
 #
-#  Copyright (C) 2017 Markus Mohrhard, Mathias Krause
-#  E-mail contact: info@openlb.net
-#  The most recent release of OpenLB can be downloaded at
-#  <http://www.openlb.net/>
+# Tested using CUDA 11.4
 #
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public
-#  License along with this program; if not, write to the Free
-#  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-#  Boston, MA  02110-1301, USA.
+# Usage:
+#  - Copy this file to OpenLB root as `config.mk`
+#  - Run `make clean; make`
+#  - Switch to example directory, e.g. `examples/laminar/cavity3dBenchmark`
+#  - Run `make`
+#  - Start the simulation using `./cavity3d`
 
-###########################################################################
-###########################################################################
+CXX             := nvcc
+CC              := nvcc
 
-CXX             := g++
-#CXX             := icpc -D__aligned__=ignored
-#CXX             := mpiCC
-#CXX             := mpic++
+CXXFLAGS        := -O3
+CXXFLAGS        += -std=c++17 
 
-CC              := gcc                                          # necessary for zlib, for Intel use icc
+PARALLEL_MODE   := NONE
 
-OPTIM           := -O3 -Wall -march=native -mtune=native        # for gcc
-#OPTIM           := -O3 -Wall -xHost                            # for Intel compiler
-#OPTIM           := -O3 -Wall -xHost -ipo                       # optional for Intel compiler
-DEBUG           := -g -Wall -DOLB_DEBUG
+PLATFORMS       := CPU_SISD GPU_CUDA
 
-CXXFLAGS        := $(OPTIM)
-#CXXFLAGS        := $(DEBUG)
+# for e.g. RTX 30* (Ampere), see table in `rules.mk` for other options
+CUDA_ARCH       := 60
 
-# compilation requires support for C++14
-# works in:
-#  * gcc 5 or later      (https://gcc.gnu.org/projects/cxx-status.html#cxx14)
-#  * icc 17.0 or later   (https://software.intel.com/en-us/articles/c14-features-supported-by-intel-c-compiler)
-#  * clang 3.4 or later  (https://clang.llvm.org/cxx_status.html#cxx14)
-CXXFLAGS        += -std=c++14 -fPIC #fPIC is necessary!!!
-
-ARPRG           := ar
-#ARPRG           := xiar                  # mandatory for intel compiler
-
-LDFLAGS         :=
-
-#PARALLEL_MODE   := OFF
-#PARALLEL_MODE   := MPI
-PARALLEL_MODE   := OMP
-#PARALLEL_MODE   := HYBRID
-
-MPIFLAGS        :=
-OMPFLAGS        := -fopenmp
-
-# Chosen by executing CMake script.
-#BUILDTYPE       := precompiled
-#BUILDTYPE       := generic
-
-FEATURES        :=
+USE_EMBEDDED_DEPENDENCIES := ON

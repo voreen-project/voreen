@@ -34,6 +34,12 @@ namespace olb {
 
 /////////////////// Statistics Postprocessing ////////////////////////////
 
+namespace statistics {
+
+struct AVERAGE_RHO : public descriptors::FIELD_BASE<1> { };
+
+}
+
 template<typename T>
 class LatticeStatistics {
 public:
@@ -41,7 +47,7 @@ public:
   enum { maxU=0 } MaxT;
 public:
   LatticeStatistics();
-  ~LatticeStatistics();
+  ~LatticeStatistics() = default;
   void reset();
   void reset(T average_rho_, T average_energy_, T maxU_, size_t numCells_);
 

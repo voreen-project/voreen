@@ -24,10 +24,12 @@
 #ifndef INDICATOR_BASE_F_3D_H
 #define INDICATOR_BASE_F_3D_H
 
+#include <functional>
 #include <vector>
 
 #include "core/vector.h"
 #include "functors/genericF.h"
+#include "indicatorBase.h"
 
 namespace olb {
 
@@ -48,8 +50,11 @@ public:
   /** \returns false or true and pos. distance if there was one found for a given origin and direction.
    * Mind that the default computation is done by a numerical approximation which searches .. [TODO: CYRIL]
    */
+  virtual bool distance(S& distance, const Vector<S,3>& origin, S precision, const Vector<S,3>& direction);
+  virtual bool distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, S precision, S pitch);
   virtual bool distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, int iC=-1);
   virtual bool distance(S& distance, const Vector<S,3>& origin);
+  virtual bool distance(S& distance, const S input[]);
   /// returns true and the normal if there was one found for an given origin and direction
   /**
    * (mind that the default computation is done by a numerical approximation which searches .. [TODO])
@@ -57,6 +62,15 @@ public:
   virtual bool normal(Vector<S,3>& normal, const Vector<S,3>& origin, const Vector<S,3>& direction, int iC=-1);
   ///Rotate vector around axis by angle theta
   virtual bool rotOnAxis(Vector<S,3>& vec_rot, const Vector<S,3>& vec, const Vector<S,3>& axis, S& theta);
+  /// Returns true if input is inside the indicator
+  virtual bool operator() (bool output[1], const S input[3]);
+  /// Returns signed distance to the nearest point on the indicator surface
+  virtual S signedDistance(const Vector<S,3>& input);
+  /// Return surface normal
+  virtual Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize);
+  /// Return surface normal after possible translation and rotation
+  Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize,
+                            std::function<Vector<S,3>(const Vector<S,3>&)> transformPos);
   /// Returns true if `point` is inside a cube with corners `_myMin` and `_myMax`
   bool isInsideBox(Vector<S,3> point);
 };
@@ -68,7 +82,7 @@ public:
   std::shared_ptr<IndicatorF3D<S>> _f;
 
   IndicatorIdentity3D(std::shared_ptr<IndicatorF3D<S>> f);
-  bool operator() (bool output[1], const S input[3]) override;
+  bool operator() (bool output[1], const S input[3]);
 };
 
 

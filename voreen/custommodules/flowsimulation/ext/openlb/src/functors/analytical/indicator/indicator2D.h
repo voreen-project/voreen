@@ -28,6 +28,7 @@
 #include "indicatorBaseF2D.h"
 #include "indicatorF2D.h"
 #include "indicCalc2D.h"
+#include "indicMod.h"
 
 #include "smoothIndicatorBaseF2D.h"
 #include "smoothIndicatorF2D.h"

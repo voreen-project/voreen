@@ -31,7 +31,7 @@
 #include <limits>
 #include "stochasticSGSdynamics.h"
 #include "mrtDynamics.h"
-#include "mrtHelpers.h"
+#include "mrt.h"
 #include "core/cell.h"
 #include "core/util.h"
 #include "math.h"
@@ -42,7 +42,6 @@
 #include <stdio.h>
 
 
-using namespace std;
 namespace olb {
 
 /// Implementation of the Stochastic relaxation based on
@@ -57,10 +56,10 @@ namespace olb {
 
 
 
-template<typename T, typename DESCRIPTOR>
-StochasticSGSdynamics<T,DESCRIPTOR>::StochasticSGSdynamics (
-  T omega_, Momenta<T,DESCRIPTOR>& momenta_, T turbulenceInt_, T charU_, T smagoConst_, T dx_, T dt_)
-  : MRTdynamics<T,DESCRIPTOR>(omega_, momenta_),
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::StochasticSGSdynamics (
+  T omega_, T turbulenceInt_, T charU_, T smagoConst_, T dx_, T dt_)
+  : MRTdynamics<T,DESCRIPTOR,MOMENTA>(omega_),
     turbulenceInt(turbulenceInt_),
     smagoConst(smagoConst_),
     charU(charU_),
@@ -89,7 +88,7 @@ StochasticSGSdynamics<T,DESCRIPTOR>::StochasticSGSdynamics (
   //          {
   //            invM_S_SGS[iPop][jPop] += DESCRIPTOR::invM[iPop][kPop] *
   //                                  rtSGS[kPop];
-  //            cout << "wert"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< endl;
+  //            cout << "wert"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< std::endl;
   //          }
   //        }
   //      }
@@ -100,8 +99,8 @@ StochasticSGSdynamics<T,DESCRIPTOR>::StochasticSGSdynamics (
 }
 
 
-template<typename T, typename DESCRIPTOR>
-void StochasticSGSdynamics<T,DESCRIPTOR>::collide(
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+CellStatistic<T> StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::collide(
   Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
@@ -112,15 +111,15 @@ void StochasticSGSdynamics<T,DESCRIPTOR>::collide(
   T drift  = computeTimeScale(preFactor, rho, pi, smagoConst, X_lang_n);
   T result = getRandBMTrans(cell, turbulenceInt, charU);
 
-  //  cout << "vor neu setzen: "<<X_lang_n<< endl;
+  //  cout << "vor neu setzen: "<<X_lang_n<< std::endl;
   X_lang_n = getRandomWalk(cell, drift, result);
-  // cout << "nach neu setzen: "<<X_lang_n<< endl;
-  //cout << X_lang_n<< endl;
-  // cout << drift<< endl;
-  // cout << result<< endl;
+  // cout << "nach neu setzen: "<<X_lang_n<< std::endl;
+  //cout << X_lang_n<< std::endl;
+  // cout << drift<< std::endl;
+  // cout << result<< std::endl;
 
 
-  this->_momenta.computeAllMomenta(cell, rho, u, pi);
+  MOMENTA().computeAllMomenta(cell, rho, u, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi, X_lang_n);
 
 
@@ -139,36 +138,36 @@ void StochasticSGSdynamics<T,DESCRIPTOR>::collide(
         if (kPop == jPop) {
           invM_S_SGS[iPop][jPop] += DESCRIPTOR::invM[iPop][kPop] *
                                     rtSGS[kPop];
-          //cout << "wert"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< endl;
+          //cout << "wert"<<iPop <<jPop << "= "<<  invM_S_SGS[iPop][jPop]<< std::endl;
         }
       }
     }
   }
 
-  T uSqr = mrtHelpers<T,DESCRIPTOR>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
+  T uSqr = mrt<DESCRIPTOR>::mrtSGSCollision(cell, rho, u, newOmega, invM_S_SGS);
   statistics.incrementStats(rho, uSqr);
 }
 
-template<typename T, typename DESCRIPTOR>
-void StochasticSGSdynamics<T,DESCRIPTOR>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::setOmega(T omega)
 {
   this->setOmega(omega);
   preFactor = computePreFactor(omega, smagoConst);
 }
 
-template<typename T, typename DESCRIPTOR>
-T StochasticSGSdynamics<T,DESCRIPTOR>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell, T X_lang_n )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell, T X_lang_n )
 {
   T rho, uTemp[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
-  this->_momenta.computeAllMomenta(cell, rho, uTemp, pi);
+  MOMENTA().computeAllMomenta(cell, rho, uTemp, pi);
   T newOmega = computeOmega(this->getOmega(), preFactor, rho, pi, X_lang_n);
   return newOmega;
 }
 
 
 
-template<typename T, typename DESCRIPTOR>
-T StochasticSGSdynamics<T,DESCRIPTOR>::getRandBMTrans(
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::getRandBMTrans(
   Cell<T,DESCRIPTOR>& cell,
   T turbulenceInt, T CharU )
 {
@@ -177,7 +176,7 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::getRandBMTrans(
 
   T mean = 0.;
   T TKE_ini = 1.5*turbulenceInt*turbulenceInt*charU*charU;
-  T velStDev =  sqrt(2./3.*TKE_ini);
+  T velStDev =  util::sqrt(2./3.*TKE_ini);
   static double n2 = 0.0;
   static int n2_cached = 0;
   if (!n2_cached) {
@@ -187,16 +186,18 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::getRandBMTrans(
       y = 2.0*rand()/RAND_MAX - 1;
 
       r = x*x + y*y;
-    } while ( util::nearZero(r) || r > 1.0);
+    }
+    while ( util::nearZero(r) || r > 1.0);
     {
-      double d = sqrt(-2.0*log(r)/r);
+      double d = util::sqrt(-2.0*util::log(r)/r);
       double n1 = x*d;
       n2 = y*d;
       double result = n1*velStDev + mean;
       n2_cached = 1;
       return result;
     }
-  } else {
+  }
+  else {
     n2_cached = 0;
     return n2*velStDev + mean;
   }
@@ -204,8 +205,8 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::getRandBMTrans(
 
 
 /// Create Random walk
-template<typename T, typename DESCRIPTOR>
-T StochasticSGSdynamics<T,DESCRIPTOR>::getRandomWalk(
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::getRandomWalk(
   Cell<T,DESCRIPTOR>& cell,
   T drift, T result)
 {
@@ -213,7 +214,7 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::getRandomWalk(
   T sigma = 2.3;
   X_lang_n *=drift;
 
-  X_lang_n +=  sigma*sqrt(drift*2)*result;
+  X_lang_n +=  sigma*util::sqrt(drift*2)*result;
 
   return X_lang_n;
 
@@ -232,8 +233,8 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::getRandomWalk(
 
 
 // /// get time sclae
-template<typename T, typename DESCRIPTOR>
-T StochasticSGSdynamics<T,DESCRIPTOR>::computeTimeScale(
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::computeTimeScale(
   T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n], T smagoConst, T X_lang_n  )
 {
   T Const = 0.2;
@@ -241,13 +242,13 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::computeTimeScale(
   if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
-  T PiNeqNorm    = sqrt(PiNeqNormSqr);
+  T PiNeqNorm    = util::sqrt(PiNeqNormSqr);
 
   /// SGS dissipation is calcualted directly withou any filter size due to effeiciency in tau
   // for post processing this has to be evaluated seperately with S_ij³
   T diss_corr = smagoConst*smagoConst*PiNeqNorm*PiNeqNorm*PiNeqNorm*(1+ X_lang_n);
 
-  T tau= Const*pow(( 1. / diss_corr ), 1./3.);
+  T tau= Const*util::pow(( 1. / diss_corr ), 1./3.);
   T drift = 1./tau;
   /// deterministic drift time scale T_L see Pope pp. 484
   return drift;
@@ -264,24 +265,24 @@ T StochasticSGSdynamics<T,DESCRIPTOR>::computeTimeScale(
 // }
 
 
-template<typename T, typename DESCRIPTOR>
-T StochasticSGSdynamics<T,DESCRIPTOR>::computePreFactor(T omega, T smagoConst)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::computePreFactor(T omega, T smagoConst)
 {
-  return (T)smagoConst*smagoConst*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*sqrt(2);
+  return (T)smagoConst*smagoConst*descriptors::invCs2<T,DESCRIPTOR>()*descriptors::invCs2<T,DESCRIPTOR>()*2*util::sqrt(2);
 }
 
-template<typename T, typename DESCRIPTOR>
-T StochasticSGSdynamics<T,DESCRIPTOR>::computeOmega(T omega0, T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n], T X_lang_n)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T StochasticSGSdynamics<T,DESCRIPTOR,MOMENTA>::computeOmega(T omega0, T preFactor, T rho, T pi[util::TensorVal<DESCRIPTOR >::n], T X_lang_n)
 {
   T PiNeqNormSqr = pi[0]*pi[0] + 2.0*pi[1]*pi[1] + pi[2]*pi[2];
   if (util::TensorVal<DESCRIPTOR >::n == 6) {
     PiNeqNormSqr += pi[2]*pi[2] + pi[3]*pi[3] + 2*pi[4]*pi[4] +pi[5]*pi[5];
   }
-  T PiNeqNorm    = sqrt(PiNeqNormSqr);
+  T PiNeqNorm    = util::sqrt(PiNeqNormSqr);
   /// Molecular realaxation time
   T tau_mol = 1. /omega0;
   /// Turbulent realaxation time
-  T tau_turb = 0.5*(sqrt(tau_mol*tau_mol+(preFactor*tau_eff*PiNeqNorm*(1+X_lang_n)))-tau_mol);
+  T tau_turb = 0.5*(util::sqrt(tau_mol*tau_mol+(preFactor*tau_eff*PiNeqNorm*(1+X_lang_n)))-tau_mol);
   /// Effective realaxation time
   tau_eff = tau_mol+tau_turb;
   T omega_new= 1./tau_eff;

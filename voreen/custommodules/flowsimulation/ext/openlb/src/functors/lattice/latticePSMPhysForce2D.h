@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,22 +41,49 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePSMPhysForce2D : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticePSMPhysForce2D(SuperLattice2D<T,DESCRIPTOR>&      sLattice,
-                             const UnitConverter<T,DESCRIPTOR>& converter,
-                             int mode_);
+  SuperLatticePSMPhysForce2D(SuperLattice<T,DESCRIPTOR>&      sLattice,
+                             const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
 /// functor returns pointwise phys force for PSM dynamics
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePSMPhysForce2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticePSMPhysForce2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePSMPhysForce2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                             const UnitConverter<T,DESCRIPTOR>& converter);
+  bool operator() (T output[], const int input[]) override;
+};
+
+
+
+//TODO: 200116 preliminary version: proper indicatorcheck to be included
+/// functor returns pointwise phys force for PSM dynamics
+template <typename T, typename DESCRIPTOR>
+class BlockLatticePSMPhysForce2DMod final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
+public:
+  BlockLatticePSMPhysForce2DMod(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                             BlockGeometry<T,2>& blockGeometry,
                              const UnitConverter<T,DESCRIPTOR>& converter,
-                             int mode_);
+                             IndicatorF2D<T>& shapeIndicator );
   bool operator() (T output[], const int input[]) override;
 private:
-  Mode mode;
+  IndicatorF2D<T>& _shapeIndicator;
+  BlockGeometry<T,2>& _blockGeometry;
 };
+
+
+
+//TODO: 200116 preliminary version: proper indicatorcheck to be included
+/// functor to get pointwise phys force for the PSM dynamics
+template <typename T, typename DESCRIPTOR>
+class SuperLatticePSMPhysForce2DMod : public SuperLatticePhysF2D<T,DESCRIPTOR> {
+public:
+  SuperLatticePSMPhysForce2DMod(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                SuperGeometry<T,2>& superGeometry,
+                                const UnitConverter<T,DESCRIPTOR>& converter,
+                                IndicatorF2D<T>& shapeIndicator );
+};
+
 
 }
 #endif

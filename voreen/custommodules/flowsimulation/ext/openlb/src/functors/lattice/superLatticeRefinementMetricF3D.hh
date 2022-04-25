@@ -33,14 +33,14 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeKnudsen3D<T, DESCRIPTOR>::SuperLatticeKnudsen3D(
-  SuperLattice3D<T, DESCRIPTOR>& lattice)
+  SuperLattice<T, DESCRIPTOR>& lattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(lattice, 1)
 {
   this->getName() = "knudsen";
 
   for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
-      new BlockLatticeKnudsen3D<T, DESCRIPTOR>(lattice.getBlockLattice(iC))
+      new BlockLatticeKnudsen3D<T, DESCRIPTOR>(lattice.getBlock(iC))
     );
   }
 }
@@ -48,7 +48,7 @@ SuperLatticeKnudsen3D<T, DESCRIPTOR>::SuperLatticeKnudsen3D(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::SuperLatticeRefinementMetricKnudsen3D(
-  SuperLattice3D<T, DESCRIPTOR>&      lattice,
+  SuperLattice<T, DESCRIPTOR>&      lattice,
   const UnitConverter<T, DESCRIPTOR>& converter)
   : SuperLatticeF3D<T, DESCRIPTOR>(lattice, 1)
 {
@@ -57,7 +57,7 @@ SuperLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::SuperLatticeRefinementMetr
   for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>(
-        lattice.getBlockLattice(iC), converter)
+        lattice.getBlock(iC), converter)
     );
   }
 }
@@ -70,7 +70,7 @@ bool SuperLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::operator()(T output[]
   if (load.isLocal(glob)) {
     const int loc = load.loc(glob);
 
-    return this->getBlockF(loc)(output);
+    return static_cast<BlockLatticeRefinementMetricKnudsen3D<T,DESCRIPTOR>&>(this->getBlockF(loc))(output);
   }
   else {
     return false;
@@ -107,14 +107,14 @@ void SuperLatticeRefinementMetricKnudsen3D<T, DESCRIPTOR>::print()
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeHighOrderKnudsen3D<T, DESCRIPTOR>::SuperLatticeHighOrderKnudsen3D(
-  SuperLattice3D<T, DESCRIPTOR>& lattice)
+  SuperLattice<T, DESCRIPTOR>& lattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(lattice, 1)
 {
   this->getName() = "high_order_knudsen";
 
   for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
-      new BlockLatticeHighOrderKnudsen3D<T, DESCRIPTOR>(lattice.getBlockLattice(iC))
+      new BlockLatticeHighOrderKnudsen3D<T, DESCRIPTOR>(lattice.getBlock(iC))
     );
   }
 }

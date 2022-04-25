@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR>
 SuperLatticePhysPoreSizeDistribution3D<T,DESCRIPTOR>::SuperLatticePhysPoreSizeDistribution3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry, int material,
+(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry, int material,
  XMLreader const& xmlReader)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,1),
     _superGeometry(superGeometry)
@@ -53,13 +52,13 @@ SuperLatticePhysPoreSizeDistribution3D<T,DESCRIPTOR>::SuperLatticePhysPoreSizeDi
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticePhysPoreSizeDistribution3D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC), this->_superGeometry.getBlockGeometry(iC), material, xmlReader));
+    this->_blockF.emplace_back( new BlockLatticePhysPoreSizeDistribution3D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC), this->_superGeometry.getBlockGeometry(iC), material, xmlReader));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysPoreSizeDistribution3D<T, DESCRIPTOR>::BlockLatticePhysPoreSizeDistribution3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, BlockGeometryStructure3D<T>& blockGeometry, int material, XMLreader const& xmlReader)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, BlockGeometry<T,3>& blockGeometry, int material, XMLreader const& xmlReader)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1), _blockGeometry(blockGeometry), _material(material),
     _distanceFunctor(blockLattice, blockGeometry, xmlReader), _distanceCache(_distanceFunctor)
 {
@@ -76,10 +75,10 @@ BlockLatticePhysPoreSizeDistribution3D<T, DESCRIPTOR>::BlockLatticePhysPoreSizeD
 template<typename T, typename DESCRIPTOR>
 bool BlockLatticePhysPoreSizeDistribution3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
-  if (this->_blockGeometry.get(input[0],input[1],input[2]) == _material) {
+  if (this->_blockGeometry.get({input[0],input[1],input[2]}) == _material) {
     T localDistance[1] = {0.};
     _distanceCache(localDistance, input);
-    // cout << localDistance[0] << endl;
+    // cout << localDistance[0] << std::endl;
 
     // filter by local maximum (compare to 26 neighbours)
     for (int iPop = 1; iPop < 27; iPop++) {

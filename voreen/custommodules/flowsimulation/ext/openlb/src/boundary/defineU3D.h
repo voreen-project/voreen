@@ -25,8 +25,8 @@
 
 #include <vector>
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry3D.h"
-#include "core/superLattice3D.h"
+#include "geometry/superGeometry.h"
+
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
 #include "dynamics/dynamics.h"
@@ -38,33 +38,33 @@
 namespace olb {
 ////////// SuperLattice Domain  /////////////////////////////////////////
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry, int material,
+void defineUBouzidi(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry, int material,
                     AnalyticalF3D<T,T>& u, std::vector<int> bulkMaterials = std::vector<int>(1,1) );
 
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice3D<T,DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator,
+void defineUBouzidi(SuperLattice<T,DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator,
                     AnalyticalF3D<T,T>& u, std::vector<int> bulkMaterials = std::vector<int>(1,1) );
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice3D<T,DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator,
+void defineUBouzidi(SuperLattice<T,DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator,
                     FunctorPtr<SuperIndicatorF3D<T>>&& bulkIndicator, AnalyticalF3D<T,T>& u);
 
 ////////// BlockLattice Domain  /////////////////////////////////////////
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, BlockIndicatorF3D<T>& indicator, BlockIndicatorF3D<T>& bulkIndicator, AnalyticalF3D<T,T>& u);
+void defineUBouzidi(BlockLattice<T,DESCRIPTOR>& _block, BlockIndicatorF3D<T>& indicator, BlockIndicatorF3D<T>& bulkIndicator, AnalyticalF3D<T,T>& u);
 
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, int iX, int iY, int iZ, int iPop, const T u[DESCRIPTOR::d]);
+void defineUBouzidi(BlockLattice<T,DESCRIPTOR>& _block, int iX, int iY, int iZ, int iPop, const T u[DESCRIPTOR::d]);
 
 
 template<typename T, typename DESCRIPTOR>
-bool getBoundaryIntersection(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, int iX, int iY, int iZ, int iPop, T point[DESCRIPTOR::d]);
+bool getBoundaryIntersection(BlockLattice<T,DESCRIPTOR>& _block, int iX, int iY, int iZ, int iPop, T point[DESCRIPTOR::d]);
 
 
 template<typename T, typename DESCRIPTOR>
-void setBoundaryIntersection(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, int iX, int iY, int iZ, int iPop, T distance);
+void setBoundaryIntersection(BlockLattice<T,DESCRIPTOR>& _block, int iX, int iY, int iZ, int iPop, T distance);
 
 
 

@@ -25,27 +25,25 @@
 #define LATTICE_POROUS_MOMENTUM_LOSS_FORCE_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePorousMomentumLossForce2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
-
+/*
 template <typename T, typename DESCRIPTOR>
 SuperLatticePorousMomentumLossForce2D<T,DESCRIPTOR>::SuperLatticePorousMomentumLossForce2D
-(SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
  std::vector<SmoothIndicatorF2D<T,T,true>* >& indicator, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice,converter,4*indicator.size())
 {
@@ -53,7 +51,7 @@ SuperLatticePorousMomentumLossForce2D<T,DESCRIPTOR>::SuperLatticePorousMomentumL
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticePorousMomentumLossForce2D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC), superGeometry.getBlockGeometry(iC), indicator, converter));
+    this->_blockF.emplace_back( new BlockLatticePorousMomentumLossForce2D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC), superGeometry.getBlockGeometry(iC), indicator, converter));
   }
 }
 
@@ -82,7 +80,7 @@ bool SuperLatticePorousMomentumLossForce2D<T,DESCRIPTOR>::operator() (T output[]
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePorousMomentumLossForce2D<T, DESCRIPTOR>::BlockLatticePorousMomentumLossForce2D(
-  BlockLatticeStructure2D<T, DESCRIPTOR>& blockLattice, BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLattice<T, DESCRIPTOR>& blockLattice, BlockGeometry<T,2>& blockGeometry,
   std::vector<SmoothIndicatorF2D<T,T,true>* >& indicator, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF2D<T, DESCRIPTOR>(blockLattice, converter, 4*indicator.size()), _blockGeometry(blockGeometry), _vectorOfIndicator(indicator)
 {
@@ -108,13 +106,13 @@ bool BlockLatticePorousMomentumLossForce2D<T, DESCRIPTOR>::operator()(T output[]
           // check if cell belongs to particle
           T inside[1] = {0.};
           T posIn[2] = {0.};
-          _blockGeometry.getPhysR(posIn, iX, iY);
+          _blockGeometry.getPhysR(posIn, {iX, iY});
           (*(_vectorOfIndicator[iInd]))( inside, posIn);
-          if ( !util::nearZero(inside[0]) && this->_blockGeometry.get(iX,iY)==1) {
+          if ( !util::nearZero(inside[0]) && this->_blockGeometry.get({iX,iY})==1) {
             // compute momentum exchange force on particle
             T tmpForce[2] = {0.,0.};
-            tmpForce[0] += this->_blockLattice.get(iX, iY).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>()[0];
-            tmpForce[1] += this->_blockLattice.get(iX, iY).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>()[1];
+            tmpForce[0] += this->_blockLattice.get(iX, iY).template getFieldComponent<descriptors::VELOCITY_NUMERATOR>(0);
+            tmpForce[1] += this->_blockLattice.get(iX, iY).template getFieldComponent<descriptors::VELOCITY_NUMERATOR>(1);
             // reset external field for next timestep
             T reset_to_zero[2] = {0.,0.};
             this->_blockLattice.get(iX, iY).template setField<descriptors::VELOCITY_NUMERATOR>(reset_to_zero);
@@ -136,6 +134,6 @@ bool BlockLatticePorousMomentumLossForce2D<T, DESCRIPTOR>::operator()(T output[]
   }
   return true;
 }
-
+*/
 }
 #endif

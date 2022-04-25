@@ -30,10 +30,10 @@
 
 #include "frameChangeF3D.h"
 #include "frameChangeF2D.h"
-#include "core/superLattice3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
+#include "core/superLattice.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
 #include "utilities/vectorHelpers.h"  // for normalize
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -62,7 +62,7 @@ bool RotatingLinear3D<T>::operator()(T output[], const T x[])
 
 template <typename T>
 RotatingLinearAnnulus3D<T>::RotatingLinearAnnulus3D(std::vector<T> axisPoint_,
-                                      std::vector<T> axisDirection_, T w_, T ri_, T ro_, T scale_)
+    std::vector<T> axisDirection_, T w_, T ri_, T ro_, T scale_)
   : AnalyticalF3D<T,T>(3), axisPoint(axisPoint_), axisDirection(axisDirection_),
     w(w_), ri(ri_), ro(ro_), scale(scale_) { }
 
@@ -71,7 +71,7 @@ template <typename T>
 bool RotatingLinearAnnulus3D<T>::operator()(T output[], const T x[])
 {
 
-  if ( (sqrt((x[0]-axisPoint[0])*(x[0]-axisPoint[0])+(x[1]-axisPoint[1])*(x[1]-axisPoint[1])) < ri) || (sqrt((x[0]-axisPoint[0])*(x[0]-axisPoint[0])+(x[1]-axisPoint[1])*(x[1]-axisPoint[1])) >= ro) ) {
+  if ( (util::sqrt((x[0]-axisPoint[0])*(x[0]-axisPoint[0])+(x[1]-axisPoint[1])*(x[1]-axisPoint[1])) < ri) || (util::sqrt((x[0]-axisPoint[0])*(x[0]-axisPoint[0])+(x[1]-axisPoint[1])*(x[1]-axisPoint[1])) >= ro) ) {
     output[0] = 0.;
     output[1] = 0.;
     output[2] = 0.;
@@ -105,14 +105,14 @@ bool RotatingLinearAnnulus3D<T>::operator()(T output[], const T x[])
       if ( (axisDirection[2] && (x[1] < axisPoint[1])) || (axisDirection[1] && (x[0] < axisPoint[0])) || (axisDirection[0] && (x[2] < axisPoint[2])) ) {
         sign2 = -1;
       }
-      alpha = atan( ( sign2*(axisDirection[0]*(x[2]-axisPoint[2]) + axisDirection[1]*(x[0]-axisPoint[0]) + axisDirection[2]*(x[1]-axisPoint[1]) ) ) / \
-              (sign1*(axisDirection[0]*(x[1]-axisPoint[1]) + axisDirection[1]*(x[2]-axisPoint[2]) + axisDirection[2]*(x[0]-axisPoint[0]))) );
-      si[0] = axisDirection[0]*x[0] + axisDirection[1]*sign2*sin(alpha)*ri + axisDirection[2]*sign1*cos(alpha)*ri;
-      si[1] = axisDirection[0]*sign1*cos(alpha)*ri + axisDirection[1]*x[1] + axisDirection[2]*sign2*sin(alpha)*ri;
-      si[2] = axisDirection[0]*sign2*sin(alpha)*ri + axisDirection[1]*sign1*cos(alpha)*ri + axisDirection[2]*x[2];
-      so[0] = axisDirection[0]*x[0] + axisDirection[1]*sign2*sin(alpha)*ro + axisDirection[2]*sign1*cos(alpha)*ro;
-      so[1] = axisDirection[0]*sign1*cos(alpha)*ro + axisDirection[1]*x[1] + axisDirection[2]*sign2*sin(alpha)*ro;
-      so[2] = axisDirection[0]*sign2*sin(alpha)*ro + axisDirection[1]*sign1*cos(alpha)*ro + axisDirection[2]*x[2];
+      alpha = util::atan( ( sign2*(axisDirection[0]*(x[2]-axisPoint[2]) + axisDirection[1]*(x[0]-axisPoint[0]) + axisDirection[2]*(x[1]-axisPoint[1]) ) ) / \
+                          (sign1*(axisDirection[0]*(x[1]-axisPoint[1]) + axisDirection[1]*(x[2]-axisPoint[2]) + axisDirection[2]*(x[0]-axisPoint[0]))) );
+      si[0] = axisDirection[0]*x[0] + axisDirection[1]*sign2*util::sin(alpha)*ri + axisDirection[2]*sign1*util::cos(alpha)*ri;
+      si[1] = axisDirection[0]*sign1*util::cos(alpha)*ri + axisDirection[1]*x[1] + axisDirection[2]*sign2*util::sin(alpha)*ri;
+      si[2] = axisDirection[0]*sign2*util::sin(alpha)*ri + axisDirection[1]*sign1*util::cos(alpha)*ri + axisDirection[2]*x[2];
+      so[0] = axisDirection[0]*x[0] + axisDirection[1]*sign2*util::sin(alpha)*ro + axisDirection[2]*sign1*util::cos(alpha)*ro;
+      so[1] = axisDirection[0]*sign1*util::cos(alpha)*ro + axisDirection[1]*x[1] + axisDirection[2]*sign2*util::sin(alpha)*ro;
+      so[2] = axisDirection[0]*sign2*util::sin(alpha)*ro + axisDirection[1]*sign1*util::cos(alpha)*ro + axisDirection[2]*x[2];
     }
 
     //Compute difference of intersections in all directions
@@ -124,11 +124,11 @@ bool RotatingLinearAnnulus3D<T>::operator()(T output[], const T x[])
     bool b2 = (L[2] == 0.);
 
     output[0] = ((axisDirection[1]*(axisPoint[2]-si[2]) - axisDirection[2]*(axisPoint[1]-si[1])) *
-                (1 - (axisDirection[1]*(x[2]-si[2])/(L[2]+b2) + axisDirection[2]*(x[1]-si[1])/(L[1]+b1))) )*w*scale;
+                 (1 - (axisDirection[1]*(x[2]-si[2])/(L[2]+b2) + axisDirection[2]*(x[1]-si[1])/(L[1]+b1))) )*w*scale;
     output[1] = ((axisDirection[2]*(axisPoint[0]-si[0]) - axisDirection[0]*(axisPoint[2]-si[2])) *
-                (1 - (axisDirection[2]*(x[0]-si[0])/(L[0]+b0) + axisDirection[0]*(x[2]-si[2])/(L[2]+b2))) )*w*scale;
+                 (1 - (axisDirection[2]*(x[0]-si[0])/(L[0]+b0) + axisDirection[0]*(x[2]-si[2])/(L[2]+b2))) )*w*scale;
     output[2] = ((axisDirection[0]*(axisPoint[1]-si[1]) - axisDirection[1]*(axisPoint[0]-si[0])) *
-                (1 - (axisDirection[0]*(x[1]-si[1])/(L[1]+b1) + axisDirection[1]*(x[0]-si[0])/(L[0]+b0))) )*w*scale;
+                 (1 - (axisDirection[0]*(x[1]-si[1])/(L[1]+b1) + axisDirection[1]*(x[0]-si[0])/(L[0]+b0))) )*w*scale;
 
   }
   return true;
@@ -163,7 +163,7 @@ bool RotatingQuadratic1D<T>::operator()(T output[], const T x[])
 
 
 template <typename T>
-CirclePowerLaw3D<T>::CirclePowerLaw3D(std::vector<T> center, std::vector<T> normal,
+CirclePowerLaw3D<T>::CirclePowerLaw3D(olb::Vector<T, 3> center, std::vector<T> normal,
                                       T maxVelocity, T radius, T n, T scale)
   : AnalyticalF3D<T,T>(3), _center(center), _normal(util::normalize(normal)),
     _radius(radius), _maxVelocity(maxVelocity), _n(n), _scale(scale) { }
@@ -172,9 +172,10 @@ template <typename T>
 CirclePowerLaw3D<T>::CirclePowerLaw3D(T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T maxVelocity, T n, T scale )
   : AnalyticalF3D<T,T>(3), _radius(radius), _maxVelocity(maxVelocity), _n(n), _scale(scale)
 {
-  _center.push_back(center0);
-  _center.push_back(center1);
-  _center.push_back(center2);
+//  _center.push_back(center0);
+  _center[0] = center0;
+  _center[1] = center1;
+  _center[2] = center2;
   std::vector<T> normalTmp;
   normalTmp.push_back(normal0);
   normalTmp.push_back(normal1);
@@ -183,8 +184,8 @@ CirclePowerLaw3D<T>::CirclePowerLaw3D(T center0, T center1, T center2, T normal0
 }
 
 template <typename T>
-CirclePowerLaw3D<T>::CirclePowerLaw3D(SuperGeometry3D<T>& superGeometry,
-                                      int material, T maxVelocity, T n, T scale)
+CirclePowerLaw3D<T>::CirclePowerLaw3D(SuperGeometry<T,3>& superGeometry,
+                                      int material, T maxVelocity, T n, T distance2Wall, T scale)
   : AnalyticalF3D<T,T>(3), _maxVelocity(maxVelocity), _n(n), _scale(scale)
 {
   _center = superGeometry.getStatistics().getCenterPhysR(material);
@@ -195,7 +196,7 @@ CirclePowerLaw3D<T>::CirclePowerLaw3D(SuperGeometry3D<T>& superGeometry,
   _normal = util::normalize(normalTmp);
 
   // div. by 2 since one of the discrete redius directions is always 0 while the two other are not
-  _radius = T();
+  _radius = T(distance2Wall);
   for (int iD = 0; iD < 3; iD++) {
     _radius += superGeometry.getStatistics().getPhysRadius(material)[iD]/2.;
   }
@@ -206,7 +207,7 @@ CirclePowerLaw3D<T>::CirclePowerLaw3D(bool useMeanVelocity, std::vector<T> axisP
   : CirclePowerLaw3D<T>(axisPoint, axisDirection, Velocity, radius, n, scale)
 {
   if (useMeanVelocity) {
-    _maxVelocity = (2. + (1. + n)/n)/((1. + n)/n * pow(1.,(2. + (1. + n)/n))) * Velocity;
+    _maxVelocity = (2. + (1. + n)/n)/((1. + n)/n * util::pow(1.,(2. + (1. + n)/n))) * Velocity;
   }
 }
 
@@ -215,25 +216,25 @@ CirclePowerLaw3D<T>::CirclePowerLaw3D(bool useMeanVelocity, T center0, T center1
   : CirclePowerLaw3D<T>(center0, center1, center2, normal0, normal1, normal2, radius, Velocity, n, scale)
 {
   if (useMeanVelocity) {
-    _maxVelocity = (2. + (1. + n)/n)/((1. + n)/n * pow(1.,(2. + (1. + n)/n))) * Velocity;
+    _maxVelocity = (2. + (1. + n)/n)/((1. + n)/n * util::pow(1.,(2. + (1. + n)/n))) * Velocity;
   }
 }
 
 template <typename T>
-CirclePowerLaw3D<T>::CirclePowerLaw3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T n, T scale)
-  : CirclePowerLaw3D<T>(superGeometry, material, Velocity, n, scale)
+CirclePowerLaw3D<T>::CirclePowerLaw3D(bool useMeanVelocity, SuperGeometry<T,3>& superGeometry, int material, T Velocity, T n, T distance2Wall, T scale)
+  : CirclePowerLaw3D<T>(superGeometry, material, Velocity, n, distance2Wall, scale)
 {
   if (useMeanVelocity) {
-    _maxVelocity = (2. + (1. + n)/n)/((1. + n)/n * pow(1.,(2. + (1. + n)/n))) * Velocity;
+    _maxVelocity = (2. + (1. + n)/n)/((1. + n)/n * util::pow(1.,(2. + (1. + n)/n))) * Velocity;
   }
 }
 
 template <typename T>
 bool CirclePowerLaw3D<T>::operator()(T output[], const T x[])
 {
-  output[0] = _scale*_maxVelocity*_normal[0]*(1.-pow(sqrt((x[1]-_center[1])*(x[1]-_center[1])+(x[2]-_center[2])*(x[2]-_center[2]))/_radius, (_n + 1.)/_n));
-  output[1] = _scale*_maxVelocity*_normal[1]*(1.-pow(sqrt((x[0]-_center[0])*(x[0]-_center[0])+(x[2]-_center[2])*(x[2]-_center[2]))/_radius, (_n + 1.)/_n));
-  output[2] = _scale*_maxVelocity*_normal[2]*(1.-pow(sqrt((x[1]-_center[1])*(x[1]-_center[1])+(x[0]-_center[0])*(x[0]-_center[0]))/_radius, (_n + 1.)/_n));
+  output[0] = _scale*_maxVelocity*_normal[0]*(1.-util::pow(util::sqrt((x[1]-_center[1])*(x[1]-_center[1])+(x[2]-_center[2])*(x[2]-_center[2]))/_radius, (_n + 1.)/_n));
+  output[1] = _scale*_maxVelocity*_normal[1]*(1.-util::pow(util::sqrt((x[0]-_center[0])*(x[0]-_center[0])+(x[2]-_center[2])*(x[2]-_center[2]))/_radius, (_n + 1.)/_n));
+  output[2] = _scale*_maxVelocity*_normal[2]*(1.-util::pow(util::sqrt((x[1]-_center[1])*(x[1]-_center[1])+(x[0]-_center[0])*(x[0]-_center[0]))/_radius, (_n + 1.)/_n));
   return true;
 }
 
@@ -248,9 +249,9 @@ CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(T center0, T center1, T 
   : CirclePowerLaw3D<T>(center0, center1, center2, normal0, normal1, normal2, radius, maxVelocity, n, scale), _turbulenceIntensity(turbulenceIntensity), _generator(_rd()), _dist(0.0, 1.0) { }
 
 template <typename T>
-CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(SuperGeometry3D<T>& superGeometry,
-    int material, T maxVelocity, T n, T turbulenceIntensity, T scale)
-  : CirclePowerLaw3D<T>(superGeometry, material, maxVelocity, n, scale), _turbulenceIntensity(turbulenceIntensity), _generator(_rd()), _dist(0.0, 1.0) { }
+CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(SuperGeometry<T,3>& superGeometry,
+    int material, T maxVelocity, T distance2Wall, T n, T turbulenceIntensity, T scale)
+  : CirclePowerLaw3D<T>(superGeometry, material, maxVelocity, n, distance2Wall, scale), _turbulenceIntensity(turbulenceIntensity), _generator(_rd()), _dist(0.0, 1.0) { }
 
 template <typename T>
 CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T n, T turbulenceIntensity, T scale)
@@ -270,8 +271,8 @@ CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(bool useMeanVelocity, T 
 }
 
 template <typename T>
-CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T n, T turbulenceIntensity, T scale)
-  : CirclePowerLawTurbulent3D(superGeometry, material, Velocity, n, turbulenceIntensity, scale)
+CirclePowerLawTurbulent3D<T>::CirclePowerLawTurbulent3D(bool useMeanVelocity, SuperGeometry<T,3>& superGeometry, int material, T Velocity, T distance2Wall, T n, T turbulenceIntensity, T scale)
+  : CirclePowerLawTurbulent3D(superGeometry, material, Velocity, n, turbulenceIntensity, distance2Wall, scale)
 {
   if (useMeanVelocity) {
     this->_maxVelocity = ((1. + 1./n) * (2. + 1./n)) / 2. * Velocity;
@@ -283,25 +284,28 @@ bool CirclePowerLawTurbulent3D<T>::operator()(T output[], const T x[])
 {
   T meanVelocity = this->_maxVelocity * 2.0 / ((1. + 1./this->_n) * (2. + 1./this->_n));
 
-  if ( 1.-sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius < 0.) {
+  if ( 1.-util::sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius < 0.) {
     output[0] = T();
-  } else {
+  }
+  else {
     output[0] = this->_scale*this->_maxVelocity*this->_normal[0]*
-                (pow(1.-sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius, 1./this->_n));
+                (util::pow(1.-util::sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius, 1./this->_n));
     output[0] += _dist(_generator) * _turbulenceIntensity * meanVelocity;
   }
-  if ( 1.-sqrt((x[0]-this->_center[0])*(x[0]-this->_center[0])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius < 0.) {
+  if ( 1.-util::sqrt((x[0]-this->_center[0])*(x[0]-this->_center[0])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius < 0.) {
     output[1] = T();
-  } else {
+  }
+  else {
     output[1] = this->_scale*this->_maxVelocity*this->_normal[1]*
-                (pow(1.-sqrt((x[0]-this->_center[0])*(x[0]-this->_center[0])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius, 1./this->_n));
+                (util::pow(1.-util::sqrt((x[0]-this->_center[0])*(x[0]-this->_center[0])+(x[2]-this->_center[2])*(x[2]-this->_center[2]))/this->_radius, 1./this->_n));
     output[1] += _dist(_generator) * _turbulenceIntensity * meanVelocity;
   }
-  if ( 1.-sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[0]-this->_center[0])*(x[0]-this->_center[0]))/this->_radius < 0.) {
+  if ( 1.-util::sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[0]-this->_center[0])*(x[0]-this->_center[0]))/this->_radius < 0.) {
     output[2] = T();
-  } else {
+  }
+  else {
     output[2] = this->_scale*this->_maxVelocity*this->_normal[2]*
-                (pow(1.-sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[0]-this->_center[0])*(x[0]-this->_center[0]))/this->_radius, 1./this->_n));
+                (util::pow(1.-util::sqrt((x[1]-this->_center[1])*(x[1]-this->_center[1])+(x[0]-this->_center[0])*(x[0]-this->_center[0]))/this->_radius, 1./this->_n));
     output[2] += _dist(_generator) * _turbulenceIntensity * meanVelocity;
   }
 
@@ -320,9 +324,9 @@ CirclePoiseuille3D<T>::CirclePoiseuille3D(T center0, T center1, T center2, T nor
   : CirclePowerLaw3D<T>(center0, center1, center2, normal0, normal1, normal2, radius, maxVelocity, 1., scale) { }
 
 template <typename T>
-CirclePoiseuille3D<T>::CirclePoiseuille3D(SuperGeometry3D<T>& superGeometry,
-    int material, T maxVelocity, T scale)
-  : CirclePowerLaw3D<T>(superGeometry, material, maxVelocity, 1., scale) { }
+CirclePoiseuille3D<T>::CirclePoiseuille3D(SuperGeometry<T,3>& superGeometry,
+    int material, T maxVelocity, T distance2Wall, T scale)
+  : CirclePowerLaw3D<T>(superGeometry, material, maxVelocity, 1., distance2Wall, scale) { }
 
 template <typename T>
 CirclePoiseuille3D<T>::CirclePoiseuille3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T scale)
@@ -343,8 +347,8 @@ CirclePoiseuille3D<T>::CirclePoiseuille3D(bool useMeanVelocity, T center0, T cen
 }
 
 template <typename T>
-CirclePoiseuille3D<T>::CirclePoiseuille3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T scale)
-  : CirclePoiseuille3D(superGeometry, material, Velocity, scale)
+CirclePoiseuille3D<T>::CirclePoiseuille3D(bool useMeanVelocity, SuperGeometry<T,3>& superGeometry, int material, T Velocity, T distance2Wall, T scale)
+  : CirclePoiseuille3D(superGeometry, material, Velocity, distance2Wall, scale)
 {
   if (useMeanVelocity) {
     this->_maxVelocity = 2. * Velocity;
@@ -391,20 +395,22 @@ bool CirclePoiseuilleStrainRate3D<T, DESCRIPTOR>::operator()(T output[], const T
 };
 
 
+
+
 template <typename T>
-RectanglePoiseuille3D<T>::RectanglePoiseuille3D(std::vector<T>& x0_, std::vector<T>& x1_,
-    std::vector<T>& x2_, std::vector<T>& maxVelocity_)
+RectanglePoiseuille3D<T>::RectanglePoiseuille3D(olb::Vector<T, 3>& x0_, olb::Vector<T, 3>& x1_,
+    olb::Vector<T, 3>& x2_, std::vector<T>& maxVelocity_)
   : AnalyticalF3D<T,T>(3), clout(std::cout,"RectanglePoiseille3D"), x0(x0_), x1(x1_),
     x2(x2_), maxVelocity(maxVelocity_) { }
 
 
 template <typename T>
-RectanglePoiseuille3D<T>::RectanglePoiseuille3D(SuperGeometry3D<T>& superGeometry_,
+RectanglePoiseuille3D<T>::RectanglePoiseuille3D(SuperGeometry<T,3>& superGeometry_,
     int material_, std::vector<T>& maxVelocity_, T offsetX, T offsetY, T offsetZ)
   : AnalyticalF3D<T,T>(3), clout(std::cout, "RectanglePoiseuille3D"), maxVelocity(maxVelocity_)
 {
-  std::vector<T> min = superGeometry_.getStatistics().getMinPhysR(material_);
-  std::vector<T> max = superGeometry_.getStatistics().getMaxPhysR(material_);
+  olb::Vector<T, 3> min = superGeometry_.getStatistics().getMinPhysR(material_);
+  olb::Vector<T, 3> max = superGeometry_.getStatistics().getMaxPhysR(material_);
   // set three corners of the plane, move by offset to land on the v=0
   // boundary and adapt certain values depending on the orthogonal axis to get
   // different points
@@ -421,7 +427,8 @@ RectanglePoiseuille3D<T>::RectanglePoiseuille3D(SuperGeometry3D<T>& superGeometr
 
     x1[1] = max[1] + offsetY;
     x2[2] = max[2] + offsetZ;
-  } else if ( util::nearZero(max[1]-min[1]) ) { // orthogonal to y-axis
+  }
+  else if ( util::nearZero(max[1]-min[1]) ) {   // orthogonal to y-axis
     x0[0] -= offsetX;
     x0[2] -= offsetZ;
     x1[0] -= offsetX;
@@ -431,7 +438,8 @@ RectanglePoiseuille3D<T>::RectanglePoiseuille3D(SuperGeometry3D<T>& superGeometr
 
     x1[0] = max[0] + offsetX;
     x2[2] = max[2] + offsetZ;
-  } else if ( util::nearZero(max[2]-min[2]) ) { // orthogonal to z-axis
+  }
+  else if ( util::nearZero(max[2]-min[2]) ) {   // orthogonal to z-axis
     x0[0] -= offsetX;
     x0[1] -= offsetY;
     x1[0] -= offsetX;
@@ -441,7 +449,8 @@ RectanglePoiseuille3D<T>::RectanglePoiseuille3D(SuperGeometry3D<T>& superGeometr
 
     x1[0] = max[0] + offsetX;
     x2[1] = max[1] + offsetY;
-  } else {
+  }
+  else {
     clout << "Error: constructor from material number works only for axis-orthogonal planes" << std::endl;
   }
 }
@@ -488,7 +497,7 @@ bool RectanglePoiseuille3D<T>::operator()(T output[], const T x[])
   T aabbcc(0);
   for (int iP = 0; iP < 4; iP++) {
     aabbcc = A[iP]*A[iP] + B[iP]*B[iP] + C[iP]*C[iP];
-    d[iP] = fabs(A[iP]*x[0]+B[iP]*x[1]+C[iP]*x[2]+D[iP])*pow(aabbcc,-0.5);
+    d[iP] = util::fabs(A[iP]*x[0]+B[iP]*x[1]+C[iP]*x[2]+D[iP])*util::pow(aabbcc,-0.5);
   }
 
   // length and width of the rectangle
@@ -504,6 +513,171 @@ bool RectanglePoiseuille3D<T>::operator()(T output[], const T x[])
   return true;
 }
 
+//Trigonometric version TODO: to be unified( etc. plane calculation )
+template <typename T>
+RectangleTrigonometricPoiseuille3D<T>::RectangleTrigonometricPoiseuille3D(std::vector<T>& x0_, std::vector<T>& x1_,
+    std::vector<T>& x2_, std::vector<T>& maxVelocity_, int numOfPolynoms_)
+  : AnalyticalF3D<T,T>(3), clout(std::cout,"RectangleTrigonometricPoiseille3D"), x0(x0_), x1(x1_),
+    x2(x2_), maxVelocity(maxVelocity_), numOfPolynoms(numOfPolynoms_)
+{
+  calcPeakAndAvg();
+}
+
+
+template <typename T>
+RectangleTrigonometricPoiseuille3D<T>::RectangleTrigonometricPoiseuille3D(SuperGeometry<T,3>& superGeometry_,
+    int material_, std::vector<T>& maxVelocity_, T offsetX, T offsetY, T offsetZ, int numOfPolynoms_)
+  : AnalyticalF3D<T,T>(3), clout(std::cout, "RectangleTrigonometricPoiseuille3D"), maxVelocity(maxVelocity_),
+    numOfPolynoms(numOfPolynoms_)
+{
+  std::vector<T> min = superGeometry_.getStatistics().getMinPhysR(material_);
+  std::vector<T> max = superGeometry_.getStatistics().getMaxPhysR(material_);
+  // set three corners of the plane, move by offset to land on the v=0
+  // boundary and adapt certain values depending on the orthogonal axis to get
+  // different points
+  x0 = min;
+  x1 = min;
+  x2 = min;
+  if ( util::nearZero(max[0]-min[0]) ) { // orthogonal to x-axis
+    x0[1] -= offsetY;
+    x0[2] -= offsetZ;
+    x1[1] -= offsetY;
+    x1[2] -= offsetZ;
+    x2[1] -= offsetY;
+    x2[2] -= offsetZ;
+
+    x1[1] = max[1] + offsetY;
+    x2[2] = max[2] + offsetZ;
+  }
+  else if ( util::nearZero(max[1]-min[1]) ) {   // orthogonal to y-axis
+    x0[0] -= offsetX;
+    x0[2] -= offsetZ;
+    x1[0] -= offsetX;
+    x1[2] -= offsetZ;
+    x2[0] -= offsetX;
+    x2[2] -= offsetZ;
+
+    x1[0] = max[0] + offsetX;
+    x2[2] = max[2] + offsetZ;
+  }
+  else if ( util::nearZero(max[2]-min[2]) ) {   // orthogonal to z-axis
+    x0[0] -= offsetX;
+    x0[1] -= offsetY;
+    x1[0] -= offsetX;
+    x1[1] -= offsetY;
+    x2[0] -= offsetX;
+    x2[1] -= offsetY;
+
+    x1[0] = max[0] + offsetX;
+    x2[1] = max[1] + offsetY;
+  }
+  else {
+    clout << "Error: constructor from material number works only for axis-orthogonal planes" << std::endl;
+  }
+  calcPeakAndAvg();
+}
+
+
+template <typename T>
+void RectangleTrigonometricPoiseuille3D<T>::calcPeakAndAvg()
+{
+  //2006_Bruus_Lecture Theoretical microfluidics
+  T sumMax = 0;
+  T sumAvg = 0;
+  for (int i=1; i<=numOfPolynoms; ++i) { //TODO: higher polynoms still to be tested
+    T n = i*2-1;   //Creating only odd indices
+    T A = util::sin(n*M_PI*0.5);
+    T max = (1./util::pow(n,3)) * (1.-(1 / util::cosh(n*M_PI / 2 ))) * A;
+    //TODO: only for y,z=1 //TODO: Maximum calculation needs to be adapted for different edge ratios
+    T avg = 2. * A * A * (n*M_PI-2*util::tanh(n*M_PI*0.5)) / (util::pow(n,5)*M_PI*M_PI);
+    sumMax += max;
+    sumAvg += avg;
+  }
+  profilePeak = sumMax;
+  profileRatioAvgToPeak = sumAvg / sumMax;
+}
+
+
+template <typename T>
+T RectangleTrigonometricPoiseuille3D<T>::getProfilePeak()
+{
+  return profilePeak;
+}
+
+template <typename T>
+T RectangleTrigonometricPoiseuille3D<T>::getRatioAvgToPeak()
+{
+  return profileRatioAvgToPeak;
+}
+
+template <typename T> //TODO: for now only works in x direction!
+bool RectangleTrigonometricPoiseuille3D<T>::operator()(T output[], const T x[])
+{
+  OstreamManager clout( std::cout,"RectPois" ); //TODO: to be removed
+
+  // create plane normals and supports, (E1,E2) and (E3,E4) are parallel
+  std::vector<std::vector<T> > n(4,std::vector<T>(3,0)); // normal vectors
+  std::vector<std::vector<T> > s(4,std::vector<T>(3,0)); // support vectors
+  for (int iD = 0; iD < 3; iD++) {
+    n[0][iD] =  x1[iD] - x0[iD];
+    n[1][iD] = -x1[iD] + x0[iD];
+    n[2][iD] =  x2[iD] - x0[iD];
+    n[3][iD] = -x2[iD] + x0[iD];
+    s[0][iD] = x0[iD];
+    s[1][iD] = x1[iD];
+    s[2][iD] = x0[iD];
+    s[3][iD] = x2[iD];
+  }
+  for (int iP = 0; iP < 4; iP++) {
+    n[iP] = util::normalize(n[iP]);
+  }
+
+  // determine plane coefficients in the coordinate equation E_i: Ax+By+Cz+D=0
+  // given form: (x-s)*n=0 => A=n1, B=n2, C=n3, D=-(s1n1+s2n2+s3n3)
+  std::vector<T> A(4,0);
+  std::vector<T> B(4,0);
+  std::vector<T> C(4,0);
+  std::vector<T> D(4,0);
+
+  for (int iP = 0; iP < 4; iP++) {
+    A[iP] = n[iP][0];
+    B[iP] = n[iP][1];
+    C[iP] = n[iP][2];
+    D[iP] = -(s[iP][0]*n[iP][0] + s[iP][1]*n[iP][1] + s[iP][2]*n[iP][2]);
+  }
+
+  // determine distance to the walls by formula
+  std::vector<T> d(4,0);
+  T aabbcc(0);
+  for (int iP = 0; iP < 4; iP++) {
+    aabbcc = A[iP]*A[iP] + B[iP]*B[iP] + C[iP]*C[iP];
+    d[iP] = util::fabs(A[iP]*x[0]+B[iP]*x[1]+C[iP]*x[2]+D[iP])*util::pow(aabbcc,-0.5);
+  }
+
+  // length and width of the rectangle
+  std::vector<T> l(2,0);
+  l[0] = d[0] + d[1] ;
+  l[1] = d[2] + d[3] ;
+
+  std::vector<T> dl(2,0);
+  dl[0] = d[0] / l[0];
+  dl[1] = d[2] / l[1];
+
+  //Polynomial creation for odd indices (2i-i) from:
+  //2006_Bruus_Lecture Theoretical microfluidics
+  T sumPoly = 0;
+  for (int i=1; i<=numOfPolynoms; ++i) { //TODO: higher polynoms still to be tested
+    T n = i*2-1;
+    T poly = (1./util::pow(n,3)) * (1.-(util::cosh(n*M_PI*(dl[0]-0.5)) / util::cosh(n*M_PI/ (2) ))) * util::sin(n*M_PI*dl[1]);
+    sumPoly += poly;
+  }
+
+  output[0] = maxVelocity[0] * ( sumPoly / profilePeak);
+  output[1] = maxVelocity[1] * ( sumPoly / profilePeak);
+  output[2] = maxVelocity[2] * ( sumPoly / profilePeak);
+  return true;
+}
+
 
 template <typename T>
 EllipticPoiseuille3D<T>::EllipticPoiseuille3D(std::vector<T> center, T a, T b, T maxVel)
@@ -514,11 +688,11 @@ EllipticPoiseuille3D<T>::EllipticPoiseuille3D(std::vector<T> center, T a, T b, T
 template <typename T>
 bool EllipticPoiseuille3D<T>::operator()(T output[], const T x[])
 {
-  T cosOmega2 = std::pow(x[0]-_center[0],2.)/(std::pow(x[0]-_center[0],2.)+std::pow(x[1]-_center[1],2.));
+  T cosOmega2 = util::pow(x[0]-_center[0],2.)/(util::pow(x[0]-_center[0],2.)+util::pow(x[1]-_center[1],2.));
   T rad2 = _a2*_b2 /((_b2-_a2)*cosOmega2 + _a2) ;
-  T x2 = (std::pow(x[0]-_center[0],2.)+std::pow(x[1]-_center[1],2.))/rad2;
+  T x2 = (util::pow(x[0]-_center[0],2.)+util::pow(x[1]-_center[1],2.))/rad2;
 
-  //  clout << _center[0] << " " << _center[1] << " " << x[0] << " " << x[1] << " " << std::sqrt(rad2) << " " << std::sqrt(std::pow(x[0]-_center[0],2.)+std::pow(x[1]-_center[1],2.)) << " " << x2 << std::endl;
+  //  clout << _center[0] << " " << _center[1] << " " << x[0] << " " << x[1] << " " << util::sqrt(rad2) << " " << util::sqrt(util::pow(x[0]-_center[0],2.)+util::pow(x[1]-_center[1],2.)) << " " << x2 << std::endl;
 
   output[0] = 0.;
   output[1] = 0.;
@@ -531,7 +705,7 @@ bool EllipticPoiseuille3D<T>::operator()(T output[], const T x[])
 
 
 template <typename T>
-AnalyticalPorousVelocity3D<T>::AnalyticalPorousVelocity3D(SuperGeometry3D<T>& superGeometry, int material, T K_, T mu_, T gradP_, T radius_, T eps_)
+AnalyticalPorousVelocity3D<T>::AnalyticalPorousVelocity3D(SuperGeometry<T,3>& superGeometry, int material, T K_, T mu_, T gradP_, T radius_, T eps_)
   :  AnalyticalF3D<T,T>(3), K(K_), mu(mu_), gradP(gradP_), radius(radius_), eps(eps_)
 {
   this->getName() = "AnalyticalPorousVelocity3D";
@@ -549,7 +723,7 @@ AnalyticalPorousVelocity3D<T>::AnalyticalPorousVelocity3D(SuperGeometry3D<T>& su
 template <typename T>
 T AnalyticalPorousVelocity3D<T>::getPeakVelocity()
 {
-  T uMax = K / mu*gradP*(1. - 1./(cosh((sqrt(1./K))*radius)));
+  T uMax = K / mu*gradP*(1. - 1./(util::cosh((util::sqrt(1./K))*radius)));
 
   return uMax/eps;
 };
@@ -559,13 +733,13 @@ template <typename T>
 bool AnalyticalPorousVelocity3D<T>::operator()(T output[], const T x[])
 {
   T dist[3] = {};
-  dist[0] = normal[0]*sqrt((x[1]-center[1])*(x[1]-center[1])+(x[2]-center[2])*(x[2]-center[2]));
-  dist[1] = normal[1]*sqrt((x[0]-center[0])*(x[0]-center[0])+(x[2]-center[2])*(x[2]-center[2]));
-  dist[2] = normal[2]*sqrt((x[1]-center[1])*(x[1]-center[1])+(x[0]-center[0])*(x[0]-center[0]));
+  dist[0] = normal[0]*util::sqrt((x[1]-center[1])*(x[1]-center[1])+(x[2]-center[2])*(x[2]-center[2]));
+  dist[1] = normal[1]*util::sqrt((x[0]-center[0])*(x[0]-center[0])+(x[2]-center[2])*(x[2]-center[2]));
+  dist[2] = normal[2]*util::sqrt((x[1]-center[1])*(x[1]-center[1])+(x[0]-center[0])*(x[0]-center[0]));
 
-  output[0] = K / mu*gradP*(1. - (cosh((sqrt(1./K))*(dist[0])))/(cosh((sqrt(1./K))*radius)));
-  output[1] = K / mu*gradP*(1. - (cosh((sqrt(1./K))*(dist[1])))/(cosh((sqrt(1./K))*radius)));
-  output[2] = K / mu*gradP*(1. - (cosh((sqrt(1./K))*(dist[2])))/(cosh((sqrt(1./K))*radius)));
+  output[0] = K / mu*gradP*(1. - (util::cosh((util::sqrt(1./K))*(dist[0])))/(util::cosh((util::sqrt(1./K))*radius)));
+  output[1] = K / mu*gradP*(1. - (util::cosh((util::sqrt(1./K))*(dist[1])))/(util::cosh((util::sqrt(1./K))*radius)));
+  output[2] = K / mu*gradP*(1. - (util::cosh((util::sqrt(1./K))*(dist[2])))/(util::cosh((util::sqrt(1./K))*radius)));
 
   output[0] *= normal[0]/eps;
   output[1] *= normal[1]/eps;
@@ -601,10 +775,11 @@ bool AngleBetweenVectors3D<T, S>::operator()(T output[], const S x[])
   T angle = T(0);
 
   if ( util::nearZero(x[0]) && util::nearZero(x[1]) && util::nearZero(x[2]) ) {
-    // if (abs(x[0]) + abs(x[1]) + abs(x[2]) == T()) {
+    // if (util::abs(x[0]) + util::abs(x[1]) + util::abs(x[2]) == T()) {
     output[0] = angle;  // angle = 0
     return true;
-  } else {
+  }
+  else {
     //Vector<S, 3> x_tmp(x); // check construction
     n_x[0] = x[0];
     n_x[1] = x[1];
@@ -623,7 +798,7 @@ bool AngleBetweenVectors3D<T, S>::operator()(T output[], const S x[])
   }
   // angle = Pi, if n_x, n_ref opposite
   if ( util::nearZero(n_x[0]+n_ref[0]) && util::nearZero(n_x[1]+n_ref[1]) && util::nearZero(n_x[2]+n_ref[2]) ) {
-    angle = acos(-1);
+    angle = util::acos(-1);
   }
   // angle = 0, if n_x, n_ref equal
   else if ( util::nearZero(n_x[0]-n_ref[0]) && util::nearZero(n_x[1]-n_ref[1]) && util::nearZero(n_x[2]-n_ref[2]) ) {
@@ -639,14 +814,15 @@ bool AngleBetweenVectors3D<T, S>::operator()(T output[], const S x[])
     if ( !util::nearZero(norm(orientation)) ) {
       n_orient = orientation;
       n_orient = normalize(n_orient);
-    } else {
+    }
+    else {
       std::cout << "orientation vector does not fit" << std::endl;
     }
     if ((cross * orientation) > T()) {
-      angle = 2*M_PI - atan2(normal, n_dot);
+      angle = 2*M_PI - util::atan2(normal, n_dot);
     }
     if ((cross * orientation) < T()) {
-      angle = atan2(normal, n_dot);
+      angle = util::atan2(normal, n_dot);
     }
   }
   output[0] = angle;
@@ -654,11 +830,11 @@ bool AngleBetweenVectors3D<T, S>::operator()(T output[], const S x[])
 }
 
 
-// constructor to obtain rotation round an _rotAxisDirection with angle _alpha
+// constructor to obtain rotation util::round an _rotAxisDirection with angle _alpha
 // and _origin
 template<typename T, typename S>
-RotationRoundAxis3D<T, S>::RotationRoundAxis3D(std::vector<T> origin,
-    std::vector<T> rotAxisDirection, T alpha)
+RotationRoundAxis3D<T, S>::RotationRoundAxis3D(olb::Vector<T, 3> origin,
+	olb::Vector<T, 3> rotAxisDirection, T alpha)
   : AnalyticalF3D<T, S>(3),
     _origin(origin),
     _rotAxisDirection(rotAxisDirection),
@@ -682,22 +858,23 @@ bool RotationRoundAxis3D<T, S>::operator()(T output[], const S x[])
       x_tmp[i] = x[i] - _origin[i];
     }
     // rotation
-    output[0] = (n[0]*n[0]*(1 - cos(_alpha)) + cos(_alpha)) * x_tmp[0]
-                + (n[0]*n[1]*(1 - cos(_alpha)) - n[2]*sin(_alpha))*x_tmp[1]
-                + (n[0]*n[2]*(1 - cos(_alpha)) + n[1]*sin(_alpha))*x_tmp[2]
+    output[0] = (n[0]*n[0]*(1 - util::cos(_alpha)) + util::cos(_alpha)) * x_tmp[0]
+                + (n[0]*n[1]*(1 - util::cos(_alpha)) - n[2]*util::sin(_alpha))*x_tmp[1]
+                + (n[0]*n[2]*(1 - util::cos(_alpha)) + n[1]*util::sin(_alpha))*x_tmp[2]
                 + _origin[0];
 
-    output[1] = (n[1]*n[0]*(1 - cos(_alpha)) + n[2]*sin(_alpha))*x_tmp[0]
-                + (n[1]*n[1]*(1 - cos(_alpha)) + cos(_alpha))*x_tmp[1]
-                + (n[1]*n[2]*(1 - cos(_alpha)) - n[0]*sin(_alpha))*x_tmp[2]
+    output[1] = (n[1]*n[0]*(1 - util::cos(_alpha)) + n[2]*util::sin(_alpha))*x_tmp[0]
+                + (n[1]*n[1]*(1 - util::cos(_alpha)) + util::cos(_alpha))*x_tmp[1]
+                + (n[1]*n[2]*(1 - util::cos(_alpha)) - n[0]*util::sin(_alpha))*x_tmp[2]
                 + _origin[1];
 
-    output[2] = (n[2]*n[0]*(1 - cos(_alpha)) - n[1]*sin(_alpha))*x_tmp[0]
-                + (n[2]*n[1]*(1 - cos(_alpha)) + n[0]*sin(_alpha))*x_tmp[1]
-                + (n[2]*n[2]*(1 - cos(_alpha)) + cos(_alpha))*x_tmp[2]
+    output[2] = (n[2]*n[0]*(1 - util::cos(_alpha)) - n[1]*util::sin(_alpha))*x_tmp[0]
+                + (n[2]*n[1]*(1 - util::cos(_alpha)) + n[0]*util::sin(_alpha))*x_tmp[1]
+                + (n[2]*n[2]*(1 - util::cos(_alpha)) + util::cos(_alpha))*x_tmp[2]
                 + _origin[2];
     return true;
-  } else {
+  }
+  else {
     //std::cout<< "Axis is null or NaN" <<std::endl;
     for (int j=0; j<3; j++) {
       output[j] = x[j];
@@ -737,7 +914,7 @@ bool CylinderToCartesian3D<T, S>::operator()(T output[], const S x[])
 // constructor to obtain cylindrical coordinates of Cartesian coordinates
 template<typename T, typename S>
 CartesianToCylinder3D<T, S>::CartesianToCylinder3D(
-  std::vector<T> cartesianOrigin, T& angle, std::vector<T> orientation)
+  olb::Vector<T, 3> cartesianOrigin, T& angle, olb::Vector<T, 3> orientation)
   : AnalyticalF3D<T, S>(3),
     _cartesianOrigin(cartesianOrigin),
     _orientation(orientation)
@@ -757,8 +934,8 @@ CartesianToCylinder3D<T, S>::CartesianToCylinder3D(
 // constructor to obtain cylindrical coordinates of Cartesian coordinates
 template<typename T, typename S>
 CartesianToCylinder3D<T, S>::CartesianToCylinder3D(
-  std::vector<T> cartesianOrigin, std::vector<T> axisDirection,
-  std::vector<T> orientation)
+  olb::Vector<T, 3> cartesianOrigin, olb::Vector<T, 3> axisDirection,
+  olb::Vector<T, 3> orientation)
   : AnalyticalF3D<T, S>(3),
     _cartesianOrigin(cartesianOrigin),
     _axisDirection(axisDirection),
@@ -775,17 +952,17 @@ CartesianToCylinder3D<T, S>::CartesianToCylinder3D(
   T orientationX, T orientationY, T orientationZ)
   : AnalyticalF3D<T, S>(3)
 {
-  _cartesianOrigin.push_back(cartesianOriginX);
-  _cartesianOrigin.push_back(cartesianOriginY);
-  _cartesianOrigin.push_back(cartesianOriginZ);
+  _cartesianOrigin[0] = cartesianOriginX;
+  _cartesianOrigin[1] = cartesianOriginY;
+  _cartesianOrigin[2] = cartesianOriginZ;
 
-  _axisDirection.push_back(axisDirectionX);
-  _axisDirection.push_back(axisDirectionY);
-  _axisDirection.push_back(axisDirectionZ);
+  _axisDirection[0] = axisDirectionX;
+  _axisDirection[1] = axisDirectionY;
+  _axisDirection[2] = axisDirectionZ;
 
-  _orientation.push_back(orientationX);
-  _orientation.push_back(orientationY);
-  _orientation.push_back(orientationZ);
+  _orientation[0] = orientationX;
+  _orientation[1] = orientationY;
+  _orientation[2] = orientationZ;
 }
 
 // operator returns cylindrical coordinates, output[0] = radius(>= 0),
@@ -840,28 +1017,28 @@ bool CartesianToCylinder3D<T, S>::operator()(T output[], const S x[])
 
 // Read only access to _axisDirection
 template<typename T, typename S>
-std::vector<T> const& CartesianToCylinder3D<T, S>::getAxisDirection() const
+olb::Vector<T, 3> const& CartesianToCylinder3D<T, S>::getAxisDirection() const
 {
   return _axisDirection;
 }
 
 // Read and write access to _axisDirection
 template<typename T, typename S>
-std::vector<T>& CartesianToCylinder3D<T, S>::getAxisDirection()
+olb::Vector<T, 3>& CartesianToCylinder3D<T, S>::getAxisDirection()
 {
   return _axisDirection;
 }
 
 // Read only access to _catesianOrigin
 template<typename T, typename S>
-std::vector<T> const& CartesianToCylinder3D<T, S>::getCartesianOrigin() const
+olb::Vector<T, 3> const& CartesianToCylinder3D<T, S>::getCartesianOrigin() const
 {
   return _cartesianOrigin;
 }
 
 // Read and write access to _catesianOrigin
 template<typename T, typename S>
-std::vector<T>& CartesianToCylinder3D<T, S>::getCartesianOrigin()
+olb::Vector<T, 3>& CartesianToCylinder3D<T, S>::getCartesianOrigin()
 {
   return _cartesianOrigin;
 }
@@ -901,9 +1078,9 @@ SphericalToCartesian3D<T, S>::SphericalToCartesian3D()
 template<typename T, typename S>
 bool SphericalToCartesian3D<T, S>::operator()(T output[], const S x[])
 {
-  output[0] = x[0]*sin(x[2])*cos(x[1]);
-  output[1] = x[0]*sin(x[2])*sin(x[1]);
-  output[2] = x[0]*cos(x[2]);
+  output[0] = x[0]*util::sin(x[2])*util::cos(x[1]);
+  output[1] = x[0]*util::sin(x[2])*util::sin(x[1]);
+  output[2] = x[0]*util::cos(x[2]);
   return true;
 }
 
@@ -963,11 +1140,11 @@ bool CartesianToSpherical3D<T, S>::operator()(T output[], const S x[])
   for (int i = 0; i <= 2; ++i) {
     distance += difference[i]*difference[i];
   }
-  distance = sqrt(distance);
+  distance = util::sqrt(distance);
 
   car2pol(output, x_rot);
   output[0] = distance;
-  output[2] = acos(difference[2]/output[0]);  // angle between z-axis and r-vector
+  output[2] = util::acos(difference[2]/output[0]);  // angle between z-axis and r-vector
 
   return true;  // output[0] = radius, output[1] = phi, output[2] = theta
 }
@@ -976,11 +1153,11 @@ bool CartesianToSpherical3D<T, S>::operator()(T output[], const S x[])
 ////////// Magnetic Field ///////////////
 
 
-// Magnetic field that creates magnetization in wire has to be orthogonal to
-// the wire. To calculate the magnetic force on particles around a cylinder
-// (J. Lindner et al. / Computers and Chemical Engineering 54 (2013) 111-121)
-// Fm = mu0*4/3.*PI*radParticle^3*_Mp*radWire^2/r^3 *
-//   [radWire^2/r^2+cos(2*theta), sin(2*theta), 0]
+/// Magnetic field that creates magnetization in wire has to be orthogonal to
+/// the wire. To calculate the magnetic force on particles around a cylinder
+/// (J. Lindner et al. / Computers and Chemical Engineering 54 (2013) 111-121)
+/// Fm = mu0*4/3.*PI*radParticle^3*_Mp*radWire^2/r^3 *
+///   [radWire^2/r^2+util::cos(2*theta), util::sin(2*theta), 0]
 template<typename T, typename S>
 MagneticForceFromCylinder3D<T, S>::MagneticForceFromCylinder3D(
   CartesianToCylinder3D<T, S>& car2cyl, T length, T radWire, T cutoff, T Mw, T Mp,
@@ -996,7 +1173,7 @@ MagneticForceFromCylinder3D<T, S>::MagneticForceFromCylinder3D(
     _mu0(mu0)
 {
   // Field direction H_0 parallel to fluid flow direction, if not: *(-1)
-  _factor = -_mu0*4/3*M_PI*pow(_radParticle, 3)*_Mp*_Mw*pow(_radWire, 2);
+  _factor = -_mu0*4/3*M_PI*util::pow(_radParticle, 3)*_Mp*_Mw*util::pow(_radWire, 2);
 }
 
 template<typename T, typename S>
@@ -1023,15 +1200,15 @@ bool MagneticForceFromCylinder3D<T, S>::operator()(T output[], const S x[])
   if ( (rad > _radWire && rad <= _cutoff*_radWire) &&
        (T(0) <= test && test <= _length) ) {
 
-    magneticForcePolar[0] = _factor/pow(rad, 3)
-                            *(pow(_radWire, 2)/pow(rad, 2) + cos(2*phi));
-    magneticForcePolar[1] = _factor/pow(rad, 3)*sin(2*phi);
+    magneticForcePolar[0] = _factor/util::pow(rad, 3)
+                            *(util::pow(_radWire, 2)/util::pow(rad, 2) + util::cos(2*phi));
+    magneticForcePolar[1] = _factor/util::pow(rad, 3)*util::sin(2*phi);
 
     // changes radial and angular force components to cartesian components.
-    outputTmp[0] = magneticForcePolar[0]*cos(phi)
-                   - magneticForcePolar[1]*sin(phi);
-    outputTmp[1] = magneticForcePolar[0]*sin(phi)
-                   + magneticForcePolar[1]*cos(phi);
+    outputTmp[0] = magneticForcePolar[0]*util::cos(phi)
+                   - magneticForcePolar[1]*util::sin(phi);
+    outputTmp[1] = magneticForcePolar[0]*util::sin(phi)
+                   + magneticForcePolar[1]*util::cos(phi);
 
     // if not in standard axis direction
     if ( !( util::nearZero(normalAxis[0]) && util::nearZero(normalAxis[1]) && util::nearZero(normalAxis[2]-1) ) ) {
@@ -1050,12 +1227,14 @@ bool MagneticForceFromCylinder3D<T, S>::operator()(T output[], const S x[])
       std::vector<T> origin(3, T());
       RotationRoundAxis3D<T, S> rotRAxis(origin, util::fromVector3(orientation), alpha[0]);
       rotRAxis(output,outputTmp);
-    } else {
+    }
+    else {
       output[0] = outputTmp[0];
       output[1] = outputTmp[1];
       output[2] = T();
     }
-  } else {
+  }
+  else {
     output[0] = outputTmp[0];
     output[1] = outputTmp[1];
     output[2] = outputTmp[1];
@@ -1075,7 +1254,7 @@ MagneticFieldFromCylinder3D<T, S>::MagneticFieldFromCylinder3D(
     _Mw(Mw)
 {
   // Field direction H_0 parallel to fluid flow direction, if not: *(-1)
-  _factor = - _Mw * pow(_radWire, 2);
+  _factor = - _Mw * util::pow(_radWire, 2);
 }
 
 template<typename T, typename S>
@@ -1102,15 +1281,15 @@ bool MagneticFieldFromCylinder3D<T, S>::operator()(T output[], const S x[])
   if ( (rad > _radWire && rad <= _cutoff * _radWire) &&
        (T(0) <= test && test <= _length) ) {
 
-    magneticFieldPolar[0] = _factor / pow(rad, 2)
-                            * (cos(phi));
-    magneticFieldPolar[1] = _factor / pow(rad, 2) * sin(phi);
+    magneticFieldPolar[0] = _factor / util::pow(rad, 2)
+                            * (util::cos(phi));
+    magneticFieldPolar[1] = _factor / util::pow(rad, 2) * util::sin(phi);
 
     // changes radial and angular force components to cartesian components.
-    outputTmp[0] = magneticFieldPolar[0] * cos(phi)
-                   - magneticFieldPolar[1] * sin(phi);
-    outputTmp[1] = magneticFieldPolar[0] * sin(phi)
-                   + magneticFieldPolar[1] * cos(phi);
+    outputTmp[0] = magneticFieldPolar[0] * util::cos(phi)
+                   - magneticFieldPolar[1] * util::sin(phi);
+    outputTmp[1] = magneticFieldPolar[0] * util::sin(phi)
+                   + magneticFieldPolar[1] * util::cos(phi);
 
     // if not in standard axis direction
     if ( !( util::nearZero(normalAxis[0]) && util::nearZero(normalAxis[1]) && util::nearZero(normalAxis[2] - 1) ) ) {
@@ -1129,12 +1308,14 @@ bool MagneticFieldFromCylinder3D<T, S>::operator()(T output[], const S x[])
       std::vector<T> origin(3, T());
       RotationRoundAxis3D<T, S> rotRAxis(origin, util::fromVector3(orientation), alpha[0]);
       rotRAxis(output, outputTmp);
-    } else {
+    }
+    else {
       output[0] = outputTmp[0];
       output[1] = outputTmp[1];
       output[2] = T();
     }
-  } else {
+  }
+  else {
     output[0] = outputTmp[0];
     output[1] = outputTmp[1];
     output[2] = outputTmp[1];

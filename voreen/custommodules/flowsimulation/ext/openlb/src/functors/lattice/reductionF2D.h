@@ -27,13 +27,13 @@
 
 #include "functors/analytical/analyticalF.h"
 #include "superBaseF2D.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/cuboidGeometry2D.h"
 
 namespace olb {
 
 
-template< typename T, typename DESCRIPTOR> class SuperLattice2D;
+template< typename T, typename DESCRIPTOR> class SuperLattice;
 
 /// Functor used to convert analytical functions to lattice functions
 /**
@@ -52,7 +52,7 @@ public:
    * \param sLattice DESCRIPTOR reference required for conversion and block functor construction
    **/
   SuperLatticeFfromAnalyticalF2D(FunctorPtr<AnalyticalF2D<T,T>>&& f,
-                                 SuperLattice2D<T,DESCRIPTOR>&    sLattice);
+                                 SuperLattice<T,DESCRIPTOR>&    sLattice);
   bool operator() (T output[], const int input[]) override;
 };
 
@@ -73,7 +73,7 @@ public:
    * \param cuboid  Cuboid reference required for input parameter conversion
    **/
   BlockLatticeFfromAnalyticalF2D(AnalyticalF2D<T,T>&                    f,
-                                 BlockLatticeStructure2D<T,DESCRIPTOR>& lattice,
+                                 BlockLattice<T,DESCRIPTOR>& lattice,
                                  Cuboid2D<T>&                           cuboid);
   bool operator() (T output[], const int input[]) override;
 };

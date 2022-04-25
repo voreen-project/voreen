@@ -25,7 +25,6 @@
 #define BLOCK_INDICATOR_F_3D_H
 
 #include "blockIndicatorBaseF3D.h"
-#include "geometry/blockGeometryView3D.h"
 #include "functors/analytical/indicator/smoothIndicatorBaseF3D.h"
 
 namespace olb {
@@ -41,8 +40,8 @@ public:
    * \param blockGeometry Block geometry structure to be used for conversion
    *                      between lattice and physical coordinates.
    **/
-  BlockIndicatorFfromIndicatorF3D(IndicatorF3D<T>&             indicatorF,
-                                  BlockGeometryStructure3D<T>& blockGeometry);
+  BlockIndicatorFfromIndicatorF3D(IndicatorF3D<T>&    indicatorF,
+                                  BlockGeometry<T,3>& blockGeometry);
 
   using BlockIndicatorF3D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -65,8 +64,8 @@ public:
    * \param blockGeometry Block geometry structure to be used for conversion
    *                      between lattice and physical coordinates.
    **/
-  BlockIndicatorFfromSmoothIndicatorF3D(SmoothIndicatorF3D<T,T,HLBM>&   indicatorF,
-                                          BlockGeometryStructure3D<T>& blockGeometry);
+  BlockIndicatorFfromSmoothIndicatorF3D(SmoothIndicatorF3D<T,T,HLBM>& indicatorF,
+                                        BlockGeometry<T,3>&           blockGeometry);
 
   using BlockIndicatorF3D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -88,20 +87,20 @@ public:
    * \param blockGeometry Block geometry structure to be queried
    * \param materials     Material number vector
    **/
-  BlockIndicatorMaterial3D(BlockGeometryStructure3D<T>& blockGeometry,
-                           std::vector<int>             materials);
+  BlockIndicatorMaterial3D(BlockGeometry<T,3>& blockGeometry,
+                           std::vector<int>    materials);
   /**
    * \param blockGeometry Block geometry structure to be queried
    * \param materials     Material number list
    **/
-  BlockIndicatorMaterial3D(BlockGeometryStructure3D<T>& blockGeometry,
-                           std::list<int>             materials);
+  BlockIndicatorMaterial3D(BlockGeometry<T,3>& blockGeometry,
+                           std::list<int>      materials);
   /**
    * \param blockGeometry Block geometry structure to be queried
    * \param material      Material number
    **/
-  BlockIndicatorMaterial3D(BlockGeometryStructure3D<T>& blockGeometry,
-                           int                          material);
+  BlockIndicatorMaterial3D(BlockGeometry<T,3>& blockGeometry,
+                           int                 material);
 
   using BlockIndicatorF3D<T>::operator();
   bool operator() (bool output[], const int input[]) override;

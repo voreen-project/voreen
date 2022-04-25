@@ -29,31 +29,31 @@
 
 #include "functors/genericF.h"
 #include "blockBaseF2D.h"
-#include "communication/superStructure2D.h"
-#include "core/superData2D.h"
+#include "indicator/superIndicatorBaseF2D.h"
+#include "communication/superStructure.h"
+#include "core/superData.h"
 #include "core/superLattice2D.h"
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
 
 namespace olb {
 
-template<typename T, typename DESCRIPTOR> class SuperLattice2D;
-template<typename T, typename BaseType> class SuperData2D;
+template<typename T, typename DESCRIPTOR> class SuperLattice;
 template<typename T> class SuperStructure2D;
 template<typename T, typename W> class SuperIdentity2D;
 template<typename T> class BlockF2D;
 
-/// represents all functors that operate on a SuperStructure2D<T> in general
+/// represents all functors that operate on a SuperStructure<T,2> in general
 template <typename T, typename W = T>
 class SuperF2D : public GenericF<W, int> {
 protected:
-  SuperF2D(SuperStructure2D<T>& superStructure, int targetDim);
-  
-  SuperStructure2D<T>& _superStructure;
-  
+  SuperF2D(SuperStructure<T,2>& superStructure, int targetDim);
+
+  SuperStructure<T,2>& _superStructure;
+
   /// Super functors may consist of several BlockF2D<W> derived functors
   /**
    * By convention: If block level functors are used at all they should
@@ -69,16 +69,16 @@ public:
   SuperF2D<T,W>& operator/(SuperF2D<T,W>& rhs);
 
   /// \return _superStructure
-  SuperStructure2D<T>& getSuperStructure();
+  SuperStructure<T,2>& getSuperStructure();
   /// \return Size of SuperF3D<T,W>::_blockF vector
   int getBlockFSize() const;
   /// \return _blockF[iCloc]
   BlockF2D<W>& getBlockF(int iCloc);
-  
+
   bool operator() (W output[], const int input []) override;
-    
+
   using GenericF<W,int>::operator();
-  
+
 };
 
 
@@ -87,18 +87,18 @@ template<typename T, typename BaseType>
 class SuperDataF2D : public SuperF2D<T,BaseType> {
 protected:
   /// `SuperData2D` object this functor was created from
-  SuperData2D<T,BaseType>& _superData;
+  SuperData<2,T,BaseType>& _superData;
 public:
   /// Constructor from `SuperData2D` - stores `_superData` reference
-  SuperDataF2D(SuperData2D<T,BaseType>& superData);
+  SuperDataF2D(SuperData<2,T,BaseType>& superData);
   /// Operator for this functor - copies data from `_superData` object into output
   bool operator() (BaseType output[], const int input[]);
   /// Getter for `_superData`
-  SuperData2D<T,BaseType>& getSuperData();
+  SuperData<2,T,BaseType>& getSuperData();
 };
 
 /// identity functor for memory management
-template <typename T, typename W>
+template <typename T, typename W=T>
 class SuperIdentity2D : public SuperF2D<T,W> {
 protected:
   FunctorPtr<SuperF2D<T,W>> _f;
@@ -111,14 +111,14 @@ public:
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeF2D : public SuperF2D<T,T> {
 protected:
-  SuperLatticeF2D(SuperLattice2D<T,DESCRIPTOR>& superLattice, int targetDim);
+  SuperLatticeF2D(SuperLattice<T,DESCRIPTOR>& superLattice, int targetDim);
 
-  SuperLattice2D<T,DESCRIPTOR>& _sLattice;
+  SuperLattice<T,DESCRIPTOR>& _sLattice;
 public:
-  SuperLattice2D<T,DESCRIPTOR>& getSuperLattice();
-  
+  SuperLattice<T,DESCRIPTOR>& getSuperLattice();
+
   bool operator () (T output[], const int input []);
-  
+
   using GenericF<T,int>::operator();
 };
 
@@ -126,7 +126,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysF2D : public SuperLatticeF2D<T,DESCRIPTOR> {
 protected:
-  SuperLatticePhysF2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysF2D(SuperLattice<T,DESCRIPTOR>& sLattice,
                       const UnitConverter<T,DESCRIPTOR>& converter, int targetDim);
   const UnitConverter<T,DESCRIPTOR>& _converter;
 public:
@@ -137,7 +137,7 @@ public:
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class SuperLatticeThermalPhysF2D : public SuperLatticeF2D<T,TDESCRIPTOR> {
 protected:
-  SuperLatticeThermalPhysF2D(SuperLattice2D<T,TDESCRIPTOR>& sLattice,
+  SuperLatticeThermalPhysF2D(SuperLattice<T,TDESCRIPTOR>& sLattice,
                              const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim);
   const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& _converter;
 public:

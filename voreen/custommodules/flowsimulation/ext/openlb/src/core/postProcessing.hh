@@ -24,12 +24,6 @@
 #ifndef POST_PROCESSING_HH
 #define POST_PROCESSING_HH
 
-#include "blockLattice2D.h"
-#include "blockLattice3D.h"
-//#include <cmath>
-//#include <numeric>
-//#include <limits>
-//#include "util.h"
 
 namespace olb {
 
@@ -71,6 +65,15 @@ void PostProcessorGenerator2D<T,DESCRIPTOR>::shift(int deltaX, int deltaY)
 }
 
 template<typename T, typename DESCRIPTOR>
+void PostProcessorGenerator2D<T,DESCRIPTOR>::shift(LatticeR<2> delta)
+{
+  x0 += delta[0];
+  x1 += delta[0];
+  y0 += delta[1];
+  y1 += delta[1];
+}
+
+template<typename T, typename DESCRIPTOR>
 bool PostProcessorGenerator2D<T,DESCRIPTOR>::
 extract(int x0_, int x1_, int y0_, int y1_)
 {
@@ -91,6 +94,21 @@ extract(int x0_, int x1_, int y0_, int y1_)
 }
 
 template<typename T, typename DESCRIPTOR>
+bool PostProcessorGenerator2D<T,DESCRIPTOR>::extract(LatticeR<2> lower, LatticeR<2> upper)
+{
+  return extract(lower[0], upper[0], lower[1], upper[1]);
+}
+
+template<typename T, typename DESCRIPTOR>
+void PostProcessorGenerator2D<T,DESCRIPTOR>::reset(LatticeR<2> lower, LatticeR<2> upper)
+{
+  x0 = lower[0];
+  x1 = upper[0];
+  y0 = lower[1];
+  y1 = upper[1];
+}
+
+template<typename T, typename DESCRIPTOR>
 void PostProcessorGenerator2D<T,DESCRIPTOR>::reset(int x0_, int x1_, int y0_, int y1_)
 {
   x0 = x0_;
@@ -107,6 +125,15 @@ LatticeCouplingGenerator2D<T,DESCRIPTOR>::LatticeCouplingGenerator2D (
   int x0_, int x1_, int y0_, int y1_)
   : x0(x0_), x1(x1_), y0(y0_), y1(y1_)
 { }
+
+template<typename T, typename DESCRIPTOR>
+void LatticeCouplingGenerator2D<T,DESCRIPTOR>::shift(LatticeR<2> delta)
+{
+  x0 += delta[0];
+  x1 += delta[0];
+  y0 += delta[1];
+  y1 += delta[1];
+}
 
 template<typename T, typename DESCRIPTOR>
 void LatticeCouplingGenerator2D<T,DESCRIPTOR>::shift(int deltaX, int deltaY)
@@ -137,6 +164,12 @@ bool LatticeCouplingGenerator2D<T,DESCRIPTOR>::extract(int x0_, int x1_, int y0_
 }
 
 template<typename T, typename DESCRIPTOR>
+bool LatticeCouplingGenerator2D<T,DESCRIPTOR>::extract(LatticeR<2> lower, LatticeR<2> upper)
+{
+  return extract(lower[0], upper[0], lower[1], upper[1]);
+}
+
+template<typename T, typename DESCRIPTOR>
 void LatticeCouplingGenerator2D<T,DESCRIPTOR>::reset(int x0_, int x1_, int y0_, int y1_)
 {
   x0 = x0_;
@@ -145,92 +178,13 @@ void LatticeCouplingGenerator2D<T,DESCRIPTOR>::reset(int x0_, int x1_, int y0_, 
   y1 = y1_;
 }
 
-
-////////////////////// Class StatisticsPostProcessor2D //////////////
-
 template<typename T, typename DESCRIPTOR>
-StatisticsPostProcessor2D<T,DESCRIPTOR>::StatisticsPostProcessor2D()
-{ 
-  this->getName() = "StatisticsPostProcessor2D";
-    
-}
-
-#ifndef PARALLEL_MODE_OMP
-template<typename T, typename DESCRIPTOR>
-void StatisticsPostProcessor2D<T,DESCRIPTOR>::process (
-  BlockLattice2D<T,DESCRIPTOR>& blockLattice )
+void LatticeCouplingGenerator2D<T,DESCRIPTOR>::reset(LatticeR<2> lower, LatticeR<2> upper)
 {
-  blockLattice.getStatistics().reset();
-}
-#endif
-
-
-#ifdef PARALLEL_MODE_OMP
-template<typename T, typename DESCRIPTOR>
-void StatisticsPostProcessor2D<T,DESCRIPTOR>::process (
-  BlockLattice2D<T,DESCRIPTOR>& blockLattice )
-{
-  #pragma omp parallel
-  blockLattice.getStatistics().reset();
-
-
-  int numCells     = 0;
-  T avRho    = T();
-  T avEnergy = T();
-  T maxU     = T();
-
-  #pragma omp parallel
-  {
-    #pragma omp critical
-    {
-      numCells       += blockLattice.getStatistics().getNumCells();
-      avRho          += blockLattice.getStatistics().getAverageRho()
-      *blockLattice.getStatistics().getNumCells();
-      avEnergy       += blockLattice.getStatistics().getAverageEnergy()
-      *blockLattice.getStatistics().getNumCells();
-      if (maxU<blockLattice.getStatistics().getMaxU() )
-      {
-        maxU        = blockLattice.getStatistics().getMaxU();
-      }
-    }
-  }
-  if (numCells==0) {
-    // avoid division by zero
-    avRho = T();
-    avEnergy = T();
-    maxU = T();
-    numCells = 0;
-  }
-  else {
-    avRho    = avRho / numCells;
-    avEnergy = avEnergy / numCells;
-  }
-  #pragma omp parallel
-  blockLattice.getStatistics().reset(avRho,avEnergy, maxU, numCells);
-}
-#endif
-
-
-////////////////////// Class StatPPGenerator2D //////////////
-
-template<typename T, typename DESCRIPTOR>
-StatPPGenerator2D<T,DESCRIPTOR>::StatPPGenerator2D()
-  : PostProcessorGenerator2D<T,DESCRIPTOR>(-1,-1,-1,-1)
-{ }
-
-template<typename T, typename DESCRIPTOR>
-PostProcessor2D<T,DESCRIPTOR>* StatPPGenerator2D<T,DESCRIPTOR>::generate() const
-{
-  return new StatisticsPostProcessor2D<T,DESCRIPTOR>;
+  reset(lower[0], upper[0], lower[1], upper[1]);
 }
 
 
-template<typename T, typename DESCRIPTOR>
-PostProcessorGenerator2D<T,DESCRIPTOR>*
-StatPPGenerator2D<T,DESCRIPTOR>::clone() const
-{
-  return new StatPPGenerator2D;
-}
 
 ////////////////////// Class PostProcessor3D /////////////////
 
@@ -274,6 +228,19 @@ void PostProcessorGenerator3D<T,DESCRIPTOR>::shift (
 }
 
 template<typename T, typename DESCRIPTOR>
+void PostProcessorGenerator3D<T,DESCRIPTOR>::shift(
+  LatticeR<3> delta, int iC_)
+{
+  x0 += delta[0];
+  x1 += delta[0];
+  y0 += delta[1];
+  y1 += delta[1];
+  z0 += delta[2];
+  z1 += delta[2];
+  iC = iC_;
+}
+
+template<typename T, typename DESCRIPTOR>
 bool PostProcessorGenerator3D<T,DESCRIPTOR>::
 extract(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
@@ -296,6 +263,23 @@ extract(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 }
 
 template<typename T, typename DESCRIPTOR>
+bool PostProcessorGenerator3D<T,DESCRIPTOR>::extract(LatticeR<3> lower, LatticeR<3> upper)
+{
+  return extract(lower[0], upper[0], lower[1], upper[1], lower[2], upper[2]);
+}
+
+template<typename T, typename DESCRIPTOR>
+void PostProcessorGenerator3D<T,DESCRIPTOR>::reset(LatticeR<3> lower, LatticeR<3> upper)
+{
+  x0 = lower[0];
+  x1 = upper[0];
+  y0 = lower[1];
+  y1 = upper[1];
+  z0 = lower[2];
+  z1 = upper[2];
+}
+
+template<typename T, typename DESCRIPTOR>
 void PostProcessorGenerator3D<T,DESCRIPTOR>::
 reset(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
@@ -314,6 +298,18 @@ LatticeCouplingGenerator3D<T,DESCRIPTOR>::LatticeCouplingGenerator3D (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
   : x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), iC(-1)
 { }
+
+template<typename T, typename DESCRIPTOR>
+void LatticeCouplingGenerator3D<T,DESCRIPTOR>::shift(LatticeR<3> delta, int iC_)
+{
+  x0 += delta[0];
+  x1 += delta[0];
+  y0 += delta[1];
+  y1 += delta[1];
+  z0 += delta[2];
+  z1 += delta[2];
+  iC = iC_;
+}
 
 template<typename T, typename DESCRIPTOR>
 void LatticeCouplingGenerator3D<T,DESCRIPTOR>::shift (
@@ -351,6 +347,23 @@ extract(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 }
 
 template<typename T, typename DESCRIPTOR>
+bool LatticeCouplingGenerator3D<T,DESCRIPTOR>::extract(LatticeR<3> lower, LatticeR<3> upper)
+{
+  return extract(lower[0], upper[0], lower[1], upper[1], lower[2], upper[2]);
+}
+
+template<typename T, typename DESCRIPTOR>
+void LatticeCouplingGenerator3D<T,DESCRIPTOR>::reset(LatticeR<3> lower, LatticeR<3> upper)
+{
+  x0 = lower[0];
+  x1 = upper[0];
+  y0 = lower[1];
+  y1 = upper[1];
+  z0 = lower[2];
+  z1 = upper[2];
+}
+
+template<typename T, typename DESCRIPTOR>
 void LatticeCouplingGenerator3D<T,DESCRIPTOR>::
 reset(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
@@ -364,33 +377,29 @@ reset(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 
 ////////////////////// Class StatisticsPostProcessor3D //////////////
 
-template<typename T, typename DESCRIPTOR>
-StatisticsPostProcessor3D<T,DESCRIPTOR>::StatisticsPostProcessor3D()
-{
-  this->getName() = "StatisticsPostProcessor3D";  
-}
+template <typename BLOCK>
+void StatisticsPostProcessor::type<BLOCK>::setup(BLOCK& blockLattice)
+{ }
 
-#ifndef PARALLEL_MODE_OMP
-template<typename T, typename DESCRIPTOR>
-void StatisticsPostProcessor3D<T,DESCRIPTOR>::process (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice )
+template <typename BLOCK>
+void StatisticsPostProcessor::type<BLOCK>::apply(BLOCK& blockLattice)
 {
+  if (!blockLattice.statisticsEnabled()) {
+    return;
+  }
+
+  #ifndef PARALLEL_MODE_OMP
   blockLattice.getStatistics().reset();
-}
-#endif
-#ifdef PARALLEL_MODE_OMP
-template<typename T, typename DESCRIPTOR>
-void StatisticsPostProcessor3D<T,DESCRIPTOR>::process (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice )
-{
+  #endif
+  #ifdef PARALLEL_MODE_OMP
+  using V = typename BLOCK::value_t;
   #pragma omp parallel
   blockLattice.getStatistics().reset();
 
-
   int numCells     = 0;
-  T avRho    = T();
-  T avEnergy = T();
-  T maxU     = T();
+  V avRho    = V();
+  V avEnergy = V();
+  V maxU     = V();
 
   #pragma omp parallel
   {
@@ -409,9 +418,9 @@ void StatisticsPostProcessor3D<T,DESCRIPTOR>::process (
   }
   if (numCells==0) {
     // avoid division by zero
-    avRho = T();
-    avEnergy = T();
-    maxU = T();
+    avRho = V();
+    avEnergy = V();
+    maxU = V();
     numCells = 0;
   }
   else {
@@ -419,32 +428,9 @@ void StatisticsPostProcessor3D<T,DESCRIPTOR>::process (
     avEnergy = avEnergy / numCells;
   }
   #pragma omp parallel
-  blockLattice.getStatistics().reset(avRho,avEnergy, maxU, numCells);
+  blockLattice.getStatistics().reset(avRho, avEnergy, maxU, numCells);
+  #endif
 }
-#endif
-
-////////////////////// Class StatPPGenerator3D //////////////
-
-template<typename T, typename DESCRIPTOR>
-StatPPGenerator3D<T,DESCRIPTOR>::StatPPGenerator3D()
-  : PostProcessorGenerator3D<T,DESCRIPTOR>(-1,-1,-1,-1,-1,-1)
-{ }
-
-template<typename T, typename DESCRIPTOR>
-PostProcessor3D<T,DESCRIPTOR>* StatPPGenerator3D<T,DESCRIPTOR>::generate() const
-{
-  return new StatisticsPostProcessor3D<T,DESCRIPTOR>;
-}
-
-
-template<typename T, typename DESCRIPTOR>
-PostProcessorGenerator3D<T,DESCRIPTOR>* StatPPGenerator3D<T,DESCRIPTOR>::clone() const
-{
-  return new StatPPGenerator3D;
-}
-
-
-
 
 }  // namespace olb
 

@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysDissipation3D<T, DESCRIPTOR>::SuperLatticePhysDissipation3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physDissipation";
@@ -53,8 +52,7 @@ SuperLatticePhysDissipation3D<T, DESCRIPTOR>::SuperLatticePhysDissipation3D(
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysDissipation3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -62,11 +60,9 @@ SuperLatticePhysDissipation3D<T, DESCRIPTOR>::SuperLatticePhysDissipation3D(
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysDissipation3D<T, DESCRIPTOR>::BlockLatticePhysDissipation3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1),
-    _overlap(overlap),
     _converter(converter)
 {
   this->getName() = "physDissipation";
@@ -76,9 +72,7 @@ template<typename T, typename DESCRIPTOR>
 bool BlockLatticePhysDissipation3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
   T rho, uTemp[DESCRIPTOR::d], pi[util::TensorVal<DESCRIPTOR >::n];
-  this->_blockLattice.get(
-    input[0]+_overlap, input[1]+_overlap, input[2]+_overlap
-  ).computeAllMomenta(rho, uTemp, pi);
+  this->_blockLattice.get(input[0], input[1], input[2]).computeAllMomenta(rho, uTemp, pi);
 
   T PiNeqNormSqr = pi[0] * pi[0] + 2. * pi[1] * pi[1] + pi[2] * pi[2];
   if (util::TensorVal<DESCRIPTOR >::n == 6) {
@@ -90,7 +84,7 @@ bool BlockLatticePhysDissipation3D<T, DESCRIPTOR>::operator()(T output[], const 
   T omega = 1. / this->_converter.getLatticeRelaxationTime();
   T dt = this->_converter.getConversionFactorTime();
   output[0] = PiNeqNormSqr * nuLattice
-              * pow(omega * descriptors::invCs2<T,DESCRIPTOR>() / rho, 2) / 2.
+              * util::pow(omega * descriptors::invCs2<T,DESCRIPTOR>() / rho, 2) / 2.
               * this->_converter.getPhysViscosity() / nuLattice / dt / dt;
 
   return true;

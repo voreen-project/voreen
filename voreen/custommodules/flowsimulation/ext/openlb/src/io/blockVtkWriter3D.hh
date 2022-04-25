@@ -55,7 +55,8 @@ void BlockVTKwriter3D<T>::write(int iT)
 {
   if ( _pointerVec.empty() ) {
     clout << "Error: Please add functor via addFunctor()";
-  } else {
+  }
+  else {
     // get first functor
     auto it = _pointerVec.cbegin();
 
@@ -75,7 +76,8 @@ void BlockVTKwriter3D<T>::write(int iT)
       for ( auto functor = _pointerVec.cbegin(); functor != _pointerVec.cend(); ++functor) {
         writeRawDataBinary( fullNameVti, **functor, nx, ny, nz);
       }
-    } else {
+    }
+    else {
       for ( auto functor = _pointerVec.cbegin(); functor != _pointerVec.cend(); ++functor) {
         writeRawData( fullNameVti, **functor, nx, ny, nz);
       }
@@ -100,7 +102,8 @@ void BlockVTKwriter3D<T>::write(BlockF3D<T>& f, int iT)
   preamble( fullNameVti, nx,ny,nz, originX,originY,originZ );
   if ( _binary ) {
     writeRawData( fullNameVti, f, nx,ny,nz );
-  } else {
+  }
+  else {
     writeRawDataBinary( fullNameVti, f, nx,ny,nz );
   }
   closePreamble( fullNameVti );
@@ -229,7 +232,8 @@ void BlockVTKwriter3D<T>::writeRawDataBinary(const std::string& fullNameVti,
     if (f.getTargetDim() == 1) {
       fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
            << "format=\"binary\" encoding=\"base64\">\n";
-    } else {
+    }
+    else {
       fout << "type=\"Float32\" Name=\"" << f.getName() << "\" "
            << "format=\"binary\" encoding=\"base64\" "
            << "NumberOfComponents=\"" << f.getTargetDim() << "\">\n";

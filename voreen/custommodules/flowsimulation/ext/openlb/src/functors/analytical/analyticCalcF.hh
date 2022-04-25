@@ -35,7 +35,7 @@ namespace olb {
 
 template <unsigned D, typename T, typename S, template<typename> class F>
 AnalyticCalcF<D,T,S,F>::AnalyticCalcF(FunctorPtr<AnalyticalF<D,T,S>>&& f,
-                                        FunctorPtr<AnalyticalF<D,T,S>>&& g)
+                                      FunctorPtr<AnalyticalF<D,T,S>>&& g)
   : AnalyticalF<D,T,S>(f->getTargetDim()),
     _f(std::move(f)),
     _g(std::move(g))

@@ -21,33 +21,26 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Local Convection Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Local Convection Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_LOCAL_CONVECTION_BOUNDARY_2D_HH
 #define SET_LOCAL_CONVECTION_BOUNDARY_2D_HH
 
 #include "setLocalConvectionBoundary2D.h"
 
 namespace olb {
-////////// SuperLattice Domain  /////////////////////////////////////////
 
 ///Initialising the LocalConvectionBoundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setLocalConvectionBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry2D<T>& superGeometry, int material, T* uAv)
+template<typename T, typename DESCRIPTOR>
+void setLocalConvectionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry<T,2>& superGeometry, int material, T* uAv)
 {
-  setLocalConvectionBoundary<T,DESCRIPTOR,MixinDynamics>(sLattice, omega, superGeometry.getMaterialIndicator(material), uAv);
+  setLocalConvectionBoundary<T,DESCRIPTOR>(sLattice, omega, superGeometry.getMaterialIndicator(material), uAv);
 }
 ///Initialising the LocalConvectionBoundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setLocalConvectionBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator, T* uAv)
+template<typename T, typename DESCRIPTOR>
+void setLocalConvectionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator, T* uAv)
 {
   OstreamManager clout(std::cout, "setLocalConvectionBoundary");
-  /* local boundaries: _overlap = 0;
-  *  interp boundaries: _overlap = 1;
-  *  bouzidi boundaries: _overlap = 1;
-  *  extField boundaries: _overlap = 1;
-  *  advectionDiffusion boundaries: _overlap = 1;
-  */
   int _overlap = 0;
   bool includeOuterCells = false;
   if (indicator->getSuperGeometry().getOverlap() == 1) {
@@ -55,69 +48,59 @@ void setLocalConvectionBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega
     clout << "WARNING: overlap == 1, boundary conditions set on overlap despite unknown neighbor materials" << std::endl;
   }
   for (int iCloc = 0; iCloc < sLattice.getLoadBalancer().size(); ++iCloc) {
-    setLocalConvectionBoundary<T,DESCRIPTOR,MixinDynamics>(sLattice.getExtendedBlockLattice(iCloc), omega,
-        indicator->getExtendedBlockIndicatorF(iCloc), uAv, includeOuterCells);
+    setLocalConvectionBoundary<T,DESCRIPTOR>(sLattice.getBlock(iCloc), omega,
+        indicator->getBlockIndicatorF(iCloc), uAv, includeOuterCells);
   }
   /// Adds needed Cells to the Communicator _commBC in SuperLattice
   addPoints2CommBC<T, DESCRIPTOR>(sLattice, std::forward<decltype(indicator)>(indicator), _overlap);
 }
 
-////////// BlockLattice Domain  /////////////////////////////////////////
 ///Set LocalConvectionBoundary for indicated cells inside the block domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setLocalConvectionBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator,
+template<typename T, typename DESCRIPTOR>
+void setLocalConvectionBoundary(BlockLattice<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator,
                                 T* uAv, bool includeOuterCells)
 {
   OstreamManager clout (std::cout, "setLocalConvectionBoundary");
   bool _output = false;
-  auto& blockGeometryStructure = indicator.getBlockGeometryStructure();
+  auto& blockGeometryStructure = indicator.getBlockGeometry();
   const int margin = includeOuterCells ? 0 : 1;
-  /*
-   *x0,x1,y0,y1 Range of cells to be traversed
-   **/
-  int x0 = margin;
-  int y0 = margin;
-  int x1 = blockGeometryStructure.getNx()-1 - margin -1 ;
-  int y1 = blockGeometryStructure.getNy()-1 - margin -1;
   std::vector<int> discreteNormal(3, 0);
-  for (int iX = x0; iX <= x1; ++iX) {
-    for (int iY = y0; iY <= y1; ++iY) {
+  blockGeometryStructure.forSpatialLocations([&](auto iX, auto iY) {
+    if (blockGeometryStructure.getNeighborhoodRadius({iX, iY}) >= margin
+        && indicator(iX, iY)) {
       PostProcessorGenerator2D<T, DESCRIPTOR>* postProcessor = nullptr;
-      if (indicator(iX, iY)) {
-
-        discreteNormal = indicator.getBlockGeometryStructure().getStatistics().getType(iX, iY);
-        if (discreteNormal[0] == 0) {//set postProcessors on indicated LocalConvectionBoundary cells
-          if (discreteNormal[1] == -1) {
-            if (_output) {
-              clout << "setLocalConvectionBoundary<" << 0 << ","<< -1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
-            }
-            postProcessor = nullptr;
+      discreteNormal = indicator.getBlockGeometry().getStatistics().getType(iX, iY);
+      if (discreteNormal[0] == 0) {//set postProcessors on indicated LocalConvectionBoundary cells
+        if (discreteNormal[1] == -1) {
+          if (_output) {
+            clout << "setLocalConvectionBoundary<" << 0 << ","<< -1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
           }
-          else if (discreteNormal[1] == 1) {
-            if (_output) {
-              clout << "setLocalConvectionBoundary<" << 0 << ","<< 1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
-            }
-            postProcessor = nullptr;
+          postProcessor = nullptr;
+        }
+        else if (discreteNormal[1] == 1) {
+          if (_output) {
+            clout << "setLocalConvectionBoundary<" << 0 << ","<< 1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
           }
-          else if (discreteNormal[2] == -1) {
-            if (_output) {
-              clout << "setLocalConvectionBoundary<" << 1 << ","<< -1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
-            }
-            postProcessor = nullptr;
+          postProcessor = nullptr;
+        }
+        else if (discreteNormal[2] == -1) {
+          if (_output) {
+            clout << "setLocalConvectionBoundary<" << 1 << ","<< -1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
           }
-          else if (discreteNormal[2] == 1) {
-            if (_output) {
-              clout << "setLocalConvectionBoundary<" << 1 << ","<< 1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
-            }
-            postProcessor = nullptr;
+          postProcessor = nullptr;
+        }
+        else if (discreteNormal[2] == 1) {
+          if (_output) {
+            clout << "setLocalConvectionBoundary<" << 1 << ","<< 1 << ">("  << iX << ", "<< iX << ", " << iY << ", " << iY << ", " << omega << " )" << std::endl;
           }
-          if (postProcessor) {
-            block.addPostProcessor(*postProcessor);
-          }
+          postProcessor = nullptr;
+        }
+        if (postProcessor) {
+          block.addPostProcessor(*postProcessor);
         }
       }
     }
-  }
+  });
 }
 
 }//namespace olb

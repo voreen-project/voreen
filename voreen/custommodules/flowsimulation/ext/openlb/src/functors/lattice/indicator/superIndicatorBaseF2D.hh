@@ -25,13 +25,13 @@
 #define SUPER_INDICATOR_BASE_F_2D_HH
 
 #include "superIndicatorBaseF2D.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 
 namespace olb {
 
 
 template <typename T>
-SuperIndicatorF2D<T>::SuperIndicatorF2D(SuperGeometry2D<T>& geometry)
+SuperIndicatorF2D<T>::SuperIndicatorF2D(SuperGeometry<T,2>& geometry)
   : SuperF2D<T, bool>(geometry, 1),
     _superGeometry(geometry)
 { }
@@ -47,15 +47,7 @@ BlockIndicatorF2D<T>& SuperIndicatorF2D<T>::getBlockIndicatorF(int iCloc)
 }
 
 template <typename T>
-BlockIndicatorF2D<T>& SuperIndicatorF2D<T>::getExtendedBlockIndicatorF(int iCloc)
-{
-  OLB_ASSERT(iCloc < int(this->_extendedBlockF.size()) && iCloc >= 0,
-             "block functor index within bounds");
-  return *(this->_extendedBlockF[iCloc]);
-}
-
-template <typename T>
-SuperGeometry2D<T>& SuperIndicatorF2D<T>::getSuperGeometry()
+SuperGeometry<T,2>& SuperIndicatorF2D<T>::getSuperGeometry()
 {
   return this->_superGeometry;
 }
@@ -65,7 +57,7 @@ bool SuperIndicatorF2D<T>::operator() (const int input[])
 {
   bool output;
   if (_cachedData) {
-    output = _cachedData->get(input[0], input[1], input[2]);
+    output = _cachedData->getBlock(input[0]).get(input+1);
   }
   else {
     this->operator()(&output, input);
@@ -78,7 +70,7 @@ bool SuperIndicatorF2D<T>::operator() (int iC, int iX, int iY)
 {
   bool output;
   if (_cachedData) {
-    output = _cachedData->get(iC, iX, iY);
+    output = _cachedData->getBlock(iC).get({iX, iY});
   }
   else {
     this->operator()(&output, iC, iX, iY);
@@ -89,10 +81,10 @@ bool SuperIndicatorF2D<T>::operator() (int iC, int iX, int iY)
 template <typename T>
 void SuperIndicatorF2D<T>::cache()
 {
-  _cachedData = std::unique_ptr<SuperData2D<T,bool>>(
-                  new SuperData2D<T,bool>(*this));
-  for (unsigned iC = 0; iC < this->_extendedBlockF.size(); ++iC) {
-    getExtendedBlockIndicatorF(iC).setCache(_cachedData->get(iC));
+  _cachedData = std::unique_ptr<SuperData<2,T,bool>>(
+                  new SuperData<2,T,bool>(*this));
+  for (unsigned iC = 0; iC < this->_blockF.size(); ++iC) {
+    getBlockIndicatorF(iC).setCache(_cachedData->getBlock(iC));
   }
 }
 

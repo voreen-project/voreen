@@ -45,10 +45,9 @@ Timer<T>::Timer(int maxTimeSteps, size_t numFluidCells)
 template<typename T>
 T Timer<T>::timevalDiffTimeMs(timeval end, timeval start)
 {
-  T msDiff;
-  msDiff = 1000*(end.tv_sec - start.tv_sec)
-           +(end.tv_usec-start.tv_usec)/1000;
-  return std::max<T>(msDiff, 1.0);
+  const T msDiff ( 1000*(end.tv_sec - start.tv_sec)
+                  +(end.tv_usec-start.tv_usec)/1000 );
+  return util::max<T>(msDiff, 1.0);
 }
 
 template<typename T>
@@ -71,7 +70,7 @@ T Timer<T>::getMLUPps()
 template<typename T>
 T Timer<T>::getTotalMLUPs()
 {
-  T tmlups = ((T)numFC * curTS) / (timevalDiffTimeMs(msTimeEnd, msTimeStart)*1000);
+  T tmlups = (numFC * curTS) / double(timevalDiffTimeMs(msTimeEnd, msTimeStart)*1000);
   return tmlups;
 }
 
@@ -109,15 +108,15 @@ void Timer<T>::update(int currentTimeStep)    // Is int sufficient? Is it possib
   curTS   = currentTimeStep;              // of update() critical
 
   rtPas   = difftime(sTimeCur,sTimeStart);                // here calculation is based on s-time
-  rtTot   = rtPas*maxTS/std::max<int>(curTS, 1);
+  rtTot   = rtPas*maxTS/util::max<int>(curTS, 1);
   rtRem   = rtTot-rtPas;
 
   rtPasMs = timevalDiffTimeMs(msTimeCur, msTimeStart);    // here with ms-time as timeval-value
-  rtTotMs = rtPasMs*maxTS/std::max<int>(curTS, 1);
+  rtTotMs = rtPasMs*maxTS/util::max<int>(curTS, 1);
   rtRemMs = rtTotMs-rtPasMs;
 
   ctPas   = (cpuTimeCur-cpuTimeStart)/CLOCKS_PER_SEC;     // and here the same for CPU-time
-  ctTot   = ctPas*maxTS/std::max<int>(curTS, 1);
+  ctTot   = ctPas*maxTS/util::max<int>(curTS, 1);
   ctRem   = ctTot-ctPas;
 
 }
@@ -149,7 +148,14 @@ T Timer<T>::getTotalRealTimeMs()
 }
 
 template<typename T>
-void Timer<T>::print(int currentTimeStep,  int printMode)
+T Timer<T>::getCurrRealTimeMs()
+{
+  gettimeofday(&msTimeCur, nullptr);    // time in ms
+  return timevalDiffTimeMs(msTimeCur, msTimeStart);
+}
+
+template<typename T>
+void Timer<T>::print(std::size_t currentTimeStep, int printMode)
 {
   if (currentTimeStep!=curTS) {
     update(currentTimeStep);
@@ -249,8 +255,7 @@ Timer<T>* createTimer(XMLreader& param, const UnitConverter<T,DESCRIPTOR>& conve
     if ( ! param["Application"]["PhysParam"]["MaxTime"].read(physStartT) ) {
       clout << "PhysMaxTime not found" << std::endl;
     }
-    else
-    {
+    else {
       clout << "Application::PhysParam::MaxTime needs to be renamed to Application::PhysParameters::PhysMaxTime" << std::endl;
     }
   }

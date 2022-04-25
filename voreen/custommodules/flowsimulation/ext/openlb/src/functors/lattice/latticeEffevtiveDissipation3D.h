@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -52,7 +52,7 @@ class SuperLatticeEffevtiveDissipation3D final : public SuperLatticeF3D<T,DESCRI
 private:
   const UnitConverter<T,DESCRIPTOR>& _converter;
 public:
-  SuperLatticeEffevtiveDissipation3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
+  SuperLatticeEffevtiveDissipation3D(SuperLattice<T,DESCRIPTOR>& sLattice,
                                      const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
                                      LESDynamics<T, DESCRIPTOR>& LESdynamics);
 };
@@ -65,7 +65,7 @@ protected:
   T _smagoConst;
   LESDynamics<T, DESCRIPTOR>& _LESdynamics;
 public:
-  BlockLatticeEffevtiveDissipation3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticeEffevtiveDissipation3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                      const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
                                      LESDynamics<T, DESCRIPTOR>& LESdynamics);
   bool operator() (T output[], const int input[]) override;

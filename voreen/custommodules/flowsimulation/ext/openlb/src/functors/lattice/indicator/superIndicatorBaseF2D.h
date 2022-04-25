@@ -26,28 +26,27 @@
 
 #include "functors/genericF.h"
 #include "functors/lattice/superBaseF2D.h"
-#include "communication/superStructure2D.h"
-#include "core/superData2D.h"
+#include "communication/superStructure.h"
+#include "core/superData.h"
 #include "blockIndicatorBaseF2D.h"
 
 namespace olb {
 
 template<typename T, typename W> class SuperF2D;
-template<typename T> class SuperGeometry2D;
+template<typename T, unsigned D> class SuperGeometry;
 template<typename T> class SuperIndicatorIdentity2D;
 
 template <typename T>
 class SuperIndicatorF2D : public SuperF2D<T,bool> {
 protected:
-  SuperGeometry2D<T>& _superGeometry;
+  SuperGeometry<T,2>& _superGeometry;
+  std::unique_ptr<SuperData<2,T,bool>> _cachedData;
 
-  std::unique_ptr<SuperData2D<T,bool>> _cachedData;
-  std::vector<std::unique_ptr<BlockIndicatorF2D<T>>> _extendedBlockF;
 public:
   using SuperF2D<T,bool>::operator();
   using identity_functor_type = SuperIndicatorIdentity2D<T>;
 
-  SuperIndicatorF2D(SuperGeometry2D<T>& geometry);
+  SuperIndicatorF2D(SuperGeometry<T,2>& geometry);
   /**
    * Get block indicator
    *
@@ -55,17 +54,11 @@ public:
    **/
   BlockIndicatorF2D<T>& getBlockIndicatorF(int iCloc);
   /**
-   * Get extended block indicator
-   *
-   * \returns _extendedBlockF[iCloc] cast as BlockIndicatorF2D<T>&
-   **/
-  BlockIndicatorF2D<T>& getExtendedBlockIndicatorF(int iCloc);
-  /**
    * Get underlying super geometry
    *
    * \returns _superGeometry
    **/
-  SuperGeometry2D<T>& getSuperGeometry();
+  SuperGeometry<T,2>& getSuperGeometry();
   /**
    * Indicator specific function operator overload
    *

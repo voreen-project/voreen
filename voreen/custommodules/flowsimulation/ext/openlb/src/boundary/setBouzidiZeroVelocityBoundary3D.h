@@ -21,22 +21,21 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the BouzidiZeroVelocityBoundary
-///This is an offLattice Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the BouzidiZeroVelocityBoundary
+//This is an offLattice Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_BOUZIDI_ZERO_VELOCITY_BOUNDARY_H
 #define SET_BOUZIDI_ZERO_VELOCITY_BOUNDARY_H
 
 #include <vector>
 #include "utilities/functorPtr.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
-#include "core/superLattice3D.h"
+
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "dynamics/dynamics.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
-#include "momentaOnBoundaries3D.h"
 #include "io/ostreamManager.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
 #include "dynamics/freeEnergyDynamics.h"
@@ -60,14 +59,14 @@ namespace olb {
 
 ///Initialising the setLocalVelocityBoundary function on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary( SuperLattice3D<T, DESCRIPTOR>& sLattice,SuperGeometry3D<T>& superGeometry, int material,IndicatorF3D<T>& geometryIndicator,
+void setBouzidiZeroVelocityBoundary( SuperLattice<T, DESCRIPTOR>& sLattice,SuperGeometry<T,3>& superGeometry, int material,IndicatorF3D<T>& geometryIndicator,
                                      std::vector<int> bulkMaterials = std::vector<int>(1,1));
 
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator, IndicatorF3D<T>& geometryIndicator,
+void setBouzidiZeroVelocityBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator, IndicatorF3D<T>& geometryIndicator,
                                     std::vector<int> bulkMaterials);
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator,
+void setBouzidiZeroVelocityBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& boundaryIndicator,
                                     FunctorPtr<SuperIndicatorF3D<T>>&& bulkIndicator,
                                     IndicatorF3D<T>& geometryIndicator);
 
@@ -76,16 +75,16 @@ void setBouzidiZeroVelocityBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, Fun
 
 
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary(BlockLatticeStructure3D<T, DESCRIPTOR>& block, BlockIndicatorF3D<T>& boundaryIndicator, BlockIndicatorF3D<T>& bulkIndicator, IndicatorF3D<T>& geometryIndicator, T _epsFraction);
+void setBouzidiZeroVelocityBoundary(BlockLattice<T, DESCRIPTOR>& block, BlockIndicatorF3D<T>& boundaryIndicator, BlockIndicatorF3D<T>& bulkIndicator, IndicatorF3D<T>& geometryIndicator, T _epsFraction);
 
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary1(BlockLatticeStructure3D<T, DESCRIPTOR>& block, BlockGeometryStructure3D<T>& blockGeometryStructure, int iX, int iY, int iZ, IndicatorF3D<T>& geometryIndicator, BlockIndicatorF3D<T>& bulkIndicator, T _epsFraction);
+void setBouzidiZeroVelocityBoundary1(BlockLattice<T, DESCRIPTOR>& block, BlockGeometry<T,3>& blockGeometryStructure, int iX, int iY, int iZ, IndicatorF3D<T>& geometryIndicator, BlockIndicatorF3D<T>& bulkIndicator, T _epsFraction);
 
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary(BlockLatticeStructure3D<T, DESCRIPTOR>& block, BlockGeometryStructure3D<T>& blockGeometryStructure, int x, int y, int z, T distances[DESCRIPTOR::q]);
+void setBouzidiZeroVelocityBoundary(BlockLattice<T, DESCRIPTOR>& block, BlockGeometry<T,3>& blockGeometryStructure, int x, int y, int z, T distances[DESCRIPTOR::q]);
 
 template<typename T, typename DESCRIPTOR>
-void setBouzidiZeroVelocityBoundary(BlockLatticeStructure3D<T, DESCRIPTOR>& block, BlockGeometryStructure3D<T>& blockGeometryStructure, int x, int y, int z, int iPop, T dist);
+void setBouzidiZeroVelocityBoundary(BlockLattice<T, DESCRIPTOR>& block, BlockGeometry<T,3>& blockGeometryStructure, int x, int y, int z, int iPop, T dist);
 } //namespace olb
 
 

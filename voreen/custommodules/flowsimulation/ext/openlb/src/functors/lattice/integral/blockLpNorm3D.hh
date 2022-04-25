@@ -47,11 +47,11 @@ BlockLpNorm3D<T,W,P>::BlockLpNorm3D(BlockF3D<W>&          f,
 template <typename T, typename W, int P>
 bool BlockLpNorm3D<T,W,P>::operator()(W output[], const int input[])
 {
-  const auto& blockGeometry = _indicatorF.getBlockGeometryStructure();
+  const auto& blockGeometry = _indicatorF.getBlockGeometry();
   const int nX = blockGeometry.getNx();
   const int nY = blockGeometry.getNy();
   const int nZ = blockGeometry.getNz();
-  const T weight = pow(blockGeometry.getDeltaR(), 3);
+  const T weight = util::pow(blockGeometry.getDeltaR(), 3);
 
   output[0] = W(0);
   W outputTmp[_f.getTargetDim()];

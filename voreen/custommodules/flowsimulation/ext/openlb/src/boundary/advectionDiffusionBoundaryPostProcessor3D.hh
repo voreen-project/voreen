@@ -24,10 +24,8 @@
 #define ADVECTION_DIFFUSION_BOUNDARY_POST_PROCESSOR_3D_HH
 
 #include "advectionDiffusionBoundaryPostProcessor3D.h"
-#include "core/blockLattice3D.h"
 #include "core/util.h"
-#include "dynamics/lbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
+#include "dynamics/lbm.h"
 
 namespace olb {
 
@@ -56,7 +54,7 @@ ConvectionBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z
 
 template<typename T, typename DESCRIPTOR>
 void ConvectionBoundaryProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_,
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_,
                  int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
@@ -65,19 +63,22 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
          x0_, x1_, y0_, y1_, z0_, z1_,
          newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
 
+    auto& pop = blockLattice.template getField<descriptors::POPULATION>();
+
 #ifdef PARALLEL_MODE_OMP
     #pragma omp parallel for
 #endif
-    for (int iX=newX0; iX<=newX1; ++iX) {
-      for (int iY=newY0; iY<=newY1; ++iY) {
-        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
-          for (int iPop = 1; iPop < DESCRIPTOR::q ; ++iPop) {
-            if (interpolationPop[iPop] != 0) {
+    for (int iPop = 1; iPop < DESCRIPTOR::q; ++iPop) {
+      if (interpolationPop[iPop] != 0) {
+        for (int iX=newX0; iX<=newX1; ++iX) {
+          for (int iY=newY0; iY<=newY1; ++iY) {
+            for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
               const auto c = descriptors::c<DESCRIPTOR>(iPop);
               if (blockLattice.isInside(iX+c[0],iY+c[0],iZ+c[0]) && blockLattice.isInside(iX+2*c[0],iY+2*c[0],iZ+2*c[0])) {
                 //do reflection
-                blockLattice.get(iX,iY,iZ)[iPop] = 0.5 * (blockLattice.getPop(iX+c[0],iY+c[1],iZ+c[2],iPop)
-                                                          + blockLattice.getPop(iX+2*c[0],iY+2*c[1],iZ+2*c[2],iPop));
+                T v = 0.5 * (  pop[iPop][blockLattice.getCellId(iX+  c[0],iY+  c[1],iZ+  c[2])]
+                             + pop[iPop][blockLattice.getCellId(iX+2*c[0],iY+2*c[1],iZ+2*c[2])]);
+                pop[iPop][blockLattice.getCellId(iX,iY,iZ)] = v;
               }
             }
           }
@@ -89,7 +90,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void ConvectionBoundaryProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -117,7 +118,7 @@ ZeroDistributionBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_,
 
 template<typename T, typename DESCRIPTOR>
 void ZeroDistributionBoundaryProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_,
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_,
                  int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
@@ -145,7 +146,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_,
 
 template<typename T, typename DESCRIPTOR>
 void ZeroDistributionBoundaryProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -167,7 +168,7 @@ ExtFieldBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_
 
 template<typename T, typename DESCRIPTOR, typename FIELD_A, typename FIELD_B>
 void ExtFieldBoundaryProcessor3D<T,DESCRIPTOR,FIELD_A,FIELD_B>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                  int x0_, int x1_,
                  int y0_, int y1_,
                  int z0_, int z1_)
@@ -201,7 +202,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
 
 template<typename T, typename DESCRIPTOR, typename FIELD_A, typename FIELD_B>
 void ExtFieldBoundaryProcessor3D<T,DESCRIPTOR,FIELD_A,FIELD_B>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }

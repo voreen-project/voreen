@@ -60,20 +60,20 @@
 #include "io/xmlReader.h"
 #include "geometry/cuboid3D.h"
 #include "geometry/cuboidGeometry3D.h"
-#include "core/superData3D.h"
-#include "core/blockData3D.h"
+#include "core/superData.h"
+#include "core/blockData.h"
 #include "io/ostreamManager.h"
 #include "communication/loadBalancer.h"
 
 //typedef double T;
 namespace olb {
 
-template< typename T> class CuboidGeometry3D;
-//template< typename T> class Cuboid2D;
-template< typename T> class Cuboid3D;
-template< typename T> class LoadBalancer;
-template< typename T, typename BaseType> class SuperData3D;
-template< typename T, typename BaseType> class BlockData3D;
+template<typename T> class CuboidGeometry3D;
+//template<typename T> class Cuboid2D;
+template<typename T> class Cuboid3D;
+template<typename T> class LoadBalancer;
+template<typename T, typename BaseType> class SuperData3D;
+template<typename T, typename BaseType> class BlockData3D;
 
 template<typename T>
 class BaseVTIreader {
@@ -115,7 +115,7 @@ protected:
   /// Reads cuboid from piece node
   void readCuboid(Cuboid3D<T>& cuboid, XMLreader* piece);
   /// Reads from pointDataTag and fills blockData
-  bool readBlockData(BlockData3D<T,BaseType>& blockData, const XMLreader& pointDataTag,
+  bool readBlockData(BlockData<3,T,BaseType>& blockData, const XMLreader& pointDataTag,
                      const std::string dName);
 };
 
@@ -124,13 +124,13 @@ protected:
 template<typename T, typename BaseType>
 class BlockVTIreader3D : public BaseVTIreader3D<T,BaseType> {
 public:
-  BlockVTIreader3D(const std::string& fName, const std::string dName);
+  BlockVTIreader3D(const std::string& fName, const std::string& dName);
   ~BlockVTIreader3D() override {};
-  BlockData3D<T,BaseType>& getBlockData();
+  BlockData<3,T,BaseType>& getBlockData();
   Cuboid3D<T>& getCuboid();
 protected:
   Cuboid3D<T> _cuboid;
-  BlockData3D<T,BaseType> _blockData;
+  BlockData<3,T,BaseType> _blockData;
 };
 
 
@@ -139,11 +139,11 @@ class SuperVTIreader3D : public BaseVTIreader3D<T,BaseType> {
 private:
   CuboidGeometry3D<T>* _cGeometry;
   LoadBalancer<T>* _loadBalancer;
-  SuperData3D<T,BaseType>* _superData;
+  SuperData<3,T,BaseType>* _superData;
 public:
   SuperVTIreader3D(const std::string& fName, const std::string dName);
   ~SuperVTIreader3D() override;
-  SuperData3D<T,BaseType>& getSuperData();
+  SuperData<3,T,BaseType>& getSuperData();
   CuboidGeometry3D<T>& getCuboidGeometry();
   LoadBalancer<T>& getLoadBalancer();
 private:

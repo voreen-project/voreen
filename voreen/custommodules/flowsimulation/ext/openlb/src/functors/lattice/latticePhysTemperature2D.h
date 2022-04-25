@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,7 +41,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class SuperLatticePhysTemperature2D final : public SuperLatticeThermalPhysF2D<T,DESCRIPTOR,TDESCRIPTOR> {
 public:
-  SuperLatticePhysTemperature2D(SuperLattice2D<T,TDESCRIPTOR>& sLattice,
+  SuperLatticePhysTemperature2D(SuperLattice<T,TDESCRIPTOR>& sLattice,
                                 ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter);
 };
 
@@ -51,7 +49,7 @@ public:
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class BlockLatticePhysTemperature2D final : public BlockLatticeThermalPhysF2D<T,DESCRIPTOR,TDESCRIPTOR> {
 public:
-  BlockLatticePhysTemperature2D(BlockLatticeStructure2D<T,TDESCRIPTOR>& blockLattice,
+  BlockLatticePhysTemperature2D(BlockLattice<T,TDESCRIPTOR>& blockLattice,
                                 ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter);
   bool operator() (T output[], const int input[]) override;
 };

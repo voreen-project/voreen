@@ -26,5 +26,7 @@
  */
 
 #include "genericF.h"
+#include "groupedFieldF.h"
 #include "analytical/functors3D.h"
 #include "lattice/functors3D.h"
+//#include "particles/particleFunctors.h"

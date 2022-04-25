@@ -33,7 +33,7 @@ namespace olb {
 
 template<typename T, typename W> class SuperF3D;
 template<typename T> class SuperIndicatorF3D;
-template<typename T> class SuperGeometry3D;
+template<typename T, unsigned D> class SuperGeometry;
 
 /// Functor that returns the Lp norm over omega of the the euklid norm of the input functor
 /**
@@ -64,7 +64,7 @@ public:
    *                   Describes the subset to be integrated.
    **/
   SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                SuperGeometry3D<T>&,
+                SuperGeometry<T,3>&,
                 FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF);
 
   /**
@@ -73,7 +73,7 @@ public:
    * \param materials vector of material numbers to be included in the Lp norm
    **/
   SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                SuperGeometry3D<T>& geometry,
+                SuperGeometry<T,3>& geometry,
                 std::vector<int>    materials);
 
   /**
@@ -82,7 +82,7 @@ public:
    * \param material single material number to be included in the Lp norm
    **/
   SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                SuperGeometry3D<T>& geometry,
+                SuperGeometry<T,3>& geometry,
                 int                 material);
 
   bool operator() (W output[], const int input[]) override;

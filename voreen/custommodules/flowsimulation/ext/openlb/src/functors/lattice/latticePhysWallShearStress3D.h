@@ -30,16 +30,17 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
+#include "core/fieldArrayD.h"
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,11 +51,11 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysWallShearStress3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  SuperGeometry3D<T>& _superGeometry;
+  SuperGeometry<T,3>& _superGeometry;
   const int _material;
 public:
-  SuperLatticePhysWallShearStress3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                                    SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLatticePhysWallShearStress3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                    SuperGeometry<T,3>& superGeometry, const int material,
                                     const UnitConverter<T,DESCRIPTOR>& converter,
                                     IndicatorF3D<T>& indicator);
 };
@@ -63,17 +64,18 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysWallShearStress3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
-  const int _overlap;
+  BlockGeometry<T,3>& _blockGeometry;
   const int _material;
-  std::vector<int> _discreteNormal; //SL
-  std::vector<T> _normal; //SL
   T _physFactor;
-  size_t index(size_t x, size_t y, size_t z) const; //SL
+
+  struct NORMAL : public descriptors::FIELD_BASE<0,1> { };
+
+  FieldArrayD<int,DESCRIPTOR,Platform::CPU_SISD,NORMAL> _discreteNormal;
+  FieldArrayD<T,DESCRIPTOR,Platform::CPU_SISD,NORMAL> _normal;
+
 public:
-  BlockLatticePhysWallShearStress3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-                                    BlockGeometryStructure3D<T>& blockGeometry,
-                                    int overlap,
+  BlockLatticePhysWallShearStress3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                    BlockGeometry<T,3>& blockGeometry,
                                     int material,
                                     const UnitConverter<T,DESCRIPTOR>& converter,
                                     IndicatorF3D<T>& indicator);

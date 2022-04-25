@@ -26,7 +26,6 @@
 
 #include "shanChenForcedPostProcessor2D.h"
 #include "interactionPotential.h"
-#include "core/blockLattice2D.h"
 #include "core/util.h"
 #include "core/finiteDifference2D.h"
 
@@ -39,58 +38,58 @@ template<typename T, typename DESCRIPTOR>
 ShanChenForcedPostProcessor2D <T,DESCRIPTOR>::
 ShanChenForcedPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
                               std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-                              std::vector<SpatiallyExtendedObject2D*> partners_)
+                              std::vector<BlockStructureD<2>*> partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenForcedPostProcessor2D";  
+  this->getName() = "ShanChenForcedPostProcessor2D";
 }
 
 template<typename T, typename DESCRIPTOR>
 ShanChenForcedPostProcessor2D <T,DESCRIPTOR>::
 ShanChenForcedPostProcessor2D(T G_,
                               std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-                              std::vector<SpatiallyExtendedObject2D*> partners_)
+                              std::vector<BlockStructureD<2>*> partners_)
   :  x0(0), x1(0), y0(0), y1(0), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenForcedPostProcessor2D";  
+  this->getName() = "ShanChenForcedPostProcessor2D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenForcedPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+processSubDomain( BlockLattice<T,DESCRIPTOR>& blockLattice,
                   int x0_, int x1_, int y0_, int y1_ )
 {
   typedef DESCRIPTOR L;
 
-  BlockLattice2D<T,DESCRIPTOR> *partnerLattice = static_cast<BlockLattice2D<T,DESCRIPTOR> *>(partners[0]);
+  BlockLattice<T,DESCRIPTOR> *partnerLattice = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
 
   int newX0, newX1, newY0, newY1;
   if ( util::intersect ( x0, x1, y0, y1,
                          x0_, x1_, y0_, y1_,
                          newX0, newX1, newY0, newY1 ) ) {
+    auto& rhoField = blockLattice.template getField<RHO_CACHE>();
 
-    auto& rhoField = blockLattice.template getDynamicFieldArray<RHO_CACHE>();
-
-    // Compute density and velocity on every site of first lattice, and store result
-    //   in external scalars; envelope cells are included, because they are needed
-    //   to compute the interaction potential in what follows.
+    #ifdef PARALLEL_MODE_OMP
+    #pragma omp parallel for schedule(static)
+    #endif
     for (int iX=newX0-1; iX<=newX1+1; ++iX) {
       for (int iY=newY0-1; iY<=newY1+1; ++iY) {
+        // Compute density and velocity on every site of first lattice, and store result
+        //   in external scalars; envelope cells are included, because they are needed
+        //   to compute the interaction potential in what follows.
         Cell<T,DESCRIPTOR> cell = blockLattice.get(iX,iY);
         rhoField[0][cell.getCellId()] = cell.computeRho()*rho0[0];
+        // Compute density and velocity on every site of second lattice, and store result
+        //   in external scalars; envelope cells are included, because they are needed
+        //   to compute the interaction potential in what follows.
+        Cell<T,DESCRIPTOR> partnerCell = partnerLattice->get(iX,iY);
+        rhoField[1][partnerCell.getCellId()] = partnerCell.computeRho()*rho0[1];
       }
     }
 
-    // Compute density and velocity on every site of second lattice, and store result
-    //   in external scalars; envelope cells are included, because they are needed
-    //   to compute the interaction potential in what follows.
-    for (int iX=newX0-1; iX<=newX1+1; ++iX) {
-      for (int iY=newY0-1; iY<=newY1+1; ++iY) {
-        Cell<T,DESCRIPTOR> cell = partnerLattice->get(iX,iY);
-        rhoField[1][cell.getCellId()] = cell.computeRho()*rho0[1];
-      }
-    }
-
+    #ifdef PARALLEL_MODE_OMP
+    #pragma omp parallel for schedule(static)
+    #endif
     for (int iX=newX0; iX<=newX1; ++iX) {
       for (int iY=newY0; iY<=newY1; ++iY) {
         Cell<T,DESCRIPTOR> blockCell   = blockLattice.get(iX,iY);
@@ -98,18 +97,18 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
 
         {
           auto j = blockCell.template getField<descriptors::VELOCITY>();
-          lbHelpers<T,DESCRIPTOR>::computeJ(blockCell,j.data());
+          lbm<DESCRIPTOR>::computeJ(blockCell,j);
           blockCell.template setField<descriptors::VELOCITY>(j);
         }
 
         {
           auto j = partnerCell.template getField<descriptors::VELOCITY>();
-          lbHelpers<T,DESCRIPTOR>::computeJ(partnerCell,j.data());
+          lbm<DESCRIPTOR>::computeJ(partnerCell,j);
           partnerCell.template setField<descriptors::VELOCITY>(j);
         }
 
-        T blockOmega   = blockLattice.getDynamics(iX, iY)->getOmega();
-        T partnerOmega = partnerLattice->getDynamics(iX, iY)->getOmega();
+        T blockOmega   = blockCell.getDynamics()->getParameters(blockLattice).template getOrFallback<descriptors::OMEGA>(0);
+        T partnerOmega = partnerCell.getDynamics()->getParameters(*partnerLattice).template getOrFallback<descriptors::OMEGA>(0);
         // Computation of the common velocity, shared among the two populations
         T rhoTot = rhoField[0][blockCell.getCellId()]*blockOmega +
                    rhoField[1][blockCell.getCellId()]*partnerOmega;
@@ -146,9 +145,9 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
         blockCell.template setField<descriptors::VELOCITY>(uTot);
         partnerCell.template setField<descriptors::VELOCITY>(uTot);
         blockCell.template setField<descriptors::FORCE>(externalBlockForce
-          - G*rhoPartnerContribution/rhoField[0][blockCell.getCellId()]);
+            - G*rhoPartnerContribution/rhoField[0][blockCell.getCellId()]);
         partnerCell.template setField<descriptors::FORCE>(externalPartnerForce
-          - G*rhoBlockContribution/rhoField[1][blockCell.getCellId()]);
+            - G*rhoBlockContribution/rhoField[1][blockCell.getCellId()]);
       }
     }
   }
@@ -156,7 +155,7 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenForcedPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -178,7 +177,7 @@ ShanChenForcedGenerator2D<T,DESCRIPTOR>::ShanChenForcedGenerator2D (
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor2D<T,DESCRIPTOR>* ShanChenForcedGenerator2D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject2D*> partners) const
+  std::vector<BlockStructureD<2>*> partners) const
 {
   return new ShanChenForcedPostProcessor2D<T,DESCRIPTOR>(
            this->x0,this->x1,this->y0,this->y1,G, rho0, interactionPotential, partners);

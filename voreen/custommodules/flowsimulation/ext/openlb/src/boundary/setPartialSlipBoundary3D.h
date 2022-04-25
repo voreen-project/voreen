@@ -21,9 +21,9 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Partial Slip Boundary
-///This is an onLattice boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Partial Slip Boundary
+//This is an onLattice boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_PARTIAL_SLIP_BOUNDARY_H
 #define SET_PARTIAL_SLIP_BOUNDARY_H
 
@@ -31,36 +31,34 @@
 #include <vector>
 #include "utilities/functorPtr.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
-#include "core/superLattice3D.h"
+
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "dynamics/dynamics.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
-#include "momentaOnBoundaries3D.h"
 #include "io/ostreamManager.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
 #include "dynamics/freeEnergyDynamics.h"
 #include "boundaryPostProcessors3D.h"
+#include "setBoundary3D.h"
 
 
 namespace olb {
 
-////////// SuperLattice Domain  /////////////////////////////////////////
+///Initialising the PartialSlipBoundary function on the superLattice domain
+template<typename T, typename DESCRIPTOR>
+void setPartialSlipBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, T tuner, SuperGeometry<T,3>& superGeometry, int material);
 
 ///Initialising the PartialSlipBoundary function on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setPartialSlipBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, T tuner, SuperGeometry3D<T>& superGeometry, int material);
+void setPartialSlipBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, T tuner, FunctorPtr<SuperIndicatorF3D<T>>&& indicator);
 
-///Initialising the PartialSlipBoundary function on the superLattice domain
+
+///Set Partial Slip Boundary for any indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR>
-void setPartialSlipBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, T tuner, FunctorPtr<SuperIndicatorF3D<T>>&& indicator);
+void setPartialSlipBoundary(BlockLattice<T,DESCRIPTOR>& block,T tuner, BlockIndicatorF3D<T>& indicator, bool includeOuterCells=false);
 
-////////// BlockLattice Domain  /////////////////////////////////////////
-
-/// Set PartialSlip boundary for any indicated cells inside the block domain
-template<typename T, typename DESCRIPTOR>
-void setPartialSlipBoundary(BlockLatticeStructure3D<T,DESCRIPTOR>& block,T tuner, BlockIndicatorF3D<T>& indicator, bool includeOuterCells=false);
 }//namespace olb
 
 

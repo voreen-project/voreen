@@ -25,27 +25,25 @@
 #define LATTICE_PHYS_PERMEABILITY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysPermeability2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticePhysPermeability2D<T,DESCRIPTOR>::SuperLatticePhysPermeability2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
   const int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 1),
     _superGeometry(superGeometry), _material(material)
@@ -55,7 +53,7 @@ SuperLatticePhysPermeability2D<T,DESCRIPTOR>::SuperLatticePhysPermeability2D(
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back( new BlockLatticePhysPermeability2D<T,DESCRIPTOR>(
-                                  this->_sLattice.getBlockLattice(iC),
+                                  this->_sLattice.getBlock(iC),
                                   this->_superGeometry.getBlockGeometry(iC),
                                   _material,
                                   this->getConverter() ) );
@@ -72,8 +70,7 @@ bool SuperLatticePhysPermeability2D<T,DESCRIPTOR>::operator()(
   ////  int lociz= input[3];
 
   //  T* value = new T[1];
-  //  int overlap = this->sLattice.getOverlap();
-  //  this->sLattice.getExtendedBlockLattice(this->sLattice.getLoadBalancer().loc(globIC)).get(locix+overlap, lociy+overlap/*, lociz+overlap*/).computeField(0,1,value);
+  //  this->sLattice.getBlock(this->sLattice.getLoadBalancer().loc(globIC)).get(locix, lociy/*, lociz*/).computeField(0,1,value);
   //  std::vector<T> result(1,this->converter.physPermeability(value[0]));
   //  delete value;
   //  if (!(result[0]<42)&&!(result[0]>42)&&!(result[0]==42)) result[0] = 999999;
@@ -84,7 +81,7 @@ bool SuperLatticePhysPermeability2D<T,DESCRIPTOR>::operator()(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysPermeability2D<T,DESCRIPTOR>::BlockLatticePhysPermeability2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, BlockGeometryStructure2D<T>& blockGeometry,
+(BlockLattice<T,DESCRIPTOR>& blockLattice, BlockGeometry<T,2>& blockGeometry,
  int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice,converter,1), _blockGeometry(blockGeometry), _material(material)
 {

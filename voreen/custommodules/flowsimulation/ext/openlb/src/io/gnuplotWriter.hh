@@ -36,21 +36,31 @@ namespace olb {
 /// Constructor with name of outputFiles
 /// boolean true for real-time plotting //WARNING: experimental!
 template< typename T >
-Gnuplot<T>::Gnuplot(std::string name, bool liveplot, std::string preCommand)
+Gnuplot<T>::Gnuplot(std::string name, bool liveplot, std::string preCommand, AxisType axisType, Regression regressionType) 
   : _name(name),
+    _liveplot(liveplot),
     _dataFile(singleton::directories().getGnuplotOutDir()+"data/"+_name+".dat"),
     _dir(singleton::directories().getGnuplotOutDir()),
-    _preCommand(preCommand)
-{
-  _liveplot = liveplot;
-  if (singleton::mpi().getRank() == _rank) {
-    std::ofstream fout;
+    _preCommand(preCommand),
+    _axisType(axisType),
+    _regressionType(regressionType),
+    csvWriter(name)
+{ }
 
-    ///add (new) data file
-    fout.open(_dataFile.c_str(), std::ios::trunc);
-    fout.close();
-  }
-}
+/// overload the constructor using delegating constructors. 
+/// This has the advantage that there is no necessity for default values which might cause some trouble
+template <typename T>
+Gnuplot<T>::Gnuplot(std::string name) : Gnuplot(name, false, "", LINEAR, OFF) {}
+
+template< typename T >
+Gnuplot<T>::Gnuplot(std::string name, bool liveplot) : Gnuplot(name, liveplot,"", LINEAR, OFF) {}
+
+template <typename T>
+Gnuplot<T>::Gnuplot(std::string name, AxisType axisType) : Gnuplot(name, false, "", axisType, OFF) {}
+
+template< typename T >
+Gnuplot<T>::Gnuplot(std::string name, AxisType axisType, Regression regressionType) : Gnuplot(name, false,"", axisType, regressionType) {}
+
 
 /// writes the data and plot file for two doubles (x and y)
 /// plotType indicates whether you want a linegraph 'l' (default) or a scatterplot 'p' (default: 'l')
@@ -67,7 +77,7 @@ void Gnuplot<T>::setData(T xValue, T yValue, std::string name, std::string key, 
       writePlotFile("plot");
     }
   }
-  writeDataFile(xValue, yValue);
+  csvWriter.writeDataFile(xValue, yValue);
 
   if (_liveplot && _init) {
     startGnuplot("plot");
@@ -112,7 +122,7 @@ void Gnuplot<T>::setData(T xValue, std::vector<T> yValues, std::vector<std::stri
       writePlotFile("plot");
     }
   }
-  writeDataFile(xValue,yValues);
+  csvWriter.writeDataFile(xValue,yValues);
 
   if (_liveplot && _init) {
     startGnuplot("plot");
@@ -121,6 +131,57 @@ void Gnuplot<T>::setData(T xValue, std::vector<T> yValues, std::vector<std::stri
   _init = false;
   return;
 }
+
+/// create lin Regression to the given Datasets in the given scaling, e.g. loglog, logloginverted, linear,....
+/// The kind of scaling is provided by the parameters xAxisType and yAxisType
+template<typename T>
+void Gnuplot<T>::linRegression(std::ofstream& fout, std::string xAxisType, std::string yAxisType)
+{ 
+  fout << "set fit quiet\n";
+
+  for (unsigned int i = 0; i < _dataSize; ++i) {
+    fout << "f" << i+1 << "(x) = m" << i+1 << " * x + b"<< i+1 << "\n"; //Match f2 to the dataset 1:3 with f2(x) = m2 * x + b2 and so on
+    fout << "fit f" << i+1 << "(x) path using ("<< xAxisType << "$1)):(" << yAxisType << "$" << i+2 << ")) via m" << i+1 << ", b" << i+1 <<"\n";
+  }
+  fout << "\n";
+
+  ///plotting the data and for each set 1:2 / 1:3,... the lin regression is plotted
+  ///IMPORTANT the word "plot" must be included in every kind of regression used in the context auf the plotting
+  fout << "plot ";
+  for (unsigned int i = 0; i < _dataSize; ++i) {
+    fout << "f"<< i+1 <<"(x) title sprintf('regr " << _names[i] << ", gradient = %.3f', m" << i+1 << ") lc " << i+1 << " axis x1y1,";
+  }
+
+  return;
+}
+
+/// scales the axes if necessary
+/// to add new kinds of scaling, just add another case, the labels for the x and y axes will be expanded by the kind of scaling (if it's other than linear)
+/// this labeling provides a labeling of the axes even if the function setLabel isn't specifically called 
+template<typename T>
+void Gnuplot<T>::scaleAxes(std::ofstream& fout)
+{
+  switch (_axisType)
+  {
+    case (LOGLOG): ///Difference between LOGLOG and LOGLOGINVERTED is just 1/N in the x-axes
+    case(LOGLOGINVERTED):
+    {
+      fout << "set xtics nomirror" << "\n";
+      fout << "set ytics nomirror" << "\n";
+
+      fout << "set format y '10^{%.2f}'" << "\n"; ///this command will change the tics-labels, the {%.2f} is replaced by the original tic-label using two
+      fout << "set format x '10^{%.2f}'" << "\n"; ///digits after the comma
+    } break;
+
+    case LINEAR:
+    default:
+    {} break;
+  }
+  
+  fout << "\n";
+  return;
+}
+
 
 /// writes the data and plot file for a double and a vector of doubles (x and y1,y2,...), where x is increasing integer
 template< typename T >
@@ -164,6 +225,7 @@ void Gnuplot<T>::writePNG(int iT, double xRange, std::string plotName)
   return;
 }
 
+/// This function is kind of the "heart" of the data analysis as it writes the gnuplot file that will be executed
 /// plotName specifies the name of the plot in case the user wants to create more than
 /// one plot with the simulation results (default: plotName = "")
 template< typename T >
@@ -175,11 +237,14 @@ void Gnuplot<T>::writePlotFile(std::string type, std::string plotName)
     std::string plotFile;
     if (_liveplot && type == "plot") {
       plotFile = singleton::directories().getGnuplotOutDir()+"data/plot.p";
-    } else if (type == "pdf") {
+    }
+    else if (type == "pdf") {
       plotFile = singleton::directories().getGnuplotOutDir()+"data/plotPDF"+plotName+".p";
-    } else if (type == "png") {
+    }
+    else if (type == "png") {
       plotFile = singleton::directories().getGnuplotOutDir()+"data/plotPNG"+plotName+".p";
-    } else {
+    }
+    else {
       std::cout << "WARNING: invalid Gnuplot type={'', 'plot'; 'pdf', 'png'}" << std::endl;
       exit(-1);
     }
@@ -202,92 +267,93 @@ void Gnuplot<T>::writePlotFile(std::string type, std::string plotName)
       }
       fout <<".png'" << "\n";
     }
-    /// set the x and y label of the Plot
-    fout << "set xlabel '" << _xLabel << "'" << "\n";
-    fout << "set ylabel '" << _yLabel << "'" << "\n";
-
+    
     /// set precommands
     fout << _preCommand << "\n";
 
-    /// vector which holds the information about the plotType
-    /// (e.g. scatterplot 'p' or lineplot 'l': default {'l','l'})
-    fout << "plot '"<<_dataFile<<"' u 1:2 w " << _plotTypes[0] << " t '"<< _names[0] << "'";
-    for (unsigned int i = 0; i < _dataSize-1; ++i) {
-      fout << ", '"<<_dataFile<<"' u 1:" << i+3 << " w " << _plotTypes[i+1] << " t '" << _names[i+1] << "'";
+    
+    /// Scaling the axes if necessary
+    scaleAxes(fout); 
+    
+    /// Labelling the axes
+
+    fout << "set xlabel '" << _xLabel << "'" << "\n";
+    fout << "set ylabel '" << _yLabel << "'" << "\n";
+
+
+
+    /// These variables will be placed directly in the plot-command
+    std::string xAxisType; /// Variable to decide how the data should be used and is scaled (e.g. log10(data), ...)
+    std::string yAxisType; /// Differentiation between x and y axis is necessary to implement e.g. log10(1/$1) instead of log10($1)
+
+    switch (_axisType)
+    {
+      case LOGLOG:
+      {
+        xAxisType = "log10(";
+        yAxisType = "log10(";
+      } break;
+
+      case LOGLOGINVERTED:
+      {
+        xAxisType = "log10(1/";
+        yAxisType = "log10(";
+      } break;
+
+      case LINEAR:
+      default:
+      {
+        xAxisType = "(";
+        yAxisType = "(";
+      }
     }
+
+    fout << "path = '" << _dir << "data/"<<_name << ".dat'" << "\n"; /// Path to the data, saves a lot of code in the gnuplot file and within this file
+
+    
+
+    /// The necessary statements for a regression will be added if needed
+    /// IMPORTANT for later additions: the word "plot" needs to be included in every case separatly, see e.g. linRegression
+    /// One must also add the buzzword (like LINREG, OFF) in the enum declaration in gnuplotWriter.h
+
+    /// there might occur the error notification "not data to fit" while the compiler is running which doesn't directly indicate whether
+    /// the plot/regression was succesfull or not
+    switch (_regressionType)
+    {
+      case LINREG:
+      {  /// LINear REGression of the datasets
+        linRegression(fout, xAxisType, yAxisType);  /// Create the lin Regression of the datasets, includes the plotting of the regression AND the data
+      } break;
+      
+      case OFF: /// No Regression, just plot the data, OFF same as default
+      default:
+      {
+        fout << "plot ";
+      } break;
+
+    }
+    /// vector which holds the information about the plotType
+    /// (e.g. scatterplot 'p' or lineplot 'l': default {'l','l'}) 
+
+    /// plotting the data and for each set 1:2 / 1:3,... 
+
+    unsigned int i = 0;
+    for ( ; i < _dataSize - 1; ++i) {
+      fout << "path u (" << xAxisType << "$1)):(" << yAxisType << "$" << i+2 << ")) w " << _plotTypes[i] << " t '" << _names[i] << "' lc " << i+1 << " axis x1y1,";
+    }
+    fout << "path u (" << xAxisType << "$1)):(" << yAxisType << "$" << i+2 << ")) w " << _plotTypes[i] << " t '" << _names[i] << "' lc " << i+1 << " axis x1y1";
+
     fout << "\n";
     if (_liveplot && type=="plot") {
       fout << "pause -1" << "\n"
-           << "reread" << "\n";
+          << "reread" << "\n";
     }
     fout.close();
+
+    
   }
   return;
 }
-
-
-/// writes the data file for two doubles (x and y)
-template< typename T >
-void Gnuplot<T>::writeDataFile(T xValue, T yValue)
-{
-  if (singleton::mpi().getRank() == _rank) {
-    std::ofstream fout;
-    fout.precision(6);
-    fout.open(_dataFile.c_str(), std::ios::app);
-    fout << xValue
-         << " "
-         << yValue
-         << std::endl;
-    fout.close();
-  }
-  return;
-}
-
-
-/// writes the data file for two doubles
-/// (higher precision and respects changes in /tmp structure)
-template< typename T >
-void Gnuplot<T>::datFileOut(T xValue, T yValue, std::string plotNameFile)
-{
-  if (singleton::mpi().getRank() == _rank) {
-    std::ofstream fout;
-    std::string DATAF;
-    DATAF = singleton::directories().getGnuplotOutDir()+"data/"+plotNameFile+".dat";
-    fout.precision(16);        // this better...
-    fout.open(DATAF.c_str(), std::ios::app);
-    fout << xValue
-         << " "
-         << yValue
-         << std::endl;
-    fout.close();
-  }
-  return;
-}
-
-
-/// writes the data file for one double and a vector of doubles
-/// (higher precision and respects changes in /tmp structure)
-template< typename T >
-void Gnuplot<T>::datFileOut(T xValue, std::vector<T> yValues, std::string plotNameFile)
-{
-  if (singleton::mpi().getRank() == _rank) {
-    std::ofstream fout;
-    std::string DATAF;
-    DATAF = singleton::directories().getGnuplotOutDir()+"data/"+plotNameFile+".dat";
-    fout.precision(16);        // this better...
-    fout.open(DATAF.c_str(), std::ios::app);
-    fout << xValue;
-    for (unsigned int i = 0; i < yValues.size(); i++) {
-      fout << " " << yValues[i];
-    }
-    fout << "\n";
-    fout.close();
-  }
-  return;
-}
-
-
-
 
 
 /// set Label of the gnuplotPlot; xLabel and yLabel
@@ -296,25 +362,6 @@ void Gnuplot<T>::setLabel(std::string xLabel, std::string yLabel)
 {
   _xLabel = xLabel;
   _yLabel = yLabel;
-}
-
-
-/// writes the data file for one double and a vector of doubles (x and y1,y2,...)
-template< typename T >
-void Gnuplot<T>::writeDataFile(T xValue, std::vector<T> yValues)
-{
-  if (singleton::mpi().getRank() == _rank) {
-    std::ofstream fout;
-    fout.precision(6);
-    fout.open(_dataFile.c_str(), std::ios::app);
-    fout << xValue;
-    for (unsigned int i = 0; i < yValues.size(); i++) {
-      fout << " " << yValues[i];
-    }
-    fout << "\n";
-    fout.close();
-  }
-  return;
 }
 
 

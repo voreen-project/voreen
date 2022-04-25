@@ -28,7 +28,7 @@
 #include "blockLpNorm3D.h"
 #include "functors/lattice/superBaseF3D.h"
 #include "functors/lattice/indicator/superIndicatorF3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "latticeIntegralCommon.h"
 #include "utilities/functorPtr.hh"
 
@@ -61,7 +61,7 @@ SuperLpNorm3D<T,W,P>::SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W, int P>
 SuperLpNorm3D<T,W,P>::SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&&        f,
-                                    SuperGeometry3D<T>&                geometry,
+                                    SuperGeometry<T,3>&                geometry,
                                     FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF)
   : SuperLpNorm3D(std::forward<decltype(f)>(f),
                   std::forward<decltype(indicatorF)>(indicatorF))
@@ -69,7 +69,7 @@ SuperLpNorm3D<T,W,P>::SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W, int P>
 SuperLpNorm3D<T,W,P>::SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                                    SuperGeometry3D<T>&         geometry,
+                                    SuperGeometry<T,3>&         geometry,
                                     std::vector<int>            materials)
   : SuperLpNorm3D(std::forward<decltype(f)>(f),
                   geometry.getMaterialIndicator(std::move(materials)))
@@ -77,7 +77,7 @@ SuperLpNorm3D<T,W,P>::SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&& f,
 
 template <typename T, typename W, int P>
 SuperLpNorm3D<T,W,P>::SuperLpNorm3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                                    SuperGeometry3D<T>&         geometry,
+                                    SuperGeometry<T,3>&         geometry,
                                     int                         material)
   : SuperLpNorm3D(std::forward<decltype(f)>(f),
                   geometry.getMaterialIndicator(material))
@@ -100,7 +100,7 @@ bool SuperLpNorm3D<T,W,P>::operator() (W output[], const int input[])
     const int nX = cuboid.getNx();
     const int nY = cuboid.getNy();
     const int nZ = cuboid.getNz();
-    const T weight = pow(cuboid.getDeltaR(), 3);
+    const T weight = util::pow(cuboid.getDeltaR(), 3);
 
     inputTmp[0] = load.glob(iC);
 

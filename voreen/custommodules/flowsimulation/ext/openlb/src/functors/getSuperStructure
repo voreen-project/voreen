@@ -1,0 +1,277 @@
+analytical/analyticCalcF.hh:  : AnalyticalF<D,T,S>(f->getTargetDim()),
+analytical/analyticCalcF.hh:  OLB_ASSERT(g->getTargetDim() == f->getTargetDim(),
+analytical/analyticCalcF.hh:  std::swap(f->_ptrCalcC, this->_ptrCalcC);
+analytical/analyticCalcF.hh:  this->getName() = "(" + _f->getName() + F<T>::symbol + _g->getName() + ")";
+analytical/analyticCalcF.hh:        new AnalyticalConst<D,T,S>(std::vector<T>(f->getTargetDim(), scalar))))
+analytical/analyticCalcF.hh:  for (int i = 0; i < this->_f->getTargetDim(); ++i) {
+analytical/indicator/indicCalc2D.hh:    this->_myMin[i] = std::min(_f->getMin()[i], _g->getMin()[i]);
+analytical/indicator/indicCalc2D.hh:    this->_myMax[i] = std::max(_f->getMax()[i], _g->getMax()[i]);
+analytical/indicator/indicCalc2D.hh:  _f->operator()(outputF, input);
+analytical/indicator/indicCalc3D.hh:    this->_myMin[i] = std::min(_f->getMin()[i], _g->getMin()[i]);
+analytical/indicator/indicCalc3D.hh:    this->_myMax[i] = std::max(_f->getMax()[i], _g->getMax()[i]);
+analytical/indicator/indicCalc3D.hh:  _f->operator()(outputF, input);
+analytical/indicator/indicatorBaseF2D.hh:  this->_myMin = _f->getMin();
+analytical/indicator/indicatorBaseF2D.hh:  this->_myMax = _f->getMax();
+analytical/indicator/indicatorBaseF3D.hh:  this->_myMin = _f->getMin();
+analytical/indicator/indicatorBaseF3D.hh:  this->_myMax = _f->getMax();
+lattice/blockReduction2D1D.hh:    for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction2D1D.hh:    T output[_f->getTargetDim()];
+lattice/blockReduction2D1D.hh:      for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction2D1D.hh:  CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction2D1D.hh:    for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction2D1D.hh:    T output[_f->getTargetDim()];
+lattice/blockReduction2D1D.hh:      for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction2D1D.hh:    BlockDataF2D<T,T>(1, 1, f->getTargetDim()),
+lattice/blockReduction2D1D.hh:    _blockDataMemory(new BlockData<2,T,T>(lattice.getN(), 1, f->getTargetDim())),
+lattice/blockReduction2D1D.hh:  this->getName() = "lineReduction(" + _f->getName() + ")";
+lattice/blockReduction2D1D.hh:    const CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction2D1D.hh:      HyperplaneLattice2D<T>(f->getSuperStructure().getCuboidGeometry(),
+lattice/blockReduction2D1D.hh:      HyperplaneLattice2D<T>(f->getSuperStructure().getCuboidGeometry(),
+lattice/blockReduction2D1D.hh:  const CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction2D1D.hh:  LoadBalancer<T>&           load     = _f->getSuperStructure().getLoadBalancer();
+lattice/blockReduction2D1D.hh:  _f->getSuperStructure().communicate();
+lattice/blockReduction2D1D.hh:  BlockData<2,T,T> localBlockData(this->getN(), 1, _f->getTargetDim());
+lattice/blockReduction2D2D.hh:    _blockDataMemory.reset(new BlockData<2,T,T>(_nx, _ny, _f->getTargetDim()));
+lattice/blockReduction2D2D.hh:  : BlockDataF2D<T,T>(1, 1, f->getTargetDim()),
+lattice/blockReduction2D2D.hh:    _origin(_f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getOrigin()),
+lattice/blockReduction2D2D.hh:    _h(_f->getSuperStructure().getCuboidGeometry().getMinDeltaR()),
+lattice/blockReduction2D2D.hh:    _nx(_f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getNx()),
+lattice/blockReduction2D2D.hh:    _ny(_f->getSuperStructure().getCuboidGeometry().getMotherCuboid().getNy()),
+lattice/blockReduction2D2D.hh:    _blockDataMemory(new BlockData<2,T,T>(_nx, _ny, _f->getTargetDim())),
+lattice/blockReduction2D2D.hh:  this->getName() = "planeReduction(" + _f->getName() + ")";
+lattice/blockReduction2D2D.hh:  const CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction2D2D.hh:  LoadBalancer<T>&           load     = _f->getSuperStructure().getLoadBalancer();
+lattice/blockReduction2D2D.hh:  _f->getSuperStructure().communicate();
+lattice/blockReduction2D2D.hh:    for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction2D2D.hh:    T output[_f->getTargetDim()];
+lattice/blockReduction2D2D.hh:      for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction3D2D.hh:    for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction3D2D.hh:    T output[_f->getTargetDim()];
+lattice/blockReduction3D2D.hh:      for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction3D2D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction3D2D.hh:    for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction3D2D.hh:    T output[_f->getTargetDim()];
+lattice/blockReduction3D2D.hh:      for ( int iSize = 0; iSize < _f->getTargetDim(); ++iSize ) {
+lattice/blockReduction3D2D.hh:    BlockDataF2D<T,T>(1, 1, f->getTargetDim()),
+lattice/blockReduction3D2D.hh:                                          f->getTargetDim())),
+lattice/blockReduction3D2D.hh:  this->getName() = "planeReduction(" + _f->getName() + ")";
+lattice/blockReduction3D2D.hh:    const CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction3D2D.hh:      HyperplaneLattice3D<T>(f->getSuperStructure().getCuboidGeometry(),
+lattice/blockReduction3D2D.hh:      HyperplaneLattice3D<T>(f->getSuperStructure().getCuboidGeometry(),
+lattice/blockReduction3D2D.hh:      .centeredIn(f->getSuperStructure().getCuboidGeometry().getMotherCuboid())
+lattice/blockReduction3D2D.hh:  const CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/blockReduction3D2D.hh:  LoadBalancer<T>&           load     = _f->getSuperStructure().getLoadBalancer();
+lattice/blockReduction3D2D.hh:  _f->getSuperStructure().communicate();
+lattice/blockReduction3D2D.hh:  BlockData<2,T,T> localBlockData(this->getNx(), this->getNy(), _f->getTargetDim());
+lattice/integral/superIntegralF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()+1),
+lattice/integral/superIntegralF3D.hh:  this->getName() = "Sum("+_f->getName()+")";
+lattice/integral/superIntegralF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superIntegralF3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/integral/superIntegralF3D.hh:        new BlockSum3D<T,W>(_f->getBlockF(iC),
+lattice/integral/superIntegralF3D.hh:  _f->getSuperStructure().communicate();
+lattice/integral/superIntegralF3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/integral/superIntegralF3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superIntegralF3D.hh:    W outputTmp[_f->getTargetDim()];
+lattice/integral/superIntegralF3D.hh:    int inputTmp[_f->getSourceDim()];
+lattice/integral/superIntegralF3D.hh:              for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/integral/superIntegralF3D.hh:    output[_f->getTargetDim()] = voxels;
+lattice/integral/superIntegralF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/integral/superIntegralF3D.hh:  this->getName() = "Integral("+_f->getName()+")";
+lattice/integral/superIntegralF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superIntegralF3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/integral/superIntegralF3D.hh:        new BlockIntegral3D<T,W>(_f->getBlockF(iC),
+lattice/integral/superIntegralF3D.hh:  _f->getSuperStructure().communicate();
+lattice/integral/superIntegralF3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/integral/superIntegralF3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superIntegralF3D.hh:    W outputTmp[_f->getTargetDim()];
+lattice/integral/superIntegralF3D.hh:    int inputTmp[_f->getSourceDim()];
+lattice/integral/superLpNorm2D.hh:  : SuperF2D<T,W>(f->getSuperStructure(),1),
+lattice/integral/superLpNorm2D.hh:  OLB_ASSERT(_f->getSourceDim() == _indicatorF->getSourceDim(),
+lattice/integral/superLpNorm2D.hh:  this->getName() = "L" + std::to_string(P) + "Norm(" + _f->getName() + ")";
+lattice/integral/superLpNorm2D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superLpNorm2D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/integral/superLpNorm2D.hh:        new BlockLpNorm2D<T,W,P>(_f->getBlockF(iC),
+lattice/integral/superLpNorm2D.hh:  _f->getSuperStructure().communicate();
+lattice/integral/superLpNorm2D.hh:  CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/integral/superLpNorm2D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superLpNorm2D.hh:  W   outputTmp[_f->getTargetDim()];
+lattice/integral/superLpNorm2D.hh:          for (int iDim = 0; iDim < _f->getTargetDim(); ++iDim) {
+lattice/integral/superLpNorm3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(),1),
+lattice/integral/superLpNorm3D.hh:  OLB_ASSERT(_f->getSourceDim() == _indicatorF->getSourceDim(),
+lattice/integral/superLpNorm3D.hh:  this->getName() = "L" + std::to_string(P) + "Norm(" + _f->getName() + ")";
+lattice/integral/superLpNorm3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superLpNorm3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/integral/superLpNorm3D.hh:        new BlockLpNorm3D<T,W,P>(_f->getBlockF(iC),
+lattice/integral/superLpNorm3D.hh:  _f->getSuperStructure().communicate();
+lattice/integral/superLpNorm3D.hh:  CuboidGeometry3D<T>& cGeometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/integral/superLpNorm3D.hh:  LoadBalancer<T>&     load      = _f->getSuperStructure().getLoadBalancer();
+lattice/integral/superLpNorm3D.hh:  W outputTmp[_f->getTargetDim()];
+lattice/integral/superLpNorm3D.hh:  int inputTmp[_f->getSourceDim()];
+lattice/integral/superLpNorm3D.hh:            for (int iDim = 0; iDim < _f->getTargetDim(); ++iDim) {
+lattice/integral/superPlaneIntegralF2D.hh:  : SuperF2D<T>(f->getSuperStructure(), 2 + f->getTargetDim()),
+lattice/integral/superPlaneIntegralF3D.hh:  : SuperF3D<T>(f->getSuperStructure(), 2 + f->getTargetDim()),
+lattice/reductionF2D.hh:  : SuperLatticeF2D<T, DESCRIPTOR>(sLattice, f->getTargetDim()),
+lattice/reductionF2D.hh:  this->getName() = "fromAnalyticalF(" + _f->getName() + ")";
+lattice/reductionF3D.hh:  : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, f->getTargetDim()),
+lattice/reductionF3D.hh:  this->getName() = "fromAnalyticalF(" + _f->getName() + ")";
+lattice/superAverage2D.hh:  : SuperF2D<T,W>(f->getSuperStructure(), f->getTargetDim()+1),
+lattice/superAverage2D.hh:  this->getName() = "Average("+_f->getName()+")";
+lattice/superAverage2D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superAverage2D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superAverage2D.hh:        new BlockAverage2D<T,W>(_f->getBlockF(iC),
+lattice/superAverage2D.hh:  _f->getSuperStructure().communicate();
+lattice/superAverage2D.hh:  CuboidGeometry2D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/superAverage2D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/superAverage2D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage2D.hh:  W outputTmp[_f->getTargetDim()];
+lattice/superAverage2D.hh:  int inputTmp[_f->getSourceDim()];
+lattice/superAverage2D.hh:            for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage2D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage2D.hh:  output[_f->getTargetDim()] = voxels;
+lattice/superAverage2D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage2D.hh:    output[i] /= output[_f->getTargetDim()];
+lattice/superAverage3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()+1),
+lattice/superAverage3D.hh:  this->getName() = "Average("+_f->getName()+")";
+lattice/superAverage3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superAverage3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superAverage3D.hh:        new BlockAverage3D<T,W>(_f->getBlockF(iC),
+lattice/superAverage3D.hh:  _f->getSuperStructure().communicate();
+lattice/superAverage3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/superAverage3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/superAverage3D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage3D.hh:  W outputTmp[_f->getTargetDim()];
+lattice/superAverage3D.hh:  int inputTmp[_f->getSourceDim()];
+lattice/superAverage3D.hh:            for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage3D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage3D.hh:  output[_f->getTargetDim()] = voxels;
+lattice/superAverage3D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superAverage3D.hh:    output[i] /= output[_f->getTargetDim()];
+lattice/superBaseF2D.hh:  : SuperF2D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superBaseF2D.hh:  this->getName() = "Id(" + _f->getName() + ")";
+lattice/superBaseF2D.hh:  for (int iC = 0; iC < _f->getBlockFSize(); ++iC) {
+lattice/superBaseF2D.hh:      new BlockIdentity2D<W>(_f->getBlockF(iC)));
+lattice/superBaseF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superBaseF3D.hh:  this->getName() = "Id(" + _f->getName() + ")";
+lattice/superBaseF3D.hh:  for (int iC = 0; iC < _f->getBlockFSize(); ++iC) {
+lattice/superBaseF3D.hh:      new BlockIdentity3D<W>(_f->getBlockF(iC)));
+lattice/superBaseF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), 1),
+lattice/superBaseF3D.hh:  this->getName() = _f->getName();
+lattice/superBaseF3D.hh:  for (int iC = 0; iC < _f->getBlockFSize(); ++iC) {
+lattice/superBaseF3D.hh:      new BlockExtractComponentF3D<W>(_f->getBlockF(iC), extractDim));
+lattice/superBaseF3D.hh:  std::vector<T> outTmp(_f->getTargetDim(), T{});
+lattice/superBaseF3D.hh:  this->getName() = f->getName();
+lattice/superBaseF3D.hh:  for (int iC = 0; iC < f->getBlockFSize(); ++iC) {
+lattice/superBaseF3D.hh:        f->getBlockF(iC), extractDim,
+lattice/superBaseF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superBaseF3D.hh:  this->getName() = _f->getName();
+lattice/superBaseF3D.hh:  for (int iC = 0; iC < f->getBlockFSize(); ++iC) {
+lattice/superBaseF3D.hh:        f->getBlockF(iC),
+lattice/superBaseF3D.hh:  : SuperLatticeF3D<T,DESCRIPTOR>(f->getSuperLattice(), f->getTargetDim()),
+lattice/superBaseF3D.hh:  this->getName() = "Id(" + _f->getName() + ")";
+lattice/superBaseF3D.hh:  for (int iC = 0; iC < _f->getBlockFSize(); ++iC) {
+lattice/superBaseF3D.hh:        static_cast<BlockLatticeF3D<T,DESCRIPTOR>&>(_f->getBlockF(iC))));
+lattice/superCalcF2D.hh:      f->getSuperStructure(),
+lattice/superCalcF2D.hh:      f->getTargetDim() > g->getTargetDim() ? f->getTargetDim() : g->getTargetDim()),
+lattice/superCalcF2D.hh:    _f->getTargetDim() == _g->getTargetDim() || _f->getTargetDim() == 1 || _g->getTargetDim() == 1,
+lattice/superCalcF2D.hh:  this->getName() = "(" + _f->getName() + F<T>::symbol + _g->getName() + ")";
+lattice/superCalcF2D.hh:  std::swap(_f->_ptrCalcC, this->_ptrCalcC);
+lattice/superCalcF2D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superCalcF2D.hh:  if ( _f->getBlockFSize() == load.size() ) {
+lattice/superCalcF2D.hh:          new BlockCalcF2D<W,F>(_f->getBlockF(iC), _g->getBlockF(iC))
+lattice/superCalcF2D.hh:          new BlockCalcF2D<W,F>(_f->getBlockF(iC), *g, load.glob(iC))
+lattice/superCalcF2D.hh:      std::unique_ptr<SuperF2D<T,W>>(new SuperConst2D<T,W>(f->getSuperStructure(), scalar)))
+lattice/superCalcF2D.hh:  if ( _f->getTargetDim() == 1 || _g->getTargetDim() == 1 ) {
+lattice/superCalcF2D.hh:    if ( _f->getTargetDim() == 1 ) {
+lattice/superCalcF3D.hh:      f->getSuperStructure(),
+lattice/superCalcF3D.hh:      f->getTargetDim() > g->getTargetDim() ? f->getTargetDim() : g->getTargetDim()),
+lattice/superCalcF3D.hh:    _f->getTargetDim() == _g->getTargetDim() || _f->getTargetDim() == 1 || _g->getTargetDim() == 1,
+lattice/superCalcF3D.hh:  this->getName() = "(" + _f->getName() + F<T>::symbol + _g->getName() + ")";
+lattice/superCalcF3D.hh:  std::swap(_f->_ptrCalcC, this->_ptrCalcC);
+lattice/superCalcF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superCalcF3D.hh:  if ( _f->getBlockFSize() == load.size() ) {
+lattice/superCalcF3D.hh:          new BlockCalcF3D<W,F>(_f->getBlockF(iC), _g->getBlockF(iC))
+lattice/superCalcF3D.hh:          new BlockCalcF3D<W,F>(_f->getBlockF(iC), *g, load.glob(iC))
+lattice/superCalcF3D.hh:      std::unique_ptr<SuperF3D<T,W>>(new SuperConst3D<T,W>(f->getSuperStructure(), scalar)))
+lattice/superCalcF3D.hh:  if ( _f->getTargetDim() == 1 || _g->getTargetDim() == 1 ) {
+lattice/superCalcF3D.hh:    if ( _f->getTargetDim() == 1 ) {
+lattice/superDiscretizationF2D.hh:  :SuperF2D<T, W>(f->getSuperStructure(),f->getTargetDim()), _f(f), _bottomBoundary(bottomBoundary), _topBoundary(topBoundary), _n(n)
+lattice/superDiscretizationF2D.hh:  this->getName()="Discretization(" + _f->getName() + ")";
+lattice/superDiscretizationF2D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superDiscretizationF2D.hh:      new BlockDiscretizationF2D<W>(_f->getBlockF(iC), _bottomBoundary, _topBoundary, _n));
+lattice/superDiscretizationF3D.hh:  :SuperF3D<T, W>(f->getSuperStructure(),f->getTargetDim()), _f(f), _bottomBoundary(bottomBoundary), _topBoundary(topBoundary), _n(n)
+lattice/superDiscretizationF3D.hh:  this->getName()="Discretization(" + _f->getName() + ")";
+lattice/superDiscretizationF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superDiscretizationF3D.hh:      new BlockDiscretizationF3D<W>(_f->getBlockF(iC), _bottomBoundary, _topBoundary, _n));
+lattice/superLocalAverage2D.hh:  : SuperF2D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superLocalAverage2D.hh:  this->getName() = "LocalAverage(" + _f->getName() + ")";
+lattice/superLocalAverage2D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superLocalAverage2D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superLocalAverage2D.hh:        new BlockLocalAverage2D<T,W>(_f->getBlockF(iC),
+lattice/superLocalAverage2D.hh:          T outputTmp[_f->getTargetDim()];
+lattice/superLocalAverage3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superLocalAverage3D.hh:  this->getName() = "LocalAverage(" + _f->getName() + ")";
+lattice/superLocalAverage3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superLocalAverage3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superLocalAverage3D.hh:        new BlockLocalAverage3D<T,W>(_f->getBlockF(iC),
+lattice/superLocalAverage3D.hh:            T outputTmp[_f->getTargetDim()];
+lattice/superMax3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superMax3D.hh:  this->getName() = "Max("+_f->getName()+")";
+lattice/superMax3D.hh:  LoadBalancer<T>&     load   = _f->getSuperStructure().getLoadBalancer();
+lattice/superMax3D.hh:  CuboidGeometry3D<T>& cuboid = _f->getSuperStructure().getCuboidGeometry();
+lattice/superMax3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superMax3D.hh:        new BlockMax3D<T,W>(_f->getBlockF(iC),
+lattice/superMax3D.hh:  _f->getSuperStructure().communicate();
+lattice/superMax3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/superMax3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/superMax3D.hh:    W outputTmp[_f->getTargetDim()];
+lattice/superMax3D.hh:    int inputTmp[_f->getSourceDim()];
+lattice/superMin3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()),
+lattice/superMin3D.hh:  this->getName() = "Min("+_f->getName()+")";
+lattice/superMin3D.hh:  LoadBalancer<T>&     load   = _f->getSuperStructure().getLoadBalancer();
+lattice/superMin3D.hh:  CuboidGeometry3D<T>& cuboid = _f->getSuperStructure().getCuboidGeometry();
+lattice/superMin3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superMin3D.hh:        new BlockMin3D<T,W>(_f->getBlockF(iC),
+lattice/superMin3D.hh:  _f->getSuperStructure().communicate();
+lattice/superMin3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/superMin3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/superMin3D.hh:    W outputTmp[_f->getTargetDim()];
+lattice/superMin3D.hh:    int inputTmp[_f->getSourceDim()];
+lattice/superRoundingF2D.hh:  :SuperF2D<T, W>(f->getSuperStructure(),f->getTargetDim()), _f(f), _rounding(rounding)
+lattice/superRoundingF2D.hh:  this->getName()="Rounding(" + _f->getName() + ")";
+lattice/superRoundingF2D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superRoundingF2D.hh:      new BlockRoundingF2D<W>(_f->getBlockF(iC),_rounding));
+lattice/superRoundingF3D.hh:  :SuperF3D<T, W>(f->getSuperStructure(),f->getTargetDim()), _f(f), _rounding(rounding)
+lattice/superRoundingF3D.hh:  this->getName()="Rounding(" + _f->getName() + ")";
+lattice/superRoundingF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superRoundingF3D.hh:      new BlockRoundingF3D<W>(_f->getBlockF(iC),_rounding));
+lattice/superStatisticF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()+1),
+lattice/superStatisticF3D.hh:  this->getName() = "Variance("+_f->getName()+")";
+lattice/superStatisticF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superStatisticF3D.hh:  CuboidGeometry3D<T>& cuboid = _f->getSuperStructure().getCuboidGeometry();
+lattice/superStatisticF3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superStatisticF3D.hh:        new BlockVarianceF3D<T,W>(_f->getBlockF(iC),
+lattice/superStatisticF3D.hh:  _f->getSuperStructure().communicate();
+lattice/superStatisticF3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/superStatisticF3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/superStatisticF3D.hh:    W outputTmp[_f->getTargetDim()];
+lattice/superStatisticF3D.hh:    int inputTmp[_f->getSourceDim()];
+lattice/superStatisticF3D.hh:    for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superStatisticF3D.hh:              for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superStatisticF3D.hh:      output[_f->getTargetDim()] = voxels;
+lattice/superStatisticF3D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superStatisticF3D.hh:  	output[i] = output[i] - std::pow(_expectedValue * output[_f->getTargetDim()], 2) / output[_f->getTargetDim()];
+lattice/superStatisticF3D.hh:  : SuperF3D<T,W>(f->getSuperStructure(), f->getTargetDim()+1),
+lattice/superStatisticF3D.hh:  this->getName() = "Variance("+_f->getName()+")";
+lattice/superStatisticF3D.hh:  LoadBalancer<T>& load = _f->getSuperStructure().getLoadBalancer();
+lattice/superStatisticF3D.hh:  CuboidGeometry3D<T>& cuboid = _f->getSuperStructure().getCuboidGeometry();
+lattice/superStatisticF3D.hh:  if ( _f->getBlockFSize()          == load.size() &&
+lattice/superStatisticF3D.hh:        new BlockStdDeviationF3D<T,W>(_f->getBlockF(iC),
+lattice/superStatisticF3D.hh:  _f->getSuperStructure().communicate();
+lattice/superStatisticF3D.hh:  CuboidGeometry3D<T>& geometry = _f->getSuperStructure().getCuboidGeometry();
+lattice/superStatisticF3D.hh:  LoadBalancer<T>&     load     = _f->getSuperStructure().getLoadBalancer();
+lattice/superStatisticF3D.hh:  W outputTmp[_f->getTargetDim()];
+lattice/superStatisticF3D.hh:  int inputTmp[_f->getSourceDim()];
+lattice/superStatisticF3D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superStatisticF3D.hh:            for (int i = 0; i < _f->getTargetDim(); ++i) {
+lattice/superStatisticF3D.hh:    output[_f->getTargetDim()] = voxels;
+lattice/superStatisticF3D.hh:  for (int i = 0; i < _f->getTargetDim(); ++i) {

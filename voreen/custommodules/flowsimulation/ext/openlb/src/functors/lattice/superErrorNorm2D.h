@@ -38,7 +38,7 @@ class SuperRelativeErrorLpNorm2D : public SuperIdentity2D<T,W> {
 public:
   template <typename DESCRIPTOR>
   SuperRelativeErrorLpNorm2D(
-    SuperLattice2D<T,DESCRIPTOR>&      sLattice,
+    SuperLattice<T,DESCRIPTOR>&      sLattice,
     FunctorPtr<SuperF2D<T,W>>&&        f,
     FunctorPtr<AnalyticalF2D<T,W>>&&   wantedF,
     FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF);
@@ -68,7 +68,7 @@ class SuperAbsoluteErrorLpNorm2D : public SuperIdentity2D<T,W> {
 public:
   template <typename DESCRIPTOR>
   SuperAbsoluteErrorLpNorm2D(
-    SuperLattice2D<T,DESCRIPTOR>&      sLattice,
+    SuperLattice<T,DESCRIPTOR>&      sLattice,
     FunctorPtr<SuperF2D<T,W>>&&        f,
     FunctorPtr<AnalyticalF2D<T,W>>&&   wantedF,
     FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF);

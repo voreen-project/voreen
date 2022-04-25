@@ -38,16 +38,19 @@ namespace olb {
 
 /// Implementation of the BGK collision step with porous force according to
 /// Guo and Zhao (2012), described as an external force
-template<typename T, typename DESCRIPTOR>
-class SmagorinskyGuoZhaoBGKdynamics : public GuoZhaoBGKdynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class SmagorinskyGuoZhaoBGKdynamics : public GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = SmagorinskyGuoZhaoBGKdynamics<T,DESCRIPTOR,M>;
+  
   /// Constructor.
   //Passing default value for smagoConst_ because 2D boundary conditions accept only
   //two-argument constructor for dynamics class.
-  SmagorinskyGuoZhaoBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, T smagoConst_ = 0.14,
+  SmagorinskyGuoZhaoBGKdynamics(T omega_, T smagoConst_ = 0.14,
                                 T dx_ = 1, T dt_ = 1);
   /// Collision step
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
+  virtual CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
   /// Get local smagorinsky relaxation parameter of the dynamics
   virtual T getSmagorinskyOmega(Cell<T,DESCRIPTOR>& cell_);

@@ -27,13 +27,15 @@
 #include <vector>
 
 #include "core/vector.h"
+#include "core/blockStructure.h"
 #include "functors/analytical/analyticalBaseF.h"
 #include "functors/genericF.h"
+#include "sdf.h"
 
 namespace olb {
 
 
-template <typename T, typename S, bool HLBM=false>
+template <typename T, typename S, bool PARTICLE=false>
 class SmoothIndicatorF3D;
 
 /** SmoothIndicatorF3D is an application from \f$ \Omega \subset R^3 \to [0,1] \f$.
@@ -52,11 +54,12 @@ protected:
   Vector<S,3> _pos;
   Vector<S,9> _rotMat;  //saved values of rotation matrix
   S _circumRadius;
-  Vector<S,3>  _theta;
+  Vector<S,3> _theta;
+  //Vector<S,3> _scale;
   S _epsilon;
   std::string _name = "smoothIndicator3D";
 public:
-  void init(Vector<S,3> theta, Vector<S,3> vel, T mass, Vector<S,3> mofi);
+  void init(Vector<S,3> theta);
   const Vector<S,3>& getMin() const;
   const Vector<S,3>& getMax() const;
   const Vector<S,3>& getPos() const;
@@ -65,9 +68,19 @@ public:
   const S& getCircumRadius() const;
   const S& getEpsilon() const;
   std::string name();
-  void setRotationMatrix(Vector<S,9> rotMat);
-  void setTheta(Vector<S,3> theta);  
+  void setPos(Vector<S,3> pos);
+  void setTheta(Vector<S,3> theta);   //set angle in radian
   void setEpsilon(S epsilon);
+  virtual S getVolume( );
+  virtual Vector<S,4> calcMofiAndMass(S density);
+  virtual Vector<S,3> calcCenterOfMass();
+  virtual Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize);
+  virtual Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize,
+                                    std::function<Vector<S,3>(const Vector<S,3>&)> transformPos);
+  virtual const S signedDistance(const PhysR<T,3> input);
+  virtual bool distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, S precision, S pitch);
+  virtual bool operator()(T output[], const S input[]);
+  bool isInsideCircumRadius(const PhysR<S,3>& input);
 
   SmoothIndicatorF3D<T,S,false>& operator+(SmoothIndicatorF3D<T,S,false>& rhs);
 };
@@ -89,56 +102,25 @@ template <typename T, typename S>
 class SmoothIndicatorF3D<T, S, true> : public AnalyticalF3D<T,S> {
 protected:
   SmoothIndicatorF3D();
-  Vector<S, 3> _myMin;
-  Vector<S, 3> _myMax;
-  Vector<S,3> _pos;
-  Vector<S,3> _vel;
-  Vector<S,3> _acc;
-  Vector<S,3> _acc2;
-  Vector<S,3> _force;
-  Vector<S,9> _rotMat;  //saved values of rotation matrix
   S _circumRadius;
-  Vector<S,3> _theta;
-  Vector<S,3> _omega;
-  Vector<S,3> _alpha;
-  Vector<S,3> _alpha2;
-  S _mass;
-  Vector<S,3> _mofi;  //moment of inertia
   S _epsilon;
-  std::string _name="HLBMobject3D";
+  std::string _name="3D-Particle surface";
 
 public:
-  void init(Vector<S,3> theta, Vector<S,3> vel, T mass, Vector<S,3> mofi);
-  const Vector<S,3>& getMin() const;    
-  const Vector<S,3>& getMax() const;    
-  const Vector<S,3>& getPos() const;
-  const Vector<S,3>& getVel() const;
-  const Vector<S,3>& getAcc() const;
-  const Vector<S,3>& getAcc2() const;
-  const Vector<S,3>& getHydrodynamicForce() const;
-  const Vector<S,9>& getRotationMatrix() const;
-  const Vector<S, 3>& getTheta() const;
-  const Vector<S, 3>& getOmega() const;
-  const Vector<S, 3>& getAlpha() const;
-  const Vector<S, 3>& getAlpha2() const;
-  const Vector<S,3>& getMofi() const;
   const S& getCircumRadius() const;
-  const S& getMass() const;
   const S& getEpsilon() const;
   std::string name();
-  void setPos(Vector<S,3> pos);
-  void setVel(Vector<S,3> vel);
-  void setAcc(Vector<S,3> acc);
-  void setAcc2(Vector<S,3> acc2);
-  void setHydrodynamicForce(Vector<S,3> force);
-  void setRotationMatrix(Vector<S,9> rotMat);
-  void setTheta(Vector<S, 3> theta);
-  void setOmega(Vector<S, 3> omega);
-  void setAlpha(Vector<S, 3> alpha);
-  void setAlpha2(Vector<S,3> alpha2);
-  void setMofi(Vector<S, 3> mofi);
-  void setMass(S mass);
   void setEpsilon(S epsilon);
+  virtual S getVolume( );
+  virtual Vector<S,4> calcMofiAndMass(S density);
+  virtual Vector<S,3> calcCenterOfMass();
+  virtual Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize);
+  virtual Vector<S,3> surfaceNormal(const Vector<S,3>& pos, const S meshSize,
+                                    std::function<Vector<S,3>(const Vector<S,3>&)> transformPos);
+  virtual const S signedDistance(const PhysR<T,3> input);
+  virtual bool distance(S& distance, const Vector<S,3>& origin, const Vector<S,3>& direction, S precision, S pitch);
+  virtual bool operator()(T output[], const S input[]);
+  bool isInsideCircumRadius(const PhysR<S,3>& input);
 };
 
 }

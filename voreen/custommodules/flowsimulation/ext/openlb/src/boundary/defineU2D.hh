@@ -29,7 +29,7 @@
 namespace olb {
 ////////// SuperLattice Domain  /////////////////////////////////////////
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry, int material,
+void defineUBouzidi(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry, int material,
                     AnalyticalF2D<T,T>& u,
                     std::vector<int> bulkMaterials)
 {
@@ -39,14 +39,14 @@ void defineUBouzidi(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>&
 }
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
+void defineUBouzidi(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,
                     FunctorPtr<SuperIndicatorF2D<T>>&& bulkIndicator,
                     AnalyticalF2D<T,T>& u)
 {
 
   for (int iCloc = 0; iCloc < sLattice.getLoadBalancer().size(); ++iCloc) {
-    defineUBouzidi<T,DESCRIPTOR>(sLattice.getExtendedBlockIndicator(iCloc), indicator->getExtendedBlockIndicatorF(iCloc),
-                                 bulkIndicator->getExtendedBlockIndicatorF(iCloc),
+    defineUBouzidi<T,DESCRIPTOR>(sLattice.getBlockIndicator(iCloc), indicator->getBlockIndicatorF(iCloc),
+                                 bulkIndicator->getBlockIndicatorF(iCloc),
                                  u);
   }
 }
@@ -54,41 +54,30 @@ void defineUBouzidi(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperInd
 ////////// BlockLattice Domain  /////////////////////////////////////////
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator, BlockIndicatorF2D<T>& bulkIndicator, AnalyticalF2D<T,T>& u)
+void defineUBouzidi(BlockLattice<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& indicator, BlockIndicatorF2D<T>& bulkIndicator, AnalyticalF2D<T,T>& u)
 {
-  if ( indicator.isEmpty() ) {
-    return;
-  }
-
-  const Vector<int,2> min = indicator.getMin();
-  const Vector<int,2> max = indicator.getMax();
-
-  for (int iX = min[0]; iX <= max[0]; ++iX) {
-    for (int iY = min[1]; iY <= max[1]; ++iY) {
-      if (indicator(iX, iY)) {
-        for (int iPop = 1; iPop < DESCRIPTOR::q ; ++iPop) {
-          // Get direction
-          int iXn = iX + descriptors::c<DESCRIPTOR >(iPop,0);
-          int iYn = iY + descriptors::c<DESCRIPTOR >(iPop,1);
-          if (bulkIndicator(iXn, iYn)) {
-            T intersection[] = { T(), T() }; // coord. of intersection
-            int opp = util::opposite<DESCRIPTOR >(iPop);
-            if (getBoundaryIntersection<T,DESCRIPTOR>(iX, iY, opp, intersection) ) {
-              T vel[]= {T(),T()};
-              u(vel,intersection);
-              defineUBouzidi<T,DESCRIPTOR>(iX, iY, opp, vel);
-            }
+  block.forSpatialLocations([&](auto iX, auto iY) {
+    if (indicator(iX,iY)) {
+      for (int iPop = 1; iPop < DESCRIPTOR::q ; ++iPop) {
+        int iXn = iX + descriptors::c<DESCRIPTOR >(iPop,0);
+        int iYn = iY + descriptors::c<DESCRIPTOR >(iPop,1);
+        if (block.isInside({iXn,iYn}) && bulkIndicator(iXn, iYn)) {
+          T intersection[] = { T(), T() }; // coord. of intersection
+          int opp = util::opposite<DESCRIPTOR >(iPop);
+          if (getBoundaryIntersection<T,DESCRIPTOR>(iX, iY, opp, intersection) ) {
+            T vel[]= {T(),T()};
+            u(vel,intersection);
+            defineUBouzidi<T,DESCRIPTOR>(iX, iY, opp, vel);
           }
         }
       }
     }
-  }
-
+  });
 }
 
 
 template<typename T, typename DESCRIPTOR>
-void defineUBouzidi(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY, int iPop, const T u[DESCRIPTOR::d])
+void defineUBouzidi(BlockLattice<T,DESCRIPTOR>& block, int iX, int iY, int iPop, const T u[DESCRIPTOR::d])
 {
   bool _output = false;
   OstreamManager clout(std::cout, "defineUBouzidi");
@@ -101,13 +90,13 @@ void defineUBouzidi(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY
 
 
 template<typename T, typename DESCRIPTOR>
-bool getBoundaryIntersection(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T point[DESCRIPTOR::d])
+bool getBoundaryIntersection(BlockLattice<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T point[DESCRIPTOR::d])
 {
   return block.getDynamics(iX, iY)->getBoundaryIntersection(iPop, point);
 }
 
 template<typename T, typename DESCRIPTOR>
-void setBoundaryIntersection(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T distance)
+void setBoundaryIntersection(BlockLattice<T,DESCRIPTOR>& block, int iX, int iY, int iPop, T distance)
 {
   bool _output = false;
   OstreamManager clout(std::cout, "setBoundaryIntersection");

@@ -29,8 +29,8 @@
 #include "functors/lattice/blockBaseF2D.h"
 #include "functors/lattice/superBaseF2D.h"
 #include "geometry/cuboidGeometry2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/blockGeometry.h"
+#include "geometry/superGeometry.h"
 
 namespace olb {
 
@@ -41,9 +41,8 @@ class AnalyticalFfromBlockF2D final : public AnalyticalF2D<T,W> {
 protected:
   BlockF2D<W>& _f;
   Cuboid2D<T>& _cuboid;
-  const int    _overlap;
 public:
-  AnalyticalFfromBlockF2D(BlockF2D<W>& f, Cuboid2D<T>& cuboid, const int overlap);
+  AnalyticalFfromBlockF2D(BlockF2D<W>& f, Cuboid2D<T>& cuboid);
   bool operator() (W output[], const T physC[]) override;
 };
 
@@ -56,13 +55,11 @@ protected:
 
   SuperF2D<T>&         _f;
   CuboidGeometry2D<T>& _cuboidGeometry;
-  int                  _overlap;
 
   std::vector<std::unique_ptr<AnalyticalFfromBlockF2D<T,W>>> _blockF;
 public:
   AnalyticalFfromSuperF2D(SuperF2D<T>& f,
                           bool communicateToAll=false,
-                          int overlap=-1,
                           bool communicateOverlap=true);
   bool operator() (T output[], const T physC[]) override;
 

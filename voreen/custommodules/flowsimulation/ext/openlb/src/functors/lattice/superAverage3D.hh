@@ -54,7 +54,7 @@ SuperAverage3D<T,W>::SuperAverage3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W>
 SuperAverage3D<T,W>::SuperAverage3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                                    SuperGeometry3D<T>& superGeometry,
+                                    SuperGeometry<T,3>& superGeometry,
                                     const int material)
   : SuperAverage3D(
       std::forward<decltype(f)>(f),

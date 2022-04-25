@@ -25,7 +25,7 @@
 #define BLOCK_LATTICE_REFINEMENT_METRIC_F_2D_HH
 
 #include "blockLatticeRefinementMetricF2D.h"
-#include "dynamics/lbHelpers.h"
+#include "dynamics/lbm.h"
 
 
 namespace olb {
@@ -33,7 +33,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeKnudsen2D<T, DESCRIPTOR>::BlockLatticeKnudsen2D(
-  BlockLatticeStructure2D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF2D<T, DESCRIPTOR>(blockLattice, 1)
 {
   this->getName() = "knudsen";
@@ -53,9 +53,9 @@ bool BlockLatticeKnudsen2D<T, DESCRIPTOR>::operator()(T output[], const int inpu
   T sum = 0.;
 
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-    const T fEq = olb::lbHelpers<T, DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
+    const T fEq = olb::equilibrium<DESCRIPTOR>::secondOrder(iPop, rho, u, uSqr);
 
-    sum += std::abs((cell[iPop] - fEq) / (fEq + descriptors::t<T,DESCRIPTOR>(iPop)));
+    sum += util::abs((cell[iPop] - fEq) / (fEq + descriptors::t<T,DESCRIPTOR>(iPop)));
   }
 
   output[0] = sum / (DESCRIPTOR::q);
@@ -66,7 +66,7 @@ bool BlockLatticeKnudsen2D<T, DESCRIPTOR>::operator()(T output[], const int inpu
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeRefinementMetricKnudsen2D<T, DESCRIPTOR>::BlockLatticeRefinementMetricKnudsen2D(
-  BlockLatticeStructure2D<T, DESCRIPTOR>& blockLattice,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
   const UnitConverter<T, DESCRIPTOR>&     converter)
   : BlockLatticeKnudsen2D<T, DESCRIPTOR>(blockLattice),
     _knudsen(converter.getKnudsenNumber())
@@ -99,7 +99,7 @@ bool BlockLatticeRefinementMetricKnudsen2D<T, DESCRIPTOR>::operator()(T output[]
   if ( output[0] <= 0. || blockC <= 0. ) {
     output[0] = 0.;
   }
- 
+
   return true;
 }
 
@@ -111,11 +111,11 @@ bool BlockLatticeRefinementMetricKnudsen2D<T, DESCRIPTOR>::operator()(
   BlockLatticeKnudsen2D<T, DESCRIPTOR>::operator()(measuredKnudsen, input);
 
   output[0] = std::log2(measuredKnudsen[0] / _knudsen);
-  
+
   if ( output[0] <= 0. || measuredKnudsen[0] <= 0. ) {
     output[0] = 0.;
   }
-  
+
   return true;
 }
 

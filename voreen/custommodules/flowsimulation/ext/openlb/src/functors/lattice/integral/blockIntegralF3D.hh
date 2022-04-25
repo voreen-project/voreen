@@ -88,7 +88,7 @@ bool BlockIntegral3D<T,W>::operator() (W output[], const int input[])
   OLB_ASSERT(_f.getSourceDim() == _indicatorF.getSourceDim(),
              "functor source dimension equals indicator source dimension");
 
-  const W weight = pow(_indicatorF.getBlockGeometryStructure().getDeltaR(), 3);
+  const W weight = util::pow(_indicatorF.getBlockGeometry().getDeltaR(), 3);
 
   W outputTmp[_f.getTargetDim()];
   int inputTmp[_f.getSourceDim()];

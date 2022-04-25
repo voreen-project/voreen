@@ -27,7 +27,7 @@
 
 #include <type_traits>
 
-#include "utilities/meta.h"
+#include "meta.h"
 
 namespace olb {
 
@@ -39,19 +39,23 @@ struct GenericVector {
   GenericVector(const GenericVector&) = delete;
   GenericVector(GenericVector&&) = delete;
 
+  GenericVector& operator = (GenericVector&& rhs) = delete;
+
   using value_type = T;
   static constexpr unsigned d = D;
 
-  const T& operator [] (unsigned iDim) const {
+  const T& operator [] (unsigned iDim) const any_platform
+  {
     return *static_cast<const IMPL*>(this)->getComponentPointer(iDim);
   }
 
-  T& operator [] (unsigned iDim) {
+  T& operator [] (unsigned iDim) any_platform
+  {
     return *static_cast<IMPL*>(this)->getComponentPointer(iDim);
   }
 
   template<typename IMPL_>
-  IMPL& operator = (const GenericVector<T,D,IMPL_>& rhs)
+  IMPL& operator = (const GenericVector<T,D,IMPL_>& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) = rhs[iDim];
@@ -60,7 +64,7 @@ struct GenericVector {
   }
 
   template<typename U, typename IMPL_>
-  IMPL& operator += (const GenericVector<U,D,IMPL_>& rhs)
+  IMPL& operator += (const GenericVector<U,D,IMPL_>& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) += rhs[iDim];
@@ -69,7 +73,7 @@ struct GenericVector {
   }
 
   template<typename IMPL_>
-  IMPL& operator -= (const GenericVector<T,D,IMPL_>& rhs)
+  IMPL& operator -= (const GenericVector<T,D,IMPL_>& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) -= rhs[iDim];
@@ -78,7 +82,7 @@ struct GenericVector {
   }
 
   template<typename U, typename IMPL_>
-  IMPL& operator *= (const GenericVector<U,D,IMPL_>& rhs)
+  IMPL& operator *= (const GenericVector<U,D,IMPL_>& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) *= rhs[iDim];
@@ -87,7 +91,7 @@ struct GenericVector {
   }
 
   template<typename U>
-  utilities::meta::enable_if_arithmetic_t<U, IMPL&> operator += (const U& rhs)
+  meta::enable_if_arithmetic_t<U, IMPL&> operator += (const U& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) += rhs;
@@ -96,7 +100,7 @@ struct GenericVector {
   }
 
   template<typename U>
-  utilities::meta::enable_if_arithmetic_t<U, IMPL&> operator -= (const U& rhs)
+  meta::enable_if_arithmetic_t<U, IMPL&> operator -= (const U& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) -= rhs;
@@ -105,7 +109,7 @@ struct GenericVector {
   }
 
   template<typename U>
-  utilities::meta::enable_if_arithmetic_t<U, IMPL&> operator *= (const U& rhs)
+  meta::enable_if_arithmetic_t<U, IMPL&> operator *= (const U& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) *= rhs;
@@ -114,7 +118,7 @@ struct GenericVector {
   }
 
   template<typename U>
-  utilities::meta::enable_if_arithmetic_t<U, IMPL&> operator /= (const U& rhs)
+  meta::enable_if_arithmetic_t<U, IMPL&> operator /= (const U& rhs) any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       operator[](iDim) /= rhs;
@@ -124,7 +128,7 @@ struct GenericVector {
 
 
   template<typename IMPL_>
-  bool operator == (const GenericVector<T,D,IMPL_>& rhs) const
+  bool operator == (const GenericVector<T,D,IMPL_>& rhs) const any_platform
   {
     bool isEqual = true;
     for (unsigned iDim=0; iDim < D; ++iDim) {
@@ -134,7 +138,7 @@ struct GenericVector {
   }
 
   template<typename IMPL_>
-  bool operator != (const GenericVector<T,D,IMPL_>& rhs) const
+  bool operator != (const GenericVector<T,D,IMPL_>& rhs) const any_platform
   {
     for (unsigned iDim=0; iDim < D; ++iDim) {
       if (operator[](iDim) != rhs[iDim]) {

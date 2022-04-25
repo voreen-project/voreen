@@ -27,7 +27,9 @@
 
 #include "indicatorBaseF3D.h"
 #include "indicatorF3D.h"
-#include "indicCalc3D.h"
+#include "indicAlt3D.h"
+#include "indicComb3D.h"
+#include "indicMod.h"
 
 #include "smoothIndicatorBaseF3D.h"
 #include "smoothIndicatorF3D.h"

@@ -45,7 +45,7 @@ public:
   SuperGeometryFaces3D(FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
                        T _latticeL);
   /// Constructor accepting single solid cell material and custom lattice length
-  SuperGeometryFaces3D(SuperGeometry3D<T>& superGeometry, const int material,
+  SuperGeometryFaces3D(SuperGeometry<T,3>& superGeometry, const int material,
                        T _latticeL);
 
   /// Constructor accepting solid cell indicator and a unit converter to query lattice length
@@ -56,7 +56,7 @@ public:
                            converter.getConversionFactorLength()) { };
   /// Constructor accepting single solid cell material and a unit converter to query lattice length
   template<typename DESCRIPTOR>
-  SuperGeometryFaces3D(SuperGeometry3D<T>& superGeometry, const int material,
+  SuperGeometryFaces3D(SuperGeometry<T,3>& superGeometry, const int material,
                        const UnitConverter<T,DESCRIPTOR>& converter)
     : SuperGeometryFaces3D(superGeometry.getMaterialIndicator(material), converter) { };
 
@@ -68,13 +68,13 @@ public:
 template <typename T, bool HLBM>
 class SuperGeometryFacesIndicator3D final : public GenericF<T,int> {
 private:
-  SuperGeometry3D<T>&   _superGeometry;
+  SuperGeometry<T,3>&   _superGeometry;
   SmoothIndicatorF3D<T,T,HLBM>& _indicator;
   const int             _material;
   T _latticeL;
 public:
-  SuperGeometryFacesIndicator3D(SuperGeometry3D<T>& superGeometry, SmoothIndicatorF3D<T,T,HLBM>& indicator, const int material,
-  T deltaX);
+  SuperGeometryFacesIndicator3D(SuperGeometry<T,3>& superGeometry, SmoothIndicatorF3D<T,T,HLBM>& indicator, const int material,
+                                T deltaX);
   bool operator() (T output[], const int input[]) override;
 };
 

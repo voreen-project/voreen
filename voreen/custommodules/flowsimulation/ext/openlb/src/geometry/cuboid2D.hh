@@ -33,7 +33,7 @@
 #include <math.h>
 #include <vector>
 #include "cuboid2D.h"
-#include "dynamics/lbHelpers.h"
+#include "dynamics/lbm.h"
 #include "io/ostreamManager.h"
 
 
@@ -42,7 +42,7 @@ namespace olb {
 ////////////////////// Class Cuboid2D /////////////////////////
 
 template<typename T>
-Cuboid2D<T>::Cuboid2D(T globPosX, T globPosY, T delta ,int nX, int nY, int refinementLevel)
+Cuboid2D<T>::Cuboid2D(T globPosX, T globPosY, T delta,int nX, int nY, int refinementLevel)
   : _weight(std::numeric_limits<size_t>::max()), clout(std::cout,"Cuboid2D")
 {
   init(globPosX, globPosY, delta, nX, nY, refinementLevel);
@@ -124,7 +124,7 @@ int Cuboid2D<T>::getNy() const
 }
 
 template<typename T>
-Vector<int,2> const Cuboid2D<T>::getExtend() const
+Vector<int,2> const Cuboid2D<T>::getExtent() const
 {
   return Vector<int,2> (_nX, _nY);
 }
@@ -182,29 +182,37 @@ void Cuboid2D<T>::getPhysR(T physR[2], const int& iX, const int& iY) const
 }
 
 template<typename T>
+void Cuboid2D<T>::getPhysR(T physR[2], LatticeR<2> latticeR) const
+{
+  physR[0] = _globPosX + latticeR[0]*_delta;
+  physR[1] = _globPosY + latticeR[1]*_delta;
+}
+
+template<typename T>
 void Cuboid2D<T>::getLatticeR(int latticeR[2], const T physR[2]) const
 {
-  latticeR[0] = (int)floor( (physR[0] - _globPosX )/_delta +.5);
-  latticeR[1] = (int)floor( (physR[1] - _globPosY )/_delta +.5);
+  latticeR[0] = (int)util::floor( (physR[0] - _globPosX )/_delta +.5);
+  latticeR[1] = (int)util::floor( (physR[1] - _globPosY )/_delta +.5);
 }
 
 template<typename T>
 void Cuboid2D<T>::getLatticeR(int latticeR[2], const Vector<T,2>& physR) const
 {
-  latticeR[0] = (int)floor( (physR[0] - _globPosX )/_delta +.5);
-  latticeR[1] = (int)floor( (physR[1] - _globPosY )/_delta +.5);
+  latticeR[0] = (int)util::floor( (physR[0] - _globPosX )/_delta +.5);
+  latticeR[1] = (int)util::floor( (physR[1] - _globPosY )/_delta +.5);
 }
 
 template<typename T>
 bool Cuboid2D<T>::checkPoint(T globX, T globY, int overlap) const
 {
 
-  if (_globPosX - T(0.5 + overlap)*_delta <= globX &&
-      _globPosX + T(_nX-0.5+overlap)*_delta  > globX &&
-      _globPosY - T(0.5 + overlap)*_delta <= globY &&
-      _globPosY + T(_nY-0.5+overlap)*_delta  > globY ) {
+  if (_globPosX <= globX + T(0.5 + overlap)*_delta &&
+      _globPosX + T(_nX+overlap)*_delta  > globX + 0.5*_delta &&
+      _globPosY <= globY + T(0.5 + overlap)*_delta &&
+      _globPosY + T(_nY+overlap)*_delta  > globY + 0.5*_delta ) {
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 }
@@ -213,13 +221,15 @@ template<typename T>
 bool Cuboid2D<T>::checkPoint(T globX, T globY, int &locX, int &locY, int overlap) const
 {
   if (overlap!=0) {
-    Cuboid2D tmp(_globPosX - overlap*_delta, _globPosY - overlap*_delta, _delta , _nX + overlap*2, _nY + overlap*2);
+    Cuboid2D tmp(_globPosX - overlap*_delta, _globPosY - overlap*_delta, _delta, _nX + overlap*2, _nY + overlap*2);
     return tmp.checkPoint(globX, globY, locX, locY);
-  } else if (!checkPoint(globX, globY)) {
+  }
+  else if (!checkPoint(globX, globY)) {
     return false;
-  } else {
-    locX = (int)floor((globX - (T)_globPosX)/_delta + .5);
-    locY = (int)floor((globY - (T)_globPosY)/_delta + .5);
+  }
+  else {
+    locX = (int)util::floor((globX - (T)_globPosX)/_delta + .5);
+    locY = (int)util::floor((globY - (T)_globPosY)/_delta + .5);
     return true;
   }
 }
@@ -228,10 +238,10 @@ template<typename T>
 bool Cuboid2D<T>::checkInters(T globX0, T globX1, T globY0, T globY1, int overlap) const
 {
 
-  T locX0d = std::max(_globPosX-overlap*_delta,globX0);
-  T locY0d = std::max(_globPosY-overlap*_delta,globY0);
-  T locX1d = std::min(_globPosX+(_nX+overlap-1)*_delta,globX1);
-  T locY1d = std::min(_globPosY+(_nY+overlap-1)*_delta,globY1);
+  T locX0d = util::max(_globPosX-overlap*_delta,globX0);
+  T locY0d = util::max(_globPosY-overlap*_delta,globY0);
+  T locX1d = util::min(_globPosX+(_nX+overlap-1)*_delta,globX1);
+  T locY1d = util::min(_globPosY+(_nY+overlap-1)*_delta,globY1);
 
   if (!(locX1d>=locX0d && locY1d>=locY0d)) {
     return false;
@@ -252,13 +262,15 @@ bool Cuboid2D<T>::checkInters(T globX0, T globX1, T globY0, T globY1,
   if (overlap!=0) {
     Cuboid2D tmp(_globPosX - overlap*_delta, _globPosY - overlap*_delta, _delta, _nX + overlap*2, _nY + overlap*2);
     return tmp.checkInters(globX0, globX1, globY0, globY1, locX0, locX1, locY0, locY1);
-  } else if (!checkInters(globX0, globX1, globY0, globY1)) {
+  }
+  else if (!checkInters(globX0, globX1, globY0, globY1)) {
     locX0 = 1;
     locX1 = 0;
     locY0 = 1;
     locY1 = 0;
     return false;
-  } else {
+  }
+  else {
     locX0 = 0;
     for (int i=0; _globPosX + i*_delta < globX0; i++) {
       locX0 = i+1;
@@ -311,12 +323,12 @@ void Cuboid2D<T>::divide(int p, std::vector<Cuboid2D<T> > &childrenC) const
   int nY = 0;
   T ratio;
   T bestRatio = (T)_nX/(T)_nY;
-  T difRatio = fabs(bestRatio - 1) + 1;
+  T difRatio = util::fabs(bestRatio - 1) + 1;
   for (int i=1; i<= p; i++) {
     int j = p / i;
     if (i*j<=p) {
-      if ( fabs(bestRatio - (T)i/(T)j) <= difRatio) {
-        difRatio = fabs(bestRatio - (T)i/(T)j);
+      if ( util::fabs(bestRatio - (T)i/(T)j) <= difRatio) {
+        difRatio = util::fabs(bestRatio - (T)i/(T)j);
         nX = i;
         nY = j;
       }
@@ -342,7 +354,8 @@ void Cuboid2D<T>::divide(int p, std::vector<Cuboid2D<T> > &childrenC) const
     Cuboid2D<T> secondChildQ(_globPosX, _globPosY+yN_QNoInsertions*_delta, _delta, xN_QInsertions, yN_QInsertions, _refinementLevel);
     firstChildQ.divide(nX, nY-rest, childrenC);
     secondChildQ.divide(nX+1,rest, childrenC);
-  } else {
+  }
+  else {
     int n_QNoInsertions = nY*(nX-rest);
     T bestVolume_QNoInsertions = (T)_nX*_nY * n_QNoInsertions/(T)p;
     int xN_QNoInsertions = (int)(bestVolume_QNoInsertions / (T)_nY + 0.9999);
@@ -369,7 +382,7 @@ void Cuboid2D<T>::resize(int iX, int iY, int nX, int nY)
 template<typename T>
 void Cuboid2D<T>::refineToLevel(unsigned int level)
 {
-  int leveldiffabs = int (std::pow(2, level - _refinementLevel ));
+  int leveldiffabs = int (util::pow(2, level - _refinementLevel ));
   _delta /= (T)(leveldiffabs);
   _nX *= leveldiffabs;
   _nY *= leveldiffabs;
@@ -408,7 +421,8 @@ size_t Cuboid2D<T>::getWeight() const
 {
   if (_weight == std::numeric_limits<size_t>::max()) {
     return getLatticeVolume();
-  } else {
+  }
+  else {
     return _weight;
   }
 }

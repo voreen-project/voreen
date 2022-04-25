@@ -26,10 +26,8 @@
 
 #include "extendedFiniteDifferenceBoundary2D.h"
 #include "core/finiteDifference2D.h"
-#include "core/blockLattice2D.h"
 #include "core/util.h"
-#include "dynamics/lbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
+#include "dynamics/lbm.h"
 
 
 namespace olb {
@@ -48,10 +46,10 @@ ExtendedStraightFdBoundaryPostProcessor2D(int x0_, int x1_, int y0_, int y1_)
 
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 void ExtendedStraightFdBoundaryPostProcessor2D<T,DESCRIPTOR,direction,orientation>::
-processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_)
 {
   using namespace olb::util::tensorIndices2D;
-  typedef lbHelpers<T,DESCRIPTOR> lbH;
+  typedef lbm<DESCRIPTOR> lbH;
   typedef DESCRIPTOR L;
   enum {x,y};
 
@@ -145,7 +143,7 @@ processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 void ExtendedStraightFdBoundaryPostProcessor2D<T,DESCRIPTOR,direction,orientation>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -153,7 +151,7 @@ process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 template<int deriveDirection>
 void ExtendedStraightFdBoundaryPostProcessor2D<T,DESCRIPTOR,direction,orientation>::
-interpolateGradients(BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+interpolateGradients(BlockLattice<T,DESCRIPTOR> const& blockLattice,
                      T velDeriv[DESCRIPTOR::d], int iX, int iY) const
 {
   fd::DirectedGradients2D<T, DESCRIPTOR, direction, orientation, direction==deriveDirection>::
@@ -163,7 +161,7 @@ interpolateGradients(BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 template<int deriveDirection>
 void ExtendedStraightFdBoundaryPostProcessor2D<T,DESCRIPTOR,direction,orientation>::
-interpolateGradients(BlockLattice2D<T,DESCRIPTOR> const& blockLattice, T& rhoDeriv, int iX, int iY) const
+interpolateGradients(BlockLattice<T,DESCRIPTOR> const& blockLattice, T& rhoDeriv, int iX, int iY) const
 {
   fd::DirectedGradients2D<T, DESCRIPTOR, direction, orientation, direction==deriveDirection>::
   interpolateScalar(rhoDeriv, blockLattice, iX, iY);

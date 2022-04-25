@@ -29,17 +29,17 @@
 
 #include "latticeFrameChangeF3D.h"
 #include "functors/analytical/frameChangeF2D.h"
-#include "core/superLattice3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
+#include "core/superLattice.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
 #include "utilities/vectorHelpers.h"  // for normalize
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 
 namespace olb {
 
 
 template <typename T, typename DESCRIPTOR>
 RotatingForceField3D<T,DESCRIPTOR>::RotatingForceField3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice_, SuperGeometry3D<T>& superGeometry_,
+(SuperLattice<T,DESCRIPTOR>& sLattice_, SuperGeometry<T,3>& superGeometry_,
  const UnitConverter<T,DESCRIPTOR>& converter_, std::vector<T> axisPoint_,
  std::vector<T> axisDirection_, T w_, bool centrifugeForceOn_,
  bool coriolisForceOn_)
@@ -90,12 +90,12 @@ bool RotatingForceField3D<T,DESCRIPTOR>::operator()(T output[], const int x[])
 
 template <typename T, typename DESCRIPTOR>
 HarmonicOscillatingRotatingForceField3D<T,DESCRIPTOR>::HarmonicOscillatingRotatingForceField3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice_, SuperGeometry3D<T>& superGeometry_,
+(SuperLattice<T,DESCRIPTOR>& sLattice_, SuperGeometry<T,3>& superGeometry_,
  const UnitConverter<T,DESCRIPTOR>& converter_, std::vector<T> axisPoint_,
  std::vector<T> axisDirection_, T amplitude_, T frequency_)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice_,3), sg(superGeometry_),
     converter(converter_), axisPoint(axisPoint_), axisDirection(axisDirection_),
-    amplitude(amplitude_), resonanceFrequency(2.*4.*std::atan(1.0)*frequency_), w(0.0), dwdt(0.0),
+    amplitude(amplitude_), resonanceFrequency(2.*4.*util::atan(1.0)*frequency_), w(0.0), dwdt(0.0),
     velocity(sLattice_,converter_)
 {
   this->getName() = "harmonicOscillatingrotatingForce";
@@ -104,8 +104,8 @@ HarmonicOscillatingRotatingForceField3D<T,DESCRIPTOR>::HarmonicOscillatingRotati
 template <typename T, typename DESCRIPTOR>
 void HarmonicOscillatingRotatingForceField3D<T,DESCRIPTOR>::updateTimeStep(int iT)
 {
-  w = resonanceFrequency * amplitude * cos(resonanceFrequency*converter.getPhysTime(iT));
-  dwdt = -resonanceFrequency * resonanceFrequency * amplitude * sin(resonanceFrequency*converter.getPhysTime(iT));
+  w = resonanceFrequency * amplitude * util::cos(resonanceFrequency*converter.getPhysTime(iT));
+  dwdt = -resonanceFrequency * resonanceFrequency * amplitude * util::sin(resonanceFrequency*converter.getPhysTime(iT));
 }
 
 

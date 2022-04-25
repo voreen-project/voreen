@@ -46,7 +46,7 @@ BlockLocalAverage3D<T,W>::BlockLocalAverage3D(
 template<typename T, typename W>
 bool BlockLocalAverage3D<T,W>::operator() (W output[], const int input[])
 {
-  const auto& geometry = _indicatorF.getBlockGeometryStructure();
+  const auto& geometry = _indicatorF.getBlockGeometry();
 
   for (int i = 0; i < this->getTargetDim(); ++i) {
     output[i] = 0.;
@@ -61,7 +61,7 @@ bool BlockLocalAverage3D<T,W>::operator() (W output[], const int input[])
   IndicatorSphere3D<T> analyticalSphere(centerOfSphere, _radius);
   BlockIndicatorFfromIndicatorF3D<T> latticeSphere(
     analyticalSphere,
-    _indicatorF.getBlockGeometryStructure());
+    _indicatorF.getBlockGeometry());
 
   std::size_t voxels(0);
   int inputTmp[3];

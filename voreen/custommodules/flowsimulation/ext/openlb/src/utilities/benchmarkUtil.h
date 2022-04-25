@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2019 Mathias J. Krause, Maximilian Gaedtke, Marc Haußmann, Davide Dapelo, Jonathan Jeppener-Haltenhoff
+ *  Copyright (C) 2019 Mathias J. Krause, Maximilian Gaedtke, Marc Haußmann,
+ *  Davide Dapelo, Jonathan Jeppener-Haltenhoff, Julius Jeßberger
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -26,9 +27,11 @@
 
 #include <deque>
 #include <functional>
+#include "calc.h"
 #include "functors/analytical/analyticalBaseF.h"
-#include "io/ostreamManager.h"
 #include "functors/analytical/analyticalF.h"
+#include "functors/analytical/derivativeF.h"
+#include "io/ostreamManager.h"
 
 namespace olb {
 
@@ -74,6 +77,7 @@ public:
   bool hasConvergedMinMax() const;
   T computeAverage() const;
   T computeStdDev(T average) const;
+  T getEpsilon() const;
   void setEpsilon(T epsilon);
 private:
   int    _deltaT;
@@ -115,7 +119,7 @@ class Newton1D {
 
 protected:
   AnalyticalF1D<T,T>& _f;
-  AnalyticalDiffFD1D<T> _df;
+  AnalyticalDerivativeFD1D<T> _df;
   T _yValue;
   T _eps;
   int _maxIterations;
@@ -190,7 +194,165 @@ public:
   void resetNoOfEntries();
 
   bool operator() (T output[], const S x[]) override;
+};
 
+
+/// Integration with the trapezoid rule
+/** Compute L^P norm on a time interval with the trapezoid rule.
+ * For p < infinity, the exact physical interval bounds are respected via
+ * linear interpolation from the two neighboring time steps inside the
+ * integration domain.
+ * P=0 corresponds to the L^\infty norm.
+ * For ADf data types, the derivatives of the result contain the derivatives
+ * of the integral w.r.t. the derivation variables. Both integrands and
+ * integration limits may depend on the derivation variables.
+ */
+template<typename T, int P=1>
+class TimeIntegrator {
+
+protected:
+  T             _lowerBound;
+  T             _upperBound;
+  T             _dt;
+
+  int           _firstStep;
+  int           _secondStep;
+  int           _lastStep;
+  int           _prelastStep;
+
+  std::conditional_t< (P==0), T, KahanSummator<T>> result;
+
+public:
+  TimeIntegrator(T lowerBound, T upperBound, T dt) :
+    _lowerBound(lowerBound),
+    _upperBound(upperBound),
+    _dt(dt),
+    _firstStep(_lowerBound > 0 ? _lowerBound / dt + 1.0 : _lowerBound / dt),
+    _secondStep(_firstStep + 1),
+    _lastStep(_upperBound > 0 ? _upperBound / dt : _upperBound / dt - 1.0),
+    _prelastStep(_lastStep - 1)
+  {
+    OLB_ASSERT((_secondStep < _prelastStep),
+      "Time integration needs smaller time steps.\n");
+    if constexpr (P==0) {
+      result = T(0);
+    }
+  }
+
+  void takeValue(int iT, T value)
+  {
+    if (iT >= _firstStep && iT <= _lastStep) {
+      if constexpr (P == 0) {
+        result = util::max(result, util::abs(value));
+      }
+      else {
+        const T time(iT * _dt);
+        T weight(_dt);
+
+        /*
+        // linear extrapolation at interval bounds
+        // was deactivated due to instability
+        if (iT == _firstStep) {
+          T offset (_lowerBound - time);
+          weight = 0.5 * _dt - 0.5 * (2.0 - offset / _dt) * offset;
+          //weight = 0.5 * _dt + time - _lowerBound;
+        }
+        else if (iT == _secondStep) {
+          T offset (_lowerBound - (time - _dt));
+          weight = _dt - 0.5 * offset * offset / _dt;
+        }
+        else if (iT == _prelastStep) {
+          T offset (_upperBound - (time + _dt));
+          weight = _dt - 0.5 * offset * offset / _dt;
+        }
+        else if (iT == _lastStep) {
+          T offset (_upperBound - time);
+          weight = 0.5 * _dt + 0.5 * (2.0 + offset / _dt) * offset;
+          //weight = 0.5 * _dt + offset;
+        }
+        */
+
+        // constant extrapolation at interval bounds
+        if (iT == _firstStep) {
+          weight = 0.5 * _dt + time - _lowerBound;
+        }
+        else if (iT == _lastStep) {
+          T offset (_upperBound - time);
+          weight = 0.5 * _dt + offset;
+        }
+
+        result.add(weight * util::pow(value, P));
+      }
+    }
+  }
+
+  void reset(T lowerBound, T upperBound, T dt)
+  {
+    _lowerBound = lowerBound;
+    _upperBound = upperBound;
+    _dt = dt;
+    _firstStep = _lowerBound / dt + 1.0;
+    _secondStep = _firstStep + 1;
+    _lastStep = _upperBound / dt;
+    _prelastStep = _lastStep - 1;
+    if constexpr (P==0) {
+      result = T(0);
+    } else {
+      result.initialize();
+    }
+    if (_secondStep >= _prelastStep) {
+      throw std::runtime_error("Time integration needs smaller time steps.\n");
+    }
+  }
+
+  T getResult()
+  {
+    using BT = BaseType<T>;
+    if constexpr (P==0) {
+      return result;
+    } else {
+      return util::pow(result.getSum(), BT(1) / P);
+    }
+    __builtin_unreachable();
+  }
+};
+
+/// Helper class that manages an array of time integrators
+template<typename T, int numComponents, int P=1>
+class TimeIntegratorsArray {
+
+protected:
+  std::array<std::unique_ptr<TimeIntegrator<T,P>>,numComponents> integrators;
+
+public:
+  TimeIntegratorsArray(T lowerBound, T upperBound, T dt) {
+    for (int i = 0; i < numComponents; ++i) {
+      integrators[i] = std::make_unique<TimeIntegrator<T,P>>(lowerBound,upperBound,dt);
+    }
+  }
+
+  /// Values can be passed in {val1, val2, ...} notation
+  void takeValues(int iT, std::array<T,numComponents> values) {
+    for (int i = 0; i < numComponents; ++i) {
+      integrators[i]->takeValue(iT,values[i]);
+    }
+  }
+
+  void reset(T lowerBound, T upperBound, T dt) {
+    std::for_each_n(integrators.begin(),numComponents,[&](auto& integrator){
+      integrator->reset(lowerBound,upperBound,dt);
+    });
+  }
+
+  std::array<T,numComponents> getResult()
+  {
+    std::array<T,numComponents> results;
+    std::transform(integrators.begin(),integrators.end(),results.begin(),
+      [](auto& integrator){
+      return integrator->getResult();
+    });
+    return results;
+  }
 };
 
 } // namespace util

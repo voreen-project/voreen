@@ -21,8 +21,8 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Regularized Heat Flux Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Regularized Heat Flux Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_REGULARIZED_HEAT_FLUX_BOUNDARY_H
 #define SET_REGULARIZED_HEAT_FLUX_BOUNDARY_H
 
@@ -31,32 +31,33 @@
 #include "geometry/blockGeometryStatistics2D.h"
 #include "core/superLattice2D.h"
 #include "io/ostreamManager.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "utilities/functorPtr.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
-#include "core/blockLatticeStructure2D.h"
-#include "advectionDiffusionMomentaOnBoundaries.h"
 #include "boundaryPostProcessors2D.h"
 #include "dynamics/dynamics.h"
 #include "dynamics/advectionDiffusionDynamics.h"
+#include "dynamics/momenta/aliases.h"
 #include "advectionDiffusionBoundaries.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
+#include "setBoundary2D.h"
 
 namespace olb {
+
 ///Initialising the RegularizedHeatFluxBoundary on the superLattice domain
 ///This is an advection diffusion boundary -->MixinDynamics = AdvectionDiffusionRLBdynamics
 template<typename T, typename DESCRIPTOR, typename MixinDynamics=AdvectionDiffusionRLBdynamics<T,DESCRIPTOR>>
-void setRegularizedHeatFluxBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry2D<T>& superGeometry, int material, T *heatFlux=nullptr);
+void setRegularizedHeatFluxBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry<T,2>& superGeometry, int material, T *heatFlux=nullptr);
 
 ///Initialising the RegularizedHeatFluxBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setRegularizedHeatFluxBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,  T *heatFlux=nullptr);
+void setRegularizedHeatFluxBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator,  T *heatFlux=nullptr);
 
-/// Set RegularizedHeatFluxBoundary for indicated cells inside the block domain
+
+///Set RegularizedHeatFluxBoundary for indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setRegularizedHeatFluxBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator, T *heatFlux);
-
+void setRegularizedHeatFluxBoundary(BlockLattice<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator, T *heatFlux);
 
 }//namespace olb
 

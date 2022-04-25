@@ -33,18 +33,17 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
 namespace olb {
-
+/*
 template <typename T, typename DESCRIPTOR>
 SuperLatticePorousMomentumLossForce3D<T,DESCRIPTOR>::SuperLatticePorousMomentumLossForce3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
+(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
  std::vector<SmoothIndicatorF3D<T,T,true>* >& indicator, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T,DESCRIPTOR>(sLattice,converter,7*indicator.size())
 {
@@ -52,7 +51,7 @@ SuperLatticePorousMomentumLossForce3D<T,DESCRIPTOR>::SuperLatticePorousMomentumL
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticePorousMomentumLossForce3D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC), superGeometry.getBlockGeometry(iC), indicator, converter));
+    this->_blockF.emplace_back( new BlockLatticePorousMomentumLossForce3D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC), superGeometry.getBlockGeometry(iC), indicator, converter));
   }
 }
 
@@ -81,7 +80,7 @@ bool SuperLatticePorousMomentumLossForce3D<T,DESCRIPTOR>::operator() (T output[]
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePorousMomentumLossForce3D<T, DESCRIPTOR>::BlockLatticePorousMomentumLossForce3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, BlockGeometryStructure3D<T>& blockGeometry,
+  BlockLattice<T, DESCRIPTOR>& blockLattice, BlockGeometry<T,3>& blockGeometry,
   std::vector<SmoothIndicatorF3D<T,T,true>* >& indicator, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 7*indicator.size()), _blockGeometry(blockGeometry), _vectorOfIndicator(indicator)
 {
@@ -101,7 +100,7 @@ bool BlockLatticePorousMomentumLossForce3D<T, DESCRIPTOR>::operator()(T output[]
     T invDeltaX = 1./this->_converter.getPhysDeltaX();
 
     // check for intersection of cuboid and indicator
-    if (getRangeBlockGeometrySmoothIndicatorIntersection3D(_blockGeometry, *(_vectorOfIndicator[iInd]), invDeltaX, start, end)) {    
+    if (getRangeBlockGeometrySmoothIndicatorIntersection3D(_blockGeometry, *(_vectorOfIndicator[iInd]), invDeltaX, start, end)) {
 
       // iterate over cells in the constructed intersection box
       for (int iX = start[0]; iX < end[0]; iX++) {
@@ -111,14 +110,14 @@ bool BlockLatticePorousMomentumLossForce3D<T, DESCRIPTOR>::operator()(T output[]
             // check if cell belongs to particle
             T inside[1] = {0.};
             T posIn[3] = {0.};
-            _blockGeometry.getPhysR(posIn, iX, iY, iZ);
+            _blockGeometry.getPhysR(posIn, {iX, iY, iZ});
             (*(_vectorOfIndicator[iInd]))( inside, posIn);
-            if ( !util::nearZero(inside[0]) && this->_blockGeometry.get(iX,iY,iZ)==1) {
+            if ( !util::nearZero(inside[0]) && this->_blockGeometry.get({iX,iY,iZ})==1) {
               // compute momentum exchange force on particle
               T tmpForce[3] = {0.,0.,0.};
-              tmpForce[0] += this->_blockLattice.get(iX, iY, iZ).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>()[0];
-              tmpForce[1] += this->_blockLattice.get(iX, iY, iZ).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>()[1];
-              tmpForce[2] += this->_blockLattice.get(iX, iY, iZ).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>()[2];
+              tmpForce[0] += this->_blockLattice.get(iX, iY, iZ).template getFieldComponent<descriptors::VELOCITY_NUMERATOR>(0);
+              tmpForce[1] += this->_blockLattice.get(iX, iY, iZ).template getFieldComponent<descriptors::VELOCITY_NUMERATOR>(1);
+              tmpForce[2] += this->_blockLattice.get(iX, iY, iZ).template getFieldComponent<descriptors::VELOCITY_NUMERATOR>(2);
               // reset external field for next timestep
               T reset_to_zero[3] = {0.,0.,0.};
               this->_blockLattice.get(iX, iY, iZ).template setField<descriptors::VELOCITY_NUMERATOR>(reset_to_zero);
@@ -148,6 +147,6 @@ bool BlockLatticePorousMomentumLossForce3D<T, DESCRIPTOR>::operator()(T output[]
   }
   return true;
 }
-
+*/
 }
 #endif

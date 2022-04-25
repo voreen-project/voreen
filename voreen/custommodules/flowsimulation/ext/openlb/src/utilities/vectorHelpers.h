@@ -24,64 +24,82 @@
 #ifndef VECTOR_HELPERS_H
 #define VECTOR_HELPERS_H
 
-#include<assert.h>
-#include<cmath>
-#include<vector>
-#include<string>
-#include<sstream>
-#include<limits>
+#include <assert.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <limits>
 
 #include "io/ostreamManager.h"
+#include "utilities/omath.h"
 #include "core/vector.h"
 
 namespace olb {
 
-template<typename T, unsigned Size > class Vector;
+template<typename T, unsigned Size> class Vector;
 
 namespace util {
 
 
 /// return true if a is close to zero
-template <class T>
-inline bool nearZero(const T& a)
+template <typename T>
+inline bool nearZero(T a)
 {
-  if (a==T()) return true;
+  if (a==T()) {
+    return true;
+  }
   T EPSILON = std::numeric_limits<T>::epsilon();
   if (a > -EPSILON && a < EPSILON) {
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 }
 
-template <class T>
-inline bool nearZero(const T& a, const T& epsilon)
+template <typename T>
+inline bool nearZero(T a, T epsilon)
 {
   if (a > -epsilon && a < epsilon) {
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 }
 
-template<typename T>
-inline bool approxEqual(const T& a, const T& b, const T& epsilon)
+template<typename T, typename U=T, typename W=T>
+inline bool approxEqual(T a, U b, W epsilon)
 {
-  if (a==b) return true;
+  if (a==b) {
+    return true;
+  }
   return nearZero<T>(a - b, epsilon);
 }
 
-template<typename T>
-inline bool approxEqual(const T& a, const T& b)
+template<typename T, typename U=T>
+inline bool approxEqual(T a, U b)
 {
-  if (a==b) return true;
-  if (nearZero(a) && nearZero(b)) return true;
-  T EPSILON = std::numeric_limits<T>::epsilon()*4.*fabs(a);
+  if (a==b) {
+    return true;
+  }
+  if (nearZero(a) && nearZero(b)) {
+    return true;
+  }
+  T EPSILON = std::numeric_limits<T>::epsilon()*4.*util::fabs(a);
   return approxEqual(a,b,EPSILON);
 }
 
 template <class T>
 inline void copyN(T c[], const T a[], const unsigned dim)
+{
+  for (unsigned i=0; i<dim; i++) {
+    c[i] = a[i];
+  }
+}
+
+template <class S, class T>
+inline void copyN(S c[], const T a[], const unsigned dim)
 {
   for (unsigned i=0; i<dim; i++) {
     c[i] = a[i];
@@ -124,7 +142,7 @@ T norm(const std::vector<T>& a)
   for (unsigned iD=0; iD<a.size(); iD++) {
     v += a[iD]*a[iD];
   }
-  v = sqrt(v);
+  v = util::sqrt(v);
   return v;
 }
 
@@ -153,6 +171,17 @@ T dotProduct2D(const Vector<T,2>& a, const Vector<T,2>& b)
   return a[0]*b[0] + a[1]*b[1];
 }
 
+/// dot product
+template <typename T,unsigned D>
+T dotProduct(const Vector<T,D>& a, const Vector<T,D>& b)
+{
+  if constexpr (D==2){
+    return dotProduct2D(a, b);
+  } else {
+    return dotProduct3D(a, b);
+  }
+}
+
 /// returns a normalized vector, works for arbitrary lengths
 template <typename T>
 std::vector<T> normalize(const std::vector<T>& a)
@@ -172,7 +201,7 @@ Vector<T,Size> floor(const Vector<T,Size>& a)
 {
   Vector<T,Size> out;
   for (unsigned int iDim=0; iDim < Size; ++iDim) {
-    out[iDim] = std::floor(a[iDim]);
+    out[iDim] = util::floor(a[iDim]);
   }
   return out;
 }
@@ -183,9 +212,38 @@ Vector<T,Size> ceil(const Vector<T,Size>& a)
 {
   Vector<T,Size> out;
   for (unsigned int iDim=0; iDim < Size; ++iDim) {
-    out[iDim] = std::ceil(a[iDim]);
+    out[iDim] = util::ceil(a[iDim]);
   }
   return out;
+}
+
+/// computes the average of all elements
+template <typename T, unsigned Size>
+T average(const Vector<T,Size>& a)
+{
+  T sum = a[0];
+  for (unsigned int iDim=1; iDim < Size; ++iDim) {
+    sum += a[iDim];
+  }
+  return sum/Size;
+}
+
+/// Calculates angles between two 2D vectors
+template <typename T>
+T angleBetweenVectors(const Vector<T,2>& a, const Vector<T,2>& b)
+{
+  return util::atan2(b[1]*a[0]-b[0]*a[1], a[0]*b[0]+a[1]*b[1]);
+}
+
+/// Calculates angles between two 3D vectors
+template <typename T>
+Vector<T,3> angleBetweenVectors(const Vector<T,3>& a, const Vector<T,3>& b)
+{
+  Vector<T,3> angles;
+  angles[0] = angleBetweenVectors(Vector<T,2>(a[1], a[2]), Vector<T,2>(b[1], b[2]));
+  angles[1] = angleBetweenVectors(Vector<T,2>(a[0], a[2]), Vector<T,2>(b[0], b[2]));
+  angles[2] = angleBetweenVectors(Vector<T,2>(a[0], a[1]), Vector<T,2>(b[0], b[1]));
+  return angles;
 }
 
 /*
@@ -257,18 +315,24 @@ std::vector<T> assign(T a, T b, T c)
 
 template<typename U>
 void print(U data, const std::string& name="", OstreamManager clout = OstreamManager(std::cout,"print"),
-  const char delimiter=',')
+           const char delimiter=',')
 {
   static_assert(!std::is_integral<U>::value && !std::is_floating_point<U>::value, "passed integral or floating_point value to function print()");
   if (name != "") {
     clout << name << " = ";
   }
-  for( auto& element : data ) {
+  for ( auto& element : data ) {
     clout << std::fixed << element << delimiter << ' ';
   }
   clout << std::endl;
 }
 
+/// Check, if object is contained in iteratable container c.
+// U must provide equality 'operator==' and this has to fit the elements of c.
+template<typename C, typename U>
+bool isContained(const C& c, U object) {
+  return (std::find(c.begin(), c.end(), object) != c.end());
+}
 
 } // namespace util
 

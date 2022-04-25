@@ -25,30 +25,30 @@
 #define WALLFUNCTION_BOUNDARY_POST_PROCESSORS_3D_H
 
 #include "core/postProcessing.h"
-#include "momentaOnBoundaries.h"
-#include "core/blockLattice3D.h"
+#include "dynamics/momenta/aliases.h"
+#include "functors/analytical/analyticalF.h"
 
 namespace olb {
 
 template <typename T>
 struct wallFunctionParam {
   /*  Used method for density reconstruction
-   *  0: Zou-He
-   *  1: extrapolation
-   *  2: constant
+   *  0: Zou-He (only for straight wall)
+   *  1: extrapolation (0th order)
+   *  2: constant (rho = 1.)
    */
   int rhoMethod = 1;
 
   /*  Used method for non-equilibrium particle distribution reconstruction
-   *  0: regularized NEBB (Latt)
-   *  1: extrapolation NEQ (Guo Zhaoli)
-   *  2: regularized second order finite Differnce
-   *  3: equilibrium scheme
+   *  0: regularized NEBB (Latt, BounceBack, use for straight walls)
+   *  1: extrapolation NEQ (Guo Zhaoli, more precise, less stable)
+   *  2: regularized second order finite Differnce (for straight walls)
+   *  3: equilibrium scheme (less precise, more stability)
    */
   int fneqMethod = 1;
 
   /*  Used wall profile
-   *  0: Musker profile
+   *  0: Musker profile 
    *  1: power law profile
    */
   int wallProfile = 0;
@@ -59,13 +59,13 @@ struct wallFunctionParam {
   /// special formulation for straight boundaries
   bool curved = true;
 
-  /// use van Driest damping function in boundary cell
+  /// use van Driest damping function in boundary cell, stabilizes LES
   bool useVanDriest = true;
 
-  /// von Karman constant for van Driest model
+  /// von Karman constant for van Driest model (~0.3-0.5)
   T vonKarman = 0.375;
 
-  /// wall distance in lattice units
+  ///  distance from cell to real wall in lattice units
   T latticeWalldistance = 0.5;
 };
 
@@ -98,7 +98,7 @@ public:
 template<typename T, typename DESCRIPTOR>
 class WallFunctionBoundaryProcessor3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
-  WallFunctionBoundaryProcessor3D(int x0, int x1, int y0, int y1, int z0, int z1, BlockGeometryStructure3D<T>& blockGeometryStructure,
+  WallFunctionBoundaryProcessor3D(int x0, int x1, int y0, int y1, int z0, int z1, BlockGeometry<T,3>& blockGeometryStructure,
                                   std::vector<int> discreteNormal, std::vector<int> missingIndices,
                                   UnitConverter<T, DESCRIPTOR> const& converter, wallFunctionParam<T> const& wallFunctionParam,
                                   IndicatorF3D<T>* geoIndicator);
@@ -110,45 +110,45 @@ public:
   {
     return 2;
   }
-  virtual void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice);
-  virtual void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  virtual void process(BlockLattice<T,DESCRIPTOR>& blockLattice);
+  virtual void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                                   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ );
-  virtual void ComputeWallFunction(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z);
+  virtual void ComputeWallFunction(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z);
 private:
   void getIndices(int index, int value, std::vector<int>& indices);
   void calculateWallDistances(IndicatorF3D<T>* indicator);
   // FD Difference Methods
   void VelGradFromSecondOrderFD(bool NormalGradient, T Vel_BC[DESCRIPTOR::d], T Vel_1[DESCRIPTOR::d], T Vel_2[DESCRIPTOR::d], T VelGrad[DESCRIPTOR::d]);
-  void computeNeighborsU(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z,
+  void computeNeighborsU(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z,
                          T u_x1[DESCRIPTOR::d], T u_x2[DESCRIPTOR::d], T u_y1[DESCRIPTOR::d], T u_y2[DESCRIPTOR::d], T u_z1[DESCRIPTOR::d], T u_z2[DESCRIPTOR::d]);
   void computeVelocityGradientTensor(T u_bc[DESCRIPTOR::d], T u_x1[DESCRIPTOR::d], T u_x2[DESCRIPTOR::d], T u_y1[DESCRIPTOR::d],
                                      T u_y2[DESCRIPTOR::d], T u_z1[DESCRIPTOR::d], T u_z2[DESCRIPTOR::d],  T VelGrad[DESCRIPTOR::d][DESCRIPTOR::d]);
-  void computeVelocityGradient(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z, T u_BC[DESCRIPTOR::d],  T VelGrad[DESCRIPTOR::d][DESCRIPTOR::d]);
-  void ComputeUWallNeighbor(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z, T (&u)[DESCRIPTOR::d]);
-  void computeNeighborsRho(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z,
+  void computeVelocityGradient(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z, T u_BC[DESCRIPTOR::d],  T VelGrad[DESCRIPTOR::d][DESCRIPTOR::d]);
+  void ComputeUWallNeighbor(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z, T (&u)[DESCRIPTOR::d]);
+  void computeNeighborsRho(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z,
                            T u_x1[DESCRIPTOR::d], T u_x2[DESCRIPTOR::d], T u_y1[DESCRIPTOR::d], T u_y2[DESCRIPTOR::d], T u_z1[DESCRIPTOR::d], T u_z2[DESCRIPTOR::d],
                            T& rho_x1, T& rho_x2, T& rho_y1, T& rho_y2, T& rho_z1, T& rho_z2);
-  void computeNeighborsRhoU(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z,
+  void computeNeighborsRhoU(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z,
                             T u_x1[DESCRIPTOR::d], T u_x2[DESCRIPTOR::d], T u_y1[DESCRIPTOR::d], T u_y2[DESCRIPTOR::d], T u_z1[DESCRIPTOR::d], T u_z2[DESCRIPTOR::d],
                             T& rho_x1, T& rho_x2, T& rho_y1, T& rho_y2, T& rho_z1, T& rho_z2);
 
   // Van Driest Method
   void computeVanDriestTauEff(T y_bc, T tau_w, T u_bc, T u_1, T u_2, T& tau_eff);
   //
-  void ComputeUWall(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x, int y, int z, T u[DESCRIPTOR::d]);
-  void ComputeTauEff(BlockLattice3D<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d]);
-  void ComputeRhoWall(BlockLattice3D<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T& rho_bc);
+  void ComputeUWall(BlockLattice<T,DESCRIPTOR>& blockLattice, int x, int y, int z, T u[DESCRIPTOR::d]);
+  void ComputeTauEff(BlockLattice<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d]);
+  void ComputeRhoWall(BlockLattice<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T& rho_bc);
 
   // Methods FneqWall
   void computeRFneqfromFneq(T fneq_bc[DESCRIPTOR::q]);
   void computeFneqRNEBB(Cell<T,DESCRIPTOR>& cell, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
-  void computeFneqENeq(BlockLattice3D<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
-  void computeFneqRSOFD(BlockLattice3D<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
+  void computeFneqENeq(BlockLattice<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
+  void computeFneqRSOFD(BlockLattice<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
 
-  void ComputeFneqWall(BlockLattice3D<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
+  void ComputeFneqWall(BlockLattice<T,DESCRIPTOR>& blockLattice, Cell<T,DESCRIPTOR>& cell, int x, int y, int z, T u_bc[DESCRIPTOR::d], T rho_bc, T fneq_bc[DESCRIPTOR::q]);
 
   int x0, x1, y0, y1, z0, z1;
-  BlockGeometryStructure3D<T>& _blockGeometryStructure;
+  BlockGeometry<T,3>& _blockGeometryStructure;
   std::vector<int> _discreteNormal;
   std::vector<int> _missingIndices;
   UnitConverter<T, DESCRIPTOR> const& _converter;
@@ -173,13 +173,13 @@ private:
 template<typename T, typename DESCRIPTOR>
 class WallFunctionBoundaryProcessorGenerator3D : public PostProcessorGenerator3D<T,DESCRIPTOR> {
 public:
-  WallFunctionBoundaryProcessorGenerator3D(int x0, int x1, int y0, int y1, int z0, int z1, BlockGeometryStructure3D<T>& blockGeometryStructure,
+  WallFunctionBoundaryProcessorGenerator3D(int x0, int x1, int y0, int y1, int z0, int z1, BlockGeometry<T,3>& blockGeometryStructure,
       std::vector<int> discreteNormal, std::vector<int> missingIndices,
       UnitConverter<T, DESCRIPTOR> const& converter, wallFunctionParam<T> const& wallFunctionParam, IndicatorF3D<T>* geoIndicator);
   PostProcessor3D<T,DESCRIPTOR>* generate() const override;
   PostProcessorGenerator3D<T,DESCRIPTOR>*  clone() const override;
 private:
-  BlockGeometryStructure3D<T>& _blockGeometryStructure;
+  BlockGeometry<T,3>& _blockGeometryStructure;
   std::vector<int> _discreteNormal;
   std::vector<int> _missingIndices;
   UnitConverter<T, DESCRIPTOR> const& _converter;

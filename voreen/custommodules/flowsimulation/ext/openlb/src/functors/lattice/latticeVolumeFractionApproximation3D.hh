@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>::SuperLatticeVolumeFractionApproximation3D(
-  SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
   IndicatorF3D<T>& indicator, int refinementLevel,
   const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1)
@@ -53,7 +52,7 @@ SuperLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>::SuperLatticeVolumeFrac
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back(new BlockLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC),
                                superGeometry.getBlockGeometry(iC),
                                indicator, refinementLevel,
                                converter, insideOut));
@@ -61,8 +60,8 @@ SuperLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>::SuperLatticeVolumeFrac
 }
 
 template<typename T, typename DESCRIPTOR>
-BlockLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>::BlockLatticeVolumeFractionApproximation3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-    BlockGeometryStructure3D<T>& blockGeometry,
+BlockLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>::BlockLatticeVolumeFractionApproximation3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+    BlockGeometry<T,3>& blockGeometry,
     IndicatorF3D<T>& indicator,
     int refinementLevel,
     const UnitConverter<T,DESCRIPTOR>& converter,
@@ -82,7 +81,7 @@ bool BlockLatticeVolumeFractionApproximation3D<T, DESCRIPTOR>::operator()(T outp
   output[0] = 0.;
   T physR[3];
   bool inside[1];
-  _blockGeometry.getPhysR(physR, input[0], input[1], input[2]);
+  _blockGeometry.getPhysR(physR, {input[0], input[1], input[2]});
 
   T subGridMinPhysR[3];
   subGridMinPhysR[0] = physR[0] + _physSubGridMinPhysRshift;

@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -42,13 +40,13 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename FIELD>
 class SuperLatticeField2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeField2D(SuperLattice2D<T,DESCRIPTOR>& sLattice);
+  SuperLatticeField2D(SuperLattice<T,DESCRIPTOR>& sLattice);
 };
 
 template <typename T, typename DESCRIPTOR, typename FIELD>
 class BlockLatticeField2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeField2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice);
+  BlockLatticeField2D(BlockLattice<T,DESCRIPTOR>& blockLattice);
   bool operator() (T output[], const int input[]);
 };
 

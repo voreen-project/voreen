@@ -31,11 +31,11 @@
 namespace olb {
 
 template <typename T, typename W>
-SuperF3D<T,W>::SuperF3D(SuperStructure3D<T>& superStructure, int targetDim)
+SuperF3D<T,W>::SuperF3D(SuperStructure<T,3>& superStructure, int targetDim)
   : GenericF<W,int>(targetDim,4), _superStructure(superStructure) { }
 
 template <typename T, typename W>
-SuperStructure3D<T>& SuperF3D<T,W>::getSuperStructure()
+SuperStructure<T,3>& SuperF3D<T,W>::getSuperStructure()
 {
   return _superStructure;
 }
@@ -59,7 +59,7 @@ BlockF3D<W>& SuperF3D<T,W>::getBlockF(int iCloc)
 template <typename T, typename W>
 bool SuperF3D<T,W>::operator()(W output[], const int input[])
 {
-  
+
   LoadBalancer<T>& load = _superStructure.getLoadBalancer();
 
   if (load.isLocal(input[0])) {
@@ -75,15 +75,12 @@ bool SuperF3D<T,W>::operator()(W output[], const int input[])
 
 
 template <typename T, typename BaseType>
-SuperDataF3D<T,BaseType>::SuperDataF3D(SuperData3D<T,BaseType>& superData)
+SuperDataF3D<T,BaseType>::SuperDataF3D(SuperData<3,T,BaseType>& superData)
   : SuperF3D<T,BaseType>(superData, superData.getDataSize()),
     _superData(superData)
 {
   for (int iC = 0; iC < _superData.getLoadBalancer().size(); ++iC) {
-    this->_blockF.emplace_back(
-      new BlockDataViewF3D<T,BaseType>(_superData.get(iC),
-                                       _superData.getOverlap())
-    );
+    this->_blockF.emplace_back(new BlockDataF3D<T,BaseType>(_superData.getBlock(iC)));
   }
 }
 
@@ -100,7 +97,7 @@ bool SuperDataF3D<T,BaseType>::operator() (BaseType output[], const int input[])
 }
 
 template <typename T, typename BaseType>
-SuperData3D<T,BaseType>& SuperDataF3D<T,BaseType>::getSuperData()
+SuperData<3,T,BaseType>& SuperDataF3D<T,BaseType>::getSuperData()
 {
   return _superData;
 }
@@ -221,31 +218,6 @@ bool SuperExtractIndicatorF3D<T,W>::operator()(W output[], const int input[])
 
 
 template <typename T, typename W>
-SuperDotProductF3D<T,W>::SuperDotProductF3D(SuperF3D<T,W>& f, T vector[])
-  : SuperF3D<T,W>(f.getSuperStructure(),1 ), _f(f), _vector(vector)
-{
-  this->getName() = _f.getName();
-  /*if ( (sizeof(_vector)/sizeof(T)) != _f.getTargetDim() ) {
-    std::cout << "WARNING: dimension of vectors do not match!" << std::endl;
-    exit(-1);
-  }*/
-}
-
-template <typename T, typename W>
-bool SuperDotProductF3D<T,W>::operator()(W output[], const int input[])
-{
-  T outTmp[3];
-  _f(outTmp, input);
-  output[0] = T();
-  for (int iDim=0; iDim<_f.getTargetDim(); iDim++) {
-    output[0] += outTmp[iDim]*_vector[iDim];
-  }
-  return true;
-}
-
-
-
-template <typename T, typename W>
 SuperIdentityOnSuperIndicatorF3D<T,W>::SuperIdentityOnSuperIndicatorF3D(SuperF3D<T,W>& f,
     SuperIndicatorF3D<T>& indicatorF,
     W defaultValue)
@@ -276,12 +248,12 @@ bool SuperIdentityOnSuperIndicatorF3D<T,W>::operator()(W output[], const int inp
 
 
 template <typename T, typename DESCRIPTOR>
-SuperLatticeF3D<T,DESCRIPTOR>::SuperLatticeF3D(SuperLattice3D<T,DESCRIPTOR>& superLattice,
+SuperLatticeF3D<T,DESCRIPTOR>::SuperLatticeF3D(SuperLattice<T,DESCRIPTOR>& superLattice,
     int targetDim)
   : SuperF3D<T,T>(superLattice, targetDim), _sLattice(superLattice) { }
 
 template <typename T, typename DESCRIPTOR>
-SuperLattice3D<T,DESCRIPTOR>& SuperLatticeF3D<T,DESCRIPTOR>::getSuperLattice()
+SuperLattice<T,DESCRIPTOR>& SuperLatticeF3D<T,DESCRIPTOR>::getSuperLattice()
 {
   return _sLattice;
 }
@@ -325,7 +297,7 @@ bool SuperLatticeIdentity3D<T,DESCRIPTOR>::operator()(T output[], const int inpu
 
 template <typename T, typename DESCRIPTOR>
 SuperLatticePhysF3D<T,DESCRIPTOR>::SuperLatticePhysF3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter,
+(SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter,
  int targetDim)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice, targetDim), _converter(converter) { }
 
@@ -336,7 +308,7 @@ UnitConverter<T,DESCRIPTOR> const& SuperLatticePhysF3D<T,DESCRIPTOR>::getConvert
 }
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>::SuperLatticeThermalPhysF3D
-(SuperLattice3D<T,TDESCRIPTOR>& sLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
+(SuperLattice<T,TDESCRIPTOR>& sLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
  int targetDim)
   : SuperLatticeF3D<T,TDESCRIPTOR>(sLattice, targetDim), _converter(converter) { }
 

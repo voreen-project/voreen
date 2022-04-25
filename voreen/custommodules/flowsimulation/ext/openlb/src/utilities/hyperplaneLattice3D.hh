@@ -33,7 +33,7 @@ template <typename T>
 int HyperplaneLattice3D<T>::computeMaxLatticeDistance(Cuboid3D<T>&& cuboid) const
 {
   const Vector<T,3>   origin = cuboid.getOrigin();
-  const Vector<int,3> extend = cuboid.getExtend();
+  const Vector<int,3> extend = cuboid.getExtent();
   const T             deltaR = cuboid.getDeltaR();
 
   T maxPhysDistance = T();
@@ -41,41 +41,41 @@ int HyperplaneLattice3D<T>::computeMaxLatticeDistance(Cuboid3D<T>&& cuboid) cons
   Vector<T,3> tmpO;
   Vector<T,3> tmpE;
 
-  for(int iDim=0; iDim<3; ++iDim){
-  tmpO[iDim] = origin[iDim] - _origin[iDim];
-  tmpE[iDim] = origin[iDim] + extend[iDim]*deltaR - _origin[iDim];
+  for (int iDim=0; iDim<3; ++iDim) {
+    tmpO[iDim] = origin[iDim] - _origin[iDim];
+    tmpE[iDim] = origin[iDim] + extend[iDim]*deltaR - _origin[iDim];
   }
-  tmp = sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1] + tmpO[2]*tmpO[2]);
+  tmp = util::sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1] + tmpO[2]*tmpO[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt((tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1] + tmpO[2]*tmpO[2]));
+  tmp = util::sqrt((tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1] + tmpO[2]*tmpO[2]));
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1] + tmpO[2]*tmpO[2]);
+  tmp = util::sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1] + tmpO[2]*tmpO[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1] + tmpE[2]*tmpE[2]);
+  tmp = util::sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1] + tmpE[2]*tmpE[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1] + tmpE[2]*tmpE[2]);
+  tmp = util::sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1] + tmpE[2]*tmpE[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1] + tmpE[2]*tmpE[2]);
+  tmp = util::sqrt(tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1] + tmpE[2]*tmpE[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1] + tmpO[2]*tmpO[2]);
+  tmp = util::sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1] + tmpO[2]*tmpO[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1] + tmpE[2]*tmpE[2]);
+  tmp = util::sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1] + tmpE[2]*tmpE[2]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
 
   return int(maxPhysDistance/_h) + 1;
@@ -147,7 +147,7 @@ void HyperplaneLattice3D<T>::constructCuboid(
   _nx = maxX - minX + 1;
   _ny = maxY - minY + 1;
 
-  _origin = _origin + double(minX)*_u + double(minY)*_v;
+  _origin = _origin + T(minX)*_u + T(minY)*_v;
 }
 
 template <typename T>
@@ -230,8 +230,8 @@ HyperplaneLattice3D<T>::HyperplaneLattice3D(
 
 template<typename T>
 HyperplaneLattice3D<T>::HyperplaneLattice3D(
-    Hyperplane3D<T> hyperplane,
-    T h, int nx, int ny)
+  Hyperplane3D<T> hyperplane,
+  T h, int nx, int ny)
   : _hyperplane(hyperplane),
     _origin(hyperplane.origin),
     _u(hyperplane.u),
@@ -254,9 +254,9 @@ template <typename T>
 Vector<T,3> HyperplaneLattice3D<T>::getPhysR(const int& planeX, const int& planeY) const
 {
   return Vector<T,3> {
-    _origin[0] + double(planeX)*_u[0] + double(planeY)*_v[0],
-    _origin[1] + double(planeX)*_u[1] + double(planeY)*_v[1],
-    _origin[2] + double(planeX)*_u[2] + double(planeY)*_v[2]
+    _origin[0] + T(planeX)*_u[0] + T(planeY)*_v[0],
+    _origin[1] + T(planeX)*_u[1] + T(planeY)*_v[1],
+    _origin[2] + T(planeX)*_u[2] + T(planeY)*_v[2]
   };
 }
 

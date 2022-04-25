@@ -26,8 +26,7 @@
 #define EXTENDED_FINITE_DIFFERENCE_BOUNDARY_2D_H
 
 #include "core/postProcessing.h"
-#include "momentaOnBoundaries.h"
-#include "core/blockLattice2D.h"
+#include "dynamics/momenta/aliases.h"
 
 
 namespace olb {
@@ -51,16 +50,16 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_ ) override;
 private:
   template<int deriveDirection>
-  void interpolateGradients(BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+  void interpolateGradients(BlockLattice<T,DESCRIPTOR> const& blockLattice,
                             T velDeriv[DESCRIPTOR::d], int iX, int iY) const;
   template<int deriveDirection>
   void interpolateGradients (
-    BlockLattice2D<T,DESCRIPTOR> const& blockLattice,T& rhoDeriv,
+    BlockLattice<T,DESCRIPTOR> const& blockLattice,T& rhoDeriv,
     int iX, int iY ) const;
 private:
   int x0, x1, y0, y1;

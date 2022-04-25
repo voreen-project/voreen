@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysVelocity3D<T, DESCRIPTOR>::SuperLatticePhysVelocity3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, bool print)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, bool print)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3), _print(print)
 {
   this->getName() = "physVelocity";
@@ -53,8 +52,7 @@ SuperLatticePhysVelocity3D<T, DESCRIPTOR>::SuperLatticePhysVelocity3D(
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysVelocity3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter,
         _print)
     );
@@ -63,12 +61,10 @@ SuperLatticePhysVelocity3D<T, DESCRIPTOR>::SuperLatticePhysVelocity3D(
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysVelocity3D<T, DESCRIPTOR>::BlockLatticePhysVelocity3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
   bool print)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 3),
-    _overlap(overlap),
     _print(print)
 {
   this->getName() = "physVelocity";
@@ -82,9 +78,7 @@ bool BlockLatticePhysVelocity3D<T, DESCRIPTOR>::operator()(T output[], const int
               << singleton::mpi().getRank() << std::endl;
   }
 
-  T rho;
-  this->_blockLattice.get(
-    input[0]+_overlap, input[1]+_overlap, input[2]+_overlap).computeRhoU(rho, output);
+  this->_blockLattice.get(input).computeU(output);
   output[0] = this->_converter.getPhysVelocity(output[0]);
   output[1] = this->_converter.getPhysVelocity(output[1]);
   output[2] = this->_converter.getPhysVelocity(output[2]);

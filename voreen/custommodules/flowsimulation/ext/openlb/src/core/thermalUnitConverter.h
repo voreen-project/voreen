@@ -35,7 +35,7 @@
 #include "io/xmlReader.h"
 #include "core/unitConverter.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 
@@ -76,7 +76,7 @@ public:
       _conversionThermalDiffusivity(this->_conversionViscosity),
       _conversionSpecificHeatCapacity(this->_conversionVelocity * this->_conversionVelocity / _conversionTemperature),
       _conversionThermalConductivity(this->_conversionForce / this->_conversionTime / _conversionTemperature),
-      _conversionHeatFlux(this->_conversionMass / pow(this->_conversionTime, 3)),
+      _conversionHeatFlux(this->_conversionMass / util::pow(this->_conversionTime, 3)),
       _charPhysLowTemperature(charPhysLowTemperature),
       _charPhysHighTemperature(charPhysHighTemperature),
       _charPhysTemperatureDifference(charPhysHighTemperature - charPhysLowTemperature),
@@ -222,12 +222,10 @@ public:
   };
   constexpr T getRayleighNumber() const
   {
-    return 9.81 * _physThermalExpansionCoefficient/this->_physViscosity/_physThermalDiffusivity * (_charPhysHighTemperature - _charPhysLowTemperature) * pow(this->_charPhysLength,3);
+    return 9.81 * _physThermalExpansionCoefficient/this->_physViscosity/_physThermalDiffusivity * (_charPhysHighTemperature - _charPhysLowTemperature) * util::pow(this->_charPhysLength,3);
   };
 /// nice terminal output for conversion factors, characteristical and physical data
   void print() const override;
-
-  void write(std::string const& fileName = "ThermalUnitConverter") const;
 
 
 

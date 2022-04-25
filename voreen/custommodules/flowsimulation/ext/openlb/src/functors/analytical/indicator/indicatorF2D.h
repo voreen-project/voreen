@@ -29,9 +29,10 @@
 #include "indicatorBaseF2D.h"
 #include "io/xmlReader.h"
 
-#include "core/blockData2D.h"
+#include "core/blockData.h"
 #include "core/unitConverter.h"
 #include "indicatorBaseF3D.h"
+#include "sdf.h"
 
 /** \file
  * This file contains indicator functions. These return 1 if the given
@@ -39,6 +40,7 @@
  * Implemented are :
  - Cuboid
  - Circle
+ - Triangle
 
  * The smoothIndicator functors return values in [0,1]. In particular there is
  * an epsilon enclosure of the set, wherein the return values are smooth and do
@@ -67,10 +69,10 @@ public:
 template <typename S>
 class IndicatorCuboid2D : public IndicatorF2D<S> {
 private:
-  Vector<S,2> _center;
-  S _xLength;
-  S _yLength;
-  S _theta;
+  const Vector<S,2> _center;
+  const S _xLength;
+  const S _yLength;
+  const S _theta;
 public:
   /// constructs an cuboid with x axis dimension 0 to extend[0], ...
   IndicatorCuboid2D(Vector<S,2> extend, Vector<S,2> origin, S theta=0);
@@ -78,6 +80,10 @@ public:
   IndicatorCuboid2D(S xlength, S ylength, Vector<S,2> center= {S(), S()}, S theta=0);
   /// returns true if input is inside, otherwise false
   bool operator() (bool output[], const S input[]) override;
+  Vector<S,2> const& getCenter() const;
+  S const getxLength() const;
+  S const getyLength() const;
+  S signedDistance(const Vector<S,2>& input) override;
 };
 
 
@@ -85,18 +91,63 @@ public:
 template <typename S>
 class IndicatorCircle2D : public IndicatorF2D<S> {
 private:
-  Vector<S,2> _center;
-  S _radius2;
+  const Vector<S,2> _center;
+  const S _radius;
+  const S _radius2;
 public:
   IndicatorCircle2D(Vector<S,2> center, S radius);
+  Vector<S,2> const& getCenter() const;
+  S const getRadius() const;
   bool operator() (bool output[], const S input[]) override;
   bool distance(S& distance, const Vector<S,2>& origin, const Vector<S,2>& direction,  int iC=-1) override;
   bool normal(Vector<S,2>& normal, const Vector<S,2>& origin, const Vector<S,2>& direction, int iC=-1) override;
+  S signedDistance(const Vector<S,2>& input) override;
+  using IndicatorF2D<S>::distance;
 };
+
+
+/// indicator function for a 2D triangle
+template <typename S>
+class IndicatorTriangle2D : public IndicatorF2D<S> {
+private:
+  const Vector<S,2> _a;
+  const Vector<S,2> _b;
+  const Vector<S,2> _c;
+public:
+  IndicatorTriangle2D(Vector<S,2> a, Vector<S,2> b, Vector<S,2> c);
+  Vector<S,2> const& getVertexA() const;
+  Vector<S,2> const& getVertexB() const;
+  Vector<S,2> const& getVertexC() const;
+  bool operator() (bool output[], const S input[]) override;
+  S signedDistance(const Vector<S,2>& input) override;
+};
+
+/// indicator function for a 2D equilateral triangle
+template <typename S>
+class IndicatorEquiTriangle2D : public IndicatorF2D<S> {
+private:
+  const Vector<S,2> _center;
+  const S _radius;
+  const Vector<S,2> _a;
+  const Vector<S,2> _b;
+  const Vector<S,2> _c;
+
+public:
+  IndicatorEquiTriangle2D(Vector<S,2> center, S radius);
+  Vector<S,2> const& getVertexA() const;
+  Vector<S,2> const& getVertexB() const;
+  Vector<S,2> const& getVertexC() const;
+  Vector<S,2> const& getCenter() const;
+  S const getRadius() const;
+  bool operator() (bool output[], const S input[]) override;
+  S signedDistance(const Vector<S,2>& input) override;
+};
+
+
 
 /// Indicator function creating an layer around an input indicator (for positive \p layerSize) or
 /// reducing the input indicator by a layer (for negative \p layerSize).
-/// \param[in] indicatorF - some indicator (e.g. IndicatorCircle2D) 
+/// \param[in] indicatorF - some indicator (e.g. IndicatorCircle2D)
 /// \param[in] layerSize - size of the layer (can be negative) [physical units]
 template <typename S>
 class IndicatorLayer2D : public IndicatorF2D<S> {

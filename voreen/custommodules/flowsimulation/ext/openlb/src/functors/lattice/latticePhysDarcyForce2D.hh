@@ -25,27 +25,25 @@
 #define LATTICE_PHYS_DARCY_FORCE_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysDarcyForce2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticePhysDarcyForce2D<T,DESCRIPTOR>::SuperLatticePhysDarcyForce2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
   const int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 2),
     _superGeometry(superGeometry), _material(material)
@@ -75,7 +73,7 @@ bool SuperLatticePhysDarcyForce2D<T,DESCRIPTOR>::operator()(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysDarcyForce2D<T,DESCRIPTOR>::BlockLatticePhysDarcyForce2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, BlockGeometry2D<T>& blockGeometry,
+(BlockLattice<T,DESCRIPTOR>& blockLattice, BlockGeometry<T,2>& blockGeometry,
  int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice,converter,2),
     _blockGeometry(blockGeometry), _material(material)

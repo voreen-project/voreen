@@ -11,6 +11,17 @@
         gcc
       ];
     };
+
+    debug = {
+      cxx   = "g++";
+      cc    = "gcc";
+      flags = "-g -Wall -DOLB_DEBUG -march=native";
+      parallel_mode = "OFF";
+      buildInputs = with pkgs; [
+        gcc
+      ];
+    };
+
     openmpi = {
       cxx   = "mpic++";
       cc    = "gcc";
@@ -21,6 +32,7 @@
         openmpi
       ];
     };
+
     openmp = {
       cxx   = "g++";
       cc    = "gcc";
@@ -31,6 +43,7 @@
       ];
     };
   };
+
   clang = {
     sequential = {
       cxx   = "clang++";
@@ -40,9 +53,10 @@
       parallel_mode = "OFF";
       buildInputs = with pkgs; [
         clang
-        llvmPackages.bintools
+        llvmPackages.bintools-unwrapped
       ];
     };
+
     openmp = {
       cxx   = "clang++";
       cc    = "clang";
@@ -51,19 +65,37 @@
       parallel_mode = "OMP";
       buildInputs = with pkgs; [
         clang
-        llvmPackages.bintools
+        llvmPackages.bintools-unwrapped
         llvmPackages.openmp
       ];
     };
   };
-  intel = {
+
+  nvcc = {
     sequential = {
-      cxx   = "icpc -D__aligned__=ignored";
-      cc    = "icc";
-      flags = "-O3 -Wall -xHost";
-      arprg = "xiar";
+      cxx   = "nvcc";
+      cc    = "nvcc";
+      flags = "-O3";
       parallel_mode = "OFF";
-      buildInputs = [ ];
+      platform = "GPU_CUDA";
+      buildInputs = with pkgs; [
+        gcc
+        cudatoolkit_11
+      ];
+    };
+
+    openmpi = {
+      cxx   = "nvcc";
+      cc    = "nvcc";
+      flags = "-O3";
+      parallel_mode = "MPI";
+      ldflags = "-lmpi_cxx -lmpi";
+      platform = "GPU_CUDA";
+      buildInputs = with pkgs; [
+        gcc
+        cudatoolkit_11
+        (openmpi.override { cudaSupport = true; cudatoolkit = cudatoolkit_11; })
+      ];
     };
   };
 }

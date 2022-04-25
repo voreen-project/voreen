@@ -24,33 +24,7 @@
 /** \file
  * Groups all the include files for basic 3D dynamics.
  */
-#include "blockData2D.h"
-#include "blockData3D.h"
-#include "blockStaticPopulationD3D.h"
-#include "blockStaticFieldsD3D.h"
-#include "blockDynamicFieldsD3D.h"
-#include "blockLattice3D.h"
-#include "blockLatticeStructure3D.h"
-#include "blockLatticeView3D.h"
-#include "blockStructure3D.h"
-#include "fieldArrayD.hh"
-#include "cell.h"
-#include "cell.hh"
-#include "latticeStatistics.h"
-#include "olbInit.h"
-#include "postProcessing.h"
-#include "powerLawUnitConverter.h"
-#include "radiativeUnitConverter.h"
-#include "serializer.h"
-#include "singleton.h"
-#include "superData3D.h"
-#include "superLattice3D.h"
-#include "superField3D.h"
-#include "unitConverter.h"
-#include "fractionalUnitConverter.h"
-#include "genericVector.h"
-#include "scalarVector.h"
-#include "columnVector.h"
-#include "vector.h"
-#include "cellIndexListD.h"
-#include "adeUnitConverter.h"
+
+#include "core.h"
+
+

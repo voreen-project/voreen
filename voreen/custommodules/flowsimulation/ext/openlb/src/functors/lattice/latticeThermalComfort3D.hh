@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,20 +43,20 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>::SuperLatticeThermalComfort3D(
-  SuperLattice3D<T,TDESCRIPTOR>& sLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
+  SuperLattice<T,TDESCRIPTOR>& sLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
   : SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(sLattice, converter, 2)
 {
   this->getName() = "thermalComfort";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlockLattice(iC), this->_converter));
+    this->_blockF.emplace_back(new BlockLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlock(iC), this->_converter));
   }
 }
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticeThermalComfort3D
-(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
+(BlockLattice<T,TDESCRIPTOR>& blockLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
   : BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(blockLattice,converter,2)
 {
   this->getName() = "thermalComfort";
@@ -92,7 +91,7 @@ bool BlockLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>::operator() (T outpu
 
   // calculation of the air temperature in °C and the magnitude of the velocity
   temp_Air = physTemp - 273.15;
-  vel_Air = sqrt(physVel[0]*physVel[0] + physVel[1]*physVel[1] + physVel[2]*physVel[2]);
+  vel_Air = util::sqrt(physVel[0]*physVel[0] + physVel[1]*physVel[1] + physVel[2]*physVel[2]);
 
   /// calculation of f_clo
   // ratio of surface area clothed/nude [-]
@@ -110,29 +109,29 @@ bool BlockLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>::operator() (T outpu
   T ppk = 673.4 - 1.8 * temp_Air;
   T ppa = (3.2437814 + 0.00326014*ppk) + (2.00658 * 0.000000001 * ppk * ppk * ppk);
   T ppb = (1165.09 - ppk) * (1.0 + 0.00121547 * ppk);
-  press_Vapor = rel_Hum/100.0 * 22105.8416/exp(2.302585 * ppk * ppa / ppb) * 1000.0;
+  press_Vapor = rel_Hum/100.0 * 22105.8416/util::exp(2.302585 * ppk * ppa / ppb) * 1000.0;
 
   // calculation like EN ISO 7730
-  //press_Vapor = rel_Hum * 10 * exp(16.6536 - 4030.183/(temp_Air+235.0));
+  //press_Vapor = rel_Hum * 10 * util::exp(16.6536 - 4030.183/(temp_Air+235.0));
   // calculation with Magnus Equation
-  //press_Vapor = rel_Hum/100.0 * 6.112 * 100 * exp((17.62*temp_Air)/(243.12+temp_Air));
+  //press_Vapor = rel_Hum/100.0 * 6.112 * 100 * util::exp((17.62*temp_Air)/(243.12+temp_Air));
 
   /// iterative calculation of h_c and t_cl
   for (int iter = 0; iter < iterMax; iter++) {
     temp_Clo = 0.8 * temp_Clo_old + 0.2 * temp_Clo;
 
-    h_c = 12.1 * sqrt(vel_Air);                         // pure forced convection
+    h_c = 12.1 * util::sqrt(vel_Air);                         // pure forced convection
 
-    if (2.38 * pow(fabs(temp_Clo - temp_Air), 0.25) > h_c) {
-      h_c = 2.38 * pow(fabs(temp_Clo - temp_Air), 0.25);      // pure free convection
+    if (2.38 * util::pow(util::fabs(temp_Clo - temp_Air), 0.25) > h_c) {
+      h_c = 2.38 * util::pow(util::fabs(temp_Clo - temp_Air), 0.25);      // pure free convection
     }
 
     temp_Clo_old = temp_Clo;
     temp_Clo = 35.7 - 0.028 * mw -
-               i_clo * (3.96e-8 * f_clo * (pow(temp_Clo + 273.0, 4) - pow(temp_Mrt + 273.0, 4)) +
+               i_clo * (3.96e-8 * f_clo * (util::pow(temp_Clo + 273.0, 4) - util::pow(temp_Mrt + 273.0, 4)) +
                         f_clo * h_c * (temp_Clo - temp_Air));
 
-    if ((fabs((temp_Clo_old - temp_Clo) / temp_Clo)) < eps) {
+    if ((util::fabs((temp_Clo_old - temp_Clo) / temp_Clo)) < eps) {
       break;
     }
     if (iter == (iterMax-1)) {
@@ -141,15 +140,15 @@ bool BlockLatticeThermalComfort3D<T,DESCRIPTOR,TDESCRIPTOR>::operator() (T outpu
   }
 
   // calculation of PMV
-  pmv = (0.303 * exp(-0.036 * mw) + 0.028) * (mw                                    // heat gain by internal metabolic process
+  pmv = (0.303 * util::exp(-0.036 * mw) + 0.028) * (mw                                    // heat gain by internal metabolic process
         -3.05e-3*(5733.0 - 6.99*mw - press_Vapor)                                  // heat loss by skin diffusion
         -0.42*(mw - 58.15)                                                         // heat loss by evaporation of sweat secretion
         -1.7e-5 * mw * (5867.0 - press_Vapor) - 0.0014 * mw * (34.0 - temp_Air)    // heat loss by latent respiration and dry respiration
-        -3.96e-8 * f_clo *(pow(temp_Clo + 273.0, 4) - pow(temp_Mrt + 273.0, 4))    // heat loss by radiation
+        -3.96e-8 * f_clo *(util::pow(temp_Clo + 273.0, 4) - util::pow(temp_Mrt + 273.0, 4))    // heat loss by radiation
         -f_clo * h_c * (temp_Clo - temp_Air));                                     // heat loss by convection
 
   // calculation of PPD
-  ppd = 100.0 - 95.0*exp(-0.03353* pow(pmv,4.0) - 0.2179*pow(pmv,2.0));
+  ppd = 100.0 - 95.0*util::exp(-0.03353* util::pow(pmv,4.0) - 0.2179*util::pow(pmv,2.0));
 
   // return of PMV and PPD
   output[0] = pmv;

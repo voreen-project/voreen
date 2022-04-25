@@ -21,8 +21,7 @@
 #  Boston, MA  02110-1301, USA.
 
 
-generic        := fileName \
-                  gnuplotWriter \
+generic        := gnuplotWriter \
                   ostreamManager \
                   parallelIO \
                   vtiReader \
@@ -34,7 +33,6 @@ precompiled    :=  base64 \
                    blockVtkWriter2D \
                    blockVtkWriter3D \
                    colormaps \
-                   fileName \
                    gnuplotWriter \
                    gnuplotHeatMapWriter \
                    ostreamManager \

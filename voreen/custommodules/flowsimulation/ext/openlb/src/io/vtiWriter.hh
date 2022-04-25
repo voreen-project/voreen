@@ -39,8 +39,8 @@
 #include "core/singleton.h"
 #include "geometry/cuboid3D.h"
 #include "geometry/cuboidGeometry3D.h"
-#include "core/blockData3D.h"
-#include "core/superData3D.h"
+#include "core/blockData.h"
+#include "core/superData.h"
 #include "communication/loadBalancer.h"
 #include "vtiWriter.h"
 
@@ -55,7 +55,7 @@ VTIwriter3D<T,BaseType>::VTIwriter3D() {};
 
 template<typename T, typename BaseType>
 void VTIwriter3D<T,BaseType>::writeData( std::string const& fName,
-    std::string const& fieldName, BlockData3D<T,BaseType> const& blockData,
+    std::string const& fieldName, BlockData<3,T,BaseType> const& blockData,
     Cuboid3D<T> const& cuboid)
 {
   // Generate full file path
@@ -67,7 +67,7 @@ void VTIwriter3D<T,BaseType>::writeData( std::string const& fName,
 
 template<typename T, typename BaseType>
 void VTIwriter3D<T,BaseType>::writeData( std::string const& fName, std::string const& fieldName,
-    SuperData3D<T,BaseType> const& superData, CuboidGeometry3D<T> const& cGeometry,
+    SuperData<3,T,BaseType> const& superData, CuboidGeometry3D<T> const& cGeometry,
     LoadBalancer<T> const& loadBalancer)
 {
   // Generate full file path
@@ -93,7 +93,7 @@ void VTIwriter3D<T,BaseType>::writeData( std::string const& fName, std::string c
     if (rank == iRank) {
       for (int iC = 0; iC < loadBalancer.size(); ++iC) {
         // Write data block by block
-        writeBlockData(fullName, fieldName, superData.get(iC), cGeometry.get(loadBalancer.glob(iC)));
+        writeBlockData(fullName, fieldName, superData.getBlock(iC), cGeometry.get(loadBalancer.glob(iC)));
       }
     }
 #ifdef PARALLEL_MODE_MPI
@@ -110,14 +110,14 @@ void VTIwriter3D<T,BaseType>::writeData( std::string const& fName, std::string c
 
 template<typename T, typename BaseType>
 void VTIwriter3D<T,BaseType>::writeData( std::string const& fName,
-    std::string const& fieldName, SuperData3D<T,BaseType> const& superData)
+    std::string const& fieldName, SuperData<3,T,BaseType> const& superData)
 {
   writeData(fName, fieldName, superData, superData.getCuboidGeometry(), superData.getLoadBalancer());
 }
 
 template<typename T, typename BaseType>
 void VTIwriter3D<T,BaseType>::writeBlockData(std::string& fullName, std::string const& fieldName,
-    BlockData3D<T,BaseType> const& blockData, Cuboid3D<T> const& cuboid)
+    BlockData<3,T,BaseType> const& blockData, Cuboid3D<T> const& cuboid)
 {
   // Open File
   std::ofstream fout(fullName.c_str(), std::ios::app);
@@ -149,8 +149,8 @@ void VTIwriter3D<T,BaseType>::writeBlockData(std::string& fullName, std::string 
   for (int iZ = 0; iZ < cuboid.getNz(); ++iZ) {
     for (int iY = 0; iY < cuboid.getNy(); ++iY) {
       for (int iX = 0; iX < cuboid.getNx(); ++iX) {
-        for (int iSize = 0; iSize < blockData.getSize(); ++iSize) {
-          fout << blockData.get(iX, iY, iZ, iSize) << " ";
+        for (unsigned iSize = 0; iSize < blockData.getSize(); ++iSize) {
+          fout << blockData.get({iX, iY, iZ}, iSize) << " ";
         }
       }
     }

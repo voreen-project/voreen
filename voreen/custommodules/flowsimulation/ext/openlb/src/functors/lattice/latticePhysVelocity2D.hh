@@ -25,41 +25,39 @@
 #define LATTICE_PHYS_VELOCITY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysVelocity2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticePhysVelocity2D<T,DESCRIPTOR>::SuperLatticePhysVelocity2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 2)
 {
   this->getName() = "physVelocity";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticePhysVelocity2D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back(new BlockLatticePhysVelocity2D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC),
                                this->_converter));
   }
 }
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysVelocity2D<T,DESCRIPTOR>::BlockLatticePhysVelocity2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice,converter,2)
 {
   this->getName() = "physVelocity";

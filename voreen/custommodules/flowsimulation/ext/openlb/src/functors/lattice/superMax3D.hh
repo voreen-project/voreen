@@ -56,7 +56,7 @@ SuperMax3D<T,W>::SuperMax3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W>
 SuperMax3D<T,W>::SuperMax3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                            SuperGeometry3D<T>& superGeometry,
+                            SuperGeometry<T,3>& superGeometry,
                             const int material)
   : SuperMax3D(
       std::forward<decltype(f)>(f),

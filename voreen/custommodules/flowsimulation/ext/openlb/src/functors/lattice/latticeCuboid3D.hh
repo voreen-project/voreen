@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,20 +43,20 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeCuboid3D<T, DESCRIPTOR>::SuperLatticeCuboid3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice) : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1)
+  SuperLattice<T, DESCRIPTOR>& sLattice) : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1)
 {
   this->getName() = "cuboid";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticeCuboid3D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back( new BlockLatticeCuboid3D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC),
                                 this->_sLattice.getLoadBalancer().glob(iC)) );
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeCuboid3D<T,DESCRIPTOR>::BlockLatticeCuboid3D(
-  BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, int iC)
+  BlockLattice<T,DESCRIPTOR>& blockLattice, int iC)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1), _iC(iC)
 {
   this->getName() = "cuboid";

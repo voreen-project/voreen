@@ -36,10 +36,10 @@ SmoothIndicCalc2D<T,S>::SmoothIndicCalc2D(SmoothIndicatorF2D<T,S>& f, SmoothIndi
   : _f(f), _g(g)
 {
   for ( int i=0; i<2; i++) {
-    this->_myMin[i] = std::min(f.getMin()[i], g.getMin()[i]);
-    this->_myMax[i] = std::max(f.getMax()[i], g.getMax()[i]);
+    this->_myMin[i] = util::min(f.getMin()[i], g.getMin()[i]);
+    this->_myMax[i] = util::max(f.getMax()[i], g.getMax()[i]);
   }
-  this->_circumRadius = std::max( 0.5*(this->getMax()[0]-this->getMin()[0]), 0.5*(this->getMax()[1]-this->getMin()[1]));
+  this->_circumRadius = util::max( 0.5*(this->getMax()[0]-this->getMin()[0]), 0.5*(this->getMax()[1]-this->getMin()[1]));
   std::swap(f._ptrCalcC, this->_ptrCalcC);
 }
 
@@ -56,7 +56,7 @@ bool SmoothIndicPlus2D<T, S>::operator()(T output[], const S input[])
   this->_f(output, input);
   T tmp;
   this->_g(&tmp, input);
-  output[0] = std::max(output[0], tmp);
+  output[0] = util::max(output[0], tmp);
   return true;
 }
 

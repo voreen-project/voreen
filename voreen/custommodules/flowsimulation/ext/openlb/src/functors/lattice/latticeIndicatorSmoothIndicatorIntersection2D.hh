@@ -25,28 +25,26 @@
 #define LATTICE_INDICATOR_SMOOTH_INDICATOR_INTERSECTION_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeIndicatorSmoothIndicatorIntersection2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template <typename T, typename DESCRIPTOR, bool HLBM>
 SuperLatticeIndicatorSmoothIndicatorIntersection2D<T,DESCRIPTOR,HLBM>::SuperLatticeIndicatorSmoothIndicatorIntersection2D (
-  SuperLattice2D<T,DESCRIPTOR>& sLattice,
-  SuperGeometry2D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice,
+  SuperGeometry<T,2>& superGeometry,
   IndicatorF2D<T>& normalInd, SmoothIndicatorF2D<T,T,HLBM>& smoothInd )
   : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, 1)
 {
@@ -54,7 +52,7 @@ SuperLatticeIndicatorSmoothIndicatorIntersection2D<T,DESCRIPTOR,HLBM>::SuperLatt
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticeIndicatorSmoothIndicatorIntersection2D<T,DESCRIPTOR,HLBM>(this->_sLattice.getExtendedBlockLattice(iC), superGeometry.getBlockGeometry(iC), normalInd, smoothInd));
+    this->_blockF.emplace_back( new BlockLatticeIndicatorSmoothIndicatorIntersection2D<T,DESCRIPTOR,HLBM>(this->_sLattice.getBlock(iC), superGeometry.getBlockGeometry(iC), normalInd, smoothInd));
   }
 }
 
@@ -78,8 +76,8 @@ bool SuperLatticeIndicatorSmoothIndicatorIntersection2D<T,DESCRIPTOR,HLBM>::oper
 
 template<typename T, typename DESCRIPTOR, bool HLBM>
 BlockLatticeIndicatorSmoothIndicatorIntersection2D<T,DESCRIPTOR,HLBM>::BlockLatticeIndicatorSmoothIndicatorIntersection2D (
-  BlockLatticeStructure2D<T, DESCRIPTOR>& blockLattice,
-  BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
+  BlockGeometry<T,2>& blockGeometry,
   IndicatorF2D<T>& normalInd, SmoothIndicatorF2D<T,T,HLBM>& smoothInd )
   : BlockLatticeF2D<T, DESCRIPTOR>(blockLattice, 1),
     _blockGeometry(blockGeometry), _normalInd(normalInd), _smoothInd(smoothInd)
@@ -107,8 +105,8 @@ bool BlockLatticeIndicatorSmoothIndicatorIntersection2D<T, DESCRIPTOR,HLBM>::ope
         start[k] = 0;
       }
       end[k] += 2;
-      if (end[k] > _blockGeometry.getExtend()[k]) {
-        end[k] = _blockGeometry.getExtend()[k];
+      if (end[k] > _blockGeometry.getExtent()[k]) {
+        end[k] = _blockGeometry.getExtent()[k];
       }
     }
 
@@ -119,9 +117,9 @@ bool BlockLatticeIndicatorSmoothIndicatorIntersection2D<T, DESCRIPTOR,HLBM>::ope
         // check if cell belongs to particle
         T insideT[1] = {0.};
         T posIn[2] = {0.};
-        _blockGeometry.getPhysR(posIn, iX, iY);
+        _blockGeometry.getPhysR(posIn, {iX, iY});
         _smoothInd( insideT, posIn);
-        if ( !util::nearZero(insideT[0]) && this->_blockGeometry.get(iX,iY)==1) {
+        if ( !util::nearZero(insideT[0]) && this->_blockGeometry.get({iX,iY})==1) {
           // Return 1 if at least one cell is found to be inside both A and B
           bool insideBool[1] = {false};
           _normalInd(insideBool, posIn);

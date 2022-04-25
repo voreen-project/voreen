@@ -27,12 +27,14 @@
 #include <vector>
 
 #include "core/vector.h"
+#include "core/blockStructure.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalBaseF.h"
+#include "sdf.h"
 
 namespace olb {
 
-template <typename T, typename S, bool HLBM=false>
+template <typename T, typename S, bool PARTICLE=false>
 class SmoothIndicatorF2D;
 
 /** SmoothIndicatorF2D is an application from \f$ \Omega \subset R^3 \to [0,1] \f$.
@@ -54,7 +56,7 @@ protected:
   S _epsilon;
   std::string _name = "smoothIndicator2D";
 public:
-  void init(T theta, Vector<S,2> vel, T mass, T mofi);
+  void init(T theta);
   const Vector<S,2>& getMin() const;
   const Vector<S,2>& getMax() const;
   const Vector<S,2>& getPos() const;
@@ -63,9 +65,18 @@ public:
   const S& getTheta() const;
   const S& getEpsilon() const;
   std::string name();
-  void setRotationMatrix(Vector<S,4> rotMat);
+  void setPos(Vector<S,2> pos);
   void setTheta(S theta);
   void setEpsilon(S epsilon);
+  virtual S calcArea();
+  virtual Vector<S,2> calcMofiAndMass(S density);
+  virtual Vector<S,2> surfaceNormal(const Vector<S,2>& pos, const S meshSize);
+  virtual Vector<S,2> surfaceNormal(const Vector<S,2>& pos, const S meshSize,
+                                    std::function<Vector<S,2>(const Vector<S,2>&)> transformPos);
+  virtual const S signedDistance(const PhysR<T,2> input);
+  virtual bool distance(S& distance, const Vector<S,2>& origin, const Vector<S,2>& direction, S precision, S pitch);
+  virtual bool operator()(T output[], const S input[]);
+  bool isInsideCircumRadius(const PhysR<S,2>& input);
 
   SmoothIndicatorF2D<T,S,false>& operator+(SmoothIndicatorF2D<T,S,false>& rhs);
 };
@@ -87,56 +98,24 @@ template <typename T, typename S>
 class SmoothIndicatorF2D<T,S,true> : public AnalyticalF2D<T,S> {
 protected:
   SmoothIndicatorF2D();
-  Vector<S,2> _myMin;
-  Vector<S,2> _myMax;
-  Vector<S,2> _pos;
-  Vector<S,2> _vel;
-  Vector<S,2> _acc;
-  Vector<S,2> _acc2;
-  Vector<S,2> _force;
-  Vector<S,4> _rotMat;  //saved values of rotation matrix
   S _circumRadius;
-  S _theta;
-  S _omega;
-  S _alpha;
-  S _alpha2;
-  S _mass;
-  S _mofi; //Moment of Inertia
   S _epsilon;
-  std::string _name = "HLBMobject2D";
+  std::string _name = "2D-Particle surface";
 
 public:
-  void init(T theta, Vector<S,2> vel, T mass, T mofi);
-  const Vector<S,2>& getMin() const;
-  const Vector<S,2>& getMax() const;
-  const Vector<S,2>& getPos() const;
-  const Vector<S,2>& getVel() const;
-  const Vector<S,2>& getAcc() const;
-  const Vector<S,2>& getAcc2() const;
-  const Vector<S,2>& getHydrodynamicForce() const;
-  const Vector<S,4>& getRotationMatrix() const;
   const S& getCircumRadius() const;
-  const S& getTheta() const;
-  const S& getOmega() const;
-  const S& getAlpha() const;
-  const S& getAlpha2() const;
-  const S& getMass() const;
-  const S& getMofi() const;
   const S& getEpsilon() const;
   std::string name();
-  void setPos(Vector<S,2> pos);
-  void setVel(Vector<S,2> vel);
-  void setAcc(Vector<S,2> acc);
-  void setAcc2(Vector<S,2> acc2);
-  void setHydrodynamicForce(Vector<S,2> force);
-  void setRotationMatrix(Vector<S,4> rotMat);
-  void setTheta(S theta);
-  void setOmega(S omega);
-  void setAlpha(S alpha);
-  void setAlpha2(S alpha2);
-  void setMass(S mass);
-  void setMofi(S mofi);
   void setEpsilon(S epsilon);
+  virtual S calcArea();
+  virtual Vector<S,2> calcMofiAndMass(S density);
+  virtual Vector<S,2> surfaceNormal(const Vector<S,2>& pos, const S meshSize);
+  virtual Vector<S,2> surfaceNormal(const Vector<S,2>& pos, const S meshSize,
+                                    std::function<Vector<S,2>(const Vector<S,2>&)> transformPos);
+  virtual const S signedDistance(const PhysR<T,2> input);
+  virtual bool distance(S& distance, const Vector<S,2>& origin, const Vector<S,2>& direction, S precision, S pitch);
+  virtual bool operator()(T output[], const S input[]);
+  bool isInsideCircumRadius(const PhysR<S,2>& input);
 };
 
 }

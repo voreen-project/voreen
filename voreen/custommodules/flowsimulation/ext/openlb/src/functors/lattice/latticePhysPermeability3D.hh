@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysPermeability3D<T, DESCRIPTOR>::SuperLatticePhysPermeability3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "permeability";
@@ -52,13 +51,13 @@ SuperLatticePhysPermeability3D<T, DESCRIPTOR>::SuperLatticePhysPermeability3D(
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back( new BlockLatticePhysPermeability3D<T, DESCRIPTOR>(
-                                  this->_sLattice.getBlockLattice(iC), this->getConverter() ) );
+                                  this->_sLattice.getBlock(iC), this->getConverter() ) );
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysPermeability3D<T, DESCRIPTOR>::BlockLatticePhysPermeability3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 1)
 {
   this->getName() = "permeability";
@@ -67,8 +66,8 @@ BlockLatticePhysPermeability3D<T, DESCRIPTOR>::BlockLatticePhysPermeability3D(
 //TODO: consistency with 2D (181219)
 //template<typename T, typename DESCRIPTOR>
 //BlockLatticePhysPermeability3D<T, DESCRIPTOR>::BlockLatticePhysPermeability3D(
-//  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-//  BlockGeometry3D<T>& blockGeometry, int material,
+//  BlockLattice<T, DESCRIPTOR>& blockLattice,
+//  BlockGeometry<T,3>& blockGeometry, int material,
 //  const UnitConverter<T>& converter)
 //  : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 1),
 //    _blockGeometry(blockGeometry),

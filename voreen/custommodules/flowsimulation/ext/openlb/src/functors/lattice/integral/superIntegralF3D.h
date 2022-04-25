@@ -28,7 +28,7 @@
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "functors/lattice/indicator/superIndicatorF3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "utilities/functorPtr.h"
 
 namespace olb {
@@ -55,7 +55,7 @@ public:
    * \param material      number of the relevant material
    **/
   SuperSum3D(FunctorPtr<SuperF3D<T,W>>&& f,
-             SuperGeometry3D<T>& superGeometry,
+             SuperGeometry<T,3>& superGeometry,
              const int material);
 
   bool operator() (W output[], const int input[]) override;
@@ -83,7 +83,7 @@ public:
    * \param material      number of the relevant material
    **/
   SuperIntegral3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                  SuperGeometry3D<T>& superGeometry,
+                  SuperGeometry<T,3>& superGeometry,
                   const int material);
 
   bool operator() (W output[], const int input[]) override;

@@ -25,8 +25,9 @@
 #define BLOCK_INDICATOR_BASE_F_2D_H
 
 #include "functors/lattice/blockBaseF2D.h"
-#include "core/blockData2D.h"
-#include "core/blockStructure2D.h"
+#include "core/blockData.h"
+#include "core/blockStructure.h"
+#include "geometry/blockGeometry.h"
 
 namespace olb {
 
@@ -34,17 +35,17 @@ namespace olb {
 template <typename T>
 class BlockIndicatorF2D : public BlockF2D<bool> {
 protected:
-  BlockGeometryStructure2D<T>& _blockGeometryStructure;
-  const BlockData2D<T,bool>*   _cachedData;
+  BlockGeometry<T,2>& _blockGeometryStructure;
+  const BlockData<2,T,bool>*   _cachedData;
 public:
   using BlockF2D<bool>::operator();
 
-  BlockIndicatorF2D(BlockGeometryStructure2D<T>& geometry);
+  BlockIndicatorF2D(BlockGeometry<T,2>& geometry);
   /// Get underlying block geometry structure
   /**
    * \returns _blockGeometryStructure
    **/
-  BlockGeometryStructure2D<T>& getBlockGeometryStructure();
+  BlockGeometry<T,2>& getBlockGeometry();
   /// Block indicator specific function operator overload
   /**
    * The boolean return value of `operator()(T output[], S input[])` describes
@@ -53,17 +54,11 @@ public:
    * \return Domain indicator i.e. `true` iff the input lies within the described subset.
    **/
   bool operator() (const int input[]);
-  /// Block indicator specific function operator overload
-  /**
-   * The boolean return value of `operator()(T output[], S input[])` describes
-   * the call's success and by convention must not describe the indicated domain.
-   *
-   * \return Domain indicator i.e. `true` iff the input lies within the described subset.
-   **/
   bool operator() (int iX, int iY);
+  bool operator() (LatticeR<2> loc);
 
   /// Set bool-mask cache to be used by indicator operator overloads
-  void setCache(const BlockData2D<T,bool>& cache);
+  void setCache(const BlockData<2,T,bool>& cache);
 
   /// Returns true only if the indicated domain subset is empty
   /**

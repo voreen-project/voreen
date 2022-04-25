@@ -27,19 +27,18 @@
 #include "inamuroNewtonRaphsonDynamics.h"
 #include "dynamics/latticeDescriptors.h"
 #include "core/util.h"
-#include "dynamics/lbHelpers.h"
-#include <cmath>
+#include "dynamics/lbm.h"
+#include "utilities/omath.h"
 
 
 namespace olb {
 
 
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::InamuroNewtonRaphsonDynamics (
-  T omega, Momenta<T,DESCRIPTOR>& momenta )
-  : BasicDynamics<T,DESCRIPTOR>(momenta),
-    _boundaryDynamics(omega, momenta),
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::InamuroNewtonRaphsonDynamics (T omega)
+  : legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA>(),
+    _boundaryDynamics(omega),
     clout(std::cout,"InamuroNewtonRaphsonDynamics")
 {
   this->getName() = "InamuroNewtonRaphsonDynamics";
@@ -49,24 +48,24 @@ InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::Inamu
   }
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR, Dynamics, direction, orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::
 computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
 {
   return _boundaryDynamics.computeEquilibrium(iPop, rho, u, uSqr);
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::collide (
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+CellStatistic<T> InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::collide (
   Cell<T,DESCRIPTOR>& cell,
   LatticeStatistics<T>& statistics )
 {
   typedef DESCRIPTOR L;
 
   T rho, u[L::d];
-  this->_momenta.computeRhoU(cell,rho,u);
+  MOMENTA().computeRhoU(cell,rho,u);
 
-  std::vector<int> missingIndexes = util::subIndexOutgoing<L,direction,orientation>();
+  constexpr auto missingIndexes = util::subIndexOutgoing<L,direction,orientation>();
   std::vector<int> knownIndexes;
   bool test[L::q];
   for (int iPop = 0; iPop < L::q; ++iPop) {
@@ -148,20 +147,20 @@ void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
   _boundaryDynamics.collide(cell, statistics);
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::getOmega() const
 {
   return _boundaryDynamics.getOmega();
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::setOmega(T omega)
 {
   _boundaryDynamics.setOmega(omega);
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::
 computeApproxMomentum(T approxMomentum[DESCRIPTOR::d], ConstCell<T,DESCRIPTOR>& cell,
                       const T &rho, const T u[DESCRIPTOR::d], const T xi[DESCRIPTOR::d],
                       const std::vector<int> knownIndexes,const std::vector<int> missingIndexes)
@@ -195,8 +194,8 @@ computeApproxMomentum(T approxMomentum[DESCRIPTOR::d], ConstCell<T,DESCRIPTOR>& 
   }
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+T InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::
 computeError(const T &rho, const T u[DESCRIPTOR::d], const T approxMomentum[DESCRIPTOR::d])
 {
   typedef DESCRIPTOR L;
@@ -205,11 +204,11 @@ computeError(const T &rho, const T u[DESCRIPTOR::d], const T approxMomentum[DESC
   for (int iDim = 0; iDim < L::d; ++iDim) {
     err += (rho * u[iDim]-approxMomentum[iDim]) * (rho * u[iDim]-approxMomentum[iDim]);
   }
-  return sqrt(err);
+  return util::sqrt(err);
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::computeGradGradError(
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::computeGradGradError(
   T gradGradError[DESCRIPTOR::d][DESCRIPTOR::d],T gradError[DESCRIPTOR::d],
   const T &rho, const T u[DESCRIPTOR::d],const T xi[DESCRIPTOR::d],
   const T approxMomentum[DESCRIPTOR::d],
@@ -364,8 +363,8 @@ void InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
   }
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::
 newtonRaphson(T xi[DESCRIPTOR::d],
               const T gradError[DESCRIPTOR::d],
               const T gradGradError[DESCRIPTOR::d][DESCRIPTOR::d])
@@ -387,13 +386,13 @@ newtonRaphson(T xi[DESCRIPTOR::d],
   return inversion;
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::
 invert(const T a[2][2],T invA[2][2])
 {
   T detA = a[0][0]*a[1][1] - a[0][1]*a[1][0];
 
-  if (fabs(detA) < 1.0e-13) {
+  if (util::fabs(detA) < 1.0e-13) {
     clout << "error detA too small! = " << detA << std::endl;
     for (int iAlpha = 0; iAlpha < 2; ++iAlpha) {
       for (int iBeta = 0; iBeta < 2; ++iBeta) {
@@ -419,14 +418,14 @@ invert(const T a[2][2],T invA[2][2])
   }
 }
 
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,direction,orientation>::invert(const T a[3][3],T invA[3][3])
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+bool InamuroNewtonRaphsonDynamics<T,DESCRIPTOR,Dynamics,MOMENTA,direction,orientation>::invert(const T a[3][3],T invA[3][3])
 {
   T detA = a[0][0]*a[1][1]*a[2][2] + a[1][0]*a[2][1]*a[0][2] + a[2][0]*a[0][1]*a[1][2]
            - a[0][0]*a[2][1]*a[1][2] - a[2][0]*a[1][1]*a[0][2] - a[1][0]*a[0][1]*a[2][2];
 
 
-  if (fabs(detA) < 1.0e-13) {
+  if (util::fabs(detA) < 1.0e-13) {
     clout << "Error: detA too small! = " << detA << std::endl;
     for (int iAlpha = 0; iAlpha < 3; ++iAlpha) {
       for (int iBeta = 0; iBeta < 3; ++iBeta) {

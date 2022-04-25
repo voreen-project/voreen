@@ -28,7 +28,7 @@
 #ifndef ENTROPIC_LB_HELPERS_H
 #define ENTROPIC_LB_HELPERS_H
 
-#include <cmath>
+#include "utilities/omath.h"
 
 namespace olb {
 
@@ -38,16 +38,16 @@ struct entropicLbHelpers {
   static T equilibrium( int iPop, T rho, const T u[DESCRIPTOR::d])
   {
     typedef DESCRIPTOR L;
-    const T invCs = sqrt(descriptors::invCs2<T,L>());
-    const T sqt3 = sqrt(3.0);
+    const T invCs = util::sqrt(descriptors::invCs2<T,L>());
+    const T sqt3 = util::sqrt(3.0);
     T prod = (T)1;
     for (int iD=0; iD < DESCRIPTOR::d; ++iD) {
       T uc = u[iD] * invCs; // u[iD] / c_s
 
-      prod *= ((T)2 - sqrt(1.0+uc*uc)) *
-              pow((2.0 / sqt3 * uc +
-                   sqrt(1.0+uc*uc))/(1.0-uc/sqt3),
-                  descriptors::c<L>(iPop,iD)/sqt3*invCs);
+      prod *= ((T)2 - util::sqrt(1.0+uc*uc)) *
+              util::pow((2.0 / sqt3 * uc +
+                         util::sqrt(1.0+uc*uc))/(1.0-uc/sqt3),
+                        descriptors::c<L>(iPop,iD)/sqt3*invCs);
     }
     return rho*descriptors::t<T,L>(iPop)*prod-descriptors::t<T,L>(iPop);
   }
@@ -64,10 +64,10 @@ struct entropicLbHelpers {
     }
 
     return rho * descriptors::t<T,L>(iPop) * (1.0 +
-                               cu*descriptors::invCs2<T,L>() - 0.5 * uSqr*descriptors::invCs2<T,L>() + 0.5*pow(descriptors::invCs2<T,L>(),2)*cu*cu
-                               - 0.5*pow(descriptors::invCs2<T,L>(),2)*cu*uSqr + pow(cu,3)*pow(descriptors::invCs2<T,L>(),3)/6.0
-                               + 0.125*uSqr*uSqr*pow(descriptors::invCs2<T,L>(),2) - 0.25*cu*cu*uSqr*pow(descriptors::invCs2<T,L>(),3)
-                               + pow(cu,4)*pow(descriptors::invCs2<T,L>(),4)/24.0)-descriptors::t<T,L>(iPop);
+           cu*descriptors::invCs2<T,L>() - 0.5 * uSqr*descriptors::invCs2<T,L>() + 0.5*util::pow(descriptors::invCs2<T,L>(),2)*cu*cu
+           - 0.5*util::pow(descriptors::invCs2<T,L>(),2)*cu*uSqr + util::pow(cu,3)*util::pow(descriptors::invCs2<T,L>(),3)/6.0
+           + 0.125*uSqr*uSqr*util::pow(descriptors::invCs2<T,L>(),2) - 0.25*cu*cu*uSqr*util::pow(descriptors::invCs2<T,L>(),3)
+           + util::pow(cu,4)*util::pow(descriptors::invCs2<T,L>(),4)/24.0)-descriptors::t<T,L>(iPop);
   }
 };
 

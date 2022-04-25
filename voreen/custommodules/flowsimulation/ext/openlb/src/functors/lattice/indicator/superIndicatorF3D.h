@@ -26,17 +26,13 @@
 
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "superIndicatorBaseF3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "functors/analytical/indicator/smoothIndicatorBaseF3D.h"
 
 namespace olb {
 
 
 /// SuperIndicatorF3D from IndicatorF3D
-/**
- * Exposes block level indicators via SuperIndicatorF3D::getBlockIndicatorF
- * respectively SuperIndicatorF3D::getExtendedBlockIndicatorF
- **/
 template <typename T>
 class SuperIndicatorFfromIndicatorF3D : public SuperIndicatorF3D<T> {
 protected:
@@ -47,7 +43,7 @@ public:
    * \param geometry   Super geometry required for block indicator construction
    **/
   SuperIndicatorFfromIndicatorF3D(FunctorPtr<IndicatorF3D<T>>&& indicatorF,
-                                  SuperGeometry3D<T>&           geometry);
+                                  SuperGeometry<T,3>&           geometry);
 
   using SuperIndicatorF3D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -57,9 +53,6 @@ public:
 /// SuperIndicatorF3D from SmoothIndicatorF3D
 /**
  * Returns true iff SmoothIndicatorF3D output is not near zero.
- *
- * Exposes block level indicators via SuperIndicatorF3D::getBlockIndicatorF
- * respectively SuperIndicatorF3D::getExtendedBlockIndicatorF
  **/
 template <typename T, bool HLBM>
 class SuperIndicatorFfromSmoothIndicatorF3D : public SuperIndicatorF3D<T> {
@@ -71,7 +64,7 @@ public:
    * \param geometry   Super geometry required for block indicator construction
    **/
   SuperIndicatorFfromSmoothIndicatorF3D(FunctorPtr<SmoothIndicatorF3D<T,T,HLBM>>&& indicatorF,
-                                          SuperGeometry3D<T>&                     geometry);
+                                        SuperGeometry<T,3>&                     geometry);
 
   using SuperIndicatorF3D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -80,10 +73,7 @@ public:
 
 /// Indicator functor from material numbers
 /**
- * Exposes block level indicators via SuperIndicatorF3D::getBlockIndicatorF
- * respectively SuperIndicatorF3D::getExtendedBlockIndicatorF
- *
- * Material number comparsion is implemented in BlockIndicatorMaterial3D.
+ * Material number comparison is implemented in BlockIndicatorMaterial3D.
  **/
 template <typename T>
 class SuperIndicatorMaterial3D : public SuperIndicatorF3D<T> {
@@ -93,13 +83,13 @@ public:
    *                  and global material number queries
    * \param materials Vector of material numbers to be indicated
    **/
-  SuperIndicatorMaterial3D(SuperGeometry3D<T>& geometry, std::vector<int> materials);
+  SuperIndicatorMaterial3D(SuperGeometry<T,3>& geometry, std::vector<int> materials);
   /**
    * \param geometry  Super geometry required for block indicator construction
    *                  and global material number queries
    * \param materials List of material numbers to be indicated
    **/
-  SuperIndicatorMaterial3D(SuperGeometry3D<T>& geometry, std::list<int> materials);
+  SuperIndicatorMaterial3D(SuperGeometry<T,3>& geometry, std::list<int> materials);
 
   using SuperIndicatorF3D<T>::operator();
   bool operator() (bool output[], const int input[]) override;

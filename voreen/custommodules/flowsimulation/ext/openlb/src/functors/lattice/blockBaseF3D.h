@@ -25,14 +25,13 @@
 #define BLOCK_BASE_F_3D_H
 
 #include "functors/genericF.h"
-#include "core/blockData3D.h"
-#include "core/blockStructure3D.h"
-#include "core/blockLatticeStructure3D.h"
+#include "core/blockData.h"
+#include "core/blockStructure.h"
 #include "core/unitConverter.h"
 
 #include <memory>
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -40,19 +39,20 @@
 namespace olb {
 
 
+template <typename T> class BlockIndicatorF3D;
+
 /// represents all functors that operate on a cuboid in general, mother class of BlockLatticeF, ..
 template <typename T>
 class BlockF3D : public GenericF<T,int> {
 protected:
-  BlockF3D(BlockStructure3D& blockStructure, int targetDim);
-  BlockStructure3D& _blockStructure;
+  BlockF3D(BlockStructureD<3>& blockStructure, int targetDim);
+  BlockStructureD<3>& _blockStructure;
 public:
   /// virtual destructor for defined behaviour
   ~BlockF3D() override {};
-  virtual BlockStructure3D& getBlockStructure() const;
+  virtual BlockStructureD<3>& getBlockStructure() const;
 
-  std::vector<T> getMinValue();
-  std::vector<T> getMaxValue();
+  using GenericF<T,int>::operator();
 
   BlockF3D<T>& operator-(BlockF3D<T>& rhs);
   BlockF3D<T>& operator+(BlockF3D<T>& rhs);
@@ -66,27 +66,16 @@ class BlockDataF3D : public BlockF3D<BaseType> {
 protected:
   BlockDataF3D(int nx, int ny, int nz, int size=1);
 
-  std::unique_ptr<BlockData3D<T,BaseType>> _blockDataStorage;
-  BlockData3D<T,BaseType>&                 _blockData;
+  std::unique_ptr<BlockData<3,T,BaseType>> _blockDataStorage;
+  BlockData<3,T,BaseType>&                 _blockData;
 public:
   /// Constructor
-  BlockDataF3D(BlockData3D<T,BaseType>& blockData);
+  BlockDataF3D(BlockData<3,T,BaseType>& blockData);
   /// to store functor data, constuctor creates _blockData with functor data
   BlockDataF3D(BlockF3D<BaseType>& f);
   /// returns _blockData
-  BlockData3D<T,BaseType>& getBlockData();
+  BlockData<3,T,BaseType>& getBlockData();
   /// access to _blockData via its get()
-  bool operator() (BaseType output[], const int input[]) override;
-};
-
-/// Overlap-aware version of BlockDataF3D for usage in SuperDataF3D
-template <typename T, typename BaseType>
-class BlockDataViewF3D : public BlockDataF3D<T,BaseType> {
-private:
-  const int _overlap;
-public:
-  BlockDataViewF3D(BlockData3D<T,BaseType>& blockData, int overlap);
-  /// access to _blockData shifted by overlap
   bool operator() (BaseType output[], const int input[]) override;
 };
 
@@ -136,31 +125,19 @@ public:
   bool operator() (T output[], const int input[]);
 };
 
-/// functor to extract one component
-template <typename T>
-class BlockDotProductF3D : public BlockF3D<T> {
-protected:
-  BlockF3D<T>& _f;
-  T _vector[];
-public:
-  BlockDotProductF3D(BlockF3D<T>& f, T vector[]);
-  bool operator() (T output[], const int input[]);
-};
-
-
 /// represents all functors that operate on a DESCRIPTOR in general, e.g. getVelocity(), getForce(), getPressure()
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeF3D : public BlockF3D<T> {
 protected:
-  BlockLatticeF3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, int targetDim);
-  BlockLatticeStructure3D<T,DESCRIPTOR>& _blockLattice;
+  BlockLatticeF3D(BlockLattice<T,DESCRIPTOR>& blockLattice, int targetDim);
+  BlockLattice<T,DESCRIPTOR>& _blockLattice;
 public:
   /// Copy Constructor
   //BlockLatticeF3D(BlockLatticeF3D<T,DESCRIPTOR> const& rhs);
   /// Assignment Operator
   //BlockLatticeF3D<T,DESCRIPTOR>& operator=(BlockLatticeF3D<T,DESCRIPTOR> const& rhs);
 
-  BlockLatticeStructure3D<T,DESCRIPTOR>& getBlockLattice();
+  BlockLattice<T,DESCRIPTOR>& getBlock();
 };
 
 
@@ -180,7 +157,7 @@ template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysF3D : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
   const UnitConverter<T,DESCRIPTOR>& _converter;
-  BlockLatticePhysF3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysF3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                       const UnitConverter<T,DESCRIPTOR>& converter, int targetDim);
 public:
   /// Copy Constructor
@@ -193,7 +170,7 @@ public:
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class BlockLatticeThermalPhysF3D : public BlockLatticeF3D<T,TDESCRIPTOR> {
 protected:
-  BlockLatticeThermalPhysF3D(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice,
+  BlockLatticeThermalPhysF3D(BlockLattice<T,TDESCRIPTOR>& blockLattice,
                              const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim);
   const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& _converter;
 };

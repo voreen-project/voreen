@@ -61,7 +61,7 @@
  *
  * S is a smooth step function:
  * S(x)=0,     for x<=0
- * S(x)=1/( 1 + exp( (1/(x-1)) + (1/x) ) ),  for 0<x<1,
+ * S(x)=1/( 1 + util::exp( (1/(x-1)) + (1/x) ) ),  for 0<x<1,
  * S(x)=1,     for x>=1.
  *
  * --> G = lambda*(U - u) is the volume force, which is added to

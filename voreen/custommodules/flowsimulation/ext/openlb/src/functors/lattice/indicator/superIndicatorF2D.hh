@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2017 Adrian Kummerlaender
+ *  Copyright (C) 2016-2018 Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -25,31 +25,27 @@
 #define SUPER_INDICATOR_F_2D_HH
 
 #include <numeric>
-#include <algorithm>
 
-#include "core/util.h"
 #include "superIndicatorF2D.h"
 #include "blockIndicatorF2D.h"
+#include "core/util.h"
 
 namespace olb {
 
-
 template <typename T>
 SuperIndicatorFfromIndicatorF2D<T>::SuperIndicatorFfromIndicatorF2D(
-  IndicatorF2D<T>& indicatorF, SuperGeometry2D<T>& geometry)
+  FunctorPtr<IndicatorF2D<T>>&& indicatorF, SuperGeometry<T,2>& geometry)
   : SuperIndicatorF2D<T>(geometry),
-    _indicatorF(indicatorF)
+    _indicatorF(std::move(indicatorF))
 {
-  this->getName() = "SuperIndicator_from_" + _indicatorF.getName();
+  this->getName() = "SuperIndicator_from_" + _indicatorF->getName();
 
-  for (int iC = 0; iC < this->getSuperStructure().getLoadBalancer().size(); ++iC) {
+  LoadBalancer<T>& load = this->getSuperStructure().getLoadBalancer();
+
+  for (int iC = 0; iC < load.size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockIndicatorFfromIndicatorF2D<T>(
-        _indicatorF, geometry.getBlockGeometry(iC))
-    );
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorFfromIndicatorF2D<T>(
-        _indicatorF, geometry.getExtendedBlockGeometry(iC))
+        *_indicatorF, geometry.getBlockGeometry(iC))
     );
   }
 }
@@ -64,9 +60,9 @@ bool SuperIndicatorFfromIndicatorF2D<T>::operator() (bool output[], const int in
 
 
 template <typename T, bool HLBM>
-SuperIndicatorFfromSmoothIndicatorF2D<T,HLBM>::SuperIndicatorFfromSmoothIndicatorF2D(
+SuperIndicatorFfromSmoothIndicatorF2D<T, HLBM>::SuperIndicatorFfromSmoothIndicatorF2D(
   FunctorPtr<SmoothIndicatorF2D<T,T,HLBM>>&& indicatorF,
-  SuperGeometry2D<T>&                     geometry)
+  SuperGeometry<T,2>&                     geometry)
   : SuperIndicatorF2D<T>(geometry),
     _indicatorF(std::move(indicatorF))
 {
@@ -76,18 +72,14 @@ SuperIndicatorFfromSmoothIndicatorF2D<T,HLBM>::SuperIndicatorFfromSmoothIndicato
 
   for (int iC = 0; iC < load.size(); ++iC) {
     this->_blockF.emplace_back(
-      new BlockIndicatorFfromSmoothIndicatorF2D<T,HLBM>(
+      new BlockIndicatorFfromSmoothIndicatorF2D<T, HLBM>(
         *_indicatorF, geometry.getBlockGeometry(iC))
-    );
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorFfromSmoothIndicatorF2D<T,HLBM>(
-        *_indicatorF, geometry.getExtendedBlockGeometry(iC))
     );
   }
 }
 
 template <typename T, bool HLBM>
-bool SuperIndicatorFfromSmoothIndicatorF2D<T,HLBM>::operator() (bool output[], const int input[])
+bool SuperIndicatorFfromSmoothIndicatorF2D<T, HLBM>::operator() (bool output[], const int input[])
 {
   T physR[2];
   T inside[1];
@@ -96,10 +88,9 @@ bool SuperIndicatorFfromSmoothIndicatorF2D<T,HLBM>::operator() (bool output[], c
   return !util::nearZero(inside[0]);
 }
 
-
 template <typename T>
 SuperIndicatorMaterial2D<T>::SuperIndicatorMaterial2D(
-  SuperGeometry2D<T>& geometry, std::vector<int> materials)
+  SuperGeometry<T,2>& geometry, std::vector<int> materials)
   : SuperIndicatorF2D<T>(geometry)
 {
   const std::string matString = std::accumulate(
@@ -116,12 +107,15 @@ SuperIndicatorMaterial2D<T>::SuperIndicatorMaterial2D(
       new BlockIndicatorMaterial2D<T>(this->_superGeometry.getBlockGeometry(iC),
                                       materials)
     );
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorMaterial2D<T>(this->_superGeometry.getExtendedBlockGeometry(iC),
-                                      materials)
-    );
   }
 }
+
+template <typename T>
+SuperIndicatorMaterial2D<T>::SuperIndicatorMaterial2D(
+  SuperGeometry<T,2>& geometry, std::list<int> materials)
+  : SuperIndicatorMaterial2D(geometry,
+                             std::vector<int>(materials.begin(), materials.end()))
+{ }
 
 template <typename T>
 bool SuperIndicatorMaterial2D<T>::operator() (bool output[], const int input[])
@@ -133,7 +127,8 @@ bool SuperIndicatorMaterial2D<T>::operator() (bool output[], const int input[])
   if (!this->_blockF.empty() && load.isLocal(input[0])) {
     // query material number of appropriate block indicator
     return this->getBlockF(load.loc(input[0]))(output, &input[1]);
-  } else {
+  }
+  else {
     return false;
   }
 }
@@ -148,8 +143,6 @@ SuperIndicatorIdentity2D<T>::SuperIndicatorIdentity2D(FunctorPtr<SuperIndicatorF
   for (int iC = 0; iC < _indicatorF->getBlockFSize(); ++iC) {
     this->_blockF.emplace_back(
       new BlockIndicatorIdentity2D<T>(_indicatorF->getBlockIndicatorF(iC)));
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorIdentity2D<T>(_indicatorF->getExtendedBlockIndicatorF(iC)));
   }
 }
 

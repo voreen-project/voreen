@@ -25,8 +25,6 @@
 #define BLOCK_LATTICE_REFINEMENT_METRIC_F_3D_H
 
 #include "blockBaseF3D.h"
-#include "core/blockLattice3D.h"
-#include "core/blockLatticeStructure3D.h"
 
 namespace olb {
 
@@ -34,7 +32,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeKnudsen3D : public BlockLatticeF3D<T, DESCRIPTOR> {
 public:
-  BlockLatticeKnudsen3D(BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice);
+  BlockLatticeKnudsen3D(BlockLattice<T, DESCRIPTOR>& blockLattice);
 
   bool operator() (T output[], const int input[]) override;
 };
@@ -45,7 +43,7 @@ private:
   const T _knudsen;
 public:
   BlockLatticeRefinementMetricKnudsen3D(
-    BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
+    BlockLattice<T, DESCRIPTOR>& blockLattice,
     const UnitConverter<T, DESCRIPTOR>&     converter);
 
   bool operator() (T output[]);
@@ -56,7 +54,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeHighOrderKnudsen3D : public BlockLatticeF3D<T, DESCRIPTOR> {
 public:
-  BlockLatticeHighOrderKnudsen3D(BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice);
+  BlockLatticeHighOrderKnudsen3D(BlockLattice<T, DESCRIPTOR>& blockLattice);
 
   bool operator() (T output[], const int input[]) override;
 };

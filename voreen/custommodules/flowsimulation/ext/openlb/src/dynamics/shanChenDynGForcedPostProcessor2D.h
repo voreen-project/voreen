@@ -24,9 +24,8 @@
 #ifndef SHAN_CHEN_DYN_G_FORCED_POST_PROCESSOR_2D_H
 #define SHAN_CHEN_DYN_G_FORCED_POST_PROCESSOR_2D_H
 
-#include "core/spatiallyExtendedObject2D.h"
+#include "core/blockStructure.h"
 #include "core/postProcessing.h"
-#include "core/blockLattice2D.h"
 
 
 namespace olb {
@@ -44,10 +43,10 @@ namespace olb {
 //public:
 //  ShanChenDynGForcedPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
 //                                    std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-//                                    std::vector<SpatiallyExtendedObject2D*> partners_);
+//                                    std::vector<BlockStructureD<2>*> partners_);
 //  ShanChenDynGForcedPostProcessor2D(T G_,
 //                                    std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-//                                    std::vector<SpatiallyExtendedObject2D*> partners_);
+//                                    std::vector<BlockStructureD<2>*> partners_);
 //  virtual int extent() const
 //  {
 //    return 1;
@@ -56,15 +55,15 @@ namespace olb {
 //  {
 //    return 1;
 //  }
-//  virtual void process(BlockLattice2D<T,DESCRIPTOR>& blockLattice);
-//  virtual void processSubDomain(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+//  virtual void process(BlockLattice<T,DESCRIPTOR>& blockLattice);
+//  virtual void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
 //                                int x0_, int x1_, int y0_, int y1_);
 //private:
 //  int x0, x1, y0, y1;
 //  T G;
 //  std::vector<T> rho0;
 //  AnalyticalF<1,T,T>& interactionPotential;
-//  std::vector<SpatiallyExtendedObject2D*> partners;
+//  std::vector<BlockStructureD<2>*> partners;
 //};
 //
 //template<typename T, typename DESCRIPTOR>
@@ -72,7 +71,7 @@ namespace olb {
 //public:
 //  ShanChenDynGForcedGenerator2D(int x0_, int x1_, int y0_, int y1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
 //  ShanChenDynGForcedGenerator2D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
-//  virtual PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject2D*> partners) const;
+//  virtual PostProcessor2D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<2>*> partners) const;
 //  virtual LatticeCouplingGenerator2D<T,DESCRIPTOR>* clone() const;
 //private:
 //  T G;

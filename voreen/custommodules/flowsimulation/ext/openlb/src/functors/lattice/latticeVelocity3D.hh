@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,20 +43,20 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeVelocity3D<T, DESCRIPTOR>::SuperLatticeVelocity3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice)
+  SuperLattice<T, DESCRIPTOR>& sLattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 3)
 {
   this->getName() = "velocity";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeVelocity3D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC)));
+    this->_blockF.emplace_back(new BlockLatticeVelocity3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC)));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeVelocity3D<T, DESCRIPTOR>::BlockLatticeVelocity3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice)
+  BlockLattice<T, DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 3)
 {
   this->getName() = "velocity";

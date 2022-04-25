@@ -24,7 +24,7 @@
 #ifndef UTILITY_ARITHMETIC_H
 #define UTILITY_ARITHMETIC_H
 
-#include <cmath>
+#include "utilities/omath.h"
 #include <functional>
 
 namespace olb {
@@ -91,7 +91,7 @@ struct power {
 
   constexpr T operator() (const T& base, const T& exponent) const
   {
-    return pow(base, exponent);
+    return util::pow(base, exponent);
   }
 };
 

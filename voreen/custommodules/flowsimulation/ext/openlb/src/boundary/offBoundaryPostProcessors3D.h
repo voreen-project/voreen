@@ -25,7 +25,6 @@
 #define OFF_BOUNDARY_POST_PROCESSORS_3D_H
 
 #include "core/postProcessing.h"
-#include "core/blockLattice3D.h"
 
 namespace olb {
 
@@ -45,8 +44,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x, y, z;
@@ -67,8 +66,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x, y, z;
@@ -89,8 +88,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x, y, z;
@@ -112,8 +111,8 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ ) override;
 private:
   int x, y, z;

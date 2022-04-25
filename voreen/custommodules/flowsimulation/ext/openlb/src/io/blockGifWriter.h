@@ -57,7 +57,7 @@ public:
    */
   void write( BlockF2D<T>& f, T minValue, T maxValue, int iT=0,
               std::string const& name="emptyName" );
-  /// writes functor data and determines its min-/maxValue
+  /// writes functor data and determines its util::min-/maxValue
   void write( BlockF2D<T>& f, int iT=0, std::string const& name="emptyName" );
   ///  writes functors stored at pointerVec
   void write(int iT=0);

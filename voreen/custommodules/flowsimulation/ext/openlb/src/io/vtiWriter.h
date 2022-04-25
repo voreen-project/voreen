@@ -31,6 +31,8 @@
 
 
 #include "io/ostreamManager.h"
+#include "core/blockData.h"
+#include "core/superData.h"
 
 
 namespace olb {
@@ -47,14 +49,14 @@ public:
   VTIwriter3D();
   /// Write Single Block Data
   static void writeData( std::string const& fName, std::string const& fieldName,
-                         BlockData3D<T,BaseType> const& blockData, Cuboid3D<T> const& cuboid);
+                         BlockData<3,T,BaseType> const& blockData, Cuboid3D<T> const& cuboid);
   /// Write Super Data
   static void writeData( std::string const& fName, std::string const& fieldName,
-                         SuperData3D<T,BaseType> const& superData, CuboidGeometry3D<T> const& cGeometry,
+                         SuperData<3,T,BaseType> const& superData, CuboidGeometry3D<T> const& cGeometry,
                          LoadBalancer<T> const& loadBalancer);
   /// Write Super Data with its own cGeometry and loadBalancer
   static void writeData( std::string const& fName, std::string const& fieldName,
-                         SuperData3D<T,BaseType> const& superData);
+                         SuperData<3,T,BaseType> const& superData);
 private:
   static OstreamManager clout;
   /// Write VTK Preamble and PostScript
@@ -63,7 +65,7 @@ private:
                             T delta, T originX, T originY, T originZ);
   static void writePostScript(std::string& fullName);
   /// Write BlockData3D - Used for single BlockData as well as SuperData
-  static void writeBlockData(std::string& fullName, std::string const& fieldName, BlockData3D<T,BaseType> const& blockData,
+  static void writeBlockData(std::string& fullName, std::string const& fieldName, BlockData<3,T,BaseType> const& blockData,
                              Cuboid3D<T> const& cuboid);
   /// Helper Functions
   static std::string getFullName(std::string const& fName);

@@ -28,7 +28,7 @@
 #include "blockLpNorm2D.h"
 #include "functors/lattice/superBaseF2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "latticeIntegralCommon.h"
 
 namespace olb {
@@ -60,7 +60,7 @@ SuperLpNorm2D<T,W,P>::SuperLpNorm2D(FunctorPtr<SuperF2D<T,W>>&&        f,
 
 template <typename T, typename W, int P>
 SuperLpNorm2D<T,W,P>::SuperLpNorm2D(FunctorPtr<SuperF2D<T,W>>&&        f,
-                                    SuperGeometry2D<T>&                geometry,
+                                    SuperGeometry<T,2>&                geometry,
                                     FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF)
   : SuperLpNorm2D(std::forward<decltype(f)>(f),
                   std::forward<decltype(indicatorF)>(indicatorF))
@@ -68,7 +68,7 @@ SuperLpNorm2D<T,W,P>::SuperLpNorm2D(FunctorPtr<SuperF2D<T,W>>&&        f,
 
 template <typename T, typename W, int P>
 SuperLpNorm2D<T,W,P>::SuperLpNorm2D(FunctorPtr<SuperF2D<T,W>>&& f,
-                                    SuperGeometry2D<T>&         geometry,
+                                    SuperGeometry<T,2>&         geometry,
                                     std::vector<int>            materials)
   : SuperLpNorm2D(std::forward<decltype(f)>(f),
                   geometry.getMaterialIndicator(std::move(materials)))
@@ -76,7 +76,7 @@ SuperLpNorm2D<T,W,P>::SuperLpNorm2D(FunctorPtr<SuperF2D<T,W>>&& f,
 
 template <typename T, typename W, int P>
 SuperLpNorm2D<T,W,P>::SuperLpNorm2D(FunctorPtr<SuperF2D<T,W>>&& f,
-                                    SuperGeometry2D<T>&         geometry,
+                                    SuperGeometry<T,2>&         geometry,
                                     int                         material)
   : SuperLpNorm2D(std::forward<decltype(f)>(f),
                   geometry.getMaterialIndicator(material))
@@ -98,7 +98,7 @@ bool SuperLpNorm2D<T,W,P>::operator() (W output[], const int input[])
 
     const int nX     = cuboid.getNx();
     const int nY     = cuboid.getNy();
-    const T   weight = pow(cuboid.getDeltaR(), 2);
+    const T   weight = util::pow(cuboid.getDeltaR(), 2);
 
     inputTmp[0] = load.glob(iC);
 

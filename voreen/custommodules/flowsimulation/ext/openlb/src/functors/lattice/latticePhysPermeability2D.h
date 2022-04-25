@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -44,11 +42,11 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysPermeability2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  SuperGeometry2D<T>& _superGeometry;
+  SuperGeometry<T,2>& _superGeometry;
   const int _material;
 public:
-  SuperLatticePhysPermeability2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                                 SuperGeometry2D<T>& superGeometry,
+  SuperLatticePhysPermeability2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                 SuperGeometry<T,2>& superGeometry,
                                  const int material, const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };
@@ -61,11 +59,11 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysPermeability2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   int _material;
 public:
-  BlockLatticePhysPermeability2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                                 BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLatticePhysPermeability2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                 BlockGeometry<T,2>& blockGeometry,
                                  int material, const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };

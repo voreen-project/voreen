@@ -21,9 +21,9 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Bouzidi Velocity Boundary
-///This is an offLattice boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Bouzidi Velocity Boundary
+//This is an offLattice boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_BOUZIDI_VELOCITY_BOUNDARY_2D_H
 #define SET_BOUZIDI_VELOCITY_BOUNDARY_2D_H
 
@@ -31,15 +31,13 @@
 #include "geometry/blockGeometryStatistics2D.h"
 #include "core/superLattice2D.h"
 #include "io/ostreamManager.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "utilities/functorPtr.h"
 #include "extendedFiniteDifferenceBoundary2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
-#include "core/blockLatticeStructure2D.h"
-#include "momentaOnBoundaries2D.h"
 #include "boundaryPostProcessors2D.h"
 #include "dynamics/dynamics.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
 #include "dynamics/freeEnergyDynamics.h"
 #include "offBoundaryPostProcessors2D.h"
@@ -61,33 +59,33 @@ namespace olb {
 
 ///Initialising the BouzidiVelocityBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics = BGKdynamics<T,DESCRIPTOR>>
-void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry, int material,
+void setBouzidiVelocityBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry, int material,
                                 IndicatorF2D<T>& geometryIndicator, std::vector<int> bulkMaterials = std::vector<int>(1,1));
 
 ///Initialising the BouzidiVelocityBoundary on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& boundaryIndicator,
+void setBouzidiVelocityBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF2D<T>>&& boundaryIndicator,
                                 FunctorPtr<SuperIndicatorF2D<T>>&& bulkIndicator,
                                 IndicatorF2D<T>& geometryIndicator);
 
 ////////// BlockLattice Domain  /////////////////////////////////////////
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& boundaryIndicator, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator);
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockIndicatorF2D<T>& boundaryIndicator, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator);
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockGeometryStructure2D<T>& blockGeometryStructure, int iX, int iY, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator);
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockGeometry<T,2>& blockGeometryStructure, int iX, int iY, BlockIndicatorF2D<T>& bulkIndicator, IndicatorF2D<T>& geometryIndicator);
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockGeometryStructure2D<T>& blockGeometryStructure, int x, int y, T distances[DESCRIPTOR::q]);
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockGeometry<T,2>& blockGeometryStructure, int x, int y, T distances[DESCRIPTOR::q]);
 
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBouzidiVelocityBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, BlockGeometryStructure2D<T>& blockGeometryStructure, int x, int y, int iPop, T dist);
+void setBouzidiVelocityBoundary(BlockLattice<T,DESCRIPTOR>& block, BlockGeometry<T,2>& blockGeometryStructure, int x, int y, int iPop, T dist);
 
 //set dynamics on indicated cells
 //this function can be used for bouzidi and bounceBackVelocityBoundary
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setOffDynamics(BlockLatticeStructure2D<T,DESCRIPTOR>& block, int x, int y, T location[DESCRIPTOR::d], T distances[DESCRIPTOR::q]);
+void setOffDynamics(BlockLattice<T,DESCRIPTOR>& block, int x, int y, T location[DESCRIPTOR::d], T distances[DESCRIPTOR::q]);
 
 }//namespace olb
 

@@ -30,33 +30,34 @@
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry3D.h"
-#include "core/superLattice3D.h"
+#include "geometry/superGeometry.h"
+#include "core/superLattice.h"
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
 #include "dynamics/dynamics.h"
-#include "momentaOnBoundaries3D.h"
 #include "dynamics/freeEnergyDynamics.h"
 #include "advectionDiffusionBoundaryPostProcessor3D.h"
 #include "advectionDiffusionBoundaries.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
+#include "setBoundary3D.h"
 
 namespace olb {
 
 //Initialising the setZeroDistributionBoundary function on the superLattice domain
 //advection diffusion boundary condition therefore mostly --> MixinDynamics = AdvectionDiffusionRLBdynamics<T,DESCRIPTOR>>
-template<typename T, typename DESCRIPTOR, typename MixinDynamics = AdvectionDiffusionRLBdynamics<T,DESCRIPTOR>>
-void setZeroDistributionBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice,SuperGeometry3D<T>& superGeometry, int material);
+template<typename T, typename DESCRIPTOR>
+void setZeroDistributionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,SuperGeometry<T,3>& superGeometry, int material);
 
 //setZeroDistributionBoundary function on the superLattice domain
 //depending on the application, the first function can be skipped and this function can be called directly in the app
-//the addPoints2CommBC is currently located inside setLocalVelocityBoundary3D.h
-template<typename T, typename DESCRIPTOR, typename MixinDynamics = AdvectionDiffusionRLBdynamics<T,DESCRIPTOR>>
-void setZeroDistributionBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& indicator);
+//the addPoints2CommBC is currently located inside setBoundary3D.h
+template<typename T, typename DESCRIPTOR>
+void setZeroDistributionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& indicator);
 
-//sets the ZeroDistributionBoundary on the block level
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setZeroDistributionBoundary(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, BlockIndicatorF3D<T>& indicator, bool includeOuterCells=false);
+
+//sets the ZeroDistributionBoundary for any indicated cell inside the block domain
+template<typename T, typename DESCRIPTOR>
+void setZeroDistributionBoundary(BlockLattice<T,DESCRIPTOR>& _block, BlockIndicatorF3D<T>& indicator, bool includeOuterCells=false);
 
 }//namespace olb
 

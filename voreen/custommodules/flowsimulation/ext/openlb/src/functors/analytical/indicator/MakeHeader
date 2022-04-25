@@ -28,7 +28,9 @@ precompiled    := indicatorBaseF2D \
                   indicatorF2D \
                   indicatorF3D \
                   indicCalc2D \
-                  indicCalc3D \
+                  indicAlt3D \
+                  indicComb3D \
+                  sdf \
                   smoothIndicatorF2D \
                   smoothIndicatorF3D \
                   smoothIndicatorBaseF2D \

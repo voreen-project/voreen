@@ -29,7 +29,7 @@
 #define UNITCONVERTER_H
 
 
-#include <math.h>
+#include "utilities/omath.h"
 #include "io/ostreamManager.h"
 #include "core/util.h"
 #include "io/xmlReader.h"
@@ -42,9 +42,16 @@
 //    6. Is it worth to introduce invConversionDensity to avoid division
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
+struct UnitConverterBase {
+  virtual ~UnitConverterBase() = default;
+
+  virtual void print() const = 0;
+  virtual void print(std::ostream& fout) const = 0;
+  virtual void write(std::string const& fileName = "unitConverter") const = 0;
+};
 
 
 /** Conversion between physical and lattice units, as well as discretization.
@@ -75,7 +82,7 @@ namespace olb {
 *  \param charLatticeVelocity
 */
 template <typename T, typename DESCRIPTOR>
-class UnitConverter {
+class UnitConverter : public UnitConverterBase {
 public:
   /** Documentation of constructor:
     *  \param physDeltaX              spacing between two lattice cells in __m__
@@ -92,10 +99,10 @@ public:
       _conversionTime(physDeltaT),
       _conversionVelocity(_conversionLength / _conversionTime),
       _conversionDensity(physDensity),
-      _conversionMass( _conversionDensity * pow(_conversionLength, 3) ),
+      _conversionMass( _conversionDensity * util::pow(_conversionLength, 3) ),
       _conversionViscosity(_conversionLength * _conversionLength / _conversionTime),
       _conversionForce( _conversionMass * _conversionLength / (_conversionTime * _conversionTime) ),
-      _conversionPressure( _conversionForce / pow(_conversionLength, 2) ),
+      _conversionPressure( _conversionForce / util::pow(_conversionLength, 2) ),
       _charPhysLength(charPhysLength),
       _charPhysVelocity(charPhysVelocity),
       _physViscosity(physViscosity),
@@ -169,7 +176,7 @@ public:
   /// return Mach number
   constexpr T getMachNumber(  ) const
   {
-    return getCharLatticeVelocity() * std::sqrt(descriptors::invCs2<T,DESCRIPTOR>());
+    return getCharLatticeVelocity() * util::sqrt(descriptors::invCs2<T,DESCRIPTOR>());
   }
   /// return Knudsen number
   constexpr T getKnudsenNumber(  ) const
@@ -322,7 +329,7 @@ public:
   /// nice terminal output for conversion factors, characteristical and physical data
   virtual void print() const;
   void print(std::ostream& fout) const;
-  
+
   void write(std::string const& fileName = "unitConverter") const;
 
 protected:
@@ -356,6 +363,24 @@ private:
 template <typename T, typename DESCRIPTOR>
 UnitConverter<T, DESCRIPTOR>* createUnitConverter(XMLreader const& params);
 
+/*
+TODO: check scaling
+template <typename T, typename DESCRIPTOR>
+UnitConverter<T, DESCRIPTOR>* createRefinedUnitConverter(
+  const UnitConverter<T, DESCRIPTOR>* converter, T refinementFactor = 0.5)
+{
+  return new UnitConverter<T, DESCRIPTOR>(
+    converter->getPhysDeltaX() * refinementFactor,
+    converter->getPhysDeltaT() * refinementFactor * refinementFactor,
+    converter->getCharPhysLength(),
+    converter->getCharPhysVelocity(),
+    converter->getPhysViscosity(),
+    converter->getPhysDensity(),
+    converter->getCharPhysPressure()
+  );
+}
+*/
+
 template <typename T, typename DESCRIPTOR>
 class UnitConverterFromResolutionAndRelaxationTime : public UnitConverter<T, DESCRIPTOR> {
 public:
@@ -368,7 +393,7 @@ public:
     T physDensity,
     T charPhysPressure = 0) : UnitConverter<T, DESCRIPTOR>(
         (charPhysLength/resolution),
-        (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * pow((charPhysLength/resolution),2) / physViscosity,
+        (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * util::pow((charPhysLength/resolution),2) / physViscosity,
         charPhysLength,
         charPhysVelocity,
         physViscosity,

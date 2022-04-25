@@ -43,11 +43,11 @@
   The functors return the displacement of a point x in a fixed amount of time.
 
   The ones in the SECOND part are useful to set Poiseuille velocity profiles on
-  - pipes with round cross-section and
+  - pipes with util::round cross-section and
   - pipes with square-shaped cross-section.
 */
 
-/** To enable simulations in a rotating frame, the axis is set in the
+/* To enable simulations in a rotating frame, the axis is set in the
   * constructor with axisPoint and axisDirection. The axisPoint can be the
   * coordinate of any point on the axis. The axisDirection has to be a normed to
   * 1. The pulse w is in rad/s. It determines the pulse speed by its norm while
@@ -72,7 +72,7 @@ protected:
 public:
   PowerLaw2D(std::vector<T> axisPoint, std::vector<T> axisDirection,  T maxVelocity, T radius, T exponent);
   /// construct from material number, note: untested
-  PowerLaw2D(SuperGeometry2D<T>& superGeometry, int material, T maxVelocity, T distance2Wall, T exponent);
+  PowerLaw2D(SuperGeometry<T,2>& superGeometry, int material, T maxVelocity, T distance2Wall, T exponent);
   bool operator()(T output[], const T input[]) override;
 };
 
@@ -82,7 +82,7 @@ class Poiseuille2D : public PowerLaw2D<T> {
 public:
   Poiseuille2D(std::vector<T> axisPoint, std::vector<T> axisDirection,  T maxVelocity, T radius);
   /// construct from material number, note: untested
-  Poiseuille2D(SuperGeometry2D<T>& superGeometry, int material, T maxVelocity, T distance2Wall);
+  Poiseuille2D(SuperGeometry<T,2>& superGeometry, int material, T maxVelocity, T distance2Wall);
   //bool operator()(T output[], const T x[]);
 };
 
@@ -119,16 +119,16 @@ public:
 /// This class converts polar coordinates of point x (x[0] = radius, x[1] = phi)
 /// to Cartesian coordinates (wrote into output field).
 /// Initial situation for the Cartesian coordinate system is that angle phi
-/// lies in the x-y-plane and turns round the _polarOrigin in math. pos sense.
+/// lies in the x-y-plane and turns util::round the _polarOrigin in math. pos sense.
 template <typename T, typename S>
 class PolarToCartesian2D : public AnalyticalF2D<T,S> {
 protected:
   /// origin of the polar coordinate system to which point x is related
-  std::vector<T> _polarOrigin;
+  olb::Vector<T, 3> _polarOrigin;
   //  std::vector<T> _normalToPlane;
 public:
   /// constructor to obtain Cartesian coordinates of polar coordinates
-  PolarToCartesian2D(std::vector<T> polarOrigin);
+  PolarToCartesian2D(olb::Vector<T, 3> polarOrigin);
   /// operator writes Cartesian coordinates of polar coordinates
   /// x[0] = radius >= 0, x[1] = phi in [0, 2*Pi) into output field
   bool operator()(T output[], const S x[]) override;
@@ -146,16 +146,16 @@ template <typename T, typename S>
 class CartesianToPolar2D : public AnalyticalF2D<T,S> {
 protected:
   /// origin of the Cartesian coordinate system
-  std::vector<T> _cartesianOrigin;
+  olb::Vector<T, 3> _cartesianOrigin;
   /// direction of the axis along which the polar coordinates are calculated
-  std::vector<T> _axisDirection;
+  olb::Vector<T, 3> _axisDirection;
   /// direction to know orientation for math positive to obtain angle phi
   /// of Cartesian point x
-  std::vector<T> _orientation;
+  olb::Vector<T, 3> _orientation;
 public:
-  CartesianToPolar2D(std::vector<T> cartesianOrigin,
-                     std::vector<T> axisDirection,
-                     std::vector<T> orientation = {T(1),T(),T()});
+  CartesianToPolar2D(olb::Vector<T, 3> cartesianOrigin,
+		  	  	  	 olb::Vector<T, 3> axisDirection,
+					 olb::Vector<T, 3> orientation = {T(1),T(),T()});
   CartesianToPolar2D(T cartesianOriginX, T cartesianOriginY,
                      T cartesianOriginZ,
                      T axisDirectionX, T axisDirectionY, T axisDirectionZ,

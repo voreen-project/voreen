@@ -56,7 +56,7 @@ SuperMin3D<T,W>::SuperMin3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W>
 SuperMin3D<T,W>::SuperMin3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                            SuperGeometry3D<T>& superGeometry,
+                            SuperGeometry<T,3>& superGeometry,
                             const int material)
   : SuperMin3D(
       std::forward<decltype(f)>(f),

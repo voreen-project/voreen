@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -45,11 +43,11 @@ class SuperLatticePhysBoundaryForce2D : public SuperLatticePhysF2D<T,DESCRIPTOR>
 private:
   FunctorPtr<SuperIndicatorF2D<T>> _indicatorF;
 public:
-  SuperLatticePhysBoundaryForce2D(SuperLattice2D<T,DESCRIPTOR>&      sLattice,
+  SuperLatticePhysBoundaryForce2D(SuperLattice<T,DESCRIPTOR>&      sLattice,
                                   FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF,
                                   const UnitConverter<T,DESCRIPTOR>& converter);
-  SuperLatticePhysBoundaryForce2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                                  SuperGeometry2D<T>& superGeometry, const int material,
+  SuperLatticePhysBoundaryForce2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                  SuperGeometry<T,2>& superGeometry, const int material,
                                   const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
@@ -58,9 +56,9 @@ template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysBoundaryForce2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
   BlockIndicatorF2D<T>&        _indicatorF;
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
 public:
-  BlockLatticePhysBoundaryForce2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysBoundaryForce2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                   BlockIndicatorF2D<T>& indicatorF,
                                   const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;

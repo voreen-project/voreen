@@ -31,11 +31,11 @@
 namespace olb {
 
 template<typename T, typename W>
-SuperF2D<T,W>::SuperF2D(SuperStructure2D<T>& superStructure, int targetDim)
-  : GenericF<W,int>(targetDim,3), _superStructure(superStructure) { }
+SuperF2D<T,W>::SuperF2D(SuperStructure<T,2>& superStructure, int targetDim)
+  : GenericF<W,int>(targetDim,2), _superStructure(superStructure) { }
 
 template<typename T, typename W>
-SuperStructure2D<T>& SuperF2D<T,W>::getSuperStructure()
+SuperStructure<T,2>& SuperF2D<T,W>::getSuperStructure()
 {
   return _superStructure;
 }
@@ -59,7 +59,7 @@ BlockF2D<W>& SuperF2D<T,W>::getBlockF(int iCloc)
 template <typename T, typename W>
 bool SuperF2D<T,W>::operator()(W output[], const int input[])
 {
-  
+
   LoadBalancer<T>& load = _superStructure.getLoadBalancer();
 
   if (load.isLocal(input[0])) {
@@ -75,15 +75,12 @@ bool SuperF2D<T,W>::operator()(W output[], const int input[])
 
 
 template <typename T,typename BaseType>
-SuperDataF2D<T,BaseType>::SuperDataF2D(SuperData2D<T,BaseType>& superData)
+SuperDataF2D<T,BaseType>::SuperDataF2D(SuperData<2,T,BaseType>& superData)
   : SuperF2D<T,BaseType>(superData, superData.getDataSize()),
     _superData(superData)
 {
   for (int iC = 0; iC < _superData.getLoadBalancer().size(); ++iC) {
-    this->_blockF.emplace_back(
-      new BlockDataViewF2D<T,BaseType>(_superData.get(iC),
-                                       _superData.getOverlap())
-    );
+    this->_blockF.emplace_back(new BlockDataF2D<T,BaseType>(_superData.getBlock(iC)));
   }
 }
 
@@ -100,7 +97,7 @@ bool SuperDataF2D<T,BaseType>::operator() (BaseType output[], const int input[])
 }
 
 template <typename T,typename BaseType>
-SuperData2D<T,BaseType>& SuperDataF2D<T,BaseType>::getSuperData()
+SuperData<2,T,BaseType>& SuperDataF2D<T,BaseType>::getSuperData()
 {
   return _superData;
 }
@@ -125,14 +122,13 @@ bool SuperIdentity2D<T,W>::operator()(W output[], const int input[])
   return _f(output, input);
 }
 
-
 template <typename T, typename DESCRIPTOR>
-SuperLatticeF2D<T,DESCRIPTOR>::SuperLatticeF2D(SuperLattice2D<T,DESCRIPTOR>& superLattice,
+SuperLatticeF2D<T,DESCRIPTOR>::SuperLatticeF2D(SuperLattice<T,DESCRIPTOR>& superLattice,
     int targetDim)
   : SuperF2D<T,T>(superLattice, targetDim), _sLattice(superLattice) { }
 
 template <typename T, typename DESCRIPTOR>
-SuperLattice2D<T,DESCRIPTOR>& SuperLatticeF2D<T,DESCRIPTOR>::getSuperLattice()
+SuperLattice<T,DESCRIPTOR>& SuperLatticeF2D<T,DESCRIPTOR>::getSuperLattice()
 {
   return _sLattice;
 }
@@ -155,7 +151,7 @@ bool SuperLatticeF2D<T, DESCRIPTOR>::operator()(
 
 template <typename T, typename DESCRIPTOR>
 SuperLatticePhysF2D<T,DESCRIPTOR>::SuperLatticePhysF2D
-(SuperLattice2D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter,
+(SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter,
  int targetDim)
   : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, targetDim), _converter(converter) { }
 
@@ -167,7 +163,7 @@ UnitConverter<T,DESCRIPTOR> const& SuperLatticePhysF2D<T,DESCRIPTOR>::getConvert
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticeThermalPhysF2D<T,DESCRIPTOR,TDESCRIPTOR>::SuperLatticeThermalPhysF2D
-(SuperLattice2D<T,TDESCRIPTOR>& sLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
+(SuperLattice<T,TDESCRIPTOR>& sLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
  int targetDim)
   : SuperLatticeF2D<T,TDESCRIPTOR>(sLattice, targetDim), _converter(converter) { }
 

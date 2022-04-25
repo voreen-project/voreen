@@ -33,9 +33,10 @@
 #include "io/ostreamManager.h"
 #include "core/unitConverter.h"
 #include "core/singleton.h"
+#include "utilities/omath.h"
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 double getThetaRefracted(double const& thetaIncident, double const& refractiveRelative);
@@ -88,7 +89,7 @@ public:
       _extinction( physAbsorption+physScattering ),
       _scatteringAlbedo( physScattering/(physAbsorption+physScattering) ),
       _physDiffusion( 1.0 / (3.0*(physAbsorption+physScattering)) ),
-      _effectiveAttenuation( std::sqrt(3*physAbsorption*(physAbsorption+physScattering)) ),
+      _effectiveAttenuation( util::sqrt(3*physAbsorption*(physAbsorption+physScattering)) ),
       _refractiveRelative(refractiveMedia/refractiveAmbient),
       _latticeAbsorption( physAbsorption*this->getConversionFactorLength() ),
       _latticeScattering( physScattering*this->getConversionFactorLength() ),
@@ -216,18 +217,70 @@ template <typename T, class DESCRIPTOR>
 void RadiativeUnitConverter<T, DESCRIPTOR>::write() const
 {
   std::string dataFile = singleton::directories().getLogOutDir() + "radiativeUnitConverter.dat";
-  if (singleton::mpi().isMainProcessor())
-  {
+  if (singleton::mpi().isMainProcessor()) {
     std::ofstream fout(dataFile.c_str(), std::ios::trunc);
-    if(!fout) {
+    if (!fout) {
       clout << "error write() function: can not open std::ofstream" << std::endl;
-    } else {
+    }
+    else {
       print( fout );
       fout.close();
     }
   }
 
 }
+
+/// Documentation of implemented functions found in 5.2.2 Biomedical Optics, Principles and Imaging; Wang 2007
+
+double getThetaRefracted(double const& thetaIncident, double const& refractiveRelative)
+{
+  double thetaRefracted = M_PI/2.;
+  if ( refractiveRelative * util::sin(thetaIncident) < 1 ) {
+    thetaRefracted = util::asin( refractiveRelative * util::sin(thetaIncident));  // eq.(5.118)
+  }
+  return thetaRefracted;
+};
+
+double getFresnelFunction(double const& theta, double const& refractiveRelative)
+{
+  double thetaRefracted = getThetaRefracted(theta, refractiveRelative);
+  double rf_1 = 0.5 * util::pow((refractiveRelative * util::cos(thetaRefracted) - util::cos(theta)) /
+                                (refractiveRelative * util::cos(thetaRefracted) + util::cos(theta)), 2.);
+  double rf_2 = 0.5 * util::pow((refractiveRelative * util::cos(theta) - util::cos(thetaRefracted)) /
+                                (refractiveRelative * util::cos(theta) + util::cos(thetaRefracted)), 2.);
+  return rf_1 + rf_2;   // eq.(5.115)
+};
+
+double R_phi_diff (double const& theta, double const& refractiveRelative)
+{
+  return 2. * util::sin(theta) * util::cos(theta) * getFresnelFunction(theta,refractiveRelative);
+};
+
+double R_j_diff (double const& theta, double const& refractiveRelative)
+{
+  return 3. * util::sin(theta) * util::pow(util::cos(theta),2.) * getFresnelFunction(theta,refractiveRelative);
+};
+
+double getRefractionFunction(const double& refractiveRelative)
+{
+  int N = 10000.0;
+  double h = (M_PI / 2.) /double(N);
+  double R_phi = 0.0;
+  double R_j = 0.0;
+  for (int i = 0; i < N; i++) {
+    R_phi += h*(R_phi_diff(0.5*h + h*i,refractiveRelative));
+    R_j   += h*(R_j_diff  (0.5*h + h*i,refractiveRelative));
+  }
+  double R_eff = (R_phi + R_j) / (2 - R_phi + R_j);     // eq.(5.112)
+  return (1 + R_eff) / (1 - R_eff);                     // eq.(5.111)    C_R = (1 + R_eff) / (1 - R_eff);
+};
+
+double getPartialBBCoefficient(double const& latticeDiffusionCoefficient, double const& relativeRefractiveIndex )
+{
+  double C_R = getRefractionFunction( relativeRefractiveIndex );
+  return 2 - 2/(4*latticeDiffusionCoefficient*C_R +1);
+};
+
 
 }  // namespace olb
 

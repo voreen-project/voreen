@@ -33,6 +33,7 @@
 #include <iostream>
 #include <sstream>
 #include <set>
+#include <limits>
 
 #include "communication/loadBalancer.h"
 #include "geometry/cuboidGeometry3D.h"
@@ -43,29 +44,35 @@
 #include "core/vector.h"
 
 
-using namespace olb::util;
-
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 template<typename T>
 class Octree;
 
-template<typename T>
-struct STLpoint {
+template<typename T, unsigned D>
+struct Vertex {
   /// Constructor constructs
-  STLpoint() : r() {};
+  Vertex() : coords() {};
+  Vertex( Vector<T,D> coords_ ) : coords(coords_) {};
   /// Operator= equals
-  STLpoint<T>& operator=(STLpoint<T> const& rhs)
+  Vertex<T,D>& operator=(Vertex<T,D> const& rhs)
   {
-    r = rhs.r;
+    coords = rhs.coords;
     return *this;
   };
   /// CopyConstructor copies
-  STLpoint(STLpoint<T> const& rhs):r(rhs.r) {};
+  Vertex(Vertex<T,D> const& rhs):coords(rhs.coords) {};
 
   /// Point coordinates in SI units
-  Vector<T,3> r;
+  Vector<T,D> coords;
+
+  /// Get dimension 
+  int getDim() const
+  {
+    return D;
+  }
+  
 };
 
 template<typename T>
@@ -82,7 +89,7 @@ struct STLtriangle {
   Vector<T,3> closestPtPointTriangle(const Vector<T,3>& pt) const;
 
   /// A triangle contains 3 Points
-  std::vector<STLpoint<T> > point;
+  std::vector<Vertex<T,3> > point;
 
   /// normal of triangle
   Vector<T,3> normal;
@@ -94,7 +101,7 @@ struct STLtriangle {
 
 public:
   /// Constructor constructs
-  STLtriangle():point(3, STLpoint<T>()), normal(T()), uBeta(T()), uGamma(T()), d(T()), kBeta(T()), kGamma(T()) {};
+  STLtriangle():point(3, Vertex<T,3>()), normal(T()), uBeta(T()), uGamma(T()), d(T()), kBeta(T()), kGamma(T()) {};
   /// CopyConstructor copies
   STLtriangle(STLtriangle<T> const& tri):point(tri.point), normal(tri.normal), uBeta(tri.uBeta), uGamma(tri.uGamma), d(tri.d), kBeta(tri.kBeta), kGamma(tri.kGamma) {};
   /// Operator= equals
@@ -119,16 +126,25 @@ public:
   {
     return normal;
   }
+  /// Return read access to normal
+  inline const Vector<T,3>& getNormal() const
+  {
+    return normal;
+  }
+  /// Returns center
+  Vector<T,3> getCenter();
   /// Returns Pt0-Pt1
   std::vector<T> getE0();
   /// Returns Pt0-Pt2
   std::vector<T> getE1();
+  /// Check whether a point is inside a triangle
+  bool isPointInside(const PhysR<T,3>& pt) const;
 };
 
 template<typename T>
 class STLmesh {
   /// Computes distance squared betwenn p1 and p2
-  T distPoints(STLpoint<T>& p1, STLpoint<T>& p2);
+  T distPoints(Vertex<T,3>& p1, Vertex<T,3>& p2);
   /// Filename
   const std::string _fName;
   /// Vector of Triangles
@@ -159,6 +175,11 @@ public:
   inline STLtriangle<T>& getTri(unsigned int i)
   {
     return _triangles[i];
+  }
+  /// Returns reference to all triangles
+  inline std::vector<STLtriangle<T> >& getTriangles()
+  {
+    return _triangles;
   }
   /// Returns number of triangles
   inline unsigned int triangleSize() const
@@ -212,13 +233,20 @@ private:
   *  New indicate function (faster, less stable)
   *  Define ray in Y-direction for each Voxel in XZ-layer. Indicate all nodes on the fly.
   */
-  void indicate2_Yray(); 
+  void indicate2_Yray();
   /*
    *  Double ray approach: two times (X-, Y-, Z-direction) for each leaf.
    *  Could be use to deal with double layer triangles and face intersections.
    */
-  
+
   void indicate3();
+
+  /// Finds normal for points on the surface (do not use for points that aren't on the surface!)
+  Vector<T,3> findNormalOnSurface(const PhysR<T,3>& pt);
+
+  /// Finds surface normal
+  Vector<T,3> evalSurfaceNormal(const Vector<T,3>& origin);
+
   /// Size of the smallest voxel
   T _voxelSize;
   /// Factor to get Si unit (m), i.e. "0.001" means mm
@@ -248,7 +276,7 @@ public:
    * \param verbose Get additional information.
    */
 
-  STLreader(const std::string fName, T voxelSize, T stlSize=1, unsigned short int method=2,
+  STLreader(const std::string fName, T voxelSize, T stlSize=1, int method=2,
             bool verbose = false, T overlap=0., T max=0.);
   /**
    * Constructs a new STLreader from a file
@@ -260,7 +288,7 @@ public:
    *               1: slow, more stable (for untight STLs)
    * \param verbose Get additional information.
    */
-  STLreader(const std::vector<std::vector<T>> meshPoints, T voxelSize, T stlSize=1, unsigned short int method=2,
+  STLreader(const std::vector<std::vector<T>> meshPoints, T voxelSize, T stlSize=1, int method=2,
             bool verbose = false, T overlap=0., T max=0.);
 
   ~STLreader() override;
@@ -269,6 +297,12 @@ public:
 
   /// Computes distance to closest triangle intersection
   bool distance(T& distance,const Vector<T,3>& origin, const Vector<T,3>& direction, int iC=-1) override;
+
+  /// Computes signed distance to closest triangle in direction of the surface normal
+  T signedDistance(const Vector<T,3>& input) override;
+
+  /// Finds and returns normal of the closest surface (triangle)
+  Vector<T,3> surfaceNormal(const Vector<T,3>& pos, const T meshSize=0) override;
 
   /// Prints console output
   void print();
@@ -281,6 +315,10 @@ public:
 
   /// Rearranges normals of triangles to point outside of geometry
   void setNormalsOutside();
+
+  /// Every octree leaf intersected by the STL will be part of the inside nodes.
+  /// Artificially enlarges all details that would otherwise be cut off by the voxelSize.
+  void setBoundaryInsideNodes();
 
   /// Returns tree
   inline Octree<T>* getTree() const

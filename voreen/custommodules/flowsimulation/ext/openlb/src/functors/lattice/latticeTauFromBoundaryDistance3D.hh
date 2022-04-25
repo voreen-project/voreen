@@ -37,10 +37,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -48,21 +47,21 @@ namespace olb {
 
 template<typename T,typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticePhysTauFromBoundaryDistance3D<T,DESCRIPTOR,TDESCRIPTOR>::SuperLatticePhysTauFromBoundaryDistance3D(
-  SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& sGeometry, XMLreader const& xmlReader, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, const T p, const T T_avg, const T c_p, const T beta, const T lambda_0, const T sigma, const T p_0, const T n_0)
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& sGeometry, XMLreader const& xmlReader, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, const T p, const T T_avg, const T c_p, const T beta, const T lambda_0, const T sigma, const T p_0, const T n_0)
   : SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physTauFromBoundaryDistance";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticePhysTauFromBoundaryDistance3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlockLattice(iC), sGeometry.getBlockGeometry(iC), xmlReader, this->_converter, p, T_avg, c_p, beta, lambda_0, sigma, p_0, n_0));
+    this->_blockF.emplace_back(new BlockLatticePhysTauFromBoundaryDistance3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlock(iC), sGeometry.getBlockGeometry(iC), xmlReader, this->_converter, p, T_avg, c_p, beta, lambda_0, sigma, p_0, n_0));
   }
 }
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticePhysTauFromBoundaryDistance3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysTauFromBoundaryDistance3D(
-  BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, BlockGeometryStructure3D<T>& blockGeometry, XMLreader const& xmlReader, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter, const T p, const T T_avg, const T c_p, const T beta, const T lambda_0, const T sigma, const T p_0, const T n_0)
-  : BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(blockLattice,converter,1), _blockGeometry(blockGeometry), _distanceFunctor(blockLattice, blockGeometry, xmlReader), _tmp1(lambda_0 * 287.058 * T_avg / p / c_p), _tmp2(2. * beta / (sqrt(2.) * M_PI * sigma * sigma * p * n_0 / p_0))
+  BlockLattice<T,DESCRIPTOR>& blockLattice, BlockGeometry<T,3>& blockGeometry, XMLreader const& xmlReader, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter, const T p, const T T_avg, const T c_p, const T beta, const T lambda_0, const T sigma, const T p_0, const T n_0)
+  : BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(blockLattice,converter,1), _blockGeometry(blockGeometry), _distanceFunctor(blockLattice, blockGeometry, xmlReader), _tmp1(lambda_0 * 287.058 * T_avg / p / c_p), _tmp2(2. * beta / (util::sqrt(2.) * M_PI * sigma * sigma * p * n_0 / p_0))
 {
   this->getName() = "physTauFromBoundaryDistance";
 }

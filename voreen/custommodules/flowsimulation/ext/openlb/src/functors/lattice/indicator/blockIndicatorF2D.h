@@ -24,8 +24,9 @@
 #ifndef BLOCK_INDICATOR_F_2D_H
 #define BLOCK_INDICATOR_F_2D_H
 
+#include <list>
+
 #include "blockIndicatorBaseF2D.h"
-#include "geometry/blockGeometryView2D.h"
 #include "functors/analytical/indicator/smoothIndicatorBaseF2D.h"
 
 namespace olb {
@@ -41,8 +42,8 @@ public:
    * \param blockGeometry Block geometry structure to be used for conversion
    *                      between lattice and physical coordinates.
    **/
-  BlockIndicatorFfromIndicatorF2D(IndicatorF2D<T>&             indicatorF,
-                                  BlockGeometryStructure2D<T>& blockGeometry);
+  BlockIndicatorFfromIndicatorF2D(IndicatorF2D<T>&    indicatorF,
+                                  BlockGeometry<T,2>& blockGeometry);
 
   using BlockIndicatorF2D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -70,7 +71,7 @@ public:
    *                      between lattice and physical coordinates.
    **/
   BlockIndicatorFfromSmoothIndicatorF2D(SmoothIndicatorF2D<T,T,HLBM>&   indicatorF,
-                                          BlockGeometryStructure2D<T>& blockGeometry);
+                                        BlockGeometry<T,2>& blockGeometry);
 
   using BlockIndicatorF2D<T>::operator();
   bool operator() (bool output[], const int input[]) override;
@@ -92,20 +93,20 @@ public:
    * \param blockGeometry Block geometry structue to be queried
    * \param materials     Material number vector
    **/
-  BlockIndicatorMaterial2D(BlockGeometryStructure2D<T>& blockGeometry,
-                           std::vector<int>             materials);
+  BlockIndicatorMaterial2D(BlockGeometry<T,2>& blockGeometry,
+                           std::vector<int>    materials);
   /**
    * \param blockGeometry Block geometry structure to be queried
    * \param materials     Material number list
    **/
-  BlockIndicatorMaterial2D(BlockGeometryStructure2D<T>& blockGeometry,
-                           std::list<int>             materials);
+  BlockIndicatorMaterial2D(BlockGeometry<T,2>& blockGeometry,
+                           std::list<int>      materials);
   /**
    * \param blockGeometry Block geometry structure to be queried
    * \param material      Material number
    **/
-  BlockIndicatorMaterial2D(BlockGeometryStructure2D<T>& blockGeometry,
-                           int                          material);
+  BlockIndicatorMaterial2D(BlockGeometry<T,2>& blockGeometry,
+                           int                 material);
 
   using BlockIndicatorF2D<T>::operator();
   bool operator() (bool output[], const int input[]) override;

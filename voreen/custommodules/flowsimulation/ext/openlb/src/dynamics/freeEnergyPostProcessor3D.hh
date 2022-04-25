@@ -25,7 +25,6 @@
 #define FREE_ENERGY_POST_PROCESSOR_3D_HH
 
 #include "freeEnergyPostProcessor3D.h"
-#include "core/blockLattice3D.h"
 
 namespace olb {
 
@@ -34,34 +33,34 @@ namespace olb {
 template<typename T, typename DESCRIPTOR>
 FreeEnergyChemicalPotentialCoupling3D <T,DESCRIPTOR>::FreeEnergyChemicalPotentialCoupling3D (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T alpha_, T kappa1_, T kappa2_, T kappa3_,
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), alpha(alpha_),
      kappa1(kappa1_), kappa2(kappa2_), kappa3(kappa3_), partners(partners_)
 {
-  this->getName() = "FreeEnergyChemicalPotentialCoupling3D";  
+  this->getName() = "FreeEnergyChemicalPotentialCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 FreeEnergyChemicalPotentialCoupling3D <T,DESCRIPTOR>::FreeEnergyChemicalPotentialCoupling3D (
   T alpha_, T kappa1_, T kappa2_, T kappa3_,
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   :  x0(0), x1(0), y0(0), y1(0), z0(0), z1(0), alpha(alpha_),
      kappa1(kappa1_), kappa2(kappa2_), kappa3(kappa3_), partners(partners_)
 {
-  this->getName() = "FreeEnergyChemicalPotentialCoupling3D";   
+  this->getName() = "FreeEnergyChemicalPotentialCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyChemicalPotentialCoupling3D<T,DESCRIPTOR>::processSubDomain (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   // If partners.size() == 1: two fluid components
   // If partners.size() == 2: three fluid components
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[0]);
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice2 = 0;
+  BlockLattice<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
+  BlockLattice<T,DESCRIPTOR> *partnerLattice2 = 0;
   if (partners.size() > 1) {
-    partnerLattice2 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[1]);
+    partnerLattice2 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[1]);
   }
 
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
@@ -70,7 +69,7 @@ void FreeEnergyChemicalPotentialCoupling3D<T,DESCRIPTOR>::processSubDomain (
                          newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
 
     // compute the density fields for each lattice
-    auto& rhoField = blockLattice.template getDynamicFieldArray<RHO_CACHE>();
+    auto& rhoField = blockLattice.template getField<RHO_CACHE>();
 
     for (int iX=newX0-1; iX<=newX1+1; ++iX)
       for (int iY=newY0-1; iY<=newY1+1; ++iY)
@@ -208,7 +207,7 @@ void FreeEnergyChemicalPotentialCoupling3D<T,DESCRIPTOR>::processSubDomain (
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyChemicalPotentialCoupling3D<T,DESCRIPTOR>::process (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+  BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -218,31 +217,31 @@ void FreeEnergyChemicalPotentialCoupling3D<T,DESCRIPTOR>::process (
 template<typename T, typename DESCRIPTOR>
 FreeEnergyForceCoupling3D <T,DESCRIPTOR>::FreeEnergyForceCoupling3D (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), partners(partners_)
 {
-  this->getName() = "FreeEnergyForceCoupling3D";  
+  this->getName() = "FreeEnergyForceCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 FreeEnergyForceCoupling3D <T,DESCRIPTOR>::FreeEnergyForceCoupling3D (
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   :  x0(0), x1(0), y0(0), y1(0), z0(0), z1(0), partners(partners_)
 {
-  this->getName() = "FreeEnergyForceCoupling3D";  
+  this->getName() = "FreeEnergyForceCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyForceCoupling3D<T,DESCRIPTOR>::processSubDomain (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   // If partners.size() == 1: two fluid components
   // If partners.size() == 2: three fluid components
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[0]);
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice2 = 0;
+  BlockLattice<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
+  BlockLattice<T,DESCRIPTOR> *partnerLattice2 = 0;
   if (partners.size() > 1) {
-    partnerLattice2 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[1]);
+    partnerLattice2 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[1]);
   }
 
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
@@ -374,7 +373,7 @@ void FreeEnergyForceCoupling3D<T,DESCRIPTOR>::processSubDomain (
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyForceCoupling3D<T,DESCRIPTOR>::process (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+  BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -385,31 +384,31 @@ void FreeEnergyForceCoupling3D<T,DESCRIPTOR>::process (
 template<typename T, typename DESCRIPTOR>
 FreeEnergyInletOutletCoupling3D <T,DESCRIPTOR>::FreeEnergyInletOutletCoupling3D (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   : x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), partners(partners_)
 {
-  this->getName() = "FreeEnergyInletOutletCoupling3D";  
+  this->getName() = "FreeEnergyInletOutletCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 FreeEnergyInletOutletCoupling3D <T,DESCRIPTOR>::FreeEnergyInletOutletCoupling3D (
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   : x0(0), x1(0), y0(0), y1(0), z0(0), z1(0), partners(partners_)
 {
-  this->getName() = "FreeEnergyInletOutletCoupling3D";   
+  this->getName() = "FreeEnergyInletOutletCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyInletOutletCoupling3D<T,DESCRIPTOR>::processSubDomain (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   // If partners.size() == 1: two fluid components
   // If partners.size() == 2: three fluid components
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[0]);
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice2 = 0;
+  BlockLattice<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
+  BlockLattice<T,DESCRIPTOR> *partnerLattice2 = 0;
   if (partners.size() > 1) {
-    partnerLattice2 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[1]);
+    partnerLattice2 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[1]);
   }
 
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
@@ -433,7 +432,7 @@ void FreeEnergyInletOutletCoupling3D<T,DESCRIPTOR>::processSubDomain (
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyInletOutletCoupling3D<T,DESCRIPTOR>::process(
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+  BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -444,32 +443,32 @@ void FreeEnergyInletOutletCoupling3D<T,DESCRIPTOR>::process(
 template<typename T, typename DESCRIPTOR>
 FreeEnergyDensityOutletCoupling3D <T,DESCRIPTOR>::FreeEnergyDensityOutletCoupling3D (
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T rho_,
-  std::vector<SpatiallyExtendedObject3D*> partners_)
+  std::vector<BlockStructureD<3>*> partners_)
   : x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_),
     rho(rho_), partners(partners_)
 {
-  this->getName() = "FreeEnergyDensityOutletCoupling3D";  
+  this->getName() = "FreeEnergyDensityOutletCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 FreeEnergyDensityOutletCoupling3D <T,DESCRIPTOR>::FreeEnergyDensityOutletCoupling3D (
-  T rho_, std::vector<SpatiallyExtendedObject3D*> partners_)
+  T rho_, std::vector<BlockStructureD<3>*> partners_)
   : x0(0), x1(0), y0(0), y1(0), z0(0), z1(0), rho(rho_), partners(partners_)
 {
-  this->getName() = "FreeEnergyDensityOutletCoupling3D";   
+  this->getName() = "FreeEnergyDensityOutletCoupling3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyDensityOutletCoupling3D<T,DESCRIPTOR>::processSubDomain (
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   // If partners.size() == 1: two fluid components
   // If partners.size() == 2: three fluid components
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[0]);
-  BlockLattice3D<T,DESCRIPTOR> *partnerLattice2 = 0;
+  BlockLattice<T,DESCRIPTOR> *partnerLattice1 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
+  BlockLattice<T,DESCRIPTOR> *partnerLattice2 = 0;
   if (partners.size() > 1) {
-    partnerLattice2 = static_cast<BlockLattice3D<T,DESCRIPTOR> *>(partners[1]);
+    partnerLattice2 = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[1]);
   }
 
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
@@ -498,7 +497,7 @@ void FreeEnergyDensityOutletCoupling3D<T,DESCRIPTOR>::processSubDomain (
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyDensityOutletCoupling3D<T,DESCRIPTOR>::process(
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+  BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -538,7 +537,7 @@ FreeEnergyChemicalPotentialGenerator3D<T,DESCRIPTOR>::FreeEnergyChemicalPotentia
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor3D<T,DESCRIPTOR>* FreeEnergyChemicalPotentialGenerator3D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject3D*> partners) const
+  std::vector<BlockStructureD<3>*> partners) const
 {
   return new FreeEnergyChemicalPotentialCoupling3D<T,DESCRIPTOR>(
            this->x0, this->x1, this->y0, this->y1, this->z0, this->z1,
@@ -567,7 +566,7 @@ FreeEnergyForceGenerator3D<T,DESCRIPTOR>::FreeEnergyForceGenerator3D ( )
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor3D<T,DESCRIPTOR>* FreeEnergyForceGenerator3D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject3D*> partners) const
+  std::vector<BlockStructureD<3>*> partners) const
 {
   return new FreeEnergyForceCoupling3D<T,DESCRIPTOR>(
            this->x0, this->x1, this->y0, this->y1, this->z0, this->z1, partners);
@@ -594,7 +593,7 @@ FreeEnergyInletOutletGenerator3D<T,DESCRIPTOR>::FreeEnergyInletOutletGenerator3D
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor3D<T,DESCRIPTOR>* FreeEnergyInletOutletGenerator3D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject3D*> partners) const
+  std::vector<BlockStructureD<3>*> partners) const
 {
   return new FreeEnergyInletOutletCoupling3D<T,DESCRIPTOR>(
            this->x0, this->x1, this->y0, this->y1, this->z0, this->z1, partners);
@@ -622,7 +621,7 @@ FreeEnergyDensityOutletGenerator3D<T,DESCRIPTOR>::FreeEnergyDensityOutletGenerat
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor3D<T,DESCRIPTOR>* FreeEnergyDensityOutletGenerator3D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject3D*> partners) const
+  std::vector<BlockStructureD<3>*> partners) const
 {
   return new FreeEnergyDensityOutletCoupling3D<T,DESCRIPTOR>(
            this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, rho, partners);

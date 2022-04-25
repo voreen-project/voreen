@@ -24,7 +24,7 @@
 #ifndef SUPER_INTEGRAL_F_3D_HH
 #define SUPER_INTEGRAL_F_3D_HH
 
-#include <cmath>
+#include "utilities/omath.h"
 #include <vector>
 
 #include "superIntegralF3D.h"
@@ -59,7 +59,7 @@ SuperSum3D<T,W>::SuperSum3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W>
 SuperSum3D<T,W>::SuperSum3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                            SuperGeometry3D<T>& superGeometry,
+                            SuperGeometry<T,3>& superGeometry,
                             const int material)
   : SuperSum3D(
       std::forward<decltype(f)>(f),
@@ -140,7 +140,7 @@ SuperIntegral3D<T,W>::SuperIntegral3D(FunctorPtr<SuperF3D<T,W>>&&        f,
 
 template <typename T, typename W>
 SuperIntegral3D<T,W>::SuperIntegral3D(FunctorPtr<SuperF3D<T,W>>&& f,
-                                      SuperGeometry3D<T>& superGeometry,
+                                      SuperGeometry<T,3>& superGeometry,
                                       const int material)
   : SuperIntegral3D(
       std::forward<decltype(f)>(f),
@@ -164,7 +164,7 @@ bool SuperIntegral3D<T,W>::operator() (W output[], const int input[])
 
     for (int iC = 0; iC < load.size(); ++iC) {
       const Cuboid3D<T> cuboid = geometry.get(load.glob(iC));
-      const W weight = pow(cuboid.getDeltaR(), 3);
+      const W weight = util::pow(cuboid.getDeltaR(), 3);
       inputTmp[0] = load.glob(iC);
       for (inputTmp[1] = 0; inputTmp[1] < cuboid.getNx(); ++inputTmp[1]) {
         for (inputTmp[2] = 0; inputTmp[2] < cuboid.getNy(); ++inputTmp[2]) {

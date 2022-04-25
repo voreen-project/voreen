@@ -25,37 +25,40 @@
 #define LATTICE_GEOMETRY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeGeometry2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticeGeometry2D<T,DESCRIPTOR>::SuperLatticeGeometry2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
   const int material)
-  : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, 1), _superGeometry(superGeometry),
+  : SuperLatticeGeometry2D<T,DESCRIPTOR>(superGeometry, material)
+{ }
+
+template<typename T,typename DESCRIPTOR>
+SuperLatticeGeometry2D<T,DESCRIPTOR>::SuperLatticeGeometry2D(
+  SuperGeometry<T,2>& superGeometry, const int material)
+  : SuperF2D<T>(superGeometry, 1), _superGeometry(superGeometry),
     _material(material)
 {
   this->getName() = "geometry";
-  int maxC = this->_sLattice.getLoadBalancer().size();
+  const int maxC = superGeometry.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back( new  BlockLatticeGeometry2D<T,DESCRIPTOR>(
-                                  this->_sLattice.getBlockLattice(iC),
                                   this->_superGeometry.getBlockGeometry(iC),
                                   _material) );
   }
@@ -63,8 +66,14 @@ SuperLatticeGeometry2D<T,DESCRIPTOR>::SuperLatticeGeometry2D(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeGeometry2D<T,DESCRIPTOR>::BlockLatticeGeometry2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, BlockGeometryStructure2D<T>& blockGeometry, int material)
-  : BlockLatticeF2D<T,DESCRIPTOR>(blockLattice,1), _blockGeometry(blockGeometry), _material(material)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, BlockGeometry<T,2>& blockGeometry, int material)
+  : BlockLatticeGeometry2D<T,DESCRIPTOR>(blockGeometry, material)
+{ }
+
+template <typename T, typename DESCRIPTOR>
+BlockLatticeGeometry2D<T,DESCRIPTOR>::BlockLatticeGeometry2D
+(BlockGeometry<T,2>& blockGeometry, int material)
+  : BlockF2D<T>(blockGeometry,1), _blockGeometry(blockGeometry), _material(material)
 {
   this->getName() = "geometry";
 }
@@ -72,7 +81,7 @@ BlockLatticeGeometry2D<T,DESCRIPTOR>::BlockLatticeGeometry2D
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticeGeometry2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  int materialTmp = _blockGeometry.getMaterial( input[0], input[1] );
+  const int materialTmp = _blockGeometry.getMaterial( {input[0], input[1]} );
 
   if (_material != -1) {
     if (_material == materialTmp) {

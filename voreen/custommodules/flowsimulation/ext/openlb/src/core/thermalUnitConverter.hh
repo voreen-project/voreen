@@ -31,7 +31,7 @@
 #include "core/singleton.h"
 #include "io/fileName.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 template <typename T, typename DESCRIPTOR, typename ThermalLattice>
@@ -84,7 +84,7 @@ void ThermalUnitConverter<T, DESCRIPTOR, ThermalLattice>::print() const
 
   clout << "----------------- ThermalConversion factors:-----------------" << std::endl;
   clout << "Temperature(K):                             temperature=                    " << getConversionFactorTemperature() << std::endl;
-  clout << "Thermal Duffusity(m^2/s):                   physThermalDiffusity=           " << getConversionFactorThermalDiffusivity() << std::endl;
+  clout << "Thermal Diffusity(m^2/s):                   physThermalDiffusity=           " << getConversionFactorThermalDiffusivity() << std::endl;
   clout << "specific Heat Capacity(J/kg):               physSpecificHeatCapacity=       " << getConversionFactorSpecificHeatCapacity() << std::endl;
   clout << "Thermal Coductivity(W/m/K):                 physThermalCondcticity=         " << getConversionFactorThermalConductivity() <<  std::endl;
   clout << "HeatFlux(W):                                physHeatFlux=                   " << getConversionFactorHeatFlux() << std::endl;

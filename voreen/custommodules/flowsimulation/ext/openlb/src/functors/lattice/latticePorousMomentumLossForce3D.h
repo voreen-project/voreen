@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -51,34 +51,35 @@ namespace olb {
  * \return output[3]-output[5] torque - physical units
  * \return output[7] number of voxels
  */
+/*
 template <typename T, typename DESCRIPTOR>
-class SuperLatticePorousMomentumLossForce3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
+class [[deprecated]] SuperLatticePorousMomentumLossForce3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticePorousMomentumLossForce3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                                        SuperGeometry3D<T>& superGeometry,
+  SuperLatticePorousMomentumLossForce3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                        SuperGeometry<T,3>& superGeometry,
                                         std::vector<SmoothIndicatorF3D<T,T,true>* >& indicator,
                                         const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };
-
+*/
 /** Functor that returns forces acting on a particle surface, returns data in output for every particle in a row(described are return values for the first particle).
  * \return output[0]-output[2] translational force - physical units
  * \return output[3]-output[5] torque - physical units
  * \return output[7] number of voxels
  */
-
+/*
 template <typename T, typename DESCRIPTOR>
-class BlockLatticePorousMomentumLossForce3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
+class [[deprecated]] BlockLatticePorousMomentumLossForce3D final : public BlockLatticePhysF3D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   std::vector<SmoothIndicatorF3D<T,T,true>* >& _vectorOfIndicator;
 public:
-  BlockLatticePorousMomentumLossForce3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-                                        BlockGeometryStructure3D<T>& blockGeometry,
+  BlockLatticePorousMomentumLossForce3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                        BlockGeometry<T,3>& blockGeometry,
                                         std::vector<SmoothIndicatorF3D<T,T,true>* >& indicator,
                                         const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };
-
+*/
 }
 #endif

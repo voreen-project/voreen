@@ -46,9 +46,13 @@ template<unsigned D, typename T, typename S> class AnalyticalIdentity;
 template<unsigned D, typename T, typename S> class AnalyticalF : public GenericF<T,S> {
 protected:
   // n denotes the target dimension
-  AnalyticalF(int n);
+  AnalyticalF(int n): GenericF<T,S>(n,D)
+  {
+    static_assert(D==1 || D==2 || D==3, "Only D=1,2,3 allowed.");
+  }
 public:
   using identity_functor_type = AnalyticalIdentity<D,T,S>;
+  static constexpr unsigned dim = D;
 
   AnalyticalF<D,T,S>& operator-(AnalyticalF<D,T,S>& rhs);
   AnalyticalF<D,T,S>& operator+(AnalyticalF<D,T,S>& rhs);

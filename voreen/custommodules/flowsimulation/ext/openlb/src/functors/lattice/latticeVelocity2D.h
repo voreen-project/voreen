@@ -32,9 +32,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -44,14 +42,14 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeVelocity2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeVelocity2D(SuperLattice2D<T,DESCRIPTOR>& sLattice);
+  SuperLatticeVelocity2D(SuperLattice<T,DESCRIPTOR>& sLattice);
 };
 
 /// BlockLatticeVelocity2D returns pointwise velocity on local lattices.
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeVelocity2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeVelocity2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice);
+  BlockLatticeVelocity2D(BlockLattice<T,DESCRIPTOR>& blockLattice);
   bool operator() (T output[], const int input[]) override;
 };
 

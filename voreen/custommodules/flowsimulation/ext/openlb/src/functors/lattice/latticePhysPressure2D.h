@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,15 +41,20 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysPressure2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysPressure2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysPressure2D(SuperLattice<T,DESCRIPTOR>& sLattice,
                              const UnitConverter<T,DESCRIPTOR>& converter);
 };
+
+template <typename T, typename DESCRIPTOR>
+SuperLatticePhysPressure2D(SuperLattice<T,DESCRIPTOR>&,
+                           const UnitConverter<T,DESCRIPTOR>&)
+  -> SuperLatticePhysPressure2D<T,DESCRIPTOR>;
 
 /// BlockLatticePhysPressure2D returns pointwise phys pressure from rho on local lattices.
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysPressure2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticePhysPressure2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysPressure2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                              const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };

@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,9 +50,9 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysEffevtiveDissipation3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysEffevtiveDissipation3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysEffevtiveDissipation3D(SuperLattice<T,DESCRIPTOR>& sLattice,
                                          const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
-                                         LESDynamics<T, DESCRIPTOR>& LESdynamics);
+                                         std::function<T(Cell<T,DESCRIPTOR>&)> effectiveOmegaF);
 };
 
 /// functor returns pointwise turbulent dissipation density on local lattices
@@ -61,11 +61,11 @@ class BlockLatticePhysEffevtiveDissipation3D final : public BlockLatticeF3D<T,DE
 protected:
   const UnitConverter<T,DESCRIPTOR>& _converter;
   T _smagoConst;
-  LESDynamics<T, DESCRIPTOR>& _LESdynamics;
+  std::function<T(Cell<T,DESCRIPTOR>&)> _effectiveOmegaF;
 public:
-  BlockLatticePhysEffevtiveDissipation3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticePhysEffevtiveDissipation3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                          const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
-                                         LESDynamics<T, DESCRIPTOR>& LESdynamics);
+                                         std::function<T(Cell<T,DESCRIPTOR>&)> effectiveOmegaF);
   bool operator() (T output[], const int input[]) override;
 };
 

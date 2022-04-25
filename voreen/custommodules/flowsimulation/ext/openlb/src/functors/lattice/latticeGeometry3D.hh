@@ -33,37 +33,47 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
 namespace olb {
 
+template<typename T,typename DESCRIPTOR>
+SuperLatticeGeometry3D<T,DESCRIPTOR>::SuperLatticeGeometry3D(
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
+  const int material)
+  : SuperLatticeGeometry3D<T,DESCRIPTOR>(superGeometry, material)
+{ }
+
 template<typename T, typename DESCRIPTOR>
 SuperLatticeGeometry3D<T, DESCRIPTOR>::SuperLatticeGeometry3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
-  const int material)
-  : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1), _superGeometry(superGeometry),
+  SuperGeometry<T,3>& superGeometry, const int material)
+  : SuperF3D<T>(superGeometry, 1), _superGeometry(superGeometry),
     _material(material)
 {
   this->getName() = "geometry";
-  int maxC = this->_sLattice.getLoadBalancer().size();
+  const int maxC = superGeometry.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new  BlockLatticeGeometry3D<T, DESCRIPTOR>(
-                                 this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back(new  BlockLatticeGeometry3D<T,DESCRIPTOR>(
                                  this->_superGeometry.getBlockGeometry(iC),
                                  _material) );
   }
 }
 
+template <typename T, typename DESCRIPTOR>
+BlockLatticeGeometry3D<T,DESCRIPTOR>::BlockLatticeGeometry3D
+(BlockLattice<T,DESCRIPTOR>& blockLattice, BlockGeometry<T,3>& blockGeometry, int material)
+  : BlockLatticeGeometry3D<T,DESCRIPTOR>(blockGeometry, material)
+{ }
+
 template<typename T, typename DESCRIPTOR>
-BlockLatticeGeometry3D<T, DESCRIPTOR>::BlockLatticeGeometry3D(BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-    BlockGeometryStructure3D<T>& blockGeometry, int material)
-  : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1),
+BlockLatticeGeometry3D<T, DESCRIPTOR>::BlockLatticeGeometry3D(
+    BlockGeometry<T,3>& blockGeometry, int material)
+  : BlockF3D<T>(blockGeometry, 1),
     _blockGeometry(blockGeometry),
     _material(material)
 {
@@ -73,7 +83,7 @@ BlockLatticeGeometry3D<T, DESCRIPTOR>::BlockLatticeGeometry3D(BlockLatticeStruct
 template<typename T, typename DESCRIPTOR>
 bool BlockLatticeGeometry3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
-  output[0] = _blockGeometry.getMaterial(input[0], input[1], input[2]);
+  output[0] = _blockGeometry.getMaterial({input[0], input[1], input[2]});
 
   if (_material != -1) {
     if ( util::nearZero(_material-output[0]) ) {

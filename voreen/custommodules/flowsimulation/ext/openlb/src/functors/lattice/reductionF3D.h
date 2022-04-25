@@ -28,8 +28,8 @@
 #include "blockBaseF3D.h"
 #include "superBaseF3D.h"
 #include "geometry/cuboidGeometry3D.h"
-#include "geometry/blockGeometry3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/blockGeometry.h"
+#include "geometry/superGeometry.h"
 #include "functors/analytical/analyticalF.h"
 
 namespace olb {
@@ -50,7 +50,7 @@ public:
    * \param sLattice DESCRIPTOR reference required for conversion and block functor construction
    **/
   SuperLatticeFfromAnalyticalF3D(FunctorPtr<AnalyticalF3D<T,T>>&& f,
-                                 SuperLattice3D<T,DESCRIPTOR>&    sLattice);
+                                 SuperLattice<T,DESCRIPTOR>&    sLattice);
   bool operator() (T output[], const int input[]) override;
 };
 
@@ -71,7 +71,7 @@ public:
    * \param cuboid  Cuboid reference required for input parameter conversion
    **/
   BlockLatticeFfromAnalyticalF3D(AnalyticalF3D<T,T>&                    f,
-                                 BlockLatticeStructure3D<T,DESCRIPTOR>& lattice,
+                                 BlockLattice<T,DESCRIPTOR>& lattice,
                                  Cuboid3D<T>&                           cuboid);
   bool operator() (T output[], const int input[]) override;
 };
@@ -111,12 +111,11 @@ class BlockLatticeInterpPhysVelocity3Degree3D final : public
 protected:
   UnitConverter<T,DESCRIPTOR>& _conv;
   Cuboid3D<T>* _cuboid;
-  int _overlap;
   int _range;
 public:
   BlockLatticeInterpPhysVelocity3Degree3D(
-    BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-    UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c, int overlap, int range);
+    BlockLattice<T,DESCRIPTOR>& blockLattice,
+    UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c, int range);
   BlockLatticeInterpPhysVelocity3Degree3D(
     const BlockLatticeInterpPhysVelocity3Degree3D<T,DESCRIPTOR>& rhs);
   bool operator() (T output[], const int input[]) override
@@ -134,7 +133,7 @@ private:
   std::vector<BlockLatticeInterpPhysVelocity3Degree3D<T,DESCRIPTOR>* > _bLattices;
 public:
   SuperLatticeInterpPhysVelocity3Degree3D(
-    SuperLattice3D<T,DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR>& conv,
+    SuperLattice<T,DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR>& conv,
     int range=1);
   bool operator() (T output[], const int input[]) override
   {
@@ -148,16 +147,15 @@ template <typename T, typename DESCRIPTOR>
 class BlockLatticeInterpDensity3Degree3D final : public
   BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
-  BlockGeometryStructure3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   UnitConverter<T,DESCRIPTOR>& _conv;
   Cuboid3D<T>* _cuboid;
-  int _overlap;
   int _range; // degree of interpolation can be changed (2,3,4,...)
 public:
   BlockLatticeInterpDensity3Degree3D(
-    BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-    BlockGeometryStructure3D<T>& blockGeometry,
-    UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c, int overlap, int range);
+    BlockLattice<T,DESCRIPTOR>& blockLattice,
+    BlockGeometry<T,3>& blockGeometry,
+    UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c, int range);
   BlockLatticeInterpDensity3Degree3D(
     const BlockLatticeInterpDensity3Degree3D<T,DESCRIPTOR>& rhs);
   bool operator() (T output[], const int input[]) override
@@ -174,8 +172,8 @@ class SuperLatticeInterpDensity3Degree3D final : public
 private:
   std::vector<BlockLatticeInterpDensity3Degree3D<T,DESCRIPTOR>* > _bLattices;
 public:
-  SuperLatticeInterpDensity3Degree3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
-                                     SuperGeometry3D<T>& sGeometry,
+  SuperLatticeInterpDensity3Degree3D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                     SuperGeometry<T,3>& sGeometry,
                                      UnitConverter<T,DESCRIPTOR>& conv, int range=1);
   ~SuperLatticeInterpDensity3Degree3D() override;
   // range equals degree of interpolation and can be changed (2,3,4,...)
@@ -194,7 +192,7 @@ protected:
   UnitConverter<T,DESCRIPTOR>& _conv;
   Cuboid3D<T>* _cuboid;
 public:
-  BlockLatticeSmoothDiracDelta3D(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  BlockLatticeSmoothDiracDelta3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                  UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* c);
   BlockLatticeSmoothDiracDelta3D(
     const BlockLatticeSmoothDiracDelta3D<T,DESCRIPTOR>& rhs);
@@ -212,9 +210,9 @@ class SuperLatticeSmoothDiracDelta3D final : public
 private:
   std::vector<BlockLatticeSmoothDiracDelta3D<T,DESCRIPTOR>* > _bLattices;
 public:
-  SuperLatticeSmoothDiracDelta3D(SuperLattice3D<T, DESCRIPTOR>& sLattice,
+  SuperLatticeSmoothDiracDelta3D(SuperLattice<T, DESCRIPTOR>& sLattice,
                                  UnitConverter<T,DESCRIPTOR>& conv,
-                                 SuperGeometry3D<T>& superGeometry);
+                                 SuperGeometry<T,3>& superGeometry);
   ~SuperLatticeSmoothDiracDelta3D() override;
   bool operator()(T output[], const int input[]) override
   {

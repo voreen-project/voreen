@@ -37,9 +37,9 @@ namespace olb {
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>&           geometry,
+  SuperGeometry<T,3>&           geometry,
   const HyperplaneLattice3D<T>& hyperplaneLattice,
   FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
   FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -58,9 +58,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>&    geometry,
+  SuperGeometry<T,3>&    geometry,
   const Hyperplane3D<T>& hyperplane,
   FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
   FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
@@ -79,9 +79,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>&    geometry,
+  SuperGeometry<T,3>&    geometry,
   const Hyperplane3D<T>& hyperplane,
   FunctorPtr<SuperIndicatorF3D<T>>&& integrationIndicator,
   BlockDataReductionMode             mode)
@@ -98,9 +98,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& u, const Vector<T,3>& v,
   std::vector<int> materials,
   BlockDataReductionMode mode)
@@ -117,9 +117,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& u, const Vector<T,3>& v,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D<T>(
@@ -134,9 +134,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& normal,
   std::vector<int> materials,
   BlockDataReductionMode mode)
@@ -153,9 +153,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& origin, const Vector<T,3>& normal,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D<T>(
@@ -170,9 +170,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& normal,
   std::vector<int> materials,
   BlockDataReductionMode mode)
@@ -189,9 +189,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>& geometry,
+  SuperGeometry<T,3>& geometry,
   const Vector<T,3>& normal,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D<T>(
@@ -206,9 +206,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>&   geometry,
+  SuperGeometry<T,3>&   geometry,
   IndicatorCircle3D<T>& circle,
   std::vector<int> materials,
   BlockDataReductionMode mode)
@@ -225,9 +225,9 @@ SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
 template<typename T, template<typename, typename> class F>
 template<typename DESCRIPTOR>
 SuperPlaneIntegralFluxF3D<T, F>::SuperPlaneIntegralFluxF3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   const UnitConverter<T,DESCRIPTOR>& converter,
-  SuperGeometry3D<T>&   geometry,
+  SuperGeometry<T,3>&   geometry,
   IndicatorCircle3D<T>& circle,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF3D<T>(
@@ -265,10 +265,10 @@ void SuperPlaneIntegralFluxPressure3D<T>::print(
       std::cout << "; force[N]=" << output[0] << std::flush;
     }
     if ( meanSiScaleName == "mmHg" ) {
-      std::cout << "; meanPressure[mmHg]=" << std::abs(output[0])/output[1]/T(133.322) << std::endl;
+      std::cout << "; meanPressure[mmHg]=" << util::abs(output[0])/output[1]/T(133.322) << std::endl;
     }
     else {
-      std::cout << "; meanPressure[Pa]=" << std::abs(output[0])/output[1] << std::endl;
+      std::cout << "; meanPressure[Pa]=" << util::abs(output[0])/output[1] << std::endl;
     }
   }
 }

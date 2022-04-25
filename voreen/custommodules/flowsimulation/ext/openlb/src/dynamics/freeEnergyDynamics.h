@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
  *  Copyright (C) 2018 Robin Trunk, Sam Avis
+ *                2021 Adrian Kummerlaender
  *  OpenLB e-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,97 +25,174 @@
 #ifndef FREE_ENERGY_DYNAMICS_H
 #define FREE_ENERGY_DYNAMICS_H
 
-#include "dynamics/dynamics.h"
+#include "lbm.h"
+#include "interface.h"
+#include "momenta/aliases.h"
 
 /** \file
  * In this file the dynamic calls for the free energy model is implemented. It
  * is used for the second (and third) lattices, as for the first one a BGK collision with
  * Guo forcing is applied (see ForcedBGKdynamcs).
  */
-
 namespace olb {
 
-template<typename T, typename DESCRIPTOR>
-class FreeEnergyBGKdynamics : public BasicDynamics<T,DESCRIPTOR> {
-public:
-  /// This dynamics describes the propagation of density(fluid1) - density(fluid2). And is
-  /// used for the second (and third) lattices in the free energy model.
-  /// \param[in] omega_ - lattice relaxation frequency [lattice units]
-  /// \param[in] gamma_ - tunable parameter for the equilibrium distribution [lattice units]
-  /// \param[in] momenta_ - momenta object describing the calculation of macroscopic values (e.g. rho and u).
-  ///                       Usually "BulkMomenta" are used.
-  FreeEnergyBGKdynamics(T omega_, T gamma_, Momenta<T,DESCRIPTOR>& momenta_);
-  /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_) override;
-  /// Compute equilibrium distribution function.
-  /// This should contain an additional term that depends upon the chemical potential. However the external field
-  /// cannot be accessed when iniEquilibrium is called and so this has been neglected.
-  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
-  /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
-  /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
-  /// Compute fluid velocity and particle density on the cell.
-  void computeRhoU(
-    ConstCell<T,DESCRIPTOR>& cell,
-    T& rho, T u[DESCRIPTOR::d]) const override;
-  /// Compute fluid velocity on the cell.
-  void computeU(ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d]) const override;
-private:
-  T omega; /// relaxation parameter
-  T gamma; /// tunable parameter
-};
+namespace equilibria {
 
-template<typename T, typename DESCRIPTOR>
-class FreeEnergyWallDynamics : public BounceBack<T,DESCRIPTOR> {
-public:
-  /// This dynamics is used for the second (and third) lattices in the free energy model at wall boundaries.
-  /// It is neccessary for returning the correct equilibrium distributions when iniEquilibrium is called.
-  FreeEnergyWallDynamics();
-  /// Compute equilibrium distribution function.
-  /// This should contain an additional term that depends upon the chemical potential. However the external field
-  /// cannot be accessed when iniEquilibrium is called and so this has been neglected.
-  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
-  /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
-  /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
-};
+struct FreeEnergy {
+  using parameters = meta::list<>;
 
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-class FreeEnergyInletOutletDynamics : public BasicDynamics<T,DESCRIPTOR> {
-public:
-  /// This dynamics is used for the second (and third) lattices in the free energy model at inlets.
-  /// It first defines the missing distribution functions and then performs the normal collision.
-  /// \param[in] omega_ - lattice relaxation frequency [lattice units]
-  /// \param[in] momenta_ - momenta object describing the calculation of macroscopic values (not including rho).
-  ///                       Usually "BulkMomenta" are used.
-  FreeEnergyInletOutletDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
-  /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics_) override;
-  /// Compute equilibrium distribution function.
-  /// This should contain an additional term that depends upon the chemical potential. However the external field
-  /// cannot be accessed when iniEquilibrium is called and so this has been neglected.
-  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
-  /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
-  /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
-  /// Compute particle density on the cell.
-  T computeRho(ConstCell<T,DESCRIPTOR>& cell) const override;
-  /// Compute fluid velocity on the cell.
-  void computeU(ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d]) const override;
-  /// Compute fluid velocity and particle density on the cell. 
-  void computeRhoU (ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d]) const override;
-  /// Set particle density on the cell.
-  void defineRho(Cell<T,DESCRIPTOR>& cell, T rho) override;
-  /// Set fluid velocity on the cell.
-  void defineU(Cell<T,DESCRIPTOR>& cell, const T u[DESCRIPTOR::d]) override;
-private:
-  T omega;
+  static std::string getName() {
+    return "FreeEnergy";
+  }
+
+  template <typename DESCRIPTOR, typename MOMENTA>
+  struct type {
+    using MomentaF = typename MOMENTA::template type<DESCRIPTOR>;
+
+    template <typename RHO, typename U, typename V=RHO>
+    auto compute(int iPop, const RHO& rho, const U& u) {
+      V eq = equilibrium<DESCRIPTOR>::secondOrder(iPop, rho, u);
+      if (iPop == 0) {
+        eq += (V{1} - descriptors::t<V,DESCRIPTOR>(0)) * rho;
+      } else {
+        eq -= descriptors::t<V,DESCRIPTOR>(iPop) * rho;
+      }
+      return eq;
+    }
+
+    template <typename CELL, typename PARAMETERS, typename FEQ, typename V=typename CELL::value_t>
+    CellStatistic<V> compute(CELL& cell, PARAMETERS& parameters, FEQ& fEq) {
+      auto u = cell.template getField<descriptors::FORCE>();
+      V rho = MomentaF().computeRho(cell);
+      const V uSqr = util::normSqr<V,DESCRIPTOR::d>(u);
+      for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+        fEq[iPop] = equilibrium<DESCRIPTOR>::secondOrder(iPop, rho, u, uSqr);
+      }
+      return {rho, uSqr};
+    };
+  };
 };
 
 }
 
+namespace collision {
+
+struct FreeEnergy {
+  struct GAMMA : public descriptors::FIELD_BASE<1> { };
+
+  using parameters = typename meta::list<descriptors::OMEGA,GAMMA>;
+
+  static std::string getName() {
+    return "FreeEnergy";
+  }
+
+  template <typename DESCRIPTOR, typename MOMENTA, typename EQUILIBRIUM>
+  struct type {
+    using EquilibriumF = typename EQUILIBRIUM::template type<DESCRIPTOR,MOMENTA>;
+
+    template <typename CELL, typename PARAMETERS, typename V=typename CELL::value_t>
+    CellStatistic<V> apply(CELL& cell, PARAMETERS& parameters) {
+      V fEq[DESCRIPTOR::q] { };
+      const auto statistic = EquilibriumF().compute(cell, parameters, fEq);
+      const V omega = parameters.template get<descriptors::OMEGA>();
+      const V gamma = parameters.template get<GAMMA>();
+      for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+        cell[iPop] *= V{1} - omega;
+        cell[iPop] += omega * fEq[iPop];
+      }
+      const V tmp = gamma * descriptors::invCs2<V,DESCRIPTOR>()
+                  * cell.template getField<descriptors::CHEM_POTENTIAL>();
+      for (int iPop=1; iPop < DESCRIPTOR::q; ++iPop) {
+        cell[iPop] -= omega * descriptors::t<V,DESCRIPTOR>(iPop) * (statistic.rho - tmp);
+      }
+      cell[0] += omega * (V{1} - descriptors::t<V,DESCRIPTOR>(0)) * (statistic.rho - tmp);
+      return statistic;
+    };
+  };
+};
+
+template <int direction, int orientation>
+struct FreeEnergyInletOutlet {
+  using parameters = typename meta::list<descriptors::OMEGA>;
+
+  static std::string getName() {
+    return "FreeEnergyInletOutlet<"
+      + std::to_string(direction) + "," + std::to_string(orientation) +
+    ">";
+  }
+
+  template <typename DESCRIPTOR, typename MOMENTA, typename EQUILIBRIUM>
+  struct type {
+    using MomentaF = typename MOMENTA::template type<DESCRIPTOR>;
+
+    template <typename CELL, typename PARAMETERS, typename V=typename CELL::value_t>
+    CellStatistic<V> apply(CELL& cell, PARAMETERS& parameters) {
+      // Do a standard collision neglecting the chemical potential term.
+      V rho, u[DESCRIPTOR::d];
+      MomentaF().computeRhoU(cell, rho, u);
+      const V omega = parameters.template get<descriptors::OMEGA>();
+      V uSqr = lbm<DESCRIPTOR>::bgkCollision(cell, rho, u, omega);
+      for (int iPop=1; iPop < DESCRIPTOR::q; ++iPop) {
+        cell[iPop] -= omega * descriptors::t<V,DESCRIPTOR>(iPop) * rho;
+      }
+      cell[0] += omega * (V{1} - descriptors::t<V,DESCRIPTOR>(0)) * rho;
+      // Distribute the missing density to the unknown distribution functions.
+      constexpr auto missingIndices = util::subIndexOutgoing<DESCRIPTOR,direction,orientation>();
+      V missingRho = rho - V{1};
+      V missingWeightSum = 0;
+      for (int iPop=0; iPop < DESCRIPTOR::q; ++iPop) {
+        if (std::find(missingIndices.begin(), missingIndices.end(), iPop) != missingIndices.end()) {
+          missingWeightSum += descriptors::t<V,DESCRIPTOR>(iPop);
+        } else {
+          missingRho -= cell[iPop];
+        }
+      }
+      for (unsigned iPop=0; iPop < missingIndices.size(); ++iPop) {
+        cell[missingIndices[iPop]] = missingRho * descriptors::t<V,DESCRIPTOR>(missingIndices[iPop]) / missingWeightSum;
+      }
+      return {rho, uSqr};
+    };
+  };
+};
+
+}
+
+template <typename T, typename DESCRIPTOR, typename MOMENTA=momenta::FreeEnergyBulkTuple>
+using FreeEnergyBGKdynamics = dynamics::Tuple<
+  T, DESCRIPTOR,
+  MOMENTA,
+  equilibria::FreeEnergy,
+  collision::FreeEnergy
+>;
+
+template <typename T, typename DESCRIPTOR>
+using FreeEnergyWallDynamics = dynamics::Tuple<
+  T, DESCRIPTOR,
+  momenta::Tuple<
+    momenta::BulkDensity,
+    momenta::ZeroMomentum,
+    momenta::ZeroStress,
+    momenta::DefineSeparately
+  >,
+  equilibria::FreeEnergy,
+  collision::Revert
+>;
+
+template <typename T, typename DESCRIPTOR, int direction, int orientation>
+using FreeEnergyInletOutletDynamics = dynamics::Tuple<
+  T, DESCRIPTOR,
+  momenta::Tuple<
+    momenta::FreeEnergyInletOutletDensity,
+    momenta::FreeEnergyInletOutletMomentum<direction,orientation>,
+    momenta::RegularizedBoundaryStress<direction,orientation>,
+    momenta::DefineSeparately
+  >,
+  equilibria::FreeEnergy,
+  collision::FreeEnergyInletOutlet<direction,orientation>
+>;
+
+}
+
 #endif
+
+#include "freeEnergyDynamics.cse.h"

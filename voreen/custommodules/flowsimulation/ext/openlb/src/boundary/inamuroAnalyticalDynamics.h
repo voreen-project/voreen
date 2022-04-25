@@ -35,19 +35,23 @@ namespace olb {
  * Inamuro, Takaji; Yoshino, Masato; Ogino, Fumimaru, (1995).
  * This implementation works for the D2Q9 DESCRIPTOR only.
 */
-template<typename T, typename DESCRIPTOR, typename Dynamics, int direction, int orientation>
-class InamuroAnalyticalDynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename Dynamics, typename MOMENTA, int direction, int orientation>
+class InamuroAnalyticalDynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+
+  template<typename M>
+  using exchange_momenta = InamuroAnalyticalDynamics<T,DESCRIPTOR,Dynamics,M,direction,orientation>;
+  
   /// Constructor
-  InamuroAnalyticalDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  InamuroAnalyticalDynamics(T omega);
   /// Compute equilibrium distribution function
   T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
+  void setOmega(T omega_);
 private:
   Dynamics boundaryDynamics;
 };

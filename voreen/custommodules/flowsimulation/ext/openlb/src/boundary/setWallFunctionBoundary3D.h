@@ -21,48 +21,46 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the WallFunctionBoundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the WallFunctionBoundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_WALL_FUNCTION_BOUNDARY_3D_H
 #define SET_WALL_FUNCTION_BOUNDARY_3D_H
 
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry3D.h"
-#include "core/superLattice3D.h"
+#include "geometry/superGeometry.h"
+#include "core/superLattice.h"
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
-#include "momentaOnBoundaries3D.h"
 #include "dynamics/dynamics.h"
 #include "dynamics/freeEnergyDynamics.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
 #include "wallFunctionBoundaryPostProcessors3D.h"
 #include "boundaryPostProcessors3D.h"
+#include "setBoundary3D.h"
 
 namespace olb {
-////////// SuperLattice Domain  /////////////////////////////////////////
 
 ///Initialising the WallFunctionBoundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T,DESCRIPTOR>>
-void setWallFunctionBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry, int material,
+template<typename T, typename DESCRIPTOR>
+void setWallFunctionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry, int material,
                              UnitConverter<T, DESCRIPTOR> const& converter,
                              wallFunctionParam<T> const& wallFunctionParam,
                              IndicatorF3D<T>* geoIndicator=NULL);
 
 ///Initialising the WallFunctionBoundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setWallFunctionBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& indicator,
+template<typename T, typename DESCRIPTOR>
+void setWallFunctionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& indicator,
                              UnitConverter<T, DESCRIPTOR> const& converter,
                              wallFunctionParam<T> const& wallFunctionParam,
                              IndicatorF3D<T>* geoIndicator);
 
 
-////////// BlockLattice Domain  /////////////////////////////////////////
 
 /// Set WallFunction boundary for any indicated cells inside the block domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setWallFunctionBoundary(BlockLatticeStructure3D<T,DESCRIPTOR>& _block, BlockIndicatorF3D<T>& indicator,
+template<typename T, typename DESCRIPTOR>
+void setWallFunctionBoundary(BlockLattice<T,DESCRIPTOR>& _block, BlockIndicatorF3D<T>& indicator,
                              UnitConverter<T, DESCRIPTOR> const& converter,
                              wallFunctionParam<T> const& wallFunctionParam,
                              IndicatorF3D<T>*            geoIndicator,

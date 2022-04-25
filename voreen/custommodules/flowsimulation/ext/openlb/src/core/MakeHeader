@@ -21,38 +21,6 @@
 #  Boston, MA  02110-1301, USA.
 
 
-generic        := blockStructure2D \
-                  blockStructure3D \
-                  radiativeUnitConverter \
-                  adeUnitConverter
+generic        := 
 
-
-precompiled    := blockStructure2D \
-                  blockStructure3D \
-                  blockData2D \
-                  blockData3D \
-                  blockLattice2D \
-                  blockLattice3D \
-                  blockLatticeStructure2D \
-                  blockLatticeStructure3D \
-                  blockLatticeView2D \
-                  blockLatticeView3D \
-                  blockStaticPopulationD2D \
-                  blockStaticPopulationD3D \
-                  blockStaticFieldsD2D \
-                  blockStaticFieldsD3D \
-                  blockDynamicFieldsD2D \
-                  blockDynamicFieldsD3D \
-                  cell \
-                  latticeStatistics \
-                  postProcessing2D \
-                  postProcessing3D \
-                  radiativeUnitConverter \
-                  serializer \
-                  superData2D \
-                  superData3D \
-                  superLattice2D \
-                  superLattice3D \
-                  unitConverter \
-                  fieldArrayD \
-                  adeUnitConverter
+precompiled    := 

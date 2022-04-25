@@ -24,10 +24,8 @@
 #ifndef LATTICE_STATISTICS_HH
 #define LATTICE_STATISTICS_HH
 
-#include "blockLattice2D.h"
-#include "blockLattice3D.h"
 #include "latticeStatistics.h"
-#include <cmath>
+#include "utilities/omath.h"
 #include <numeric>
 #include <limits>
 #include "util.h"
@@ -40,11 +38,6 @@ template<typename T>
 LatticeStatistics<T>::LatticeStatistics() : clout(std::cout,"LatticeStatistics")
 {
   initialize();
-}
-
-template<typename T>
-LatticeStatistics<T>::~LatticeStatistics()
-{
 }
 
 template<typename T>
@@ -66,7 +59,8 @@ void LatticeStatistics<T>::reset()
     }
     numCells = 0;
     firstCall = false;
-  } else {
+  }
+  else {
     // The average density is actually used in the "ConstRhoBgk" model.
     // Depending on the simulation setup, it is possible that it has
     // a nonsensical value before the simulation is started. For this
@@ -76,7 +70,8 @@ void LatticeStatistics<T>::reset()
         averageVect[iVect] = (T)1;
       }
       firstCall = false;
-    } else {
+    }
+    else {
       for (unsigned iVect=0; iVect<averageVect.size(); ++iVect) {
         averageVect[iVect] = tmpAv[iVect] / (T)tmpNumCells;
       }
@@ -91,7 +86,7 @@ void LatticeStatistics<T>::reset()
       maxVect[iVect] = tmpMax[iVect];
     }
     averageVect[avEnergy] *= (T)0.5; // energy is 0.5 *uSqr
-    maxVect[maxU]         = sqrt(maxVect[maxU]); // u is sqrt(uSqr)
+    maxVect[maxU]         = util::sqrt(maxVect[maxU]); // u is util::sqrt(uSqr)
     numCells              = tmpNumCells;
   }
 

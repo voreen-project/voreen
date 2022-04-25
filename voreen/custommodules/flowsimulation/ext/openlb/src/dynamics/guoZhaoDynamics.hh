@@ -33,7 +33,7 @@
 #include "dynamics/dynamics.h"
 #include "core/cell.h"
 #include "dynamics/guoZhaoLbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
+#include "dynamics/lbm.h"
 #include "dynamics/guoZhaoDynamics.h"
 
 namespace olb {
@@ -43,35 +43,35 @@ namespace olb {
 /** \param omega_ relaxation parameter, related to the dynamic viscosity
  *  \param momenta_ a Momenta object to know how to compute velocity momenta
  */
-template<typename T, typename DESCRIPTOR>
-GuoZhaoBGKdynamics<T,DESCRIPTOR>::GuoZhaoBGKdynamics (
-  T omega, Momenta<T,DESCRIPTOR>& momenta )
-  : BasicDynamics<T,DESCRIPTOR>(momenta),
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::GuoZhaoBGKdynamics (T omega)
+  : legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA>(),
     _omega(omega)
 {
-  this->getName() = "GuoZhaoBGKdynamics";  
+  this->getName() = "GuoZhaoBGKdynamics";
   OLB_PRECONDITION( DESCRIPTOR::template provides<descriptors::FORCE>() );
 
   _epsilon = (T)1.0; // This to avoid a NaN error at the first timestep.
 }
 
-template<typename T, typename DESCRIPTOR>
-T GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d]) const
 {
+  T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
   return GuoZhaoLbHelpers<T,DESCRIPTOR>::equilibrium(iPop, _epsilon, rho, u, uSqr);
 }
 
-template<typename T, typename DESCRIPTOR>
-void GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeU (ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d] ) const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::computeU (ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d] ) const
 {
   T rho;
   this->computeRhoU(cell, rho, u);
 }
 
-template<typename T, typename DESCRIPTOR>
-void GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeRhoU (ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d] ) const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::computeRhoU (ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d] ) const
 {
-  this->_momenta.computeRhoU(cell, rho, u);
+  MomentaF().computeRhoU(cell, rho, u);
 
   const T epsilon = cell.template getField<descriptors::EPSILON>();
   const T nu      = cell.template getField<descriptors::NU>();
@@ -83,29 +83,27 @@ void GuoZhaoBGKdynamics<T,DESCRIPTOR>::computeRhoU (ConstCell<T,DESCRIPTOR>& cel
     u[iDim] += 0.5*epsilon*bodyF[iDim];
   }
 
-  const T uMag = sqrt( util::normSqr<T,DESCRIPTOR::d>(u) );
-  const T Fe = 0.;//1.75/sqrt(150.*pow(epsilon,3));
+  const T uMag = util::sqrt( util::normSqr<T,DESCRIPTOR::d>(u) );
+  const T Fe = 0.;//1.75/util::sqrt(150.*util::pow(epsilon,3));
 
   const T c_0 = 0.5*(1 + 0.5*epsilon*nu/k);
-  const T c_1 = 0.5*epsilon*Fe/sqrt(k);
+  const T c_1 = 0.5*epsilon*Fe/util::sqrt(k);
 
   for (int iDim=0; iDim<DESCRIPTOR::d; ++iDim) {
-    u[iDim] /= (c_0 + sqrt(c_0*c_0 + c_1*uMag));
+    u[iDim] /= (c_0 + util::sqrt(c_0*c_0 + c_1*uMag));
   }
 }
 
-template<typename T, typename DESCRIPTOR>
-void GuoZhaoBGKdynamics<T,DESCRIPTOR>::updateEpsilon (Cell<T,DESCRIPTOR>& cell)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::updateEpsilon (Cell<T,DESCRIPTOR>& cell)
 {
   // Copying epsilon from external to member variable to provide access for computeEquilibrium.
   _epsilon = cell.template getField<descriptors::EPSILON>();
 }
 
 
-template<typename T, typename DESCRIPTOR>
-void GuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
-  Cell<T,DESCRIPTOR>& cell,
-  LatticeStatistics<T>& statistics )
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+CellStatistic<T> GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::collide(Cell<T,DESCRIPTOR>& cell)
 {
   // Copying epsilon from
   // external to member variable to provide access for computeEquilibrium.
@@ -115,26 +113,84 @@ void GuoZhaoBGKdynamics<T,DESCRIPTOR>::collide (
   GuoZhaoLbHelpers<T,DESCRIPTOR>::updateGuoZhaoForce(cell, u);
   T uSqr = GuoZhaoLbHelpers<T,DESCRIPTOR>::bgkCollision(cell, _epsilon, rho, u, _omega);
   GuoZhaoLbHelpers<T,DESCRIPTOR>::addExternalForce(cell, u, _omega, rho, _epsilon);
-  statistics.incrementStats(rho, uSqr);
+  return {rho, uSqr};
 }
 
-template<typename T, typename DESCRIPTOR>
-T GuoZhaoBGKdynamics<T,DESCRIPTOR>::getOmega() const
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::getOmega() const
 {
   return _omega;
 }
 
-template<typename T, typename DESCRIPTOR>
-T GuoZhaoBGKdynamics<T,DESCRIPTOR>::getEpsilon()
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::getEpsilon()
 {
   return _epsilon;
 }
 
-template<typename T, typename DESCRIPTOR>
-void GuoZhaoBGKdynamics<T,DESCRIPTOR>::setOmega(T omega)
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void GuoZhaoBGKdynamics<T,DESCRIPTOR,MOMENTA>::setOmega(T omega)
 {
   _omega = omega;
 }
+
+
+////////////////////// Class PorousGuoSimpleBGKdynamics /////////////////////////
+
+/** \param omega_ relaxation parameter, related to the dynamic viscosity
+ *  \param momenta_ a Momenta object to know how to compute velocity momenta
+ */
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,MOMENTA>::PorousGuoSimpleBGKdynamics (T omega)
+  : legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA>(),
+    _omega(omega)
+{
+  OLB_PRECONDITION( DESCRIPTOR::template provides<descriptors::FORCE>() );
+}
+
+
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,MOMENTA>::computeU (ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d] ) const
+{
+  T rho;
+  this->computeRhoU(cell, rho, u);
+}
+
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,MOMENTA>::computeRhoU (ConstCell<T,DESCRIPTOR>& cell, T& rho, T u[DESCRIPTOR::d] ) const
+{
+  MOMENTA().computeRhoU(cell, rho, u);
+  const T porosity = cell.template getField<descriptors::POROSITY>();
+  for (int iDim=0; iDim<DESCRIPTOR::d; ++iDim) {
+    u[iDim] *= porosity;
+  }
+}
+
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+CellStatistic<T> PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,MOMENTA>::collide (
+  Cell<T,DESCRIPTOR>& cell)
+{
+  T rho, u[DESCRIPTOR::d];
+  this->computeRhoU(cell, rho, u);
+  GuoZhaoLbHelpers<T,DESCRIPTOR>::updateGuoForceSimple(cell, u);
+  T uSqr = GuoZhaoLbHelpers<T,DESCRIPTOR>::bgkCollisionAndForcing(cell, rho, u, _omega);
+  return {rho, uSqr};
+}
+
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+T PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,MOMENTA>::getOmega() const
+{
+  return _omega;
+}
+
+template<typename T, typename DESCRIPTOR, typename MOMENTA>
+void PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,MOMENTA>::setOmega(T omega)
+{
+  _omega = omega;
+}
+
+
+
 
 }
 

@@ -43,12 +43,12 @@ public:
 template <typename T, bool HLBM=false>
 class BlockGeometryFacesIndicator3D final : public GenericF<T,int> {
 private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
+  BlockGeometry<T,3>& _blockGeometry;
   SmoothIndicatorF3D<T,T,HLBM>& _indicator;
   int _material;
   T _latticeLsqr;
 public:
-  BlockGeometryFacesIndicator3D(BlockGeometryStructure3D<T>& blockGeometry,
+  BlockGeometryFacesIndicator3D(BlockGeometry<T,3>& blockGeometry,
                                 SmoothIndicatorF3D<T,T,HLBM>& indicator,
                                 int material, T deltaX);
   bool operator() (T output[], const int input[]) override;

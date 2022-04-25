@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,14 +41,14 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeRank2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeRank2D(SuperLattice2D<T,DESCRIPTOR>& sLattice);
+  SuperLatticeRank2D(SuperLattice<T,DESCRIPTOR>& sLattice);
 };
 
 /// BlockLatticeRank2D returns pointwise the rank no. + 1 on local lattice.
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeRank2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeRank2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice);
+  BlockLatticeRank2D(BlockLattice<T,DESCRIPTOR>& blockLattice);
   bool operator() (T output[], const int input[]) override;
 };
 

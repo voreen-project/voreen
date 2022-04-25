@@ -35,8 +35,7 @@
 #include "core/vector.h"
 
 
-using namespace olb::util;
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 template<typename T>

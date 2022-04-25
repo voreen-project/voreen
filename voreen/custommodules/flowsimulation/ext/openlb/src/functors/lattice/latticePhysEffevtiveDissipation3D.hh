@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,24 +43,25 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysEffevtiveDissipation3D<T, DESCRIPTOR>::SuperLatticePhysEffevtiveDissipation3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst, LESDynamics<T, DESCRIPTOR>& LESdynamics)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
+                                         std::function<T(Cell<T,DESCRIPTOR>&)> effectiveOmegaF)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physEffevtiveDissipation";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticePhysEffevtiveDissipation3D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
-                               this->_converter, smagoConst, LESdynamics));
+    this->_blockF.emplace_back(new BlockLatticePhysEffevtiveDissipation3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC),
+                               this->_converter, smagoConst, effectiveOmegaF));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysEffevtiveDissipation3D<T, DESCRIPTOR>::BlockLatticePhysEffevtiveDissipation3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
-  LESDynamics<T, DESCRIPTOR>& LESdynamics)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, T smagoConst,
+  std::function<T(Cell<T,DESCRIPTOR>&)> effectiveOmegaF)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1),
-    _converter(converter), _smagoConst(smagoConst), _LESdynamics(LESdynamics)
+    _converter(converter), _smagoConst(smagoConst), _effectiveOmegaF(effectiveOmegaF)
 {
   this->getName() = "physEffevtiveDissipation";
 }
@@ -82,11 +82,11 @@ bool BlockLatticePhysEffevtiveDissipation3D<T, DESCRIPTOR>::operator()(T output[
 
   T dt = 1./ _converter.getConversionFactorTime();
   auto cell = this->_blockLattice.get(input[0], input[1], input[2]);
-  T omegaEff = _LESdynamics.getEffectiveOmega(cell);
+  T omegaEff = _effectiveOmegaF(cell);
   T nuEff = ((1./omegaEff)-0.5)/descriptors::invCs2<T,DESCRIPTOR>();  // BGK shear viscosity definition
 
   output[0] = PiNeqNormSqr * nuEff
-              * pow(omegaEff * descriptors::invCs2<T,DESCRIPTOR>() / rho, 2) / 2.
+              * util::pow(omegaEff * descriptors::invCs2<T,DESCRIPTOR>() / rho, 2) / 2.
               * _converter.getPhysViscosity() / _converter.getLatticeViscosity() / dt / dt;
 
   return true;

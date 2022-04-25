@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2012 Asher Zarth, Lukas Baron, Mathias J. Krause, Jonas Latt
+ *  Copyright (C) 2012 Asher Zarth, Lukas Baron, Mathias J. Krause, Jonas Latt, Jan E. Marquardt
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -33,11 +33,14 @@
 namespace olb {
 
 /// Implementation of the BGK collision step for a porosity model
-template<typename T, typename DESCRIPTOR>
-class PorousForcedBGKdynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class PorousForcedBGKdynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = PorousForcedBGKdynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  PorousForcedBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  PorousForcedBGKdynamics(T omega_);
   void computeU (
     ConstCell<T,DESCRIPTOR>& cell,
     T u[DESCRIPTOR::d] ) const override;
@@ -47,8 +50,7 @@ public:
     T& rho, T u[DESCRIPTOR::d]) const override;
 
   /// Collision step
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_);
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell);
 
   /// get relaxation parameter
   T    getOmega() const;
@@ -57,7 +59,42 @@ public:
 
 
 private:
+  using MomentaF = typename MOMENTA::template type<DESCRIPTOR>;
+
   T _omega;      ///< relaxation parameter
+};
+
+
+/* Implementation of the BGK collision for moving porous media (HLBM approach).
+ * As this scheme requires additionla data stored in an external field,
+ * it is meant to be used along with a PorousParticle descriptor.
+ * \param omega Lattice relaxation frequency
+ * \param momenta A standard object for the momenta computation
+ */
+template<typename T, typename DESCRIPTOR, typename MOMENTA, bool isStatic=false>
+class PorousParticleForcedBGKdynamics : public BGKdynamics<T,DESCRIPTOR,MOMENTA>, public PorousParticleDynamics<T,DESCRIPTOR,isStatic> {
+public:
+  template<typename M>
+  using exchange_momenta = PorousParticleForcedBGKdynamics<T,DESCRIPTOR,M,isStatic>;
+
+  /// Constructor
+  PorousParticleForcedBGKdynamics(T omega_);
+  /// Compute fluid velocity on the cell.
+  void computeU ( ConstCell<T,DESCRIPTOR>& cell, T u[DESCRIPTOR::d] ) const override;
+  /// Compute fluid velocity and particle density on the cell.
+  void computeRhoU ( ConstCell<T,DESCRIPTOR>& cell,
+                     T& rho, T u[DESCRIPTOR::d]) const override;
+  /// extended Collision step, computes local drag in a given direction
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell,
+               LatticeStatistics<T>& statistics_) override;
+protected:
+  T porousParticleBgkCollision(Cell<T,DESCRIPTOR>& cell, T rho, T u[DESCRIPTOR::d], T omega);
+
+private:
+  T KupershtokhForcing(Cell<T,DESCRIPTOR>& cell, const T rho, const T u[DESCRIPTOR::d], const T omega);
+  T GuoForcing(Cell<T,DESCRIPTOR>& cell, const T rho, T u[DESCRIPTOR::d], const T omega);
+  T ShanChenForcing(Cell<T,DESCRIPTOR>& cell, const T rho, T u[DESCRIPTOR::d], const T omega);
+  T computeUSqr(Cell<T,DESCRIPTOR>& cell);
 };
 
 } // olb

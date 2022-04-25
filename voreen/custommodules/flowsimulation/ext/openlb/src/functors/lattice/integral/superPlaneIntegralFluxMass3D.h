@@ -81,7 +81,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const HyperplaneLattice3D<T>& hyperplaneLattice,
@@ -113,7 +113,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Hyperplane3D<T>& hyperplane,
@@ -144,7 +144,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Hyperplane3D<T>&  hyperplane,
@@ -165,7 +165,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Vector<T,3>& origin,
@@ -185,7 +185,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                const Vector<T,3>& origin,
@@ -204,7 +204,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                IndicatorCircle3D<T>& circle,
@@ -222,7 +222,7 @@ public:
    **/
   SuperPlaneIntegralFluxMass3D(FunctorPtr<SuperF3D<T>>&& velocityF,
                                FunctorPtr<SuperF3D<T>>&& densityF,
-                               SuperGeometry3D<T>&       geometry,
+                               SuperGeometry<T,3>&       geometry,
                                T conversationFactorMass,
                                T conversationFactorTime,
                                IndicatorCircle3D<T>& circle,

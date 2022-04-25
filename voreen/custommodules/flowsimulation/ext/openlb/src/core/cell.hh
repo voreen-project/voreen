@@ -32,38 +32,25 @@
 
 #include "cell.h"
 #include "util.h"
-#include "dynamics/lbHelpers.h"
-#include "core/blockStaticFieldsD2D.hh"
-#include "core/blockStaticFieldsD3D.hh"
+#include "dynamics/lbm.h"
+
+#include "core/fieldArrayD.hh"
 
 namespace olb {
 
 
 template <typename T, typename DESCRIPTOR>
-ConstCell<T,DESCRIPTOR>::ConstCell(
-  const BlockStaticPopulationD<T,DESCRIPTOR>& staticPopulationD,
-  const BlockStaticFieldsD<T,DESCRIPTOR>&     staticFieldsD,
-  const BlockDynamicFieldsD<T,DESCRIPTOR>&    dynamicFieldsD,
-  const BlockDynamicsMap<T,DESCRIPTOR>&       dynamicsMap,
-  std::size_t iCell
-):
+ConstCell<T,DESCRIPTOR>::ConstCell(const BlockLattice<T,DESCRIPTOR>& block,
+                                   std::size_t iCell):
   _iCell(iCell),
-  _staticPopulationD(const_cast<BlockStaticPopulationD<T,DESCRIPTOR>&>(staticPopulationD)),
-  _staticFieldsD(const_cast<BlockStaticFieldsD<T,DESCRIPTOR>&>(staticFieldsD)),
-  _dynamicFieldsD(const_cast<BlockDynamicFieldsD<T,DESCRIPTOR>&>(dynamicFieldsD)),
-  _dynamicsMap(const_cast<BlockDynamicsMap<T,DESCRIPTOR>&>(dynamicsMap))
+  _block(const_cast<BlockLattice<T,DESCRIPTOR>&>(block)),
+  _populations{_block.getPopulationPointers(iCell)}
 { }
 
 template <typename T, typename DESCRIPTOR>
 std::size_t ConstCell<T,DESCRIPTOR>::getCellId() const
 {
   return _iCell;
-}
-
-template <typename T, typename DESCRIPTOR>
-unsigned ConstCell<T,DESCRIPTOR>::getSerializedSize() const
-{
-  return DESCRIPTOR::q + DESCRIPTOR::size();
 }
 
 template <typename T, typename DESCRIPTOR>
@@ -74,125 +61,53 @@ ConstCell<T,DESCRIPTOR>& ConstCell<T,DESCRIPTOR>::self() const
 
 template <typename T, typename DESCRIPTOR>
 template <typename FIELD>
-ConstFieldPtr<T,DESCRIPTOR,FIELD> ConstCell<T,DESCRIPTOR>::getFieldPointer() const
+auto ConstCell<T,DESCRIPTOR>::getFieldPointer(FIELD) const
 {
-  return const_cast<const BlockStaticFieldsD<T,DESCRIPTOR>&>(_staticFieldsD).template getFieldPointer<FIELD>(_iCell);
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD_ID>
-ConstFieldPtr<T,DESCRIPTOR,typename FIELD_ID::type>
-ConstCell<T,DESCRIPTOR>::getFieldPointer(FIELD_ID id) const
-{
-  return getFieldPointer<typename FIELD_ID::type>();
+  static_assert(descriptors::is_data_field<FIELD>::value,
+                "FIELD must be structured data field");
+  return _block.template getField<FIELD>().getPointer(_iCell);
 }
 
 template <typename T, typename DESCRIPTOR>
 template <typename FIELD>
-FieldPtr<T,DESCRIPTOR,FIELD> Cell<T,DESCRIPTOR>::getFieldPointer()
+auto Cell<T,DESCRIPTOR>::getFieldPointer(FIELD)
 {
-  return this->_staticFieldsD.template getFieldPointer<FIELD>(this->_iCell);
+  static_assert(descriptors::is_data_field<FIELD>::value,
+                "FIELD must be structured data field");
+  return this->_block.template getField<FIELD>().getPointer(this->_iCell);
 }
 
 template <typename T, typename DESCRIPTOR>
-template <typename FIELD_ID>
-FieldPtr<T,DESCRIPTOR,typename FIELD_ID::type>
-Cell<T,DESCRIPTOR>::getFieldPointer(FIELD_ID id)
+template <typename FIELD>
+auto ConstCell<T,DESCRIPTOR>::getFieldComponent(unsigned iD) const
 {
-  return getFieldPointer<typename FIELD_ID::type>();
+  static_assert(descriptors::is_data_field<FIELD>::value,
+                "FIELD must be structured data field");
+  return _block.template getField<FIELD>()[iD][_iCell];
 }
 
 template <typename T, typename DESCRIPTOR>
 ConstCell<T,DESCRIPTOR> ConstCell<T,DESCRIPTOR>::neighbor(Vector<int,DESCRIPTOR::d> c) const
 {
-  return ConstCell<T,DESCRIPTOR>(
-    _staticPopulationD,
-    _staticFieldsD,
-    _dynamicFieldsD,
-    _dynamicsMap,
-    _iCell + _staticPopulationD.getNeighborDistance(c));
+  return ConstCell<T,DESCRIPTOR>(_block, _iCell + _block.getNeighborDistance(c));
 }
 
 template <typename T, typename DESCRIPTOR>
 Cell<T,DESCRIPTOR> Cell<T,DESCRIPTOR>::neighbor(Vector<int,DESCRIPTOR::d> c)
 {
-  return Cell<T,DESCRIPTOR>(
-    this->_staticPopulationD,
-    this->_staticFieldsD,
-    this->_dynamicFieldsD,
-    this->_dynamicsMap,
-    this->_iCell + this->_staticPopulationD.getNeighborDistance(c));
+  return Cell<T,DESCRIPTOR>(this->_block, this->_iCell + this->_block.getNeighborDistance(c));
 }
 
 template <typename T, typename DESCRIPTOR>
 T ConstCell<T,DESCRIPTOR>::operator[](unsigned iPop) const
 {
-  OLB_PRECONDITION(iPop < descriptors::q<DESCRIPTOR>());
-  return *_staticPopulationD.getPopulationPointer(iPop, _iCell);
+  return *_populations[iPop];
 }
 
 template <typename T, typename DESCRIPTOR>
 T& Cell<T,DESCRIPTOR>::operator[](unsigned iPop)
 {
-  OLB_PRECONDITION(iPop < descriptors::q<DESCRIPTOR>());
-  return *this->_staticPopulationD.getPopulationPointer(iPop, this->_iCell);
-}
-
-
-template <typename T, typename DESCRIPTOR>
-Cell<T,DESCRIPTOR>& Cell<T,DESCRIPTOR>::operator=(ConstCell<T,DESCRIPTOR>& rhs)
-{
-  for (unsigned iPop=0; iPop < DESCRIPTOR::template size<descriptors::POPULATION>(); ++iPop) {
-    operator[](iPop) = rhs[iPop];
-  }
-  this->_staticFieldsD.forFieldsAt(this->_iCell, [&rhs](auto field, auto id) {
-    field = rhs.getFieldPointer(id);
-  });
-  // TODO: reimplement dynamic field copy, potentially also using a forFieldsAt-like construct
-  //this->getDynamicFields() = rhs.getDynamicFields();
-  this->defineDynamics(const_cast<Dynamics<T,DESCRIPTOR>*>(rhs.getDynamics()));
-  return *this;
-}
-
-template <typename T, typename DESCRIPTOR>
-void Cell<T,DESCRIPTOR>::init()
-{
-  for (unsigned iPop=0; iPop < DESCRIPTOR::template size<descriptors::POPULATION>(); ++iPop) {
-    operator[](iPop) = T();
-  }
-  this->_staticFieldsD.forFieldsAt(this->_iCell, [](auto field, auto id) {
-    for (unsigned iDim=0; iDim < decltype(field)::d; ++iDim) {
-      field[iDim] = T();
-    }
-  });
-}
-
-template <typename T, typename DESCRIPTOR>
-void ConstCell<T,DESCRIPTOR>::serialize(T* data) const
-{
-  for (unsigned iPop = 0; iPop < DESCRIPTOR::template size<descriptors::POPULATION>(); ++iPop) {
-    data[iPop] = operator[](iPop);
-  }
-  T* currData = data + DESCRIPTOR::template size<descriptors::POPULATION>();
-  this->_staticFieldsD.forFieldsAt(this->_iCell, [&currData](auto field, auto id) {
-    for (unsigned iDim=0; iDim < decltype(field)::d; ++iDim) {
-      *(currData++) = field[iDim];
-    }
-  });
-}
-
-template <typename T, typename DESCRIPTOR>
-void Cell<T,DESCRIPTOR>::unSerialize(const T* data)
-{
-  for (unsigned iPop = 0; iPop < DESCRIPTOR::template size<descriptors::POPULATION>(); ++iPop) {
-    operator[](iPop) = data[iPop];
-  }
-  const T* currData = data + DESCRIPTOR::template size<descriptors::POPULATION>();
-  this->_staticFieldsD.forFieldsAt(this->_iCell, [&currData](auto field, auto id) {
-    for (unsigned iDim=0; iDim < decltype(field)::d; ++iDim) {
-      field[iDim] = *(currData++);
-    }
-  });
+  return *this->_populations[iPop];
 }
 
 template <typename T, typename DESCRIPTOR>
@@ -221,48 +136,16 @@ bool ConstCell<T,DESCRIPTOR>::operator<=(ConstCell<T,DESCRIPTOR>& rhs) const
 
 template <typename T, typename DESCRIPTOR>
 template <typename FIELD>
-std::enable_if_t<
-  (DESCRIPTOR::template size<FIELD>() > 1),
-  FieldD<T,DESCRIPTOR,FIELD>
->
-ConstCell<T,DESCRIPTOR>::getField() const
+auto ConstCell<T,DESCRIPTOR>::getField(FIELD) const
 {
-  return _staticFieldsD.template getField<FIELD>(_iCell);
+  return _block.template getField<FIELD>().get(_iCell);
 }
 
 template <typename T, typename DESCRIPTOR>
 template <typename FIELD>
-std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), typename FIELD::template value_type<T>>
-ConstCell<T,DESCRIPTOR>::getField() const
+void Cell<T,DESCRIPTOR>::setField(const FieldD<T,DESCRIPTOR,FIELD>& field)
 {
-  return _staticFieldsD.template getField<FIELD>(_iCell)[0];
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-std::enable_if_t<
-  (DESCRIPTOR::template size<FIELD>() > 1),
-  FieldD<T,DESCRIPTOR,FIELD>
->
-ConstCell<T,DESCRIPTOR>::getDynamicField() const
-{
-  return _dynamicFieldsD.template getField<FIELD>(_iCell);
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), typename FIELD::template value_type<T>>
-ConstCell<T,DESCRIPTOR>::getDynamicField() const
-{
-  return _dynamicFieldsD.template getField<FIELD>(_iCell)[0];
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-std::enable_if_t<(DESCRIPTOR::template size<FIELD>() > 1), void>
-Cell<T,DESCRIPTOR>::setField(const FieldD<T,DESCRIPTOR,FIELD>& field)
-{
-  this->_staticFieldsD.template setField<FIELD>(this->_iCell, field);
+  return this->_block.template getField<FIELD>().set(this->_iCell, field);
 }
 
 template <typename T, typename DESCRIPTOR>
@@ -270,55 +153,20 @@ template <typename FIELD>
 std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), void>
 Cell<T,DESCRIPTOR>::setField(typename FIELD::template value_type<T> value)
 {
-  this->_staticFieldsD.template setField<FIELD>(this->_iCell, FieldD<T,DESCRIPTOR,FIELD>(value));
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-ConstFieldPtr<T,DESCRIPTOR,FIELD> ConstCell<T,DESCRIPTOR>::getDynamicFieldPointer() const
-{
-  return _dynamicFieldsD.template getFieldPointer<FIELD>(_iCell);
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-FieldPtr<T,DESCRIPTOR,FIELD> Cell<T,DESCRIPTOR>::getDynamicFieldPointer()
-{
-  return this->_dynamicFieldsD.template getFieldPointer<FIELD>(this->getCellId());
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-std::enable_if_t<(DESCRIPTOR::template size<FIELD>() > 1), void>
-Cell<T,DESCRIPTOR>::setDynamicField(const FieldD<T,DESCRIPTOR,FIELD>& field)
-{
-  this->_dynamicFieldsD.template setField<FIELD>(this->_iCell, field);
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), void>
-Cell<T,DESCRIPTOR>::setDynamicField(typename FIELD::template value_type<T> value)
-{
-  this->_dynamicFieldsD.template setField<FIELD>(this->_iCell, FieldD<T,DESCRIPTOR,FIELD>(value));
-}
-
-template<typename T, typename DESCRIPTOR>
-void Cell<T,DESCRIPTOR>::defineDynamics(Dynamics<T,DESCRIPTOR>* dynamics)
-{
-  this->_dynamicsMap.set(this->getCellId(), dynamics);
+  return this->_block.template getField<FIELD>().set(this->_iCell,
+                                                     FieldD<T,DESCRIPTOR,FIELD>(value));
 }
 
 template<typename T, typename DESCRIPTOR>
 const Dynamics<T,DESCRIPTOR>* ConstCell<T,DESCRIPTOR>::getDynamics() const
 {
-  return &_dynamicsMap.get(this->getCellId());
+  return _block.getDynamics(_iCell);
 }
 
 template<typename T, typename DESCRIPTOR>
 Dynamics<T,DESCRIPTOR>* Cell<T,DESCRIPTOR>::getDynamics()
 {
-  return &this->_dynamicsMap.get(this->getCellId());
+  return this->_block.getDynamics(this->_iCell);
 }
 
 template <typename T, typename DESCRIPTOR>
@@ -328,33 +176,6 @@ void ConstCell<T,DESCRIPTOR>::computeField(T* data) const
   auto field = getFieldPointer<FIELD>();
   for (long unsigned int i=0; i < DESCRIPTOR::template size<FIELD>(); ++i) {
     data[i] = field[i];
-  }
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-void Cell<T,DESCRIPTOR>::defineField(const T* data)
-{
-  this->_staticFieldsD.template setField<FIELD>(this->_iCell, Vector<T,DESCRIPTOR::template size<FIELD>()>(data));
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-void Cell<T,DESCRIPTOR>::addField(const T* data)
-{
-  auto field = getFieldPointer<FIELD>();
-  for (unsigned i=0; i < DESCRIPTOR::template size<FIELD>(); ++i) {
-    field[i] += data[i];
-  }
-}
-
-template <typename T, typename DESCRIPTOR>
-template <typename FIELD>
-void Cell<T,DESCRIPTOR>::multiplyField(const T* data)
-{
-  auto field = getFieldPointer<FIELD>();
-  for (unsigned i=0; i < DESCRIPTOR::template size<FIELD>(); ++i) {
-    field[i] *= data[i];
   }
 }
 
@@ -369,9 +190,9 @@ void Cell<T,DESCRIPTOR>::revert()
 }
 
 template<typename T, typename DESCRIPTOR>
-void Cell<T,DESCRIPTOR>::collide(LatticeStatistics<T>& statistics)
+CellStatistic<T> Cell<T,DESCRIPTOR>::collide()
 {
-  getDynamics()->collide(*this, statistics);
+  return getDynamics()->collide(*this);
 }
 
 template<typename T, typename DESCRIPTOR>
@@ -414,7 +235,7 @@ void ConstCell<T,DESCRIPTOR>::computeFeq(T fEq[descriptors::q<DESCRIPTOR>()]) co
   computeRhoU(rho, u.data());
   const T uSqr = norm_squared(u);
   for (int iPop=0; iPop < descriptors::q<DESCRIPTOR>(); ++iPop) {
-    fEq[iPop] = lbHelpers<T,DESCRIPTOR>::equilibrium(iPop, rho, u.data(), uSqr);
+    fEq[iPop] = lbm<DESCRIPTOR>::equilibrium(iPop, rho, u, uSqr);
   }
 }
 
@@ -424,7 +245,7 @@ void ConstCell<T,DESCRIPTOR>::computeFneq(T fNeq[descriptors::q<DESCRIPTOR>()]) 
   T rho{};
   T u[descriptors::d<DESCRIPTOR>()] { };
   computeRhoU(rho, u);
-  lbHelpers<T,DESCRIPTOR>::computeFneq(self(), fNeq, rho, u);
+  lbm<DESCRIPTOR>::computeFneq(self(), fNeq, rho, u);
 }
 
 template<typename T, typename DESCRIPTOR>

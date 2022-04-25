@@ -24,41 +24,81 @@
 #ifndef CELL_D_H
 #define CELL_D_H
 
-#include "cell.h"
+#include "fieldArrayD.h"
 
 namespace olb {
 
+/// Minimal cell storing only population data
 template<typename T, typename DESCRIPTOR>
-class SingleCellBlockD {
-protected:
-  BlockStaticPopulationD<T,DESCRIPTOR> _localStaticPopulationD;
-  BlockStaticFieldsD<T,DESCRIPTOR>     _localStaticFieldsD;
-  BlockDynamicFieldsD<T,DESCRIPTOR>    _localDynamicFieldsD;
-  BlockDynamicsMap<T,DESCRIPTOR>       _localDynamicsMap;
+class PopulationCellD {
+private:
+  FieldD<T,DESCRIPTOR,descriptors::POPULATION> _data;
 
 public:
-  SingleCellBlockD() = default;
+  using value_t = T;
+  using descriptor_t = DESCRIPTOR;
 
+  template <typename POPULATIONS>
+  PopulationCellD(POPULATIONS&& pops):
+    _data{pops} { }
+
+  const T& operator[](unsigned iPop) const {
+    return _data[iPop];
+  }
+
+  T& operator[](unsigned iPop) {
+    return _data[iPop];
+  }
 };
 
+/// Single cell implementing the full field data interface
 template<typename T, typename DESCRIPTOR>
-class CellD : private SingleCellBlockD<T,DESCRIPTOR>, public Cell<T,DESCRIPTOR> {
+class CellD {
+private:
+  MultiFieldArrayForDescriptorD<T,DESCRIPTOR,Platform::CPU_SISD> _fieldsD;
+
 public:
-  CellD():
-    SingleCellBlockD<T,DESCRIPTOR>(),
-    Cell<T,DESCRIPTOR>(
-      this->_localStaticPopulationD,
-      this->_localStaticFieldsD,
-      this->_localDynamicFieldsD,
-      this->_localDynamicsMap,
-      0)
-  { }
+  using value_t = T;
+  using descriptor_t = DESCRIPTOR;
 
-  using Cell<T,DESCRIPTOR>::operator=;
+  CellD(): _fieldsD(1) { }
 
-  CellD(ConstCell<T,DESCRIPTOR> rhs): CellD()
-  {
-    this->operator=(rhs);
+  const T& operator[](unsigned iPop) const {
+    return _fieldsD.template getFieldComponent<descriptors::POPULATION>(0, iPop);
+  }
+
+  T& operator[](unsigned iPop) {
+    return _fieldsD.template getFieldComponent<descriptors::POPULATION>(0, iPop);
+  }
+
+  template <typename FIELD>
+  auto getField() const {
+    return _fieldsD.template getField<FIELD>(0);
+  }
+
+  template <typename FIELD>
+  void setField(const FieldD<T,DESCRIPTOR,FIELD>& v) {
+    _fieldsD.template setField<FIELD>(0, v);
+  }
+
+  template <typename FIELD>
+  auto getFieldPointer() {
+    return _fieldsD.template getFieldPointer<FIELD>(0);
+  }
+
+  template <typename FIELD>
+  auto getFieldPointer() const {
+    return _fieldsD.template getFieldPointer<FIELD>(0);
+  }
+
+  template <typename FIELD>
+  const auto& getFieldComponent(unsigned iD) const {
+    return _fieldsD.template getFieldComponent<FIELD>(0, iD);
+  }
+
+  template <typename FIELD>
+  auto& getFieldComponent(unsigned iD) {
+    return _fieldsD.template getFieldComponent<FIELD>(0, iD);
   }
 
 };

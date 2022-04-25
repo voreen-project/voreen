@@ -48,7 +48,7 @@ bool BlockGeometryFaces3D<T>::operator() (T output[], const int input[])
   std::size_t counter[7] = {0};
 
   if (!_indicatorF.isEmpty()) {
-    auto& blockGeometry = _indicatorF.getBlockGeometryStructure();
+    auto& blockGeometry = _indicatorF.getBlockGeometry();
     const Vector<int,3> min = _indicatorF.getMin();
     const Vector<int,3> max = _indicatorF.getMax();
 
@@ -58,22 +58,22 @@ bool BlockGeometryFaces3D<T>::operator() (T output[], const int input[])
         for (int iZ = min[2]; iZ <= max[2]; ++iZ) {
           // Lock at solid nodes only
           if (_indicatorF(iX, iY, iZ)) {
-            if (blockGeometry.getMaterial(iX-1, iY, iZ) == 1) {
+            if (blockGeometry.getMaterial({iX-1, iY, iZ}) == 1) {
               counter[0]++;
             }
-            if (blockGeometry.getMaterial(iX, iY-1, iZ) == 1) {
+            if (blockGeometry.getMaterial({iX, iY-1, iZ}) == 1) {
               counter[1]++;
             }
-            if (blockGeometry.getMaterial(iX, iY, iZ-1) == 1) {
+            if (blockGeometry.getMaterial({iX, iY, iZ-1}) == 1) {
               counter[2]++;
             }
-            if (blockGeometry.getMaterial(iX+1, iY, iZ) == 1) {
+            if (blockGeometry.getMaterial({iX+1, iY, iZ}) == 1) {
               counter[3]++;
             }
-            if (blockGeometry.getMaterial(iX, iY+1, iZ) == 1) {
+            if (blockGeometry.getMaterial({iX, iY+1, iZ}) == 1) {
               counter[4]++;
             }
-            if (blockGeometry.getMaterial(iX, iY, iZ+1) == 1) {
+            if (blockGeometry.getMaterial({iX, iY, iZ+1}) == 1) {
               counter[5]++;
             }
           }
@@ -93,12 +93,12 @@ bool BlockGeometryFaces3D<T>::operator() (T output[], const int input[])
 
 template <typename T, bool HLBM>
 BlockGeometryFacesIndicator3D<T,HLBM>::BlockGeometryFacesIndicator3D(
-  BlockGeometryStructure3D<T>& blockGeometry, SmoothIndicatorF3D<T,T,HLBM>& indicator,
+  BlockGeometry<T,3>& blockGeometry, SmoothIndicatorF3D<T,T,HLBM>& indicator,
   int material, T latticeL)
   : GenericF<T,int>(7,0), _blockGeometry(blockGeometry), _indicator(indicator),
     _material(material), _latticeLsqr(latticeL*latticeL)
 {
-      this->getName() = "facesSmoothInd";
+  this->getName() = "facesSmoothInd";
 }
 template <typename T, bool HLBM>
 bool BlockGeometryFacesIndicator3D<T,HLBM>::operator() (T output[], const int input[])
@@ -119,33 +119,39 @@ bool BlockGeometryFacesIndicator3D<T,HLBM>::operator() (T output[], const int in
       for (int iY = y0; iY <= y1; ++iY) {
         for (int iZ = z0; iZ <= z1; ++iZ) {
           // Look at solid nodes only
-          _blockGeometry.getPhysR(physR, iX, iY, iZ);
+          _blockGeometry.getPhysR(physR, {iX, iY, iZ});
           _indicator(inside, physR);
           if ( !util::nearZero(inside[0]) ) {
-            _blockGeometry.getPhysR(physR, iX-1, iY, iZ);
+            _blockGeometry.getPhysR(physR, {iX-1, iY, iZ});
             _indicator(inside, physR);
-            if ( util::nearZero(inside[0]) )
+            if ( util::nearZero(inside[0]) ) {
               counter[0]++;
-            _blockGeometry.getPhysR(physR, iX, iY-1, iZ);
+            }
+            _blockGeometry.getPhysR(physR, {iX, iY-1, iZ});
             _indicator(inside, physR);
-            if ( util::nearZero(inside[0]) )
+            if ( util::nearZero(inside[0]) ) {
               counter[1]++;
-            _blockGeometry.getPhysR(physR, iX, iY, iZ-1);
+            }
+            _blockGeometry.getPhysR(physR, {iX, iY, iZ-1});
             _indicator(inside, physR);
-            if ( util::nearZero(inside[0]) )
+            if ( util::nearZero(inside[0]) ) {
               counter[2]++;
-            _blockGeometry.getPhysR(physR, iX+1, iY, iZ);
+            }
+            _blockGeometry.getPhysR(physR, {iX+1, iY, iZ});
             _indicator(inside, physR);
-            if ( util::nearZero(inside[0]) )
+            if ( util::nearZero(inside[0]) ) {
               counter[3]++;
-            _blockGeometry.getPhysR(physR, iX, iY+1, iZ);
+            }
+            _blockGeometry.getPhysR(physR, {iX, iY+1, iZ});
             _indicator(inside, physR);
-            if ( util::nearZero(inside[0]) )
+            if ( util::nearZero(inside[0]) ) {
               counter[4]++;
-            _blockGeometry.getPhysR(physR, iX, iY, iZ+1);
+            }
+            _blockGeometry.getPhysR(physR, {iX, iY, iZ+1});
             _indicator(inside, physR);
-            if ( util::nearZero(inside[0]) )
+            if ( util::nearZero(inside[0]) ) {
               counter[5]++;
+            }
           }
         }
       }
@@ -158,7 +164,8 @@ bool BlockGeometryFacesIndicator3D<T,HLBM>::operator() (T output[], const int in
     }
     output[6]=total;
     return true;
-  } else {
+  }
+  else {
     for (int i=0; i<7; ++i) {
       output[i]=T();
     }

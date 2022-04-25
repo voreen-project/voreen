@@ -35,11 +35,15 @@ template<typename T, typename DESCRIPTOR,
          bool orthogonal>
 struct DirectedGradients2D {
   static void interpolateVector(T velDeriv[DESCRIPTOR::d],
-                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                                BlockLattice<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY);
   static void interpolateScalar(T& rhoDeriv,
-                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                                BlockLattice<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY);
+
+  template <typename CELL>
+  static void interpolateVector( T velDeriv[DESCRIPTOR::d],
+                                 CELL& cell ) any_platform;
 };
 
 // Implementation for orthogonal==true; i.e. the derivative is along
@@ -48,7 +52,7 @@ template<typename T, typename DESCRIPTOR,
          int direction, int orientation>
 struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, true> {
   static void interpolateVector(T velDeriv[DESCRIPTOR::d],
-                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                                BlockLattice<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY)
   {
     using namespace fd;
@@ -69,7 +73,7 @@ struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, true> {
   }
 
   static void interpolateScalar(T& rhoDeriv,
-                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                                BlockLattice<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY)
   {
     using namespace fd;
@@ -85,6 +89,25 @@ struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, true> {
     rhoDeriv = -orientation * boundaryGradient(rho0, rho1, rho2);
 
   }
+
+  template <typename CELL>
+  static void interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                CELL& cell) any_platform
+  {
+    using namespace fd;
+
+    T u0[DESCRIPTOR::d], u1[DESCRIPTOR::d], u2[DESCRIPTOR::d];
+
+    cell.computeU(u0);
+    cell.neighbor({(direction==0 ? (-orientation):0),
+                   (direction==1 ? (-orientation):0)}).computeU(u1);
+    cell.neighbor({(direction==0 ? (-2*orientation):0),
+                   (direction==1 ? (-2*orientation):0)}).computeU(u2);
+
+    for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+      velDeriv[iD] = -orientation * boundaryGradient(u0[iD], u1[iD], u2[iD]);
+    }
+  }
 };
 
 
@@ -94,7 +117,7 @@ template<typename T, typename DESCRIPTOR,
          int direction, int orientation>
 struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, false> {
   static void interpolateVector(T velDeriv[DESCRIPTOR::d],
-                                BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                                BlockLattice<T,DESCRIPTOR> const& blockLattice,
                                 int iX, int iY)
   {
     using namespace fd;
@@ -115,7 +138,7 @@ struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, false> {
   }
 
   static void  interpolateScalar(T& rhoDeriv,
-                                 BlockLattice2D<T,DESCRIPTOR> const& blockLattice,
+                                 BlockLattice<T,DESCRIPTOR> const& blockLattice,
                                  int iX, int iY)
   {
     using namespace fd;
@@ -130,6 +153,25 @@ struct DirectedGradients2D<T, DESCRIPTOR, direction, orientation, false> {
 
     rhoDeriv = centralGradient(rho_p1, rho_m1);
 
+  }
+
+  template <typename CELL>
+  static void interpolateVector(T velDeriv[DESCRIPTOR::d],
+                                CELL& cell) any_platform
+  {
+    using namespace fd;
+
+    T u_p1[DESCRIPTOR::d], u_m1[DESCRIPTOR::d];
+
+    int deriveDirection = 1-direction;
+    cell.neighbor({(deriveDirection==0 ? 1:0),
+                   (deriveDirection==1 ? 1:0)}).computeU(u_p1);
+    cell.neighbor({(deriveDirection==0 ? (-1):0),
+                   (deriveDirection==1 ? (-1):0)}).computeU(u_m1);
+
+    for (int iD=0; iD<DESCRIPTOR::d; ++iD) {
+      velDeriv[iD] = centralGradient(u_p1[iD],u_m1[iD]);
+    }
   }
 };
 

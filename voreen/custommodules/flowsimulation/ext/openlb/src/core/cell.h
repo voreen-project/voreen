@@ -30,23 +30,25 @@
 
 #include <type_traits>
 
-#include "blockStaticPopulationD2D.h"
-#include "blockStaticFieldsD2D.h"
-#include "blockDynamicFieldsD2D.h"
-
-#include "blockStaticPopulationD3D.h"
-#include "blockStaticFieldsD3D.h"
-#include "blockDynamicFieldsD3D.h"
-
-#include "blockDynamicsMap.h"
-
-#include "utilities/meta.h"
+#include "util.h"
+#include "meta.h"
 #include "utilities/aliases.h"
+
+#include "fieldArrayD.h"
 
 namespace olb {
 
+template<typename T> struct CellStatistic;
+template<typename T> class LatticeStatistics;
+template<typename T, typename DESCRIPTOR> struct Dynamics;
+template<typename T, typename DESCRIPTOR> class BlockLattice;
 template<typename T, typename DESCRIPTOR> class Cell;
 
+/// Highest-level interface to read-only Cell data
+/**
+ * Only use where access to the specific ConcreteBlockLattice
+ * resp. Dynamics information is not (yet) possible.
+ **/
 template<typename T, typename DESCRIPTOR>
 class ConstCell {
 private:
@@ -55,19 +57,27 @@ private:
 protected:
   friend Cell<T,DESCRIPTOR>;
 
+  /// Memory ID of currently represented cell
   std::size_t _iCell;
-
-  BlockStaticPopulationD<T,DESCRIPTOR>& _staticPopulationD;
-  BlockStaticFieldsD<T,DESCRIPTOR>& _staticFieldsD;
-
-  BlockDynamicFieldsD<T,DESCRIPTOR>& _dynamicFieldsD;
-  BlockDynamicsMap<T,DESCRIPTOR>&    _dynamicsMap;
+  /// Underlying BlockLattice
+  BlockLattice<T,DESCRIPTOR>& _block;
+  /// Pointers to population values of current cell
+  /**
+   * Workaround to increase performance of post-processors,
+   * post-processing functors until they are ported to
+   * work on concrete lattices again (as is already the case
+   * for dynamics)
+   *
+   * Validity of neighborhood accesses via these pointers not
+   * guaranteed (e.g. consider CPU_SIMD vs. CPU_SISD)
+   **/
+  Vector<T*,DESCRIPTOR::q> _populations;
 
 public:
-  ConstCell(const BlockStaticPopulationD<T,DESCRIPTOR>& staticPopulationD,
-            const BlockStaticFieldsD<T,DESCRIPTOR>&     staticFieldsD,
-            const BlockDynamicFieldsD<T,DESCRIPTOR>&    dynamicFieldsD,
-            const BlockDynamicsMap<T,DESCRIPTOR>&       dynamicsMap,
+  using value_t = T;
+  using descriptor_t = DESCRIPTOR;
+
+  ConstCell(const BlockLattice<T,DESCRIPTOR>& block,
             std::size_t iCell);
 
   /// Return memory ID of the currently represented cell
@@ -77,16 +87,10 @@ public:
   /**
    * Caller is responsible that this is valid.
    **/
-  void setCellId(std::size_t iCell) {
+  void setCellId(std::size_t iCell)
+  {
     _iCell = iCell;
-  }
-
-  /// Jump to next cell in linearization sequence
-  /**
-   * Caller is responsible that this is valid.
-   **/
-  void advanceCellId() {
-    ++_iCell;
+    _populations = _block.getPopulationPointers(iCell);
   }
 
   bool operator==(ConstCell<T,DESCRIPTOR>& rhs) const;
@@ -104,51 +108,16 @@ public:
 
   /// Return read-only field accessor
   template <typename FIELD>
-  ConstFieldPtr<T,DESCRIPTOR,FIELD> getFieldPointer() const;
-  /// Helper for accessing fields in a generic lambda expression
-  template <typename FIELD_ID>
-  ConstFieldPtr<T,DESCRIPTOR,typename FIELD_ID::type>
-  getFieldPointer(FIELD_ID id) const;
-
+  auto getFieldPointer(FIELD field = FIELD()) const;
+  /// Return copy of field component
+  template <typename FIELD>
+  auto getFieldComponent(unsigned iD) const;
   /// Return copy of descriptor-declared FIELD as a vector
   template <typename FIELD>
-  std::enable_if_t<
-    (DESCRIPTOR::template size<FIELD>() > 1),
-    FieldD<T,DESCRIPTOR,FIELD>
-  >
-  getField() const;
-  /// Return copy of descriptor-declared FIELD as a scalar
-  template <typename FIELD>
-  std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), typename FIELD::template value_type<T>>
-  getField() const;
-
-  /// Return pointer to dynamic FIELD of cell
-  template <typename FIELD>
-  ConstFieldPtr<T,DESCRIPTOR,FIELD>
-  getDynamicFieldPointer() const;
-
-  /// Return copy of dynamic FIELD as a scalar
-  template <typename FIELD>
-  std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), typename FIELD::template value_type<T>>
-  getDynamicField() const;
-  /// Return copy of dynamic FIELD as a vector
-  template <typename FIELD>
-  std::enable_if_t<
-    (DESCRIPTOR::template size<FIELD>() > 1),
-    FieldD<T,DESCRIPTOR,FIELD>
-  >
-  getDynamicField() const;
+  auto getField(FIELD field = FIELD()) const;
 
   /// Get a pointer to the dynamics
   const Dynamics<T,DESCRIPTOR>* getDynamics() const;
-
-  /// Return serialized size of the currently represented cell
-  /**
-   * This value may vary depending on the number of dynamic fields.
-   **/
-  unsigned getSerializedSize() const;
-  /// Serialize cell data (population and fields)
-  void serialize(T* data) const;
 
   /// Copy FIELD content to given memory location
   template <typename FIELD>
@@ -174,19 +143,14 @@ public:
 
 };
 
+/// Highest-level interface to Cell data
 template<typename T, typename DESCRIPTOR>
 class Cell : public ConstCell<T,DESCRIPTOR> {
 public:
-  Cell(BlockStaticPopulationD<T,DESCRIPTOR>& staticPopulationD,
-       BlockStaticFieldsD<T,DESCRIPTOR>&     staticFieldsD,
-       BlockDynamicFieldsD<T,DESCRIPTOR>&    dynamicFieldsD,
-       BlockDynamicsMap<T,DESCRIPTOR>&       dynamicsMap,
+  Cell(BlockLattice<T,DESCRIPTOR>& block,
        std::size_t iCell):
-    ConstCell<T,DESCRIPTOR>(staticPopulationD, staticFieldsD, dynamicFieldsD, dynamicsMap, iCell)
+    ConstCell<T,DESCRIPTOR>(block, iCell)
   { }
-
-  /// Override all values with those of rhs
-  Cell<T,DESCRIPTOR>& operator=(ConstCell<T,DESCRIPTOR>& rhs);
 
   Cell<T,DESCRIPTOR> neighbor(Vector<int,DESCRIPTOR::d> c);
 
@@ -196,66 +160,18 @@ public:
    **/
   T& operator[](unsigned iPop);
 
-  /// Zero-initialize memory of population and all cell fields
-  void init();
-
   /// Return field accessor
   template <typename FIELD>
-  FieldPtr<T,DESCRIPTOR,FIELD> getFieldPointer();
-  /// Helper for accessing fields in a generic lambda expression
-  template <typename FIELD_ID>
-  FieldPtr<T,DESCRIPTOR,typename FIELD_ID::type>
-  getFieldPointer(FIELD_ID id);
+  auto getFieldPointer(FIELD field = FIELD());
 
   /// Set value of FIELD from a vector
   template <typename FIELD>
-  std::enable_if_t<(DESCRIPTOR::template size<FIELD>() > 1), void>
-  setField(const FieldD<T,DESCRIPTOR,FIELD>& field);
+  void setField(const FieldD<T,DESCRIPTOR,FIELD>& field);
   /// Set value of FIELD from a scalar
   template <typename FIELD>
   std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), void>
   setField(typename FIELD::template value_type<T> value);
 
-  /// Return pointer to dynamic FIELD of cell
-  template <typename FIELD>
-  FieldPtr<T,DESCRIPTOR,FIELD> getDynamicFieldPointer();
-
-  /// Set value of dynamic FIELD from a vector
-  template <typename FIELD>
-  std::enable_if_t<(DESCRIPTOR::template size<FIELD>() > 1), void>
-  setDynamicField(const FieldD<T,DESCRIPTOR,FIELD>& field);
-  /// Set value of dynamic FIELD from a scalar
-  template <typename FIELD>
-  std::enable_if_t<(DESCRIPTOR::template size<FIELD>() == 1), void>
-  setDynamicField(typename FIELD::template value_type<T> value);
-
-  /// Update cell (population and fields) using serialized data
-  void unSerialize(const T* data);
-
-  /// Set FIELD value from given memory location
-  template <typename FIELD>
-  void defineField(const T* data);
-  /// Add to FIELD from given memory location
-  /**
-   * Similar to defineField(),but instead of replacing existing values
-   * the data is added onto the existing values.
-   **/
-  template <typename FIELD>
-  void addField(const T* data);
-  /// Multiply FIELD with values at given memory location
-  /**
-   * Similar to defineField(), but instead of replacing existing values
-   * the data is multiplied to the existing values.
-   **/
-  template <typename FIELD>
-  void multiplyField(const T* data);
-
-  /// Define or re-define dynamics of the cell.
-  /**
-   * \param dynamics_ a pointer to the dynamics object, whos memory management
-   *                  falls under the responsibility of the user
-   **/
-  void defineDynamics(Dynamics<T,DESCRIPTOR>* dynamics_);
   /// Get a pointer to the dynamics
   Dynamics<T,DESCRIPTOR>* getDynamics();
 
@@ -263,7 +179,7 @@ public:
   void revert();
 
   /// Apply LB collision to the cell according to local dynamics
-  void collide(LatticeStatistics<T>& statistics);
+  CellStatistic<T> collide();
 
   /// Set density on the cell
   void defineRho(T rho);
@@ -279,14 +195,6 @@ public:
   void iniRegularized(T rho, const T u[descriptors::d<DESCRIPTOR>()], const T pi[util::TensorVal<DESCRIPTOR >::n]);
 
 };
-
-
-template<typename T, typename DESCRIPTOR>
-struct WriteCellFunctional {
-  virtual ~WriteCellFunctional() { };
-  virtual void apply(Cell<T,DESCRIPTOR>& cell, int pos[descriptors::d<DESCRIPTOR>()]) const =0;
-};
-
 
 }
 

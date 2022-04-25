@@ -26,12 +26,11 @@
 #define BLOCK_LATTICE_INTEGRAL_F_3D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 
 #include "blockLatticeIntegralF3D.h"
 #include "blockGeometryFaces3D.h"
 #include "blockCalcF3D.h" // for IdentityF
-#include "core/blockLattice3D.h"
 #include "core/olbDebug.h"
 
 namespace olb {
@@ -39,8 +38,8 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR>
 BlockL1Norm3D<T,DESCRIPTOR>::BlockL1Norm3D(BlockLatticeF3D<T,DESCRIPTOR>& f,
-    BlockGeometry3D<T>& blockGeometry, int material)
-  : BlockLatticeF3D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
+    BlockGeometry<T,3>& blockGeometry, int material)
+  : BlockLatticeF3D<T,DESCRIPTOR>(f.getBlock(),f.getTargetDim()),
     _f(f), _blockGeometry(blockGeometry), _material(material)
 {
   this->getName() = "L1("+_f.getName()+")";
@@ -53,12 +52,12 @@ bool BlockL1Norm3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
   T outputTmp[this->getTargetDim()];
   for (int i = 0; i < this->getTargetDim(); ++i) {
     output[i] = T(0);
-    for (int iX = 0; iX < _f.getBlockLattice().getNx(); ++iX) {
-      for (int iY = 0; iY < _f.getBlockLattice().getNy(); ++iY) {
-        for (int iZ = 0; iZ < _f.getBlockLattice().getNz(); ++iZ) {
+    for (int iX = 0; iX < _f.getBlock().getNx(); ++iX) {
+      for (int iY = 0; iY < _f.getBlock().getNy(); ++iY) {
+        for (int iZ = 0; iZ < _f.getBlock().getNz(); ++iZ) {
           if (this->_blockGeometry.getMaterial(iX, iY, iZ) == _material) {
-            _f(outputTmp,iX, iY, iZ);
-            T tmp = fabs(outputTmp[i]);
+            _f(outputTmp, {iX, iY, iZ});
+            T tmp = util::fabs(outputTmp[i]);
             if (tmp > output[i]) {
               output[i] = tmp;
             }
@@ -73,8 +72,8 @@ bool BlockL1Norm3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 
 template <typename T, typename DESCRIPTOR>
 BlockL223D<T,DESCRIPTOR>::BlockL223D(BlockLatticeF3D<T,DESCRIPTOR>& f,
-                                     BlockGeometry3D<T>& blockGeometry, int material)
-  : BlockLatticeF3D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
+                                     BlockGeometry<T,3>& blockGeometry, int material)
+  : BlockLatticeF3D<T,DESCRIPTOR>(f.getBlock(),f.getTargetDim()),
     _f(f), _blockGeometry(blockGeometry), _material(material)
 {
   this->getName() = "L22("+f.getName()+")";
@@ -84,9 +83,9 @@ BlockL223D<T,DESCRIPTOR>::BlockL223D(BlockLatticeF3D<T,DESCRIPTOR>& f,
 template <typename T, typename DESCRIPTOR>
 bool BlockL223D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  //  f.getBlockLattice().communicate();
-  //  CuboidGeometry3D<T>& cGeometry = f.getBlockLattice().get_cGeometry();
-  //  loadBalancer& load = f.getBlockLattice().get_load();
+  //  f.getBlock().communicate();
+  //  CuboidGeometry3D<T>& cGeometry = f.getBlock().get_cGeometry();
+  //  loadBalancer& load = f.getBlock().get_load();
 
   output[0]=0;
   //  for (int i=0; i<this->n; i++) {
@@ -95,7 +94,7 @@ bool BlockL223D<T,DESCRIPTOR>::operator() (T output[], const int input[])
   //      int nX = cGeometry.get(load.glob(iC)).getNx();
   //      int nY = cGeometry.get(load.glob(iC)).getNy();
   //      int nZ = cGeometry.get(load.glob(iC)).getNz();
-  //      T weight = pow(this->blockGeometry.getDeltaR(),3);
+  //      T weight = util::pow(this->blockGeometry.getDeltaR(),3);
   //      for (int iX=0; iX<nX; ++iX) {
   //        for (int iY=0; iY<nY; ++iY) {
   //          for (int iZ=0; iZ<nZ; ++iZ) {
@@ -119,7 +118,7 @@ bool BlockL223D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysDrag3D<T,DESCRIPTOR>::BlockLatticePhysDrag3D(
-  BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   BlockIndicatorF3D<T>&                  indicatorF,
   const UnitConverter<T,DESCRIPTOR>&     converter)
   : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice, converter, 3),
@@ -149,7 +148,7 @@ bool BlockLatticePhysDrag3D<T,DESCRIPTOR>::operator() (T output[], const int inp
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysCorrDrag3D<T,DESCRIPTOR>::BlockLatticePhysCorrDrag3D(
-  BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   BlockIndicatorF3D<T>&                  indicatorF,
   const UnitConverter<T,DESCRIPTOR>&     converter)
   : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice, converter, 3),

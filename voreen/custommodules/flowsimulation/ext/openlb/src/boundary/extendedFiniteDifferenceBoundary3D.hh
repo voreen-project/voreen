@@ -26,11 +26,8 @@
 
 #include "extendedFiniteDifferenceBoundary3D.h"
 #include "core/finiteDifference3D.h"
-#include "core/blockLattice3D.h"
 #include "core/util.h"
-#include "dynamics/lbHelpers.h"
-#include "dynamics/firstOrderLbHelpers.h"
-#include "momentaOnBoundaries3D.h"
+#include "dynamics/lbm.h"
 
 
 namespace olb {
@@ -48,12 +45,12 @@ ExtendedFdPlaneBoundaryPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z
 
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 void ExtendedFdPlaneBoundaryPostProcessor3D<T,DESCRIPTOR,direction,orientation>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                  int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   typedef DESCRIPTOR L;
   using namespace olb::util::tensorIndices3D;
-  typedef lbHelpers<T,DESCRIPTOR> lbH;
+  typedef lbm<DESCRIPTOR> lbH;
   enum {x,y,z};
 
 
@@ -166,7 +163,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
 
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 void ExtendedFdPlaneBoundaryPostProcessor3D<T,DESCRIPTOR,direction,orientation>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -174,7 +171,7 @@ process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 template<int deriveDirection>
 void ExtendedFdPlaneBoundaryPostProcessor3D<T,DESCRIPTOR,direction,orientation>::
-interpolateGradients(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
+interpolateGradients(BlockLattice<T,DESCRIPTOR> const& blockLattice,
                      T velDeriv[DESCRIPTOR::d],
                      int iX, int iY, int iZ) const
 {
@@ -185,7 +182,7 @@ interpolateGradients(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
 template<typename T, typename DESCRIPTOR, int direction, int orientation>
 template<int deriveDirection>
 void ExtendedFdPlaneBoundaryPostProcessor3D<T,DESCRIPTOR,direction,orientation>::
-interpolateGradients(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
+interpolateGradients(BlockLattice<T,DESCRIPTOR> const& blockLattice,
                      T& rhoDeriv, int iX, int iY, int iZ) const
 {
   fd::DirectedGradients3D<T, DESCRIPTOR, direction, orientation, deriveDirection, direction==deriveDirection>::

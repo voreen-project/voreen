@@ -25,27 +25,25 @@
 #define LATTICE_STRAIN_RATE_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeStrainRate2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 /*template <typename T, typename DESCRIPTOR>
 BlockLatticeStrainRate2D<T,DESCRIPTOR>::BlockLatticeStrainRate2D
-  (BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T>& converter)
+  (BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T>& converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice,converter,4)
 { this->getName() = "strainRate"; }
 
@@ -63,7 +61,7 @@ std::vector<T> BlockLatticeStrainRate2D<T,DESCRIPTOR>::operator() (std::vector<i
   strainRate[2] = -pi[1]*omega*descriptors::invCs2<T,DESCRIPTOR>()/rho/2.;
   strainRate[3] = -pi[2]*omega*descriptors::invCs2<T,DESCRIPTOR>()/rho/2.;
 
-  //cout << pi[0] << " " << pi[1] << " " << pi[2] << " " << descriptors::invCs2<T,DESCRIPTOR>() << endl;
+  //cout << pi[0] << " " << pi[1] << " " << pi[2] << " " << descriptors::invCs2<T,DESCRIPTOR>() << std::endl;
 
   std::vector<T> output(strainRate, strainRate+4); // first adress, last adress
   return output;

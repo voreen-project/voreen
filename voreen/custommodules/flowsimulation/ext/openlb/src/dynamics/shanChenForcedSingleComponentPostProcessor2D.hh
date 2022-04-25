@@ -26,7 +26,6 @@
 
 #include "shanChenForcedSingleComponentPostProcessor2D.h"
 #include "interactionPotential.h"
-#include "core/blockLattice2D.h"
 #include "core/util.h"
 #include "core/finiteDifference2D.h"
 
@@ -40,10 +39,10 @@ ShanChenForcedSingleComponentPostProcessor2D <T,DESCRIPTOR>::
 ShanChenForcedSingleComponentPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
     std::vector<T> rho0_,
     AnalyticalF<1,T,T>& iP_,
-    std::vector<SpatiallyExtendedObject2D*> partners_)
+    std::vector<BlockStructureD<2>*> partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenForcedSingleComponentPostProcessor2D";  
+  this->getName() = "ShanChenForcedSingleComponentPostProcessor2D";
 }
 
 template<typename T, typename DESCRIPTOR>
@@ -51,15 +50,15 @@ ShanChenForcedSingleComponentPostProcessor2D <T,DESCRIPTOR>::
 ShanChenForcedSingleComponentPostProcessor2D(T G_,
     std::vector<T> rho0_,
     AnalyticalF<1,T,T>& iP_,
-    std::vector<SpatiallyExtendedObject2D*> partners_)
+    std::vector<BlockStructureD<2>*> partners_)
   :  x0(0), x1(0), y0(0), y1(0), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenForcedSingleComponentPostProcessor2D";  
+  this->getName() = "ShanChenForcedSingleComponentPostProcessor2D";
 }
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenForcedSingleComponentPostProcessor2D<T,DESCRIPTOR>::
-processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+processSubDomain( BlockLattice<T,DESCRIPTOR>& blockLattice,
                   int x0_, int x1_, int y0_, int y1_ )
 {
   typedef DESCRIPTOR L;
@@ -69,7 +68,7 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
                          x0_, x1_, y0_, y1_,
                          newX0, newX1, newY0, newY1 ) ) {
 
-    auto& rhoField = blockLattice.template getDynamicFieldArray<RHO_CACHE>()[0];
+    auto& rhoField = blockLattice.template getField<RHO_CACHE>()[0];
 
     // Compute density and velocity on every site of first lattice, and store result
     //   in external scalars; envelope cells are included, because they are needed
@@ -86,10 +85,10 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
         Cell<T,DESCRIPTOR> blockCell = blockLattice.get(iX,iY);
 
         auto j = blockCell.template getField<descriptors::VELOCITY>();
-        lbHelpers<T,DESCRIPTOR>::computeJ(blockCell,j.data());
+        lbm<DESCRIPTOR>::computeJ(blockCell,j);
         blockCell.template setField<descriptors::VELOCITY>(j);
 
-        T blockOmega   = blockCell.getDynamics()->getOmega();
+        T blockOmega   = blockCell.getDynamics()->getParameters(blockLattice).template getOrFallback<descriptors::OMEGA>(0);
 
         // Computation of the common velocity, shared among the two populations
         T rhoTot = rhoField[blockCell.getCellId()]*blockOmega;
@@ -117,7 +116,7 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
 
         blockCell.template setField<descriptors::VELOCITY>(uTot);
         blockCell.template setField<descriptors::FORCE>(externalBlockForce
-          - G*rhoBlockContribution/rhoField[blockCell.getCellId()]);
+            - G*rhoBlockContribution/rhoField[blockCell.getCellId()]);
       }
     }
   }
@@ -125,7 +124,7 @@ processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenForcedSingleComponentPostProcessor2D<T,DESCRIPTOR>::
-process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1);
 }
@@ -147,7 +146,7 @@ ShanChenForcedSingleComponentGenerator2D<T,DESCRIPTOR>::ShanChenForcedSingleComp
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor2D<T,DESCRIPTOR>* ShanChenForcedSingleComponentGenerator2D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject2D*> partners) const
+  std::vector<BlockStructureD<2>*> partners) const
 {
   return new ShanChenForcedSingleComponentPostProcessor2D<T,DESCRIPTOR>(
            this->x0,this->x1,this->y0,this->y1,G, rho0, interactionPotential, partners);

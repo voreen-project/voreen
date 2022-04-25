@@ -24,7 +24,9 @@
 generic        :=
 
 precompiled    := superIntegralF3D \
+                  superIntegralF2D \
                   blockIntegralF3D \
+                  blockIntegralF2D \
                   superPlaneIntegralF3D \
                   superPlaneIntegralFluxF3D \
                   superPlaneIntegralFluxMass3D \

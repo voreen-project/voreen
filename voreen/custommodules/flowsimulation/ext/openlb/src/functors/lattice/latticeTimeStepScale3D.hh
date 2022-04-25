@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeTimeStepScale3D<T, DESCRIPTOR>::SuperLatticeTimeStepScale3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice,
+  SuperLattice<T, DESCRIPTOR>& sLattice,
   T oldTau, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, DESCRIPTOR::q)
 {
@@ -54,7 +53,7 @@ SuperLatticeTimeStepScale3D<T, DESCRIPTOR>::SuperLatticeTimeStepScale3D(
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticeTimeStepScale3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
+        this->_sLattice.getBlock(iC),
         oldTau,
         converter)
     );
@@ -63,7 +62,7 @@ SuperLatticeTimeStepScale3D<T, DESCRIPTOR>::SuperLatticeTimeStepScale3D(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeTimeStepScale3D<T,DESCRIPTOR>::BlockLatticeTimeStepScale3D
-(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, T oldTau, const UnitConverter<T,DESCRIPTOR>& converter)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, T oldTau, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, DESCRIPTOR::q), _tau_old(oldTau), _converter(converter)
 {
   this->getName() = "latticeTimeStepScale";

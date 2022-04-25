@@ -28,12 +28,6 @@
 
 namespace olb {
 
-template<unsigned D, typename T, typename S>
-AnalyticalF<D,T,S>::AnalyticalF(int n) : GenericF<T,S>(n,D)
-{
-  static_assert(D==1 || D==2 || D==3, "Only D=1,2,3 allowed.");
-}
-
 // identity to "store results"
 template<unsigned D, typename T, typename S>
 AnalyticalIdentity<D,T,S>::AnalyticalIdentity(AnalyticalF<D,T,S>& f)
@@ -67,7 +61,8 @@ bool AnalyticalFfromIndicatorF3D<T, S>::operator() (T output[], const S input[])
   _indicatorF(&tmp, input);
   if ( tmp ) {
     output[0] = T(1);
-  } else {
+  }
+  else {
     output[0] = T(0);
   }
   return tmp;

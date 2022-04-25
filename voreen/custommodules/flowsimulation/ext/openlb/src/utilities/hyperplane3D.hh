@@ -79,9 +79,9 @@ Hyperplane3D<T>& Hyperplane3D<T>::normalTo(const Vector<T,3>& n)
 template <typename T>
 Hyperplane3D<T>& Hyperplane3D<T>::originAt(const Vector<T,3>& o)
 {
-  origin[0] = o[0] - 2*std::numeric_limits<T>::epsilon()*fabs(o[0]);
-  origin[1] = o[1] - 2*std::numeric_limits<T>::epsilon()*fabs(o[1]);
-  origin[2] = o[2] - 2*std::numeric_limits<T>::epsilon()*fabs(o[2]);
+  origin[0] = o[0] - 2*std::numeric_limits<T>::epsilon()*util::fabs(o[0]);
+  origin[1] = o[1] - 2*std::numeric_limits<T>::epsilon()*util::fabs(o[1]);
+  origin[2] = o[2] - 2*std::numeric_limits<T>::epsilon()*util::fabs(o[2]);
 
   return *this;
 }
@@ -90,15 +90,15 @@ template <typename T>
 Hyperplane3D<T>& Hyperplane3D<T>::centeredIn(const Cuboid3D<T>& cuboid)
 {
   const Vector<T,3>& cuboidOrigin = cuboid.getOrigin();
-  const Vector<int,3>& extend     = cuboid.getExtend();
+  const Vector<int,3>& extend     = cuboid.getExtent();
   const T deltaR = cuboid.getDeltaR();
 
   origin[0] = (cuboidOrigin[0] + 0.5 * deltaR * extend[0]);
   origin[1] = (cuboidOrigin[1] + 0.5 * deltaR * extend[1]);
   origin[2] = (cuboidOrigin[2] + 0.5 * deltaR * extend[2]);
-  origin[0] -= 2*std::numeric_limits<T>::epsilon()*fabs(origin[0]);
-  origin[1] -= 2*std::numeric_limits<T>::epsilon()*fabs(origin[1]);
-  origin[2] -= 2*std::numeric_limits<T>::epsilon()*fabs(origin[2]);
+  origin[0] -= 2*std::numeric_limits<T>::epsilon()*util::fabs(origin[0]);
+  origin[1] -= 2*std::numeric_limits<T>::epsilon()*util::fabs(origin[1]);
+  origin[2] -= 2*std::numeric_limits<T>::epsilon()*util::fabs(origin[2]);
 
   return *this;
 }
@@ -128,8 +128,8 @@ Hyperplane3D<T>& Hyperplane3D<T>::rotateSpanAroundX(T r)
 {
   return applyMatrixToSpan(
   {1, 0,       0     },
-  {0, cos(r), -sin(r)},
-  {0, sin(r),  cos(r)}
+  {0, util::cos(r), -util::sin(r)},
+  {0, util::sin(r),  util::cos(r)}
   );
 
 }
@@ -138,9 +138,9 @@ template <typename T>
 Hyperplane3D<T>& Hyperplane3D<T>::rotateSpanAroundY(T r)
 {
   return applyMatrixToSpan(
-  { cos(r), 0, sin(r)},
+  { util::cos(r), 0, util::sin(r)},
   { 0,      1, 0     },
-  {-sin(r), 0, cos(r)}
+  {-util::sin(r), 0, util::cos(r)}
   );
 }
 
@@ -148,8 +148,8 @@ template <typename T>
 Hyperplane3D<T>& Hyperplane3D<T>::rotateSpanAroundZ(T r)
 {
   return applyMatrixToSpan(
-  {cos(r), -sin(r), 0},
-  {sin(r),  cos(r), 0},
+  {util::cos(r), -util::sin(r), 0},
+  {util::sin(r),  util::cos(r), 0},
   {0,       0,      1}
   );
 }

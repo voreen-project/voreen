@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeGuoZhaoEpsilon3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoEpsilon3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice)
+  SuperLattice<T, DESCRIPTOR>& sLattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1)
 {
   this->getName() = "epsilon";
@@ -52,16 +51,14 @@ SuperLatticeGuoZhaoEpsilon3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoEpsilon3D(
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
-      new BlockLatticeGuoZhaoEpsilon3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap() )
+      new BlockLatticeGuoZhaoEpsilon3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC))
     );
   }
 }
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeGuoZhaoEpsilon3D<T,DESCRIPTOR>::BlockLatticeGuoZhaoEpsilon3D
-(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice)
+(BlockLattice<T,DESCRIPTOR>& blockLattice)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, 1)
 {
   this->getName() = "epsilon";
@@ -70,7 +67,7 @@ BlockLatticeGuoZhaoEpsilon3D<T,DESCRIPTOR>::BlockLatticeGuoZhaoEpsilon3D
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticeGuoZhaoEpsilon3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  output[0] = *this->_blockLattice.get( input[0], input[1], input[2] ).template getFieldPointer<descriptors::EPSILON>();
+  output[0] = this->_blockLattice.get(input).template getField<descriptors::EPSILON>();
   return true;
 }
 

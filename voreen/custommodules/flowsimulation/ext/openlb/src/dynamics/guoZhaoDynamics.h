@@ -38,11 +38,24 @@ namespace olb {
 
 /// Implementation of the BGK collision step with porous force according to
 /// Guo and Zhao (2012), described as an external force
-template<typename T, typename DESCRIPTOR>
-class GuoZhaoBGKdynamics : public BasicDynamics<T,DESCRIPTOR> {
+/* Use momenta::Tuple<
+  T,
+  DESCRIPTOR,
+  BulkDensity,
+  GuoZhaoMomentum,
+  BulkStress,
+  DefineToNEq
+>;*/
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class GuoZhaoBGKdynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = GuoZhaoBGKdynamics<T,DESCRIPTOR,M>;
+
+  using MomentaF = typename MOMENTA::template type<DESCRIPTOR>;
+
   /// Constructor
-  GuoZhaoBGKdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  GuoZhaoBGKdynamics(T omega_);
   ///  Compute fluid velocity on the cell.
   void computeU (
     ConstCell<T,DESCRIPTOR>& cell,
@@ -52,14 +65,13 @@ public:
     ConstCell<T,DESCRIPTOR>& cell,
     T& rho, T u[DESCRIPTOR::d]) const override;
   /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
+  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d]) const override;
   /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_) override;
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
+  void setOmega(T omega_);
   /// Get local porosity as per from the dynamics class member variable.
   T getEpsilon();
 protected:
@@ -68,6 +80,45 @@ protected:
   T _omega;  ///< relaxation parameter
   T _epsilon; ///< porosity. Must be re-declared as a member variable to allow
 };
+
+
+/* Use momenta::Tuple<
+  T,
+  DESCRIPTOR,
+  BulkDensity,
+  PorousGuoMomentum,
+  BulkStress,
+  DefineToNEq
+>;*/
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class PorousGuoSimpleBGKdynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
+public:
+  template<typename M>
+  using exchange_momenta = PorousGuoSimpleBGKdynamics<T,DESCRIPTOR,M>;
+
+  /// Constructor
+  PorousGuoSimpleBGKdynamics(T omega_);
+  ///  Compute fluid velocity on the cell.
+  void computeU (
+    ConstCell<T,DESCRIPTOR>& cell,
+    T u[DESCRIPTOR::d] ) const override;
+  /// Compute fluid velocity and particle density on the cell.
+  void computeRhoU (
+    ConstCell<T,DESCRIPTOR>& cell,
+    T& rho, T u[DESCRIPTOR::d]) const override;
+  /// Collision step
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell) override;
+  /// Get local relaxation parameter of the dynamics
+  T getOmega() const;
+  /// Set local relaxation parameter of the dynamics
+  void setOmega(T omega_);
+protected:
+  T _omega;  ///< relaxation parameter
+};
+
+
+
+
 
 }
 

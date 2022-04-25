@@ -30,9 +30,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -42,7 +40,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeVolumeFractionPolygonApproximation2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeVolumeFractionPolygonApproximation2D(SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLatticeVolumeFractionPolygonApproximation2D(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
       IndicatorF2D<T>& indicator, const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut = false);
 };
 
@@ -52,14 +50,14 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeVolumeFractionPolygonApproximation2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   IndicatorF2D<T>& _indicator;
   const UnitConverter<T,DESCRIPTOR>& _converter;
   bool _insideOut;
 
 public:
-  BlockLatticeVolumeFractionPolygonApproximation2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-      BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLatticeVolumeFractionPolygonApproximation2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+      BlockGeometry<T,2>& blockGeometry,
       IndicatorF2D<T>& indicator,
       const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut);
   bool operator() (T output[], const int input[]);

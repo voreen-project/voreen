@@ -32,16 +32,17 @@
 #include <math.h>
 #include <fstream>
 #include <sstream>
-#include <cmath>
+#include "utilities/omath.h"
 
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "geometry/blockGeometryStatistics2D.h"
 
 namespace olb {
 
 template<typename T>
-BlockGeometryStatistics2D<T>::BlockGeometryStatistics2D( BlockGeometryStructure2D<T>* blockGeometry)
-  : _blockGeometry(blockGeometry), clout(std::cout,"BlockGeometryStatistics2D")
+BlockGeometryStatistics2D<T>::BlockGeometryStatistics2D(BlockGeometry<T,2>* blockGeometry)
+  : _blockGeometry(blockGeometry),
+    clout(std::cout,"BlockGeometryStatistics2D")
 {
   _statisticsUpdateNeeded = true;
 }
@@ -67,16 +68,9 @@ void BlockGeometryStatistics2D<T>::update(bool verbose)
 
   if (getStatisticsStatus() ) {
     _material2n.clear();
-
-    _nX = _blockGeometry->getNx();
-    _nY = _blockGeometry->getNy();
-    _h = _blockGeometry->getDeltaR();
-
-    for (int iX = 0; iX < _nX; ++iX) {
-      for (int iY = 0; iY < _nY; ++iY) {
-        takeStatistics(iX, iY);
-      }
-    }
+    _blockGeometry->forCoreSpatialLocations([&](auto iX, auto iY) {
+      takeStatistics(iX, iY);
+    });
 
     _nMaterials=int();
     std::map<int, int>::iterator iter;
@@ -282,26 +276,32 @@ std::vector<T> BlockGeometryStatistics2D<T>::getCenterPhysR(int material) const
 }
 
 template<typename T>
+std::vector<int> BlockGeometryStatistics2D<T>::getType(const int* input) const
+{
+  return const_this->getType(input[0], input[1]);
+}
+
+template<typename T>
 std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
 {
   std::vector<int> discreteNormal(3, 0);
 
-  if (_blockGeometry->getMaterial(iX, iY) != 1
-      && _blockGeometry->getMaterial(iX, iY) != 0) {
+  if (_blockGeometry->getMaterial({iX, iY}) != 1
+      && _blockGeometry->getMaterial({iX, iY}) != 0) {
 
     ///boundary0N and boundary 0P
-    if (_blockGeometry->getMaterial(iX, iY + 1) != 1
-        && _blockGeometry->getMaterial(iX, iY + 1) != 0
-        && _blockGeometry->getMaterial(iX, iY - 1) != 1
-        && _blockGeometry->getMaterial(iX, iY - 1) != 0) {
+    if (_blockGeometry->getMaterial({iX, iY + 1}) != 1
+        && _blockGeometry->getMaterial({iX, iY + 1}) != 0
+        && _blockGeometry->getMaterial({iX, iY - 1}) != 1
+        && _blockGeometry->getMaterial({iX, iY - 1}) != 0) {
 
-      if (_blockGeometry->getMaterial(iX + 1, iY) == 1) {
+      if (_blockGeometry->getMaterial({iX + 1, iY}) == 1) {
         discreteNormal[0] = 0;
         discreteNormal[1] = -1;
         discreteNormal[2] = 0;
       }
 
-      if (_blockGeometry->getMaterial(iX - 1, iY) == 1) {
+      if (_blockGeometry->getMaterial({iX - 1, iY}) == 1) {
         discreteNormal[0] = 0;
         discreteNormal[1] = 1;
         discreteNormal[2] = 0;
@@ -309,18 +309,18 @@ std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
     }
 
     /// boundary1N and boundary1P
-    if (_blockGeometry->getMaterial(iX + 1, iY) != 1
-        && _blockGeometry->getMaterial(iX + 1, iY) != 0
-        && _blockGeometry->getMaterial(iX - 1, iY) != 1
-        && _blockGeometry->getMaterial(iX - 1, iY) != 0) {
+    if (_blockGeometry->getMaterial({iX + 1, iY}) != 1
+        && _blockGeometry->getMaterial({iX + 1, iY}) != 0
+        && _blockGeometry->getMaterial({iX - 1, iY}) != 1
+        && _blockGeometry->getMaterial({iX - 1, iY}) != 0) {
 
-      if (_blockGeometry->getMaterial(iX, iY + 1) == 1) {
+      if (_blockGeometry->getMaterial({iX, iY + 1}) == 1) {
         discreteNormal[0] = 0;
         discreteNormal[1] = 0;
         discreteNormal[2] = -1;
       }
 
-      if (_blockGeometry->getMaterial(iX, iY - 1) == 1) {
+      if (_blockGeometry->getMaterial({iX, iY - 1}) == 1) {
         discreteNormal[0] = 0;
         discreteNormal[1] = 0;
         discreteNormal[2] = 1;
@@ -328,20 +328,20 @@ std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
     }
 
     /// externalCornerNN and externalCornerNP
-    if (_blockGeometry->getMaterial(iX + 1, iY) != 1
-        && _blockGeometry->getMaterial(iX + 1, iY) != 0) {
+    if (   _blockGeometry->getMaterial({iX + 1, iY}) != 1
+        && _blockGeometry->getMaterial({iX + 1, iY}) != 0) {
 
-      if (_blockGeometry->getMaterial(iX, iY + 1) != 1
-          && _blockGeometry->getMaterial(iX, iY + 1) != 0
-          && _blockGeometry->getMaterial(iX + 1, iY + 1) == 1) {
+      if (_blockGeometry->getMaterial({iX, iY + 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY + 1}) != 0
+          && _blockGeometry->getMaterial({iX + 1, iY + 1}) == 1) {
         discreteNormal[0] = 1;
         discreteNormal[1] = -1;
         discreteNormal[2] = -1;
       }
 
-      if (_blockGeometry->getMaterial(iX, iY - 1) != 1
-          && _blockGeometry->getMaterial(iX, iY - 1) != 0
-          && _blockGeometry->getMaterial(iX + 1, iY - 1) == 1) {
+      if (_blockGeometry->getMaterial({iX, iY - 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY - 1}) != 0
+          && _blockGeometry->getMaterial({iX + 1, iY - 1}) == 1) {
         discreteNormal[0] = 1;
         discreteNormal[1] = -1;
         discreteNormal[2] = 1;
@@ -349,20 +349,20 @@ std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
     }
 
     /// externalCornerPN and externalCornerPP
-    if (_blockGeometry->getMaterial(iX - 1, iY) != 1
-        && _blockGeometry->getMaterial(iX - 1, iY) != 0) {
+    if (_blockGeometry->getMaterial({iX - 1, iY}) != 1
+        && _blockGeometry->getMaterial({iX - 1, iY}) != 0) {
 
-      if (_blockGeometry->getMaterial(iX, iY + 1) != 1
-          && _blockGeometry->getMaterial(iX, iY + 1) != 0
-          && _blockGeometry->getMaterial(iX - 1, iY + 1) == 1) {
+      if (_blockGeometry->getMaterial({iX, iY + 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY + 1}) != 0
+          && _blockGeometry->getMaterial({iX - 1, iY + 1}) == 1) {
         discreteNormal[0] = 1;
         discreteNormal[1] = 1;
         discreteNormal[2] = -1;
       }
 
-      if (_blockGeometry->getMaterial(iX, iY - 1) != 1
-          && _blockGeometry->getMaterial(iX, iY - 1) != 0
-          && _blockGeometry->getMaterial(iX - 1, iY - 1) == 1) {
+      if (_blockGeometry->getMaterial({iX, iY - 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY - 1}) != 0
+          && _blockGeometry->getMaterial({iX - 1, iY - 1}) == 1) {
         discreteNormal[0] = 1;
         discreteNormal[1] = 1;
         discreteNormal[2] = 1;
@@ -370,20 +370,20 @@ std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
     }
 
     /// internalCornerNN and internalCornerNP
-    if (_blockGeometry->getMaterial(iX - 1, iY) != 1
-        && _blockGeometry->getMaterial(iX - 1, iY) != 0) {
+    if (_blockGeometry->getMaterial({iX - 1, iY}) != 1
+        && _blockGeometry->getMaterial({iX - 1, iY}) != 0) {
 
-      if (_blockGeometry->getMaterial(iX, iY - 1) != 1
-          && _blockGeometry->getMaterial(iX, iY - 1) != 0
-          && _blockGeometry->getMaterial(iX - 1, iY - 1) == 0) {
+      if (_blockGeometry->getMaterial({iX, iY - 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY - 1}) != 0
+          && _blockGeometry->getMaterial({iX - 1, iY - 1}) == 0) {
         discreteNormal[0] = 2;
         discreteNormal[1] = -1;
         discreteNormal[2] = -1;
       }
 
-      if (_blockGeometry->getMaterial(iX, iY + 1) != 1
-          && _blockGeometry->getMaterial(iX, iY + 1) != 0
-          && _blockGeometry->getMaterial(iX - 1, iY + 1) == 0) {
+      if (_blockGeometry->getMaterial({iX, iY + 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY + 1}) != 0
+          && _blockGeometry->getMaterial({iX - 1, iY + 1}) == 0) {
         discreteNormal[0] = 2;
         discreteNormal[1] = -1;
         discreteNormal[2] = 1;
@@ -391,20 +391,20 @@ std::vector<int> BlockGeometryStatistics2D<T>::getType(int iX, int iY) const
     }
 
     /// internalCornerPN and internalCornerPP
-    if (_blockGeometry->getMaterial(iX + 1, iY) != 1
-        && _blockGeometry->getMaterial(iX + 1, iY) != 0) {
+    if (_blockGeometry->getMaterial({iX + 1, iY}) != 1
+        && _blockGeometry->getMaterial({iX + 1, iY}) != 0) {
 
-      if (_blockGeometry->getMaterial(iX, iY - 1) != 1
-          && _blockGeometry->getMaterial(iX, iY - 1) != 0
-          && _blockGeometry->getMaterial(iX + 1, iY - 1) == 0) {
+      if (_blockGeometry->getMaterial({iX, iY - 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY - 1}) != 0
+          && _blockGeometry->getMaterial({iX + 1, iY - 1}) == 0) {
         discreteNormal[0] = 2;
         discreteNormal[1] = 1;
         discreteNormal[2] = -1;
       }
 
-      if (_blockGeometry->getMaterial(iX, iY + 1) != 1
-          && _blockGeometry->getMaterial(iX, iY + 1) != 0
-          && _blockGeometry->getMaterial(iX + 1, iY + 1) == 0) {
+      if (_blockGeometry->getMaterial({iX, iY + 1}) != 1
+          && _blockGeometry->getMaterial({iX, iY + 1}) != 0
+          && _blockGeometry->getMaterial({iX + 1, iY + 1}) == 0) {
         discreteNormal[0] = 2;
         discreteNormal[1] = 1;
         discreteNormal[2] = 1;
@@ -427,22 +427,22 @@ std::vector<int> BlockGeometryStatistics2D<T>::computeNormal(int iX, int iY) con
   std::vector<int> normal (2,int(0));
 
   if (iX != 0) {
-    if (_blockGeometry->getMaterial(iX - 1, iY) == 1) {
+    if (_blockGeometry->getMaterial({iX - 1, iY}) == 1) {
       normal[0] = -1;
     }
   }
   if (iX != _nX - 1) {
-    if (_blockGeometry->getMaterial(iX + 1, iY) == 1) {
+    if (_blockGeometry->getMaterial({iX + 1, iY}) == 1) {
       normal[0] = 1;
     }
   }
   if (iY != 0) {
-    if (_blockGeometry->getMaterial(iX, iY - 1) == 1) {
+    if (_blockGeometry->getMaterial({iX, iY - 1}) == 1) {
       normal[1] = -1;
     }
   }
   if (iY != _nY - 1) {
-    if (_blockGeometry->getMaterial(iX, iY + 1) == 1) {
+    if (_blockGeometry->getMaterial({iX, iY + 1}) == 1) {
       normal[1] = 1;
     }
   }
@@ -465,13 +465,13 @@ std::vector<T> BlockGeometryStatistics2D<T>::computeNormal(int material) const
   std::vector<int> maxC = getMaxLatticeR(material);
   for (int iX = minC[0]; iX<=maxC[0]; iX++) {
     for (int iY = minC[1]; iY<=maxC[1]; iY++) {
-      if (_blockGeometry->getMaterial(iX,iY) == material) {
+      if (_blockGeometry->getMaterial({iX,iY}) == material) {
         normal[0]+=computeNormal(iX,iY)[0];
         normal[1]+=computeNormal(iX,iY)[1];
       }
     }
   }
-  T norm = sqrt(normal[0]*normal[0]+normal[1]*normal[1]);
+  T norm = util::sqrt(normal[0]*normal[0]+normal[1]*normal[1]);
   if (norm>0.) {
     normal[0]/=norm;
     normal[1]/=norm;
@@ -495,7 +495,7 @@ std::vector<int> BlockGeometryStatistics2D<T>::computeDiscreteNormal(int materia
   T smallestAngle = T(0);
   for (int iX = -1; iX<=1; iX++) {
     for (int iY = -1; iY<=1; iY++) {
-      T norm = sqrt(iX*iX+iY*iY);
+      T norm = util::sqrt(iX*iX+iY*iY);
       if (norm>0.&& norm<maxNorm) {
         T angle = (iX*normal[0] + iY*normal[1])/norm;
         if (angle>=smallestAngle) {
@@ -524,7 +524,7 @@ bool BlockGeometryStatistics2D<T>::check(int material, int iX, int iY,
   bool found = true;
   for (int iOffsetX = -offsetX; iOffsetX <= (int) offsetX; ++iOffsetX) {
     for (int iOffsetY = -offsetY; iOffsetY <= (int) offsetY; ++iOffsetY) {
-      if (_blockGeometry->getMaterial(iX + iOffsetX, iY + iOffsetY) != material) {
+      if (_blockGeometry->getMaterial({iX + iOffsetX, iY + iOffsetY}) != material) {
         found = false;
       }
     }
@@ -584,7 +584,7 @@ template<typename T>
 void BlockGeometryStatistics2D<T>::takeStatistics(int iX, int iY)
 {
 
-  int type = _blockGeometry->getMaterial(iX, iY);
+  int type = _blockGeometry->getMaterial({iX, iY});
   if (_material2n.count(type) == 0) {
     _material2n[type] = 1;
     std::vector<int> minCo;

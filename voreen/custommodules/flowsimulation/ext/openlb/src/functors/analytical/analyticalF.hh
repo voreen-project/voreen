@@ -33,6 +33,7 @@
 #include "analyticalF.h"
 #include "core/singleton.h"
 #include "communication/mpiManager.h"
+#include "utilities/calc.h"
 #include "utilities/vectorHelpers.h"
 #include "core/radiativeUnitConverter.h"
 
@@ -49,11 +50,13 @@ template <unsigned D, typename T, typename S>
 AnalyticalComposed<D,T,S>::AnalyticalComposed( std::vector<AnalyticalF<D,T,S>>& f)
   : AnalyticalF<D,T,S>(f.size())
 {
-  if (D != f.size())
+  if (D != f.size()) {
     throw std::length_error("D does not match with f.size().");
+  }
   this->getName() = "composed";
-  for (auto&& i : f)
+  for (auto&& i : f) {
     _f.push_back(i);
+  }
 }
 
 template <unsigned D, typename T, typename S>
@@ -103,6 +106,16 @@ AnalyticalConst<D,T,S>::AnalyticalConst(T value0, T value1, T value2)
 }
 
 template <unsigned D, typename T, typename S>
+AnalyticalConst<D,T,S>::AnalyticalConst(const Vector<T,2>& value)
+  : AnalyticalF<D,T,S>(2)
+{
+  _c.reserve(2);
+  _c.push_back(value[0]);
+  _c.push_back(value[1]);
+  this->getName() = "const";
+}
+
+template <unsigned D, typename T, typename S>
 AnalyticalConst<D,T,S>::AnalyticalConst(const Vector<T,3>& value)
   : AnalyticalF<D,T,S>(3)
 {
@@ -137,7 +150,7 @@ bool AnalyticalNormal<D,T,S>::operator()(T output[], const S x[])
   for ( unsigned i = 0; i < D; ++i) {
     r2 += (x[i] - _mean[i]) * (x[i] - _mean[i]);
   }
-  output[0] = exp(-r2/(2*_stdDev*_stdDev)) / (_stdDev*sqrt(2.*M_PI));
+  output[0] = util::exp(-r2/(2*_stdDev*_stdDev)) / (_stdDev*util::sqrt(2.*M_PI));
   return true;
 }
 
@@ -191,7 +204,8 @@ bool AnalyticalRandomTruncatedNormal<D,T,S>::operator()(T output[], const S x[])
 {
   do {
     output[0] = this->distro(this->gen);
-  } while (output[0] < _min || output[0] > _max);
+  }
+  while (output[0] < _min || output[0] > _max);
   return true;
 }
 
@@ -221,8 +235,112 @@ bool AnalyticalRandomOld<D,T,S>::operator()(T output[], const S x[])
 }
 
 
+template <typename T, typename S, typename DESCRIPTOR>
+EccentricVelocityField<T,S,DESCRIPTOR>::EccentricVelocityField(
+  Vector<T,DESCRIPTOR::d> position,
+  Vector<T,DESCRIPTOR::d> velocity,
+  Vector<T,utilities::dimensions::convert<DESCRIPTOR::d>::rotation> angularVelocity )
+  : AnalyticalF<DESCRIPTOR::d,T,S>(DESCRIPTOR::d),
+    _position(position),
+    _velocity(velocity),
+    _angularVelocity(angularVelocity)
+{
+  this->getName() = "EccentricVelocityField";
+}
+
+template <typename T, typename S, typename DESCRIPTOR>
+bool EccentricVelocityField<T,S,DESCRIPTOR>::operator()(T output[], const S input[])
+{
+  constexpr unsigned D = DESCRIPTOR::d;
+
+  Vector<T,D> localVel = util::calculateLocalVelocity(_position, _velocity, _angularVelocity, Vector<T,D>(input));
+  for (unsigned iDim=0; iDim<D; ++iDim) {
+    output[iDim] = localVel[iDim];
+  }
+
+  return true;
+}
+
+template <typename T, typename S, typename DESCRIPTOR>
+EccentricLatticeVelocityField<T,S,DESCRIPTOR>::EccentricLatticeVelocityField(
+  Vector<T,DESCRIPTOR::d> position,
+  Vector<T,DESCRIPTOR::d> velocity,
+  Vector<T,utilities::dimensions::convert<DESCRIPTOR::d>::rotation> angularVelocity,
+  UnitConverter<T,DESCRIPTOR> const& converter )
+  : AnalyticalF<DESCRIPTOR::d,T,S>(DESCRIPTOR::d),
+    _position(position),
+    _velocity(velocity),
+    _angularVelocity(angularVelocity),
+    _converter(converter)
+{
+  this->getName() = "EccentricLatticeVelocityField";
+}
+
+template <typename T, typename S, typename DESCRIPTOR>
+bool EccentricLatticeVelocityField<T,S,DESCRIPTOR>::operator()(T output[], const S input[])
+{
+  constexpr unsigned D = DESCRIPTOR::d;
+
+  Vector<T,D> localVel = util::calculateLocalVelocity(_position, _velocity, _angularVelocity, Vector<T,D>(input));
+  for (unsigned iDim=0; iDim<D; ++iDim) {
+    output[iDim] = _converter.getLatticeVelocity( localVel[iDim] );
+  }
+
+  return true;
+}
 
 
+template <unsigned D, typename T, typename S>
+AnalyticalSquareWave<D,T,S>::AnalyticalSquareWave(
+  T period, T amplitude, T difference)
+  : AnalyticalF<D,T,S>(1), _period(period),
+    _amplitude(amplitude), _difference(difference)
+{ }
+
+template <unsigned D, typename T, typename S>
+bool AnalyticalSquareWave<D,T,S>::operator()(T output[], const S x[])
+{
+  if ( util::fmod_pos(x[0],_period) <= (_difference * _period)) {
+    output[0] = _amplitude;
+  }
+  else {
+    output[0] = - _amplitude;
+  }
+  return true;
+}
+
+
+template <unsigned D, typename T, typename S>
+AnalyticalSmoothedSquareWave<D,T,S>::AnalyticalSmoothedSquareWave(
+  T period, T amplitude, T difference, T epsilon)
+  : AnalyticalSquareWave<D,T,S>(period, amplitude, difference),
+    _epsilon(epsilon)
+{
+  OLB_ASSERT(epsilon < difference, "Smoothing region is to large for given phase difference");
+}
+
+template <unsigned D, typename T, typename S>
+bool AnalyticalSmoothedSquareWave<D,T,S>::operator()(T output[], const S x[])
+{
+  if ( util::fmod_pos(x[0],this->_period) <= 0.5 * _epsilon) {
+    output[0] = this->_amplitude * util::sin(M_PI * util::fmod_pos(x[0],this->_period) / _epsilon);
+  }
+  else if ( util::fmod_pos(x[0],this->_period) <= this->_difference * this->_period - 0.5 * _epsilon ) {
+    output[0] = this->_amplitude;
+  }
+  else if ( util::fmod_pos(x[0],this->_period) <= this->_difference * this->_period + 0.5 * _epsilon ) {
+    output[0] = - this->_amplitude
+       * util::sin(M_PI * (util::fmod_pos(x[0],this->_period) - this->_difference * this->_period) / _epsilon);
+  }
+  else if ( util::fmod_pos(x[0],this->_period) <= this->_period - 0.5 * _epsilon ) {
+    output[0] = - this->_amplitude;
+  }
+  else {
+    output[0] = this->_amplitude
+       * util::sin(M_PI * (util::fmod_pos(x[0],this->_period) - this->_period) / _epsilon);
+  }
+  return true;
+}
 
 
 
@@ -243,7 +361,8 @@ AnalyticalLinear1D<T,S>::AnalyticalLinear1D(S x0, T v0, S x1, T v1)
 {
   if ( util::nearZero(x1-x0) ) {
     std::cout << "Error: x1-x2=0" << std::endl;
-  } else {
+  }
+  else {
     _a = ( v1-v0 ) / ( x1-x0 );
     _b = v0 - _a*x0;
   }
@@ -293,8 +412,7 @@ bool PolynomialStartScale<T,S>::operator()(T output[], const S x[])
 
 template <typename T, typename S>
 SinusStartScale<T,S>::SinusStartScale(int numTimeSteps, T maxValue)
-  : AnalyticalF1D<T,S>(1), _numTimeSteps(numTimeSteps), _maxValue(maxValue),
-    _pi(4.0*atan(1.0))
+  : AnalyticalF1D<T,S>(1), _numTimeSteps(numTimeSteps), _maxValue(maxValue)
 {
   this->getName() = "sinusStartScale";
 }
@@ -302,32 +420,31 @@ SinusStartScale<T,S>::SinusStartScale(int numTimeSteps, T maxValue)
 template <typename T, typename S>
 bool SinusStartScale<T,S>::operator()(T output[], const S x[])
 {
-  output[0]=(_maxValue * (sin(-_pi / 2.0 + (T)x[0] / (T)_numTimeSteps * _pi) + 1.0)) / 2.0;
+  output[0]=(_maxValue * (util::sin(-M_PI / 2.0 + (T)x[0] / (T)_numTimeSteps * M_PI) + 1.0)) / 2.0;
   return true;
 }
 
-template <typename T>
-AnalyticalDiffFD1D<T>::AnalyticalDiffFD1D(AnalyticalF1D<T,T>& f, T eps) : AnalyticalF1D<T,T>(1), _f(f), _eps(eps)
-{
-}
 
-template <typename T>
-bool AnalyticalDiffFD1D<T>::operator() (T output[], const T input[])
+template <typename T, typename S>
+Sinus<T,S>::Sinus(T period, T amplitude)
+  : AnalyticalF1D<T,S>(1), _period(period), _amplitude(amplitude)
 {
-  _f(output,input);
-  T x = output[0];
-  T input2[1];
-  input2[0] = input[0] + _eps;
-  _f(output,input2);
-  output[0] -= x;
-  output[0] /= _eps;
-  return true;
+  this->getName() = "Sinus";
 }
 
 template <typename T, typename S>
+bool Sinus<T,S>::operator()(T output[], const S x[])
+{
+  output[0] = _amplitude * util::sin((x[0] / _period) * 2 * M_PI);
+  return true;
+}
+
+
+template <typename T, typename S>
 Cosinus<T,S>::Cosinus(T period, T amplitude)
-  : AnalyticalF1D<T,S>(1), _period(period), _amplitude(amplitude),
-    _pi(4.0*atan(1.0))
+  : AnalyticalF1D<T,S>(1),
+    _period(period),
+    _amplitude(amplitude)
 {
   this->getName() = "Cosinus";
 }
@@ -335,14 +452,16 @@ Cosinus<T,S>::Cosinus(T period, T amplitude)
 template <typename T, typename S>
 bool Cosinus<T,S>::operator()(T output[], const S x[])
 {
-  output[0] = _amplitude * cos((x[0] / _period) * 2 * _pi);
+  output[0] = _amplitude * util::cos((x[0] / _period) * T(2) * M_PI);
   return true;
 }
 
 template <typename T, typename S>
-CosinusComposite<T,S>::CosinusComposite(T period, T difference, T amplitude)
-  : AnalyticalF1D<T,S>(1), _period(period), _difference(difference) ,_amplitude(amplitude),
-    _pi(4.0*atan(1.0))
+CosinusComposite<T,S>::CosinusComposite(T period, T amplitude, T difference)
+  : AnalyticalF1D<T,S>(1),
+    _period(period),
+    _difference(difference),
+    _amplitude(amplitude)
 {
   this->getName() = "CosinusComposite";
 }
@@ -350,12 +469,15 @@ CosinusComposite<T,S>::CosinusComposite(T period, T difference, T amplitude)
 template <typename T, typename S>
 bool CosinusComposite<T,S>::operator()(T output[], const S x[])
 {
-  if( std::fmod(x[0],_period) <= (_difference * _period)){
-  	output[0] = _amplitude * cos(((std::fmod(x[0], _period)) / (_difference * _period)) * _pi);
+  if ( util::fmod_pos(x[0],_period) <= (_difference * _period)) {
+    output[0] = _amplitude
+     * util::cos(((util::fmod_pos(x[0], _period))
+                   / (_difference * _period)) * M_PI);
   }
-  else
-  {
-	output[0] = _amplitude * cos(((std::fmod(x[0], _period) - (_difference * _period)) / (_period - (_difference * _period))) * _pi + _pi);
+  else {
+    output[0] = _amplitude
+     * util::cos(((util::fmod_pos(x[0], _period) - (_difference * _period))
+                   / (_period - (_difference * _period))) * M_PI + M_PI);
   }
   return true;
 }
@@ -380,7 +502,8 @@ AnalyticalLinear2D<T,S>::AnalyticalLinear2D(S x0, S y0, T v0, S x1, S y1,
   T n2= (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
   if ( util::nearZero(n2) ) {
     std::cout << "Error function" << std::endl;
-  } else {
+  }
+  else {
     T n0 = (y1-y0)*(v2-v0) - (v1-v0)*(y2-y0);
     T n1 = (v1-v0)*(x2-x0) - (x1-x0)*(v2-v0);
     _a = -n0 / n2;
@@ -407,13 +530,14 @@ AnalyticalParticleAdsorptionLinear2D<T,S>::AnalyticalParticleAdsorptionLinear2D(
 template <typename T, typename S>
 bool AnalyticalParticleAdsorptionLinear2D<T,S>::operator()(T output[], const S input[])
 {
-  T dist = sqrt((input[0]-_center[0])*(input[0]-_center[0]) + (input[1]-_center[1])*(input[1]-_center[1]));
+  T dist = util::sqrt((input[0]-_center[0])*(input[0]-_center[0]) + (input[1]-_center[1])*(input[1]-_center[1]));
 
   if (dist > _radius) {
     output[0] = T();
     output[1] = T();
     return true;
-  } else {
+  }
+  else {
     output[0] = _maxValue*(T(1) - dist/_radius)*(_center[0]-input[0])/_radius;
     output[1] = _maxValue*(T(1) - dist/_radius)*(_center[1]-input[1])/_radius;
     return true;
@@ -421,6 +545,7 @@ bool AnalyticalParticleAdsorptionLinear2D<T,S>::operator()(T output[], const S i
 }
 
 
+//TODO: to be removed due to eccentricVelocityField
 template <typename T, typename S, typename DESCRIPTOR>
 ParticleU2D<T,S,DESCRIPTOR>::ParticleU2D(SmoothIndicatorF2D<T,T,true>& indicator, UnitConverter<T,DESCRIPTOR> const& converter)
   :AnalyticalF2D<T,S>(2), _indicator(indicator), _converter(converter)
@@ -431,9 +556,9 @@ ParticleU2D<T,S,DESCRIPTOR>::ParticleU2D(SmoothIndicatorF2D<T,T,true>& indicator
 template <typename T, typename S, typename DESCRIPTOR>
 bool ParticleU2D<T,S,DESCRIPTOR>::operator()(T output[], const S input[])
 {
-  //two dimensions: u = U + w x r = (Ux, Uy, 0) + (0,0,w) x (X,Y,0) = (Ux, Uy, 0) + (-w*Y, w*X, 0)
-  output[0] = _converter.getLatticeVelocity( _indicator.getVel()[0] + _indicator.getOmega() * (input[1] - _indicator.getPos()[1]) );
-  output[1] = _converter.getLatticeVelocity( _indicator.getVel()[1] - _indicator.getOmega() * (input[0] - _indicator.getPos()[0]) );
+  Vector<T,2> tmp = _indicator.getLocalVel( Vector<S,2>(input) );
+  output[0] = _converter.getLatticeVelocity(tmp[0]);
+  output[1] = _converter.getLatticeVelocity(tmp[1]);
 
   return true;
 }
@@ -457,7 +582,8 @@ AnalyticalLinear3D<T,S>::AnalyticalLinear3D(S x0, S y0, S z0, T v0, S x1,
         +( (z3-z0)*(x1-x0)-(x3-x0)*(z1-z0) ) * ( (y2-y0)*(x1-x0)-(x2-x0)*(y1-y0) );
   if ( util::nearZero(n) ) {
     std::cout << "Error function" << std::endl;
-  } else {
+  }
+  else {
     T w = ( (y1-y0)*(x3-x0)-(x1-x0)*(y3-y0) ) * ( (v2-v0)-(x2-x0)*(v1-v0) / (x1-x0) )
           /( (y2-y0)*(x1-x0)-(x2-x0)*(y1-y0) ) + (v3-v0) - (x3-x0)*(v1-v0) / (x1-x0);
     T zx = (y1-y0)*( (x2-x0)*(z1-z0)-(z2-z0)*(x1-x0) )
@@ -506,7 +632,7 @@ bool AnalyticalScaled3D<T,S>::operator()(T output[], const S x[])
 template <typename T, typename S, typename DESCRIPTOR>
 PLSsolution3D<T,S,DESCRIPTOR>::PLSsolution3D(RadiativeUnitConverter<T,DESCRIPTOR> const& converter)
   : AnalyticalF3D<T,S>(1),
-    _physSigmaEff(std::sqrt( converter.getPhysAbsorption() / converter.getPhysDiffusion() )),
+    _physSigmaEff(util::sqrt( converter.getPhysAbsorption() / converter.getPhysDiffusion() )),
     _physDiffusionCoefficient(converter.getPhysDiffusion())
 {
   this->getName() = "PLSsolution3D";
@@ -515,8 +641,8 @@ PLSsolution3D<T,S,DESCRIPTOR>::PLSsolution3D(RadiativeUnitConverter<T,DESCRIPTOR
 template <typename T, typename S, typename DESCRIPTOR>
 bool PLSsolution3D<T,S,DESCRIPTOR>::operator()(T output[1], const S x[3])
 {
-  double r = std::sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
-  output[0] = 1. / (4.0*M_PI*_physDiffusionCoefficient*r) *std::exp(-_physSigmaEff * r);
+  double r = util::sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
+  output[0] = 1. / (4.0*M_PI*_physDiffusionCoefficient*r) *util::exp(-_physSigmaEff * r);
   return true;
 }
 
@@ -524,7 +650,7 @@ bool PLSsolution3D<T,S,DESCRIPTOR>::operator()(T output[1], const S x[3])
 template <typename T, typename S, typename DESCRIPTOR>
 LightSourceCylindrical3D<T,S,DESCRIPTOR>::LightSourceCylindrical3D(RadiativeUnitConverter<T,DESCRIPTOR> const& converter, Vector<T,3> center)
   : AnalyticalF3D<T,S>(1),
-    _physSigmaEff(sqrt( converter.getPhysAbsorption() / converter.getPhysDiffusion() )),
+    _physSigmaEff(util::sqrt( converter.getPhysAbsorption() / converter.getPhysDiffusion() )),
     _physDiffusionCoefficient(converter.getPhysDiffusion()),
     _center(center)
 {
@@ -534,11 +660,11 @@ LightSourceCylindrical3D<T,S,DESCRIPTOR>::LightSourceCylindrical3D(RadiativeUnit
 template <typename T, typename S, typename DESCRIPTOR>
 bool LightSourceCylindrical3D<T,S,DESCRIPTOR>::operator()(T output[1], const S x[3])
 {
-  double r = sqrt( (x[0]-_center[0])*(x[0]-_center[0]) + (x[1]-_center[1])*(x[1]-_center[1]) );
+  double r = util::sqrt( (x[0]-_center[0])*(x[0]-_center[0]) + (x[1]-_center[1])*(x[1]-_center[1]) );
   if ( util::nearZero(r) ) {
     std::cout << "Warning: evaluation of \"LightSourceCylindrical3D\" functor close to singularity." << std::endl;
   }
-  output[0] = 1. / (4.0*M_PI*_physDiffusionCoefficient*r) *exp(-_physSigmaEff * r);
+  output[0] = 1. / (4.0*M_PI*_physDiffusionCoefficient*r) *util::exp(-_physSigmaEff * r);
   return true;
 }
 
@@ -556,7 +682,7 @@ bool Spotlight<T,S>::operator()(T output[1], const S x[3])
   Vector<T,3> w(x[0] -_position[0], x[1] -_position[1], x[2] -_position[2]);
   w = normalize(w);
   T cosPhi = w*_orientation;
-  output[0] = 1. / (norm(w)*norm(w)) * std::pow(std::max(0., cosPhi), _falloff);
+  output[0] = 1. / (norm(w)*norm(w)) * util::pow(util::max(0., cosPhi), _falloff);
   return true;
 }
 
@@ -571,7 +697,7 @@ GaussianHill2D<T,S>::GaussianHill2D(T sigma, Vector<T,2> x0, T c0)
 template <typename T, typename S>
 bool GaussianHill2D<T,S>::operator()(T output[1], const S x[2])
 {
-  output[0] =  _c0 * exp(- ((x[0]-_x0[0])*(x[0]-_x0[0]) + (x[1]-_x0[1])*(x[1]-_x0[1])) / (2*_sigma*_sigma) );
+  output[0] =  _c0 * util::exp(- ((x[0]-_x0[0])*(x[0]-_x0[0]) + (x[1]-_x0[1])*(x[1]-_x0[1])) / (2*_sigma*_sigma) );
   return true;
 }
 
@@ -586,11 +712,12 @@ GaussianHillTimeEvolution2D<T,S>::GaussianHillTimeEvolution2D(T sigma0, T D, T t
 template <typename T, typename S>
 bool GaussianHillTimeEvolution2D<T,S>::operator()(T output[1], const S x[2])
 {
-  output[0] = _sigma02 / (_sigma02+2*_D*_t) * _c0 * exp(- ((x[0]-_x0[0]-_u[0]*_t)*(x[0]-_x0[0]-_u[0]*_t) + (x[1]-_x0[1]-_u[1]*_t)*(x[1]-_x0[1]-_u[1]*_t)) / (2*(_sigma02+2*_D*_t) ));
+  output[0] = _sigma02 / (_sigma02+2*_D*_t) * _c0 * util::exp(- ((x[0]-_x0[0]-_u[0]*_t)*(x[0]-_x0[0]-_u[0]*_t) + (x[1]-_x0[1]-_u[1]*_t)*(x[1]-_x0[1]-_u[1]*_t)) / (2*(_sigma02+2*_D*_t) ));
   return true;
 }
 
 
+//TODO: to be removed due to eccentricVelocityField
 template <typename T, typename S, typename DESCRIPTOR>
 ParticleU3D<T,S,DESCRIPTOR>::ParticleU3D(SmoothIndicatorF3D<T,T,true>& indicator, UnitConverter<T,DESCRIPTOR> const& converter)
   :AnalyticalF3D<T,S>(3), _indicator(indicator), _converter(converter)
@@ -601,19 +728,16 @@ ParticleU3D<T,S,DESCRIPTOR>::ParticleU3D(SmoothIndicatorF3D<T,T,true>& indicator
 template <typename T, typename S, typename DESCRIPTOR>
 bool ParticleU3D<T,S,DESCRIPTOR>::operator()(T output[], const S input[])
 {
-  //three dimensions: u = U + w x r = (Ux, Uy, Uz) + (wx,wy,wz) x (X,Y,Z) = (Ux, Uy, Uz) + (wy*Z-wz*Y, wz*X-wx*Z, wx*Y-wy*X)
-  output[0] = _converter.getLatticeVelocity( _indicator.getVel()[0] +
-             ( _indicator.getOmega()[1]*(input[2] - _indicator.getPos()[2])
-             - _indicator.getOmega()[2]*(input[1] - _indicator.getPos()[1]) ) );
-  output[1] = _converter.getLatticeVelocity( _indicator.getVel()[1] +
-             ( _indicator.getOmega()[2]*(input[0] - _indicator.getPos()[0])
-             - _indicator.getOmega()[0]*(input[2] - _indicator.getPos()[2]) ) );
-  output[2] = _converter.getLatticeVelocity( _indicator.getVel()[2] +
-             ( _indicator.getOmega()[0]*(input[1] - _indicator.getPos()[1])
-             - _indicator.getOmega()[1]*(input[0] - _indicator.getPos()[0]) ) );
+  Vector<T,3> tmp = _indicator.getLocalVel( Vector<S,3>(input) );
+  output[0] = _converter.getLatticeVelocity(tmp[0]);
+  output[1] = _converter.getLatticeVelocity(tmp[1]);
+  output[2] = _converter.getLatticeVelocity(tmp[2]);
 
   return true;
 }
+
+
+
 
 } // end namespace olb
 

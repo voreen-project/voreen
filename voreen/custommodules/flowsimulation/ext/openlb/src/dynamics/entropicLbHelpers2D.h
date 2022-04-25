@@ -28,7 +28,7 @@
 #ifndef ENTROPIC_LB_HELPERS_2D_H
 #define ENTROPIC_LB_HELPERS_2D_H
 
-#include <cmath>
+#include "utilities/omath.h"
 
 namespace olb {
 

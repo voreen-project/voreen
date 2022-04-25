@@ -32,14 +32,14 @@
 
 #include <algorithm>
 #include "functors/lattice/reductionF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
 
 namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeFfromAnalyticalF3D<T, DESCRIPTOR>::SuperLatticeFfromAnalyticalF3D(
   FunctorPtr<AnalyticalF3D<T,T>>&& f,
-  SuperLattice3D<T, DESCRIPTOR>&   sLattice)
+  SuperLattice<T, DESCRIPTOR>&   sLattice)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, f->getTargetDim()),
     _f(std::move(f))
 {
@@ -52,7 +52,7 @@ SuperLatticeFfromAnalyticalF3D<T, DESCRIPTOR>::SuperLatticeFfromAnalyticalF3D(
     this->_blockF.emplace_back(
       new BlockLatticeFfromAnalyticalF3D<T,DESCRIPTOR>(
         *_f,
-        sLattice.getExtendedBlockLattice(iC),
+        sLattice.getBlock(iC),
         cuboid.get(load.glob(iC)))
     );
   }
@@ -71,7 +71,7 @@ bool SuperLatticeFfromAnalyticalF3D<T, DESCRIPTOR>::operator()(
 template<typename T, typename DESCRIPTOR>
 BlockLatticeFfromAnalyticalF3D<T, DESCRIPTOR>::BlockLatticeFfromAnalyticalF3D(
   AnalyticalF3D<T, T>&                    f,
-  BlockLatticeStructure3D<T, DESCRIPTOR>& lattice,
+  BlockLattice<T, DESCRIPTOR>& lattice,
   Cuboid3D<T>&                            cuboid)
   : BlockLatticeF3D<T, DESCRIPTOR>(lattice, f.getTargetDim()),
     _f(f),
@@ -95,12 +95,12 @@ bool BlockLatticeFfromAnalyticalF3D<T, DESCRIPTOR>::operator()(
 template<typename T, typename DESCRIPTOR>
 SmoothBlockIndicator3D<T, DESCRIPTOR>::SmoothBlockIndicator3D(
   IndicatorF3D<T>& f, T h, T eps, T sigma)
-  : BlockDataF3D<T, T>((int)((f.getMax()[0] - f.getMin()[0]) / h + ( round(eps*0.5)*2+2 )),
-                       (int)((f.getMax()[1] - f.getMin()[1]) / h + ( round(eps*0.5)*2+2 )),
-                       (int)((f.getMax()[2] - f.getMin()[2]) / h + ( round(eps*0.5)*2+2 ))),
+  : BlockDataF3D<T, T>((int)((f.getMax()[0] - f.getMin()[0]) / h + ( util::round(eps*0.5)*2+2 )),
+                       (int)((f.getMax()[1] - f.getMin()[1]) / h + ( util::round(eps*0.5)*2+2 )),
+                       (int)((f.getMax()[2] - f.getMin()[2]) / h + ( util::round(eps*0.5)*2+2 ))),
     _h(h),
     _sigma(sigma),
-    _eps(round(eps*0.5)*2),
+    _eps(util::round(eps*0.5)*2),
     _wa(_eps+1),
     _f(f)
 {
@@ -108,14 +108,14 @@ SmoothBlockIndicator3D<T, DESCRIPTOR>::SmoothBlockIndicator3D(
   T value, dx, dy, dz;
   T weights[this->_wa][this->_wa][this->_wa];
   T sum = 0;
-  const int iStart = floor(this->_wa*0.5);
-  const int iEnd = ceil(this->_wa*0.5);
+  const int iStart = util::floor(this->_wa*0.5);
+  const int iEnd = util::ceil(this->_wa*0.5);
 
   // calculate weights: they are constants, but calculation here is less error-prone than hardcoding these parameters
   for (int x = -iStart; x < iEnd; ++x) {
     for (int y = -iStart; y < iEnd; ++y) {
       for (int z = -iStart; z < iEnd; ++z) {
-        weights[x+iStart][y+iStart][z+iStart] = exp(-(x*x+y*y+z*z)/(2*this->_sigma*this->_sigma)) / (pow(this->_sigma,3)*sqrt(pow(2,3)*pow(M_PI,3)));
+        weights[x+iStart][y+iStart][z+iStart] = util::exp(-(x*x+y*y+z*z)/(2*this->_sigma*this->_sigma)) / (util::pow(this->_sigma,3)*util::sqrt(util::pow(2,3)*util::pow(M_PI,3)));
         // important because sum of all weigths only equals 1 for this->_wa -> infinity
         sum += weights[x+iStart][y+iStart][z+iStart];
       }
@@ -169,7 +169,7 @@ SmoothBlockIndicator3D<T, DESCRIPTOR>::SmoothBlockIndicator3D(
          * Round to 3 decimals
          * See above sum != 1.0, that's the reason for devision, otherwise porosity will never reach 0
          */
-        this->getBlockData().get(iX,iY,iZ,0) = value*invSum;//nearbyint(1000*value/sum)/1000.0;
+        this->getBlockData().get({iX,iY,iZ},0) = value*invSum;//nearbyint(1000*value/sum)/1000.0;
       }
     }
   }
@@ -180,7 +180,7 @@ bool SmoothBlockIndicator3D<T, DESCRIPTOR>::operator()(
   T output[], const int input[])
 {
   T physR[3] = {};
-  _superGeometry.getPhysR(physR,input[0],input[1],input[2] );
+  _superGeometry.getPhysR(physR,{input[0],input[1],input[2]} );
   _f(output,physR);
   return true;
 }*/
@@ -189,7 +189,7 @@ bool SmoothBlockIndicator3D<T, DESCRIPTOR>::operator()(
 template<typename T, typename DESCRIPTOR>
 SuperLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>::
 SuperLatticeInterpPhysVelocity3Degree3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR>& conv, int range)
+  SuperLattice<T, DESCRIPTOR>& sLattice, UnitConverter<T,DESCRIPTOR>& conv, int range)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 3)
 {
   this->getName() = "Interp3DegreeVelocity";
@@ -198,11 +198,10 @@ SuperLatticeInterpPhysVelocity3Degree3D(
   for (int iC = 0; iC < maxC; iC++) {
     BlockLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>* foo =
       new BlockLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>(
-      sLattice.getExtendedBlockLattice(iC),
+      sLattice.getBlock(iC),
       conv,
       &sLattice.getCuboidGeometry().get(this->_sLattice.getLoadBalancer().
                                         glob(iC)),
-      sLattice.getOverlap(),
       range);
     _bLattices.push_back(foo);
   }
@@ -219,12 +218,11 @@ void SuperLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>::operator()(
 template<typename T, typename DESCRIPTOR>
 BlockLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>::
 BlockLatticeInterpPhysVelocity3Degree3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, UnitConverter<T,DESCRIPTOR>& conv,
-  Cuboid3D<T>* c, int overlap, int range)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, UnitConverter<T,DESCRIPTOR>& conv,
+  Cuboid3D<T>* c, int range)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 3),
     _conv(conv),
     _cuboid(c),
-    _overlap(overlap),
     _range(range)
 {
   this->getName() = "BlockLatticeInterpVelocity3Degree3D";
@@ -237,7 +235,6 @@ BlockLatticeInterpPhysVelocity3Degree3D(
   BlockLatticeF3D<T, DESCRIPTOR>(rhs._blockLattice, 3),
   _conv(rhs._conv),
   _cuboid(rhs._cuboid),
-  _overlap(rhs._overlap),
   _range(rhs._range)
 {
 }
@@ -251,10 +248,6 @@ void BlockLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>::operator()(
   T latPhysPos[3] = {T()};
   _cuboid->getFloorLatticeR(latIntPos, &input[0]);
   _cuboid->getPhysR(latPhysPos, latIntPos);
-
-  latIntPos[0] += _overlap;
-  latIntPos[1] += _overlap;
-  latIntPos[2] += _overlap;
 
   volume=T(1);
   for (int i = -_range; i <= _range+1; ++i) {
@@ -302,7 +295,7 @@ void BlockLatticeInterpPhysVelocity3Degree3D<T, DESCRIPTOR>::operator()(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::SuperLatticeInterpDensity3Degree3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, SuperGeometry3D<T>& sGeometry,
+  SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,3>& sGeometry,
   UnitConverter<T,DESCRIPTOR>& conv, int range) :
   SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 3)
 {
@@ -314,11 +307,11 @@ SuperLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::SuperLatticeInterpDensity3Deg
 
     BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>* foo =
       new BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>(
-      sLattice.getExtendedBlockLattice(lociC),
-      sGeometry.getExtendedBlockGeometry(lociC),
+      sLattice.getBlock(lociC),
+      sGeometry.getBlockGeometry(lociC),
       conv,
       &sLattice.getCuboidGeometry().get(globiC),
-      sLattice.getOverlap(), range);
+      range);
     _bLattices.push_back(foo);
 
     if (sLattice.getOverlap() <= range + 1)
@@ -350,11 +343,11 @@ void SuperLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::operator()(T output[],
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::BlockLatticeInterpDensity3Degree3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-  BlockGeometryStructure3D<T>& blockGeometry, UnitConverter<T,DESCRIPTOR>& conv,
-  Cuboid3D<T>* c, int overlap, int range) :
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
+  BlockGeometry<T,3>& blockGeometry, UnitConverter<T,DESCRIPTOR>& conv,
+  Cuboid3D<T>* c, int range) :
   BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 3), _blockGeometry(blockGeometry),
-  _conv(conv), _cuboid(c), _overlap(overlap), _range(range)
+  _conv(conv), _cuboid(c), _range(range)
 {
   this->getName() = "BlockLatticeInterpDensity3Degree3D";
 }
@@ -364,7 +357,7 @@ BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::BlockLatticeInterpDensity3Deg
   const BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>& rhs) :
   BlockLatticeF3D<T, DESCRIPTOR>(rhs._blockLattice, 3),
   _blockGeometry(rhs._blockGeometry),_conv(rhs._conv), _cuboid(
-    rhs._cuboid), _overlap(rhs._overlap), _range(rhs._range)
+    rhs._cuboid), _range(rhs._range)
 {
 }
 
@@ -385,11 +378,6 @@ void BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::operator()(
   // latPhysPos is global physical position on geometry
   _cuboid->getPhysR(latPhysPos, latIntPos);
 
-  // point on cuboid equals cell on blocklattice (extended) shifted by _overlap
-  latIntPos[0] += _overlap;
-  latIntPos[1] += _overlap;
-  latIntPos[2] += _overlap;
-
   for (unsigned iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
     output[iPop] = T(0);
     for (int i = -_range; i <= _range + 1; ++i) {
@@ -397,8 +385,8 @@ void BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::operator()(
         for (int k = -_range; k <= _range + 1; ++k) {
           f_iPop = 0.;
           // just if material of cell != 1 there may be information of fluid density
-          if (_blockGeometry.getMaterial(latIntPos[0] + i, latIntPos[1] + j,
-                                         latIntPos[2] + k) != 0) {
+          if (_blockGeometry.getMaterial({latIntPos[0] + i, latIntPos[1] + j,
+            latIntPos[2] + k}) != 0) {
             // because of communication it is possible to get density information
             // from neighboring cuboid
             f_iPop = this->_blockLattice.get(latIntPos[0] + i, latIntPos[1] + j,
@@ -435,8 +423,8 @@ void BlockLatticeInterpDensity3Degree3D<T, DESCRIPTOR>::operator()(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeSmoothDiracDelta3D<T, DESCRIPTOR>::SuperLatticeSmoothDiracDelta3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice,
-  UnitConverter<T,DESCRIPTOR>& conv, SuperGeometry3D<T>& sGeometry) :
+  SuperLattice<T, DESCRIPTOR>& sLattice,
+  UnitConverter<T,DESCRIPTOR>& conv, SuperGeometry<T,3>& sGeometry) :
   SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 3)
 {
   this->getName() = "SuperLatticeSmoothDiracDelta3D";
@@ -447,7 +435,7 @@ SuperLatticeSmoothDiracDelta3D<T, DESCRIPTOR>::SuperLatticeSmoothDiracDelta3D(
 
     BlockLatticeSmoothDiracDelta3D<T, DESCRIPTOR>* foo =
       new BlockLatticeSmoothDiracDelta3D<T, DESCRIPTOR>(
-      sLattice.getExtendedBlockLattice(lociC),
+      sLattice.getBlock(lociC),
       conv, &sLattice.getCuboidGeometry().get(globiC)
     );
     _bLattices.push_back(foo);
@@ -475,7 +463,7 @@ void SuperLatticeSmoothDiracDelta3D<T, DESCRIPTOR>::operator()(T delta[4][4][4],
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeSmoothDiracDelta3D<T, DESCRIPTOR>::BlockLatticeSmoothDiracDelta3D(
-  BlockLattice3D<T, DESCRIPTOR>& blockLattice, UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* cuboid)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, UnitConverter<T,DESCRIPTOR>& conv, Cuboid3D<T>* cuboid)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 3), _conv(conv), _cuboid(cuboid)
 {
   this->getName() = "BlockLatticeSmoothDiracDelta3D";
@@ -517,9 +505,9 @@ void BlockLatticeSmoothDiracDelta3D<T, DESCRIPTOR>::operator()(
             / physLatticeL;
 
         // the for loops already define that a, b, c are smaller than 2
-        delta[i+range][j+range][k+range] *= 1. / 4 * (1 + cos(M_PI * a / 2.));
-        delta[i+range][j+range][k+range] *= 1. / 4 * (1 + cos(M_PI * b / 2.));
-        delta[i+range][j+range][k+range] *= 1. / 4 * (1 + cos(M_PI * c / 2.));
+        delta[i+range][j+range][k+range] *= 1. / 4 * (1 + util::cos(M_PI * a / 2.));
+        delta[i+range][j+range][k+range] *= 1. / 4 * (1 + util::cos(M_PI * b / 2.));
+        delta[i+range][j+range][k+range] *= 1. / 4 * (1 + util::cos(M_PI * c / 2.));
 
         counter += delta[i+range][j+range][k+range];
       }

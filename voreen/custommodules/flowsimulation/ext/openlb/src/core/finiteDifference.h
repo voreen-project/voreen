@@ -30,14 +30,14 @@ namespace fd {
 
 /// Second-order central gradient (u_p1 = u(x+1))
 template<typename T>
-T centralGradient(T u_p1, T u_m1)
+T centralGradient(T u_p1, T u_m1) any_platform
 {
   return (u_p1 - u_m1) / (T)2;
 }
 
 /// Second-order asymmetric gradient (u_1 = u(x+1))
 template<typename T>
-T boundaryGradient(T u_0, T u_1, T u_2)
+T boundaryGradient(T u_0, T u_1, T u_2) any_platform
 {
   return (-(T)3*u_0 + (T)4*u_1 - (T)1*u_2) / (T)2;
 }

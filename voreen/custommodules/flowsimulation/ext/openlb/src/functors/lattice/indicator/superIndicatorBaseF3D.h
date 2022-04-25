@@ -25,16 +25,16 @@
 #define SUPER_INDICATOR_BASE_F_3D_H
 
 #include "functors/genericF.h"
-#include "core/superData3D.h"
+#include "core/superData.h"
 #include "functors/lattice/superBaseF3D.h"
-#include "communication/superStructure3D.h"
+#include "communication/superStructure.h"
 #include "blockIndicatorBaseF3D.h"
 
 namespace olb {
 
 
 template<typename T, typename W> class SuperF3D;
-template<typename T> class SuperGeometry3D;
+template<typename T, unsigned D> class SuperGeometry;
 template<typename T> class SuperIndicatorIdentity3D;
 
 
@@ -48,15 +48,14 @@ template<typename T> class SuperIndicatorIdentity3D;
 template <typename T>
 class SuperIndicatorF3D : public SuperF3D<T,bool> {
 protected:
-  SuperGeometry3D<T>& _superGeometry;
+  SuperGeometry<T,3>& _superGeometry;
+  std::unique_ptr<SuperData<3,T,bool>> _cachedData;
 
-  std::unique_ptr<SuperData3D<T,bool>> _cachedData;
-  std::vector<std::unique_ptr<BlockIndicatorF3D<T>>> _extendedBlockF;
 public:
   using SuperF3D<T,bool>::operator();
   using identity_functor_type = SuperIndicatorIdentity3D<T>;
 
-  SuperIndicatorF3D(SuperGeometry3D<T>& geometry);
+  SuperIndicatorF3D(SuperGeometry<T,3>& geometry);
   /**
    * Get block indicator
    *
@@ -64,17 +63,11 @@ public:
    **/
   BlockIndicatorF3D<T>& getBlockIndicatorF(int iCloc);
   /**
-   * Get extended block indicator
-   *
-   * \returns _extendedBlockF[iCloc] cast as BlockIndicatorF3D<T>&
-   **/
-  BlockIndicatorF3D<T>& getExtendedBlockIndicatorF(int iCloc);
-  /**
    * Get underlying super geometry
    *
    * \returns _superGeometry
    **/
-  SuperGeometry3D<T>& getSuperGeometry();
+  SuperGeometry<T,3>& getSuperGeometry();
   /**
    * Indicator specific function operator overload
    *

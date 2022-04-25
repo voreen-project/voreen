@@ -25,15 +25,14 @@
 #define INDICATOR_F_3D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <cassert>
 #include <sstream>
 
 #include "indicatorF3D.h"
-#include "indicCalc3D.h"
+#include "indicComb3D.h"
 #include "utilities/vectorHelpers.h"
 
-using namespace std;
 
 namespace olb {
 
@@ -55,6 +54,15 @@ bool IndicatorTranslate3D<S>::operator() (bool output[], const S input[] )
   _indicator.operator()(output, inputTranslated);
   return output[0];
 }
+
+template <typename S>
+S IndicatorTranslate3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  Vector<S,3> translate = sdf::translate(input, {_translate[0], _translate[1], _translate[2]});
+  return _indicator.signedDistance(translate);
+}
+
+
 
 template <typename S>
 IndicatorCircle3D<S>::IndicatorCircle3D(Vector<S,3> center, Vector<S,3> normal, S radius)
@@ -101,14 +109,14 @@ Vector<S,3> const& IndicatorCircle3D<S>::getNormal() const
 template <typename S>
 S IndicatorCircle3D<S>::getRadius() const
 {
-  return sqrt(_radius2);
+  return util::sqrt(_radius2);
 }
 
 
 
 template <typename S>
 IndicatorSphere3D<S>::IndicatorSphere3D(Vector<S,3> center, S radius)
-  :  _center(center), _radius2(radius*radius)
+  :  _center(center), _radius(radius), _radius2(_radius*_radius)
 {
   this->_myMin = _center - radius;
   this->_myMax = _center + radius;
@@ -120,26 +128,27 @@ IndicatorSphere3D<S>::IndicatorSphere3D(const IndicatorSphere3D& sphere)
   this->_myMin = sphere._myMin;
   this->_myMax = sphere._myMax;
   _center = sphere._center;
+  _radius = sphere._radius;
   _radius2 = sphere._radius2;
 }
 
-// returns true if x is inside the sphere
 template <typename S>
-bool IndicatorSphere3D<S>::operator()(bool output[], const S input[])
+Vector<S,3> const& IndicatorSphere3D<S>::getCenter() const
 {
-  output[0] = (  (_center[0] - input[0]) * (_center[0]-input[0])
-                 +(_center[1] - input[1]) * (_center[1]-input[1])
-                 +(_center[2] - input[2]) * (_center[2]-input[2]) <= _radius2 );
-  return true;
+  return _center;
 }
 
 template <typename S>
-bool IndicatorSphere3D<S>::distance(S& distance, const Vector<S,3>& origin)
+S const IndicatorSphere3D<S>::getRadius() const
 {
-  distance = sqrt(  (_center[0] - origin[0]) * (_center[0]-origin[0])
-                    +(_center[1] - origin[1]) * (_center[1]-origin[1])
-                    +(_center[2] - origin[2]) * (_center[2]-origin[2]) ) - sqrt(_radius2);
-  return true;
+  return _radius;
+}
+
+template <typename S>
+S IndicatorSphere3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  Vector<S,3> p = input - _center;
+  return sdf::sphere(p, _radius);
 }
 
 template <typename S>
@@ -155,7 +164,7 @@ bool IndicatorSphere3D<S>::distance(S& distance, const Vector<S,3>& origin,
     return true;
   }
   // norm of direction
-  a = sqrt(a);
+  a = util::sqrt(a);
 
   S b = 2.*((origin[0] - _center[0])*direction[0] +
             (origin[1] - _center[1])*direction[1] +
@@ -170,8 +179,8 @@ bool IndicatorSphere3D<S>::distance(S& distance, const Vector<S,3>& origin,
     return false;
   }
 
-  S x1 = (- b + sqrt(d)) *0.5;
-  S x2 = (- b - sqrt(d)) *0.5;
+  S x1 = (- b + util::sqrt(d)) *0.5;
+  S x2 = (- b - util::sqrt(d)) *0.5;
 
   // case if origin is inside the sphere
   if ((x1<0.) || (x2<0.)) {
@@ -184,9 +193,9 @@ bool IndicatorSphere3D<S>::distance(S& distance, const Vector<S,3>& origin,
       return true;
     }
   }
-  // case if origin is ouside the sphere
+  // case if origin is outside the sphere
   else {
-    distance = min(x1,x2);
+    distance = util::min(x1,x2);
     return true;
   }
 
@@ -222,6 +231,17 @@ bool IndicatorLayer3D<S>::operator()(bool output[], const S input[])
     }
   }
   return true;
+}
+
+template <typename S>
+S IndicatorLayer3D<S>::signedDistance( const Vector<S,3>& input )
+
+{
+
+// Rounding: Creates a Layer with a constant thickness --> edges are rounded
+  return sdf::rounding(_indicatorF.signedDistance(input), _layerSize);
+
+
 }
 
 template <typename S>
@@ -264,7 +284,10 @@ bool IndicatorInternal3D<S>::operator()(bool output[], const S input[])
 template <typename S>
 IndicatorCylinder3D<S>::IndicatorCylinder3D(Vector<S,3> center1,
     Vector<S,3> center2, S radius)
-  :  _center1(center1), _center2(center2), _radius2(radius*radius)
+  :  _center1(center1), _center2(center2),
+     _ba(_center2 - _center1),
+     _baba(_ba[0]*_ba[0] + _ba[1]*_ba[1] + _ba[2]*_ba[2]),
+     _radius2(radius*radius), _length(util::sqrt(_baba))
 {
   // cylinder defined by the centers of the two extremities and the radius
   // _I,_J,_K is the new base where _K is the axe of the cylinder0
@@ -275,28 +298,28 @@ IndicatorCylinder3D<S>::IndicatorCylinder3D(Vector<S,3> center1,
 template <typename S>
 IndicatorCylinder3D<S>::IndicatorCylinder3D(Vector<S,3> center1,
     Vector<S,3> normal, S radius, S eps)
-  :  _center1(center1), _center2(center1), _radius2(radius*radius)
+  :  _center1(center1-.5*eps*normalize(normal)),
+     _center2(_center1 + eps*normalize(normal)),
+     _ba(_center2 - _center1),
+     _baba(_ba[0]*_ba[0] + _ba[1]*_ba[1] + _ba[2]*_ba[2]),
+     _radius2(radius*radius), _length(util::sqrt(_baba))
 {
-  normal = normalize(normal);
   // cylinder defined by the centers of the two extremities and the radius
   // _I,_J,_K is the new base where _K is the axe of the cylinder0
-  _center1 -= .5*eps*normal;
-  _center2 = _center1 + eps*normal;
-
   init();
 }
 
 /// Indicator function for a cylinder
 template <typename S>
 IndicatorCylinder3D<S>::IndicatorCylinder3D(IndicatorCircle3D<S> const& circleF, S eps)
-  :  _center1(circleF.getCenter()), _center2(circleF.getCenter()),
-     _radius2(circleF.getRadius()*circleF.getRadius())
+  :  _center1(circleF.getCenter() - .5*eps*circleF.getNormal()),
+     _center2(_center1 + eps*circleF.getNormal()),
+     _ba(_center2 - _center1),
+     _baba(_ba[0]*_ba[0] + _ba[1]*_ba[1] + _ba[2]*_ba[2]),
+     _radius2(circleF.getRadius()*circleF.getRadius()), _length(util::sqrt(_baba))
 {
   // cylinder defined by the centers of the two extremities and the radius
   // _I,_J,_K is the new base where _K is the axe of the cylinder0
-  _center1 -= .5*eps*circleF.getNormal();
-  _center2 = _center1 + eps*circleF.getNormal();
-
   init();
 }
 
@@ -304,9 +327,11 @@ IndicatorCylinder3D<S>::IndicatorCylinder3D(IndicatorCircle3D<S> const& circleF,
 template <typename S>
 bool IndicatorCylinder3D<S>::operator()(bool output[], const S input[])
 {
-  S X = _I[0]*(input[0]-_center1[0]) + _I[1]*(input[1]-_center1[1]) + _I[2]*(input[2]-_center1[2]);
-  S Y = _J[0]*(input[0]-_center1[0]) + _J[1]*(input[1]-_center1[1]) + _J[2]*(input[2]-_center1[2]);
-  S Z = _K[0]*(input[0]-_center1[0]) + _K[1]*(input[1]-_center1[1]) + _K[2]*(input[2]-_center1[2]);
+  Vector<S,3> pa(Vector<S,3>(input) - _center1);
+
+  S X = _I[0]*pa[0] + _I[1]*pa[1] + _I[2]*pa[2];
+  S Y = _J[0]*pa[0] + _J[1]*pa[1] + _J[2]*pa[2];
+  S Z = _K[0]*pa[0] + _K[1]*pa[1] + _K[2]*pa[2];
 
   // X^2 + Y^2 <= _radius2
   output[0] = ( Z <= _length && Z >= 0 && X*X + Y*Y <= _radius2 );
@@ -316,14 +341,7 @@ bool IndicatorCylinder3D<S>::operator()(bool output[], const S input[])
 template <typename S>
 void IndicatorCylinder3D<S>::init()
 {
-  _length = sqrt( (_center2[0]-_center1[0]) * (_center2[0]-_center1[0])
-                  +(_center2[1]-_center1[1]) * (_center2[1]-_center1[1])
-                  +(_center2[2]-_center1[2]) * (_center2[2]-_center1[2]) );
-
-  // _K = centre2 - centre1 (normalized)
-  _K = {(_center2[0]-_center1[0]) / _length, (_center2[1]-_center1[1]) / _length,
-        (_center2[2]-_center1[2]) / _length
-       };
+  _K = _ba / _length;
 
   // _I and _J form an orthonormal base with _K
   if ( util::approxEqual(_center2[1],_center1[1]) && util::approxEqual(_center2[0],_center1[0]) ) {
@@ -337,23 +355,21 @@ void IndicatorCylinder3D<S>::init()
     _J = {0,1,0};
   }
   else {
-    S normi = sqrt (_K[1]*_K[1]+_K[0]*_K[0]);
+    S normi = util::sqrt (_K[1]*_K[1]+_K[0]*_K[0]);
     _I = {-_K[1]/normi, _K[0]/normi,0};
     _J = {_K[1]*_I[2] - _K[2]*_I[1], _K[2]*_I[0] - _K[0]*_I[2], _K[0]*_I[1] - _K[1]*_I[0]};
   }
 
-  double r = sqrt(_radius2);
-  S maxx, maxy, maxz;
-  S minx, miny, minz;
+  double r = util::sqrt(_radius2);
 
-  maxx= _center1[0] + sqrt(_I[0]*_I[0]+_J[0]*_J[0])*r + max(_K[0]*_length, 0.);
-  minx= _center1[0] - sqrt(_I[0]*_I[0]+_J[0]*_J[0])*r + min(_K[0]*_length, 0.);
+  S maxx= _center1[0] + util::sqrt(_I[0]*_I[0]+_J[0]*_J[0])*r + util::max(_K[0]*_length, 0.);
+  S minx= _center1[0] - util::sqrt(_I[0]*_I[0]+_J[0]*_J[0])*r + util::min(_K[0]*_length, 0.);
 
-  maxy= _center1[1] + sqrt(_I[1]*_I[1]+_J[1]*_J[1])*r + max(_K[1]*_length, 0.);
-  miny= _center1[1] - sqrt(_I[1]*_I[1]+_J[1]*_J[1])*r + min(_K[1]*_length, 0.);
+  S maxy= _center1[1] + util::sqrt(_I[1]*_I[1]+_J[1]*_J[1])*r + util::max(_K[1]*_length, 0.);
+  S miny= _center1[1] - util::sqrt(_I[1]*_I[1]+_J[1]*_J[1])*r + util::min(_K[1]*_length, 0.);
 
-  maxz= _center1[2] + sqrt(_I[2]*_I[2]+_J[2]*_J[2])*r + max(_K[2]*_length, 0.);
-  minz= _center1[2] - sqrt(_I[2]*_I[2]+_J[2]*_J[2])*r + min(_K[2]*_length, 0.);
+  S maxz= _center1[2] + util::sqrt(_I[2]*_I[2]+_J[2]*_J[2])*r + util::max(_K[2]*_length, 0.);
+  S minz= _center1[2] - util::sqrt(_I[2]*_I[2]+_J[2]*_J[2])*r + util::min(_K[2]*_length, 0.);
 
   this->_myMin = {minx, miny, minz};
   this->_myMax = {maxx, maxy, maxz};
@@ -376,8 +392,18 @@ Vector<S,3> const& IndicatorCylinder3D<S>::getCenter2() const
 template <typename S>
 S IndicatorCylinder3D<S>::getRadius() const
 {
-  return sqrt(_radius2);
+  return util::sqrt(_radius2);
 }
+
+template <typename S>
+S IndicatorCylinder3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  return sdf::cylinder(input, _center1, _ba, _baba, util::sqrt(_radius2));
+}
+
+
+
+//TODO: Rename to IndicatorCappedCone3D and create a real IndicatorCone3D ??
 
 // cone defined by the centers of the two extremities and the radiuses of the two extremities
 // the 2nd radius is optional: if it is not defined, the 2nd center is the vertex of the cone
@@ -385,17 +411,12 @@ template <typename S>
 IndicatorCone3D<S>::IndicatorCone3D(Vector<S,3> center1, Vector<S,3> center2,
                                     S radius1, S radius2)
   :  _center1(center1), _center2(center2),
-     _radius1(radius1), _radius2(radius2)
+     _ba(center2 - center1), _baba(_ba*_ba),
+     _radius1(radius1), _radius2(radius2),
+     _length(util::sqrt((_center2 - _center1)*(_center2 - _center1)))
 {
   // _I,_J,_K is the new base where _K is the axe of the cone
-  // _K = centre2 - centre1 (normalized)
-  _length = sqrt( (_center2[0]-_center1[0]) * (_center2[0]-_center1[0])
-                  +(_center2[1]-_center1[1]) * (_center2[1]-_center1[1])
-                  +(_center2[2]-_center1[2]) * (_center2[2]-_center1[2]) );
-  // _K = centre2 - centre1 (normalized)
-  _K = {(_center2[0]-_center1[0]) / _length, (_center2[1]-_center1[1]) / _length,
-        (_center2[2]-_center1[2]) / _length
-       };
+  _K = (_center2 - _center1)/_length;
 
   // _I and _J form an orthonormal base with _K
   if ( util::approxEqual(_center2[1],_center1[1]) && util::approxEqual(_center2[0],_center1[0]) ) {
@@ -409,28 +430,25 @@ IndicatorCone3D<S>::IndicatorCone3D(Vector<S,3> center1, Vector<S,3> center2,
     _J = {0,1,0};
   }
   else {
-    S normi = sqrt(_K[1]*_K[1] + _K[0]*_K[0]);
+    S normi = util::sqrt(_K[1]*_K[1] + _K[0]*_K[0]);
     _I = {-_K[1]/normi, _K[0]/normi,0};
     _J = {_K[1]*_I[2] - _K[2]*_I[1], _K[2]*_I[0] - _K[0]*_I[2], _K[0]*_I[1] - _K[1]*_I[0]};
   }
 
-  S maxx, maxy, maxz;
-  S minx, miny, minz;
+  S maxx= _center1[0] + util::max( util::sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius1,
+                                   util::sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius2 + _K[0]*_length);
+  S minx= _center1[0] + util::min(-util::sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius1,
+                                  -util::sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius2 + _K[0]*_length);
 
-  maxx= _center1[0] + max( sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius1,
-                           sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius2 + _K[0]*_length);
-  minx= _center1[0] + min(-sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius1,
-                          -sqrt(_I[0]*_I[0]+_J[0]*_J[0])*_radius2 + _K[0]*_length);
+  S maxy= _center1[1] + util::max( util::sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius1,
+                                   util::sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius2 + _K[1]*_length);
+  S miny= _center1[1] + util::min(-util::sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius1,
+                                  -util::sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius2 + _K[1]*_length);
 
-  maxy= _center1[1] + max( sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius1,
-                           sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius2 + _K[1]*_length);
-  miny= _center1[1] + min(-sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius1,
-                          -sqrt(_I[1]*_I[1]+_J[1]*_J[1])*_radius2 + _K[1]*_length);
-
-  maxz= _center1[2] + max( sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius1,
-                           sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius2 + _K[2]*_length);
-  minz= _center1[2] + min(-sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius1,
-                          -sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius2 + _K[2]*_length);
+  S maxz= _center1[2] + util::max( util::sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius1,
+                                   util::sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius2 + _K[2]*_length);
+  S minz= _center1[2] + util::min(-util::sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius1,
+                                  -util::sqrt(_I[2]*_I[2]+_J[2]*_J[2])*_radius2 + _K[2]*_length);
 
   this->_myMin = {minx, miny, minz};
   this->_myMax = {maxx, maxy, maxz};
@@ -441,15 +459,151 @@ template <typename S>
 bool IndicatorCone3D<S>::operator()(bool output[], const S input[])
 {
   // radius: the radius of the cone at the point x
-  S X = _I[0]*(input[0]-_center1[0]) + _I[1]*(input[1]-_center1[1]) + _I[2]*(input[2]-_center1[2]);
-  S Y = _J[0]*(input[0]-_center1[0]) + _J[1]*(input[1]-_center1[1]) + _J[2]*(input[2]-_center1[2]);
-  S Z = _K[0]*(input[0]-_center1[0]) + _K[1]*(input[1]-_center1[1]) + _K[2]*(input[2]-_center1[2]);
+  Vector<S,3> pa(Vector<S,3>(input) - _center1);
+  S X = _I[0]*pa[0] + _I[1]*pa[1] + _I[2]*pa[2];
+  S Y = _J[0]*pa[0] + _J[1]*pa[1] + _J[2]*pa[2];
+  S Z = _K[0]*pa[0] + _K[1]*pa[1] + _K[2]*pa[2];
   S radius = _radius1 + (_radius2 - _radius1)*Z / _length;
 
   output[0] = ( Z <= _length && Z >= 0 && X*X + Y*Y <= radius*radius );
   return true;
 }
 
+template <typename S>
+Vector<S,3> const& IndicatorCone3D<S>::getCenter1() const
+{
+  return _center1;
+}
+
+template <typename S>
+Vector<S,3> const& IndicatorCone3D<S>::getCenter2() const
+{
+  return _center2;
+}
+
+template <typename S>
+S IndicatorCone3D<S>::getRadius1() const
+{
+  return _radius1;
+}
+
+template <typename S>
+S IndicatorCone3D<S>::getRadius2() const
+{
+  return _radius2;
+}
+
+template <typename S>
+S IndicatorCone3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  return sdf::cone(input, _center1, _ba, _baba, _radius1, _radius2);
+}
+
+template <typename S>
+IndicatorEllipsoid3D<S>::IndicatorEllipsoid3D(Vector<S,3> center, Vector<S,3> radius)
+  :  _center(center), _radius(radius)
+{
+#ifdef OLB_DEBUG
+  OstreamManager clout(std::cout, "IndicatorEllipsoid3D");
+  clout << "WARNING: The indicator doesn't provide an exact signed distance function." << std::endl;
+#endif
+
+  assert(_radius[0]>0 && _radius[1]>0 && _radius[2]>0);
+
+  this->_myMin = center - radius;
+  this->_myMax = center + radius;
+}
+
+template <typename S>
+Vector<S,3> const& IndicatorEllipsoid3D<S>::getRadius() const
+{
+  return _radius;
+}
+
+template <typename S>
+Vector<S,3> const& IndicatorEllipsoid3D<S>::getCenter() const
+{
+  return _center;
+}
+
+template <typename S>
+S IndicatorEllipsoid3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  Vector<S,3> p = input - _center;
+  return sdf::ellipsoid(p, _radius);
+}
+
+template <typename S>
+IndicatorSuperEllipsoid3D<S>::IndicatorSuperEllipsoid3D(Vector<S,3> center, S xHalfAxis, S yHalfAxis, S zHalfAxis, S exponent1, S exponent2)
+  : _center(center), _xHalfAxis(xHalfAxis), _yHalfAxis(yHalfAxis), _zHalfAxis(zHalfAxis), _exp1(exponent1), _exp2(exponent2)
+{
+  assert(_xHalfAxis>0 && _yHalfAxis>0 && _zHalfAxis>0);
+
+  S max_axis = util::max( xHalfAxis, util::max(yHalfAxis, zHalfAxis) );
+  this->_myMin = {
+    center[0] - util::sqrt(2.)*max_axis,
+    center[1] - util::sqrt(2.)*max_axis,
+    center[2] - util::sqrt(2.)*max_axis
+  };
+  this->_myMax = {
+    center[0] + util::sqrt(2.)*max_axis,
+    center[1] + util::sqrt(2.)*max_axis,
+    center[2] + util::sqrt(2.)*max_axis
+  };
+}
+
+template <typename S>
+Vector<S,3> const& IndicatorSuperEllipsoid3D<S>::getCenter() const
+{
+  return _center;
+}
+
+template <typename S>
+S IndicatorSuperEllipsoid3D<S>::getXHalfAxis() const
+{
+  return _xHalfAxis;
+}
+
+template <typename S>
+S IndicatorSuperEllipsoid3D<S>::getYHalfAxis() const
+{
+  return _yHalfAxis;
+}
+
+template <typename S>
+S IndicatorSuperEllipsoid3D<S>::getZHalfAxis() const
+{
+  return _zHalfAxis;
+}
+
+template <typename S>
+S IndicatorSuperEllipsoid3D<S>::getExponent1() const
+{
+  return _exp1;
+}
+
+template <typename S>
+S IndicatorSuperEllipsoid3D<S>::getExponent2() const
+{
+  return _exp2;
+}
+
+template <typename S>
+bool IndicatorSuperEllipsoid3D<S>::operator()(bool output[], const S input[])
+{
+  S a = util::pow ( util::abs( (input[0] - _center[0]) / _xHalfAxis ), _exp1 );
+  S b = util::pow ( util::abs( (input[1] - _center[1]) / _yHalfAxis ), _exp1 );
+  S c = util::pow ( util::abs( (input[2] - _center[2]) / _zHalfAxis ), _exp2 );
+  S ab = util::pow( a+b, _exp2/_exp1 );
+
+  if ( (ab+c) <= 1. ) {
+    output[0] = 1.;
+    return true;
+  }
+
+  output[0] = 0.;
+  return false;
+}
 
 
 // Warning : the cuboid is only defined parallel to the plans x=0, y=0 and z=0 !!!
@@ -470,19 +624,58 @@ IndicatorCuboid3D<S>::IndicatorCuboid3D(S xLength, S yLength, S zLength, Vector<
 {
   assert(_xLength>0 && _yLength>0 && _zLength>0);
 
-  this->_myMin = {_center[0] - _xLength/2., _center[1] - _yLength/2., _center[2] - _zLength/2.};
-  this->_myMax = {_center[0] + _xLength/2., _center[1] + _yLength/2., _center[2] + _zLength/2.};
+  this->_myMin = {_center[0] - S{0.5}*_xLength, _center[1] - S{0.5}*_yLength, _center[2] - S{0.5}*_zLength};
+  this->_myMax = {_center[0] + S{0.5}*_xLength, _center[1] + S{0.5}*_yLength, _center[2] + S{0.5}*_zLength};
 }
 
+template <typename S>
+Vector<S,3> const& IndicatorCuboid3D<S>::getCenter() const
+{
+  return _center;
+}
+
+template <typename S>
+S const IndicatorCuboid3D<S>::getxLength() const
+{
+  return _xLength;
+}
+
+template <typename S>
+S const IndicatorCuboid3D<S>::getyLength() const
+{
+  return _yLength;
+}
+
+template <typename S>
+S const IndicatorCuboid3D<S>::getzLength() const
+{
+  return _zLength;
+}
 
 template <typename S>
 bool IndicatorCuboid3D<S>::operator()(bool output[], const S input[])
 {
   // returns true if x is inside the cuboid
-  output[0] = ( (fabs(_center[0] - input[0]) < _xLength/2. || util::approxEqual(fabs(_center[0] - input[0]),_xLength/2.))
-                && (fabs(_center[1] - input[1]) < _yLength/2. || util::approxEqual(fabs(_center[1] - input[1]),_yLength/2.))
-                && (fabs(_center[2] - input[2]) < _zLength/2. || util::approxEqual(fabs(_center[2] - input[2]),_zLength/2.)) );
+  Vector<S,3> q = distanceXYZ(input);
+  output[0] = ( (q[0] < std::numeric_limits<S>::epsilon())
+                && (q[1] < std::numeric_limits<S>::epsilon())
+                && (q[2] < std::numeric_limits<S>::epsilon()) );
   return output[0];
+}
+
+template <typename S>
+Vector<S,3> IndicatorCuboid3D<S>::distanceXYZ( Vector<S,3> input )
+{
+  return  { S(util::abs(S(input[0] - _center[0])) - 0.5 * _xLength),
+            S(util::abs(S(input[1] - _center[1])) - 0.5 * _yLength),
+            S(util::abs(S(input[2] - _center[2])) - 0.5 * _zLength)
+          };
+}
+
+template <typename S>
+S IndicatorCuboid3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  return sdf::box(input - _center, Vector<S,3>(.5*_xLength, .5*_yLength, .5*_zLength));
 }
 
 
@@ -501,9 +694,8 @@ IndicatorCuboidRotate3D<S>::IndicatorCuboidRotate3D(S xLength, S yLength, S zLen
   assert(plane==0 || plane==1 || plane==2);
 }
 
-// do transformation to axis aligned cuboid, then call operator() of basic cuboid.
 template <typename S>
-bool IndicatorCuboidRotate3D<S>::operator()(bool output[], const S input[])
+void IndicatorCuboidRotate3D<S>::transformInput(const S input[3], S newInput[3])
 {
   //initialize for _plane == 2
   int i=0;
@@ -520,19 +712,33 @@ bool IndicatorCuboidRotate3D<S>::operator()(bool output[], const S input[])
   S x = input[i] - _centerRotation[i];
   S y = input[j] - _centerRotation[j];
   // rotation of _theta in rad
-  S xx = x*cos(_theta) - y*sin(_theta);
-  S yy = x*sin(_theta) + y*cos(_theta);
+  S xx = x*util::cos(_theta) - y*util::sin(_theta);
+  S yy = x*util::sin(_theta) + y*util::cos(_theta);
   // change back to standard coordinate system
   x = xx + _centerRotation[i];
   y = yy + _centerRotation[j];
-  S newInput[3];
   newInput[_plane] = input[_plane];
   newInput[i] = x;
   newInput[j] = y;
+}
+
+// do transformation to axis aligned cuboid, then call operator() of basic cuboid.
+template <typename S>
+bool IndicatorCuboidRotate3D<S>::operator()(bool output[], const S input[])
+{
+  S newInput[3];
+  transformInput(input, newInput);
   IndicatorCuboid3D<S>::operator()(output, newInput);
   return output[0];
 }
 
+template <typename S>
+S IndicatorCuboidRotate3D<S>::signedDistance( const Vector<S,3>& input )
+{
+  S newInput[3], tmp[3] = {input[0], input[1], input[2]};
+  transformInput(tmp, newInput);
+  return IndicatorCuboid3D<S>::signedDistance(Vector<S,3>(newInput));
+}
 
 
 ////// creator functions /////

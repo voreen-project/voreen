@@ -28,24 +28,19 @@
 
 namespace olb {
 
-////////// SuperLattice Domain  /////////////////////////////////////////
 
 ///Initialising the setLocalVelocityBoundary function on the superLattice domain
-template<typename T,typename DESCRIPTOR, class MixinDynamics>
-void setBounceBackVelocityBoundary(SuperGeometry3D<T>& superGeometry, int material, T omega, SuperLattice3D<T, DESCRIPTOR>& sLattice)
+template<typename T,typename DESCRIPTOR>
+void setBounceBackVelocityBoundary(SuperGeometry<T,3>& superGeometry, int material, T omega, SuperLattice<T, DESCRIPTOR>& sLattice)
 {
-  setBounceBackVelocityBoundary<T,DESCRIPTOR,MixinDynamics>(superGeometry.getMaterialIndicator(material),omega,sLattice);
+  setBounceBackVelocityBoundary<T,DESCRIPTOR>(superGeometry.getMaterialIndicator(material),omega,sLattice);
 }
-template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBounceBackVelocityBoundary(FunctorPtr<SuperIndicatorF3D<T>>&& indicator, T omega,SuperLattice3D<T, DESCRIPTOR>& sLattice)
+
+template<typename T, typename DESCRIPTOR>
+void setBounceBackVelocityBoundary(FunctorPtr<SuperIndicatorF3D<T>>&& indicator, T omega,SuperLattice<T, DESCRIPTOR>& sLattice)
 {
   OstreamManager clout(std::cout, "BounceBackVelocityBoundary");
-  /*  local boundaries: _overlap = 0;
-   *  interp boundaries: _overlap = 1;
-   *  bouzidi boundaries: _overlap = 1;
-   *  extField boundaries: _overlap = 1;
-   *  advectionDiffusion boundaries: _overlap = 1;
-   */
+  
   int _overlap = 1;
   bool includeOuterCells = false;
   if (indicator->getSuperGeometry().getOverlap() == 1) {
@@ -55,49 +50,31 @@ void setBounceBackVelocityBoundary(FunctorPtr<SuperIndicatorF3D<T>>&& indicator,
   // addPoints2CommBC(sLattice,std::forward<decltype(indicator)>(indicator), _overlap);
   clout << sLattice.getLoadBalancer().size() <<"sLattice.getLoadBalancer.size()" << std::endl;
   for (int iC = 0; iC < sLattice.getLoadBalancer().size(); ++iC) {
-    setBounceBackVelocityBoundary<T,DESCRIPTOR,MixinDynamics>(indicator->getExtendedBlockIndicatorF(iC),omega,includeOuterCells,sLattice.getExtendedBlockLattice(iC));
+    setBounceBackVelocityBoundary<T,DESCRIPTOR>(indicator->getBlockIndicatorF(iC),omega,includeOuterCells,sLattice.getBlock(iC));
   }
 }
 
-////////// BlockLattice Domain  /////////////////////////////////////////
 
 
-template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setBounceBackVelocityBoundary(BlockIndicatorF3D<T>& indicator, T omega, bool includeOuterCells,BlockLatticeStructure3D<T,DESCRIPTOR>& _block)
+template<typename T, typename DESCRIPTOR>
+void setBounceBackVelocityBoundary(BlockIndicatorF3D<T>& indicator, T omega, bool includeOuterCells,BlockLattice<T,DESCRIPTOR>& _block)
 {
-  auto& blockGeometryStructure = indicator.getBlockGeometryStructure();
+  auto& blockGeometryStructure = indicator.getBlockGeometry();
   const int margin = includeOuterCells ? 0 : 1;
-  /*
-   *x0,x1,y0,y1,z0,z1 Range of cells to be traversed
-   **/
-  int x0 = margin;
-  int y0 = margin;
-  int z0 = margin;
-  int x1 = blockGeometryStructure.getNx()-1 -margin;
-  int y1 = blockGeometryStructure.getNy()-1 -margin;
-  int z1 = blockGeometryStructure.getNz()-1 -margin;
   std::vector<int> discreteNormal(4,0);
   T default_rho = 1.0;
   T default_u[] = {0.0, 0.0, 0.0};
-  for (int iX = x0; iX <= x1; iX++) {
-    for (int iY = y0; iY <= y1; iY++) {
-      for (int iZ = z0; iZ <= z1; iZ++) {
-        Momenta<T,DESCRIPTOR>* momenta = nullptr;
-        Dynamics<T,DESCRIPTOR>* dynamics = nullptr;
-        PostProcessorGenerator3D<T,DESCRIPTOR>* postProcessor = nullptr;
-        if (indicator(iX, iY, iZ)) {
-          momenta = nullptr;
-          dynamics = new BounceBackVelocity<T,DESCRIPTOR>(default_rho, default_u);
-          postProcessor = nullptr;
-          //Defined in setLocalVelocityBoundary3d
-          setBoundary<T, DESCRIPTOR, MixinDynamics>(_block, iX,iY,iZ, omega, momenta, dynamics, postProcessor);
+  blockGeometryStructure.forSpatialLocations([&](auto iX, auto iY, auto iZ) {
+    if (blockGeometryStructure.getNeighborhoodRadius({iX, iY, iZ}) >= margin
+        && indicator(iX, iY, iZ)) {
+      Dynamics<T,DESCRIPTOR>* dynamics = nullptr;
+      PostProcessorGenerator3D<T,DESCRIPTOR>* postProcessor = nullptr;
+      dynamics = new BounceBackVelocity<T,DESCRIPTOR>(default_rho, default_u);
 
-        }
-      }
+      setBoundary(_block, iX,iY,iZ, dynamics, postProcessor);
     }
-  }
-
+  });
 }
 
-}
+}//namespace olb
 #endif

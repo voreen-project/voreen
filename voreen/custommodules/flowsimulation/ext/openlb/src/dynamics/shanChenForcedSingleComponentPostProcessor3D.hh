@@ -27,7 +27,6 @@
 
 #include "shanChenForcedSingleComponentPostProcessor3D.h"
 #include "interactionPotential.h"
-#include "core/blockLattice3D.h"
 #include "core/util.h"
 #include "core/finiteDifference3D.h"
 
@@ -40,16 +39,16 @@ template<typename T, typename DESCRIPTOR>
 ShanChenForcedSingleComponentPostProcessor3D <T,DESCRIPTOR>::
 ShanChenForcedSingleComponentPostProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
     T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-    std::vector<SpatiallyExtendedObject3D*> partners_)
+    std::vector<BlockStructureD<3>*> partners_)
   :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
-  this->getName() = "ShanChenForcedSingleComponentPostProcessor3D";  
+  this->getName() = "ShanChenForcedSingleComponentPostProcessor3D";
 }
 
 template<typename T, typename DESCRIPTOR>
 ShanChenForcedSingleComponentPostProcessor3D <T,DESCRIPTOR>::
 ShanChenForcedSingleComponentPostProcessor3D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-    std::vector<SpatiallyExtendedObject3D*> partners_)
+    std::vector<BlockStructureD<3>*> partners_)
   :  x0(0), x1(0), y0(0), y1(0), z0(0), z1(0), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 {
   this->getName() = "ShanChenForcedSingleComponentPostProcessor3D";
@@ -57,7 +56,7 @@ ShanChenForcedSingleComponentPostProcessor3D(T G_, std::vector<T> rho0_, Analyti
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenForcedSingleComponentPostProcessor3D<T,DESCRIPTOR>::
-processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+processSubDomain( BlockLattice<T,DESCRIPTOR>& blockLattice,
                   int x0_, int x1_, int y0_, int y1_, int z0_, int z1_ )
 {
   typedef DESCRIPTOR L;
@@ -67,7 +66,7 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
                          x0_, x1_, y0_, y1_, z0_, z1_,
                          newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
 
-    auto& rhoField = blockLattice.template getDynamicFieldArray<RHO_CACHE>()[0];
+    auto& rhoField = blockLattice.template getField<RHO_CACHE>()[0];
 
     // Compute density and velocity on every site of first lattice, and store result
     //   in external scalars; envelope cells are included, because they are needed
@@ -87,10 +86,10 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
           Cell<T,DESCRIPTOR> blockCell   = blockLattice.get(iX,iY,iZ);
 
           auto j = blockCell.template getField<descriptors::VELOCITY>();
-          lbHelpers<T,DESCRIPTOR>::computeJ(blockCell,j.data());
+          lbm<DESCRIPTOR>::computeJ(blockCell,j);
           blockCell.template setField<descriptors::VELOCITY>(j);
 
-          T blockOmega   = blockLattice.getDynamics(iX, iY, iZ)->getOmega();
+          T blockOmega = blockCell.getDynamics()->getParameters(blockLattice).template getOrFallback<descriptors::OMEGA>(0);
 
           // Computation of the common velocity, shared among the two populations
           T rhoTot = rhoField[blockCell.getCellId()]*blockOmega;
@@ -119,7 +118,7 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
 
           blockCell.template setField<descriptors::VELOCITY>(uTot);
           blockCell.template setField<descriptors::FORCE>(externalBlockForce
-            - G*rhoBlockContribution/rhoField[blockCell.getCellId()]);
+              - G*rhoBlockContribution/rhoField[blockCell.getCellId()]);
         }
       }
     }
@@ -128,7 +127,7 @@ processSubDomain( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
 
 template<typename T, typename DESCRIPTOR>
 void ShanChenForcedSingleComponentPostProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -150,7 +149,7 @@ ShanChenForcedSingleComponentGenerator3D<T,DESCRIPTOR>::ShanChenForcedSingleComp
 
 template<typename T, typename DESCRIPTOR>
 PostProcessor3D<T,DESCRIPTOR>* ShanChenForcedSingleComponentGenerator3D<T,DESCRIPTOR>::generate (
-  std::vector<SpatiallyExtendedObject3D*> partners) const
+  std::vector<BlockStructureD<3>*> partners) const
 {
   return new ShanChenForcedSingleComponentPostProcessor3D<T,DESCRIPTOR>(
            this->x0,this->x1,this->y0,this->y1,this->z0,this->z1, G, rho0, interactionPotential, partners);

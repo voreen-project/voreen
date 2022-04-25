@@ -34,7 +34,7 @@ int HyperplaneLattice2D<T>::computeMaxLatticeDistance() const
 {
   const Cuboid2D<T>&  cuboid = _geometry.getMotherCuboid();
   const Vector<T,2>   origin = cuboid.getOrigin();
-  const Vector<int,2> extend = cuboid.getExtend();
+  const Vector<int,2> extend = cuboid.getExtent();
   const T             deltaR = cuboid.getDeltaR();
 
   T maxPhysDistance = T();
@@ -42,25 +42,25 @@ int HyperplaneLattice2D<T>::computeMaxLatticeDistance() const
   Vector<T,2> tmpO;
   Vector<T,2> tmpE;
 
-  for(int iDim=0; iDim<2; ++iDim){
-  tmpO[iDim] = origin[iDim] - _origin[iDim];
-  tmpE[iDim] = origin[iDim] + extend[iDim]*deltaR - _origin[iDim];
+  for (int iDim=0; iDim<2; ++iDim) {
+    tmpO[iDim] = origin[iDim] - _origin[iDim];
+    tmpE[iDim] = origin[iDim] + extend[iDim]*deltaR - _origin[iDim];
   }
-  tmp = sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1]);
+  tmp = util::sqrt(tmpO[0]*tmpO[0] + tmpO[1]*tmpO[1]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt((tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1]));
+  tmp = util::sqrt((tmpE[0]*tmpE[0] + tmpO[1]*tmpO[1]));
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1]);
+  tmp = util::sqrt(tmpO[0]*tmpO[0] + tmpE[1]*tmpE[1]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
-  tmp = sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1]);
+  tmp = util::sqrt(tmpE[0]*tmpE[0] + tmpE[1]*tmpE[1]);
   if (maxPhysDistance < tmp) {
-      maxPhysDistance = tmp;
+    maxPhysDistance = tmp;
   }
 
   return int(maxPhysDistance/_h) + 1;
@@ -87,7 +87,7 @@ void HyperplaneLattice2D<T>::constructCuboid(int maxLatticeDistance)
   }
 
   _n = max - min + 1;
-  _origin = _origin + double(min)*_u;
+  _origin = _origin + T(min)*_u;
 }
 
 template <typename T>
@@ -165,8 +165,8 @@ template <typename T>
 Vector<T,2> HyperplaneLattice2D<T>::getPhysR(const int& n) const
 {
   return Vector<T,2> {
-    _origin[0] + double(n)*_u[0],
-    _origin[1] + double(n)*_u[1]
+    _origin[0] + T(n)*_u[0],
+    _origin[1] + T(n)*_u[1]
   };
 }
 

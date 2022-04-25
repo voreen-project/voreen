@@ -25,7 +25,7 @@
 #define SUPER_GEOMETRY_FACES_3D_HH
 
 #include "superGeometryFaces3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 
 namespace olb {
 
@@ -45,7 +45,7 @@ SuperGeometryFaces3D<T>::SuperGeometryFaces3D(
 
 template<typename T>
 SuperGeometryFaces3D<T>::SuperGeometryFaces3D(
-  SuperGeometry3D<T>& superGeometry, const int material, T latticeL)
+  SuperGeometry<T,3>& superGeometry, const int material, T latticeL)
   : SuperGeometryFaces3D(superGeometry.getMaterialIndicator(material), latticeL)
 { }
 
@@ -76,7 +76,7 @@ bool SuperGeometryFaces3D<T>::operator()(T output[], const int input[])
 
 template <typename T, bool HLBM>
 SuperGeometryFacesIndicator3D<T,HLBM>::SuperGeometryFacesIndicator3D(
-  SuperGeometry3D<T>& superGeometry,
+  SuperGeometry<T,3>& superGeometry,
   SmoothIndicatorF3D<T,T,HLBM>& indicator,
   const int material, T deltaX)
   : GenericF<T,int>(7,0), _superGeometry(superGeometry), _indicator(indicator),
@@ -89,19 +89,22 @@ template <typename T, bool HLBM>
 bool SuperGeometryFacesIndicator3D<T,HLBM>::operator() (T output[], const int input[])
 {
   _superGeometry.communicate();
-  for (int iDim = 0; iDim < 7; ++iDim)
+  for (int iDim = 0; iDim < 7; ++iDim) {
     output[iDim]=T();
+  }
   for (int iC = 0; iC < _superGeometry.getLoadBalancer().size(); ++iC) {
-    BlockGeometryFacesIndicator3D<T,HLBM> f(_superGeometry.getBlockGeometry(iC), 
+    BlockGeometryFacesIndicator3D<T,HLBM> f(_superGeometry.getBlockGeometry(iC),
                                             _indicator, _material, _latticeL);
     T outputTmp[f.getTargetDim()];
     f(outputTmp,input);
-    for (int iDim = 0; iDim < 7; ++iDim)
+    for (int iDim = 0; iDim < 7; ++iDim) {
       output[iDim] += outputTmp[iDim];
+    }
   }
 #ifdef PARALLEL_MODE_MPI
-  for (int iDim = 0; iDim < 7; ++iDim)
+  for (int iDim = 0; iDim < 7; ++iDim) {
     singleton::mpi().reduceAndBcast( output[iDim], MPI_SUM);
+  }
 #endif
   return true;
 }

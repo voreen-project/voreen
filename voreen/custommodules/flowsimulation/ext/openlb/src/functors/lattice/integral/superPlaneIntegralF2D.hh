@@ -55,10 +55,10 @@ bool SuperPlaneIntegralF2D<T>::isToBeIntegrated(const Vector<T,2>& physR, int iC
 template<typename T>
 SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
   FunctorPtr<SuperF2D<T>>&& f,
-  SuperGeometry2D<T>&       geometry,
+  SuperGeometry<T,2>&       geometry,
   const HyperplaneLattice2D<T>& hyperplaneLattice,
   FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
-  FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
+  FunctorPtr<IndicatorF1D<T>>&&      subplaneIndicator,
   BlockDataReductionMode             mode)
   : SuperF2D<T>(f->getSuperStructure(), 2 + f->getTargetDim()),
     _geometry(geometry),
@@ -106,10 +106,10 @@ SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
 template<typename T>
 SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
   FunctorPtr<SuperF2D<T>>&& f,
-  SuperGeometry2D<T>&       geometry,
+  SuperGeometry<T,2>&       geometry,
   const Hyperplane2D<T>&    hyperplane,
   FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
-  FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
+  FunctorPtr<IndicatorF1D<T>>&&      subplaneIndicator,
   BlockDataReductionMode             mode)
   : SuperPlaneIntegralF2D(
       std::forward<decltype(f)>(f),
@@ -123,7 +123,7 @@ SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
 template<typename T>
 SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
   FunctorPtr<SuperF2D<T>>&& f,
-  SuperGeometry2D<T>&       geometry,
+  SuperGeometry<T,2>&       geometry,
   const Hyperplane2D<T>&    hyperplane,
   FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
   BlockDataReductionMode             mode)
@@ -139,7 +139,7 @@ SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
 template<typename T>
 SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
   FunctorPtr<SuperF2D<T>>&& f,
-  SuperGeometry2D<T>& geometry,
+  SuperGeometry<T,2>& geometry,
   const Vector<T,2>& origin, const Vector<T,2>& u,
   std::vector<int> materials,
   BlockDataReductionMode mode)
@@ -154,7 +154,7 @@ SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
 template<typename T>
 SuperPlaneIntegralF2D<T>::SuperPlaneIntegralF2D(
   FunctorPtr<SuperF2D<T>>&& f,
-  SuperGeometry2D<T>& geometry,
+  SuperGeometry<T,2>& geometry,
   const Vector<T,2>& origin, const Vector<T,2>& u,
   BlockDataReductionMode mode)
   : SuperPlaneIntegralF2D(

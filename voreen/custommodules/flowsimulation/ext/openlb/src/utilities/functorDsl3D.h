@@ -104,7 +104,12 @@ std::shared_ptr<SuperF3D<T,W>> norm(std::shared_ptr<SuperF3D<T,W>>        f,
 /// Returns restriction of a analytical functor f to the lattice sLattice
 template<typename T, typename W, typename DESCRIPTOR>
 std::shared_ptr<SuperF3D<T,W>> restrict(std::shared_ptr<AnalyticalF3D<T,W>> f,
-                                        SuperLattice3D<T, DESCRIPTOR>& sLattice);
+                                        SuperLattice<T, DESCRIPTOR>& sLattice);
+
+/// Returns external field functor 
+template<typename T,typename DESCRIPTOR, typename FIELD>
+std::enable_if_t<DESCRIPTOR::d == 3, std::shared_ptr<SuperF3D<T>>>
+field(SuperLattice<T,DESCRIPTOR>& sLattice);
 
 }
 

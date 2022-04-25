@@ -29,8 +29,8 @@
 #include "functors/lattice/blockBaseF3D.h"
 #include "functors/lattice/superBaseF3D.h"
 #include "geometry/cuboidGeometry3D.h"
-#include "geometry/blockGeometry3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/blockGeometry.h"
+#include "geometry/superGeometry.h"
 
 namespace olb {
 
@@ -54,9 +54,8 @@ class AnalyticalFfromBlockF3D final : public AnalyticalF3D<T,W> {
 protected:
   BlockF3D<W>& _f;
   Cuboid3D<T>& _cuboid;
-  const int    _overlap;
 public:
-  AnalyticalFfromBlockF3D(BlockF3D<W>& f, Cuboid3D<T>& cuboid, const int overlap);
+  AnalyticalFfromBlockF3D(BlockF3D<W>& f, Cuboid3D<T>& cuboid);
   bool operator() (W output[], const T physC[]) override;
 };
 
@@ -69,13 +68,11 @@ protected:
 
   SuperF3D<T,W>&       _f;
   CuboidGeometry3D<T>& _cuboidGeometry;
-  int                  _overlap;
 
   std::vector<std::unique_ptr<AnalyticalFfromBlockF3D<T,W>>> _blockF;
 public:
   AnalyticalFfromSuperF3D(SuperF3D<T,W>& f,
                           bool communicateToAll=false,
-                          int overlap=-1,
                           bool communicateOverlap=true);
   bool operator() (W output[], const T physC[]) override;
 

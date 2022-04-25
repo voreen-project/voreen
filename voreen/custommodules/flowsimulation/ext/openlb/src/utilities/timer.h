@@ -80,16 +80,16 @@ private:
   */
 
   // parameter for time measurement
-  double        cpuTimeStart, cpuTimeCur, cpuTimeEnd;         // in cpu-time
-  time_t          sTimeStart,   sTimeCur,   sTimeEnd, *tp;    // in seconds
-  timeval        msTimeStart,  msTimeCur,  msTimeEnd;         // in ms
-  timeval        msTimeLast;                                  // in ms, for MegaLatticeUpdate-measurements only
-  T deltaTS;                                                  // time-step difference since last call of update()
+  double        cpuTimeStart{}, cpuTimeCur{}, cpuTimeEnd{};         // in cpu-time
+  time_t          sTimeStart{},   sTimeCur{},   sTimeEnd{}, *tp{};    // in seconds
+  timeval        msTimeStart{},  msTimeCur{},  msTimeEnd{};         // in ms
+  timeval        msTimeLast{};                                  // in ms, for MegaLatticeUpdate-measurements only
+  T deltaTS{};                                                  // time-step difference since last call of update()
 
   // Input-parameter of the algorithm to compute remaining runtimes and performance (actually constants)
-  int curTS;      // current lattice time step
-  int maxTS;      // total number of lattice time steps that are intended to be computed
-  size_t numFC;      // number of fluid cells (depending from size and dimension of the domain)
+  std::size_t curTS{};      // current lattice time step
+  std::size_t maxTS{};      // total number of lattice time steps that are intended to be computed
+  std::size_t numFC{};      // number of fluid cells (depending from size and dimension of the domain)
 
   // parameter-prefixes for output
   /* prefix-explanation:
@@ -98,14 +98,14 @@ private:
       lt: lattice-time values, elapsed time within the simulated system
   */
 
-  int    ltTot, ltPas, ltRem;         // lattice time (time steps)
-  double ctPas, ctRem, ctTot;         // cpu time
-  T      rtPas, rtRem, rtTot;         // times in s
-  T      rtPasMs, rtRemMs, rtTotMs;   // times in ms
+  int    ltPas{},   ltRem{},   ltTot{};     // lattice time (time steps)
+  double ctPas{},   ctRem{},   ctTot{};     // cpu time
+  T      rtPas{},   rtRem{},   rtTot{};     // times in s
+  T      rtPasMs{}, rtRemMs{}, rtTotMs{};   // times in ms
 
 public:
   /// initializes timer with the given values, abbreviation to Timer() + initialize(int,int)
-  Timer(int maxTimeSteps, size_t numFluidCells=1);
+  Timer(int maxTimeSteps, std::size_t numFluidCells=1);
 
   /// returns the time difference between two timeval objects in ms
   /** The timeval data type is used in the variables for ms-time measurement. \sa getTotalRealTimeMs*/
@@ -148,6 +148,10 @@ public:
     \param printMode Value for selecting style of output. <br>0 = default semicolon-separated single row mode without cpu-time <br>1 = single row mode without cpu-time <br>2 = nicely formatted two-line layout including current and remaining cpu-time
     \sa update()
   */
+
+  /// Returns the total measured time between start() and moment of call in ms.
+  T getCurrRealTimeMs();
+
   void printStep(int printMode=0);
 
   /// Performs an update() followed by a printStep().
@@ -156,7 +160,7 @@ public:
     \param printMode mode of display style passed to printStep()
     \sa printStep()
   */
-  void print(int currentTimeStep, int printMode=0);
+  void print(std::size_t currentTimeStep, int printMode=0);
 
   /// Prints a (short) summary containing the overall time consumption in real and in cpu time for use after computation.
   void printSummary();

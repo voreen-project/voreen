@@ -36,7 +36,7 @@
 #include "unitConverter.h"
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 
@@ -90,9 +90,9 @@ public:
                                    T charPhysVelocity, T physConsistencyCoeff, T powerLawIndex,
                                    T physDensity, T charPhysPressure = 0 )
     : UnitConverter<T, DESCRIPTOR>( physDeltaX, physDeltaT, charPhysLength, charPhysVelocity,
-                                 physConsistencyCoeff * pow(charPhysVelocity / (2*charPhysLength), powerLawIndex-1),
-                                 physDensity, charPhysPressure ),
-      _conversionConsistencyCoeff(pow( physDeltaT,powerLawIndex-2 ) * pow( physDeltaX,2 ) ),
+                                    physConsistencyCoeff * util::pow(charPhysVelocity / (2*charPhysLength), powerLawIndex-1),
+                                    physDensity, charPhysPressure ),
+      _conversionConsistencyCoeff(util::pow( physDeltaT,powerLawIndex-2 ) * util::pow( physDeltaX,2 ) ),
       _powerLawIndex(powerLawIndex),
       _physConsistencyCoeff(physConsistencyCoeff),
       clout(std::cout,"PowerLawUnitConverter")
@@ -129,7 +129,7 @@ public:
   /// nice terminal output for conversion factors, characteristical and physical data
   void print() const override;
   void print(std::ostream& fout) const;
-  
+
   void write(std::string const& fileName = "unitConverter") const;
 
 protected:
@@ -161,9 +161,9 @@ public:
     T physDensity,
     T charPhysPressure = 0)
     : PowerLawUnitConverter<T, DESCRIPTOR>( (charPhysLength/resolution),
-                                         (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * pow((charPhysLength/resolution),2) / ( ( charPhysLength * charPhysVelocity * pow( charPhysVelocity / ( 2 * charPhysLength ), 1 - powerLawIndex ) / Re ) * pow( charPhysVelocity / (2 * charPhysLength ), powerLawIndex - 1 ) ),
-                                         charPhysLength, charPhysVelocity,
-                                         charPhysLength * charPhysVelocity * pow( charPhysVelocity / ( 2 * charPhysLength ), 1 - powerLawIndex ) / Re, powerLawIndex, physDensity, charPhysPressure )
+                                            (latticeRelaxationTime - 0.5) / descriptors::invCs2<T,DESCRIPTOR>() * util::pow((charPhysLength/resolution),2) / ( ( charPhysLength * charPhysVelocity * util::pow( charPhysVelocity / ( 2 * charPhysLength ), 1 - powerLawIndex ) / Re ) * util::pow( charPhysVelocity / (2 * charPhysLength ), powerLawIndex - 1 ) ),
+                                            charPhysLength, charPhysVelocity,
+                                            charPhysLength * charPhysVelocity * util::pow( charPhysVelocity / ( 2 * charPhysLength ), 1 - powerLawIndex ) / Re, powerLawIndex, physDensity, charPhysPressure )
   {
   }
 

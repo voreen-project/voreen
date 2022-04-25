@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2014 Albert Mink, Mathias J. Krause, Adrian Kummerlaender
+ *  Copyright (C) 2012-2017 Lukas Baron, Tim Dornieden, Mathias J. Krause,
+ *  Albert Mink, Benjamin Förster, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,17 +25,27 @@
 #ifndef SUPER_LATTICE_INTEGRAL_F_2D_H
 #define SUPER_LATTICE_INTEGRAL_F_2D_H
 
-#include<vector>
-#include<cmath>
+#include <vector>
 
 #include "functors/genericF.h"
+#include "blockLatticeIntegralF2D.h"
 #include "superBaseF2D.h"
 #include "indicator/superIndicatorBaseF2D.h"
+#include "functors/analytical/indicator/indicatorBaseF2D.h"
+#include "indicator/superIndicatorF2D.h"
 #include "functors/analytical/interpolationF2D.h"
+#include "functors/lattice/reductionF2D.h"
+#include "integral/superIntegralF2D.h"
 #include "core/superLattice2D.h"
 #include "core/vector.h"
+#include "io/ostreamManager.h"
+#include "geometry/superGeometry.h"
+#include "superGeometryFaces2D.h"
+#include "utilities/functorPtr.h"
+#include "latticePhysBoundaryForce2D.h"
+#include "latticePhysCorrBoundaryForce2D.h"
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -46,117 +57,48 @@ namespace olb {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/// functor that returns the max in each component of all points of a certain material
-template <typename T>
-class SuperMax2D final : public SuperF2D<T> {
-private:
-  SuperF2D<T>& _f;
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
-public:
-  SuperMax2D(SuperF2D<T>& f, SuperGeometry2D<T>& superGeometry,
-             const int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// functor that returns the min in each component of all points of a certain material
-template <typename T>
-class SuperMin2D final : public SuperF2D<T> {
-private:
-  SuperF2D<T>& _f;
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
-public:
-  SuperMin2D(SuperF2D<T>& f, SuperGeometry2D<T>& superGeometry,
-             const int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-/// sums over all cells of a certain material number
-template <typename T>
-class SuperSum2D final : public SuperF2D<T> {
-private:
-  SuperF2D<T>& _f;
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
-public:
-  SuperSum2D(SuperF2D<T>& f, SuperGeometry2D<T>& superGeometry,
-             const int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-template <typename T>
-class SuperIntegral2D final : public SuperF2D<T> {
-private:
-  SuperF2D<T>& _f;
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
-public:
-  SuperIntegral2D(SuperF2D<T>& f, SuperGeometry2D<T>& superGeometry,
-                  const int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// functor counts to get the discrete surface for a material no. in direction (1,0,0), (0,1,0), (0,0,1), (-1,0,0), (0,-1,0), (0,0,-1) and total surface, then it converts it into phys units
-template <typename T>
-class SuperGeometryFaces2D final : public GenericF<T,int> {
-private:
-  SuperGeometry2D<T>&   _superGeometry;
-  const int             _material;
-  const T _latticeL;
-public:
-  template<typename DESCRIPTOR>
-  SuperGeometryFaces2D(SuperGeometry2D<T>& superGeometry, const int material, const UnitConverter<T,DESCRIPTOR>& converter);
-  SuperGeometryFaces2D(SuperGeometry2D<T>& superGeometry, const int material, T latticeL);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// functor counts to get the discrete surface for a material no. and SmoothIndicator in direction (1,0,0), (0,1,0), (-1,0,0), (0,-1,0) and total surface, then it converts it into phys units
-template <typename T, bool HLBM>
-class SuperGeometryFacesIndicator2D final : public GenericF<T,int> {
-private:
-  SuperGeometry2D<T>&   _superGeometry;
-  SmoothIndicatorF2D<T,T,HLBM>& _indicator;
-  const int             _material;
-  T _latticeL;
-public:
-  SuperGeometryFacesIndicator2D(SuperGeometry2D<T>& superGeometry, SmoothIndicatorF2D<T,T,HLBM>& indicator, const int material,
-                                T deltaX);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// functor to get pointwise phys force acting on a boundary with a given material on local lattice
+/// functor to get pointwise phys force acting on a indicated boundary on local lattice
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysDrag2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
+  FunctorPtr<SuperIndicatorF2D<T>>              _indicatorF;
+  SuperGeometryFaces2D<T>                       _facesF;
+  SuperLatticePhysBoundaryForce2D<T,DESCRIPTOR> _pBoundForceF;
+  SuperSum2D<T,T>                               _sumF;
+
+  const T _factor;
 public:
-  SuperLatticePhysDrag2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                         SuperGeometry2D<T>& superGeometry, const int material,
+  SuperLatticePhysDrag2D(SuperLattice<T,DESCRIPTOR>&      sLattice,
+                         FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF,
                          const UnitConverter<T,DESCRIPTOR>& converter);
+  SuperLatticePhysDrag2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                         SuperGeometry<T,2>& superGeometry, const int material,
+                         const UnitConverter<T,DESCRIPTOR>& converter);
+
   bool operator() (T output[], const int input[]) override;
 };
 
-
+/// functor to get pointwise phys force acting on a indicated boundary on local lattice
 /**
- *  functor to get pointwise phys force acting on a boundary with a given material on local lattice
  *  see: Caiazzo, Junk: Boundary Forces in lattice Boltzmann: Analysis of MEA
  */
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysCorrDrag2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  SuperGeometry2D<T>& _superGeometry;
-  const int _material;
+  FunctorPtr<SuperIndicatorF2D<T>>                  _indicatorF;
+  SuperGeometryFaces2D<T>                           _facesF;
+  SuperLatticePhysCorrBoundaryForce2D<T,DESCRIPTOR> _pBoundForceF;
+  SuperSum2D<T,T>                                   _sumF;
+
+  const T _factor;
 public:
-  SuperLatticePhysCorrDrag2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                             SuperGeometry2D<T>& superGeometry, const int material,
+  SuperLatticePhysCorrDrag2D(SuperLattice<T,DESCRIPTOR>&      sLattice,
+                             FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF,
                              const UnitConverter<T,DESCRIPTOR>& converter);
+  SuperLatticePhysCorrDrag2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                             SuperGeometry<T,2>& superGeometry, const int material,
+                             const UnitConverter<T,DESCRIPTOR>& converter);
+
   bool operator() (T output[], const int input[]) override;
 };
 

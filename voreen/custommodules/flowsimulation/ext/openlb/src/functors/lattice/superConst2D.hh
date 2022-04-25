@@ -31,7 +31,7 @@ namespace olb {
 
 
 template <typename T, typename W>
-SuperConst2D<T,W>::SuperConst2D(SuperStructure2D<T>& superStructure, std::vector<W> v)
+SuperConst2D<T,W>::SuperConst2D(SuperStructure<T,2>& superStructure, std::vector<W> v)
   : SuperF2D<T,W>(superStructure, v.size()),
     _c{std::move(v)}
 {
@@ -39,7 +39,7 @@ SuperConst2D<T,W>::SuperConst2D(SuperStructure2D<T>& superStructure, std::vector
 }
 
 template <typename T, typename W>
-SuperConst2D<T,W>::SuperConst2D(SuperStructure2D<T>& superStructure, W scalar)
+SuperConst2D<T,W>::SuperConst2D(SuperStructure<T,2>& superStructure, W scalar)
   : SuperConst2D(superStructure, std::vector<W>(1, scalar))
 { }
 

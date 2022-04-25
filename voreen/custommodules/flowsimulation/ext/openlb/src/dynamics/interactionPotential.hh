@@ -41,7 +41,7 @@ ShanChen93<T,S>::ShanChen93(T rhoZero) : AnalyticalF<1,T,S>(1), _rhoZero(rhoZero
 template <typename T, typename S>
 bool ShanChen93<T,S>::operator()(T psi[], const S rho[])
 {
-  psi[0]=sqrt(_rhoZero)*(1-exp(-(rho[0]/_rhoZero)));
+  psi[0]=util::sqrt(_rhoZero)*(1-util::exp(-(rho[0]/_rhoZero)));
   return true;
 }
 
@@ -55,7 +55,7 @@ ShanChen94<T,S>::ShanChen94(T rhoZero, T psiZero) : AnalyticalF<1,T,S>(1), _rhoZ
 template <typename T, typename S>
 bool ShanChen94<T,S>::operator()(T psi[], const S rho[])
 {
-  psi[0]=_psiZero*exp(-_rhoZero/rho[0]);
+  psi[0]=_psiZero*util::exp(-_rhoZero/rho[0]);
   return true;
 }
 
@@ -71,7 +71,7 @@ PengRobinson<T,S>::PengRobinson(T G, T acentricFactor, T a, T b, T tr) : Analyti
   //T rhoc = pc/0.307/_R/tc;
   _t = _tc*tr;
   //Zc=0.307 Tc=0.072922004 pc=0.059569985 rhoc=2.6609121
-  _alpha = 1. + (0.37464+1.54226*_acentricFactor-0.26992*_acentricFactor*_acentricFactor)*(1.-sqrt(_t/_tc));
+  _alpha = 1. + (0.37464+1.54226*_acentricFactor-0.26992*_acentricFactor*_acentricFactor)*(1.-util::sqrt(_t/_tc));
   _alpha = _alpha*_alpha;
   this->getName() = "PengRobinson";
 }
@@ -80,7 +80,7 @@ template <typename T, typename S>
 bool PengRobinson<T,S>::operator()(T psi[], const S rho[])
 {
   T p = (rho[0]*_R*_t/(1.-_b*rho[0]))-(_a*_alpha*rho[0]*rho[0]/(1.+2.*_b*rho[0]-_b*_b*rho[0]*rho[0]));
-  psi[0] = sqrt(6.*(p-rho[0]/3.)/_G);
+  psi[0] = util::sqrt(6.*(p-rho[0]/3.)/_G);
   return true;
 }
 
@@ -89,10 +89,10 @@ template <typename T, typename S>
 bool PengRobinson<T,S>::operator()(T psi[], const S rho[], const S t[])
 {
   _t = t[0];
-  _alpha = 1. + (0.37464+1.54226*_acentricFactor-0.26992*_acentricFactor*_acentricFactor)*(1.-sqrt(_t/_tc));
+  _alpha = 1. + (0.37464+1.54226*_acentricFactor-0.26992*_acentricFactor*_acentricFactor)*(1.-util::sqrt(_t/_tc));
   _alpha = _alpha*_alpha;
   T p = (rho[0]*_R*_t/(1.-_b*rho[0]))-(_a*_alpha*rho[0]*rho[0]/(1.+2.*_b*rho[0]-_b*_b*rho[0]*rho[0]));
-  psi[0] = sqrt(6.*(p-rho[0]/3.)/_G);
+  psi[0] = util::sqrt(6.*(p-rho[0]/3.)/_G);
   return true;
 }
 
@@ -116,7 +116,7 @@ bool CarnahanStarling<T,S>::operator()(T psi[], const S rho[])
 {
   T c = _b*rho[0]/4.;
   T p = rho[0]*_R*_t*((1.+c+c*c-c*c*c)/(1.-c)/(1.-c)/(1.-c))-_a*rho[0]*rho[0];
-  psi[0] = sqrt(6.*(p-rho[0]/3.)/_G);
+  psi[0] = util::sqrt(6.*(p-rho[0]/3.)/_G);
   return true;
 }
 
@@ -127,7 +127,7 @@ bool CarnahanStarling<T,S>::operator()(T psi[], const S rho[], const S t[])
   _t = t[0];
   T c = _b*rho[0]/4.;
   T p = rho[0]*_R*_t*((1.+c+c*c-c*c*c)/(1.-c)/(1.-c)/(1.-c))-_a*rho[0]*rho[0];
-  psi[0] = sqrt(6.*(p-rho[0]/3.)/_G);
+  psi[0] = util::sqrt(6.*(p-rho[0]/3.)/_G);
   return true;
 }
 
@@ -155,7 +155,7 @@ Krause<T,S>::Krause(T rhoZero, T psiZero) : AnalyticalF<1,T,S>(1), _rhoZero(rhoZ
 template <typename T, typename S>
 bool Krause<T,S>::operator()(T psi[], const S rho[])
 {
-  psi[0]=_psiZero/1.77*1.414/_rhoZero*exp(-(_rhoZero-rho[0])*(_rhoZero-rho[0])/_rhoZero/_rhoZero);
+  psi[0]=_psiZero/1.77*1.414/_rhoZero*util::exp(-(_rhoZero-rho[0])*(_rhoZero-rho[0])/_rhoZero/_rhoZero);
   return true;
 }
 
@@ -170,7 +170,7 @@ WeisbrodKrause<T,S>::WeisbrodKrause(T rhoZero, T sigmu) : AnalyticalF<1,T,S>(1),
 template <typename T, typename S>
 bool WeisbrodKrause<T,S>::operator()(T psi[], const S rho[])
 {
-  psi[0]=sqrt(_rhoZero)*1.5179/_sigmu*exp(-(_sigmu-rho[0]/_rhoZero)*(_sigmu-rho[0]/_rhoZero)/_sigmu/_sigmu);
+  psi[0]=util::sqrt(_rhoZero)*1.5179/_sigmu*util::exp(-(_sigmu-rho[0]/_rhoZero)*(_sigmu-rho[0]/_rhoZero)/_sigmu/_sigmu);
   return true;
 }
 
@@ -184,7 +184,7 @@ Normal<T,S>::Normal(T sigma, T mu) : AnalyticalF<1,T,S>(1), _sigma(sigma), _mu(m
 template <typename T, typename S>
 bool Normal<T,S>::operator()(T psi[], const S rho[])
 {
-  psi[0]=1./2.507/_sigma*exp(-(rho[0]-_mu)*(rho[0]-_mu)/_sigma/_sigma/2.);
+  psi[0]=1./2.507/_sigma*util::exp(-(rho[0]-_mu)*(rho[0]-_mu)/_sigma/_sigma/2.);
   return true;
 }
 

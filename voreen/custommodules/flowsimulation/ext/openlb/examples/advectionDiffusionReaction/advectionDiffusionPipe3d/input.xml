@@ -1,0 +1,18 @@
+<Param>
+	<!-- Flags for advection-diffusion simulations -->
+	<advectionScheme> 1 </advectionScheme> <!-- 1 = central; 2 = upwind 1st order; 3 = upwind 1st order with anti-diffusion; 4 = upwind 2nd order -->
+	<fromCentre> true </fromCentre> <!-- Seeding point at the centre? -->
+
+	<!-- (dimensionless) Parameters for the simulation setup -->
+	<antiDiffusionTuning> 1 </antiDiffusionTuning> <!-- Anti-diffusion coefficient (0=0%; 1=100%) -->
+	<nx> 500 </nx>         <!-- Number of internal lattice points along the x direction -->
+	<ny> 7 </ny>          <!-- Number of internal lattice points along the y direction -->
+	<tMax> 5001 </tMax>    <!-- Total number of lattice updates -->
+	<tVtm> 500 </tVtm>     <!-- Number of timesteps before producing output -->
+
+	<!-- Dimensional parameters -->
+	<charU> 0.05 </charU>              <!-- Flow velocity (m/s) -->
+	<deltaX> 0.1 </deltaX>            <!-- Lattice spacing (m) -->
+	<deltaT> 0.01 </deltaT>           <!-- Timestep (s) -->
+	<diffusivity> 0.005</diffusivity> <!-- Diffusivity (m^2/s) -->
+</Param>

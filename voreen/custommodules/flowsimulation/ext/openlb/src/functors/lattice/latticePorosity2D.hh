@@ -25,27 +25,25 @@
 #define LATTICE_POROSITY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePorosity2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticePorosity2D<T,DESCRIPTOR>::SuperLatticePorosity2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
   const int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 1),
     _superGeometry(superGeometry), _material(material)
@@ -55,7 +53,7 @@ SuperLatticePorosity2D<T,DESCRIPTOR>::SuperLatticePorosity2D(
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(new BlockLatticePorosity2D<T,DESCRIPTOR>(
-                                 this->_sLattice.getBlockLattice(iC),
+                                 this->_sLattice.getBlock(iC),
                                  this->_superGeometry.getBlockGeometry(iC),
                                  _material,
                                  converter));
@@ -64,7 +62,7 @@ SuperLatticePorosity2D<T,DESCRIPTOR>::SuperLatticePorosity2D(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePorosity2D<T,DESCRIPTOR>::BlockLatticePorosity2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, BlockGeometryStructure2D<T>& blockGeometry,
+(BlockLattice<T,DESCRIPTOR>& blockLattice, BlockGeometry<T,2>& blockGeometry,
  int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice,converter,1), _blockGeometry(blockGeometry), _material(material)
 {

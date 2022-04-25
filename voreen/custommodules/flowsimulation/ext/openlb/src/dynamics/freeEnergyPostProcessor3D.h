@@ -24,13 +24,12 @@
 #ifndef FREE_ENERGY_POST_PROCESSOR_3D_H
 #define FREE_ENERGY_POST_PROCESSOR_3D_H
 
-#include "core/spatiallyExtendedObject3D.h"
+#include "core/blockStructure.h"
 #include "core/postProcessing.h"
-#include "core/blockLattice3D.h"
 
 /* \file
- * PostProcessor classes organising the coupling between the lattices for the free energy 
- * model. The PostProcessor for the calculation of the chemical potential needs to be 
+ * PostProcessor classes organising the coupling between the lattices for the free energy
+ * model. The PostProcessor for the calculation of the chemical potential needs to be
  * applied first, as the force relies on its results.
  */
 
@@ -47,15 +46,15 @@ public:
   /// \param[in] kappa3_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyChemicalPotentialCoupling3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                                             T alpha_, T kappa1_, T kappa2_, T kappa3_,
-                                             std::vector<SpatiallyExtendedObject3D*> partners_);
+                                        T alpha_, T kappa1_, T kappa2_, T kappa3_,
+                                        std::vector<BlockStructureD<3>*> partners_);
   /// \param[in] alpha_ - Parameter related to the interface width. [lattice units]
   /// \param[in] kappa1_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] kappa2_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] kappa3_ - Parameter related to the surface tension (needs to be >0). [lattice units]
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyChemicalPotentialCoupling3D(T alpha_, T kappa1_, T kappa2_, T kappa3_,
-                                             std::vector<SpatiallyExtendedObject3D*> partners_);
+                                        std::vector<BlockStructureD<3>*> partners_);
   int extent() const override
   {
     return 1;
@@ -64,15 +63,15 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
-  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<3, 0, 0>;
+  using RHO_CACHE = descriptors::FIELD_BASE<3, 0, 0>;
 
   int x0, x1, y0, y1, z0, z1;
   T alpha, kappa1, kappa2, kappa3;
-  std::vector<SpatiallyExtendedObject3D*> partners;
+  std::vector<BlockStructureD<3>*> partners;
 };
 
 /// PostProcessor calculating the interfacial force in the free energy model. On the fist
@@ -82,8 +81,8 @@ template<typename T, typename DESCRIPTOR>
 class FreeEnergyForceCoupling3D : public LocalPostProcessor3D<T,DESCRIPTOR> {
 public:
   FreeEnergyForceCoupling3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                                 std::vector<SpatiallyExtendedObject3D*> partners_);
-  FreeEnergyForceCoupling3D(std::vector<SpatiallyExtendedObject3D*> partners_);
+                            std::vector<BlockStructureD<3>*> partners_);
+  FreeEnergyForceCoupling3D(std::vector<BlockStructureD<3>*> partners_);
   int extent() const override
   {
     return 1;
@@ -92,12 +91,12 @@ public:
   {
     return 1;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int x0, x1, y0, y1, z0, z1;
-  std::vector<SpatiallyExtendedObject3D*> partners;
+  std::vector<BlockStructureD<3>*> partners;
 };
 
 /// PostProcessor for assigning the velocity at inlet and outlets to lattice two and three.
@@ -108,9 +107,9 @@ class FreeEnergyInletOutletCoupling3D : public LocalPostProcessor3D<T,DESCRIPTOR
 public:
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyInletOutletCoupling3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                                       std::vector<SpatiallyExtendedObject3D*> partners_);
+                                  std::vector<BlockStructureD<3>*> partners_);
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  FreeEnergyInletOutletCoupling3D(std::vector<SpatiallyExtendedObject3D*> partners_);
+  FreeEnergyInletOutletCoupling3D(std::vector<BlockStructureD<3>*> partners_);
   int extent() const override
   {
     return 0;
@@ -119,12 +118,12 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int x0, x1, y0, y1, z0, z1;
-  std::vector<SpatiallyExtendedObject3D*> partners;
+  std::vector<BlockStructureD<3>*> partners;
 };
 
 /// PostProcessor for setting a constant density outlet.
@@ -136,10 +135,10 @@ public:
   /// \param[in] rho_ - Gives the value of the constraint.
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
   FreeEnergyDensityOutletCoupling3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_,
-                                  T rho_, std::vector<SpatiallyExtendedObject3D*> partners_);
+                                    T rho_, std::vector<BlockStructureD<3>*> partners_);
   /// \param[in] rho_ - Gives the value of the constraint.
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  FreeEnergyDensityOutletCoupling3D(T rho_, std::vector<SpatiallyExtendedObject3D*> partners_);
+  FreeEnergyDensityOutletCoupling3D(T rho_, std::vector<BlockStructureD<3>*> partners_);
   int extent() const override
   {
     return 0;
@@ -148,13 +147,13 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                         int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int x0, x1, y0, y1, z0, z1;
   T rho;
-  std::vector<SpatiallyExtendedObject3D*> partners;
+  std::vector<BlockStructureD<3>*> partners;
 };
 
 
@@ -186,7 +185,7 @@ public:
   /// \param[in] kappa2_ - Parameter related to the surface tension (need to be >0). [lattice units]
   /// \param[in] kappa3_ - Parameter related to the surface tension (need to be >0). [lattice units]
   FreeEnergyChemicalPotentialGenerator3D(T alpha_, T kappa1_, T kappa2_, T kappa3_);
-  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<3>*> partners) const override;
   LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 private:
   T alpha, kappa1, kappa2, kappa3;
@@ -198,7 +197,7 @@ class FreeEnergyForceGenerator3D : public LatticeCouplingGenerator3D<T,DESCRIPTO
 public:
   FreeEnergyForceGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
   FreeEnergyForceGenerator3D( );
-  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<3>*> partners) const override;
   LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 };
 
@@ -209,7 +208,7 @@ public:
   FreeEnergyInletOutletGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
   FreeEnergyInletOutletGenerator3D( );
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<3>*> partners) const override;
   LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 };
 
@@ -222,7 +221,7 @@ public:
   /// \param[in] rho_ - Gives the value of the constraint.
   FreeEnergyDensityOutletGenerator3D(T rho_);
   /// \param[in] partners_ - Contains one partner lattice for two fluid components, or two lattices for three components.
-  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const override;
+  PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<3>*> partners) const override;
   LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const override;
 private:
   T rho;

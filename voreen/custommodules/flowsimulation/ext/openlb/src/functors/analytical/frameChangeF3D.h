@@ -41,11 +41,11 @@
   The functors return the displacement of a point x in a fixed amount of time.
 
   The ones in the SECOND part are useful to set Poiseuille velocity profiles on
-  - pipes with round cross-section and
+  - pipes with util::round cross-section and
   - pipes with square-shaped cross-section.
 */
 
-/** To enable simulations in a rotating frame, the axis is set in the
+/* To enable simulations in a rotating frame, the axis is set in the
   * constructor with axisPoint and axisDirection. The axisPoint can be the
   * coordinate of any point on the axis. The axisDirection has to be a normed to
   * 1. The pulse w is in rad/s. It determines the pulse speed by its norm while
@@ -58,7 +58,7 @@
 namespace olb {
 
 
-template<typename T> class SuperGeometry3D;
+template<typename T, unsigned D> class SuperGeometry;
 
 // PART 1: /////////////////////////////////////////////////////////////////////
 // Functors for rotating the coordinate system (velocity, pressure, force,...)
@@ -134,7 +134,7 @@ public:
 
 /**
   * This functor returns a quadratic Poiseuille profile for use with a pipe with
-  * round cross-section. It uses cylinder coordinates and is valid for the
+  * util::round cross-section. It uses cylinder coordinates and is valid for the
   * entire length of the pipe.
   *
   * This functor gives a parabolic velocity profile for a given point x as it
@@ -148,12 +148,12 @@ public:
   * determine the Poisseuille profile entierly.
   */
 
-/// Velocity profile for round pipes and power law fluids: u(r)=u_max*(1-(r/R)^((n+1)/n)). The exponent n characterizes the fluid behavior.
+/// Velocity profile for util::round pipes and power law fluids: u(r)=u_max*(1-(r/R)^((n+1)/n)). The exponent n characterizes the fluid behavior.
 /// n<1: Pseudoplastic, n=1: Newtonian fluid, n>1: Dilatant
 template <typename T>
 class CirclePowerLaw3D : public AnalyticalF3D<T,T> {
 protected:
-  std::vector<T> _center;
+  olb::Vector<T, 3> _center;
   std::vector<T> _normal;
   T _radius;
   T _maxVelocity;
@@ -161,16 +161,16 @@ protected:
   T _scale;
 
 public:
-  CirclePowerLaw3D(std::vector<T> axisPoint, std::vector<T> axisDirection,  T maxVelocity, T radius, T n, T scale = T(1));
+  CirclePowerLaw3D(olb::Vector<T, 3> axisPoint, std::vector<T> axisDirection,  T maxVelocity, T radius, T n, T scale = T(1));
   CirclePowerLaw3D(T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T maxVelocity, T n, T scale = T(1));
-  CirclePowerLaw3D(SuperGeometry3D<T>& superGeometry, int material, T maxVelocity, T n, T scale = T(1));
+  CirclePowerLaw3D(SuperGeometry<T,3>& superGeometry, int material, T maxVelocity, T n, T distance2Wall, T scale = T(1));
 
   CirclePowerLaw3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T n, T scale = T(1));
   CirclePowerLaw3D(bool useMeanVelocity, T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T Velocity, T n, T scale = T(1));
-  CirclePowerLaw3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T n, T scale = T(1));
+  CirclePowerLaw3D(bool useMeanVelocity, SuperGeometry<T,3>& superGeometry, int material, T Velocity, T n, T distance2Wall, T scale = T(1));
 
   /// Returns centerpoint vector
-  std::vector<T> getCenter()
+  olb::Vector<T, 3> getCenter()
   {
     return _center;
   };
@@ -188,7 +188,7 @@ public:
   bool operator()(T output[], const T x[]) override;
 };
 
-/// Velocity profile for round pipes and turbulent flows: u(r)=u_max*(1-r/R)^(1/n) The exponent n can be calculated by n = 1.03 * ln(Re) - 3.6
+/// Velocity profile for util::round pipes and turbulent flows: u(r)=u_max*(1-r/R)^(1/n) The exponent n can be calculated by n = 1.03 * ln(Re) - 3.6
 /// n=7 is used for many flow applications
 template <typename T>
 class CirclePowerLawTurbulent3D : public CirclePowerLaw3D<T> {
@@ -201,40 +201,40 @@ private:
 public:
   CirclePowerLawTurbulent3D(std::vector<T> axisPoint_, std::vector<T> axisDirection,  T maxVelocity, T radius, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
   CirclePowerLawTurbulent3D(T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T maxVelocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
-  CirclePowerLawTurbulent3D(SuperGeometry3D<T>& superGeometry, int material, T maxVelocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+  CirclePowerLawTurbulent3D(SuperGeometry<T,3>& superGeometry, int material, T maxVelocity, T distance2Wall, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
 
   CirclePowerLawTurbulent3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
   CirclePowerLawTurbulent3D(bool useMeanVelocity, T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T Velocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
-  CirclePowerLawTurbulent3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
+  CirclePowerLawTurbulent3D(bool useMeanVelocity, SuperGeometry<T,3>& superGeometry, int material, T Velocity, T distance2Wall, T n = 7, T turbulenceIntensity = 0.05, T scale = T(1));
 
   bool operator()(T output[], const T x[]) override;
 };
 
-/// Velocity profile for round pipes and a laminar flow of a Newtonian fluid: u(r)=u_max*(1-(r/R)^2)
+/// Velocity profile for util::round pipes and a laminar flow of a Newtonian fluid: u(r)=u_max*(1-(r/R)^2)
 template <typename T>
 class CirclePoiseuille3D final : public CirclePowerLaw3D<T> {
 
 public:
   CirclePoiseuille3D(std::vector<T> axisPoint, std::vector<T> axisDirection,  T maxVelocity, T radius, T scale = T(1));
   CirclePoiseuille3D(T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T maxVelocity, T scale = T(1));
-  CirclePoiseuille3D(SuperGeometry3D<T>& superGeometry, int material, T maxVelocity, T scale = T(1));
+  CirclePoiseuille3D(SuperGeometry<T,3>& superGeometry, int material, T maxVelocity, T distance2Wall, T scale = T(1));
 
   CirclePoiseuille3D(bool useMeanVelocity, std::vector<T> axisPoint, std::vector<T> axisDirection,  T Velocity, T radius, T scale = T(1));
   CirclePoiseuille3D(bool useMeanVelocity, T center0, T center1, T center2, T normal0, T normal1, T normal2, T radius, T Velocity, T scale = T(1));
-  CirclePoiseuille3D(bool useMeanVelocity, SuperGeometry3D<T>& superGeometry, int material, T Velocity, T scale = T(1));
+  CirclePoiseuille3D(bool useMeanVelocity, SuperGeometry<T,3>& superGeometry, int material, T Velocity, T distance2Wall, T scale = T(1));
 };
 
-/// Strain rate for round pipes and laminar flow of a Newtonian fluid
+/// Strain rate for util::round pipes and laminar flow of a Newtonian fluid
 template < typename T,typename DESCRIPTOR>
 class CirclePoiseuilleStrainRate3D : public AnalyticalF3D<T,T> {
 protected:
- T lengthY;
- T lengthZ;
- T maxVelocity;
+  T lengthY;
+  T lengthZ;
+  T maxVelocity;
 
 public:
- CirclePoiseuilleStrainRate3D(UnitConverter<T, DESCRIPTOR> const& converter, T ly);
- bool operator()(T output[], const T input[]) override;
+  CirclePoiseuilleStrainRate3D(UnitConverter<T, DESCRIPTOR> const& converter, T ly);
+  bool operator()(T output[], const T input[]) override;
 };
 
 /**
@@ -245,20 +245,44 @@ template <typename T>
 class RectanglePoiseuille3D final : public AnalyticalF3D<T,T> {
 protected:
   OstreamManager clout;
+  olb::Vector<T, 3> x0;
+  olb::Vector<T, 3> x1;
+  olb::Vector<T, 3> x2;
+  std::vector<T> maxVelocity;
+
+public:
+  RectanglePoiseuille3D(olb::Vector<T, 3>& x0_, olb::Vector<T, 3>& x1_, olb::Vector<T, 3>& x2_, std::vector<T>& maxVelocity_);
+  /// constructor from material numbers
+  /** offsetX,Y,Z is a positive number denoting the distance from border
+    * voxels of material_ to the zerovelocity boundary */
+  RectanglePoiseuille3D(SuperGeometry<T,3>& superGeometry_, int material_, std::vector<T>& maxVelocity_, T offsetX, T offsetY, T offsetZ);
+  bool operator()(T output[], const T x[]) override;
+};
+
+//More accurate Version using a trigonometric formulation
+template <typename T>
+class RectangleTrigonometricPoiseuille3D final : public AnalyticalF3D<T,T> {
+protected:
+  OstreamManager clout;
   std::vector<T> x0;
   std::vector<T> x1;
   std::vector<T> x2;
   std::vector<T> maxVelocity;
+  int numOfPolynoms;
+  T profilePeak;
+  T profileRatioAvgToPeak;
+  void calcPeakAndAvg();
 
 public:
-  RectanglePoiseuille3D(std::vector<T>& x0_, std::vector<T>& x1_, std::vector<T>& x2_, std::vector<T>& maxVelocity_);
+  RectangleTrigonometricPoiseuille3D(std::vector<T>& x0_, std::vector<T>& x1_, std::vector<T>& x2_, std::vector<T>& maxVelocity, int numOfPolynoms_ = 1);
   /// constructor from material numbers
   /** offsetX,Y,Z is a positive number denoting the distance from border
     * voxels of material_ to the zerovelocity boundary */
-  RectanglePoiseuille3D(SuperGeometry3D<T>& superGeometry_, int material_, std::vector<T>& maxVelocity_, T offsetX, T offsetY, T offsetZ);
+  RectangleTrigonometricPoiseuille3D(SuperGeometry<T,3>& superGeometry_, int material_, std::vector<T>& maxVelocity_, T offsetX, T offsetY, T offsetZ, int numOfPolynoms_ = 1);
+  T getProfilePeak();
+  T getRatioAvgToPeak();
   bool operator()(T output[], const T x[]) override;
 };
-
 
 /**
   * This functor returns a quadratic Poiseuille profile for use with a pipe with
@@ -269,7 +293,7 @@ public:
   * b is in y-direction
   *
   */
-/// Velocity profile for round pipes.
+/// Velocity profile for util::round pipes.
 template <typename T>
 class EllipticPoiseuille3D final : public AnalyticalF3D<T,T> {
 protected:
@@ -289,12 +313,12 @@ public:
 template <typename T>
 class AnalyticalPorousVelocity3D : public AnalyticalF3D<T,T> {
 protected:
-  std::vector<T> center;
-  std::vector<T> normal;
+  olb::Vector<T, 3> center;
+  olb::Vector<T, 3> normal;
   T K, mu, gradP, radius;
   T eps;
 public:
-  AnalyticalPorousVelocity3D(SuperGeometry3D<T>& superGeometry, int material, T K_, T mu_, T gradP_, T radius_, T eps_=T(1));
+  AnalyticalPorousVelocity3D(SuperGeometry<T,3>& superGeometry, int material, T K_, T mu_, T gradP_, T radius_, T eps_=T(1));
   T getPeakVelocity();
   bool operator()(T output[], const T input[]) override;
 };
@@ -332,14 +356,14 @@ template <typename T, typename S>
 class RotationRoundAxis3D final : public AnalyticalF3D<T,S> {
 protected:
   /// origin, around which x is turned
-  std::vector<T> _origin;
+  olb::Vector<T, 3>_origin;
   /// direction, around which x is turned
-  std::vector<T> _rotAxisDirection;
+  olb::Vector<T, 3> _rotAxisDirection;
   /// angle, by which vector x is rotated around _rotAxisDirection
   T _alpha;
 public:
   /// constructor defines _rotAxisDirection, _alpha and _origin
-  RotationRoundAxis3D(std::vector<T> origin, std::vector<T> rotAxisDirection,
+  RotationRoundAxis3D(olb::Vector<T, 3> origin, olb::Vector<T, 3> rotAxisDirection,
                       T alpha);
   /// operator writes coordinates of the resulting point after rotation
   /// of x by angle _alpha in math positive sense to _rotAxisDirection
@@ -354,7 +378,7 @@ public:
 /// This class converts cylindrical of point x (x[0] = radius, x[1] = phi,
 /// x[2] = z) to Cartesian coordinates (wrote into output field).
 /// Initial situation for the Cartesian coordinate system is that angle phi
-/// lies in the x-y-plane and turns round the _cylinderOrigin, the z-axis
+/// lies in the x-y-plane and turns util::round the _cylinderOrigin, the z-axis
 /// direction equals the axis direction of the cylinder.
 template <typename T, typename S>
 class CylinderToCartesian3D final : public AnalyticalF3D<T,S> {
@@ -380,18 +404,18 @@ template <typename T, typename S>
 class CartesianToCylinder3D final : public AnalyticalF3D<T,S> {
 protected:
   /// origin of the Cartesian coordinate system
-  std::vector<T> _cartesianOrigin;
+	olb::Vector<T, 3>_cartesianOrigin;
   /// direction of the axis along which the cylindrical coordinates are calculated
-  std::vector<T> _axisDirection;
+	olb::Vector<T, 3> _axisDirection;
   /// direction to know orientation for math positive to obtain angle phi
   /// of Cartesian point x
-  std::vector<T> _orientation;
+	olb::Vector<T, 3> _orientation;
 public:
-  CartesianToCylinder3D(std::vector<T> cartesianOrigin, T& angle,
-                        std::vector<T> orientation = {T(1),T(),T()});
-  CartesianToCylinder3D(std::vector<T> cartesianOrigin,
-                        std::vector<T> axisDirection,
-                        std::vector<T> orientation = {T(1),T(),T()});
+  CartesianToCylinder3D(olb::Vector<T, 3> cartesianOrigin, T& angle,
+		  	  	  	  	olb::Vector<T, 3> orientation = {T(1),T(),T()});
+  CartesianToCylinder3D(olb::Vector<T, 3> cartesianOrigin,
+		  	  	  	  	olb::Vector<T, 3> axisDirection,
+						olb::Vector<T, 3> orientation = {T(1),T(),T()});
   CartesianToCylinder3D(T cartesianOriginX, T cartesianOriginY,
                         T cartesianOriginZ,
                         T axisDirectionX, T axisDirectionY,
@@ -403,13 +427,13 @@ public:
   /// output[0] = radius ( >= 0), output[1] = phi (in [0, 2Pi)), output[2] = z
   bool operator()(T output[], const S x[]) override;
   /// Read only access to _axisDirection
-  std::vector<T> const& getAxisDirection() const;
+  olb::Vector<T, 3> const& getAxisDirection() const;
   /// Read and write access to _axisDirection
-  std::vector<T>& getAxisDirection();
+  olb::Vector<T, 3>& getAxisDirection();
   /// Read only access to _catesianOrigin
-  std::vector<T> const& getCartesianOrigin() const;
+  olb::Vector<T, 3> const& getCartesianOrigin() const;
   /// Read and write access to _catesianOrigin
-  std::vector<T>& getCartesianOrigin();
+  olb::Vector<T, 3>& getCartesianOrigin();
   /// Read and write access to _axisDirection using angle
   void setAngle(T angle);
 };
@@ -469,7 +493,7 @@ public:
 /// the wire. To calculate the magnetic force on particles around a cylinder
 /// (J. Lindner et al. / Computers and Chemical Engineering 54 (2013) 111-121)
 ///  Fm = mu0*4/3.*PI*radParticle^3*_Mp*radWire^2/r^3 *
-///       [radWire^2/r^2+cos(2*theta), sin(2*theta), 0]
+///       [radWire^2/r^2+util::cos(2*theta), util::sin(2*theta), 0]
 template <typename T, typename S>
 class MagneticForceFromCylinder3D final : public AnalyticalF3D<T,S> {
 protected:
@@ -494,7 +518,7 @@ public:
   MagneticForceFromCylinder3D(CartesianToCylinder3D<T,S>& car2cyl, T length,
                               T radWire, T cutoff, T Mw, T Mp = T(1),
                               T radParticle = T(1), T mu0 = 4*3.14159265e-7);
-  /// operator writes the magnetic force in a point x round a cylindrical wire into output field
+  /// operator writes the magnetic force in a point x util::round a cylindrical wire into output field
   bool operator()(T output[], const S x[]) override;
 };
 
@@ -519,7 +543,7 @@ public:
                               T cutoff,
                               T Mw
                              );
-  /// operator writes the magnetic force in a point x round a cylindrical wire into output field
+  /// operator writes the magnetic force in a point x util::round a cylindrical wire into output field
   bool operator()(T output[], const S x[]) override;
 };
 

@@ -26,7 +26,6 @@
 
 #include "shanChenDynGForcedPostProcessor2D.h"
 #include "interactionPotential.h"
-#include "core/blockLattice2D.h"
 #include "core/util.h"
 #include "core/finiteDifference2D.h"
 
@@ -39,7 +38,7 @@ namespace olb {
 //ShanChenDynGForcedPostProcessor2D <T,DESCRIPTOR>::
 //ShanChenDynGForcedPostProcessor2D(int x0_, int x1_, int y0_, int y1_, T G_,
 //                                  std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-//                                  std::vector<SpatiallyExtendedObject2D*> partners_)
+//                                  std::vector<BlockStructureD<2>*> partners_)
 //  :  x0(x0_), x1(x1_), y0(y0_), y1(y1_), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 //{ }
 //
@@ -47,13 +46,13 @@ namespace olb {
 //ShanChenDynGForcedPostProcessor2D <T,DESCRIPTOR>::
 //ShanChenDynGForcedPostProcessor2D(T G_,
 //                                  std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_,
-//                                  std::vector<SpatiallyExtendedObject2D*> partners_)
+//                                  std::vector<BlockStructureD<2>*> partners_)
 //  :  x0(0), x1(0), y0(0), y1(0), G(G_), rho0(rho0_), interactionPotential(iP_), partners(partners_)
 //{ }
 //
 //template<typename T, typename DESCRIPTOR>
 //void ShanChenDynGForcedPostProcessor2D<T,DESCRIPTOR>::
-//processSubDomain( BlockLattice2D<T,DESCRIPTOR>& blockLattice,
+//processSubDomain( BlockLattice<T,DESCRIPTOR>& blockLattice,
 //                  int x0_, int x1_, int y0_, int y1_ )
 //{
 //  typedef DESCRIPTOR L;
@@ -63,7 +62,7 @@ namespace olb {
 //    externalForceOffset = L::ExternalField::externalForceBeginsAt
 //  };
 //
-//  BlockLattice2D<T,DESCRIPTOR> *partnerLattice = static_cast<BlockLattice2D<T,DESCRIPTOR> *>(partners[0]);
+//  BlockLattice<T,DESCRIPTOR> *partnerLattice = static_cast<BlockLattice<T,DESCRIPTOR> *>(partners[0]);
 //
 //  int newX0, newX1, newY0, newY1;
 //  if ( util::intersect ( x0, x1, y0, y1,
@@ -74,8 +73,8 @@ namespace olb {
 //    int offsetX = newX0-1;
 //    int offsetY = newY0-1;
 //
-//    BlockData2D<T,T> rhoField1(nx, ny);
-//    BlockData2D<T,T> rhoField2(nx, ny);
+//    BlockData<2,T,T> rhoField1(nx, ny);
+//    BlockData<2,T,T> rhoField2(nx, ny);
 //
 //    // Compute density and velocity on every site of first lattice, and store result
 //    //   in external scalars; envelope cells are included, because they are needed
@@ -103,9 +102,9 @@ namespace olb {
 //        Cell<T,DESCRIPTOR>& partnerCell = partnerLattice->get(iX,iY);
 //
 //        T* j = blockCell.template getFieldPointer<descriptors::VELOCITY>();
-//        lbHelpers<T,DESCRIPTOR>::computeJ(blockCell,j);
+//        lbm<DESCRIPTOR>::computeJ(blockCell,j);
 //        j = partnerCell.template getFieldPointer<descriptors::VELOCITY>();
-//        lbHelpers<T,DESCRIPTOR>::computeJ(partnerCell,j);
+//        lbm<DESCRIPTOR>::computeJ(partnerCell,j);
 //
 //        T blockOmega   = blockLattice.getDynamics(iX, iY)->getOmega();
 //        T partnerOmega = partnerLattice.getDynamics(iX, iY)->getOmega();
@@ -152,9 +151,9 @@ namespace olb {
 //
 //        for (int iD = 0; iD < L::d; ++iD) {
 //          blockU[iD] = uTot[iD];
-//          blockForce[iD] = externalBlockForce[iD] - G*fabs(gForce[(iD+1)%2])*rhoPartnerContribution[iD]/rhoField1.get(iX-offsetX, iY-offsetY);
+//          blockForce[iD] = externalBlockForce[iD] - G*util::fabs(gForce[(iD+1)%2])*rhoPartnerContribution[iD]/rhoField1.get(iX-offsetX, iY-offsetY);
 //          partnerU[iD] = uTot[iD];
-//          partnerForce[iD] = externalPartnerForce[iD] - G*fabs(gForce[(iD+1)%2])*rhoBlockContribution[iD]/rhoField2.get(iX-offsetX, iY-offsetY);
+//          partnerForce[iD] = externalPartnerForce[iD] - G*util::fabs(gForce[(iD+1)%2])*rhoBlockContribution[iD]/rhoField2.get(iX-offsetX, iY-offsetY);
 //        }
 //      }
 //    }
@@ -163,7 +162,7 @@ namespace olb {
 //
 //template<typename T, typename DESCRIPTOR>
 //void ShanChenDynGForcedPostProcessor2D<T,DESCRIPTOR>::
-//process(BlockLattice2D<T,DESCRIPTOR>& blockLattice)
+//process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 //{
 //  processSubDomain(blockLattice, x0, x1, y0, y1);
 //}
@@ -185,7 +184,7 @@ namespace olb {
 //
 //template<typename T, typename DESCRIPTOR>
 //PostProcessor2D<T,DESCRIPTOR>* ShanChenDynGForcedGenerator2D<T,DESCRIPTOR>::generate (
-//  std::vector<SpatiallyExtendedObject2D*> partners) const
+//  std::vector<BlockStructureD<2>*> partners) const
 //{
 //  return new ShanChenDynGForcedPostProcessor2D<T,DESCRIPTOR>(
 //           this->x0,this->x1,this->y0,this->y1,G, rho0, interactionPotential, partners);

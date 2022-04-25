@@ -25,20 +25,18 @@
 #define LATTICE_PHYS_EXTERNAL_ZETA_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysExternalZeta2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
@@ -46,7 +44,7 @@ namespace olb {
 //Zeta-Field (Geng2019)
 template <typename T,typename DESCRIPTOR>
 SuperLatticePhysExternalZeta2D<T,DESCRIPTOR>::SuperLatticePhysExternalZeta2D
-(SuperLattice2D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 9)
 {
   this->getName() = "ExtZetaField";
@@ -55,8 +53,7 @@ SuperLatticePhysExternalZeta2D<T,DESCRIPTOR>::SuperLatticePhysExternalZeta2D
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysExternalZeta2D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -65,11 +62,9 @@ SuperLatticePhysExternalZeta2D<T,DESCRIPTOR>::SuperLatticePhysExternalZeta2D
 // Zeta-Field (Geng2019)
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysExternalZeta2D<T,DESCRIPTOR>::BlockLatticePhysExternalZeta2D(
-  BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter)
-  : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice, converter, 9),
-    _overlap(overlap)
+  : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice, converter, 9)
 {
   this->getName() = "ExtZetaField";
 }
@@ -77,9 +72,7 @@ BlockLatticePhysExternalZeta2D<T,DESCRIPTOR>::BlockLatticePhysExternalZeta2D(
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysExternalZeta2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  this->_blockLattice.get(
-    input[0]+_overlap, input[1]+_overlap
-  ).template computeField<descriptors::ZETA>(output);
+  this->_blockLattice.get(input).template computeField<descriptors::ZETA>(output);
   return true;
 }
 

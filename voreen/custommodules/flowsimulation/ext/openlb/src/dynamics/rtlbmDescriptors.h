@@ -28,7 +28,7 @@
 #define RTLBM_DESCRIPTORS_H
 
 #include "latticeDescriptors.h"
-#include <cmath>
+#include "utilities/omath.h"
 
 namespace olb {
 
@@ -46,27 +46,27 @@ namespace rtlbm_data {
 using utilities::Fraction;
 
 template <unsigned D, unsigned Q>
-constexpr Fraction t[Q] = {};
+platform_constant Fraction t[Q] = {};
 
 template <unsigned D, unsigned Q>
-constexpr double norm_c[Q] = {};
+platform_constant double norm_c[Q] = {};
 
 template <>
-constexpr Fraction t<3,7>[7] = {
+platform_constant_definition Fraction t<3,7>[7] = {
   0,
   {1, 6}, {1, 6}, {1, 6},
   {1, 6}, {1, 6}, {1, 6}
 };
 
 template <>
-constexpr double norm_c<3,7>[7] = {
+platform_constant_definition double norm_c<3,7>[7] = {
   0.0,
   1.0, 1.0, 1.0,
   1.0, 1.0, 1.0
 };
 
 template <>
-constexpr Fraction t<3,15>[15] = {
+platform_constant_definition Fraction t<3,15>[15] = {
   0,
   {1, 15}, {1, 15}, {1, 15},
   {3, 40}, {3, 40}, {3, 40}, {3, 40},
@@ -75,7 +75,7 @@ constexpr Fraction t<3,15>[15] = {
 };
 
 template <>
-constexpr double norm_c<3,15>[15] = {
+platform_constant_definition double norm_c<3,15>[15] = {
   0.0,
   1.0, 1.0, 1.0,
   1.73205080757, 1.73205080757, 1.73205080757, 1.73205080757,
@@ -84,7 +84,7 @@ constexpr double norm_c<3,15>[15] = {
 };
 
 template <>
-constexpr Fraction t<3,27>[27] = {
+platform_constant_definition Fraction t<3,27>[27] = {
   0,
 
   {1, 21}, {1, 21}, {1, 21},
@@ -99,7 +99,7 @@ constexpr Fraction t<3,27>[27] = {
 };
 
 template <>
-constexpr double norm_c<3,27>[27] = {
+platform_constant_definition double norm_c<3,27>[27] = {
   0.0,
   1.0, 1.0, 1.0,
   1.41421356237, 1.41421356237, 1.41421356237,

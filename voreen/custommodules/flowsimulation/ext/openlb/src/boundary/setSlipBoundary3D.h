@@ -21,9 +21,9 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Slip Boundary
-///This is an onLattice boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Slip Boundary
+//This is an onLattice boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_SLIP_BOUNDARY_H
 #define SET_SLIP_BOUNDARY_H
 
@@ -31,36 +31,33 @@
 #include <vector>
 #include "utilities/functorPtr.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
-#include "core/superLattice3D.h"
+
 #include "functors/lattice/indicator/superIndicatorBaseF3D.h"
 #include "dynamics/dynamics.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
-#include "momentaOnBoundaries3D.h"
 #include "io/ostreamManager.h"
 #include "functors/lattice/indicator/blockIndicatorF3D.h"
 #include "dynamics/freeEnergyDynamics.h"
 #include "boundaryPostProcessors3D.h"
+#include "setBoundary3D.h"
 
 
 namespace olb {
-////////// SuperLattice Domain  /////////////////////////////////////////
 
 ///Initialising the setslipBoundary function on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setSlipBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry, int material);
+void setSlipBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry, int material);
 
 ///Initialising the setslipBoundary function on the superLattice domain
 template<typename T, typename DESCRIPTOR>
-void setSlipBoundary(SuperLattice3D<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& indicator);
+void setSlipBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, FunctorPtr<SuperIndicatorF3D<T>>&& indicator);
 
 
-////////// BlockLattice Domain  /////////////////////////////////////////
-
-/// Set slip boundary for any indicated cells inside the block domain
+///Set slipBoundary for any indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR>
-void setSlipBoundary(BlockLatticeStructure3D<T,DESCRIPTOR>& block,BlockIndicatorF3D<T>& indicator, bool includeOuterCells=false);
+void setSlipBoundary(BlockLattice<T,DESCRIPTOR>& block,BlockIndicatorF3D<T>& indicator, bool includeOuterCells=false);
 
 }//namespace olb
 

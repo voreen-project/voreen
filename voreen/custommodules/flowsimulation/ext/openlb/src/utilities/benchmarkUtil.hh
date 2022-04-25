@@ -30,7 +30,7 @@
 #include <sstream>
 #include <numeric>
 #include <algorithm>
-#include <cmath>
+#include "utilities/omath.h"
 #include <cassert>
 
 
@@ -69,7 +69,7 @@ template<typename T>
 void ValueTracer<T>::takeValue(T val, bool doPrint)
 {
   _values.push_back(val);
-  if ((int)_values.size() > std::abs(_deltaT)) {
+  if ((int)_values.size() > util::abs(_deltaT)) {
     _values.erase(_values.begin());
     if (doPrint && _t%_deltaT==0) {
       T average = computeAverage();
@@ -85,7 +85,7 @@ void ValueTracer<T>::resetScale(T u, T L)
 {
   _t = _t%_deltaT;
   _deltaT = (int) (L/u/2.);
-  if ( (int)_values.size() > std::abs(_deltaT) ) {
+  if ( (int)_values.size() > util::abs(_deltaT) ) {
     _values.erase(_values.begin(), _values.begin() + (_values.size()-_deltaT) );
   }
 }
@@ -102,14 +102,16 @@ void ValueTracer<T>::resetValues()
 template<typename T>
 bool ValueTracer<T>::hasConverged() const
 {
-  if ((int)_values.size() < std::abs(_deltaT)) {
+  if ((int)_values.size() < util::abs(_deltaT)) {
     return false;
-  } else {
+  }
+  else {
     T average = computeAverage();
     T stdDev = computeStdDev(average);
     if (!std::isnan(stdDev/average)) {
-      return fabs(stdDev/average) < _epsilon;
-    } else {
+      return util::fabs(stdDev/average) < _epsilon;
+    }
+    else {
       clout << "simulation diverged." << std::endl;
       return true;
     }
@@ -118,14 +120,16 @@ bool ValueTracer<T>::hasConverged() const
 template<typename T>
 bool ValueTracer<T>::convergenceCheck() const
 {
-  if ((int)_values.size() < std::abs(_deltaT)) {
+  if ((int)_values.size() < util::abs(_deltaT)) {
     return false;
-  } else {
+  }
+  else {
     T average = computeAverage();
     T stdDev = computeStdDev(average);
     if (!std::isnan(stdDev/average)) {
-      return fabs(stdDev/average) < _epsilon;
-    } else {
+      return util::fabs(stdDev/average) < _epsilon;
+    }
+    else {
       clout << "simulation diverged." << std::endl;
       return false;
     }
@@ -134,9 +138,10 @@ bool ValueTracer<T>::convergenceCheck() const
 template<typename T>
 bool ValueTracer<T>::hasConvergedMinMax() const
 {
-  if ((int)_values.size() < std::abs(_deltaT)) {
+  if ((int)_values.size() < util::abs(_deltaT)) {
     return false;
-  } else {
+  }
+  else {
     T minEl = *min_element(_values.begin(), _values.end());
     T maxEl = *max_element(_values.begin(), _values.end());
     T average = computeAverage();
@@ -158,7 +163,13 @@ T ValueTracer<T>::computeStdDev(T average) const
   for (int i=0; i<n; ++i) {
     sqrDev += (_values[i]-average)*(_values[i]-average);
   }
-  return sqrt(sqrDev/(n-1));
+  return util::sqrt(sqrDev/(n-1));
+}
+
+template<typename T>
+T ValueTracer<T>::getEpsilon() const
+{
+  return _epsilon;
 }
 
 template<typename T>
@@ -191,7 +202,8 @@ T BisectStepper<T>::getVal(bool stable, bool doPrint)
       currentVal = iniVal+step;
       state = up;
       message << "[" << iniVal << ",infty]";
-    } else {
+    }
+    else {
       currentVal = iniVal-step;
       state = down;
       message << "[-infty," << iniVal << "]";
@@ -201,7 +213,8 @@ T BisectStepper<T>::getVal(bool stable, bool doPrint)
     if (stable) {
       message << "[" << currentVal << ",infty]";
       currentVal += step;
-    } else {
+    }
+    else {
       lowerVal = currentVal-step;
       upperVal = currentVal;
       currentVal = 0.5*(lowerVal+upperVal);
@@ -213,7 +226,8 @@ T BisectStepper<T>::getVal(bool stable, bool doPrint)
     if (!stable) {
       message << "[-infty," << currentVal << "]";
       currentVal -= step;
-    } else {
+    }
+    else {
       lowerVal = currentVal;
       upperVal = currentVal+step;
       currentVal = 0.5*(lowerVal+upperVal);
@@ -224,7 +238,8 @@ T BisectStepper<T>::getVal(bool stable, bool doPrint)
   case bisect:
     if (stable) {
       lowerVal = currentVal;
-    } else {
+    }
+    else {
       upperVal = currentVal;
     }
     currentVal = 0.5*(lowerVal+upperVal);
@@ -256,11 +271,11 @@ T Newton1D<T>::solve(T startValue, bool print)
   T fValue[1], dfValue[1], x[1];
   x[0] = startValue;
   _f(fValue,x);
-  T eps = fabs(fValue[0] - _yValue);
+  T eps = util::fabs(fValue[0] - _yValue);
   for (int i=0; i<_maxIterations && eps>_eps; i++) {
     _f(fValue,x);
     _df(dfValue,x);
-    eps = fabs(fValue[0] - _yValue);
+    eps = util::fabs(fValue[0] - _yValue);
     if (print) {
       std::cout << "newtonStep=" << i << "; eps=" << eps << "; x=" << x[0]  << "; f(x)="<< fValue[0] << "; df(x)="<< dfValue[0] << std::endl;
     }

@@ -25,27 +25,25 @@
 #define LATTICE_VOLUME_FRACTION_APPROXIMATION_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeVolumeFractionApproximation2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>::SuperLatticeVolumeFractionApproximation2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
   IndicatorF2D<T>& indicator, int refinementLevel,
   const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut)
   : SuperLatticeF2D<T, DESCRIPTOR>(sLattice, 1)
@@ -54,7 +52,7 @@ SuperLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>::SuperLatticeVolumeFrac
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back(new BlockLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC),
                                superGeometry.getBlockGeometry(iC),
                                indicator, refinementLevel,
                                converter, insideOut));
@@ -62,8 +60,8 @@ SuperLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>::SuperLatticeVolumeFrac
 }
 
 template<typename T, typename DESCRIPTOR>
-BlockLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>::BlockLatticeVolumeFractionApproximation2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-    BlockGeometryStructure2D<T>& blockGeometry,
+BlockLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>::BlockLatticeVolumeFractionApproximation2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+    BlockGeometry<T,2>& blockGeometry,
     IndicatorF2D<T>& indicator,
     int refinementLevel,
     const UnitConverter<T,DESCRIPTOR>& converter,
@@ -83,7 +81,7 @@ bool BlockLatticeVolumeFractionApproximation2D<T, DESCRIPTOR>::operator()(T outp
   output[0] = 0.;
   T physR[2];
   bool inside[1];
-  _blockGeometry.getPhysR(physR, input[0], input[1]);
+  _blockGeometry.getPhysR(physR, {input[0], input[1]});
 
   T subGridMinPhysR[2];
   subGridMinPhysR[0] = physR[0] + _physSubGridMinPhysRshift;

@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,7 +41,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeVolumeFractionApproximation2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeVolumeFractionApproximation2D(SuperLattice2D<T,DESCRIPTOR>& sLattice, SuperGeometry2D<T>& superGeometry,
+  SuperLatticeVolumeFractionApproximation2D(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,2>& superGeometry,
       IndicatorF2D<T>& indicator, int refinementLevel, const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut = false);
 };
 
@@ -53,7 +51,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeVolumeFractionApproximation2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   IndicatorF2D<T>& _indicator;
   int _refinementLevel;
   const UnitConverter<T,DESCRIPTOR>& _converter;
@@ -62,8 +60,8 @@ private:
   T _physSubGridDeltaX;
   T _latticeSubGridVolume;
 public:
-  BlockLatticeVolumeFractionApproximation2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-      BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLatticeVolumeFractionApproximation2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+      BlockGeometry<T,2>& blockGeometry,
       IndicatorF2D<T>& indicator,
       int refinementLevel,
       const UnitConverter<T,DESCRIPTOR>& converter, bool insideOut);

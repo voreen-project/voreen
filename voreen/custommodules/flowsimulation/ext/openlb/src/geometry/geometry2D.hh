@@ -26,13 +26,11 @@
 #ifndef GEOMETRY_2D_HH
 #define GEOMETRY_2D_HH
 
-#include "blockGeometry2D.hh"
+#include "blockGeometry.hh"
 #include "blockGeometryStatistics2D.hh"
-#include "blockGeometryStructure2D.hh"
-#include "blockGeometryView2D.hh"
 #include "cuboid2D.hh"
 #include "cuboidGeometry2D.hh"
-#include "superGeometry2D.hh"
+#include "superGeometry.hh"
 #include "superGeometryStatistics2D.hh"
 
 #endif

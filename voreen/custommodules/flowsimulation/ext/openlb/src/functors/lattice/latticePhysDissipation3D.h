@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,7 +50,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePhysDissipation3D final : public SuperLatticePhysF3D<T,DESCRIPTOR> {
 public:
-  SuperLatticePhysDissipation3D(SuperLattice3D<T,DESCRIPTOR>& sLattice,
+  SuperLatticePhysDissipation3D(SuperLattice<T,DESCRIPTOR>& sLattice,
                                 const UnitConverter<T,DESCRIPTOR>& converter);
 };
 
@@ -58,11 +58,9 @@ public:
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysDissipation3D final : public BlockLatticeF3D<T,DESCRIPTOR> {
 protected:
-  const int             _overlap;
   const UnitConverter<T, DESCRIPTOR>& _converter;
 public:
-  BlockLatticePhysDissipation3D(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice,
-                                int overlap,
+  BlockLatticePhysDissipation3D(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                 const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };

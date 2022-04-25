@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticePhysHeatFluxBoundary3D<T, DESCRIPTOR, TDESCRIPTOR>::SuperLatticePhysHeatFluxBoundary3D(
-  SuperLattice3D<T, TDESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
+  SuperLattice<T, TDESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
   const int material, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
   IndicatorF3D<T>& indicator)
   : SuperLatticeThermalPhysF3D<T, DESCRIPTOR, TDESCRIPTOR>(sLattice, converter, 1),
@@ -56,9 +55,8 @@ SuperLatticePhysHeatFluxBoundary3D<T, DESCRIPTOR, TDESCRIPTOR>::SuperLatticePhys
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysHeatFluxBoundary3D<T, DESCRIPTOR, TDESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        _superGeometry.getExtendedBlockGeometry(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
+        _superGeometry.getBlockGeometry(iC),
         _material,
         this->_converter,
         indicator)
@@ -69,15 +67,13 @@ SuperLatticePhysHeatFluxBoundary3D<T, DESCRIPTOR, TDESCRIPTOR>::SuperLatticePhys
 // constructor calculates the normal of the boundary on every lattice for one specific material number
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticePhysHeatFluxBoundary3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysHeatFluxBoundary3D(
-  BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice,
-  BlockGeometryStructure3D<T>& blockGeometry,
-  int overlap,
+  BlockLattice<T,TDESCRIPTOR>& blockLattice,
+  BlockGeometry<T,3>& blockGeometry,
   int material,
   const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
   IndicatorF3D<T>& indicator)
   : BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(blockLattice,converter,1),
     _blockGeometry(blockGeometry),
-    _overlap(overlap),
     _material(material)
 {
   this->getName() = "physHeatFluxBoundary";
@@ -96,7 +92,7 @@ BlockLatticePhysHeatFluxBoundary3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysHe
         _discreteNormal[iX-1][iY-1].resize(_blockGeometry.getNz() - 2);
         _normal[iX-1][iY-1].resize(_blockGeometry.getNz() - 2);
 
-        if (_blockGeometry.get(iX, iY, iZ) == _material) {
+        if (_blockGeometry.get({iX, iY, iZ}) == _material) {
           discreteNormalOutwards = _blockGeometry.getStatistics().getType(iX, iY, iZ);
           _discreteNormal[iX - 1][iY - 1][iZ - 1].resize(3);
           _normal[iX - 1][iY - 1][iZ - 1].resize(3);
@@ -106,7 +102,7 @@ BlockLatticePhysHeatFluxBoundary3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysHe
           _discreteNormal[iX- 1][iY- 1][iZ- 1][2] = -discreteNormalOutwards[3];
 
           T physR[3];
-          _blockGeometry.getPhysR(physR,iX, iY, iZ);
+          _blockGeometry.getPhysR(physR,{iX, iY, iZ});
           Vector<T,3> origin(physR[0],physR[1],physR[2]);
           Vector<T,3> direction(-_discreteNormal[iX- 1][iY- 1][iZ- 1][0] * scaling,
                                 -_discreteNormal[iX- 1][iY- 1][iZ- 1][1] * scaling,
@@ -117,7 +113,7 @@ BlockLatticePhysHeatFluxBoundary3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysHe
           origin[2] = physR[2];
 
           indicator.normal(normal, origin, direction);
-          normal.normalize();
+          normalize(normal);
 
           _normal[iX- 1][iY- 1][iZ- 1][0] = normal[0];
           _normal[iX- 1][iY- 1][iZ- 1][1] = normal[1];
@@ -134,48 +130,34 @@ bool BlockLatticePhysHeatFluxBoundary3D<T, DESCRIPTOR, TDESCRIPTOR>::operator()(
 {
   output[0] = T();
 
-  if (input[0] + _overlap < 1 ||
-      input[1] + _overlap < 1 ||
-      input[2] + _overlap < 1 ||
-      input[0] + _overlap >= _blockGeometry.getNx()-1 ||
-      input[1] + _overlap >= _blockGeometry.getNy()-1 ||
-      input[2] + _overlap >= _blockGeometry.getNz()-1 ) {
-
+  if (this->_blockLattice.getNeighborhoodRadius(input) < 1) {
 #ifdef OLB_DEBUG
     std::cout << "Input address not mapped by _discreteNormal, overlap too small" << std::endl;
 #endif
     return true;
   }
 
-  if (_blockGeometry.get(input[0]+_overlap,input[1]+_overlap,input[2]+_overlap) == _material) {
+  if (_blockGeometry.get(input) == _material) {
 
     // lattice temperature next to the boundary in the direction of the normal
     T temp1 = this->_blockLattice.get(
-                input[0] + _overlap + _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][0],
-                input[1] + _overlap + _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][1],
-                input[2] + _overlap + _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][2]).computeRho();
+                input[0] + _discreteNormal[input[0]-1][input[1]-1][input[2]-1][0],
+                input[1] + _discreteNormal[input[0]-1][input[1]-1][input[2]-1][1],
+                input[2] + _discreteNormal[input[0]-1][input[1]-1][input[2]-1][2]).computeRho();
 
     // second lattice temperature in the direction of the normal
     T temp2 = this->_blockLattice.get(
-                input[0] + _overlap + 2*_discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][0],
-                input[1] + _overlap + 2*_discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][1],
-                input[2] + _overlap + 2*_discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][2]).computeRho();
-
-    // calculation of deltaX with the discrete normal
-    /*T deltaX = sqrt( _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][0] *
-                     _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][0] +
-                     _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][1] *
-                     _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][1] +
-                     _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][2] *
-                     _discreteNormal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][2] );*/
+                input[0] + 2*_discreteNormal[input[0]-1][input[1]-1][input[2]-1][0],
+                input[1] + 2*_discreteNormal[input[0]-1][input[1]-1][input[2]-1][1],
+                input[2] + 2*_discreteNormal[input[0]-1][input[1]-1][input[2]-1][2]).computeRho();
 
     // calculation of deltaX with the normal, yields higher accuracy for deltaX
-    T deltaX = sqrt( _normal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][0] *
-                     _normal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][0] +
-                     _normal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][1] *
-                     _normal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][1] +
-                     _normal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][2] *
-                     _normal[input[0]+_overlap-1][input[1]+_overlap-1][input[2]+_overlap-1][2] );
+    T deltaX = util::sqrt( _normal[input[0]-1][input[1]-1][input[2]-1][0] *
+                           _normal[input[0]-1][input[1]-1][input[2]-1][0] +
+                           _normal[input[0]-1][input[1]-1][input[2]-1][1] *
+                           _normal[input[0]-1][input[1]-1][input[2]-1][1] +
+                           _normal[input[0]-1][input[1]-1][input[2]-1][2] *
+                           _normal[input[0]-1][input[1]-1][input[2]-1][2] );
 
     // lattice temperature on the boundary
     // ATTENTION: here the temperature is hardcoded as the characteristic high temperature

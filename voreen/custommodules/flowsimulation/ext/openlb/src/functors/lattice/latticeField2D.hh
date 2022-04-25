@@ -25,39 +25,37 @@
 #define LATTICE_FIELD_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeField2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T, typename DESCRIPTOR, typename FIELD>
 SuperLatticeField2D<T,DESCRIPTOR,FIELD>::SuperLatticeField2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice)
+  SuperLattice<T,DESCRIPTOR>& sLattice)
   : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, DESCRIPTOR::template size<FIELD>())
 {
   this->getName() = "ExtField";
   for (int iC = 0; iC < this->_sLattice.getLoadBalancer().size(); iC++ ) {
     this->_blockF.emplace_back(
-      new BlockLatticeField2D<T,DESCRIPTOR,FIELD>(this->_sLattice.getBlockLattice(iC)));
+      new BlockLatticeField2D<T,DESCRIPTOR,FIELD>(this->_sLattice.getBlock(iC)));
   }
 }
 
 template<typename T, typename DESCRIPTOR, typename FIELD>
 BlockLatticeField2D<T,DESCRIPTOR,FIELD>::BlockLatticeField2D(
-  BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice)
+  BlockLattice<T,DESCRIPTOR>& blockLattice)
   : BlockLatticeF2D<T, DESCRIPTOR>(blockLattice, DESCRIPTOR::template size<FIELD>())
 {
   this->getName() = "extField";
@@ -67,7 +65,7 @@ template<typename T, typename DESCRIPTOR, typename FIELD>
 bool BlockLatticeField2D<T,DESCRIPTOR,FIELD>::operator()(
   T output[], const int input[])
 {
-  this->_blockLattice.get(input[0], input[1]).template computeField<FIELD>(output);
+  this->_blockLattice.get(input).template computeField<FIELD>(output);
   return true;
 }
 

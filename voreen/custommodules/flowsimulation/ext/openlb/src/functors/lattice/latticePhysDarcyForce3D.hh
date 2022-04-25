@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysDarcyForce3D<T, DESCRIPTOR>::SuperLatticePhysDarcyForce3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
+  SuperLattice<T, DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
   const int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3),
     _superGeometry(superGeometry), _material(material)
@@ -73,7 +72,7 @@ bool SuperLatticePhysDarcyForce3D<T, DESCRIPTOR>::operator()(T output[], const i
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysDarcyForce3D<T, DESCRIPTOR>::BlockLatticePhysDarcyForce3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, BlockGeometry3D<T>& blockGeometry,
+  BlockLattice<T, DESCRIPTOR>& blockLattice, BlockGeometry<T,3>& blockGeometry,
   int material, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 3),
     _blockGeometry(blockGeometry),

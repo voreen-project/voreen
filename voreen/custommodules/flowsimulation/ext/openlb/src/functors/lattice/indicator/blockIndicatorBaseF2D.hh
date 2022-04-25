@@ -25,19 +25,19 @@
 #define BLOCK_INDICATOR_BASE_F_2D_HH
 
 #include "blockIndicatorBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 
 namespace olb {
 
 template <typename T>
-BlockIndicatorF2D<T>::BlockIndicatorF2D(BlockGeometryStructure2D<T>& geometry)
+BlockIndicatorF2D<T>::BlockIndicatorF2D(BlockGeometry<T,2>& geometry)
   : BlockF2D<bool>(geometry, 1),
     _blockGeometryStructure(geometry),
     _cachedData{nullptr}
 { }
 
 template <typename T>
-BlockGeometryStructure2D<T>& BlockIndicatorF2D<T>::getBlockGeometryStructure()
+BlockGeometry<T,2>& BlockIndicatorF2D<T>::getBlockGeometry()
 {
   return _blockGeometryStructure;
 }
@@ -50,7 +50,7 @@ bool BlockIndicatorF2D<T>::operator() (const int input[])
     this->operator()(&output, input);
   }
   else {
-    _cachedData->get(input[0], input[1]);
+    _cachedData->get(input);
   }
   return output;
 }
@@ -58,18 +58,18 @@ bool BlockIndicatorF2D<T>::operator() (const int input[])
 template <typename T>
 bool BlockIndicatorF2D<T>::operator() (int iX, int iY)
 {
-  bool output{};
-  if (_cachedData == nullptr) {
-    this->operator()(&output, iX, iY);
-  }
-  else {
-    _cachedData->get(iX, iY);
-  }
-  return output;
+  int latticeR[2] { iX, iY };
+  return this->operator()(latticeR);
 }
 
 template <typename T>
-void BlockIndicatorF2D<T>::setCache(const BlockData2D<T,bool>& cache)
+bool BlockIndicatorF2D<T>::operator() (LatticeR<2> loc)
+{
+  return operator()(loc[0], loc[1]);
+}
+
+template <typename T>
+void BlockIndicatorF2D<T>::setCache(const BlockData<2,T,bool>& cache)
 {
   _cachedData = &cache;
 }

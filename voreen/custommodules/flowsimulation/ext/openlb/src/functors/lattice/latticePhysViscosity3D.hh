@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysViscosity3D<T, DESCRIPTOR>::SuperLatticePhysViscosity3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, bool logscale)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter, bool logscale)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physViscosity";
@@ -53,8 +52,7 @@ SuperLatticePhysViscosity3D<T, DESCRIPTOR>::SuperLatticePhysViscosity3D(
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysViscosity3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter, logscale)
     );
   }
@@ -62,11 +60,9 @@ SuperLatticePhysViscosity3D<T, DESCRIPTOR>::SuperLatticePhysViscosity3D(
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysViscosity3D<T, DESCRIPTOR>::BlockLatticePhysViscosity3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter, bool logscale)
   : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 1),
-    _overlap(overlap),
     _logscale(logscale)
 {
   this->getName() = "physViscosity";
@@ -75,16 +71,16 @@ BlockLatticePhysViscosity3D<T, DESCRIPTOR>::BlockLatticePhysViscosity3D(
 template<typename T, typename DESCRIPTOR>
 bool BlockLatticePhysViscosity3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
-  Cell<T,DESCRIPTOR> cell = this->_blockLattice.get(input[0]+_overlap, input[1]+_overlap, input[2]+_overlap);
-  if (cell.getDynamics()->getOmega() == T()) {
+  Cell<T,DESCRIPTOR> cell = this->_blockLattice.get(input[0], input[1], input[2]);
+  const auto omegaPL = cell.template getField<descriptors::OMEGA>();
+  if (omegaPL == T()) {
     output[0] = std::numeric_limits<double>::quiet_NaN();
     return true;
   }
-  const auto omegaPL = cell.template getField<descriptors::OMEGA>();
   output[0] = (1./omegaPL - 0.5) / descriptors::invCs2<T,DESCRIPTOR>()
               * this->_converter.getPhysDeltaX() * this->_converter.getPhysDeltaX() / this->_converter.getPhysDeltaT();
   if (_logscale) {
-    output[0] = log10(output[0]);
+    output[0] = util::log10(output[0]);
   }
 
   return true;

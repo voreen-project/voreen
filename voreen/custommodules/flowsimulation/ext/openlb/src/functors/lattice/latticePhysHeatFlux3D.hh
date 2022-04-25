@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,21 +43,21 @@ namespace olb {
 
 template<typename T,typename DESCRIPTOR, typename TDESCRIPTOR>
 SuperLatticePhysHeatFlux3D<T,DESCRIPTOR,TDESCRIPTOR>::SuperLatticePhysHeatFlux3D(
-  SuperLattice3D<T,TDESCRIPTOR>& sLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter)
+  SuperLattice<T,TDESCRIPTOR>& sLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter)
   : SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(sLattice, converter, 3)
 {
   this->getName() = "physHeatFlux";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticePhysHeatFlux3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlockLattice(iC),
+    this->_blockF.emplace_back(new BlockLatticePhysHeatFlux3D<T,DESCRIPTOR,TDESCRIPTOR>(this->_sLattice.getBlock(iC),
                                this->_converter));
   }
 }
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticePhysHeatFlux3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysHeatFlux3D
-(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
+(BlockLattice<T,TDESCRIPTOR>& blockLattice, ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter)
   : BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>(blockLattice,converter,3),
     _temp(converter.getLatticeSpecificHeatCapacity(converter.getPhysSpecificHeatCapacity())*(converter.getLatticeThermalRelaxationTime() - 0.5) / converter.getLatticeThermalRelaxationTime())
 {
@@ -68,9 +67,11 @@ BlockLatticePhysHeatFlux3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticePhysHeatFlux3D
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 bool BlockLatticePhysHeatFlux3D<T,DESCRIPTOR,TDESCRIPTOR>::operator() (T output[], const int input[])
 {
-  T temperature, extVel[3], j[3];
-  this->_blockLattice.get( input[0], input[1], input[2] ).computeRhoU(temperature,extVel);
+  T j[3];
+  const T temperature = this->_blockLattice.get( input[0], input[1], input[2] ).computeRho();
+  const auto extVel = this->_blockLattice.get( input[0], input[1], input[2] ).template getField<descriptors::VELOCITY>();
   this->_blockLattice.get( input[0], input[1], input[2] ).computeJ(j);
+
   output[0]= this->_converter.getPhysHeatFlux((j[0] - temperature * extVel[0])*_temp);
   output[1]= this->_converter.getPhysHeatFlux((j[1] - temperature * extVel[1])*_temp);
   output[2]= this->_converter.getPhysHeatFlux((j[2] - temperature * extVel[2])*_temp);

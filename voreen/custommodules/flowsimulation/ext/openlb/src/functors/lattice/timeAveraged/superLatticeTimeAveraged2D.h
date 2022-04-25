@@ -40,8 +40,8 @@ class SuperLatticeTimeAveragedF2D final:  public SuperF2D<T,T> {
 private:
   int _ensembles;
   SuperF2D<T,T>& _sFunctor;
-  SuperData2D<T, T> _sData;
-  SuperData2D<T, T> _sDataP2;
+  SuperData<2,T, T> _sData;
+  SuperData<2,T, T> _sDataP2;
 
 public:
   SuperLatticeTimeAveragedF2D(SuperF2D<T,T>& sFunctor);
@@ -65,9 +65,9 @@ private:
   int _ensembles;
   SuperF2D<T,T>& _sFunctorM;
   SuperF2D<T,T>& _sFunctorN;
-  SuperData2D<T, T> _sDataM;
-  SuperData2D<T, T> _sDataN;
-  SuperData2D<T, T> _sDataMN;
+  SuperData<2,T, T> _sDataM;
+  SuperData<2,T, T> _sDataN;
+  SuperData<2,T, T> _sDataMN;
 
 public:
   SuperLatticeTimeAveragedCrossCorrelationF2D(SuperF2D<T,T>& sFunctorM, SuperF2D<T,T>& sFunctorN);
@@ -82,11 +82,11 @@ class SuperLatticeTimeAveraged2DL2Norm final: public SuperF2D<T,T> {
 private:
   SuperF2D<T,T>&_sFunctorM;
   SuperF2D<T,T>&_sFunctorN;
-  SuperGeometry2D<T>& _sGeometry;
+  SuperGeometry<T,2>& _sGeometry;
   int _material;
 
 public:
-  SuperLatticeTimeAveraged2DL2Norm(SuperF2D<T,T>& sFunctorM,SuperF2D<T,T>& sFunctorN,SuperGeometry2D<T>& sGeometry,int material);
+  SuperLatticeTimeAveraged2DL2Norm(SuperF2D<T,T>& sFunctorM,SuperF2D<T,T>& sFunctorN,SuperGeometry<T,2>& sGeometry,int material);
 
   bool operator() (T output[], const int input[]);
 

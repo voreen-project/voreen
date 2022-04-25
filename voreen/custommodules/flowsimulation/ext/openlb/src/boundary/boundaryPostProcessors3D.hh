@@ -25,127 +25,68 @@
 #define BOUNDARY_POST_PROCESSORS_3D_HH
 
 #include "boundaryPostProcessors3D.h"
+
 #include "core/finiteDifference3D.h"
-#include "core/blockLattice3D.h"
-#include "dynamics/firstOrderLbHelpers.h"
 #include "core/util.h"
-#include "utilities/vectorHelpers.h"
+
+#include "dynamics/dynamics.h"
+#include "dynamics/lbm.h"
 
 namespace olb {
 
 ////////  PlaneFdBoundaryProcessor3D ///////////////////////////////////
 
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-PlaneFdBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
-PlaneFdBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-  : x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_)
-{
-  this->getName() = "PlaneFdBoundaryProcessor3D";
-  this->getName() = "PlaneFdBoundaryProcessor3D";
-  OLB_PRECONDITION(x0==x1 || y0==y1 || z0==z1);
-}
-
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-void PlaneFdBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+template <typename T, typename DESCRIPTOR, int direction, int orientation>
+template <typename CELL>
+void PlaneFdBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::apply(CELL& cell)
 {
   using namespace olb::util::tensorIndices3D;
 
-  int newX0, newX1, newY0, newY1, newZ0, newZ1;
-  if ( util::intersect (
-         x0, x1, y0, y1, z0, z1,
-         x0_, x1_, y0_, y1_, z0_, z1_,
-         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
-    int iX;
+  T dx_u[DESCRIPTOR::d], dy_u[DESCRIPTOR::d], dz_u[DESCRIPTOR::d];
+  T rho, u[DESCRIPTOR::d];
 
-#ifdef PARALLEL_MODE_OMP
-    #pragma omp parallel for
-#endif
-    for (iX=newX0; iX<=newX1; ++iX) {
-      T dx_u[DESCRIPTOR::d], dy_u[DESCRIPTOR::d], dz_u[DESCRIPTOR::d];
-      for (int iY=newY0; iY<=newY1; ++iY) {
-        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
-          Cell<T,DESCRIPTOR> cell = blockLattice.get(iX,iY,iZ);
-          Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(iX, iY, iZ);
-          T rho, u[DESCRIPTOR::d];
-          cell.computeRhoU(rho,u);
+  auto& dynamics = cell.getDynamics();
 
-          interpolateGradients<0> ( blockLattice, dx_u, iX, iY, iZ );
-          interpolateGradients<1> ( blockLattice, dy_u, iX, iY, iZ );
-          interpolateGradients<2> ( blockLattice, dz_u, iX, iY, iZ );
-          T dx_ux = dx_u[0];
-          T dy_ux = dy_u[0];
-          T dz_ux = dz_u[0];
-          T dx_uy = dx_u[1];
-          T dy_uy = dy_u[1];
-          T dz_uy = dz_u[1];
-          T dx_uz = dx_u[2];
-          T dy_uz = dy_u[2];
-          T dz_uz = dz_u[2];
-          T omega = dynamics->getOmega();
-          T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
-          T pi[util::TensorVal<DESCRIPTOR >::n];
-          pi[xx] = (T)2 * dx_ux * sToPi;
-          pi[yy] = (T)2 * dy_uy * sToPi;
-          pi[zz] = (T)2 * dz_uz * sToPi;
-          pi[xy] = (dx_uy + dy_ux) * sToPi;
-          pi[xz] = (dx_uz + dz_ux) * sToPi;
-          pi[yz] = (dy_uz + dz_uy) * sToPi;
+  cell.computeRhoU(rho,u);
 
-          // Computation of the particle distribution functions
-          // according to the regularized formula
-          T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
-          for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop)
-            cell[iPop] = dynamics -> computeEquilibrium(iPop,rho,u,uSqr) +
-                         firstOrderLbHelpers<T,DESCRIPTOR>::fromPiToFneq(iPop, pi);
-        }
-      }
-    }
+  interpolateGradients<0>(cell, dx_u);
+  interpolateGradients<1>(cell, dy_u);
+  interpolateGradients<2>(cell, dz_u);
+
+  T dx_ux = dx_u[0];
+  T dy_ux = dy_u[0];
+  T dz_ux = dz_u[0];
+  T dx_uy = dx_u[1];
+  T dy_uy = dy_u[1];
+  T dz_uy = dz_u[1];
+  T dx_uz = dx_u[2];
+  T dy_uz = dy_u[2];
+  T dz_uz = dz_u[2];
+  T omega = dynamics.getOmegaOrFallback(std::numeric_limits<T>::signaling_NaN());
+  T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
+  T pi[util::TensorVal<DESCRIPTOR >::n];
+  pi[xx] = (T)2 * dx_ux * sToPi;
+  pi[yy] = (T)2 * dy_uy * sToPi;
+  pi[zz] = (T)2 * dz_uz * sToPi;
+  pi[xy] = (dx_uy + dy_ux) * sToPi;
+  pi[xz] = (dx_uz + dz_ux) * sToPi;
+  pi[yz] = (dy_uz + dz_uy) * sToPi;
+
+  // Computation of the particle distribution functions
+  // according to the regularized formula
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = dynamics.computeEquilibrium(iPop,rho,u)
+               + equilibrium<DESCRIPTOR>::template fromPiToFneq<T>(iPop, pi);
   }
 }
 
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-void PlaneFdBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+template <typename T, typename DESCRIPTOR, int direction, int orientation>
+template <int deriveDirection, typename CELL>
+void PlaneFdBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::interpolateGradients(
+  CELL& cell, T velDeriv[DESCRIPTOR::d]) const
 {
-  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
-}
-
-
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-template<int deriveDirection>
-void PlaneFdBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
-interpolateGradients(BlockLattice3D<T,DESCRIPTOR> const& blockLattice, T velDeriv[DESCRIPTOR::d],
-                     int iX, int iY, int iZ) const
-{
-  fd::DirectedGradients3D<T, DESCRIPTOR, direction, orientation, deriveDirection, direction==deriveDirection>::
-  interpolateVector(velDeriv, blockLattice, iX, iY, iZ);
-}
-
-
-////////  PlaneFdBoundaryProcessorGenerator3D ///////////////////////////////
-
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-PlaneFdBoundaryProcessorGenerator3D<T,DESCRIPTOR,direction,orientation>::
-PlaneFdBoundaryProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-  : PostProcessorGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_)
-{ }
-
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-PostProcessor3D<T,DESCRIPTOR>* PlaneFdBoundaryProcessorGenerator3D<T,DESCRIPTOR,direction,orientation>::
-generate() const
-{
-  return new PlaneFdBoundaryProcessor3D<T,DESCRIPTOR, direction,orientation>
-         ( this->x0, this->x1, this->y0, this->y1, this->z0, this->z1 );
-}
-
-template<typename T, typename DESCRIPTOR, int direction, int orientation>
-PostProcessorGenerator3D<T,DESCRIPTOR>*
-PlaneFdBoundaryProcessorGenerator3D<T,DESCRIPTOR,direction,orientation>::clone() const
-{
-  return new PlaneFdBoundaryProcessorGenerator3D<T,DESCRIPTOR,direction,orientation>
-         (this->x0, this->x1, this->y0, this->y1, this->z0, this->z1);
+  fd::DirectedGradients3D<T,DESCRIPTOR,direction,orientation,deriveDirection,direction==deriveDirection>
+    ::interpolateVector(velDeriv, cell);
 }
 
 
@@ -195,7 +136,7 @@ StraightConvectionBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
 
 template<typename T, typename DESCRIPTOR, int direction,int orientation>
 void StraightConvectionBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
   if ( util::intersect (
@@ -263,7 +204,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR, int direction,int orientation>
 void StraightConvectionBoundaryProcessor3D<T,DESCRIPTOR,direction,orientation>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -296,182 +237,101 @@ StraightConvectionBoundaryProcessorGenerator3D<T,DESCRIPTOR,direction,orientatio
 
 ////////  OuterVelocityEdgeProcessor3D ///////////////////////////////////
 
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-OuterVelocityEdgeProcessor3D<T,DESCRIPTOR, plane,normal1,normal2>::
-OuterVelocityEdgeProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-  : x0(x0_), x1(x1_), y0(y0_), y1(y1_), z0(z0_), z1(z1_)
-{
-  this->getName() = "OuterVelocityEdgeProcessor3D";
-  OLB_PRECONDITION (
-    (plane==2 && x0==x1 && y0==y1) ||
-    (plane==1 && x0==x1 && z0==z1) ||
-    (plane==0 && y0==y1 && z0==z1)     );
-
-}
-
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-void OuterVelocityEdgeProcessor3D<T,DESCRIPTOR, plane,normal1,normal2>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+template <typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+template <typename CELL>
+void OuterVelocityEdgeProcessor3D<T,DESCRIPTOR,plane,normal1,normal2>::apply(CELL& cell)
 {
   using namespace olb::util::tensorIndices3D;
 
-  int newX0, newX1, newY0, newY1, newZ0, newZ1;
-  if ( util::intersect ( x0, x1, y0, y1, z0, z1,
-                         x0_, x1_, y0_, y1_, z0_, z1_,
-                         newX0, newX1, newY0, newY1, newZ0, newZ1 ) ) {
-    int iX;
+  constexpr auto direction1 = (plane+1)%3;
+  constexpr auto direction2 = (plane+2)%3;
 
-#ifdef PARALLEL_MODE_OMP
-    #pragma omp parallel for
-#endif
-    for (iX=newX0; iX<=newX1; ++iX) {
-      for (int iY=newY0; iY<=newY1; ++iY) {
-        for (int iZ=newZ0; iZ<=newZ1; ++iZ) {
-          if (canInterpolateGradients<plane,0>(blockLattice, iX, iY, iZ)
-              && canInterpolateGradients<direction1,normal1>(blockLattice, iX, iY, iZ)
-              && canInterpolateGradients<direction2,normal2>(blockLattice, iX, iY, iZ)) {
-            Cell<T,DESCRIPTOR> cell = blockLattice.get(iX,iY,iZ);
-            Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(iX, iY, iZ);
+  auto& dynamics = cell.getDynamics();
 
-            T rho10 = getNeighborRho(iX,iY,iZ,1,0, blockLattice);
-            T rho01 = getNeighborRho(iX,iY,iZ,0,1, blockLattice);
-            T rho20 = getNeighborRho(iX,iY,iZ,2,0, blockLattice);
-            T rho02 = getNeighborRho(iX,iY,iZ,0,2, blockLattice);
-            T rho = (T)2/(T)3*(rho01+rho10)-(T)1/(T)6*(rho02+rho20);
+  T rho10 = getNeighborRho(cell, 1,0);
+  T rho01 = getNeighborRho(cell, 0,1);
+  T rho20 = getNeighborRho(cell, 2,0);
+  T rho02 = getNeighborRho(cell, 0,2);
+  T rho = (T)2/(T)3*(rho01+rho10)-(T)1/(T)6*(rho02+rho20);
 
-            T dA_uB_[3][3];
+  T dA_uB_[3][3];
 
-            interpolateGradients<plane,0>            ( blockLattice, dA_uB_[0], iX, iY, iZ );
-            interpolateGradients<direction1,normal1> ( blockLattice, dA_uB_[1], iX, iY, iZ );
-            interpolateGradients<direction2,normal2> ( blockLattice, dA_uB_[2], iX, iY, iZ );
-            T dA_uB[3][3];
-            for (int iBeta=0; iBeta<3; ++iBeta) {
-              dA_uB[plane][iBeta]      = dA_uB_[0][iBeta];
-              dA_uB[direction1][iBeta] = dA_uB_[1][iBeta];
-              dA_uB[direction2][iBeta] = dA_uB_[2][iBeta];
-            }
-            T omega = dynamics -> getOmega();
-            T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
-            T pi[util::TensorVal<DESCRIPTOR >::n];
-            pi[xx] = (T)2 * dA_uB[0][0] * sToPi;
-            pi[yy] = (T)2 * dA_uB[1][1] * sToPi;
-            pi[zz] = (T)2 * dA_uB[2][2] * sToPi;
-            pi[xy] = (dA_uB[0][1]+dA_uB[1][0]) * sToPi;
-            pi[xz] = (dA_uB[0][2]+dA_uB[2][0]) * sToPi;
-            pi[yz] = (dA_uB[1][2]+dA_uB[2][1]) * sToPi;
+  interpolateGradients<plane,0>           (cell, dA_uB_[0]);
+  interpolateGradients<direction1,normal1>(cell, dA_uB_[1]);
+  interpolateGradients<direction2,normal2>(cell, dA_uB_[2]);
 
-            // Computation of the particle distribution functions
-            // according to the regularized formula
-            T u[DESCRIPTOR::d];
-            cell.computeU(u);
-            T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
+  T dA_uB[3][3];
+  for (int iBeta=0; iBeta<3; ++iBeta) {
+    dA_uB[plane][iBeta]      = dA_uB_[0][iBeta];
+    dA_uB[direction1][iBeta] = dA_uB_[1][iBeta];
+    dA_uB[direction2][iBeta] = dA_uB_[2][iBeta];
+  }
+  T omega = dynamics.getOmegaOrFallback(std::numeric_limits<T>::signaling_NaN());
+  T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
+  T pi[util::TensorVal<DESCRIPTOR>::n];
+  pi[xx] = (T)2 * dA_uB[0][0] * sToPi;
+  pi[yy] = (T)2 * dA_uB[1][1] * sToPi;
+  pi[zz] = (T)2 * dA_uB[2][2] * sToPi;
+  pi[xy] = (dA_uB[0][1]+dA_uB[1][0]) * sToPi;
+  pi[xz] = (dA_uB[0][2]+dA_uB[2][0]) * sToPi;
+  pi[yz] = (dA_uB[1][2]+dA_uB[2][1]) * sToPi;
 
-            for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-              cell[iPop] = dynamics->computeEquilibrium(iPop,rho,u,uSqr) +
-                           firstOrderLbHelpers<T,DESCRIPTOR>::fromPiToFneq(iPop, pi);
-            }
-          }
-        }
-      }
-    }
+  // Computation of the particle distribution functions
+  // according to the regularized formula
+  T u[DESCRIPTOR::d];
+  cell.computeU(u);
+
+  for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
+    cell[iPop] = dynamics.computeEquilibrium(iPop,rho,u)
+               + equilibrium<DESCRIPTOR>::template fromPiToFneq<T>(iPop, pi);
   }
 }
 
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-void OuterVelocityEdgeProcessor3D<T,DESCRIPTOR, plane,normal1,normal2>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+template <typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+template <typename CELL>
+T OuterVelocityEdgeProcessor3D<T,DESCRIPTOR,plane,normal1,normal2>
+  ::getNeighborRho(CELL& cell, int step1, int step2)
 {
-  processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
+  constexpr auto direction1 = (plane+1)%3;
+  constexpr auto direction2 = (plane+2)%3;
+  int coords[3] { };
+  coords[direction1] = -normal1*step1;
+  coords[direction2] = -normal2*step2;
+  return cell.neighbor(coords).computeRho();
 }
 
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-T OuterVelocityEdgeProcessor3D<T,DESCRIPTOR, plane,normal1,normal2>::
-getNeighborRho(int x, int y, int z, int step1, int step2, BlockLattice3D<T,DESCRIPTOR> const& blockLattice)
+template <typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
+template <int deriveDirection, int orientation, typename CELL>
+void OuterVelocityEdgeProcessor3D<T,DESCRIPTOR,plane,normal1,normal2>
+  ::interpolateGradients(CELL& cell, T velDeriv[DESCRIPTOR::d]) const
 {
-  int coords[3] = {x, y, z};
-  coords[direction1] += -normal1*step1;
-  coords[direction2] += -normal2*step2;
-  return blockLattice.get(coords[0], coords[1], coords[2]).computeRho();
-}
-
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-template<int deriveDirection, int orientation>
-bool OuterVelocityEdgeProcessor3D<T,DESCRIPTOR, plane,normal1,normal2>::
-canInterpolateGradients(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
-                        int iX, int iY, int iZ) const
-{
-  return fd::DirectedGradients3D<T,DESCRIPTOR,deriveDirection,orientation,deriveDirection,deriveDirection!=plane>::
-         canInterpolateVector(blockLattice, iX, iY, iZ);
-}
-
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-template<int deriveDirection, int orientation>
-void OuterVelocityEdgeProcessor3D<T,DESCRIPTOR, plane,normal1,normal2>::
-interpolateGradients(BlockLattice3D<T,DESCRIPTOR> const& blockLattice,
-                     T velDeriv[DESCRIPTOR::d],
-                     int iX, int iY, int iZ) const
-{
-  fd::DirectedGradients3D<T,DESCRIPTOR,deriveDirection,orientation,deriveDirection,deriveDirection!=plane>::
-  interpolateVector(velDeriv, blockLattice, iX, iY, iZ);
-}
-
-////////  OuterVelocityEdgeProcessorGenerator3D ///////////////////////////////
-
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-OuterVelocityEdgeProcessorGenerator3D<T,DESCRIPTOR, plane,normal1,normal2>::
-OuterVelocityEdgeProcessorGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-  : PostProcessorGenerator3D<T,DESCRIPTOR>(x0_, x1_, y0_, y1_, z0_, z1_)
-{ }
-
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-PostProcessor3D<T,DESCRIPTOR>*
-OuterVelocityEdgeProcessorGenerator3D<T,DESCRIPTOR, plane,normal1,normal2>::
-generate() const
-{
-  return new OuterVelocityEdgeProcessor3D < T,DESCRIPTOR, plane,normal1,normal2 >
-         ( this->x0, this->x1, this->y0, this->y1, this->z0, this->z1);
-}
-
-template<typename T, typename DESCRIPTOR, int plane, int normal1, int normal2>
-PostProcessorGenerator3D<T,DESCRIPTOR>*
-OuterVelocityEdgeProcessorGenerator3D<T,DESCRIPTOR, plane,normal1,normal2>::clone() const
-{
-  return new OuterVelocityEdgeProcessorGenerator3D<T,DESCRIPTOR, plane,normal1,normal2 >
-         (this->x0, this->x1, this->y0, this->y1, this->z0, this->z1);
+  fd::DirectedGradients3D<T,DESCRIPTOR,deriveDirection,orientation,deriveDirection,deriveDirection!=plane>
+    ::interpolateVector(velDeriv, cell);
 }
 
 /////////// OuterVelocityCornerProcessor3D /////////////////////////////////////
 
-template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
-OuterVelocityCornerProcessor3D<T, DESCRIPTOR, xNormal, yNormal, zNormal>::
-OuterVelocityCornerProcessor3D ( int x_, int y_, int z_ )
-  : x(x_), y(y_), z(z_)
-{
-  this->_priority = 1;
-  this->getName() = "OuterVelocityCornerProcessor3D";
-}
-
-template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
-void OuterVelocityCornerProcessor3D<T, DESCRIPTOR, xNormal, yNormal, zNormal>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+template <typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
+template <typename CELL>
+void OuterVelocityCornerProcessor3D<T,DESCRIPTOR,xNormal,yNormal,zNormal>::apply(CELL& cell)
 {
   using namespace olb::util::tensorIndices3D;
-  Cell<T,DESCRIPTOR> cell = blockLattice.get(x,y,z);
-  Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(x, y, z);
 
-  T rho100 = blockLattice.get(x - 1*xNormal, y - 0*yNormal, z - 0*zNormal).computeRho();
-  T rho010 = blockLattice.get(x - 0*xNormal, y - 1*yNormal, z - 0*zNormal).computeRho();
-  T rho001 = blockLattice.get(x - 0*xNormal, y - 0*yNormal, z - 1*zNormal).computeRho();
-  T rho200 = blockLattice.get(x - 2*xNormal, y - 0*yNormal, z - 0*zNormal).computeRho();
-  T rho020 = blockLattice.get(x - 0*xNormal, y - 2*yNormal, z - 0*zNormal).computeRho();
-  T rho002 = blockLattice.get(x - 0*xNormal, y - 0*yNormal, z - 2*zNormal).computeRho();
+  auto& dynamics = cell.getDynamics();
+
+  T rho100 = cell.neighbor({-1*xNormal, -0*yNormal, -0*zNormal}).computeRho();
+  T rho010 = cell.neighbor({-0*xNormal, -1*yNormal, -0*zNormal}).computeRho();
+  T rho001 = cell.neighbor({-0*xNormal, -0*yNormal, -1*zNormal}).computeRho();
+  T rho200 = cell.neighbor({-2*xNormal, -0*yNormal, -0*zNormal}).computeRho();
+  T rho020 = cell.neighbor({-0*xNormal, -2*yNormal, -0*zNormal}).computeRho();
+  T rho002 = cell.neighbor({-0*xNormal, -0*yNormal, -2*zNormal}).computeRho();
+
   T rho = (T)4/(T)9 * (rho001 + rho010 + rho100) - (T)1/(T)9 * (rho002 + rho020 + rho200);
 
   T dx_u[DESCRIPTOR::d], dy_u[DESCRIPTOR::d], dz_u[DESCRIPTOR::d];
-  fd::DirectedGradients3D<T, DESCRIPTOR, 0, xNormal, 0, true>::interpolateVector(dx_u, blockLattice, x,y,z);
-  fd::DirectedGradients3D<T, DESCRIPTOR, 1, yNormal, 0, true>::interpolateVector(dy_u, blockLattice, x,y,z);
-  fd::DirectedGradients3D<T, DESCRIPTOR, 2, zNormal, 0, true>::interpolateVector(dz_u, blockLattice, x,y,z);
+  fd::DirectedGradients3D<T, DESCRIPTOR, 0, xNormal, 0, true>::interpolateVector(dx_u, cell);
+  fd::DirectedGradients3D<T, DESCRIPTOR, 1, yNormal, 0, true>::interpolateVector(dy_u, cell);
+  fd::DirectedGradients3D<T, DESCRIPTOR, 2, zNormal, 0, true>::interpolateVector(dz_u, cell);
 
   T dx_ux = dx_u[0];
   T dy_ux = dy_u[0];
@@ -482,7 +342,7 @@ process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
   T dx_uz = dx_u[2];
   T dy_uz = dy_u[2];
   T dz_uz = dz_u[2];
-  T omega = dynamics -> getOmega();
+  T omega = dynamics.getOmegaOrFallback(std::numeric_limits<T>::signaling_NaN());
   T sToPi = - rho / descriptors::invCs2<T,DESCRIPTOR>() / omega;
   T pi[util::TensorVal<DESCRIPTOR >::n];
   pi[xx] = (T)2 * dx_ux * sToPi;
@@ -496,50 +356,12 @@ process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
   // according to the regularized formula
   T u[DESCRIPTOR::d];
   cell.computeU(u);
-  T uSqr = util::normSqr<T,DESCRIPTOR::d>(u);
 
   for (int iPop = 0; iPop < DESCRIPTOR::q; ++iPop) {
-    cell[iPop] = dynamics -> computeEquilibrium(iPop,rho,u,uSqr) +
-                 firstOrderLbHelpers<T,DESCRIPTOR>::fromPiToFneq(iPop, pi);
-  }
-
-}
-
-template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
-void OuterVelocityCornerProcessor3D<T, DESCRIPTOR, xNormal, yNormal, zNormal>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
-                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
-{
-  if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
-    process(blockLattice);
+    cell[iPop] = dynamics.computeEquilibrium(iPop,rho,u)
+               + equilibrium<DESCRIPTOR>::template fromPiToFneq<T>(iPop, pi);
   }
 }
-
-////////  OuterVelocityCornerProcessorGenerator3D ///////////////////////////////
-
-template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
-OuterVelocityCornerProcessorGenerator3D<T,DESCRIPTOR, xNormal,yNormal,zNormal>::
-OuterVelocityCornerProcessorGenerator3D(int x_, int y_, int z_)
-  : PostProcessorGenerator3D<T,DESCRIPTOR>(x_,x_, y_,y_, z_,z_)
-{ }
-
-template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
-PostProcessor3D<T,DESCRIPTOR>*
-OuterVelocityCornerProcessorGenerator3D<T,DESCRIPTOR, xNormal,yNormal,zNormal>::
-generate() const
-{
-  return new OuterVelocityCornerProcessor3D<T,DESCRIPTOR, xNormal,yNormal,zNormal>
-         ( this->x0, this->y0, this->z0 );
-}
-
-template<typename T, typename DESCRIPTOR, int xNormal, int yNormal, int zNormal>
-PostProcessorGenerator3D<T,DESCRIPTOR>*
-OuterVelocityCornerProcessorGenerator3D<T,DESCRIPTOR, xNormal,yNormal,zNormal>::clone() const
-{
-  return new OuterVelocityCornerProcessorGenerator3D<T,DESCRIPTOR, xNormal, yNormal, zNormal>
-         (this->x0, this->y0, this->z0);
-}
-
 
 ////////  SlipBoundaryProcessor3D ////////////////////////////////
 
@@ -587,7 +409,7 @@ SlipBoundaryProcessor3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, in
 
 template<typename T, typename DESCRIPTOR>
 void SlipBoundaryProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
   if ( util::intersect (
@@ -616,7 +438,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void SlipBoundaryProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -690,7 +512,7 @@ PartialSlipBoundaryProcessor3D(T tuner_, int x0_, int x1_, int y0_, int y1_, int
 
 template<typename T, typename DESCRIPTOR>
 void PartialSlipBoundaryProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
 
@@ -726,7 +548,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void PartialSlipBoundaryProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -769,7 +591,7 @@ FreeEnergyWallProcessor3D<T,DESCRIPTOR>::FreeEnergyWallProcessor3D(
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyWallProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
   if ( util::intersect (
@@ -795,7 +617,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyWallProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -845,7 +667,7 @@ FreeEnergyChemPotBoundaryProcessor3D(
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyChemPotBoundaryProcessor3D<T,DESCRIPTOR>::
 processSubDomain(
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+  BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
   if ( util::intersect (
@@ -875,7 +697,7 @@ processSubDomain(
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyChemPotBoundaryProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }
@@ -926,7 +748,7 @@ FreeEnergyConvectiveProcessor3D(
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyConvectiveProcessor3D<T,DESCRIPTOR>::
 processSubDomain(
-  BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+  BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   int newX0, newX1, newY0, newY1, newZ0, newZ1;
   if ( util::intersect (
@@ -959,7 +781,7 @@ processSubDomain(
               }
             }
             else {
-              uPerp = sqrt(u[0] * u[0] + u[1] * u[1]);
+              uPerp = util::sqrt(u[0] * u[0] + u[1] * u[1]);
             }
           }
           else if (discreteNormalY == 0) {
@@ -972,14 +794,14 @@ processSubDomain(
               }
             }
             else {
-              uPerp = sqrt(u[0] * u[0] + u[2] * u[2]);
+              uPerp = util::sqrt(u[0] * u[0] + u[2] * u[2]);
             }
           }
           else if (discreteNormalX == 0) {
-            uPerp = sqrt(u[1] * u[1] + u[2] * u[2]);
+            uPerp = util::sqrt(u[1] * u[1] + u[2] * u[2]);
           }
           else {
-            uPerp = sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
+            uPerp = util::sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
           }
 
           rho = (rho0 + uPerp * rho1) / (1. + uPerp);
@@ -992,7 +814,7 @@ processSubDomain(
 
 template<typename T, typename DESCRIPTOR>
 void FreeEnergyConvectiveProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   processSubDomain(blockLattice, x0, x1, y0, y1, z0, z1);
 }

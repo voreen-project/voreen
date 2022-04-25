@@ -31,7 +31,7 @@ namespace olb {
 
 
 template <typename T, typename W>
-SuperConst3D<T,W>::SuperConst3D(SuperStructure3D<T>& superStructure, std::vector<W> v)
+SuperConst3D<T,W>::SuperConst3D(SuperStructure<T,3>& superStructure, std::vector<W> v)
   : SuperF3D<T,W>(superStructure, v.size()),
     _c{std::move(v)}
 {
@@ -39,7 +39,7 @@ SuperConst3D<T,W>::SuperConst3D(SuperStructure3D<T>& superStructure, std::vector
 }
 
 template <typename T, typename W>
-SuperConst3D<T,W>::SuperConst3D(SuperStructure3D<T>& superStructure, W scalar)
+SuperConst3D<T,W>::SuperConst3D(SuperStructure<T,3>& superStructure, W scalar)
   : SuperConst3D(superStructure, std::vector<W>(1, scalar))
 { }
 

@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,11 +50,11 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class SuperLatticePhysHeatFluxBoundary3D final : public SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR> {
 private:
-  SuperGeometry3D<T>& _superGeometry;
+  SuperGeometry<T,3>& _superGeometry;
   const int _material;
 public:
-  SuperLatticePhysHeatFluxBoundary3D(SuperLattice3D<T,TDESCRIPTOR>& sLattice,
-                                     SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLatticePhysHeatFluxBoundary3D(SuperLattice<T,TDESCRIPTOR>& sLattice,
+                                     SuperGeometry<T,3>& superGeometry, const int material,
                                      const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
                                      IndicatorF3D<T>& indicator);
 };
@@ -63,15 +63,13 @@ public:
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class BlockLatticePhysHeatFluxBoundary3D final : public BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR> {
 private:
-  BlockGeometryStructure3D<T>& _blockGeometry;
-  const int _overlap;
+  BlockGeometry<T,3>& _blockGeometry;
   const int _material;
   std::vector<std::vector<std::vector<std::vector<int>>>> _discreteNormal;
   std::vector<std::vector<std::vector<std::vector<T>>>> _normal;
 public:
-  BlockLatticePhysHeatFluxBoundary3D(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice,
-                                     BlockGeometryStructure3D<T>& blockGeometry,
-                                     int overlap,
+  BlockLatticePhysHeatFluxBoundary3D(BlockLattice<T,TDESCRIPTOR>& blockLattice,
+                                     BlockGeometry<T,3>& blockGeometry,
                                      int material,
                                      const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter,
                                      IndicatorF3D<T>& indicator);

@@ -41,7 +41,7 @@ protected:
   FunctorPtr<AnalyticalF<D,T,S>> _g;
 public:
   AnalyticCalcF(FunctorPtr<AnalyticalF<D,T,S>>&& f,
-                  FunctorPtr<AnalyticalF<D,T,S>>&& g);
+                FunctorPtr<AnalyticalF<D,T,S>>&& g);
 
   AnalyticCalcF(T scalar, FunctorPtr<AnalyticalF<D,T,S>>&& g);
   AnalyticCalcF(FunctorPtr<AnalyticalF<D,T,S>>&& f, T scalar);

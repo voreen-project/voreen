@@ -36,23 +36,26 @@ namespace olb {
 
 // ===== the porous BGK advection diffusion dynamics =====//
 /// This approach contains a slight error in the diffusion term.
-template<typename T, typename DESCRIPTOR>
-class PorousAdvectionDiffusionBGKdynamics : public BasicDynamics<T, DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::AdvectionDiffusionBulkTuple>
+class PorousAdvectionDiffusionBGKdynamics : public legacy::BasicDynamics<T, DESCRIPTOR, MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = PorousAdvectionDiffusionBGKdynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  PorousAdvectionDiffusionBGKdynamics( T omega, Momenta<T, DESCRIPTOR>& momenta, T tSolid );
-  PorousAdvectionDiffusionBGKdynamics( const UnitConverter<T,DESCRIPTOR>& converter, Momenta<T, DESCRIPTOR>& momenta, T tSolid );
+  PorousAdvectionDiffusionBGKdynamics( T omega, T tSolid );
+  PorousAdvectionDiffusionBGKdynamics( const UnitConverter<T,DESCRIPTOR>& converter, T tSolid );
   /// Compute equilibrium distribution function
-  T computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr ) const override;
+  T computeEquilibrium( int iPop, T rho, const T u[DESCRIPTOR::d] ) const override;
   /// Collision step
-  void collide( Cell<T,DESCRIPTOR>& cell, LatticeStatistics<T>& statistics ) override;
+  CellStatistic<T> collide( Cell<T,DESCRIPTOR>& cell ) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega( T omega ) override;
-  /// Set local relaxation parameter of the dynamics
-  T computeRho( ConstCell<T,DESCRIPTOR>& cell ) const override;
+  void setOmega( T omega );
 private:
+  using MomentaF = typename MOMENTA::template type<DESCRIPTOR>;
+
   T scaleTemp(const T rho, const T porosity) const; // scales temperature relative to porosity
   T _omega;  ///< relaxation parameter
   T _tSolid; // temperature in lattice units of material with porosity 0;

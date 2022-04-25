@@ -61,14 +61,19 @@ void SuperVTMwriter2D<T,W>::write(int iT)
   //  !!!!!!!!!!! check whether _pointerVec is empty
   if ( _pointerVec.empty() ) {
     clout << "Error: Did you add a Functor ?";
-  } else {
+  }
+  else {
+    // no gaps between vti files (cuboids)
+    for (SuperF2D<T,W>* f : _pointerVec) {
+      f->getSuperStructure().communicate();
+    }
+
     // to get first element _pointerVec
     // problem if functors with different SuperStructure are stored
     // since till now, there is only one origin
     auto it_begin = _pointerVec.cbegin();
     CuboidGeometry2D<T> const& cGeometry = (**it_begin).getSuperStructure().getCuboidGeometry();
     // no gaps between vti files (cuboids)
-    (**it_begin).getSuperStructure().communicate();
     LoadBalancer<T>& load = (**it_begin).getSuperStructure().getLoadBalancer();
 
     // PVD, owns all
@@ -104,9 +109,10 @@ void SuperVTMwriter2D<T,W>::write(int iT)
 
       preambleVTI(fullNameVTI, -1,-1,nx,ny, originPhysR[0],originPhysR[1], delta);
       for (auto it : _pointerVec) {
-        if(_binary) {
+        if (_binary) {
           dataArrayBinary(fullNameVTI, (*it), load.glob(iCloc), nx,ny);
-        } else {
+        }
+        else {
           dataArray(fullNameVTI, (*it), load.glob(iCloc), nx,ny);
         }
       }
@@ -162,9 +168,10 @@ void SuperVTMwriter2D<T,W>::write(SuperF2D<T,W>& f, int iT)
     cGeometry.getPhysR(originPhysR,originLatticeR);
 
     preambleVTI(fullNameVTI, -1,-1, nx,ny, originPhysR[0],originPhysR[1], delta);
-    if(_binary) {
+    if (_binary) {
       dataArrayBinary(fullNameVTI, f, load.glob(iCloc), nx,ny);
-    } else {
+    }
+    else {
       dataArray(fullNameVTI, f, load.glob(iCloc), nx,ny);
     }
     closePiece(fullNameVTI);
@@ -197,6 +204,13 @@ void SuperVTMwriter2D<T,W>::createMasterFile()
 template<typename T, typename W>
 void SuperVTMwriter2D<T,W>::addFunctor(SuperF2D<T,W>& f)
 {
+  _pointerVec.push_back(&f);
+}
+
+template<typename T, typename W>
+void SuperVTMwriter2D<T,W>::addFunctor(SuperF2D<T,W>& f, const std::string& functorName)
+{
+  f.getName() = functorName;
   _pointerVec.push_back(&f);
 }
 
@@ -334,7 +348,8 @@ void SuperVTMwriter2D<T,W>::dataPVDmaster(int iT,
          << "file=\"" << namePiece << "\"/>\n";
     fout.close();
     closePVD(fullNamePVDMaster);
-  } else {
+  }
+  else {
     clout << "Error: could not open " << fullNamePVDMaster << std::endl;
   }
 }
@@ -375,7 +390,7 @@ void SuperVTMwriter2D<T,W>::dataArray(const std::string& fullName,
 
 template<typename T, typename W>
 void SuperVTMwriter2D<T,W>::dataArrayBinary(const std::string& fullName,
-                                            SuperF2D<T,W>& f, int iC, int nx, int ny)
+    SuperF2D<T,W>& f, int iC, int nx, int ny)
 {
   std::ofstream fout( fullName, std::ios::out | std::ios::app );
   if (!fout) {

@@ -37,7 +37,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR, class dynamicsManager>
 SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::SuperGuoZhaoInstantiator2D (
-  SuperLattice2D<T, DESCRIPTOR>& sLattice_) :
+  SuperLattice<T, DESCRIPTOR>& sLattice_) :
   sLattice(sLattice_)
 {}
 
@@ -50,7 +50,7 @@ void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::definePorousFie
 
 template<typename T, typename DESCRIPTOR, class dynamicsManager>
 void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineEpsilon (
-  SuperGeometry2D<T>& sGeometry, int material, AnalyticalF<2,T,T>& epsilon)
+  SuperGeometry<T,2>& sGeometry, int material, AnalyticalF<2,T,T>& epsilon)
 {
 
   sLattice.template defineField<descriptors::EPSILON>(sGeometry, material, epsilon);
@@ -58,7 +58,7 @@ void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineEpsilon (
 
 template<typename T, typename DESCRIPTOR, class dynamicsManager>
 void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineK (
-  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry2D<T>& sGeometry, int material, AnalyticalF<2,T,T>& K)
+  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry<T,2>& sGeometry, int material, AnalyticalF<2,T,T>& K)
 {
 
   AnalyticalConst2D<T,T> normFactor(converter.getConversionFactorLength()*converter.getConversionFactorLength());
@@ -68,7 +68,7 @@ void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineK (
 
 template<typename T, typename DESCRIPTOR, class dynamicsManager>
 void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineNu (
-  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry2D<T>& sGeometry, int material)
+  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry<T,2>& sGeometry, int material)
 {
 
   AnalyticalConst2D<T,T> nu(converter.getLatticeViscosity());
@@ -77,7 +77,7 @@ void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineNu (
 
 template<typename T, typename DESCRIPTOR, class dynamicsManager>
 void SuperGuoZhaoInstantiator2D<T, DESCRIPTOR, dynamicsManager>::defineBodyForce (
-  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry2D<T>& sGeometry, int material, AnalyticalF<2,T,T>& BodyForce)
+  UnitConverter<T,DESCRIPTOR> const& converter, SuperGeometry<T,2>& sGeometry, int material, AnalyticalF<2,T,T>& BodyForce)
 {
 
   std::vector<T> normFactorValue ( 2,

@@ -25,14 +25,15 @@
 #ifndef SCALAR_VECTOR_H
 #define SCALAR_VECTOR_H
 
-#include <cmath>
 #include <vector>
 #include <limits>
 #include <iostream>
 #include <type_traits>
 
 #include "genericVector.h"
-#include "utilities/meta.h"
+#include "meta.h"
+#include "utilities/omath.h"
+#include "utilities/oalgorithm.h"
 
 namespace olb {
 
@@ -42,7 +43,7 @@ template<typename T, unsigned D, typename IMPL>
 struct ScalarVector : public GenericVector<T,D,IMPL> {
   using type = GenericVector<T,D,IMPL>;
 
-  static_assert(utilities::meta::is_arithmetic<T>::type::value, "T must be scalar type");
+  static_assert(meta::is_arithmetic<T>::type::value, "T must be scalar type");
 
   ScalarVector() = default;
   ScalarVector(const ScalarVector&) = delete;
@@ -64,17 +65,18 @@ inline T norm_squared(const ScalarVector<T,D,IMPL>& a)
 template<typename T, unsigned D, typename IMPL>
 inline T norm(const ScalarVector<T,D,IMPL>& a)
 {
+  using namespace util;
   T sqNorm = norm_squared(a);
-  return std::sqrt(sqNorm);
+  return sqrt(sqNorm);
 }
 
-/// Returns true iff all components are within floating point error distance of 0 
+/// Returns true iff all components are within floating point error distance of 0
 template<typename T, unsigned D, typename IMPL>
 bool closeToZero(const ScalarVector<T,D,IMPL>& a)
 {
   const T eps = std::numeric_limits<T>::epsilon();
   for (unsigned iDim=0; iDim < D; ++iDim) {
-    if (fabs(a[iDim]) > eps) {
+    if (util::fabs(a[iDim]) > eps) {
       return false;
     }
   }
@@ -93,8 +95,8 @@ std::vector<T> toStdVector(const ScalarVector<T,D,IMPL>& a)
 }
 
 /// Returns true if all lhs components are smaller than rhs
-template<typename T, unsigned D, typename IMPL, typename IMPL_>
-inline bool operator< (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<T,D,IMPL_>& rhs)
+template<typename T, unsigned D, typename U, typename IMPL, typename IMPL_>
+inline bool operator< (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<U,D,IMPL_>& rhs)
 {
   bool smaller = true;
   for (unsigned iDim=0; iDim < D; ++iDim) {
@@ -104,15 +106,15 @@ inline bool operator< (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<T,D
 }
 
 /// Returns true if all lhs components are greater than rhs
-template<typename T, unsigned D, typename IMPL, typename IMPL_>
-inline bool operator> (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<T,D,IMPL_>& rhs)
+template<typename T, unsigned D, typename U, typename IMPL, typename IMPL_>
+inline bool operator> (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<U,D,IMPL_>& rhs)
 {
   return rhs < lhs;
 }
 
 /// Returns true if all lhs components are smaller or equal than rhs
-template<typename T, unsigned D, typename IMPL, typename IMPL_>
-inline bool operator<= (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<T,D,IMPL_>& rhs)
+template<typename T, unsigned D, typename U, typename IMPL, typename IMPL_>
+inline bool operator<= (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<U,D,IMPL_>& rhs)
 {
   bool smallerEq = true;
   for (unsigned iDim=0; iDim < D; ++iDim) {
@@ -122,8 +124,8 @@ inline bool operator<= (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<T,
 }
 
 /// Returns true if all lhs components are smaller or equal than rhs
-template<typename T, unsigned D, typename IMPL, typename IMPL_>
-inline bool operator>= (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<T,D,IMPL_>& rhs)
+template<typename T, unsigned D, typename U, typename IMPL, typename IMPL_>
+inline bool operator>= (const ScalarVector<T,D,IMPL>& lhs, const ScalarVector<U,D,IMPL_>& rhs)
 {
   return rhs <= lhs;
 }

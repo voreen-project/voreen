@@ -34,7 +34,7 @@
 #include "latticePhysVelocity3D.h"
 #include "latticeDensity3D.h"
 
-/** To enable simulations in a rotating frame, the axis is set in the
+/* To enable simulations in a rotating frame, the axis is set in the
   * constructor with axisPoint and axisDirection. The axisPoint can be the
   * coordinate of any point on the axis. The axisDirection has to be a normed to
   * 1. The pulse w is in rad/s. It determines the pulse speed by its norm while
@@ -65,7 +65,7 @@ template<typename T, typename DESCRIPTOR> class SuperLatticeF3D;
 template <typename T, typename DESCRIPTOR>
 class RotatingForceField3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
 protected:
-  SuperGeometry3D<T>& sg;
+  SuperGeometry<T,3>& sg;
   const UnitConverter<T,DESCRIPTOR>& converter;
   std::vector<T> axisPoint;
   std::vector<T> axisDirection;
@@ -76,8 +76,8 @@ protected:
   SuperLatticeDensity3D<T, DESCRIPTOR> rho;
 
 public:
-  RotatingForceField3D(SuperLattice3D<T,DESCRIPTOR>& sLattice_,
-                       SuperGeometry3D<T>& superGeometry_,
+  RotatingForceField3D(SuperLattice<T,DESCRIPTOR>& sLattice_,
+                       SuperGeometry<T,3>& superGeometry_,
                        const UnitConverter<T,DESCRIPTOR>& converter_,
                        std::vector<T> axisPoint_,
                        std::vector<T> axisDirection_,
@@ -102,7 +102,7 @@ template<typename T, typename DESCRIPTOR> class SuperLatticeF3D;
 template <typename T, typename DESCRIPTOR>
 class HarmonicOscillatingRotatingForceField3D final : public SuperLatticeF3D<T,DESCRIPTOR> {
 protected:
-  SuperGeometry3D<T>& sg;
+  SuperGeometry<T,3>& sg;
   const UnitConverter<T,DESCRIPTOR>& converter;
   std::vector<T> axisPoint;
   std::vector<T> axisDirection;
@@ -113,8 +113,8 @@ protected:
   SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity;
 
 public:
-  HarmonicOscillatingRotatingForceField3D(SuperLattice3D<T,DESCRIPTOR>& sLattice_,
-                                          SuperGeometry3D<T>& superGeometry_,
+  HarmonicOscillatingRotatingForceField3D(SuperLattice<T,DESCRIPTOR>& sLattice_,
+                                          SuperGeometry<T,3>& superGeometry_,
                                           const UnitConverter<T,DESCRIPTOR>& converter_,
                                           std::vector<T> axisPoint_,
                                           std::vector<T> axisDirection_,

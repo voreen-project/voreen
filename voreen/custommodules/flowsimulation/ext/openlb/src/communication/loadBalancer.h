@@ -27,9 +27,11 @@
 
 #include <vector>
 #include <map>
+
 #include "core/singleton.h"
 #include "core/serializer.h"
 #include "io/xmlReader.h"
+#include "core/platform/platform.h"
 
 namespace olb {
 
@@ -87,6 +89,21 @@ public:
   int rank(int glob) const;
   /// \return read only acess to _size
   int size() const;
+  /// \return read size of  _rank
+  int getRankSize() const;
+
+  /// \return target platform for processing of local cuboid
+  virtual Platform platform(int loc) const {
+  #ifdef PLATFORM_GPU_CUDA
+    return Platform::GPU_CUDA;
+  #else
+  #ifdef PLATFORM_CPU_SIMD
+    return Platform::CPU_SIMD;
+  #else
+    return Platform::CPU_SISD;
+  #endif
+  #endif
+  }
 
   /// equal operator
   bool operator==(const LoadBalancer<T>& rhs) const;
@@ -138,7 +155,8 @@ LoadBalancer<T>* createLoadBalancer(XMLreader const& xmlReader, CuboidGeometry3D
   bool newFile = ( fileAttr != "Attribute not found." );
   if ( newFile ) {
     lbXml = new XMLreader(fileAttr);
-  } else {
+  }
+  else {
     lbXml = &xmlReader;
   }
 
@@ -157,7 +175,8 @@ LoadBalancer<T>* createLoadBalancer(XMLreader const& xmlReader, CuboidGeometry3D
     double ratioFullEmpty;
     if (!(*lbXml)["RatioFullEmpty"].read<double>(ratioFullEmpty, verbose)) {
       lb = new HeuristicLoadBalancer<T>(*cGeo);
-    } else {
+    }
+    else {
       lb = new HeuristicLoadBalancer<T>(*cGeo, ratioFullEmpty);
     }
   }

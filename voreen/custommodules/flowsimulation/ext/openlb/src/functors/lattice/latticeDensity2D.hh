@@ -25,40 +25,38 @@
 #define LATTICE_DENSITY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeDensity2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticeDensity2D<T,DESCRIPTOR>::SuperLatticeDensity2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice)
+  SuperLattice<T,DESCRIPTOR>& sLattice)
   : SuperLatticeF2D<T,DESCRIPTOR>(sLattice, 1)
 {
   this->getName() = "density";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticeDensity2D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC)) );
+    this->_blockF.emplace_back( new BlockLatticeDensity2D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC)) );
   }
 }
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeDensity2D<T,DESCRIPTOR>::BlockLatticeDensity2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice)
+(BlockLattice<T,DESCRIPTOR>& blockLattice)
   : BlockLatticeF2D<T,DESCRIPTOR>(blockLattice,1)
 {
   this->getName() = "density";

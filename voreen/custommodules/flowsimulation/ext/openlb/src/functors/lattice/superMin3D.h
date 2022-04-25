@@ -53,7 +53,7 @@ public:
    * \param material      number of the relevant material
    **/
   SuperMin3D(FunctorPtr<SuperF3D<T,W>>&& f,
-             SuperGeometry3D<T>& superGeometry,
+             SuperGeometry<T,3>& superGeometry,
              const int material);
 
   bool operator() (W output[], const int input[]) override;

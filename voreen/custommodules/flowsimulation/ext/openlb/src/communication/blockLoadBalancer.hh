@@ -65,7 +65,8 @@ void BlockLoadBalancer<T>::init_chunkD(int rank, int size, int globChunkSize, in
   if (rank+1 <= globChunkSize-(globChunkSize/size)*size) {
     this->_firstGlobNum = globChunkSize/size * rank + rank + offset;
     this->_lastGlobNum  = this->_firstGlobNum + this->_locChunkSize - 1;
-  } else {
+  }
+  else {
     this->_firstGlobNum = globChunkSize/size * rank + globChunkSize - (globChunkSize/size)*size + offset;
     this->_lastGlobNum  = this->_firstGlobNum + this->_locChunkSize - 1;
   }

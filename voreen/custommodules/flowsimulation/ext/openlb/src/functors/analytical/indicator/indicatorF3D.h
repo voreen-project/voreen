@@ -27,6 +27,7 @@
 #include<vector>
 #include "indicatorBaseF3D.h"
 #include "io/xmlReader.h"
+#include "sdf.h"
 
 
 /** \file
@@ -36,6 +37,7 @@
  - Sphere
  - Cylinder
  - Cone
+ - Ellipsoid
  - Pipe (not yet)
  - Cube (not yet)
  - Cuboid
@@ -51,7 +53,7 @@
 
 namespace olb {
 
-
+template<typename S> class IndicatorIdentity3D;
 
 template <typename S>
 class IndicatorTranslate3D : public IndicatorF3D<S> {
@@ -61,6 +63,7 @@ private:
 public:
   IndicatorTranslate3D(std::array<S,3> translate, IndicatorF3D<S>& indicator);
   bool operator() (bool output[], const S input[]) override;
+  S signedDistance(const Vector<S,3>& input) override;
 };
 
 
@@ -89,14 +92,17 @@ template <typename S>
 class IndicatorSphere3D : public IndicatorF3D<S> {
 private:
   Vector<S,3> _center;
+  S _radius;
   S _radius2;
 public:
   IndicatorSphere3D(Vector<S,3> center, S radius);
   IndicatorSphere3D(const IndicatorSphere3D&);
-  bool operator() (bool output[], const S input[]) override;
+  Vector<S,3> const& getCenter() const;
+  S const getRadius() const;
+  S signedDistance(const Vector<S,3>& input) override;
   bool distance(S& distance, const Vector<S,3>& origin,
                 const Vector<S,3>& direction, int iC=-1) override;
-  bool distance(S& distance, const Vector<S,3>& origin) override;
+  using IndicatorF3D<S>::distance;
 };
 
 /// indicator function for a layer
@@ -108,6 +114,7 @@ private:
 public:
   IndicatorLayer3D(IndicatorF3D<S>& indicatorF, S layerSize);
   bool operator() (bool output[], const S input[]) override;
+  S signedDistance(const Vector<S,3>& input) override;
 };
 
 /// indicator function for the internal part of an input indicator
@@ -127,11 +134,14 @@ class IndicatorCylinder3D : public IndicatorF3D<S> {
 private:
   Vector<S,3> _center1;
   Vector<S,3> _center2;
+  Vector<S,3> _ba;
   Vector<S,3> _I;
   Vector<S,3> _J;
   Vector<S,3> _K;
-  S _length;
+  S _baba;
   S _radius2;
+  S _length;
+
   void init();
 public:
   IndicatorCylinder3D(Vector<S,3> center1, Vector<S,3> center2, S radius);
@@ -142,6 +152,7 @@ public:
   Vector<S,3> const& getCenter1() const;
   Vector<S,3> const& getCenter2() const;
   S getRadius() const;
+  S signedDistance(const Vector<S,3>& input) override;
 };
 
 /// indicator function for a 3d frustum
@@ -150,16 +161,63 @@ class IndicatorCone3D : public IndicatorF3D<S> {
 private:
   Vector<S,3> _center1;
   Vector<S,3> _center2;
+  Vector<S,3> _ba;
   Vector<S,3> _I;
   Vector<S,3> _J;
   Vector<S,3> _K;
-  S _length;
+  S _baba;
   S _radius1;
   S _radius2; // The 2nd radius is optional: if not defined, _center2 is the vertex of the cone
+  S _length;
+
 public:
   IndicatorCone3D(Vector<S,3> center1, Vector<S,3> center2, S radius1, S radius2=0);
+  Vector<S,3> const& getCenter1() const;
+  Vector<S,3> const& getCenter2() const;
+  S getRadius1() const;
+  S getRadius2() const;
+  bool operator() (bool output[], const S input[]) override;
+  S signedDistance(const Vector<S,3>& input) override;
+};
+
+/// indicator function for an ellipsoid
+template <typename S>
+class IndicatorEllipsoid3D : public IndicatorF3D<S> {
+private:
+  Vector<S,3> _center;
+  Vector<S,3> _radius;
+
+public:
+  IndicatorEllipsoid3D(Vector<S,3> center, Vector<S,3> radius);
+  Vector<S,3> const& getCenter() const;
+  Vector<S,3> const& getRadius() const;
+  S signedDistance(const Vector<S,3>& input) override;
+};
+
+
+/// indicator function for a super ellipsoid
+template <typename S>
+class IndicatorSuperEllipsoid3D : public IndicatorF3D<S> {
+private:
+  Vector<S,3> _center;
+  S _xHalfAxis;
+  S _yHalfAxis;
+  S _zHalfAxis;
+  S _exp1;
+  S _exp2;
+
+public:
+  IndicatorSuperEllipsoid3D(Vector<S,3> center, S xHalfAxis, S yHalfAxis, S zHalfAxis, S exponent1, S exponent2);
+  Vector<S,3> const& getCenter() const;
+  S getXHalfAxis() const;
+  S getYHalfAxis() const;
+  S getZHalfAxis() const;
+  S getExponent1() const;
+  S getExponent2() const;
   bool operator() (bool output[], const S input[]) override;
 };
+
+
 
 /** indicator function for a 3d-cuboid, parallel to the planes x=0, y=0, z=0.
  * \param extend must have only positive elements
@@ -168,17 +226,27 @@ public:
 template <typename S>
 class IndicatorCuboid3D : public IndicatorF3D<S> {
 private:
-  const Vector<S,3> _center;
-  const S _xLength;
-  const S _yLength;
-  const S _zLength;
+  Vector<S,3> _center;
+  S _xLength;
+  S _yLength;
+  S _zLength;
+
+  /// calculates the distances in x, y, z
+  Vector<S,3> distanceXYZ(const Vector<S,3> input);
+
 public:
   /// constructs an cuboid with x axis from origin[0] to origin[0]+extend[0], ...
   IndicatorCuboid3D(Vector<S,3> extend, Vector<S,3> origin);
   /// constructs an cuboid with x axis dimension center[0]-xlength/2 to center[0]+xlength/2
   IndicatorCuboid3D(S xlength, S ylength, S zlength, Vector<S,3> center);
+  Vector<S,3> const& getCenter() const;
+  S const getxLength() const;
+  S const getyLength() const;
+  S const getzLength() const;
   /// returns true if input is inside, otherwise false
   bool operator() (bool output[], const S input[]) override;
+  /// Returns signed distance to the nearest point on the indicator surface
+  S signedDistance(const Vector<S,3>& input) override;
 };
 
 
@@ -193,14 +261,17 @@ public:
 template <typename S>
 class IndicatorCuboidRotate3D : public IndicatorCuboid3D<S> {
 private:
-    S _theta;
-    int _plane;
-    Vector<S,3> _centerRotation;
+  S _theta;
+  int _plane;
+  Vector<S,3> _centerRotation;
+  void transformInput(const S input[3], S newInput[3]);
 public:
-    // constructs an cuboid turned by some angle theta around a given center of rotation
-    IndicatorCuboidRotate3D(Vector<S,3> extend, Vector<S,3> origin, S theta, int plane, Vector<S,3> centerRotation);
-    IndicatorCuboidRotate3D(S xlength, S ylength, S zlength, Vector<S,3> origin, S theta, int plane, Vector<S,3> centerRotation);
-    bool operator() (bool output[], const S input[]);
+  // constructs an cuboid turned by some angle theta around a given center of rotation
+  IndicatorCuboidRotate3D(Vector<S,3> extend, Vector<S,3> origin, S theta, int plane, Vector<S,3> centerRotation);
+  IndicatorCuboidRotate3D(S xlength, S ylength, S zlength, Vector<S,3> origin, S theta, int plane, Vector<S,3> centerRotation);
+  bool operator() (bool output[], const S input[]);
+  /// Returns signed distance to the nearest point on the indicator surface
+  S signedDistance(const Vector<S,3>& input) override;
 };
 
 /////////creatorFunctions//////////////////////

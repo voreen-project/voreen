@@ -1,6 +1,7 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2012 Lukas Baron, Mathias J. Krause, Albert Mink
+ *  Copyright (C) 2012-2017 Lukas Baron, Mathias J. Krause,
+ *  Albert Mink, Adrian Kummerlaender
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -24,12 +25,17 @@
 #ifndef BLOCK_LATTICE_INTEGRAL_F_2D_H
 #define BLOCK_LATTICE_INTEGRAL_F_2D_H
 
-
 #include "functors/genericF.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
+#include "latticePhysBoundaryForce2D.h"
+#include "latticePhysCorrBoundaryForce2D.h"
+#include "blockGeometryFaces2D.h"
+#include "integral/blockIntegralF2D.h"
+#include "indicator/blockIndicatorBaseF2D.h"
+#include "functors/analytical/indicator/smoothIndicatorBaseF2D.h"
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -37,146 +43,72 @@
 namespace olb {
 
 
-template<typename T, typename DESCRIPTOR> class BlockLattice2D;
 template<typename T> class BlockIndicatorF2D;
 
-
-/// BlockMax2D returns the max in each component of all points of a certain material
-template <typename T, typename DESCRIPTOR>
-class BlockMax2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
-private:
-  BlockLatticeF2D<T,DESCRIPTOR>& _f;
-  BlockGeometry2D<T>& _blockGeometry;
-  int _material;
-public:
-  BlockMax2D(BlockLatticeF2D<T,DESCRIPTOR>& f, BlockGeometry2D<T>& blockGeometry,
-             int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// BlockSum2D sums over all cells of a certain material number
-template <typename T, typename DESCRIPTOR>
-class BlockSum2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
-private:
-  BlockLatticeF2D<T,DESCRIPTOR>& _f;
-  BlockGeometry2D<T>& _blockGeometry;
-  int _material;
-public:
-  BlockSum2D(BlockLatticeF2D<T,DESCRIPTOR>& f, BlockGeometry2D<T>& blockGeometry,
-             int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// BlockIntegral2D
-template <typename T, typename DESCRIPTOR>
-class BlockIntegral2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
-private:
-  BlockLatticeF2D<T,DESCRIPTOR>& _f;
-  BlockGeometry2D<T>& _blockGeometry;
-  int _material;
-public:
-  BlockIntegral2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
-                  BlockGeometry2D<T>& blockGeometry, int material);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-/// BlockL1Norm2D returns componentwise the l1 norm
 template <typename T, typename DESCRIPTOR>
 class BlockL1Norm2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
-private:
+protected:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
-  BlockGeometry2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   int _material;
 public:
-  BlockL1Norm2D(BlockLatticeF2D<T,DESCRIPTOR>& f,
-                BlockGeometry2D<T>& blockGeometry, int material);
+  BlockL1Norm2D(BlockLatticeF2D<T,DESCRIPTOR>& f, BlockGeometry<T,2>& blockGeometry, int material);
   bool operator() (T output[], const int input[]) override;
 };
 
 
-/// BlockL222D returns componentwise the squared l2-norm
+/// BlockL223D returns componentwise the squared l2-norm
 template <typename T, typename DESCRIPTOR>
 class BlockL222D final : public BlockLatticeF2D<T,DESCRIPTOR> {
-private:
+protected:
   BlockLatticeF2D<T,DESCRIPTOR>& _f;
-  BlockGeometry2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   int _material;
 public:
-  BlockL222D(BlockLatticeF2D<T,DESCRIPTOR>& f, BlockGeometry2D<T>& blockGeometry,
+  BlockL222D(BlockLatticeF2D<T,DESCRIPTOR>& f,
+             BlockGeometry<T,2>& blockGeometry,
              int material);
   bool operator() (T output[], const int input[]) override;
 };
 
 
-/// functor counts to get the discrete surface for a material no. in direction (1,0,0), (0,1,0), (0,0,1), (-1,0,0), (0,-1,0), (0,0,-1) and total surface, then it converts it into phys units
-template <typename T>
-class BlockGeometryFaces2D final : public GenericF<T,int> {
-private:
-  const BlockGeometryStructure2D<T>& _blockGeometry;
-  int _material;
-  T _latticeL;
-public:
-  template<typename DESCRIPTOR>
-  BlockGeometryFaces2D(BlockGeometryStructure2D<T>& blockGeometry, int material, const UnitConverter<T,DESCRIPTOR>& converter);
-  BlockGeometryFaces2D(BlockGeometryStructure2D<T>& blockGeometry, int material, T latticeL);
-  bool operator() (T output[], const int input[]) override;
-};
-
-/// functor counts to get the discrete surface for a smooth indicator in direction (1,0,0), (0,1,0), (-1,0,0), (0,-1,0)
-/// and total surface, then it converts it into phys units
-template <typename T, bool HLBM=false>
-class BlockGeometryFacesIndicator2D final : public GenericF<T,int> {
-private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
-  SmoothIndicatorF2D<T,T,HLBM>& _indicator;
-  int _material;
-  T _latticeL;
-public:
-  BlockGeometryFacesIndicator2D(BlockGeometryStructure2D<T>& blockGeometry, SmoothIndicatorF2D<T,T,HLBM>& indicator,
-                                int material, T deltaX);
-  bool operator() (T output[], const int input[]) override;
-};
-
-
-
-/** functor to get pointwise phys force acting on a boundary with a given
- *  material on local lattice, if globIC is not on
- *  the local processor, the returned vector is empty
- */
+/// functor to get pointwise phys force acting on a indicated boundary on local lattice
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysDrag2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometry2D<T>& _blockGeometry;
-  int _material;
+  BlockIndicatorF2D<T>&                         _indicatorF;
+  BlockGeometryFaces2D<T>                       _facesF;
+  BlockLatticePhysBoundaryForce2D<T,DESCRIPTOR> _pBoundForceF;
+  BlockSum2D<T>                                 _sumF;
+
+  const T _factor;
 public:
-  BlockLatticePhysDrag2D(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                         BlockGeometry2D<T>& blockGeometry, int material,
-                         const UnitConverter<T,DESCRIPTOR>& converter);
+  BlockLatticePhysDrag2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                         BlockIndicatorF2D<T>&                  indicatorF,
+                         const UnitConverter<T,DESCRIPTOR>&     converter);
   bool operator() (T output[], const int input[]) override;
 };
 
 
-/** functor to get pointwise phys force acting on a boundary with a given
- *  material on local lattice, if globIC is not on
- *  the local processor, the returned vector is empty
+/// functor to get pointwise phys force acting on a indicated boundary on local lattice
+/**
  *  see: Caiazzo, Junk: Boundary Forces in lattice Boltzmann: Analysis of MEA
  */
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePhysCorrDrag2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometry2D<T>& _blockGeometry;
-  int _material;
+  BlockIndicatorF2D<T>&                             _indicatorF;
+  BlockGeometryFaces2D<T>                           _facesF;
+  BlockLatticePhysCorrBoundaryForce2D<T,DESCRIPTOR> _pBoundForceF;
+  BlockSum2D<T>                                     _sumF;
+
+  const T _factor;
 public:
-  BlockLatticePhysCorrDrag2D(BlockLattice2D<T,DESCRIPTOR>& blockLattice,
-                             BlockGeometry2D<T>& blockGeometry, int material,
-                             const UnitConverter<T,DESCRIPTOR>& converter);
+  BlockLatticePhysCorrDrag2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                             BlockIndicatorF2D<T>&                  indicatorF,
+                             const UnitConverter<T,DESCRIPTOR>&     converter);
   bool operator() (T output[], const int input[]) override;
 };
-
-
 
 
 } // end namespace olb

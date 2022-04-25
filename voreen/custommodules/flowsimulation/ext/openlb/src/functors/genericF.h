@@ -50,7 +50,8 @@ template <typename T, typename S>
 class GenericF {
 protected:
   // constructor
-  GenericF(int targetDim, int sourceDim);
+  GenericF(int targetDim, int sourceDim):
+    _n(targetDim), _m(sourceDim) { };
 
 private:
   std::string _name;
@@ -62,8 +63,10 @@ private:
   GenericF& operator=(const GenericF&) = delete;
 
 public:
+  using targetType = T;
+  using sourceType = S;
   // virtual destructor
-  virtual ~GenericF();
+  virtual ~GenericF() = default;
   /// memory management, frees resouces (calcClass)
   std::shared_ptr< GenericF<T,S> > _ptrCalcC;
   /// read only access to member variable _m

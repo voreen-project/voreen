@@ -34,33 +34,34 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR, typename DESCRIPTOR_AD>
 UnitConverter<T,DESCRIPTOR> createADfractionalUnitConverter (
-                            const UnitConverter<T,DESCRIPTOR>& converter,
-                            int fraction, T targetLatticeRelaxationTime )
+  const UnitConverter<T,DESCRIPTOR>& converter,
+  int fraction, T targetLatticeRelaxationTime )
 {
-  if (fraction <= 0)
+  if (fraction <= 0) {
     throw std::out_of_range("fracton must be positive.");
-  
+  }
+
   T conversionViscosityOrDiffusivity = converter.getPhysDeltaX() * converter.getPhysDeltaX() / (converter.getPhysDeltaT() * fraction);
   T physViscosiyOrDiffusivity = (targetLatticeRelaxationTime - 0.5) * conversionViscosityOrDiffusivity / descriptors::invCs2<T,DESCRIPTOR_AD>();
 
   return UnitConverter<T,DESCRIPTOR> (
-      converter.getPhysDeltaX() / fraction,
-      converter.getPhysDeltaT() / fraction,
-      converter.getCharPhysLength(),
-      converter.getCharPhysVelocity(),
-      physViscosiyOrDiffusivity,
-      converter.getPhysDensity(),
-      converter.getCharPhysPressure()
-      );
+           converter.getPhysDeltaX() / fraction,
+           converter.getPhysDeltaT() / fraction,
+           converter.getCharPhysLength(),
+           converter.getCharPhysVelocity(),
+           physViscosiyOrDiffusivity,
+           converter.getPhysDensity(),
+           converter.getCharPhysPressure()
+         );
 }
 
 template <typename T, typename DESCRIPTOR>
 UnitConverter<T,DESCRIPTOR> createFractionalUnitConverter (
-                            const UnitConverter<T,DESCRIPTOR>& converter,
-                            int fraction, T targetLatticeRelaxationTime )
+  const UnitConverter<T,DESCRIPTOR>& converter,
+  int fraction, T targetLatticeRelaxationTime )
 {
   return createADfractionalUnitConverter<T,DESCRIPTOR,DESCRIPTOR> (
-                                        converter, fraction, targetLatticeRelaxationTime );
+           converter, fraction, targetLatticeRelaxationTime );
 }
 
 template <typename T, typename DESCRIPTOR>

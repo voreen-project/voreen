@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,14 +41,14 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeCuboid2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeCuboid2D(SuperLattice2D<T,DESCRIPTOR>& sLattice);
+  SuperLatticeCuboid2D(SuperLattice<T,DESCRIPTOR>& sLattice);
 };
 
 /// BlockLatticeCuboid2D returns pointwise the cuboid no. + 1 on local lattice.
 template <typename T, typename DESCRIPTOR>
 class BlockLatticeCuboid2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 public:
-  BlockLatticeCuboid2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, const int iC);
+  BlockLatticeCuboid2D(BlockLattice<T,DESCRIPTOR>& blockLattice, const int iC);
   bool operator() (T output[], const int input[]) override;
 private:
   // holds cuboid nmb of current block

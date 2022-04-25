@@ -42,7 +42,7 @@ BlockDiscretizationF2D<T>::BlockDiscretizationF2D(BlockF2D<T>& f,
 template <typename T>
 bool BlockDiscretizationF2D<T>::operator()(T output[], const int input[])
 {
-  const T delta = (_topBoundary - _bottomBoundary) / (std::max(_n-1,1));
+  const T delta = (_topBoundary - _bottomBoundary) / (util::max(_n-1,1));
   _f(output, input);
 
   for (int i=0; i < _f.getTargetDim(); ++i) {

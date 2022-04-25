@@ -28,67 +28,35 @@
 #ifndef MRT_DYNAMICS_H
 #define MRT_DYNAMICS_H
 
-#include "dynamics/dynamics.h"
+#include "interface.h"
+#include "collisionMRT.h"
 
 namespace olb {
 
+/**
+ * Original implementation based on:
+ * D'Humieres et al., "Multiple-relaxation-time lattice Boltzmann models in three dimensions",
+ * Phil: Trans. R. soc. Lond. A (2002) 360, 437-451
+ * and
+ * Yu et al,, "LES of turbulent square jet flow using an MRT lattice Boltzmann model",
+ * Computers & Fluids 35 (2006), 957-965
+ **/
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+using MRTdynamics = dynamics::Tuple<
+  T, DESCRIPTOR,
+  MOMENTA,
+  equilibria::SecondOrder,
+  collision::MRT
+>;
 
-/// Implementation of the entropic collision step
-template<typename T, typename DESCRIPTOR>
-class MRTdynamics : public BasicDynamics<T,DESCRIPTOR> {
-public:
-  /// Constructor
-  MRTdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
-  /// Compute equilibrium distribution function
-  T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
-  /// Compute all equilibrium moments
-  void computeAllEquilibrium(T momentaEq[DESCRIPTOR::q], T rho,
-                          const T u[DESCRIPTOR::d], const T uSqr);
-  /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_) override;
-  /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
-  /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
-  /// Get local relaxation parameter of the dynamics
-  T getLambda() const;
-  /// Set local relaxation parameter of the dynamics
-  void setLambda(T lambda_);
-protected:
-  T invM_S[DESCRIPTOR::q][DESCRIPTOR::q]; // relaxation times matrix.
-  T omega; // the shear viscosity relaxation time
-  T lambda;// the bulk viscosity relaxation time
-};
-
-/// Implementation of the entropic collision step
-template<typename T, typename DESCRIPTOR>
-class ForcedMRTdynamics : public MRTdynamics<T,DESCRIPTOR> {
-public:
-  /// Constructor
-  ForcedMRTdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
-  /// Clone the object on its dynamic type.
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_);
-
-};
-
-/// Implementation of the entropic collision step
-template<typename T, typename DESCRIPTOR>
-class MRTdynamics2 : public MRTdynamics<T,DESCRIPTOR> {
-public:
-  /// Constructor
-  MRTdynamics2(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
-  /// Clone the object on its dynamic type.
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_);
-
-protected:
-  T invM_S_2[DESCRIPTOR::q][DESCRIPTOR::q]; // relaxation times matrix.
-  T omega;
-};
-
-
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+using ForcedMRTdynamics = dynamics::Tuple<
+  T, DESCRIPTOR,
+  MOMENTA,
+  equilibria::SecondOrder,
+  collision::MRT,
+  forcing::LaddVerberg
+>;
 
 }
 

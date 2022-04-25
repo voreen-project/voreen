@@ -29,7 +29,7 @@
 #include <algorithm>
 
 #include "interpolationF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
 
 namespace olb {
 
@@ -47,8 +47,7 @@ SpecialAnalyticalFfromBlockF3D<T,W>::SpecialAnalyticalFfromBlockF3D(
 
 
 template <typename T, typename W>
-bool SpecialAnalyticalFfromBlockF3D<T,W>::operator()(W output[],
-    const T physC[])
+bool SpecialAnalyticalFfromBlockF3D<T,W>::operator()(W output[], const T physC[])
 {
   Vector<T,3> origin = _cuboid.getOrigin();
 
@@ -60,8 +59,8 @@ bool SpecialAnalyticalFfromBlockF3D<T,W>::operator()(W output[],
 
   int latticeR[3];
   for (int i=0; i<3; i++) {
-    latticeR[i] = std::max((int)floor( (physCv[i] - origin[i])/
-                                       _cuboid.getDeltaR()), 0);
+    latticeR[i] = util::max((int)util::floor( (physCv[i] - origin[i])/
+                            _cuboid.getDeltaR()), 0);
   }
   Vector<T,3> physRiC;
   Vector<W,3> d, e;
@@ -175,9 +174,9 @@ bool SpecialAnalyticalFfromBlockF3D<T,W>::operator()(W output[],
 
 template <typename T, typename W>
 AnalyticalFfromBlockF3D<T,W>::AnalyticalFfromBlockF3D(
-  BlockF3D<W>& f, Cuboid3D<T>& cuboid, const int overlap)
+  BlockF3D<W>& f, Cuboid3D<T>& cuboid)
   : AnalyticalF3D<T,W>(f.getTargetDim()),
-    _f(f), _cuboid(cuboid), _overlap(overlap)
+    _f(f), _cuboid(cuboid)
 {
   this->getName() = "fromBlockF";
 }
@@ -190,16 +189,17 @@ bool AnalyticalFfromBlockF3D<T,W>::operator()(W output[], const T physC[])
   int latticeR[3];
   _cuboid.getFloorLatticeR(latticeR, physC);
 
-  if ( latticeR[0] >= -_overlap && latticeR[0] + 1 < _cuboid.getNx() + _overlap &&
-       latticeR[1] >= -_overlap && latticeR[1] + 1 < _cuboid.getNy() + _overlap &&
-       latticeR[2] >= -_overlap && latticeR[2] + 1 < _cuboid.getNz() + _overlap ) {
+  auto& block = _f.getBlockStructure();
+  auto padding = std::min(1, block.getPadding());
+
+  if (LatticeR<3>(latticeR) >= -padding && LatticeR<3>(latticeR) < block.getExtent()+padding-1) {
     const int& locX = latticeR[0];
     const int& locY = latticeR[1];
     const int& locZ = latticeR[2];
 
     Vector<T,3> physRiC;
     Vector<T,3> physCv(physC);
-    _cuboid.getPhysR(physRiC.data(), locX, locY, locZ);
+    _cuboid.getPhysR(physRiC.data(), {locX, locY, locZ});
 
     // compute weights
     Vector<W,3> d = (physCv - physRiC) * (1. / _cuboid.getDeltaR());
@@ -283,7 +283,8 @@ bool AnalyticalFfromBlockF3D<T,W>::operator()(W output[], const T physC[])
     }
 
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 }
@@ -291,30 +292,21 @@ bool AnalyticalFfromBlockF3D<T,W>::operator()(W output[], const T physC[])
 
 template <typename T, typename W>
 AnalyticalFfromSuperF3D<T,W>::AnalyticalFfromSuperF3D(SuperF3D<T,W>& f,
-    bool communicateToAll, int overlap, bool communicateOverlap)
+    bool communicateToAll, bool communicateOverlap)
   : AnalyticalF3D<T,W>(f.getTargetDim()),
     _communicateToAll(communicateToAll),
     _communicateOverlap(communicateOverlap),
     _f(f),
-    _cuboidGeometry(f.getSuperStructure().getCuboidGeometry()),
-    _overlap(overlap)
+    _cuboidGeometry(f.getSuperStructure().getCuboidGeometry())
 {
   this->getName() = "fromSuperF";
 
-  if (overlap == -1) {
-    _overlap = _f.getSuperStructure().getOverlap();
-  }
-
   LoadBalancer<T>& load = _f.getSuperStructure().getLoadBalancer();
-
-  if ( _f.getBlockFSize() == load.size() ) {
-    for (int iC = 0; iC < load.size(); ++iC) {
-      this->_blockF.emplace_back(
-        new AnalyticalFfromBlockF3D<T>(_f.getBlockF(iC),
-                                       _cuboidGeometry.get(load.glob(iC)),
-                                       _overlap)
-      );
-    }
+  for (int iC = 0; iC < load.size(); ++iC) {
+    this->_blockF.emplace_back(
+      new AnalyticalFfromBlockF3D<T>(_f.getBlockF(iC),
+                                     _cuboidGeometry.get(load.glob(iC)))
+    );
   }
 }
 
@@ -337,112 +329,9 @@ bool AnalyticalFfromSuperF3D<T,W>::operator()(W output[], const T physC[])
   int dataSize = 0;
   int dataFound = 0;
 
-  int latticeC[4] = {};
-
   LoadBalancer<T>& load = _f.getSuperStructure().getLoadBalancer();
-
   for (int iC = 0; iC < load.size(); ++iC) {
-    latticeC[0] = load.glob(iC);
-    Cuboid3D<T>& cuboid = _cuboidGeometry.get(latticeC[0]);
-    cuboid.getFloorLatticeR(latticeR, physC);
-
-    // latticeR within cuboid extended by overlap
-    if ( latticeR[0] >= -_overlap && latticeR[0] + 1 < cuboid.getNx() + _overlap &&
-         latticeR[1] >= -_overlap && latticeR[1] + 1 < cuboid.getNy() + _overlap &&
-         latticeR[2] >= -_overlap && latticeR[2] + 1 < cuboid.getNz() + _overlap ) {
-      if (_blockF.empty()) {
-        const int& locX = latticeR[0];
-        const int& locY = latticeR[1];
-        const int& locZ = latticeR[2];
-
-        Vector<T,3> physRiC;
-        Vector<T,3> physCv(physC);
-        cuboid.getPhysR(physRiC.data(), locX, locY, locZ);
-
-        // compute weights
-        Vector<W,3> d = (physCv - physRiC) * (1. / cuboid.getDeltaR());
-        Vector<W,3> e = 1. - d;
-
-        W output_tmp[_f.getTargetDim()];
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX;
-        latticeC[2] = locY;
-        latticeC[3] = locZ;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * e[0] * e[1] * e[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX;
-        latticeC[2] = locY + 1;
-        latticeC[3] = locZ;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * e[0] * d[1] * e[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX + 1;
-        latticeC[2] = locY;
-        latticeC[3] = locZ;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * d[0] * e[1] * e[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX + 1;
-        latticeC[2] = locY + 1;
-        latticeC[3] = locZ;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * d[0] * d[1] * e[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX;
-        latticeC[2] = locY;
-        latticeC[3] = locZ + 1;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * e[0] * e[1] * d[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX;
-        latticeC[2] = locY + 1;
-        latticeC[3] = locZ + 1;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * e[0] * d[1] * d[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX + 1;
-        latticeC[2] = locY;
-        latticeC[3] = locZ + 1;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * d[0] * e[1] * d[2];
-          output_tmp[iD] = W();
-        }
-
-        latticeC[1] = locX + 1;
-        latticeC[2] = locY + 1;
-        latticeC[3] = locZ + 1;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * d[0] * d[1] * d[2];
-          output_tmp[iD] = W();
-        }
-      } else {
-        _blockF[iC]->operator()(output, physC);
-      }
-
+    if (_blockF[iC]->operator()(output, physC)) {
       dataSize += _f.getTargetDim();
       ++dataFound;
     }
@@ -462,7 +351,8 @@ bool AnalyticalFfromSuperF3D<T,W>::operator()(W output[], const T physC[])
     for (int iD = 0; iD < dataSize; ++iD) {
       output[iD]/=dataFound;
     }
-  } else {
+  }
+  else {
     if (dataFound!=0) {
       dataSize /= dataFound;
       for (int iD = 0; iD < dataSize; ++iD) {

@@ -30,26 +30,69 @@
 namespace olb {
 
 
-template<typename T, typename DESCRIPTOR, typename... FIELDS>
-std::size_t MultiFieldArrayD<T,DESCRIPTOR,FIELDS...>::getNblock() const
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+template <typename FIELD>
+const typename FIELD::template value_type<T>&
+MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::getFieldComponent(std::size_t iCell, unsigned iDim) const
 {
-  return descriptors::getFieldListSize<DESCRIPTOR::d,DESCRIPTOR::q,FIELDS...>();
+  return get<FIELD>()[iDim][iCell];
 }
 
-template<typename T, typename DESCRIPTOR, typename... FIELDS>
-std::size_t MultiFieldArrayD<T,DESCRIPTOR,FIELDS...>::getSerializableSize() const
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+template <typename FIELD>
+typename FIELD::template value_type<T>&
+MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::getFieldComponent(std::size_t iCell, unsigned iDim)
 {
-  return _count * descriptors::getFieldListSize<DESCRIPTOR::d,DESCRIPTOR::q,FIELDS...>() * sizeof(T);
+  return get<FIELD>()[iDim][iCell];
 }
 
-template<typename T, typename DESCRIPTOR, typename... FIELDS>
-bool* MultiFieldArrayD<T,DESCRIPTOR,FIELDS...>::getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode)
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+template <typename F>
+void MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::forFields(F f) const
+{
+  fields_t::for_each([&](auto field) {
+    f(get(field));
+  });
+}
+
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+template <typename F>
+void MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::forFields(F f)
+{
+  fields_t::for_each([&](auto field) {
+    f(get(field));
+  });
+}
+
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+template <typename F>
+void MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::forFieldsAt(std::size_t idx, F f)
+{
+  fields_t::for_each([&](auto field) {
+    f(get(field).getFieldPointer(idx), field);
+  });
+}
+
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+std::size_t MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::getNblock() const
+{
+  return (get<FIELDS>().getNblock() + ... + 0);
+}
+
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+std::size_t MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::getSerializableSize() const
+{
+  return (get<FIELDS>().getSerializableSize() + ... + 0);
+}
+
+template <typename T, typename DESCRIPTOR, Platform PLATFORM, typename... FIELDS>
+bool* MultiFieldArrayD<T,DESCRIPTOR,PLATFORM,FIELDS...>::getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode)
 {
   std::size_t currentBlock = 0;
   bool* dataPtr = nullptr;
 
-  utilities::meta::tuple_for_each(_data, [&](auto& field) {
-    this->registerSerializableOfConstSize(iBlock, sizeBlock, currentBlock, dataPtr, field, loadingMode);
+  meta::tuple_for_each(_static, [&](auto& field) {
+    registerSerializableOfConstSize(iBlock, sizeBlock, currentBlock, dataPtr, field, loadingMode);
   });
 
   return dataPtr;

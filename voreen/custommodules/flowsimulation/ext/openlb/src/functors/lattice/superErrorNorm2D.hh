@@ -33,7 +33,7 @@ namespace olb {
 template <typename T, typename W, int P>
 template <typename DESCRIPTOR>
 SuperRelativeErrorLpNorm2D<T,W,P>::SuperRelativeErrorLpNorm2D(
-  SuperLattice2D<T,DESCRIPTOR>&      sLattice,
+  SuperLattice<T,DESCRIPTOR>&      sLattice,
   FunctorPtr<SuperF2D<T,W>>&&        f,
   FunctorPtr<AnalyticalF2D<T,W>>&&   wantedF,
   FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF)
@@ -66,7 +66,7 @@ SuperRelativeErrorLpNorm2D<T,W,P>::SuperRelativeErrorLpNorm2D(
 template <typename T, typename W, int P>
 template <typename DESCRIPTOR>
 SuperAbsoluteErrorLpNorm2D<T,W,P>::SuperAbsoluteErrorLpNorm2D(
-  SuperLattice2D<T,DESCRIPTOR>&      sLattice,
+  SuperLattice<T,DESCRIPTOR>&      sLattice,
   FunctorPtr<SuperF2D<T,W>>&&        f,
   FunctorPtr<AnalyticalF2D<T,W>>&&   wantedF,
   FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF)

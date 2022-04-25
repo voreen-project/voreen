@@ -25,29 +25,27 @@
 #define LATTICE_AVERAGE_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticeAverage2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeAverage2D<T,DESCRIPTOR>::BlockLatticeAverage2D
-(BlockLatticeF2D<T,DESCRIPTOR>& f, BlockGeometry2D<T>& blockGeometry,
+(BlockLatticeF2D<T,DESCRIPTOR>& f, BlockGeometry<T,2>& blockGeometry,
  int material, T radius)
-  : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlockLattice(), f.getTargetDim()),
+  : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlock(), f.getTargetDim()),
     _f(f), _blockGeometry(blockGeometry), _material(material), _radius(radius)
 {
   this->getName() = "Average("+f.getName()+")";
@@ -70,7 +68,7 @@ bool BlockLatticeAverage2D<T,DESCRIPTOR>::operator() (T output[], const int inpu
   // iterate over all cuboids & points and test for material && isInSphere
   //  std::vector<T> tmp( this->_n, T() );
   //  int numVoxels(0);
-  //  if (this->_blockGeometry.getMaterial(center[0],center[1],center[2]) == material) {
+  //  if (this->_blockGeometry.getMaterial({center[0],center[1],center[2]}) == material) {
   //    for (int iC=0; iC<load.size(); iC++) {
   //      int nX = cGeometry.get(load.glob(iC)).getNx();
   //      int nY = cGeometry.get(load.glob(iC)).getNy();
@@ -82,7 +80,7 @@ bool BlockLatticeAverage2D<T,DESCRIPTOR>::operator() (T output[], const int inpu
   //            glob[0] = (int)cGeometry.get(load.glob(iC)).get_globPosX() + iX;
   //            glob[1] = (int)cGeometry.get(load.glob(iC)).get_globPosY() + iY;
   //            glob[2] = (int)cGeometry.get(load.glob(iC)).get_globPosZ() + iZ;
-  //            if (this->_blockGeometry.getMaterial(glob[0],glob[1],glob[2]) == material
+  //            if (this->_blockGeometry.getMaterial({glob[0],glob[1],glob[2]}) == material
   //                && isInSphere(glob)[0]==true) {
   //              for (unsigned iD=0; iD<f(load.glob(0),0,0,0).size(); iD++) {
   //                tmp[iD]+=f(load.glob(iC),iX,iY,iZ)[iD];

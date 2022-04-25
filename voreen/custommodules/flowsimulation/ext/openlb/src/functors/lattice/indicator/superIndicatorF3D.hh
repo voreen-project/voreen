@@ -34,7 +34,7 @@ namespace olb {
 
 template <typename T>
 SuperIndicatorFfromIndicatorF3D<T>::SuperIndicatorFfromIndicatorF3D(
-  FunctorPtr<IndicatorF3D<T>>&& indicatorF, SuperGeometry3D<T>& geometry)
+  FunctorPtr<IndicatorF3D<T>>&& indicatorF, SuperGeometry<T,3>& geometry)
   : SuperIndicatorF3D<T>(geometry),
     _indicatorF(std::move(indicatorF))
 {
@@ -46,10 +46,6 @@ SuperIndicatorFfromIndicatorF3D<T>::SuperIndicatorFfromIndicatorF3D(
     this->_blockF.emplace_back(
       new BlockIndicatorFfromIndicatorF3D<T>(
         *_indicatorF, geometry.getBlockGeometry(iC))
-    );
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorFfromIndicatorF3D<T>(
-        *_indicatorF, geometry.getExtendedBlockGeometry(iC))
     );
   }
 }
@@ -66,7 +62,7 @@ bool SuperIndicatorFfromIndicatorF3D<T>::operator() (bool output[], const int in
 template <typename T, bool HLBM>
 SuperIndicatorFfromSmoothIndicatorF3D<T, HLBM>::SuperIndicatorFfromSmoothIndicatorF3D(
   FunctorPtr<SmoothIndicatorF3D<T,T,HLBM>>&& indicatorF,
-  SuperGeometry3D<T>&                     geometry)
+  SuperGeometry<T,3>&                     geometry)
   : SuperIndicatorF3D<T>(geometry),
     _indicatorF(std::move(indicatorF))
 {
@@ -78,10 +74,6 @@ SuperIndicatorFfromSmoothIndicatorF3D<T, HLBM>::SuperIndicatorFfromSmoothIndicat
     this->_blockF.emplace_back(
       new BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>(
         *_indicatorF, geometry.getBlockGeometry(iC))
-    );
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorFfromSmoothIndicatorF3D<T, HLBM>(
-        *_indicatorF, geometry.getExtendedBlockGeometry(iC))
     );
   }
 }
@@ -98,7 +90,7 @@ bool SuperIndicatorFfromSmoothIndicatorF3D<T, HLBM>::operator() (bool output[], 
 
 template <typename T>
 SuperIndicatorMaterial3D<T>::SuperIndicatorMaterial3D(
-  SuperGeometry3D<T>& geometry, std::vector<int> materials)
+  SuperGeometry<T,3>& geometry, std::vector<int> materials)
   : SuperIndicatorF3D<T>(geometry)
 {
   const std::string matString = std::accumulate(
@@ -115,16 +107,12 @@ SuperIndicatorMaterial3D<T>::SuperIndicatorMaterial3D(
       new BlockIndicatorMaterial3D<T>(this->_superGeometry.getBlockGeometry(iC),
                                       materials)
     );
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorMaterial3D<T>(this->_superGeometry.getExtendedBlockGeometry(iC),
-                                      materials)
-    );
   }
 }
 
 template <typename T>
 SuperIndicatorMaterial3D<T>::SuperIndicatorMaterial3D(
-  SuperGeometry3D<T>& geometry, std::list<int> materials)
+  SuperGeometry<T,3>& geometry, std::list<int> materials)
   : SuperIndicatorMaterial3D(geometry,
                              std::vector<int>(materials.begin(), materials.end()))
 { }
@@ -155,8 +143,6 @@ SuperIndicatorIdentity3D<T>::SuperIndicatorIdentity3D(FunctorPtr<SuperIndicatorF
   for (int iC = 0; iC < _indicatorF->getBlockFSize(); ++iC) {
     this->_blockF.emplace_back(
       new BlockIndicatorIdentity3D<T>(_indicatorF->getBlockIndicatorF(iC)));
-    this->_extendedBlockF.emplace_back(
-      new BlockIndicatorIdentity3D<T>(_indicatorF->getExtendedBlockIndicatorF(iC)));
   }
 }
 

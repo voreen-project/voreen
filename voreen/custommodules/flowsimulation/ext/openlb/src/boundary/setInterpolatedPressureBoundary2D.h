@@ -21,8 +21,8 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Interpolated Pressure Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Interpolated Pressure Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 
 #ifndef SET_INTERPOLATED_PRESSURE_BOUNDARY_2D_H
 #define SET_INTERPOLATED_PRESSURE_BOUNDARY_2D_H
@@ -31,34 +31,31 @@
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/blockGeometryStatistics2D.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "core/superLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
 #include "dynamics/dynamics.h"
-#include "momentaOnBoundaries2D.h"
 #include "boundaryPostProcessors2D.h"
+#include "setBoundary2D.h"
 
 namespace olb {
-////////// SuperLattice Domain  /////////////////////////////////////////
 
 ///Initialising the setInterpolatedPressureBoundary function on the superLattice domain
 ///Interpolated Boundaries use the BGKdynamics collision-operator
 template<typename T, typename DESCRIPTOR, class MixinDynamics=BGKdynamics<T,DESCRIPTOR>>
-void setInterpolatedPressureBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry2D<T>& superGeometry, int material);
+void setInterpolatedPressureBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry<T,2>& superGeometry, int material);
 
 ///Initialising the setInterpolatedPressureBoundary function on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setInterpolatedPressureBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator);
+void setInterpolatedPressureBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator);
 
-////////// BlockLattice Domain  /////////////////////////////////////////
 
 /// Add interpolated pressure boundary for any indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setInterpolatedPressureBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block,T omega, BlockIndicatorF2D<T>& indicator, bool includeOuterCells=false);
+void setInterpolatedPressureBoundary(BlockLattice<T,DESCRIPTOR>& block,T omega, BlockIndicatorF2D<T>& indicator, bool includeOuterCells=false);
 
 }//namespace olb
 

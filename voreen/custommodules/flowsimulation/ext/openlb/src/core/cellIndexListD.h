@@ -26,6 +26,7 @@
 
 #include "fieldArrayD.h"
 #include "utilities/aliases.h"
+#include "serializer.h"
 
 #include <vector>
 #include <numeric>
@@ -45,11 +46,11 @@ namespace olb {
  *      velocity field to be applied.
  **/
 template <typename T, typename DESCRIPTOR, typename... FIELDS>
-class CellIndexListD {
+class CellIndexListD : public Serializable {
 private:
   std::size_t _count;
   std::size_t _capacity;
-  MultiFieldArrayD<T,DESCRIPTOR,descriptors::CELL_ID,FIELDS...> _fields;
+  MultiFieldArrayD<T,DESCRIPTOR,Platform::CPU_SISD,descriptors::CELL_ID,FIELDS...> _fields;
 
 public:
   CellIndexListD(std::size_t capacity=64):
@@ -58,7 +59,7 @@ public:
     _fields(capacity)
   { }
 
-  CellIndexListD(std::vector<std::size_t>&& indices):
+  CellIndexListD(std::vector<CellID>&& indices):
     _capacity(indices.size()),
     _fields(_capacity)
   {
@@ -67,35 +68,61 @@ public:
     }
   }
 
-  /// Append cell index and allocate attached field data
-  void append(std::size_t iCell);
+  std::size_t size() const {
+    return _count;
+  };
 
-  template <typename FIELD>
-  FieldPtr<T,DESCRIPTOR,FIELD> getFieldPointer(std::size_t index) {
-    return _fields.template get<FIELD>().getFieldPointer(index);
-  }
+  /// Append cell index and allocate attached field data
+  std::size_t append(std::size_t iCell);
 
   /// Ascending sort of cell indices
   /**
    * Attached data is moved accordingly.
-   * Only useful for when processing chunks of sequential cell indices. 
+   * Only useful for when processing chunks of sequential cell indices.
    **/
   void sort();
 
-  template <typename O>
-  void forEach(BlockLattice<T,DESCRIPTOR>& block, O op);
+  /// Return pointer to FIELD at index
+  template <typename FIELD>
+  auto getFieldPointer(std::size_t index)
+  {
+    return _fields.template get<FIELD>().getRowPointer(index);
+  }
+
+  /// Return copy of FIELD data at index
+  template <typename FIELD>
+  auto getField(std::size_t index) const
+  {
+    return _fields.template getField<FIELD>(index);
+  }
+  /// Set FIELD data at index
+  template <typename FIELD>
+  void setField(std::size_t index, const FieldD<T,DESCRIPTOR,FIELD>& v)
+  {
+    return _fields.template setField<FIELD>(index, v);
+  }
+
+  template <typename FIELD>
+  const auto& getFieldArray() const
+  {
+    return _fields.template get<FIELD>();
+  }
+
+  std::size_t getNblock() const override;
+  std::size_t getSerializableSize() const override;
+  bool* getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode) override;
 
 };
 
 template <typename T, typename DESCRIPTOR, typename... FIELDS>
-void CellIndexListD<T,DESCRIPTOR,FIELDS...>::append(std::size_t iCell)
+std::size_t CellIndexListD<T,DESCRIPTOR,FIELDS...>::append(std::size_t iCell)
 {
   if (_count == _capacity) {
     _capacity *= 2;
     _fields.resize(_capacity);
   }
   _fields.template get<descriptors::CELL_ID>()[0][_count] = iCell;
-  _count += 1;
+  return _count++;
 }
 
 template <typename T, typename DESCRIPTOR, typename... FIELDS>
@@ -105,8 +132,8 @@ void CellIndexListD<T,DESCRIPTOR,FIELDS...>::sort()
   std::vector<std::size_t> permutation(_count);
   std::iota(permutation.begin(), permutation.end(), 0);
   std::sort(permutation.begin(), permutation.end(), [&cell_id](auto i, auto j) {
-                                                      return cell_id[i] < cell_id[j];
-                                                    });
+    return cell_id[i] < cell_id[j];
+  });
   std::vector<bool> swapped(_count, false);
   for (std::size_t i=0; i < _count; ++i) {
     if (swapped[i]) {
@@ -125,17 +152,35 @@ void CellIndexListD<T,DESCRIPTOR,FIELDS...>::sort()
 }
 
 template <typename T, typename DESCRIPTOR, typename... FIELDS>
-template <typename O>
-void CellIndexListD<T,DESCRIPTOR,FIELDS...>::forEach(BlockLattice<T,DESCRIPTOR>& block, O op)
+std::size_t CellIndexListD<T,DESCRIPTOR,FIELDS...>::getNblock() const
 {
-  auto cell = block.get(0ul);
-  auto& indices = _fields.template get<descriptors::CELL_ID>()[0];
-  for (std::size_t i=0; i < _count; ++i) {
-    cell.setCellId(indices[i]);
-    op(cell, getFieldPointer<FIELDS>(i)...);
-  }
+  return 2
+         + _fields.getNblock();
 }
- 
+
+template <typename T, typename DESCRIPTOR, typename... FIELDS>
+std::size_t CellIndexListD<T,DESCRIPTOR,FIELDS...>::getSerializableSize() const
+{
+  return 2 * sizeof(std::size_t)
+         + _fields.getSerializableSize();
+}
+
+template <typename T, typename DESCRIPTOR, typename... FIELDS>
+bool* CellIndexListD<T,DESCRIPTOR,FIELDS...>::getBlock(std::size_t iBlock, std::size_t& sizeBlock, bool loadingMode)
+{
+  std::size_t currentBlock = 0;
+  bool* dataPtr = nullptr;
+
+  registerVar(iBlock, sizeBlock, currentBlock, dataPtr, _count);
+  registerVar(iBlock, sizeBlock, currentBlock, dataPtr, _capacity);
+  if (loadingMode && iBlock == 2) {
+    _fields.resize(_capacity);
+  }
+  registerSerializableOfConstSize(iBlock, sizeBlock, currentBlock, dataPtr, _fields, loadingMode);
+
+  return dataPtr;
+}
+
 }
 
 #endif

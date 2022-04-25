@@ -36,14 +36,6 @@
 namespace olb {
 
 template <typename T, typename S>
-GenericF<T,S>::GenericF (int targetDim, int sourceDim) : _n(targetDim), _m(sourceDim)
-{
-}
-
-template <typename T, typename S>
-GenericF<T,S>::~GenericF () {}
-
-template <typename T, typename S>
 int GenericF<T,S>::getSourceDim() const
 {
   return _m;

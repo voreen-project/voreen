@@ -34,11 +34,11 @@
 #include <vector>
 
 #include "communication/mpiManager.h"
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "io/ostreamManager.h"
 
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 /// Representation of a statistic for a parallel 3D geometry
@@ -50,33 +50,29 @@ namespace olb {
  * This class is not intended to be derived from.
  */
 
-template<typename T>
-class SuperGeometry3D;
+template<typename T, unsigned D>
+class SuperGeometry;
 
 template<typename T>
 class SuperGeometryStatistics3D {
-
 private:
-
   /// Points to the underlying data from which the statistics is taken
-  const SuperGeometry3D<T>* _superGeometry;
+  const SuperGeometry<T,3>* _superGeometry;
   /// Specifies if an update is needed
   bool _statisticsUpdateNeeded;
-  /// Size of ghost voxel layer
-  int _overlap;
 
   /// Number of different material numbers
   int _nMaterials;
   /// Mapping a material number to the number of this kind found in the super geometry
-  std::map<int, int> _material2n;
+  std::map<int, std::size_t> _material2n;
   /// Mapping a material number to the min. physical position in each space direction
-  std::map<int, std::vector<T> > _material2min;
+  std::map<int, olb::Vector<T, 3> > _material2min;
   /// Mapping a material number to the max. physical position in each space direction
-  std::map<int, std::vector<T> > _material2max;
+  std::map<int, olb::Vector<T, 3> > _material2max;
   /// Componentwise min extension over all material numbers. Default is 0.
-  std::vector<T> _minOverMaterial;
+  olb::Vector<T, 3> _minOverMaterial;
   /// Componentwise maximal extension over all material numbers. Default is 0.
-  std::vector<T> _maxOverMaterial;
+  olb::Vector<T, 3> _maxOverMaterial;
 
   /// class specific cout
   mutable OstreamManager clout;
@@ -86,7 +82,7 @@ private:
 public:
 
   /// Constructor
-  SuperGeometryStatistics3D(SuperGeometry3D<T>* superGeometry);
+  SuperGeometryStatistics3D(SuperGeometry<T,3>* superGeometry);
   /// Copy constructor
   SuperGeometryStatistics3D(SuperGeometryStatistics3D const& rhs);
   /// Copy assignment
@@ -104,46 +100,46 @@ public:
   int getNmaterials();
   int getNmaterials() const;
   /// Returns the number of voxels for a given material number
-  int getNvoxel(int material);
-  int getNvoxel(int material) const;
+  std::size_t getNvoxel(int material);
+  std::size_t getNvoxel(int material) const;
   /// Returns the number of voxels with material!=0
-  int getNvoxel();
-  int getNvoxel() const;
+  std::size_t getNvoxel();
+  std::size_t getNvoxel() const;
   /// Returns the min. phys position in each direction corresponding to material number
-  std::vector<T> getMinPhysR(int material);
-  std::vector<T> getMinPhysR(int material) const;
+  olb::Vector<T, 3>getMinPhysR(int material);
+  olb::Vector<T, 3>getMinPhysR(int material) const;
   /// Returns the min. phys position in each direction corresponding to all non-zero material numbers
-  std::vector<T> getMinPhysR();
-  std::vector<T> getMinPhysR() const;
+  olb::Vector<T, 3>getMinPhysR();
+  olb::Vector<T, 3>getMinPhysR() const;
   /// Returns the max. phys position in each direction corresponding to material number
-  std::vector<T> getMaxPhysR(int material);
-  std::vector<T> getMaxPhysR(int material) const;
+  olb::Vector<T, 3> getMaxPhysR(int material);
+  olb::Vector<T, 3> getMaxPhysR(int material) const;
   /// Returns the max. phys position in each direction corresponding to all non-zero material numbers
-  std::vector<T> getMaxPhysR();
-  std::vector<T> getMaxPhysR() const;
+  olb::Vector<T, 3> getMaxPhysR();
+  olb::Vector<T, 3> getMaxPhysR() const;
   /// Returns the phys extend as length in each direction
-  std::vector<T> getPhysExtend(int material);
+  olb::Vector<T, 3> getPhysExtend(int material);
   std::vector<T> getPhysExtend(int material) const;
   /// Returns the phys radius as length in each direction
-  std::vector<T> getPhysRadius(int material);
-  std::vector<T> getPhysRadius(int material) const;
+  olb::Vector<T, 3> getPhysRadius(int material);
+  olb::Vector<T, 3> getPhysRadius(int material) const;
   /// Returns the center position
-  std::vector<T> getCenterPhysR(int material);
-  std::vector<T> getCenterPhysR(int material) const;
+  olb::Vector<T, 3> getCenterPhysR(int material);
+  olb::Vector<T, 3> getCenterPhysR(int material) const;
   /// Returns the boundary type which is characterized by a discrte normal (c.f. Zimny)
-  std::vector<int> getType(int iC, int iX, int iY, int iZ);
-  std::vector<int> getType(int iC, int iX, int iY, int iZ) const;
+  olb::Vector<int, 3> getType(int iC, int iX, int iY, int iZ);
+  olb::Vector<int, 3> getType(int iC, int iX, int iY, int iZ) const;
 
   /// Returns normal that points into the fluid for paraxial surfaces
-  std::vector<T> computeNormal (int material);
-  std::vector<T> computeNormal (int material) const;
+  olb::Vector<T, 3> computeNormal (int material);
+  olb::Vector<T, 3> computeNormal (int material) const;
   /// Returns discrete normal with norm maxNorm that points into the fluid for paraxial surfaces
   /// maxNorm=1.1 implies only normals parallel to the axises
-  std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1);
-  std::vector<int> computeDiscreteNormal (int material, T maxNorm = 1.1) const;
-  /// Returns sqrt( maxX^2 + maxY^2 + maxZ^2 ) max over a certain material number
+  olb::Vector<int, 3> computeDiscreteNormal (int material, T maxNorm = 1.1);
+  olb::Vector<int, 3> computeDiscreteNormal (int material, T maxNorm = 1.1) const;
+  /// Returns util::sqrt( maxX^2 + maxY^2 + maxZ^2 ) max over a certain material number
   T computeMaxPhysDistance(int material ) const;
-  /// Returns sqrt( maxX^2 + maxY^2 + maxZ^2 ) max over all material numbers
+  /// Returns util::sqrt( maxX^2 + maxY^2 + maxZ^2 ) max over all material numbers
   T computeMaxPhysDistance() const;
   /// Prints some statistic information, i.e. the number of voxels and min. max. physical position for each different material
   void print();

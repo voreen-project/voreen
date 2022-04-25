@@ -41,7 +41,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   const HyperplaneLattice3D<T>& hyperplaneLattice,
@@ -67,7 +67,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   const Hyperplane3D<T>& hyperplane,
@@ -93,7 +93,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   const Hyperplane3D<T>& hyperplane,
@@ -117,7 +117,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   const Vector<T,3>& origin, const Vector<T,3>& u, const Vector<T,3>& v,
@@ -141,7 +141,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   const Vector<T,3>& origin, const Vector<T,3>& u, const Vector<T,3>& v,
@@ -163,7 +163,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   IndicatorCircle3D<T>& circle,
@@ -187,7 +187,7 @@ template<typename T>
 SuperPlaneIntegralFluxMass3D<T>::SuperPlaneIntegralFluxMass3D(
   FunctorPtr<SuperF3D<T>>&& velocityF,
   FunctorPtr<SuperF3D<T>>&& densityF,
-  SuperGeometry3D<T>&       geometry,
+  SuperGeometry<T,3>&       geometry,
   T conversationFactorMass,
   T conversationFactorTime,
   IndicatorCircle3D<T>& circle,
@@ -226,17 +226,20 @@ void SuperPlaneIntegralFluxMass3D<T>::print(
   if (regionName != "") {
     clout << "regionName=" << regionName << "; regionSize[m^2]=" << output[1]
           << std::flush;
-  } else {
+  }
+  else {
     clout << "regionSize[m^2]=" << output[1] << std::flush;
   }
   if (singleton::mpi().isMainProcessor()) {
     if (massFluxSiScaleName == "mcg/s") { // milli gramm
       std::cout << "; massFlowRate[mcg/s]=" << output[0] * T(1.e6)
                 << std::endl;
-    } else if (massFluxSiScaleName == "mg/s") { // micro gramm
+    }
+    else if (massFluxSiScaleName == "mg/s") {   // micro gramm
       std::cout << "; massFlowRate[mg/s]=" << output[0] * T(1.e3)
                 << std::endl;
-    } else {
+    }
+    else {
       std::cout << "; massFlowRate[kg/s]=" << output[0] << std::endl;
     }
   }

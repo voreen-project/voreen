@@ -36,10 +36,11 @@ namespace olb {
 namespace heatmap {
 
 template <typename T>
-struct plotParam
-{
+struct plotParam {
   std::string name;
   bool writeCSV = false;
+  bool fullScreenPlot = false;
+  bool activateFullScreenPlotColorBox = false;
   int contourlevel = 0;
   std::string colour = std::string("rainbow");
   Vector<T,2u> zoomOrigin;
@@ -64,7 +65,7 @@ struct plotParam
  */
 template <typename T>
 void write(BlockReduction3D2D<T>& blockReduction, int iT, const plotParam<T> param = {},
-	   const std::vector<T>& valueArea = std::vector<T>());
+           const std::vector<T>& valueArea = std::vector<T>());
 
 /** This function is used to plot heat maps as jpeg files.
  * minValue and maxValue set a defined scalar range.
@@ -75,10 +76,7 @@ void write(BlockReduction3D2D<T>& blockReduction, int iT, const plotParam<T> par
  */
 template <typename T>
 void write(BlockReduction2D2D<T>& blockReduction, int iT, const plotParam<T> param = {},
-	   const std::vector<T>& valueArea = std::vector<T>());
-
-
-
+           const std::vector<T>& valueArea = std::vector<T>());
 
 namespace detail {
 
@@ -89,8 +87,7 @@ void genericHeatMapInterface(const HyperplaneLattice3D<T>& hyperPlane, BlockF2D<
 
 
 template <typename T>
-struct detailParam
-{
+struct detailParam {
   const plotParam<T>* plot;
   BlockF2D<T>* blockData;
   const HyperplaneLattice3D<T>* hyperPlane;
@@ -103,6 +100,10 @@ struct detailParam
   int iT;
   int nx;
   int ny;
+  T aspect;
+  int canvasX;
+  int canvasY;
+  T cbXscaling;
   T spacing;
   Vector<T,3> origin;
   Vector<T,3> normal;

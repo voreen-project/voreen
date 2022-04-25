@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeGuoZhaoPhysBodyForce3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoPhysBodyForce3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3)
 {
   this->getName() = "physBodyForce";
@@ -53,8 +52,7 @@ SuperLatticeGuoZhaoPhysBodyForce3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoPhysBodyFo
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticeGuoZhaoPhysBodyForce3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -62,7 +60,7 @@ SuperLatticeGuoZhaoPhysBodyForce3D<T, DESCRIPTOR>::SuperLatticeGuoZhaoPhysBodyFo
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticeGuoZhaoPhysBodyForce3D<T,DESCRIPTOR>::BlockLatticeGuoZhaoPhysBodyForce3D
-(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF3D<T,DESCRIPTOR>(blockLattice, converter, 3)
 {
   this->getName() = "physBodyForce";
@@ -71,15 +69,10 @@ BlockLatticeGuoZhaoPhysBodyForce3D<T,DESCRIPTOR>::BlockLatticeGuoZhaoPhysBodyFor
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticeGuoZhaoPhysBodyForce3D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  output[0] = this->_converter.getPhysForce(
-                *this->_blockLattice.get( input[0], input[1], input[2] )
-                .template getFieldPointer<descriptors::BODY_FORCE>() );
-  output[1] = this->_converter.getPhysForce(
-                *this->_blockLattice.get( input[0], input[1], input[2] )
-                .template getFieldPointer<descriptors::BODY_FORCE>(1) );
-  output[2] = this->_converter.getPhysForce(
-                *this->_blockLattice.get( input[0], input[1], input[2] )
-                .template getFieldPointer<descriptors::BODY_FORCE>(2) );
+  auto cell = this->_blockLattice.get(input[0], input[1], input[2]);
+  output[0] = this->_converter.getPhysForce(cell.template getFieldComponent<descriptors::BODY_FORCE>(0));
+  output[1] = this->_converter.getPhysForce(cell.template getFieldComponent<descriptors::BODY_FORCE>(1));
+  output[2] = this->_converter.getPhysForce(cell.template getFieldComponent<descriptors::BODY_FORCE>(2));
   return true;
 }
 

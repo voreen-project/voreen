@@ -35,15 +35,18 @@ namespace olb {
 
 /// Implementation of the MRT collision step with stochastic relaxation based on
 /// " A stochastic subgrid model with application to turbulent flow and scalar mixing"; Phys. of Fluids 19; 2007
-template<typename T, typename DESCRIPTOR>
-class StochasticSGSdynamics : public MRTdynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class StochasticSGSdynamics : public MRTdynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = StochasticSGSdynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  StochasticSGSdynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_, T turbulenceInt_, T charU_, T smagoConst_, T dx_ = 1, T dt_ = 1 );
+  StochasticSGSdynamics(T omega_, T turbulenceInt_, T charU_, T smagoConst_, T dx_ = 1, T dt_ = 1 );
 
 
   // Collide
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
+  virtual CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell,
                        LatticeStatistics<T>& statistics_);
 
   /// Set local relaxation parameter of the dynamics
@@ -65,7 +68,7 @@ private:
   T computePreFactor(T omega_, T smagoConst_);
 
   /// Computes the local smagorinsky relaxation parameter
-  T computeOmega(T omega0_, T preFactor_, T rho_, T pi_[util::TensorVal<DESCRIPTOR >::n] , T X_lang_n_);
+  T computeOmega(T omega0_, T preFactor_, T rho_, T pi_[util::TensorVal<DESCRIPTOR >::n], T X_lang_n_);
 
   /// Computes the local time scale from SGS dissipation rate for BMtransform
   T computeTimeScale(T preFactor_, T rho_, T pi_[util::TensorVal<DESCRIPTOR >::n], T smagoConst_, T X_lang_n_);

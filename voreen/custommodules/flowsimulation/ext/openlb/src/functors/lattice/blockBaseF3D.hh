@@ -30,63 +30,17 @@ namespace olb {
 
 
 template <typename T>
-BlockF3D<T>::BlockF3D(BlockStructure3D& blockStructure, int targetDim)
+BlockF3D<T>::BlockF3D(BlockStructureD<3>& blockStructure, int targetDim)
   : GenericF<T,int>(targetDim,3), _blockStructure(blockStructure) { }
 
 template <typename T>
-BlockStructure3D& BlockF3D<T>::getBlockStructure() const
+BlockStructureD<3>& BlockF3D<T>::getBlockStructure() const
 {
   return _blockStructure;
 }
 
-template <typename T>
-std::vector<T> BlockF3D<T>::getMinValue()
-{
-  T min[this->getTargetDim()];
-  T minTmp[this->getTargetDim()];
-  this->operator()(min,0,0);
-  for (int iX = 1; iX < _blockStructure.getNx(); ++iX) {
-    for (int iY = 1; iY < _blockStructure.getNy(); ++iY) {
-      for (int iZ = 1; iZ < _blockStructure.getNz(); ++iZ) {
-        this->operator()(minTmp,iX,iY,iZ);
-        for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-          if (min[iDim] > minTmp[iDim] ) {
-            min[iDim] = minTmp[iDim];
-          }
-        }
-      }
-    }
-  }
-  std::vector<T> minV(min,min+this->getTargetDim());
-  return minV;
-}
-
-
-template <typename T>
-std::vector<T> BlockF3D<T>::getMaxValue()
-{
-  T max[this->getTargetDim()];
-  T maxTmp[this->getTargetDim()];
-  this->operator()(max,0,0);
-  for (int iX = 1; iX < _blockStructure.getNx(); ++iX) {
-    for (int iY = 1; iY < _blockStructure.getNy(); ++iY) {
-      for (int iZ = 1; iZ < _blockStructure.getNz(); ++iZ) {
-        this->operator()(maxTmp,iX,iY,iZ);
-        for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-          if (max[iDim] > maxTmp[iDim] ) {
-            max[iDim] = maxTmp[iDim];
-          }
-        }
-      }
-    }
-  }
-  std::vector<T> maxV(max,max+this->getTargetDim());
-  return maxV;
-}
-
-
 template <typename T,typename BaseType>
-BlockDataF3D<T,BaseType>::BlockDataF3D(BlockData3D<T,BaseType>& blockData)
+BlockDataF3D<T,BaseType>::BlockDataF3D(BlockData<3,T,BaseType>& blockData)
   : BlockF3D<T>(blockData, blockData.getSize()),
     _blockData(blockData)
 { }
@@ -94,7 +48,7 @@ BlockDataF3D<T,BaseType>::BlockDataF3D(BlockData3D<T,BaseType>& blockData)
 template <typename T,typename BaseType>
 BlockDataF3D<T,BaseType>::BlockDataF3D(BlockF3D<BaseType>& f)
   : BlockF3D<T>(f.getBlockStructure(), f.getTargetDim()),
-    _blockDataStorage(new BlockData3D<T,BaseType>(f)),
+    _blockDataStorage(new BlockData<3,T,BaseType>(f)),
     _blockData(*_blockDataStorage)
 { }
 
@@ -102,13 +56,13 @@ template <typename T,typename BaseType>
 BlockDataF3D<T,BaseType>::BlockDataF3D(int nx, int ny, int nz, int size)
 // hacky solution to both managing BlockData3D using std::unique_ptr and
 // passing it down the line to the base class
-  : BlockF3D<T>(*(new BlockData3D<T,BaseType>(nx, ny, nz, size)), size),
-    _blockDataStorage(static_cast<BlockData3D<T,BaseType>*>(&(this->getBlockStructure()))),
+  : BlockF3D<T>(*(new BlockData<3,T,BaseType>({{nx, ny, nz}, 0}, size)), size),
+    _blockDataStorage(static_cast<BlockData<3,T,BaseType>*>(&(this->getBlockStructure()))),
     _blockData(*_blockDataStorage)
 { }
 
 template <typename T,typename BaseType>
-BlockData3D<T,BaseType>& BlockDataF3D<T,BaseType>::getBlockData()
+BlockData<3,T,BaseType>& BlockDataF3D<T,BaseType>::getBlockData()
 {
   return _blockData;
 }
@@ -117,26 +71,7 @@ template <typename T, typename BaseType>
 bool BlockDataF3D<T,BaseType>::operator() (BaseType output[], const int input[])
 {
   for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-    output[iDim] = _blockData.get(input[0], input[1], input[2], iDim);
-  }
-  return true;
-}
-
-
-template <typename T,typename BaseType>
-BlockDataViewF3D<T,BaseType>::BlockDataViewF3D(BlockData3D<T,BaseType>& blockData, int overlap)
-  : BlockDataF3D<T,BaseType>(blockData),
-    _overlap(overlap)
-{ }
-
-template <typename T, typename BaseType>
-bool BlockDataViewF3D<T,BaseType>::operator() (BaseType output[], const int input[])
-{
-  for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-    output[iDim] = this->_blockData.get(input[0] + _overlap,
-                                        input[1] + _overlap,
-                                        input[2] + _overlap,
-                                        iDim);
+    output[iDim] = _blockData.get(input, iDim);
   }
   return true;
 }
@@ -223,39 +158,15 @@ bool BlockExtractIndicatorF3D<T>::operator()(T output[], const int input[])
 }
 
 
-template <typename T>
-BlockDotProductF3D<T>::BlockDotProductF3D(BlockF3D<T>& f, T vector[])
-  : BlockF3D<T>(f.getBlockStructure(),1 ), _f(f), _vector(vector)
-{
-  this->getName() = _f.getName();
-  /*if ( (sizeof(_vector)/sizeof(T)) != _f.getTargetDim() ) {
-    std::cout << "WARNING: dimension of vectors do not match!" << std::endl;
-    exit(-1);
-  }*/
-}
-
-template <typename T>
-bool BlockDotProductF3D<T>::operator()(T output[], const int input[])
-{
-  T outTmp[3];
-  output[0] = T();
-  _f(outTmp, input);
-  for (int iDim=0; iDim<_f.getTargetDim(); iDim++) {
-    output[0] += outTmp[iDim]*_vector[iDim];
-  }
-  return true;
-}
-
-
 template <typename T, typename DESCRIPTOR>
 BlockLatticeF3D<T,DESCRIPTOR>::BlockLatticeF3D
-(BlockLatticeStructure3D<T,DESCRIPTOR>& blockStructure, int targetDim)
+(BlockLattice<T,DESCRIPTOR>& blockStructure, int targetDim)
   : BlockF3D<T>(blockStructure, targetDim), _blockLattice(blockStructure)
 { }
 /*
 template <typename T, typename DESCRIPTOR>
 BlockLatticeF3D<T,DESCRIPTOR>::BlockLatticeF3D(BlockLatticeF3D<T,DESCRIPTOR> const& rhs)
-  : BlockF3D<T>(rhs.getBlockStructure(), rhs.getTargetDim() ), _blockLattice(rhs.getBlockLattice())
+  : BlockF3D<T>(rhs.getBlockStructure(), rhs.getTargetDim() ), _blockLattice(rhs.getBlock())
 { }
 
 template <typename T, typename DESCRIPTOR>
@@ -266,7 +177,7 @@ BlockLatticeF3D<T,DESCRIPTOR>& BlockLatticeF3D<T,DESCRIPTOR>::operator=(BlockLat
 }
 */
 template <typename T, typename DESCRIPTOR>
-BlockLatticeStructure3D<T,DESCRIPTOR>& BlockLatticeF3D<T, DESCRIPTOR>::getBlockLattice()
+BlockLattice<T,DESCRIPTOR>& BlockLatticeF3D<T, DESCRIPTOR>::getBlock()
 {
   return _blockLattice;
 }
@@ -275,7 +186,7 @@ BlockLatticeStructure3D<T,DESCRIPTOR>& BlockLatticeF3D<T, DESCRIPTOR>::getBlockL
 template <typename T, typename DESCRIPTOR>
 BlockLatticeIdentity3D<T,DESCRIPTOR>::BlockLatticeIdentity3D(
   BlockLatticeF3D<T,DESCRIPTOR>& f)
-  : BlockLatticeF3D<T,DESCRIPTOR>(f.getBlockLattice(),f.getTargetDim()),
+  : BlockLatticeF3D<T,DESCRIPTOR>(f.getBlock(),f.getTargetDim()),
     _f(f)
 {
   this->getName() = _f.getName();
@@ -291,13 +202,13 @@ bool BlockLatticeIdentity3D<T,DESCRIPTOR>::operator()(T output[], const int inpu
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysF3D<T,DESCRIPTOR>::BlockLatticePhysF3D
-(BlockLatticeStructure3D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, int targetDim)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, int targetDim)
   : BlockLatticeF3D<T,DESCRIPTOR>(blockLattice, targetDim), _converter(converter)
 { }
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticeThermalPhysF3D
-(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim)
+(BlockLattice<T,TDESCRIPTOR>& blockLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim)
   : BlockLatticeF3D<T,TDESCRIPTOR>(blockLattice, targetDim), _converter(converter)
 { }
 

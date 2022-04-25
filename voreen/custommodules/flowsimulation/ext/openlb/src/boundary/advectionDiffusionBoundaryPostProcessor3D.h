@@ -29,7 +29,6 @@
 
 
 #include "core/postProcessing.h"
-#include "core/blockLattice3D.h"
 
 namespace olb {
 
@@ -54,8 +53,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int interpolationPop[DESCRIPTOR::q];
@@ -94,8 +93,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int x0, x1, y0, y1, z0, z1;
@@ -135,8 +134,8 @@ public:
   {
     return 0;
   }
-  void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice) override;
-  void processSubDomain ( BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  void process(BlockLattice<T,DESCRIPTOR>& blockLattice) override;
+  void processSubDomain ( BlockLattice<T,DESCRIPTOR>& blockLattice,
                           int x0_, int x1_, int y0_, int y1_, int z0_, int z1_) override;
 private:
   int resetPop[DESCRIPTOR::q];

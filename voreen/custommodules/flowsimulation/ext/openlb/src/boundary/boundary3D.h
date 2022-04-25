@@ -24,14 +24,11 @@
 /** \file
  * Groups all the 3D include files in the boundaryConditions directory.
  */
-#include "advectionDiffusionMomentaOnBoundaries.h"
 #include "advectionDiffusionBoundaryPostProcessor3D.h"
 #include "boundaryPostProcessors3D.h"
 #include "extendedFiniteDifferenceBoundary3D.h"
 #include "inamuroAnalyticalDynamics.h"
 #include "inamuroNewtonRaphsonDynamics.h"
-#include "momentaOnBoundaries.h"
-#include "momentaOnBoundaries3D.h"
 #include "offBoundaryPostProcessors3D.h"
 #include "rtlbmBoundaryDynamics.h"
 #include "wallFunctionBoundaryPostProcessors3D.h"
@@ -51,8 +48,9 @@
 #include "setFreeEnergyInletBoundary3D.h"
 #include "setFreeEnergyOutletBoundary3D.h"
 #include "setFreeEnergyWallBoundary3D.h"
-#include "setBouzidiVelocityBoundary3D.h"
-#include "setBouzidiZeroVelocityBoundary3D.h"
+#include "setBouzidiVelocityBoundary3D.hh"
+#include "setBouzidiZeroVelocityBoundary3D.hh"
+#include "setBounceBackVelocityBoundary3D.h"
 #include "defineU3D.h"
 #include "setSlipBoundary3D.h"
 #include "setSlipBoundaryWithDynamics3D.h"
@@ -61,4 +59,6 @@
 #include "setRtlbmDiffuseTemperatureBoundary3D.h"
 #include "setRtlbmDiffuseConstTemperatureBoundary3D.h"
 #include "setRtlbmDirectedTemperatureBoundary3D.h"
+#include "helper.h"
 
+#include "boundary3D.hh"

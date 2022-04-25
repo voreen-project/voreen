@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template <typename T, typename DESCRIPTOR>
 SuperLatticePhysBoundaryDistance3D<T,DESCRIPTOR>::SuperLatticePhysBoundaryDistance3D
-(SuperLattice3D<T,DESCRIPTOR>& sLattice, SuperGeometry3D<T>& superGeometry,
+(SuperLattice<T,DESCRIPTOR>& sLattice, SuperGeometry<T,3>& superGeometry,
  XMLreader const& xmlReader)
   : SuperLatticeF3D<T,DESCRIPTOR>(sLattice,1),
     _superGeometry(superGeometry)
@@ -53,13 +52,13 @@ SuperLatticePhysBoundaryDistance3D<T,DESCRIPTOR>::SuperLatticePhysBoundaryDistan
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back( new BlockLatticePhysBoundaryDistance3D<T,DESCRIPTOR>(this->_sLattice.getBlockLattice(iC), this->_superGeometry.getBlockGeometry(iC), xmlReader));
+    this->_blockF.emplace_back( new BlockLatticePhysBoundaryDistance3D<T,DESCRIPTOR>(this->_sLattice.getBlock(iC), this->_superGeometry.getBlockGeometry(iC), xmlReader));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysBoundaryDistance3D<T, DESCRIPTOR>::BlockLatticePhysBoundaryDistance3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, BlockGeometryStructure3D<T>& blockGeometry, XMLreader const& xmlReader)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, BlockGeometry<T,3>& blockGeometry, XMLreader const& xmlReader)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1), _blockGeometry(blockGeometry)
 {
   this->getName() = "physBoundaryDistance";
@@ -74,7 +73,7 @@ BlockLatticePhysBoundaryDistance3D<T, DESCRIPTOR>::BlockLatticePhysBoundaryDista
 template<typename T, typename DESCRIPTOR>
 bool BlockLatticePhysBoundaryDistance3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
-  T minDistance = std::numeric_limits<T>::max();
+  T minDistance = std::numeric_limits<T>::util::max();
   T origin[3];
   _blockGeometry.getPhysR(origin, input);
   for (auto &indicator : _indicatorList) {
@@ -86,12 +85,12 @@ bool BlockLatticePhysBoundaryDistance3D<T, DESCRIPTOR>::operator()(T output[], c
     }
     T distance = 0;
     indicator->distance(distance, origin);
-    // clout << "sphere distance = " << distance << endl;
+    // clout << "sphere distance = " << distance << std::endl;
     if ( distance < minDistance ) {
       minDistance = distance;
     }
   }
-  // clout << "min distance = " << minDistance << endl;
+  // clout << "min distance = " << minDistance << std::endl;
 
   output[0] = minDistance;
   return true;

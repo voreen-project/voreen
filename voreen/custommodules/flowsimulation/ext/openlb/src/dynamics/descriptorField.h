@@ -27,45 +27,107 @@
 #include <type_traits>
 #include <stdexcept>
 
+#include "core/meta.h"
+#include "core/vector.h"
+
+#include "core/platform/column.h"
+
 namespace olb {
 
+/// Forward declaration of Expr type used for code generation
+struct Expr;
+
 namespace descriptors {
+
+// *INDENT-OFF*
 
 /// \defgroup descriptor
 //@{
 
-/// Base of a descriptor field whose size is defined by A*D + B*Q + C
-template <unsigned C, unsigned A=0, unsigned B=0>
-struct DESCRIPTOR_FIELD_BASE {
-  /// Deleted constructor to enforce pure usage as type and prevent implicit narrowing conversions
-  DESCRIPTOR_FIELD_BASE() = delete;
+/// Base of a field whose size is defined by [C,U_1,...,U_N]^T * [1,V_1,...V_N]
+template <unsigned C, unsigned... U>
+struct FIELD_BASE {
+  FIELD_BASE() = default;
 
   /// Return value type of field
   /**
    * Most fields are stored using the same value type as the T type
    * parameter of their associated lattice. However this template
    * offers the possibility of declaring a different value type per
-   * field. See TYPED_DESCRIPTOR_FIELD_BASE.
+   * field. See TYPED_FIELD_BASE.
    **/
   template <typename T>
   using value_type = T;
 
-  /// Evaluates the size function
-  /**
-   * To be called by DESCRIPTOR_BASE
-   **/
-  template <unsigned D, unsigned Q>
-  static constexpr unsigned size()
+  template <typename T>
+  using column_type = AbstractColumn<T>;
+
+  /// Get size of field for parameter vector V (strict)
+  template <std::size_t... V>
+  static constexpr std::size_t size(std::index_sequence<V...>)
   {
-    return A * D + B * Q + C;
+    static_assert(sizeof...(U) == sizeof...(V), "V size fits U params");
+    return ((U*V) + ... + C);
+  }
+
+  /// Get size of field for parameter vector V (zero-padds or shortens V as required)
+  template <std::size_t... V>
+  static constexpr std::size_t size()
+  {
+    if constexpr (sizeof...(U) < sizeof...(V)) {
+      return size(meta::take_n_sequence<sizeof...(U)>(std::index_sequence<V...>()));
+    } else if constexpr (sizeof...(U) > sizeof...(V)) {
+      using namespace meta;
+      static_assert(is_zero_sequence(drop_n_sequence<sizeof...(V)>(std::index_sequence<U...>())),
+                    "Dropped U entries are zero");
+      return size(std::index_sequence<V...>() + zero_sequence<sizeof...(U) - sizeof...(V)>());
+    } else {
+      return size(std::index_sequence<V...>());
+    }
+    __builtin_unreachable();
+  }
+
+  // Initial value used for allocation of field data in FieldArrayD (optional)
+  /**
+   * Return value must be a correctly sized and typed olb::Vector.
+   **/
+  template <typename T, typename DESCRIPTOR>
+  static constexpr auto getInitialValue() {
+    return Vector<value_type<T>, DESCRIPTOR::template size<FIELD_BASE<C,U...>>()>{};
+  }
+
+  static constexpr bool isSerializable() {
+    return true;
   }
 };
 
 /// Base of a descriptor field of scalar TYPE with dimensions A*B + B*Q + C
-template <typename TYPE, unsigned C, unsigned A=0, unsigned B=0>
-struct TYPED_DESCRIPTOR_FIELD_BASE : public DESCRIPTOR_FIELD_BASE<C,A,B> {
+template <typename TYPE, unsigned C, unsigned... U>
+struct TYPED_FIELD_BASE : public FIELD_BASE<C,U...> {
   template <typename T>
-  using value_type = TYPE;
+  using value_type = std::conditional_t<std::is_same_v<T,Expr>,Expr,TYPE>;
+
+  template <typename T>
+  using column_type = AbstractColumn<TYPE>;
+
+  template <typename T, typename DESCRIPTOR>
+  static constexpr auto getInitialValue() {
+    return Vector<value_type<T>, DESCRIPTOR::template size<FIELD_BASE<C,U...>>()>{};
+  }
+
+  static constexpr bool isSerializable() {
+    return !std::is_pointer_v<TYPE>;
+  }
+};
+
+/// Base of a implicitly propagatable descriptor field
+template <unsigned C, unsigned... U>
+struct PROPAGATABLE_FIELD_BASE : public FIELD_BASE<C,U...> {
+  template <typename T>
+  using value_type = T;
+
+  template <typename T>
+  using column_type = AbstractCyclicColumn<T>;
 };
 
 /// Base of a tensor-valued descriptor field
@@ -79,118 +141,103 @@ struct TENSOR {
   }
 };
 
+/// Base of a descriptor field of pointer type
+template <typename TYPE>
+struct OBJECT_POINTER_FIELD_BASE : public TYPED_FIELD_BASE<std::add_pointer_t<TYPE>,1> {
+  static_assert(std::is_object_v<TYPE>, "TYPE must be object");
+};
+
 /// \defgroup descriptor_fields Set of common descriptor fields
 /// \ingroup descriptor
 //@{
 
-struct CELL_ID : public TYPED_DESCRIPTOR_FIELD_BASE<std::size_t,1,0,0> { };
+struct CELL_ID      : public TYPED_FIELD_BASE<std::size_t,1> { };
+struct MATERIAL     : public TYPED_FIELD_BASE<int,        1> { };
+struct LATTICE_TIME : public TYPED_FIELD_BASE<std::size_t,1> { };
 
-// Field types need to be distinct (i.e. not aliases) in order for `DESCRIPTOR_BASE::index` to work
-// (Field size parametrized by: Cs + Ds*D + Qs*Q)          Cs Ds Qs
-struct POPULATION           : public DESCRIPTOR_FIELD_BASE<0,  0, 1> { };
-struct VELOCITY             : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct VELOCITY2            : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct SOURCE               : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct FORCE                : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct EXTERNAL_FORCE       : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct TAU_EFF              : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct CUTOFF_KIN_ENERGY    : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct CUTOFF_HEAT_FLUX     : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct CHEM_POTENTIAL       : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct V6                   : public DESCRIPTOR_FIELD_BASE<6,  0, 0> { };
-struct V12                  : public DESCRIPTOR_FIELD_BASE<12, 0, 0> { };
-struct OMEGA                : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct G                    : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct EPSILON              : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct BODY_FORCE           : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct K                    : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct NU                   : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct POROSITY             : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct VELOCITY_NUMERATOR   : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct VELOCITY_DENOMINATOR : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct ZETA                 : public DESCRIPTOR_FIELD_BASE<0,  0, 1> { };
-struct LOCAL_DRAG           : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct VELOCITY_SOLID       : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct COORDINATE           : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct F                    : public DESCRIPTOR_FIELD_BASE<0,  0, 1> { };
-struct DJDF                 : public DESCRIPTOR_FIELD_BASE<0,  0, 1> { };
-struct DJDALPHA             : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
-struct AV_SHEAR             : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct TAU_W                : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct SCALAR               : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct SMAGO_CONST          : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct EFFECTIVE_OMEGA      : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct VELO_GRAD            : public DESCRIPTOR_FIELD_BASE<0,  3, 0> { };
-struct FIL_RHO              : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_FIL_VEL_X      : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_FIL_VEL_Y      : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_FIL_VEL_Z      : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_AV_DISS        : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_AV_TKE         : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_SIGMA_ADM      : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct LOCAL_NU_EDDY        : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct FILTERED_VEL_GRAD    : public DESCRIPTOR_FIELD_BASE<0,  3, 0> { };
-struct ERROR_COVARIANCE     : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct VARIANCE             : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct TAU_SGS              : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct FILTERED_POPULATION  : public DESCRIPTOR_FIELD_BASE<0,  0, 1> { };
-struct INDICATE             : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct BIOGAS_INSTANT       : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct BIOGAS_CUMULATIVE    : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct METHANE_INSTANT      : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct METHANE_CUMULATIVE   : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct CO2_INSTANT          : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct CO2_CUMULATIVE       : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct TEMPERATURE          : public DESCRIPTOR_FIELD_BASE<1,  0, 0> { };
-struct INTERPHASE_NORMAL    : public DESCRIPTOR_FIELD_BASE<0,  1, 0> { };
+struct POPULATION : public PROPAGATABLE_FIELD_BASE<0, 0, 1> { };
 
-//@}
+struct STATISTIC_GENERATED : public TYPED_FIELD_BASE<int,1> { };
+struct STATISTIC           : public FIELD_BASE<2> { };
 
-/// \defgroup descriptor_details Descriptor field handling
-/// \ingroup descriptor
-//@{
+// Field types need to be distinct (i.e. not aliases)
+// (Field size parametrized: Cs + Ds*D + Qs*Q)  Cs Ds Qs
+struct VELOCITY             : public FIELD_BASE<0,  1, 0> { };
+struct VELOCITY2            : public FIELD_BASE<0,  1, 0> { };
+struct SOURCE               : public FIELD_BASE<1,  0, 0> { };
+struct FORCE                : public FIELD_BASE<0,  1, 0> { };
+struct EXTERNAL_FORCE       : public FIELD_BASE<0,  1, 0> { };
+struct TAU_EFF              : public FIELD_BASE<1,  0, 0> { };
+struct CUTOFF_KIN_ENERGY    : public FIELD_BASE<1,  0, 0> { };
+struct CUTOFF_HEAT_FLUX     : public FIELD_BASE<1,  0, 0> { };
+struct CHEM_POTENTIAL       : public FIELD_BASE<1,  0, 0> { };
+struct V6                   : public FIELD_BASE<6,  0, 0> { };
+struct V12                  : public FIELD_BASE<12, 0, 0> { };
+struct OMEGA                : public FIELD_BASE<1,  0, 0> { };
+struct G                    : public FIELD_BASE<0,  1, 0> { };
+struct EPSILON              : public FIELD_BASE<1,  0, 0> { };
+struct BODY_FORCE           : public FIELD_BASE<0,  1, 0> { };
+struct K                    : public FIELD_BASE<1,  0, 0> { };
+struct NU                   : public FIELD_BASE<1,  0, 0> { };
+struct VELOCITY_NUMERATOR   : public FIELD_BASE<0,  1, 0> { };
+struct VELOCITY_DENOMINATOR : public FIELD_BASE<1,  0, 0> { };
+struct ZETA                 : public FIELD_BASE<0,  0, 1> { };
+struct LOCAL_DRAG           : public FIELD_BASE<0,  1, 0> { };
+struct VELOCITY_SOLID       : public FIELD_BASE<0,  1, 0> { };
+struct COORDINATE           : public FIELD_BASE<0,  1, 0> { };
+struct F                    : public FIELD_BASE<0,  0, 1> { };
+struct DJDF                 : public FIELD_BASE<0,  0, 1> { };
+struct DJDALPHA             : public FIELD_BASE<0,  1, 0> { };
+struct AV_SHEAR             : public FIELD_BASE<1,  0, 0> { };
+struct TAU_W                : public FIELD_BASE<1,  0, 0> { };
+struct SCALAR               : public FIELD_BASE<1,  0, 0> { };
+struct SMAGO_CONST          : public FIELD_BASE<1,  0, 0> { };
+struct EFFECTIVE_OMEGA      : public FIELD_BASE<1,  0, 0> { };
+struct VELO_GRAD            : public FIELD_BASE<0,  3, 0> { };
+struct FIL_RHO              : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_FIL_VEL_X      : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_FIL_VEL_Y      : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_FIL_VEL_Z      : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_AV_DISS        : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_AV_TKE         : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_SIGMA_ADM      : public FIELD_BASE<1,  0, 0> { };
+struct LOCAL_NU_EDDY        : public FIELD_BASE<1,  0, 0> { };
+struct FILTERED_VEL_GRAD    : public FIELD_BASE<0,  3, 0> { };
+struct ERROR_COVARIANCE     : public FIELD_BASE<1,  0, 0> { };
+struct VARIANCE             : public FIELD_BASE<1,  0, 0> { };
+struct TAU_SGS              : public FIELD_BASE<1,  0, 0> { };
+struct FILTERED_POPULATION  : public FIELD_BASE<0,  0, 1> { };
+struct INDICATE             : public FIELD_BASE<1,  0, 0> { };
+struct BIOGAS_INSTANT       : public FIELD_BASE<1,  0, 0> { };
+struct BIOGAS_CUMULATIVE    : public FIELD_BASE<1,  0, 0> { };
+struct METHANE_INSTANT      : public FIELD_BASE<1,  0, 0> { };
+struct METHANE_CUMULATIVE   : public FIELD_BASE<1,  0, 0> { };
+struct CO2_INSTANT          : public FIELD_BASE<1,  0, 0> { };
+struct CO2_CUMULATIVE       : public FIELD_BASE<1,  0, 0> { };
+struct TEMPERATURE          : public FIELD_BASE<1,  0, 0> { };
+struct INTERPHASE_NORMAL    : public FIELD_BASE<0,  1, 0> { };
+struct MASS                 : public FIELD_BASE<1,  0, 0> { };
+struct CELL_TYPE            : public FIELD_BASE<1,  0, 0> { };
+struct COLLISION_DETECTION  : public TYPED_FIELD_BASE<size_t, 1,  0, 0> { };
+struct POROSITY             : public FIELD_BASE<1,  0, 0> {
+  template <typename T, typename DESCRIPTOR>
+  static constexpr auto getInitialValue() {
+    return Vector<value_type<T>,DESCRIPTOR::template size<POROSITY>()>{1};
+  }
+};
+struct POROSITY2            : public FIELD_BASE<1,  0, 0> { };
+struct EUL2LAGR             : public FIELD_BASE<1,  0, 0> { };
 
-template <
-  unsigned D,
-  unsigned Q,
-  typename WANTED_FIELD,
-  typename CURRENT_FIELD,
-  typename... FIELDS,
-  // WANTED_FIELD equals the head of our field list, terminate recursion
-  std::enable_if_t<std::is_same<WANTED_FIELD,CURRENT_FIELD>::value, int> = 0
->
-constexpr unsigned getIndexFromFieldList()
-{
-  return 0;
-}
-
-template <
-  unsigned D,
-  unsigned Q,
-  typename WANTED_FIELD,
-  typename CURRENT_FIELD,
-  typename... FIELDS,
-  // WANTED_FIELD doesn't equal the head of our field list
-  std::enable_if_t<!std::is_same<WANTED_FIELD,CURRENT_FIELD>::value, int> = 0
->
-constexpr unsigned getIndexFromFieldList()
-{
-  // Break compilation when WANTED_FIELD is not provided by list of fields
-  static_assert(sizeof...(FIELDS) > 0, "Field not found.");
-
-  // Add size of current field to implicit offset and continue search
-  // for WANTED_FIELD in the tail of our field list
-  return CURRENT_FIELD::template size<D,Q>() + getIndexFromFieldList<D,Q,WANTED_FIELD,FIELDS...>();
-}
-
-
+//TODO: This expression has been removed on master lately. As no obvious equivalent could be found immediately,
+//      it is added back in to enable some functionality on feature/unifiedParticleFramework.
+//      In case a proper equivalent exists, this expression can be removed for good!
 template <
   typename WANTED_FIELD,
   typename CURRENT_FIELD,
   typename... FIELDS,
   // WANTED_FIELD equals the head of our field list, terminate recursion
   std::enable_if_t<std::is_same<WANTED_FIELD,CURRENT_FIELD>::value, int> = 0
->
+  >
 constexpr unsigned getIndexInFieldList()
 {
   return 0;
@@ -202,7 +249,7 @@ template <
   typename... FIELDS,
   // WANTED_FIELD doesn't equal the head of our field list
   std::enable_if_t<!std::is_same<WANTED_FIELD,CURRENT_FIELD>::value, int> = 0
->
+  >
 constexpr unsigned getIndexInFieldList()
 {
   // Break compilation when WANTED_FIELD is not provided by list of fields
@@ -211,58 +258,11 @@ constexpr unsigned getIndexInFieldList()
   return 1 + getIndexInFieldList<WANTED_FIELD,FIELDS...>();
 }
 
-
-template <unsigned D, unsigned Q>
-constexpr unsigned getFieldListSize()
-{
-  // Field-less descriptor base case
-  return 0;
-}
-
-template <unsigned D, unsigned Q, typename CURRENT_FIELD, typename... FIELDS>
-constexpr unsigned getFieldListSize()
-{
-  // Calculate size of CURRENT_FIELD and add it to the sum of all remaining field sizes
-  return CURRENT_FIELD::template size<D,Q>() + getFieldListSize<D,Q,FIELDS...>();
-}
-
-template <unsigned D, unsigned Q, typename... FIELDS>
-constexpr unsigned getIndexFromFieldNumber(unsigned i)
-{
-  const unsigned indices[] { getIndexFromFieldList<D,Q,FIELDS,FIELDS...>()... };
-  return indices[i];
-}
-
-template <unsigned D, unsigned Q, typename... FIELDS>
-constexpr unsigned getSizeFromFieldNumber(unsigned i)
-{
-  const unsigned sizes[] { FIELDS::template size<D,Q>()... };
-  return sizes[i];
-}
-
-template <
-  unsigned D,
-  unsigned Q
->
-constexpr unsigned getFieldFromIndex(unsigned index)
-{
-  return 0;
-}
-
-template <
-  unsigned D,
-  unsigned Q,
-  typename CURRENT_FIELD,
-  typename... FIELDS
->
-constexpr unsigned getFieldFromIndex(unsigned index)
-{
-  return index == 0 ? 0 : 1 + getFieldFromIndex<D,Q,FIELDS...>(index - CURRENT_FIELD::template size<D,Q>());
-}
-
 //@}
 
 //@}
+
+// *INDENT-ON*
 
 }
 

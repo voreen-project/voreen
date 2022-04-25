@@ -23,11 +23,4 @@
 
 generic        := 
 
-precompiled    := chopardDynamics \
-                  dynamics \
-                  entropicDynamics \
-                  latticeDescriptors \
-                  smagorinskyBGKdynamics \
-                  freeEnergyDynamics
-
-
+precompiled    := 

@@ -26,6 +26,7 @@
 
 #include "blockLocalAverage2D.h"
 #include "indicator/blockIndicatorF2D.h"
+#include "functors/analytical/indicator/indicatorF2D.h"
 
 namespace olb {
 
@@ -46,7 +47,7 @@ BlockLocalAverage2D<T,W>::BlockLocalAverage2D(
 template<typename T, typename W>
 bool BlockLocalAverage2D<T,W>::operator() (W output[], const int input[])
 {
-  const auto& geometry = _indicatorF.getBlockGeometryStructure();
+  const auto& geometry = _indicatorF.getBlockGeometry();
 
   for (int i = 0; i < this->getTargetDim(); ++i) {
     output[i] = 0.;
@@ -61,7 +62,7 @@ bool BlockLocalAverage2D<T,W>::operator() (W output[], const int input[])
   IndicatorCircle2D<T> analyticalCircle(centerOfCircle, _radius);
   BlockIndicatorFfromIndicatorF2D<T> latticeCircle(
     analyticalCircle,
-    _indicatorF.getBlockGeometryStructure());
+    _indicatorF.getBlockGeometry());
 
   std::size_t voxels(0);
   int inputTmp[2];

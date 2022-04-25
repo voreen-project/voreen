@@ -34,7 +34,7 @@
 
 #include "io/ostreamManager.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 /// Representation of a statistic for a 3D geometry
@@ -46,46 +46,46 @@ namespace olb {
  * This class is not intended to be derived from.
  */
 
-template<typename T>
-class BlockGeometryStructure3D;
+template<typename T, unsigned D>
+class BlockGeometry;
 
 template<typename T>
 class BlockGeometryStatistics3D {
 private:
   /// Points to the underlying data from which the statistics is taken
-  BlockGeometryStructure3D<T>* _blockGeometry;
+  BlockGeometry<T,3>* _blockGeometry{};
   /// Specifies if an update is needed
-  bool _statisticsUpdateNeeded;
+  bool _statisticsUpdateNeeded{};
   /// Number of voxels in each direction
-  int _nX, _nY, _nZ;
+  int _nX{}, _nY{}, _nZ{};
   /// Spacing
-  T _h;
+  T _h{};
 
   /// Number of different material numbers
-  int _nMaterials;
+  int _nMaterials{};
   /// Mapping a material number to the number of this kind found in the super geometry
-  std::map<int, int> _material2n;
+  std::map<int, std::size_t> _material2n{};
   /// Mapping a material number to the min. lattice position in each space direction
-  std::map<int, std::vector<int> > _material2min;
+  std::map<int, std::vector<int> > _material2min{};
   /// Mapping a material number to the max. lattice position in each space direction
-  std::map<int, std::vector<int> > _material2max;
+  std::map<int, std::vector<int> > _material2max{};
 
   /// class specific cout
   mutable OstreamManager clout;
 
-  const BlockGeometryStatistics3D<T>* const_this;
+  const BlockGeometryStatistics3D<T>* const_this{};
 
 public:
   /// Constructor
-  BlockGeometryStatistics3D(BlockGeometryStructure3D<T>* blockGeometry);
+  BlockGeometryStatistics3D(BlockGeometry<T,3>* blockGeometry);
 
   /// Read and write access to a flag, which indicates if an uptate is needed (=true)
   bool& getStatisticsStatus();
   /// Read only access to a flag, which indicates if an uptate is needed (=true)
   bool const & getStatisticsStatus() const;
   /// Returns the map with the numbers of voxels for each  material
-  std::map<int, int> getMaterial2n();
-  std::map<int, int> getMaterial2n() const;
+  std::map<int, std::size_t> getMaterial2n();
+  std::map<int, std::size_t> getMaterial2n() const;
 
   /// Updates the statistics if it is really needed
   void update(bool verbose=false);
@@ -94,11 +94,11 @@ public:
   int getNmaterials();
   int getNmaterials() const;
   ///Returns the number of voxels for a given material number
-  int getNvoxel(int material);
-  int getNvoxel(int material) const;
+  std::size_t getNvoxel(int material);
+  std::size_t getNvoxel(int material) const;
   /// Returns the number of voxels with material!=0
-  int getNvoxel();
-  int getNvoxel() const;
+  std::size_t getNvoxel();
+  std::size_t getNvoxel() const;
   /// Returns the min. lattice position in each direction
   std::vector<int> getMinLatticeR(int material);
   std::vector<int> getMinLatticeR(int material) const;
@@ -128,6 +128,7 @@ public:
    * 3 element:   orientation -1, 0 or 1
    */
   std::vector<int> getType(int iX, int iY, int iZ, bool anyNormal = false);
+  std::vector<int> getType(const int* input, bool anyNormal = false) const;
   std::vector<int> getType(int iX, int iY, int iZ, bool anyNormal = false) const;
 
   /// Returns normal that points into the fluid for paraxial surfaces

@@ -31,3 +31,4 @@
 #include "functorDsl2D.hh"
 #include "hyperplane2D.hh"
 #include "hyperplaneLattice2D.hh"
+#include "random.hh"

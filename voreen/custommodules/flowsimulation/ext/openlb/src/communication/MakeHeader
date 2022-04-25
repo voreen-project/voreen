@@ -26,15 +26,11 @@ generic        := loadBalancer \
                   ompManager
 
 precompiled    := blockLoadBalancer \
-                  communicator2D \
-                  communicator3D \
-                  cuboidNeighbourhood2D \
-                  cuboidNeighbourhood3D \
                   heuristicLoadBalancer \
                   loadBalancer \
                   mpiManager \
                   ompManager \
-                  superStructure2D \
-                  superStructure3D \
-                  superPropagation \
-                  blockPropagation
+                  superStructure \
+                  superCommunicator \
+                  blockCommunicator \
+                  superCommunicationTagCoordinator

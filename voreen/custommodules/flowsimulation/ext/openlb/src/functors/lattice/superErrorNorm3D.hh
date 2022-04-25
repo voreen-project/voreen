@@ -33,7 +33,7 @@ namespace olb {
 template <typename T, typename W, int P>
 template <typename DESCRIPTOR>
 SuperRelativeErrorLpNorm3D<T,W,P>::SuperRelativeErrorLpNorm3D(
-  SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+  SuperLattice<T,DESCRIPTOR>&      sLattice,
   FunctorPtr<SuperF3D<T,W>>&&        f,
   FunctorPtr<AnalyticalF3D<T,W>>&&   wantedF,
   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF)
@@ -66,7 +66,7 @@ SuperRelativeErrorLpNorm3D<T,W,P>::SuperRelativeErrorLpNorm3D(
 template <typename T, typename W, int P>
 template <typename DESCRIPTOR>
 SuperAbsoluteErrorLpNorm3D<T,W,P>::SuperAbsoluteErrorLpNorm3D(
-  SuperLattice3D<T,DESCRIPTOR>&      sLattice,
+  SuperLattice<T,DESCRIPTOR>&      sLattice,
   FunctorPtr<SuperF3D<T,W>>&&        f,
   FunctorPtr<AnalyticalF3D<T,W>>&&   wantedF,
   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF)

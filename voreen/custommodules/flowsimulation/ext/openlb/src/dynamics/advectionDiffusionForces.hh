@@ -29,7 +29,7 @@
 namespace olb {
 
 template<typename T, typename DESCRIPTOR,
-typename ADLattice>
+         typename ADLattice>
 AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T St_)
 {
   initArg = 8;
@@ -37,7 +37,7 @@ AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffDragForce3D(UnitConverter<T,D
 }
 
 template<typename T, typename DESCRIPTOR,
-typename ADLattice>
+         typename ADLattice>
 AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T pRadius_, T pRho_)
 {
   initArg = 8;
@@ -45,7 +45,7 @@ AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffDragForce3D(UnitConverter<T,D
 }
 
 template<typename T, typename DESCRIPTOR,
-typename ADLattice>
+         typename ADLattice>
 void AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
 {
   T velF[3] = {0.,0.,0.};
@@ -57,7 +57,50 @@ void AdvDiffDragForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DE
 
 template<typename T, typename DESCRIPTOR,
 typename ADLattice>
-AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffRotatingForce3D(SuperGeometry3D<T>& superGeometry_,
+AdvDiffSNDragForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffSNDragForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, T pRadius_, T pRho_)
+{
+  initArg = 8;
+  dragCoeff = (9.*converter_.getPhysViscosity()*converter_.getPhysDensity()*converter_.getConversionFactorTime()) / (2.*pRho_*pRadius_*pRadius_);
+  Re_pCoeff = 2.*pRadius_/converter_.getPhysViscosity();
+}
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+void AdvDiffSNDragForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
+{
+  T velF[3] = {0.,0.,0.};
+  nsCell->computeU(velF);
+  T magVelF = pow((pow(velF[0],2.)+pow(velF[1],2.)+pow(velF[2],2.)),0.5);
+  T magVel = pow((pow(vel[0],2.)+pow(vel[1],2.)+pow(vel[2],2.)),0.5);
+  T Re_p = Re_pCoeff*abs(magVelF - magVel); 
+  for (int i=0; i < DESCRIPTOR::d; i++) {
+    force[i] += dragCoeff*(1. + 0.15*pow(Re_p,0.687))*(velF[i]-vel[i]);
+  }
+}
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+AdvDiffBuoyancyForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffBuoyancyForce3D(UnitConverter<T,DESCRIPTOR> const& converter_, Vector<T,3> g, T pRho_)
+{
+  initArg = 8;
+  densDiff = (pRho_ - converter_.getPhysDensity())*converter_.getConversionFactorTime()/pRho_;
+  gravity[0] = converter_.getLatticeVelocity(g[0]);
+  gravity[1] = converter_.getLatticeVelocity(g[1]);
+  gravity[2] = converter_.getLatticeVelocity(g[2]);
+}
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+void AdvDiffBuoyancyForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
+{
+  for (int i=0; i < DESCRIPTOR::d; i++) {
+    force[i] += densDiff*gravity[i];
+  }
+}
+
+template<typename T, typename DESCRIPTOR,
+typename ADLattice>
+AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffRotatingForce3D(SuperGeometry<T,3>& superGeometry_,
     const UnitConverter<T,DESCRIPTOR>& converter_, std::vector<T> axisPoint_, std::vector<T> axisDirection_,
     T w_, T* frac_, bool centrifugeForceOn_, bool coriolisForceOn_) :
   sg(superGeometry_), axisPoint(axisPoint_), axisDirection(axisDirection_),
@@ -67,7 +110,7 @@ AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffRotatingForce3D(SuperGeom
 }
 
 template<typename T, typename DESCRIPTOR,
-typename ADLattice>
+         typename ADLattice>
 void AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
 {
   std::vector<T> F_centri(3,0);
@@ -99,8 +142,8 @@ void AdvDiffRotatingForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<
 }
 
 template<typename T, typename DESCRIPTOR,
-typename ADLattice>
-AdvDiffMagneticWireForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffMagneticWireForce3D(SuperGeometry3D<T>& superGeometry_, UnitConverter<T,DESCRIPTOR> const& converter_, T pMass, AnalyticalF<3,T, T>& getMagForce) : sg(superGeometry_), _getMagForce(getMagForce)
+         typename ADLattice>
+AdvDiffMagneticWireForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffMagneticWireForce3D(SuperGeometry<T,3>& superGeometry_, UnitConverter<T,DESCRIPTOR> const& converter_, T pMass, AnalyticalF<3,T, T>& getMagForce) : sg(superGeometry_), _getMagForce(getMagForce)
 {
   initArg = 8;
   _pMass = converter_.getConversionFactorTime() / pMass;
@@ -108,7 +151,7 @@ AdvDiffMagneticWireForce3D<T,DESCRIPTOR,ADLattice>::AdvDiffMagneticWireForce3D(S
 }
 
 template<typename T, typename DESCRIPTOR,
-typename ADLattice>
+         typename ADLattice>
 void AdvDiffMagneticWireForce3D<T,DESCRIPTOR,ADLattice>::applyForce(T force[], Cell<T,DESCRIPTOR> *nsCell, Cell<T,ADLattice> *adCell, T vel[], int latticeR[])
 {
   std::vector<T> physR(3,T());

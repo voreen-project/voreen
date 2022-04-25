@@ -21,8 +21,8 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the slip boundary with dynamics
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the slip boundary with dynamics
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_SLIP_BOUNDARY_WITH_DYNAMICS_2D_HH
 #define SET_SLIP_BOUNDARY_WITH_DYNAMICS_2D_HH
 
@@ -31,15 +31,14 @@
 namespace olb {
 ///Initialising the setSlipBoundaryWithDynamics function on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setSlipBoundaryWithDynamics(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega, SuperGeometry2D<T>& superGeometry, int material)
+void setSlipBoundaryWithDynamics(SuperLattice<T, DESCRIPTOR>& sLattice, T omega, SuperGeometry<T,2>& superGeometry, int material)
 {
-
   setSlipBoundaryWithDynamics<T,DESCRIPTOR,MixinDynamics>(sLattice, omega, superGeometry.getMaterialIndicator(material));
 }
 
 ///Initialising the setSlipBoundaryWithDynamics function on the superLattice domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setSlipBoundaryWithDynamics(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator)
+void setSlipBoundaryWithDynamics(SuperLattice<T, DESCRIPTOR>& sLattice, T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator)
 {
   bool includeOuterCells = false;
   int _overlap = indicator->getSuperGeometry().getOverlap();
@@ -49,154 +48,54 @@ void setSlipBoundaryWithDynamics(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omeg
     clout << "WARNING: overlap == 1, boundary conditions set on overlap despite unknown neighbor materials" << std::endl;
   }
   for (int iCloc = 0; iCloc < sLattice.getLoadBalancer().size(); ++iCloc) {
-    setSlipBoundaryWithDynamics<T,DESCRIPTOR,MixinDynamics>(sLattice.getExtendedBlockLattice(iCloc), omega,
-        indicator->getExtendedBlockIndicatorF(iCloc), includeOuterCells);
+    setSlipBoundaryWithDynamics<T,DESCRIPTOR,MixinDynamics>(sLattice.getBlock(iCloc), omega,
+        indicator->getBlockIndicatorF(iCloc), includeOuterCells);
   }
   /// Adds needed Cells to the Communicator _commBC in SuperLattice
   //the addPoints2CommBC function is initialised inside setLocalVelocityBoundary2D.h/hh
   addPoints2CommBC<T,DESCRIPTOR>(sLattice, std::forward<decltype(indicator)>(indicator), _overlap);
-
-
 }
-////////// BlockLattice Domain  /////////////////////////////////////////
 
 /// Set Interpolated velocity boundary for any indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR, class MixinDynamics>
-void setSlipBoundaryWithDynamics(BlockLatticeStructure2D<T,DESCRIPTOR>& block, T omega,BlockIndicatorF2D<T>& indicator, bool includeOuterCells)
+void setSlipBoundaryWithDynamics(BlockLattice<T,DESCRIPTOR>& block, T omega,BlockIndicatorF2D<T>& indicator, bool includeOuterCells)
 {
+  using namespace boundaryhelper;
   OstreamManager clout(std::cout, "setSlipBoundaryWithDynamics");
-  auto& blockGeometryStructure = indicator.getBlockGeometryStructure();
+  auto& blockGeometryStructure = indicator.getBlockGeometry();
   const int margin = includeOuterCells ? 0 : 1;
-  /*
-   *x0,x1,y0,y1 Range of cells to be traversed
-   **/
-  int x0 = margin;
-  int y0 = margin;
-  int x1 = blockGeometryStructure.getNx()-1 -margin;
-  int y1 = blockGeometryStructure.getNy()-1 -margin;
   std::vector<int> discreteNormal(3, 0);
-  for (int iX = x0; iX <= x1; ++iX) {
-    for (int iY = y0; iY <= y1; ++iY) {
-      Momenta<T, DESCRIPTOR>* momenta = nullptr;
+  blockGeometryStructure.forSpatialLocations([&](auto iX, auto iY) {
+    if (blockGeometryStructure.getNeighborhoodRadius({iX, iY}) >= margin
+        && indicator(iX, iY)) {
       Dynamics<T, DESCRIPTOR>* dynamics = nullptr;
       PostProcessorGenerator2D<T, DESCRIPTOR>* postProcessor = nullptr;
-      if (indicator(iX, iY)) {
-        discreteNormal = indicator.getBlockGeometryStructure().getStatistics().getType(iX, iY);
-        if (discreteNormal[0] == 0) {
-          ///sets momenta, dynamics and post processor on velocity boundary cells
-          if (discreteNormal[1] == 1) {
-            //momenta vector provisionally inside src/core/blockLatticeStructure2D.h
-            momenta = new BasicDirichletBM<T,DESCRIPTOR,VelocityBM,0,1>;
-            //dynamics vector provisionally inside src/core/blockLatticeStructure2D.h
-            dynamics = new MixinDynamics(omega, *momenta);
-            postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-
-          }
-          else if (discreteNormal[1] == -1) {
-            momenta = new BasicDirichletBM<T,DESCRIPTOR,VelocityBM,0,-1>;
-            dynamics = new MixinDynamics(omega, *momenta);
-            postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-
-
-          }
-          else if (discreteNormal[2] == 1) {
-            momenta = new BasicDirichletBM<T,DESCRIPTOR,VelocityBM,1,1>;
-            dynamics = new MixinDynamics(omega, *momenta);
-            postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-
-          }
-          else if (discreteNormal[2] == -1) {
-            momenta = new BasicDirichletBM<T,DESCRIPTOR,VelocityBM,1,-1>;
-            dynamics = new MixinDynamics(omega, *momenta);
-            postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-          }
-          else {
-            clout << "Could not setSlipBoundaryWithDynamics (" << iX
-                  << ", " << iY << ")" << std::endl;
-          }
-        }
-
-        else if (discreteNormal[0] == 1) {
-          ///sets momenta, dynamics and post processors on externalVelocityCorner Boundary cells
-          if (discreteNormal[1] == 1) {
-            if (discreteNormal[2] == 1) {
-              momenta = new FixedVelocityBM<T,DESCRIPTOR>;
-              dynamics = new MixinDynamics(omega, *momenta);
-              postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-            }
-            else if (discreteNormal[2] == -1) {
-              momenta = new FixedVelocityBM<T,DESCRIPTOR>;
-              dynamics = new MixinDynamics(omega, *momenta);
-              postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-
-            }
-            else {
-              clout << "Could not setSlipBoundaryWithDynamics ("
-                    << iX << ", " << iY << ")" << std::endl;
-            }
-          }
-          else if (discreteNormal[1] == -1) {
-            if (discreteNormal[2] == 1) {
-              momenta = new FixedVelocityBM<T,DESCRIPTOR>;
-              dynamics = new MixinDynamics(omega, *momenta);
-              postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-
-            }
-            else if (discreteNormal[2] == -1) {
-              momenta = new FixedVelocityBM<T,DESCRIPTOR>;
-              dynamics = new MixinDynamics(omega, *momenta);
-              postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
-
-
-            }
-            else {
-              clout << "Could not setSlipBoundaryWithDynamics ("
-                    << iX << ", " << iY << ")" << std::endl;
-            }
-          }
-        }
-        else if (discreteNormal[0] == 2) {
-          ///sets momenta, dynamics and post processors on internalVelocityCorner Boundary cells
-          if (discreteNormal[1] == 1) {
-            if (discreteNormal[2] == 1) {
-              momenta = new InnerCornerVelBM2D<T,DESCRIPTOR, 1,1>;
-              dynamics = new CombinedRLBdynamics<T,DESCRIPTOR, MixinDynamics>(omega, *momenta);
-              postProcessor = nullptr;
-            }
-            else if (discreteNormal[2] == -1) {
-              momenta = new InnerCornerVelBM2D<T,DESCRIPTOR, 1,-1>;
-              dynamics = new CombinedRLBdynamics<T,DESCRIPTOR, MixinDynamics>(omega, *momenta);
-              postProcessor = nullptr;
-            }
-            else {
-              clout << "Could not setSlipBoundaryWithDynamics ("
-                    << iX << ", " << iY << ")" << std::endl;
-            }
-          }
-          else if (discreteNormal[1] == -1) {
-            if (discreteNormal[2] == 1) {
-              momenta = new InnerCornerVelBM2D<T,DESCRIPTOR, -1,1>;
-              dynamics = new CombinedRLBdynamics<T,DESCRIPTOR, MixinDynamics>(omega, *momenta);
-              postProcessor = nullptr;
-            }
-            else if (discreteNormal[2] == -1) {
-              momenta = new InnerCornerVelBM2D<T,DESCRIPTOR, -1,-1>;
-              dynamics = new CombinedRLBdynamics<T,DESCRIPTOR, MixinDynamics>(omega, *momenta);
-              postProcessor = nullptr;
-            }
-            else {
-              clout << "Could not setSlipBoundaryWithDynamics ("
-                    << iX << ", " << iY << ")" << std::endl;
-            }
-          }
-        }
-        //this function is initialised inside setLocalVelocityBoundary2D.h/hh
-        //setting of boundary on cells
-        setBoundary<T, DESCRIPTOR, MixinDynamics>(block, omega, iX,iY, momenta, dynamics, postProcessor);
+      discreteNormal = indicator.getBlockGeometry().getStatistics().getType(iX, iY);
+      if (discreteNormal[0] == 0) {
+        ///sets momenta, dynamics and post processor on velocity boundary cells
+        dynamics = block.getDynamics(MixinDynamicsExchangeDirectionOrientationMomenta<T,DESCRIPTOR,
+            MixinDynamics,momenta::BasicDirichletVelocityBoundaryTuple
+          >::construct(Vector<int,2>(discreteNormal.data()+1)));
+        postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
       }
+      else if (discreteNormal[0] == 1) {
+        ///sets momenta, dynamics and post processors on externalVelocityCorner Boundary cells
+        dynamics = block.template getDynamics<typename MixinDynamics::template exchange_momenta<
+          momenta::FixedVelocityBoundaryTuple
+        >>();
+        postProcessor = new SlipBoundaryProcessorGenerator2D<T, DESCRIPTOR>(iX, iX, iY, iY, discreteNormal[1], discreteNormal[2]);
+      }
+      else if (discreteNormal[0] == 2) {
+        ///sets momenta, dynamics and post processors on internalVelocityCorner Boundary cells
+        dynamics = block.getDynamics(PlainMixinDynamicsForNormalMomenta<T,DESCRIPTOR,
+          CombinedRLBdynamics,MixinDynamics,momenta::InnerCornerVelocityTuple2D
+        >::construct(Vector<int,2>(discreteNormal.data()+1)));
+        postProcessor = nullptr;
+      }
+      dynamics->getParameters(block).template set<descriptors::OMEGA>(omega);
+      setBoundary(block, iX,iY, dynamics, postProcessor);
     }
-  }
-
+  });
 }
 
 

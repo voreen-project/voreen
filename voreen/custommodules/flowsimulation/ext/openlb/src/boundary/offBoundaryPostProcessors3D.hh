@@ -25,9 +25,10 @@
 #define OFF_BOUNDARY_POST_PROCESSORS_3D_HH
 
 #include "offBoundaryPostProcessors3D.h"
-#include "core/blockLattice3D.h"
+
 #include "core/util.h"
 #include "core/cell.h"
+#include "dynamics/dynamics.h"
 
 namespace olb {
 
@@ -48,7 +49,7 @@ ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
 ZeroVelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
-  this->getName() = "ZeroVelocityBouzidiLinearPostProcessor3D";  
+  this->getName() = "ZeroVelocityBouzidiLinearPostProcessor3D";
   this->_priority = -1;
 #ifndef QUIET
   if (dist < 0 || dist > 1)
@@ -86,7 +87,7 @@ ZeroVelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T di
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
@@ -95,7 +96,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   blockLattice.get(x, y, z)[opp] = q*blockLattice.get(xN, yN, zN)[iPop] +
                                    (1-q)*blockLattice.get(xB, yB, zB)[iPop2];
@@ -108,7 +109,7 @@ VelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
 {
   this->getName() = "VelocityBouzidiLinearPostProcessor3D";
   this->_priority = -1;
-  
+
 #ifndef QUIET
   if (dist < 0 || dist > 1)
     std::cout << "WARNING: Bogus distance at (" << x << "," << y << "," << z << "): "
@@ -147,7 +148,7 @@ VelocityBouzidiLinearPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
@@ -156,9 +157,9 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBouzidiLinearPostProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
-  Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(xN, yN, zN);
+  auto* dynamics = static_cast<legacy::OffDynamics<T,DESCRIPTOR>*>(blockLattice.getDynamics(xN, yN, zN));
   T u = ufrac*dynamics->getVelocityCoefficient(iPop);
   auto cellN = blockLattice.get(xN, yN, zN);
   auto cell = blockLattice.get(x, y, z);
@@ -174,7 +175,7 @@ ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
 ZeroVelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
-  this->getName() = "ZeroVelocityBounceBackPostProcessor3D";  
+  this->getName() = "ZeroVelocityBounceBackPostProcessor3D";
   this->_priority = -1;
 
 #ifndef QUIET
@@ -197,7 +198,7 @@ ZeroVelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
@@ -206,7 +207,7 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void ZeroVelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
   blockLattice.get(x, y, z)[opp] = blockLattice.get(xN, yN, zN)[iPop];
 }
@@ -216,7 +217,7 @@ VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
 VelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
   : x(x_), y(y_), z(z_), iPop(iPop_), dist(dist_)
 {
-  this->getName() = "VelocityBounceBackPostProcessor3D";  
+  this->getName() = "VelocityBounceBackPostProcessor3D";
   this->_priority = -1;
 
 #ifndef QUIET
@@ -240,7 +241,7 @@ VelocityBounceBackPostProcessor3D(int x_, int y_, int z_, int iPop_, T dist_)
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
-processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
+processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, int y0_, int y1_, int z0_, int z1_)
 {
   if (util::contained(x, y, z, x0_, x1_, y0_, y1_, z0_, z1_)) {
     process(blockLattice);
@@ -249,9 +250,9 @@ processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice, int x0_, int x1_, i
 
 template<typename T, typename DESCRIPTOR>
 void VelocityBounceBackPostProcessor3D<T,DESCRIPTOR>::
-process(BlockLattice3D<T,DESCRIPTOR>& blockLattice)
+process(BlockLattice<T,DESCRIPTOR>& blockLattice)
 {
-  Dynamics<T,DESCRIPTOR>* dynamics = blockLattice.getDynamics(xN, yN, zN);
+  auto* dynamics = static_cast<legacy::OffDynamics<T,DESCRIPTOR>*>(blockLattice.getDynamics(xN, yN, zN));
   T u = dynamics->getVelocityCoefficient(iPop);
   auto cellN = blockLattice.get(xN, yN, zN);
   auto cell  = blockLattice.get(x, y, z);

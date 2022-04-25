@@ -38,7 +38,7 @@
 #include "core/vector.h"
 #include "geometry/cuboid3D.h"
 
-/// All OpenLB code is contained in this namespace.
+// All OpenLB code is contained in this namespace.
 namespace olb {
 
 
@@ -84,6 +84,9 @@ public:
   CuboidGeometry3D(T originX, T originY, T originZ, T deltaR, int nX, int nY, int nZ, int nC=1);
   /// Constructor with vectors
   CuboidGeometry3D(std::vector<T> origin, T deltaR, std::vector<int> extent, int nC=1);
+  CuboidGeometry3D(Vector<T,3> origin, T deltaR, Vector<int,3> extent, int nC=1);
+  /// Construction from an alrealy existing mother cuboid
+  CuboidGeometry3D(const Cuboid3D<T>& motherCuboid, int nC);
   /// Constructs a cuboid structure with a uniform spacing of voxelSize which consists of  nC cuboids, the cuboids not needed are removed and too big ones are shrinked
   CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, int nC=1);
   CuboidGeometry3D(std::shared_ptr<IndicatorF3D<T>> indicator_sharedPtrF, T voxelSize, int nC=1);
@@ -113,7 +116,7 @@ public:
   /// globZ + orientationZ/delta) is in a cuboid.
   /// It gives the related cuboidID and _p if the points are
   /// not in any of the cuboids.
-  /// abs(orientationX) = abs(orientationY) = abs(orientationY) = 1
+  /// util::abs(orientationX) = util::abs(orientationY) = util::abs(orientationY) = 1
   /// must be satisfied
   int get_iC(T globX, T globY, T globZ, int orientationX, int orientationY, int orientationZ) const; //TODO old ones
   /// Returns true and the cuboid number of the nearest lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
@@ -124,14 +127,16 @@ public:
   bool getC(const Vector<T,3>& physR, int& iC) const;
   /// Returns true and the nearest lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getLatticeR(int latticeR[4], const T physR[3]) const;
-  /// Returns true and the floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
+  /// Returns true and the util::floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getFloorLatticeR(const std::vector<T>& physR, std::vector<int>& latticeR) const;
-  /// Returns true and the floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
+  /// Returns true and the util::floor lattice position to the given physical position if the physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   bool getFloorLatticeR(const Vector<T,3>& physR, Vector<int,4>& latticeR) const;
   /// Returns the physical position to the given lattice position respecting periodicity for the overlap nodes which are not in the mother cuboid for the case the flag periodicityOn[iDim]=true if the   physical position is within any of the cuboids with an overlap of 1/2*delta belonging to the cuboid geometry
   void getPhysR(T physR[3], const int& iCglob,  const int& iX, const int& iY, const int& iZ) const;
   /// Returns the physical position to the given lattice position respecting periodicity for the overlap nodes which are not in the mother cuboid for the case the flag periodicityOn[iDim]=true
   void getPhysR(T physR[3], const int latticeR[4]) const;
+  void getPhysR(T physR[3], LatticeR<4> latticeR) const;
+  void getPhysR(T output[3], const int iCglob, LatticeR<3> latticeR) const;
 
   /// Stores the iC of the neighbouring cuboids in a vector;
   void getNeighbourhood(int cuboid, std::vector<int>& neighbours, int offset = 0);

@@ -26,24 +26,22 @@
  */
 
 #include <iostream>
-#include <cmath>
+#include "utilities/omath.h"
 #include <math.h>
 #include <sstream>
 
-//#define PARALLEL_MODE_MPI
-#include "geometry/superGeometry3D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/superGeometryStatistics3D.h"
 #include "utilities/vectorHelpers.h"
 #include "core/vector.h"
 
-using namespace olb::util;
 
 namespace olb {
 
 template<typename T>
-SuperGeometryStatistics3D<T>::SuperGeometryStatistics3D(SuperGeometry3D<T>* superGeometry)
+SuperGeometryStatistics3D<T>::SuperGeometryStatistics3D(SuperGeometry<T,3>* superGeometry)
   : _superGeometry(superGeometry), _statisticsUpdateNeeded(true),
-    _overlap(superGeometry->getOverlap()), _nMaterials(0), _minOverMaterial(3,T(0)), _maxOverMaterial(3,T(0)),
+    _nMaterials(0), _minOverMaterial(0), _maxOverMaterial(0),
     clout(std::cout,"SuperGeometryStatistics3D")
 {
 }
@@ -51,7 +49,7 @@ SuperGeometryStatistics3D<T>::SuperGeometryStatistics3D(SuperGeometry3D<T>* supe
 template<typename T>
 SuperGeometryStatistics3D<T>::SuperGeometryStatistics3D(SuperGeometryStatistics3D const& rhs)
   : _superGeometry(rhs._superGeometry), _statisticsUpdateNeeded(true),
-    _overlap(rhs._superGeometry->getOverlap() ), _nMaterials(rhs._nMaterials),
+    _nMaterials(rhs._nMaterials),
     _minOverMaterial(rhs._minOverMaterial), _maxOverMaterial(rhs._maxOverMaterial),
     clout(std::cout,"SuperGeometryStatistics3D")
 {
@@ -62,7 +60,6 @@ SuperGeometryStatistics3D<T>& SuperGeometryStatistics3D<T>::operator=(SuperGeome
 {
   _superGeometry = rhs._superGeometry;
   _statisticsUpdateNeeded = true;
-  _overlap = rhs._overlap;
   _nMaterials = rhs._nMaterials;
   _minOverMaterial = rhs._minOverMaterial;
   _maxOverMaterial = rhs._maxOverMaterial;
@@ -107,7 +104,7 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
     int updateReallyNeeded = 0;
     for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
       if (_superGeometry->getBlockGeometry(iCloc).getStatistics().getStatisticsStatus() ) {
-        auto& blockGeometry = const_cast<BlockGeometryView3D<T>&>(_superGeometry->getBlockGeometry(iCloc));
+        auto& blockGeometry = const_cast<BlockGeometry<T,3>&>(_superGeometry->getBlockGeometry(iCloc));
         blockGeometry.getStatistics(false).update(false);
         updateReallyNeeded++;
       }
@@ -126,7 +123,7 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
 
 
     // get total number of different materials right
-    _material2n = std::map<int, int>();
+    _material2n = std::map<int, std::size_t>();
     _nMaterials = int();
     for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
       if (_superGeometry->getBlockGeometry(iCloc).getStatistics(false).getNmaterials() > 0) {
@@ -141,8 +138,8 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
 
     // store the number and min., max. possition for each rank
     for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
-      std::map<int, int> material2n = _superGeometry->getBlockGeometry(iCloc).getStatistics(false).getMaterial2n();
-      std::map<int, int>::iterator iter;
+      std::map<int, std::size_t> material2n = _superGeometry->getBlockGeometry(iCloc).getStatistics(false).getMaterial2n();
+      std::map<int, std::size_t>::iterator iter;
 
       for (iter = material2n.begin(); iter != material2n.end(); iter++) {
         if (iter->second!=0) {
@@ -152,7 +149,6 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
             _material2n[iter->first] = iter->second;
             _material2min[iter->first] = minPhysR;
             _material2max[iter->first] = maxPhysR;
-            //std::cout << iter->first<<":"<<_material2n[iter->first]<<std::endl;
           }
           else {
             _material2n[iter->first] += iter->second;
@@ -164,7 +160,6 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
                 _material2max[iter->first][iDim] = maxPhysR[iDim];
               }
             }
-            //std::cout << iter->first<<":"<<_material2n[iter->first]<<std::endl;
           }
         }
       }
@@ -172,10 +167,10 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
 
     // store the number and min., max. possition for all ranks
 #ifdef PARALLEL_MODE_MPI
-    int materials[_nMaterials];
-    int materialsInBuf[_nMaterials];
-    int materialCount[_nMaterials];
-    int materialCountInBuf[_nMaterials];
+    std::ptrdiff_t materials[_nMaterials];
+    std::ptrdiff_t materialsInBuf[_nMaterials];
+    std::ptrdiff_t materialCount[_nMaterials];
+    std::ptrdiff_t materialCountInBuf[_nMaterials];
     T materialMinR[3*_nMaterials];
     T materialMaxR[3*_nMaterials];
     T materialMinRinBuf[3*_nMaterials];
@@ -189,8 +184,8 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
         materialMaxRinBuf[3*iM + iDim] = T();
       }
     }
-    int counter = 0;
-    std::map<int, int>::iterator iMaterial;
+    std::size_t counter = 0;
+    std::map<int, std::size_t>::iterator iMaterial;
     for (iMaterial = _material2n.begin(); iMaterial != _material2n.end(); iMaterial++) {
       materials[counter] = iMaterial->first;
       materialCount[counter] = iMaterial->second;
@@ -245,7 +240,7 @@ void SuperGeometryStatistics3D<T>::update(bool verbose)
 #endif
 
     // update _minOverMaterial and _maxOverMaterial
-    typename std::map< int, std::vector<T> >::const_iterator iter;
+    typename std::map< int, olb::Vector<T, 3> >::const_iterator iter;
     // find componentwise minimal extension over all material numbers
     for ( int iDim = 0; iDim < 3; iDim++ ) {
       // minimum
@@ -291,14 +286,14 @@ int SuperGeometryStatistics3D<T>::getNmaterials() const
 }
 
 template<typename T>
-int SuperGeometryStatistics3D<T>::getNvoxel(int material)
+std::size_t SuperGeometryStatistics3D<T>::getNvoxel(int material)
 {
   update(true);
   return const_this->getNvoxel(material);
 }
 
 template<typename T>
-int SuperGeometryStatistics3D<T>::getNvoxel(int material) const
+std::size_t SuperGeometryStatistics3D<T>::getNvoxel(int material) const
 {
   try {
     return _material2n.at(material);
@@ -309,89 +304,89 @@ int SuperGeometryStatistics3D<T>::getNvoxel(int material) const
 }
 
 template<typename T>
-int SuperGeometryStatistics3D<T>::getNvoxel()
+std::size_t SuperGeometryStatistics3D<T>::getNvoxel()
 {
   update();
   return const_this->getNvoxel();
 }
 
 template<typename T>
-int SuperGeometryStatistics3D<T>::getNvoxel() const
+std::size_t SuperGeometryStatistics3D<T>::getNvoxel() const
 {
-  int total = 0;
+  std::size_t total = 0;
   for (const auto& material : _material2n) {
     if (material.first!=0) {
-      total+=material.second;
+      total += material.second;
     }
   }
   return total;
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMinPhysR(int material)
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMinPhysR(int material)
 {
   update();
   return const_this->getMinPhysR(material);
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMinPhysR(int material) const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMinPhysR(int material) const
 {
   try {
     return _material2min.at(material);
   }
   catch (std::out_of_range& ex) {
-    return std::vector<T> {};
+    return {0, 0, 0};
   }
 }
 
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMinPhysR()
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMinPhysR()
 {
   update();
   return const_this->getMinPhysR();
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMinPhysR() const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMinPhysR() const
 {
   return _minOverMaterial;
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMaxPhysR(int material)
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMaxPhysR(int material)
 {
   update();
   return const_this->getMaxPhysR(material);
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMaxPhysR(int material) const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMaxPhysR(int material) const
 {
   try {
     return _material2max.at(material);
   }
   catch (std::out_of_range& ex) {
-    return std::vector<T> {};
+    return {0, 0, 0};
   }
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMaxPhysR()
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMaxPhysR()
 {
   update();
   return const_this->getMaxPhysR();
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getMaxPhysR() const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getMaxPhysR() const
 {
   return _maxOverMaterial;
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getPhysExtend(int material)
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getPhysExtend(int material)
 {
   update();
   return const_this->getPhysExtend(material);
@@ -408,69 +403,69 @@ std::vector<T> SuperGeometryStatistics3D<T>::getPhysExtend(int material) const
     return extend;
   }
   catch (std::out_of_range& ex) {
-    std::vector<T> null;
-    return null;
+    return { 0, 0, 0 };
   }
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getPhysRadius(int material)
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getPhysRadius(int material)
 {
   update();
   return const_this->getPhysRadius(material);
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getPhysRadius(int material) const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getPhysRadius(int material) const
 {
-  std::vector<T> radius;
+  olb::Vector<T, 3> radius;
   for (int iDim=0; iDim<3; iDim++) {
-    radius.push_back((getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim])/2.);
+    //radius.push_back((getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim])/2.);
+    radius[iDim] = (getMaxPhysR(material)[iDim] - getMinPhysR(material)[iDim])/2.;
   }
   return radius;
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getCenterPhysR(int material)
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getCenterPhysR(int material)
 {
   update();
   return const_this->getCenterPhysR(material);
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::getCenterPhysR(int material) const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::getCenterPhysR(int material) const
 {
-  std::vector<T> center;
+  olb::Vector<T, 3> center;
   for (int iDim=0; iDim<3; iDim++) {
-    center.push_back(getMinPhysR(material)[iDim] + getPhysRadius(material)[iDim]);
+    center[iDim] = getMinPhysR(material)[iDim] + getPhysRadius(material)[iDim];
   }
   return center;
 }
 
 template<typename T>
-std::vector<int> SuperGeometryStatistics3D<T>::getType(int iC, int iX, int iY, int iZ)
+olb::Vector<int, 3> SuperGeometryStatistics3D<T>::getType(int iC, int iX, int iY, int iZ)
 {
   update();
   return const_this->getType(iC, iX, iY, iZ);
 }
 
 template<typename T>
-std::vector<int> SuperGeometryStatistics3D<T>::getType(int iC, int iX, int iY, int iZ) const
+olb::Vector<int, 3> SuperGeometryStatistics3D<T>::getType(int iC, int iX, int iY, int iZ) const
 {
   int iCloc=_superGeometry->getLoadBalancer().loc(iC);
-  std::vector<int> discreteNormal = _superGeometry->getExtendedBlockGeometry(iCloc).getStatistics(false).getType(iX+_overlap, iY+_overlap, iZ+_overlap);
+  olb::Vector<int, 3> discreteNormal = _superGeometry->getBlockGeometry(iCloc).getStatistics(false).getType(iX, iY, iZ);
   return discreteNormal;
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::computeNormal(int material)
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::computeNormal(int material)
 {
   update();
   return const_this->computeNormal(material);
 }
 
 template<typename T>
-std::vector<T> SuperGeometryStatistics3D<T>::computeNormal(int material) const
+olb::Vector<T, 3> SuperGeometryStatistics3D<T>::computeNormal(int material) const
 {
   std::vector<T> normal (3,int());
   for (int iCloc=0; iCloc<_superGeometry->getLoadBalancer().size(); iCloc++) {
@@ -486,17 +481,17 @@ std::vector<T> SuperGeometryStatistics3D<T>::computeNormal(int material) const
     singleton::mpi().reduceAndBcast((normal[iDim]), MPI_SUM);
   }
 #endif
-/* SL: normalization not necessary
+
   if (getNvoxel(material) == 0) {
-    std::cerr << "Unkown material number" << std::endl;
+    std::cerr << "Unkown material number: " << material << std::endl;
     std::exit(-1);
   }
 
   for (int iDim=0; iDim<3; iDim++) {
     normal[iDim] /= getNvoxel(material);
   }
-*/
-  T norm = sqrt(normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2]);
+
+  T norm = util::sqrt(normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2]);
   if (norm>0.) {
     normal[0]/=norm;
     normal[1]/=norm;
@@ -506,23 +501,23 @@ std::vector<T> SuperGeometryStatistics3D<T>::computeNormal(int material) const
 }
 
 template<typename T>
-std::vector<int> SuperGeometryStatistics3D<T>::computeDiscreteNormal(int material, T maxNorm)
+olb::Vector<int, 3> SuperGeometryStatistics3D<T>::computeDiscreteNormal(int material, T maxNorm)
 {
   update();
   return const_this->computeDiscreteNormal(material, maxNorm);
 }
 
 template<typename T>
-std::vector<int> SuperGeometryStatistics3D<T>::computeDiscreteNormal(int material, T maxNorm) const
+olb::Vector<int, 3> SuperGeometryStatistics3D<T>::computeDiscreteNormal(int material, T maxNorm) const
 {
-  std::vector<T> normal = computeNormal(material);
-  std::vector<int> discreteNormal(3,int(0));
+  olb::Vector<T,3> normal = computeNormal(material);
+  olb::Vector<int, 3> discreteNormal(0);
 
   T smallestAngle = T(0);
   for (int iX = -1; iX<=1; iX++) {
     for (int iY = -1; iY<=1; iY++) {
       for (int iZ = -1; iZ<=1; iZ++) {
-        T norm = sqrt(iX*iX+iY*iY+iZ*iZ);
+        T norm = util::sqrt(iX*iX+iY*iY+iZ*iZ);
         if (norm>0.&& norm<maxNorm) {
           T angle = (iX*normal[0] + iY*normal[1] + iZ*normal[2])/norm;
           if (angle>=smallestAngle) {

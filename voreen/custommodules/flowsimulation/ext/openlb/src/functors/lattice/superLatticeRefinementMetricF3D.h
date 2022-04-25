@@ -25,7 +25,7 @@
 #define SUPER_LATTICE_REFINEMENT_METRIC_F_3D_H
 
 #include "superBaseF3D.h"
-#include "core/superLattice3D.h"
+
 
 namespace olb {
 
@@ -41,7 +41,7 @@ namespace olb {
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeKnudsen3D final : public SuperLatticeF3D<T, DESCRIPTOR> {
 public:
-  SuperLatticeKnudsen3D(SuperLattice3D<T, DESCRIPTOR>& lattice);
+  SuperLatticeKnudsen3D(SuperLattice<T, DESCRIPTOR>& lattice);
 };
 
 /// SuperLatticeRefinementMetricKnudsen3D suggests a per-block grid refinement factor
@@ -59,7 +59,7 @@ public:
    * \param rounding  Configures the quality of the grid by rounding the output
    **/
   SuperLatticeRefinementMetricKnudsen3D(
-    SuperLattice3D<T, DESCRIPTOR>&      lattice,
+    SuperLattice<T, DESCRIPTOR>&      lattice,
     const UnitConverter<T, DESCRIPTOR>& converter);
 
   /**
@@ -86,7 +86,7 @@ public:
 template <typename T, typename DESCRIPTOR>
 class SuperLatticeHighOrderKnudsen3D final : public SuperLatticeF3D<T, DESCRIPTOR> {
 public:
-  SuperLatticeHighOrderKnudsen3D(SuperLattice3D<T, DESCRIPTOR>& lattice);
+  SuperLatticeHighOrderKnudsen3D(SuperLattice<T, DESCRIPTOR>& lattice);
 };
 
 

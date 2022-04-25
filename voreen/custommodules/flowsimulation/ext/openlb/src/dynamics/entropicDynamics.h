@@ -41,35 +41,39 @@ namespace olb {
 
 
 /// Implementation of the entropic collision step
-template<typename T, typename DESCRIPTOR>
-class EntropicEqDynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class EntropicEqDynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = EntropicEqDynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  EntropicEqDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  EntropicEqDynamics(T omega_);
   /// Compute equilibrium distribution function
   T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_) override;
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
+  void setOmega(T omega_);
 private:
   T omega;  ///< relaxation parameter
 };
 
 /// Implementation of the forced entropic collision step
-template<typename T, typename DESCRIPTOR>
-class ForcedEntropicEqDynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class ForcedEntropicEqDynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = ForcedEntropicEqDynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  ForcedEntropicEqDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  ForcedEntropicEqDynamics(T omega_);
   /// Compute equilibrium distribution function
   virtual T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const;
   /// Collision step
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_);
+  virtual CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell);
   /// Get local relaxation parameter of the dynamics
   virtual T getOmega() const;
   /// Set local relaxation parameter of the dynamics
@@ -80,20 +84,22 @@ private:
 
 /// Implementation of the entropic collision step
 
-template<typename T, typename DESCRIPTOR>
-class EntropicDynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class EntropicDynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = EntropicDynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  EntropicDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  EntropicDynamics(T omega_);
   /// Compute equilibrium distribution function
   T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const override;
   /// Collision step
-  void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_) override;
+  CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell) override;
   /// Get local relaxation parameter of the dynamics
-  T getOmega() const override;
+  T getOmega() const;
   /// Set local relaxation parameter of the dynamics
-  void setOmega(T omega_) override;
+  void setOmega(T omega_);
 private:
   /// computes the entropy function H(f)=sum_i f_i*ln(f_i/t_i)
   T computeEntropy(const T f[]);
@@ -109,16 +115,18 @@ private:
 };
 
 /// Implementation of the forced entropic collision step
-template<typename T, typename DESCRIPTOR>
-class ForcedEntropicDynamics : public BasicDynamics<T,DESCRIPTOR> {
+template<typename T, typename DESCRIPTOR, typename MOMENTA=momenta::BulkTuple>
+class ForcedEntropicDynamics : public legacy::BasicDynamics<T,DESCRIPTOR,MOMENTA> {
 public:
+  template<typename M>
+  using exchange_momenta = ForcedEntropicDynamics<T,DESCRIPTOR,M>;
+
   /// Constructor
-  ForcedEntropicDynamics(T omega_, Momenta<T,DESCRIPTOR>& momenta_);
+  ForcedEntropicDynamics(T omega_);
   /// Compute equilibrium distribution function
   virtual T computeEquilibrium(int iPop, T rho, const T u[DESCRIPTOR::d], T uSqr) const;
   /// Collision step
-  virtual void collide(Cell<T,DESCRIPTOR>& cell,
-                       LatticeStatistics<T>& statistics_);
+  virtual CellStatistic<T> collide(Cell<T,DESCRIPTOR>& cell);
   /// Get local relaxation parameter of the dynamics
   virtual T getOmega() const;
   /// Set local relaxation parameter of the dynamics

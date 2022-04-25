@@ -21,45 +21,43 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Free Energy Outlet Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Free Energy Outlet Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_FREE_ENERGY_OUTLET_BOUNDARY_2D_H
 #define SET_FREE_ENERGY_OUTLET_BOUNDARY_2D_H
 
 #include <vector>
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "geometry/blockGeometryStatistics2D.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "core/superLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
 #include "dynamics/dynamics.h"
 #include "dynamics/freeEnergyDynamics.h"
-#include "momentaOnBoundaries2D.h"
 #include "boundaryPostProcessors2D.h"
+#include "setBoundary2D.h"
 
 namespace olb {
 
-/// Implementation of a outlet boundary condition for the partner lattices of the binary or ternary free energy model.
+///Implementation of a outlet boundary condition for the partner lattices of the binary or ternary free energy model.
 ///Initialising the Free Energy Outlet Boundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T, DESCRIPTOR>>
-void setFreeEnergyOutletBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega,
-                                 SuperGeometry2D<T>& superGeometry, int material, std::string type, int latticeNumber);
+template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T,DESCRIPTOR>>
+void setFreeEnergyOutletBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, T omega,
+                                 SuperGeometry<T,2>& superGeometry, int material, std::string type, int latticeNumber);
 
-/// Implementation of a outlet boundary condition for the partner lattices of the binary or ternary free energy model.
+///Implementation of a outlet boundary condition for the partner lattices of the binary or ternary free energy model.
 ///Initialising the Free Energy Outlet Boundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T, DESCRIPTOR>>
-void setFreeEnergyOutletBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice, T omega,
+template<typename T, typename DESCRIPTOR, typename MixinDynamics = RLBdynamics<T,DESCRIPTOR>>
+void setFreeEnergyOutletBoundary(SuperLattice<T, DESCRIPTOR>& sLattice, T omega,
                                  FunctorPtr<SuperIndicatorF2D<T>>&& indicator, std::string type, int latticeNumber);
 
 /// Set FreeEnergyOutlet boundary for any indicated cells inside the block domain
 template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setFreeEnergyOutletBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator, std::string type,
+void setFreeEnergyOutletBoundary(BlockLattice<T,DESCRIPTOR>& block, T omega, BlockIndicatorF2D<T>& indicator, std::string type,
                                  int latticeNumber, bool includeOuterCells=false);
-
 
 }//namespace olb
 

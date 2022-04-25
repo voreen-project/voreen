@@ -30,16 +30,16 @@
 #include "superBaseF3D.h"
 #include "superCalcF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
-#include "core/superLattice3D.h"
+
 #include "blockBaseF3D.h"
-#include "geometry/blockGeometry3D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/blockIndicatorBaseF3D.h"
 #include "dynamics/smagorinskyBGKdynamics.h"
 #include "dynamics/porousBGKdynamics.h"
 
 
-/** Note: Throughout the whole source code directory genericFunctions, the
+/* Note: Throughout the whole source code directory genericFunctions, the
  *  template parameters for i/o dimensions are:
  *           F: S^m -> T^n  (S=source, T=target)
  */
@@ -50,14 +50,14 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class SuperLatticePhysTemperature3D final : public SuperLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR> { // templatename before <
 public:
-  SuperLatticePhysTemperature3D(SuperLattice3D<T,TDESCRIPTOR>& sLattice,
+  SuperLatticePhysTemperature3D(SuperLattice<T,TDESCRIPTOR>& sLattice,
                                 ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter);
 };
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 class BlockLatticePhysTemperature3D final : public BlockLatticeThermalPhysF3D<T,DESCRIPTOR,TDESCRIPTOR> {
 public:
-  BlockLatticePhysTemperature3D(BlockLatticeStructure3D<T,TDESCRIPTOR>& blockLattice,
+  BlockLatticePhysTemperature3D(BlockLattice<T,TDESCRIPTOR>& blockLattice,
                                 ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR> const& converter);
   bool operator() (T output[], const int input[]) override;
 };

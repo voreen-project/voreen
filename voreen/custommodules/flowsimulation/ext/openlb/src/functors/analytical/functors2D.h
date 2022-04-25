@@ -28,6 +28,7 @@
 #include "analyticalBaseF.h"
 #include "analyticalF.h"
 #include "analyticCalcF.h"
+#include "derivativeF.h"
 #include "frameChangeF2D.h"
 #include "frameChangeF3D.h"
 #include "fringe2D.h"

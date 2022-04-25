@@ -25,7 +25,7 @@
 #ifndef SUPER_LATTICE_INTEGRAL_F_3D_HH
 #define SUPER_LATTICE_INTEGRAL_F_3D_HH
 
-#include <cmath>
+#include "utilities/omath.h"
 #include <algorithm>
 
 #include "superLatticeIntegralF3D.h"
@@ -34,14 +34,13 @@
 #include "io/ostreamManager.h"
 #include "utilities/functorPtr.hh"
 
-using namespace olb::util;
 
 namespace olb {
 
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysDrag3D<T, DESCRIPTOR>::SuperLatticePhysDrag3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3),
@@ -56,7 +55,7 @@ SuperLatticePhysDrag3D<T, DESCRIPTOR>::SuperLatticePhysDrag3D(
   for (int iC = 0; iC < this->getSuperStructure().getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticePhysDrag3D<T,DESCRIPTOR>(
-        sLattice.getBlockLattice(iC),
+        sLattice.getBlock(iC),
         indicatorF->getBlockIndicatorF(iC),
         converter)
     );
@@ -65,8 +64,8 @@ SuperLatticePhysDrag3D<T, DESCRIPTOR>::SuperLatticePhysDrag3D(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysDrag3D<T, DESCRIPTOR>::SuperLatticePhysDrag3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice,
-  SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLattice<T, DESCRIPTOR>& sLattice,
+  SuperGeometry<T,3>& superGeometry, const int material,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysDrag3D(sLattice,
                            superGeometry.getMaterialIndicator(material),
@@ -90,7 +89,7 @@ bool SuperLatticePhysDrag3D<T, DESCRIPTOR>::operator()(T output[], const int inp
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysCorrDrag3D<T, DESCRIPTOR>::SuperLatticePhysCorrDrag3D(
-  SuperLattice3D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   FunctorPtr<SuperIndicatorF3D<T>>&& indicatorF,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 3),
@@ -105,7 +104,7 @@ SuperLatticePhysCorrDrag3D<T, DESCRIPTOR>::SuperLatticePhysCorrDrag3D(
   for (int iC = 0; iC < this->getSuperStructure().getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticePhysCorrDrag3D<T,DESCRIPTOR>(
-        sLattice.getBlockLattice(iC),
+        sLattice.getBlock(iC),
         indicatorF->getBlockIndicatorF(iC),
         converter)
     );
@@ -114,8 +113,8 @@ SuperLatticePhysCorrDrag3D<T, DESCRIPTOR>::SuperLatticePhysCorrDrag3D(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysCorrDrag3D<T, DESCRIPTOR>::SuperLatticePhysCorrDrag3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice,
-  SuperGeometry3D<T>& superGeometry, const int material,
+  SuperLattice<T, DESCRIPTOR>& sLattice,
+  SuperGeometry<T,3>& superGeometry, const int material,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysCorrDrag3D(sLattice,
                                superGeometry.getMaterialIndicator(material),

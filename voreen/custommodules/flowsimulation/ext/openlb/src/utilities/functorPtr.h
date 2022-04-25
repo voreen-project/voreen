@@ -31,18 +31,12 @@ namespace olb {
 
 namespace util {
 
-/// Backport of C++17's std::void_t
-template<typename...>
-struct void_t {
-  using type = void;
-};
-
 /// Indicates existence of F::identity_functor_type typedef
 template<class F, class U = void>
 struct has_identity_functor : std::false_type { };
 /// Indicates existence of F::identity_functor_type typedef
 template<class F>
-struct has_identity_functor<F, typename void_t<typename F::identity_functor_type>::type> : std::true_type { };
+struct has_identity_functor<F, std::void_t<typename F::identity_functor_type>> : std::true_type { };
 
 }
 

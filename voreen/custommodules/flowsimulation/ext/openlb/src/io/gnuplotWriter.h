@@ -27,16 +27,27 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include "CSVWriter.h"
+#include "CSVWriter.hh"
 
 namespace olb {
 
 template< typename T >
 class Gnuplot {
 public:
+
+  enum AxisType {LINEAR, LOGLOG, LOGLOGINVERTED}; /// different types of data usage and axes scaling
+  enum Regression {OFF, LINREG};                  /// type of Regression, off, LINear REGression, exponential Regression?,...
+
   /// Constructor with name for output files
   /// boolean true for real-time plotting //WARNING: experimental!
-  Gnuplot(std::string name, bool liveplot = false, std::string preCommand = "");
-
+  /// Every set of paramters has its own constructor which is delegating the "large constructor"
+  Gnuplot(std::string name, bool liveplot, std::string preCommand, AxisType axisType, Regression regressionType);
+  explicit Gnuplot(std::string name);
+  Gnuplot(std::string name, bool liveplot);
+  Gnuplot(std::string name, AxisType axisType);
+  Gnuplot(std::string name, AxisType axisType, Regression regressionType);
+  
   /// initialises the data file
   void init();
 
@@ -68,11 +79,6 @@ public:
   void writePNG(int iT = -1, double xRange = -1, std::string plotName = "");
 
 
-  /// higher precision file output, respects /tmp folder structure if changed
-  void datFileOut(T xValue, T yValue, std::string plotFileName = "");
-  void datFileOut(T xValue, std::vector<T> yValues, std::string plotFileName = "");
-
-
 private:
   std::string _xLabel;
   std::string _yLabel;
@@ -84,6 +90,13 @@ private:
   std::vector<std::string> _names;
   std::string _key;
   std::string _preCommand;
+  AxisType _axisType; 
+  Regression _regressionType; 
+
+  /// the creation of the datafile and writing of the data in the CSV format datafile
+  /// is now done by the CSV Writer. The functions setData call the CSV Writer writeDataFile function
+  CSV<T> csvWriter;
+
   /// plotType vector stores the type of the plot the user wants to create
   /// (e.g. 'l' line graph (default) or 'p' scatterplot)
   std::vector<char> _plotTypes;
@@ -93,21 +106,20 @@ private:
   double _xRange = -1;
   T _time = 0.;
 
-  int _rank = 0;
+  static constexpr int _rank {0};
 
   /// writes a plot file for type {"plot", "png", "pdf")
   void writePlotFile(std::string type, std::string plotName = "");
-
-  /// writes the data file for two doubles (x and y)
-  void writeDataFile(T xValue, T yValue);
-
-  /// writes the data file for one double and a vector of doubles (x and y1,y2,...)
-  void writeDataFile(T xValue, std::vector<T> yValues);
 
 protected:
   /// system command to start gnuplot (LINUX ONLY!)
   void startGnuplot(std::string plotFile, std::string plotName = "");
 
+  /// creates the lin regression to the data
+  void linRegression(std::ofstream& fout, std::string x_axisType, std::string y_axisType);
+
+  /// scales the axes if needed
+  void scaleAxes(std::ofstream& fout);
 };
 
 }  // namespace olb

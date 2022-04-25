@@ -46,42 +46,42 @@ template<typename T, template<typename, typename> class F>
 class SuperPlaneIntegralFluxF2D : public SuperPlaneIntegralF2D<T> {
 public:
   template<typename DESCRIPTOR>
-  SuperPlaneIntegralFluxF2D(SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperPlaneIntegralFluxF2D(SuperLattice<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
-                            SuperGeometry2D<T>& geometry,
+                            SuperGeometry<T,2>& geometry,
                             const HyperplaneLattice2D<T>& hyperplaneLattice,
                             FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
                             FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
   template<typename DESCRIPTOR>
-  SuperPlaneIntegralFluxF2D(SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperPlaneIntegralFluxF2D(SuperLattice<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
-                            SuperGeometry2D<T>&    geometry,
+                            SuperGeometry<T,2>&    geometry,
                             const Hyperplane2D<T>& hyperplane,
                             FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
                             FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
   template<typename DESCRIPTOR>
-  SuperPlaneIntegralFluxF2D(SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperPlaneIntegralFluxF2D(SuperLattice<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
-                            SuperGeometry2D<T>&     geometry,
+                            SuperGeometry<T,2>&     geometry,
                             const Hyperplane2D<T>&  hyperplane,
                             FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
   template<typename DESCRIPTOR>
-  SuperPlaneIntegralFluxF2D(SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperPlaneIntegralFluxF2D(SuperLattice<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
-                            SuperGeometry2D<T>& geometry,
+                            SuperGeometry<T,2>& geometry,
                             const Vector<T,2>& origin,
                             const Vector<T,2>& u,
                             std::vector<int> materials,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
   template<typename DESCRIPTOR>
-  SuperPlaneIntegralFluxF2D(SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperPlaneIntegralFluxF2D(SuperLattice<T, DESCRIPTOR>&     sLattice,
                             const UnitConverter<T,DESCRIPTOR>& converter,
-                            SuperGeometry2D<T>& geometry,
+                            SuperGeometry<T,2>& geometry,
                             const Vector<T,2>& origin,
                             const Vector<T,2>& u,
                             BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -96,7 +96,7 @@ public:
  **/
 template<typename T>
 class SuperPlaneIntegralFluxPressure2D final
-    : public SuperPlaneIntegralFluxF2D<T, SuperLatticePhysPressure2D> {
+  : public SuperPlaneIntegralFluxF2D<T, SuperLatticePhysPressure2D> {
 public:
   using SuperPlaneIntegralFluxF2D<T, SuperLatticePhysPressure2D>::SuperPlaneIntegralFluxF2D;
 
@@ -113,7 +113,7 @@ public:
  **/
 template<typename T>
 class SuperPlaneIntegralFluxVelocity2D final
-    : public SuperPlaneIntegralFluxF2D<T, SuperLatticePhysVelocity2D> {
+  : public SuperPlaneIntegralFluxF2D<T, SuperLatticePhysVelocity2D> {
 public:
   using SuperPlaneIntegralFluxF2D<T, SuperLatticePhysVelocity2D>::SuperPlaneIntegralFluxF2D;
 

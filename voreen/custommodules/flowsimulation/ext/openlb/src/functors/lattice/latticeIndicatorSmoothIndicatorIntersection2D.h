@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -43,8 +41,8 @@ namespace olb {
 template <typename T, typename DESCRIPTOR, bool HLBM>
 class SuperLatticeIndicatorSmoothIndicatorIntersection2D final : public SuperLatticeF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticeIndicatorSmoothIndicatorIntersection2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-      SuperGeometry2D<T>& superGeometry,
+  SuperLatticeIndicatorSmoothIndicatorIntersection2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+      SuperGeometry<T,2>& superGeometry,
       IndicatorF2D<T>& normalInd, SmoothIndicatorF2D<T,T,HLBM>& smoothInd );
   bool operator() (T output[], const int input[]) override;
 };
@@ -53,12 +51,12 @@ public:
 template <typename T, typename DESCRIPTOR, bool HLBM>
 class BlockLatticeIndicatorSmoothIndicatorIntersection2D final : public BlockLatticeF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   IndicatorF2D<T>& _normalInd;
   SmoothIndicatorF2D<T,T,HLBM>& _smoothInd;
 public:
-  BlockLatticeIndicatorSmoothIndicatorIntersection2D( BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-      BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLatticeIndicatorSmoothIndicatorIntersection2D( BlockLattice<T,DESCRIPTOR>& blockLattice,
+      BlockGeometry<T,2>& blockGeometry,
       IndicatorF2D<T>& normalInd, SmoothIndicatorF2D<T,T,HLBM>& smoothInd );
   bool operator() (T output[], const int input[]) override;
 };

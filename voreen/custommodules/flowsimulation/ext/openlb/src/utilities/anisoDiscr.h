@@ -31,7 +31,7 @@
 
 #include <iostream>
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <stdlib.h>
 #include <fstream>
 #include <iomanip>
@@ -47,12 +47,12 @@
 namespace olb {
 
 /** Function to compute Henyey Greenstein phase funtion
- * \param cosTheta cos(theta) of scattering event with net direction theta
+ * \param cosTheta util::cos(theta) of scattering event with net direction theta
  * \param g anisotropy factor
  */
-inline double henyeyGreenstein(double cosTheta, double g)
+double henyeyGreenstein(double cosTheta, double g)
 {
-  return (1-g*g) / std::pow(1+g*g-2*g*cosTheta ,1.5);
+  return (1-g*g) / util::pow(1+g*g-2*g*cosTheta,1.5);
 }
 
 // check for energy conservation
@@ -60,9 +60,9 @@ template< int q, typename DESCRIPTOR>
 std::array<double,q> testEnergyConservationColumn( const std::array<std::array<double,q>,q>&  phi )
 {
   std::array<double,q> discIntegral;
-  for( int iVec = 0; iVec < q; iVec++ ) {
+  for ( int iVec = 0; iVec < q; iVec++ ) {
     discIntegral[iVec] = 0;
-    for( int iSum = 0; iSum < q; iSum++ ) {
+    for ( int iSum = 0; iSum < q; iSum++ ) {
       discIntegral[iVec] += descriptors::t<double,DESCRIPTOR>(iSum) * phi[iSum][iVec];
     }
   }
@@ -74,9 +74,9 @@ template<int q, typename DESCRIPTOR>
 std::array<double,q> testEnergyConservationRow( const std::array<std::array<double,q>,q>& phi )
 {
   std::array<double,q> discIntegral;
-  for( int iVec = 0; iVec < q; iVec++ ) {
+  for ( int iVec = 0; iVec < q; iVec++ ) {
     discIntegral[iVec] = 0;
-    for( int iSum = 0; iSum < q; iSum++ ) {
+    for ( int iSum = 0; iSum < q; iSum++ ) {
       discIntegral[iVec] += descriptors::t<double,DESCRIPTOR>(iSum) * phi[iVec][iSum];
     }
   }
@@ -86,12 +86,12 @@ std::array<double,q> testEnergyConservationRow( const std::array<std::array<doub
 // check for anisotropy conservation
 template< int q>
 std::array<double,q> testAnisotropyConservationColumn( const std::array<std::array<double,q>,q>&  phi,
-  const double weights[q], std::array<std::array<double,q>,q>& cosTheta)
+    const double weights[q], std::array<std::array<double,q>,q>& cosTheta)
 {
   std::array<double,q> discIntegral;
-  for( int iVec = 0; iVec < q; iVec++ ) {
+  for ( int iVec = 0; iVec < q; iVec++ ) {
     discIntegral[iVec] = 0;
-    for( int iSum = 0; iSum < q; iSum++ ) {
+    for ( int iSum = 0; iSum < q; iSum++ ) {
       discIntegral[iVec] += weights[iSum] * cosTheta[iVec][iSum]* phi[iVec][iSum];
     }
   }
@@ -104,10 +104,10 @@ std::array<double,q> testAnisotropyConservationColumn( const std::array<std::arr
  * \param a
  * \param b
  */
-inline std::vector<double> linespace( double const stepsize, double const a, double const b )
+std::vector<double> linespace( double const stepsize, double const a, double const b )
 {
   std::vector<double> linspace{}; // initalize to empty
-  if( util::nearZero( a-b ) ) {
+  if ( util::nearZero( a-b ) ) {
     return linspace;
   }
   int const h = (int) ( (b-a) / stepsize);
@@ -128,11 +128,11 @@ inline std::vector<double> linespace( double const stepsize, double const a, dou
  */
 template<typename DESCRIPTOR>
 void computeAnisotropyMatrix( double const stepsize, double const anisotropyFactor,
-  double solution[(DESCRIPTOR::q-1)*((DESCRIPTOR::q-1)+1)/2],
-  std::array<std::array<double,DESCRIPTOR::q-1>, DESCRIPTOR::q-1>& phi, int const breakAfter = -1)
+                              double solution[(DESCRIPTOR::q-1)*((DESCRIPTOR::q-1)+1)/2],
+                              std::array<std::array<double,DESCRIPTOR::q-1>, DESCRIPTOR::q-1>& phi, int const breakAfter = -1)
 {
   using namespace descriptors;
-  if( !DESCRIPTOR::template provides<descriptors::tag::RTLBM>() ){
+  if ( !DESCRIPTOR::template provides<descriptors::tag::RTLBM>() ) {
     std::cout << "Warning: Compute anisotropy matrix for wrong latice stencil!" << std::endl;
     std::cout << "Weight for direction 0 is required to be 0." << std::endl;
     return;
@@ -157,8 +157,8 @@ void computeAnisotropyMatrix( double const stepsize, double const anisotropyFact
       // shift by 1 due to notation in DESCRIPTOR/DESCRIPTOR
       // exclude 0th direction
       dotProduct = c<L>(iPop+1)*c<L>(jPop+1);
-      normI = std::sqrt( c<L>(iPop+1)*c<L>(iPop+1) );
-      normJ = std::sqrt( c<L>(jPop+1)*c<L>(jPop+1) );
+      normI = util::sqrt( c<L>(iPop+1)*c<L>(iPop+1) );
+      normJ = util::sqrt( c<L>(jPop+1)*c<L>(jPop+1) );
       angleProb[iPop][jPop] = dotProduct / (normI*normJ);
     }
   }
@@ -169,7 +169,7 @@ void computeAnisotropyMatrix( double const stepsize, double const anisotropyFact
     }
   }
 
-  for( int i = 0; i < nn; i++ ) {
+  for ( int i = 0; i < nn; i++ ) {
     solution[i] = 0;
   };
 
@@ -180,8 +180,7 @@ void computeAnisotropyMatrix( double const stepsize, double const anisotropyFact
 
   // additional condition only for unit testing
   size_t index = 0;
-  for ( ; index < anisoIterVector.size() && index != (std::size_t)(breakAfter); index++)
-  {
+  for ( ; index < anisoIterVector.size() && index != (std::size_t)(breakAfter); index++) {
     // wipe matrices and vectors
     for (int m = 0; m < mm; m++) {
       for (int n = 0; n < nn; n++) {
@@ -251,7 +250,7 @@ void computeAnisotropyMatrix( double const stepsize, double const anisotropyFact
 
 template<typename DESCRIPTOR>
 void computeAnisotropyMatrixKimAndLee( double const anisotropyFactor,
-  std::array<std::array<double,DESCRIPTOR::q>,DESCRIPTOR::q>& phi )
+                                       std::array<std::array<double,DESCRIPTOR::q>,DESCRIPTOR::q>& phi )
 {
   OstreamManager clout( std::cout, "AnisotropyMatrix_KimAndLee" );
   clout << "Compute anisotropy matrix ..." << std::endl;
@@ -266,10 +265,10 @@ void computeAnisotropyMatrixKimAndLee( double const anisotropyFactor,
   for (int iPop=0; iPop<q; iPop++) {
     for (int jPop=0; jPop<q; jPop++) {
       dotProduct = descriptors::c<L>(iPop) * descriptors::c<L>(jPop);
-      normI = std::sqrt( util::normSqr<int,3>(descriptors::c<L>(iPop)) );
-      normJ = std::sqrt( util::normSqr<int,3>(descriptors::c<L>(jPop)) );
+      normI = util::sqrt( util::normSqr<int,3>(descriptors::c<L>(iPop)) );
+      normJ = util::sqrt( util::normSqr<int,3>(descriptors::c<L>(jPop)) );
       cosTheta[iPop][jPop] = dotProduct /(normI*normJ);
-      if( util::normSqr<int,3>(descriptors::c<L>(iPop)) == 0 || util::normSqr<int,3>(descriptors::c<L>(jPop)) == 0){
+      if ( util::normSqr<int,3>(descriptors::c<L>(iPop)) == 0 || util::normSqr<int,3>(descriptors::c<L>(jPop)) == 0) {
         cosTheta[iPop][jPop] = 0.0;
       }
     }

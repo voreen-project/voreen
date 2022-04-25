@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,7 +43,7 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysPressure3D<T, DESCRIPTOR>::SuperLatticePhysPressure3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF3D<T, DESCRIPTOR>(sLattice, converter, 1)
 {
   this->getName() = "physPressure";
@@ -53,8 +52,7 @@ SuperLatticePhysPressure3D<T, DESCRIPTOR>::SuperLatticePhysPressure3D(
   for (int iC = 0; iC < maxC; iC++) {
     this->_blockF.emplace_back(
       new BlockLatticePhysPressure3D<T, DESCRIPTOR>(
-        this->_sLattice.getExtendedBlockLattice(iC),
-        this->_sLattice.getOverlap(),
+        this->_sLattice.getBlock(iC),
         this->_converter)
     );
   }
@@ -62,11 +60,9 @@ SuperLatticePhysPressure3D<T, DESCRIPTOR>::SuperLatticePhysPressure3D(
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticePhysPressure3D<T, DESCRIPTOR>::BlockLatticePhysPressure3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice,
-  int overlap,
+  BlockLattice<T, DESCRIPTOR>& blockLattice,
   const UnitConverter<T,DESCRIPTOR>& converter)
-  : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 1),
-    _overlap(overlap)
+  : BlockLatticePhysF3D<T, DESCRIPTOR>(blockLattice, converter, 1)
 {
   this->getName() = "physPressure";
 }
@@ -75,9 +71,8 @@ template<typename T, typename DESCRIPTOR>
 bool BlockLatticePhysPressure3D<T, DESCRIPTOR>::operator()(T output[], const int input[])
 {
   // lattice pressure = c_s^2 ( rho -1 )
-  T latticePressure = ( this->_blockLattice.get(input[0]+_overlap, input[1]+_overlap, input[2]+_overlap).computeRho() - 1.0) / descriptors::invCs2<T,DESCRIPTOR>();
+  T latticePressure = ( this->_blockLattice.get(input).computeRho() - 1.0) / descriptors::invCs2<T,DESCRIPTOR>();
   output[0] = this->_converter.getPhysPressure(latticePressure);
-
   return true;
 }
 

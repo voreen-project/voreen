@@ -24,9 +24,8 @@
 #ifndef SHAN_CHEN_DYN_OMEGA_FORCED_POST_PROCESSOR_3D_H
 #define SHAN_CHEN_DYN_OMEGA_FORCED_POST_PROCESSOR_3D_H
 
-#include "core/spatiallyExtendedObject3D.h"
+#include "core/blockStructure.h"
 #include "core/postProcessing.h"
-#include "core/blockLattice3D.h"
 
 
 namespace olb {
@@ -44,10 +43,10 @@ class ShanChenDynOmegaForcedPostProcessor3D : public LocalPostProcessor3D<T,DESC
 public:
   ShanChenDynOmegaForcedPostProcessor3D (
     int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_,
-    AnalyticalF<1,T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
+    AnalyticalF<1,T,T>& iP_, std::vector<BlockStructureD<3>*> partners_);
   ShanChenDynOmegaForcedPostProcessor3D (
     T G_, std::vector<T> rho0_,
-    AnalyticalF<1,T,T>& iP_, std::vector<SpatiallyExtendedObject3D*> partners_);
+    AnalyticalF<1,T,T>& iP_, std::vector<BlockStructureD<3>*> partners_);
   virtual int extent() const
   {
     return 1;
@@ -56,16 +55,16 @@ public:
   {
     return 1;
   }
-  virtual void process(BlockLattice3D<T,DESCRIPTOR>& blockLattice);
-  virtual void processSubDomain(BlockLattice3D<T,DESCRIPTOR>& blockLattice,
+  virtual void process(BlockLattice<T,DESCRIPTOR>& blockLattice);
+  virtual void processSubDomain(BlockLattice<T,DESCRIPTOR>& blockLattice,
                                 int x0_, int x1_, int y0_, int y1_, int z0_, int z1_);
 private:
-  using RHO_CACHE = descriptors::DESCRIPTOR_FIELD_BASE<2,0,0>;
+  using RHO_CACHE = descriptors::FIELD_BASE<2,0,0>;
   int x0, x1, y0, y1, z0, z1;
   T G;
   std::vector<T> rho0;
   AnalyticalF<1,T,T>& interactionPotential;
-  std::vector<SpatiallyExtendedObject3D*> partners;
+  std::vector<BlockStructureD<3>*> partners;
 };
 
 template<typename T, typename DESCRIPTOR>
@@ -73,7 +72,7 @@ class ShanChenDynOmegaForcedGenerator3D : public LatticeCouplingGenerator3D<T,DE
 public:
   ShanChenDynOmegaForcedGenerator3D(int x0_, int x1_, int y0_, int y1_, int z0_, int z1_, T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
   ShanChenDynOmegaForcedGenerator3D(T G_, std::vector<T> rho0_, AnalyticalF<1,T,T>& iP_);
-  virtual PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<SpatiallyExtendedObject3D*> partners) const;
+  virtual PostProcessor3D<T,DESCRIPTOR>* generate(std::vector<BlockStructureD<3>*> partners) const;
   virtual LatticeCouplingGenerator3D<T,DESCRIPTOR>* clone() const;
 private:
   T G;

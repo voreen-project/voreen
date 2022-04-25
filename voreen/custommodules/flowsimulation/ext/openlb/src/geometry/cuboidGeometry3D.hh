@@ -68,9 +68,21 @@ CuboidGeometry3D<T>::CuboidGeometry3D(std::vector<T> origin, T deltaR,
                                       std::vector<int> extent, int nC)
   : CuboidGeometry3D(origin[0], origin[1], origin[2], deltaR,
                      extent[0], extent[1], extent[2], nC)
-{
-  _cuboids.reserve(nC+2);
-}
+{ }
+
+template<typename T>
+CuboidGeometry3D<T>::CuboidGeometry3D(Vector<T,3> origin, T deltaR,
+                                      Vector<int,3> extent, int nC)
+  : CuboidGeometry3D(origin[0], origin[1], origin[2], deltaR,
+                     extent[0], extent[1], extent[2], nC)
+{ }
+
+template<typename T>
+CuboidGeometry3D<T>::CuboidGeometry3D(const Cuboid3D<T>& motherCuboid, int nC)
+  : CuboidGeometry3D(
+    motherCuboid.getOrigin(), motherCuboid.getDeltaR(),
+    motherCuboid.getExtent(), nC)
+{ }
 
 template<typename T>
 CuboidGeometry3D<T>::CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, int nC)
@@ -85,6 +97,7 @@ CuboidGeometry3D<T>::CuboidGeometry3D(IndicatorF3D<T>& indicatorF, T voxelSize, 
   split(0, nC);
   shrink(indicatorF);
 }
+
 template<typename T>
 CuboidGeometry3D<T>::CuboidGeometry3D(std::shared_ptr<IndicatorF3D<T>> indicator_sharedPtrF, T voxelSize, int nC)
   : CuboidGeometry3D<T>(*indicator_sharedPtrF, voxelSize, nC)
@@ -304,9 +317,9 @@ bool CuboidGeometry3D<T>::getLatticeR(int latticeR[4], const T physR[3]) const
   int iCtmp = get_iC(physR[0], physR[1], physR[2]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
-    latticeR[3] = (int)floor( (physR[2] - _cuboids[latticeR[0]].getOrigin()[2] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[3] = (int)util::floor( (physR[2] - _cuboids[latticeR[0]].getOrigin()[2] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
     return true;
   }
   else {
@@ -320,9 +333,9 @@ bool CuboidGeometry3D<T>::getFloorLatticeR(const std::vector<T>& physR, std::vec
   int iCtmp = get_iC(physR[0], physR[1], physR[2]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
-    latticeR[3] = (int)floor( (physR[2] - _cuboids[latticeR[0]].getOrigin()[2] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[3] = (int)util::floor( (physR[2] - _cuboids[latticeR[0]].getOrigin()[2] ) / _cuboids[latticeR[0]].getDeltaR() );
     return true;
   }
   else {
@@ -337,9 +350,9 @@ bool CuboidGeometry3D<T>::getFloorLatticeR(
   int iCtmp = get_iC(physR[0], physR[1], physR[2]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
-    latticeR[3] = (int)floor( (physR[2] - _cuboids[latticeR[0]].getOrigin()[2] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[3] = (int)util::floor( (physR[2] - _cuboids[latticeR[0]].getOrigin()[2] ) / _cuboids[latticeR[0]].getDeltaR() );
     return true;
   }
   else {
@@ -353,17 +366,17 @@ void CuboidGeometry3D<T>::getPhysR(T physR[3], const int& iCglob, const int& iX,
   _cuboids[iCglob].getPhysR(physR, iX, iY, iZ);
   for (int iDim = 0; iDim < 3; iDim++) {
     if (_periodicityOn[iDim]) {
-      //std::cout << "!!! " << iDim << _periodicityOn[iDim] <<":"<< _motherCuboid.getDeltaR()*(_motherCuboid.getExtend()[iDim]) << std::endl;
+      //std::cout << "!!! " << iDim << _periodicityOn[iDim] <<":"<< _motherCuboid.getDeltaR()*(_motherCuboid.getExtent()[iDim]) << std::endl;
       physR[iDim] = remainder( physR[iDim] - _motherCuboid.getOrigin()[iDim]
-                               + _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]),
-                               _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]));
+                               + _motherCuboid.getDeltaR() * (_motherCuboid.getExtent()[iDim]),
+                               _motherCuboid.getDeltaR() * (_motherCuboid.getExtent()[iDim]));
       // solving the rounding error problem for double
       if ( physR[iDim]*physR[iDim] < 0.001 * _motherCuboid.getDeltaR()*_motherCuboid.getDeltaR() ) {
         physR[iDim] = T();
       }
       // make it to mod instead remainer
       if ( physR[iDim] < 0 ) {
-        physR[iDim] += _motherCuboid.getDeltaR() *( _motherCuboid.getExtend()[iDim]);
+        physR[iDim] += _motherCuboid.getDeltaR() *( _motherCuboid.getExtent()[iDim]);
       }
       // add origin
       physR[iDim] += _motherCuboid.getOrigin()[iDim];
@@ -378,6 +391,17 @@ void CuboidGeometry3D<T>::getPhysR(T physR[3], const int latticeR[4]) const
   getPhysR(physR, latticeR[0],  latticeR[1],  latticeR[2],  latticeR[3]);
 }
 
+template<typename T>
+void CuboidGeometry3D<T>::getPhysR(T physR[3], LatticeR<4> latticeR) const
+{
+  getPhysR(physR, latticeR[0],  latticeR[1],  latticeR[2],  latticeR[3]);
+}
+
+template<typename T>
+void CuboidGeometry3D<T>::getPhysR(T physR[3], const int iCglob, LatticeR<3> latticeR) const
+{
+  getPhysR(physR, iCglob,  latticeR[0],  latticeR[1],  latticeR[2]);
+}
 
 template<typename T>
 void CuboidGeometry3D<T>::getNeighbourhood(int cuboid, std::vector<int>& neighbours, int overlap)
@@ -397,7 +421,7 @@ void CuboidGeometry3D<T>::getNeighbourhood(int cuboid, std::vector<int>& neighbo
     T nY = get(iC).getNy();
     T nZ = get(iC).getNz();
     T deltaR = get(iC).getDeltaR();
-    if (get(cuboid).checkInters(globX - overlap * deltaR,
+    if (get(cuboid).checkInters(globX,
                                 globX + (nX + overlap - 1)*deltaR,
                                 globY - overlap * deltaR,
                                 globY + (nY + overlap - 1)*deltaR,
@@ -791,12 +815,12 @@ void CuboidGeometry3D<T>::shrink(int iC, IndicatorF3D<T>& indicatorF)
         indicatorF(inside,physR);
         if (inside[0]) {
           fullCells++;
-          maxX = std::max(maxX, iX);
-          maxY = std::max(maxY, iY);
-          maxZ = std::max(maxZ, iZ);
-          newX = std::min(newX, iX);
-          newY = std::min(newY, iY);
-          newZ = std::min(newZ, iZ);
+          maxX = util::max(maxX, iX);
+          maxY = util::max(maxY, iY);
+          maxZ = util::max(maxZ, iZ);
+          newX = util::min(newX, iX);
+          newY = util::min(newY, iY);
+          newZ = util::min(newZ, iZ);
         }
       }
     }
@@ -1213,7 +1237,7 @@ std::string CuboidGeometry3D<T>::_cuboidParameters(Cuboid3D<T> const& cub)
   ss.precision (std::numeric_limits<double>::digits10 + 1);
   ss << " extent=\"";
   for (int i = 0; i<3; i++) {
-    ss << cub.getExtend()[i] << " ";
+    ss << cub.getExtent()[i] << " ";
   }
 
   ss << "\" origin=\"";

@@ -31,9 +31,7 @@
 #include "indicator/superIndicatorBaseF2D.h"
 #include "utilities/functorPtr.h"
 #include "blockBaseF2D.h"
-#include "geometry/blockGeometry2D.h"
-#include "core/blockLattice2D.h"
-#include "core/blockLatticeStructure2D.h"
+#include "geometry/blockGeometry.h"
 #include "indicator/blockIndicatorF2D.h"
 #include "dynamics/porousBGKdynamics.h"
 
@@ -44,33 +42,35 @@ namespace olb {
  * \return output[3] torque - physical units
  * \return output[4] number of voxels
  */
+/*
 template <typename T, typename DESCRIPTOR>
 class SuperLatticePorousMomentumLossForce2D final : public SuperLatticePhysF2D<T,DESCRIPTOR> {
 public:
-  SuperLatticePorousMomentumLossForce2D(SuperLattice2D<T,DESCRIPTOR>& sLattice,
-                                        SuperGeometry2D<T>& superGeometry,
+  SuperLatticePorousMomentumLossForce2D(SuperLattice<T,DESCRIPTOR>& sLattice,
+                                        SuperGeometry<T,2>& superGeometry,
                                         std::vector<SmoothIndicatorF2D<T,T,true>* >& indicator,
                                         const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };
-
+*/
 /** Functor that returns forces acting on a particle surface, returns data in output for every particle in a row(described are return values for the first particle).
  * \return output[0]-output[2] translational force - physical units
  * \return output[3]-output[5] torque - physical units
  * \return output[7] number of voxels
  */
+/*
 template <typename T, typename DESCRIPTOR>
 class BlockLatticePorousMomentumLossForce2D final : public BlockLatticePhysF2D<T,DESCRIPTOR> {
 private:
-  BlockGeometryStructure2D<T>& _blockGeometry;
+  BlockGeometry<T,2>& _blockGeometry;
   std::vector<SmoothIndicatorF2D<T,T,true>* >& _vectorOfIndicator;
 public:
-  BlockLatticePorousMomentumLossForce2D(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
-                                        BlockGeometryStructure2D<T>& blockGeometry,
+  BlockLatticePorousMomentumLossForce2D(BlockLattice<T,DESCRIPTOR>& blockLattice,
+                                        BlockGeometry<T,2>& blockGeometry,
                                         std::vector<SmoothIndicatorF2D<T,T,true>* >& indicator,
                                         const UnitConverter<T,DESCRIPTOR>& converter);
   bool operator() (T output[], const int input[]) override;
 };
-
+*/
 }
 #endif

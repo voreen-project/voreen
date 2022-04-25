@@ -25,27 +25,25 @@
 #define LATTICE_PHYS_BOUNDARY_FORCE_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysBoundaryForce2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysBoundaryForce2D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce2D(
-  SuperLattice2D<T, DESCRIPTOR>&     sLattice,
+  SuperLattice<T, DESCRIPTOR>&     sLattice,
   FunctorPtr<SuperIndicatorF2D<T>>&& indicatorF,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T, DESCRIPTOR>(sLattice, converter, 2),
@@ -55,7 +53,7 @@ SuperLatticePhysBoundaryForce2D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce2D(
   for (int iC = 0; iC < this->_sLattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticePhysBoundaryForce2D<T, DESCRIPTOR>(
-        this->_sLattice.getBlockLattice(iC),
+        this->_sLattice.getBlock(iC),
         _indicatorF->getBlockIndicatorF(iC),
         this->_converter));
   }
@@ -63,8 +61,8 @@ SuperLatticePhysBoundaryForce2D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce2D(
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticePhysBoundaryForce2D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce2D(
-  SuperLattice2D<T, DESCRIPTOR>& sLattice,
-  SuperGeometry2D<T>& superGeometry, const int material,
+  SuperLattice<T, DESCRIPTOR>& sLattice,
+  SuperGeometry<T,2>& superGeometry, const int material,
   const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysBoundaryForce2D(sLattice,
                                     superGeometry.getMaterialIndicator(material),
@@ -73,12 +71,12 @@ SuperLatticePhysBoundaryForce2D<T, DESCRIPTOR>::SuperLatticePhysBoundaryForce2D(
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysBoundaryForce2D<T,DESCRIPTOR>::BlockLatticePhysBoundaryForce2D(
-  BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice,
+  BlockLattice<T,DESCRIPTOR>& blockLattice,
   BlockIndicatorF2D<T>&                  indicatorF,
   const UnitConverter<T,DESCRIPTOR>&     converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice, converter, 2),
     _indicatorF(indicatorF),
-    _blockGeometry(indicatorF.getBlockGeometryStructure())
+    _blockGeometry(indicatorF.getBlockGeometry())
 {
   this->getName() = "physBoundaryForce";
 }
@@ -95,7 +93,7 @@ bool BlockLatticePhysBoundaryForce2D<T,DESCRIPTOR>::operator() (T output[], cons
       // Get direction
       // Get next cell located in the current direction
       // Check if the next cell is a fluid node
-      if (_blockGeometry.get(input[0] + descriptors::c<DESCRIPTOR >(iPop,0), input[1] + descriptors::c<DESCRIPTOR >(iPop,1)) == 1) {
+      if (_blockGeometry.get({input[0] + descriptors::c<DESCRIPTOR >(iPop,0), input[1] + descriptors::c<DESCRIPTOR >(iPop,1)}) == 1) {
         // Get f_q of next fluid cell where l = opposite(q)
         T f = this->_blockLattice.get(input[0] + descriptors::c<DESCRIPTOR >(iPop,0), input[1] + descriptors::c<DESCRIPTOR >(iPop,1))[iPop];
         // Get f_l of the boundary cell

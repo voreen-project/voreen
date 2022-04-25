@@ -26,7 +26,7 @@
 
 #include "core/vector.h"
 #include "io/ostreamManager.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "functors/lattice/superBaseF2D.h"
 #include "functors/analytical/indicator/indicatorBaseF2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
@@ -43,14 +43,14 @@ namespace olb {
 template<typename T>
 class SuperPlaneIntegralF2D : public SuperF2D<T> {
 protected:
-  SuperGeometry2D<T>& _geometry;
+  SuperGeometry<T,2>& _geometry;
 
   /// Functor to be integrated on the line
   FunctorPtr<SuperF2D<T>> _f;
   /// Indicator describing relevant discrete integration points
   FunctorPtr<SuperIndicatorF2D<T>> _integrationIndicatorF;
   /// Indicator describing the relevant subset of the interpolated hyperplane
-  FunctorPtr<IndicatorF2D<T>> _subplaneIndicatorF;
+  FunctorPtr<IndicatorF1D<T>> _subplaneIndicatorF;
   /// Functor describing line to be interpolated and integrated
   BlockReduction2D1D<T> _reductionF;
 
@@ -102,10 +102,10 @@ public:
    *        definition and a discretization.
    **/
   SuperPlaneIntegralF2D(FunctorPtr<SuperF2D<T>>&& f,
-                        SuperGeometry2D<T>&       geometry,
+                        SuperGeometry<T,2>&       geometry,
                         const HyperplaneLattice2D<T>& hyperplaneLattice,
                         FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
-                        FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
+                        FunctorPtr<IndicatorF1D<T>>&&      subplaneIndicator,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
   /// Constructor providing automatic lattice generation
   /**
@@ -125,10 +125,10 @@ public:
    *        i.e. if they are interpolated or read directly from lattice points.
    **/
   SuperPlaneIntegralF2D(FunctorPtr<SuperF2D<T>>&& f,
-                        SuperGeometry2D<T>&       geometry,
+                        SuperGeometry<T,2>&       geometry,
                         const Hyperplane2D<T>&    hyperplane,
                         FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
-                        FunctorPtr<IndicatorF2D<T>>&&      subplaneIndicator,
+                        FunctorPtr<IndicatorF1D<T>>&&      subplaneIndicator,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
 
   /// Constructor providing automatic lattice generation and omitting subplane restriction
@@ -148,7 +148,7 @@ public:
    *        i.e. if they are interpolated or read directly from lattice points.
    **/
   SuperPlaneIntegralF2D(FunctorPtr<SuperF2D<T>>&& f,
-                        SuperGeometry2D<T>&       geometry,
+                        SuperGeometry<T,2>&       geometry,
                         const Hyperplane2D<T>&    hyperplane,
                         FunctorPtr<SuperIndicatorF2D<T>>&& integrationIndicator,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);
@@ -162,7 +162,7 @@ public:
    * \param mode      defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF2D(FunctorPtr<SuperF2D<T>>&& f,
-                        SuperGeometry2D<T>& geometry,
+                        SuperGeometry<T,2>& geometry,
                         const Vector<T,2>& origin,
                         const Vector<T,2>& u,
                         std::vector<int> materials,
@@ -175,7 +175,7 @@ public:
    * \param mode   defines how the values of the discrete hyperplane are determined
    **/
   SuperPlaneIntegralF2D(FunctorPtr<SuperF2D<T>>&& f,
-                        SuperGeometry2D<T>& geometry,
+                        SuperGeometry<T,2>& geometry,
                         const Vector<T,2>& origin,
                         const Vector<T,2>& u,
                         BlockDataReductionMode mode=BlockDataReductionMode::Analytical);

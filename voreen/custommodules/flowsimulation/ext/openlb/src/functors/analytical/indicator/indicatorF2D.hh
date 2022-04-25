@@ -24,7 +24,7 @@
 #ifndef INDICATOR_F_2D_HH
 #define INDICATOR_F_2D_HH
 
-#include <cmath>
+#include "utilities/omath.h"
 
 #include "indicatorF2D.h"
 #include "utilities/vectorHelpers.h"
@@ -65,13 +65,11 @@ bool IndicatorF2DfromIndicatorF3D<S>::operator()(bool output[], const S input[])
 // For other cuboids, please use the parallelepiped version
 template <typename S>
 IndicatorCuboid2D<S>::IndicatorCuboid2D(Vector<S,2> extend, Vector<S,2> origin, S theta)
-  : _theta(theta)
+  : _center(origin + S(.5)*extend), _xLength(extend[0]), _yLength(extend[1]), _theta(theta)
+
 {
   this->_myMin = origin;
   this->_myMax = origin + extend;
-  _center = origin + S(.5)*extend;
-  _xLength = extend[0];
-  _yLength = extend[1];
 }
 
 template <typename S>
@@ -89,17 +87,48 @@ bool IndicatorCuboid2D<S>::operator()(bool output[], const S input[])
 {
   S x, y;
   if ( !util::nearZero(_theta) ) {
-    x = _center[0] + (input[0] - _center[0])*std::cos(_theta) - (input[1] - _center[1])*std::sin(_theta);
-    y = _center[1] + (input[0] - _center[0])*std::sin(_theta) + (input[1] - _center[1])*std::cos(_theta);
-  } else {
+    x = _center[0] + (input[0] - _center[0])*util::cos(_theta) - (input[1] - _center[1])*util::sin(_theta);
+    y = _center[1] + (input[0] - _center[0])*util::sin(_theta) + (input[1] - _center[1])*util::cos(_theta);
+  }
+  else {
     x = input[0];
     y = input[1];
   }
 
-  output[0] = (  (fabs(_center[0] - x) < _xLength/2. || util::approxEqual(fabs(_center[0] - x),_xLength/2.) )
-                 && (fabs(_center[1] - y) < _yLength/2. || util::approxEqual(fabs(_center[1] - y), _yLength/2.) ) );
+  output[0] = (  (util::fabs(_center[0] - x) < _xLength/2. || util::approxEqual(util::fabs(_center[0] - x),_xLength/2.) )
+                 && (util::fabs(_center[1] - y) < _yLength/2. || util::approxEqual(util::fabs(_center[1] - y), _yLength/2.) ) );
   return true;
 }
+
+template <typename S>
+Vector<S,2> const& IndicatorCuboid2D<S>::getCenter() const
+{
+  return _center;
+}
+
+template <typename S>
+S const IndicatorCuboid2D<S>::getxLength() const
+{
+  return _xLength;
+}
+
+template <typename S>
+S const IndicatorCuboid2D<S>::getyLength() const
+{
+  return _yLength;
+}
+
+template <typename S>
+S IndicatorCuboid2D<S>::signedDistance( const Vector<S,2>& input )
+{
+  // TODO: Implementation should be analogous to other indicators.
+
+  Vector<S,2> ptransl = {input[0]-_center[0], input[1]-_center[1]};
+  Vector<S,2> prot = {util::cos(-_theta)*ptransl[0]+util::sin(-_theta)*ptransl[1], util::cos(-_theta)*ptransl[1]-util::sin(-_theta)*ptransl[0]};
+
+  return sdf::box(prot, Vector<S,2>(.5*_xLength, .5*_yLength));
+}
+
 
 // creator function
 template <typename S>
@@ -124,17 +153,30 @@ IndicatorCuboid2D<S>* createIndicatorCuboid2D(XMLreader const& params, bool verb
 template <typename S>
 IndicatorCircle2D<S>::IndicatorCircle2D(Vector<S,2> center, S radius)
   :  _center(center),
+     _radius(radius),
      _radius2(radius*radius)
 {
   this->_myMin = _center - radius;
   this->_myMax = _center + radius;
 }
 
+template <typename S>
+Vector<S,2> const& IndicatorCircle2D<S>::getCenter() const
+{
+  return _center;
+}
+
+template <typename S>
+S const IndicatorCircle2D<S>::getRadius() const
+{
+  return _radius;
+}
+
 // returns true if x is inside the circle
 template <typename S>
 bool IndicatorCircle2D<S>::operator()(bool output[], const S input[])
 {
-  output[0] = ( std::pow(_center[0] - input[0],2) + std::pow(_center[1] - input[1], 2) <= _radius2 );
+  output[0] = ( util::pow(_center[0] - input[0],2) + util::pow(_center[1] - input[1], 2) <= _radius2 );
   return output[0];
 }
 
@@ -150,7 +192,7 @@ bool IndicatorCircle2D<S>::distance(S& distance, const Vector<S,2>& origin, cons
     return true;
   }
   // norm of direction
-  a = sqrt(a);
+  a = util::sqrt(a);
 
   S b = 2.*((origin[0] - _center[0])*direction[0] +
             (origin[1] - _center[1])*direction[1])/a;
@@ -163,8 +205,8 @@ bool IndicatorCircle2D<S>::distance(S& distance, const Vector<S,2>& origin, cons
     return false;
   }
 
-  S x1 = (- b + sqrt(d)) *0.5;
-  S x2 = (- b - sqrt(d)) *0.5;
+  S x1 = (- b + util::sqrt(d)) *0.5;
+  S x2 = (- b - util::sqrt(d)) *0.5;
 
   // case if origin is inside the sphere
   if ((x1<0.) || (x2<0.)) {
@@ -179,7 +221,7 @@ bool IndicatorCircle2D<S>::distance(S& distance, const Vector<S,2>& origin, cons
   }
   // case if origin is ouside the sphere
   else {
-    distance = std::min(x1,x2);
+    distance = util::min(x1,x2);
     return true;
   }
 
@@ -202,7 +244,12 @@ bool IndicatorCircle2D<S>::normal(Vector<S,2>& normal, const Vector<S,2>& origin
   return true;
 }
 
-
+template <typename S>
+S IndicatorCircle2D<S>::signedDistance(const Vector<S,2>& input)
+{
+  Vector<S,2> p = input - _center;
+  return sdf::sphere(p, _radius);
+}
 
 template <typename S>
 IndicatorCircle2D<S>* createIndicatorCircle2D(XMLreader const& params, bool verbose)
@@ -222,13 +269,154 @@ IndicatorCircle2D<S>* createIndicatorCircle2D(XMLreader const& params, bool verb
 }
 
 template <typename S>
+IndicatorTriangle2D<S>::IndicatorTriangle2D(Vector<S,2> a, Vector<S,2> b, Vector<S,2> c)
+  :  _a(a),
+     _b(b),
+     _c(c)
+{
+
+  this->_myMin = {util::min(_a[0], util::min(_b[0], _c[0])), util::min(_a[1], util::min(_b[1], _c[1]))};
+  this->_myMax = {util::max(_a[0], util::max(_b[0], _c[0])), util::max(_a[1], util::max(_b[1], _c[1]))};
+}
+
+
+template <typename S>
+Vector<S,2> const& IndicatorTriangle2D<S>::getVertexA() const
+{
+  return _a;
+}
+
+template <typename S>
+Vector<S,2> const& IndicatorTriangle2D<S>::getVertexB() const
+{
+  return _b;
+}
+
+template <typename S>
+Vector<S,2> const& IndicatorTriangle2D<S>::getVertexC() const
+{
+  return _c;
+}
+
+// returns true if x is inside the triangle
+template <typename S>
+bool IndicatorTriangle2D<S>::operator()(bool output[], const S input[])
+{
+  output[0] = ( sdf::triangle({input[0], input[1]}, _a, _b, _c) <= 0 );
+  return output[0];
+}
+
+template <typename S>
+S IndicatorTriangle2D<S>::signedDistance(const Vector<S,2>& input)
+{
+
+  return sdf::triangle(input, _a, _b, _c);
+}
+
+template <typename S>
+IndicatorTriangle2D<S>* createIndicatorTriangle2D(XMLreader const& params, bool verbose)
+{
+  OstreamManager clout(std::cout,"createIndicatorTriangle2D");
+  params.setWarningsOn(verbose);
+
+  Vector<S,2> a;
+  Vector<S,2> b;
+  Vector<S,2> c;
+
+  std::stringstream xmla( params.getAttribute("a") );
+  xmla>> a[0] >> a[1];
+  std::stringstream xmlb( params.getAttribute("b") );
+  xmlb >> b[0] >> b[1];
+  std::stringstream xmlc( params.getAttribute("c") );
+  xmlc >> c[0] >> c[1];
+
+  return new IndicatorTriangle2D<S>(a, b, c);
+}
+
+template <typename S>
+IndicatorEquiTriangle2D<S>::IndicatorEquiTriangle2D(Vector<S,2> center, S radius)
+  :  _center(center),
+     _radius(radius),
+     _a({center[0], center[1]+radius}),
+_b({center[0]-util::sqrt(3)/2.*radius, center[1]-0.5*radius}),
+_c({center[0]+util::sqrt(3)/2.*radius, center[1]-0.5*radius})
+{
+
+  this->_myMin = {util::min(_a[0], util::min(_b[0], _c[0])), util::min(_a[1], util::min(_b[1], _c[1]))};
+  this->_myMax = {util::max(_a[0], util::max(_b[0], _c[0])), util::max(_a[1], util::max(_b[1], _c[1]))};
+}
+
+
+template <typename S>
+Vector<S,2> const& IndicatorEquiTriangle2D<S>::getVertexA() const
+{
+  return _a;
+}
+
+template <typename S>
+Vector<S,2> const& IndicatorEquiTriangle2D<S>::getVertexB() const
+{
+  return _b;
+}
+
+template <typename S>
+Vector<S,2> const& IndicatorEquiTriangle2D<S>::getVertexC() const
+{
+  return _c;
+}
+
+template <typename S>
+Vector<S,2> const& IndicatorEquiTriangle2D<S>::getCenter() const
+{
+  return _center;
+}
+
+template <typename S>
+S const IndicatorEquiTriangle2D<S>::getRadius() const
+{
+  return _radius;
+}
+
+// returns true if x is inside the triangle
+template <typename S>
+bool IndicatorEquiTriangle2D<S>::operator()(bool output[], const S input[])
+{
+  output[0] = ( sdf::triangle({input[0], input[1]}, _a, _b, _c) <= 0 );
+  return output[0];
+}
+
+template <typename S>
+S IndicatorEquiTriangle2D<S>::signedDistance(const Vector<S,2>& input)
+{
+
+  return sdf::triangle( input, _a, _b, _c);
+}
+
+template <typename S>
+IndicatorEquiTriangle2D<S>* createIndicatorEquiTriangle2D(XMLreader const& params, bool verbose)
+{
+  OstreamManager clout(std::cout,"createIndicatorEquiTriangle2D");
+  params.setWarningsOn(verbose);
+
+  Vector<S,2> center;
+  S radius = 1;
+
+  std::stringstream xmlCenter( params.getAttribute("center") );
+  xmlCenter>> center[0] >> center[1];
+  std::stringstream xmlRadius( params.getAttribute("radius") );
+  xmlRadius >> radius;
+
+  return new IndicatorEquiTriangle2D<S>(center, radius);
+}
+
+template <typename S>
 IndicatorLayer2D<S>::IndicatorLayer2D(IndicatorF2D<S>& indicatorF, S layerSize)
   :  _indicatorF(indicatorF), _layerSize(layerSize)
 {
   this->_myMin = indicatorF.getMin() - layerSize;
   this->_myMax = indicatorF.getMax() + layerSize;
-  OLB_ASSERT( (this->_myMax[0]-this->_myMin[0]) > std::numeric_limits<S>::epsilon() ,"Indicator reduced to zero-set in x direction");
-  OLB_ASSERT( (this->_myMax[1]-this->_myMin[1]) > std::numeric_limits<S>::epsilon() ,"Indicator reduced to zero-set in y direction");
+  OLB_ASSERT( (this->_myMax[0]-this->_myMin[0]) > std::numeric_limits<S>::epsilon(),"Indicator reduced to zero-set in x direction");
+  OLB_ASSERT( (this->_myMax[1]-this->_myMin[1]) > std::numeric_limits<S>::epsilon(),"Indicator reduced to zero-set in y direction");
   _isPositive = std::signbit(layerSize);
 }
 

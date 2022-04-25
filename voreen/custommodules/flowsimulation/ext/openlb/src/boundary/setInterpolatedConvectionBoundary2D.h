@@ -21,8 +21,8 @@
  *  Boston, MA  02110-1301, USA.
 */
 
-///This file contains the Interpolated Convection Boundary
-///This is a new version of the Boundary, which only contains free floating functions
+//This file contains the Interpolated Convection Boundary
+//This is a new version of the Boundary, which only contains free floating functions
 #ifndef SET_INTERPOLATED_CONVECTION_BOUNDARY_2D_H
 #define SET_INTERPOLATED_CONVECTION_BOUNDARY_2D_H
 
@@ -30,32 +30,32 @@
 #include "geometry/blockGeometryStatistics2D.h"
 #include "core/superLattice2D.h"
 #include "io/ostreamManager.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 #include "utilities/functorPtr.h"
 #include "extendedFiniteDifferenceBoundary2D.h"
 #include "functors/lattice/indicator/superIndicatorF2D.h"
-#include "core/blockLatticeStructure2D.h"
-#include "momentaOnBoundaries2D.h"
 #include "boundaryPostProcessors2D.h"
 #include "dynamics/dynamics.h"
-#include "geometry/blockGeometry2D.h"
+#include "geometry/blockGeometry.h"
 #include "functors/lattice/indicator/blockIndicatorF2D.h"
 #include "dynamics/freeEnergyDynamics.h"
+#include "setBoundary2D.h"
 
 namespace olb {
+    
 ///Initialising the InterpolatedConvectionBoundary on the superLattice domain
 ///This is an interpolated boundary --> MixinDynamics = BGKdynamics
 ///Usually T* uAv = NULL;
-template<typename T, typename DESCRIPTOR, typename MixinDynamics=BGKdynamics<T,DESCRIPTOR>>
-void setInterpolatedConvectionBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry2D<T>& superGeometry, int material, T* uAv);
+template<typename T, typename DESCRIPTOR>
+void setInterpolatedConvectionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, SuperGeometry<T,2>& superGeometry, int material, T* uAv);
 
 ///Initialising the InterpolatedConvectionBoundary on the superLattice domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setInterpolatedConvectionBoundary(SuperLattice2D<T, DESCRIPTOR>& sLattice,T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator, T* uAv);
+template<typename T, typename DESCRIPTOR>
+void setInterpolatedConvectionBoundary(SuperLattice<T, DESCRIPTOR>& sLattice,T omega, FunctorPtr<SuperIndicatorF2D<T>>&& indicator, T* uAv);
 
 ///Set InterpolatedConvectionBoundary for indicated cells inside the block domain
-template<typename T, typename DESCRIPTOR, typename MixinDynamics>
-void setInterpolatedConvectionBoundary(BlockLatticeStructure2D<T,DESCRIPTOR>& block, T omega,BlockIndicatorF2D<T>& indicator,
+template<typename T, typename DESCRIPTOR>
+void setInterpolatedConvectionBoundary(BlockLattice<T,DESCRIPTOR>& block, T omega,BlockIndicatorF2D<T>& indicator,
                                        T* uAv, bool includeOuterCells=false);
 
 }//namespace olb

@@ -24,14 +24,11 @@
 /** \file
  * Groups all the generic 3D template files in the boundaryConditions directory.
  */
-#include "advectionDiffusionMomentaOnBoundaries.hh"
 #include "advectionDiffusionBoundaryPostProcessor3D.hh"
 #include "boundaryPostProcessors3D.hh"
 #include "extendedFiniteDifferenceBoundary3D.hh"
 #include "inamuroAnalyticalDynamics.hh"
 #include "inamuroNewtonRaphsonDynamics.hh"
-#include "momentaOnBoundaries.hh"
-#include "momentaOnBoundaries3D.hh"
 #include "offBoundaryPostProcessors3D.hh"
 #include "rtlbmBoundaryDynamics.hh"
 #include "wallFunctionBoundaryPostProcessors3D.hh"
@@ -51,8 +48,7 @@
 #include "setFreeEnergyInletBoundary3D.hh"
 #include "setFreeEnergyOutletBoundary3D.hh"
 #include "setFreeEnergyWallBoundary3D.hh"
-#include "setBouzidiVelocityBoundary3D.hh"
-#include "setBouzidiZeroVelocityBoundary3D.hh"
+#include "setBounceBackVelocityBoundary3D.hh"
 #include "defineU3D.hh"
 #include "setSlipBoundary3D.hh"
 #include "setSlipBoundaryWithDynamics3D.hh"

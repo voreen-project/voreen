@@ -24,15 +24,17 @@
 #ifndef INDICATOR_BASE_F_2D_H
 #define INDICATOR_BASE_F_2D_H
 
+#include <functional>
 #include <vector>
 
 #include "core/vector.h"
 #include "functors/genericF.h"
+#include "indicatorBase.h"
 
 namespace olb {
 
 
-/** IndicatorF1D is an application from \f$ \Omega \subset R^3 \to {0,1} \f$.
+/** IndicatorF1D is an application from \f$ \Omega \subset R \to {0,1} \f$.
   * \param _myMin   holds minimal(component wise) vector of the domain \f$ \Omega \f$.
   * \param _myMax   holds maximal(component wise) vector of the domain \f$ \Omega \f$.
   */
@@ -43,15 +45,24 @@ protected:
   Vector<S,1> _myMin;
   Vector<S,1> _myMax;
 public:
+  using GenericF<bool,S>::operator();
+
   virtual Vector<S,1>& getMin();
   virtual Vector<S,1>& getMax();
+
   IndicatorF1D<S>& operator+(IndicatorF1D<S>& rhs);
   IndicatorF1D<S>& operator-(IndicatorF1D<S>& rhs);
   IndicatorF1D<S>& operator*(IndicatorF1D<S>& rhs);
+
+  /// Indicator specific function operator overload
+  /**
+   * \return Domain indicator i.e. `true` iff the input lies within the described domain.
+   **/
+  virtual bool operator() (const S input[]);
 };
 
 
-/** IndicatorF2D is an application from \f$ \Omega \subset R^3 \to {0,1} \f$.
+/** IndicatorF2D is an application from \f$ \Omega \subset R^2 \to {0,1} \f$.
   * \param _myMin   holds minimal(component wise) vector of the domain \f$ \Omega \f$.
   * \param _myMax   holds maximal(component wise) vector of the domain \f$ \Omega \f$.
   */
@@ -71,14 +82,25 @@ public:
   /**
    * (mind that the default computation is done by a numerical approximation which searches .. [TODO])
    */
+  virtual bool distance(S& distance, const Vector<S,2>& origin, S precision, const Vector<S,2>& direction);
+  virtual bool distance(S& distance, const Vector<S,2>& origin, const Vector<S,2>& direction, S precision, S pitch);
   virtual bool distance(S& distance, const Vector<S,2>& origin, const Vector<S,2>& direction, int iC=-1);
-
+  virtual bool distance(S& distance, const Vector<S,2>& origin);
+  virtual bool distance(S& distance, const S input[]);
   /// returns true and the normal if there was one found for an given origin and direction
   /**
    * (mind that the default computation is done by a numerical approximation which searches .. [TODO])
    */
   virtual bool normal(Vector<S,2>& normal, const Vector<S,2>& origin, const Vector<S,2>& direction, int iC=-1);
-
+/// Returns true if input is inside the indicator
+  virtual bool operator() (bool output[1], const S input[2]);
+  /// Returns signed distance to the nearest point on the indicator surface
+  virtual S signedDistance(const Vector<S,2>& input);
+  /// Return surface normal
+  virtual Vector<S,2> surfaceNormal(const Vector<S,2>& pos, const S meshSize);
+  /// Return surface normal after possible translation and rotation
+  Vector<S,2> surfaceNormal(const Vector<S,2>& pos, const S meshSize,
+                            std::function<Vector<S,2>(const Vector<S,2>&)> transformPos);
   /// Returns true if `point` is inside a cube with corners `_myMin` and `_myMax`
   bool isInsideBox(Vector<S,2> point);
 
@@ -97,7 +119,7 @@ public:
   std::shared_ptr<IndicatorF2D<S>> _f;
 
   IndicatorIdentity2D(std::shared_ptr<IndicatorF2D<S>> f);
-  bool operator() (bool output[1], const S input[2]) override;
+  bool operator() (bool output[1], const S input[2]);
 };
 
 

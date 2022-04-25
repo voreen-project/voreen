@@ -25,27 +25,25 @@
 #define LATTICE_PHYS_EXTERNAL_PARTICLE_VELOCITY_2D_HH
 
 #include <vector>
-#include <cmath>
+#include "utilities/omath.h"
 #include <limits>
 
 #include "latticePhysExternalParticleVelocity2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry2D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "indicator/superIndicatorF2D.h"
 #include "blockBaseF2D.h"
 #include "functors/genericF.h"
 #include "functors/analytical/analyticalF.h"
 #include "functors/analytical/indicator/indicatorF2D.h"
-#include "core/blockLattice2D.h"
 #include "communication/mpiManager.h"
-#include "core/blockLatticeStructure2D.h"
 
 
 namespace olb {
 
 template<typename T,typename DESCRIPTOR>
 SuperLatticePhysExternalParticleVelocity2D<T,DESCRIPTOR>::SuperLatticePhysExternalParticleVelocity2D(
-  SuperLattice2D<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T,DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticePhysF2D<T,DESCRIPTOR>(sLattice, converter, 2)
 {
   this->getName() = "ExtPartVelField";
@@ -53,7 +51,7 @@ SuperLatticePhysExternalParticleVelocity2D<T,DESCRIPTOR>::SuperLatticePhysExtern
   for (int iC = 0; iC < sLattice.getLoadBalancer().size(); ++iC) {
     this->_blockF.emplace_back(
       new BlockLatticePhysExternalParticleVelocity2D<T, DESCRIPTOR>(
-        sLattice.getExtendedBlockLattice(iC),
+        sLattice.getBlock(iC),
         converter)
     );
   }
@@ -61,7 +59,7 @@ SuperLatticePhysExternalParticleVelocity2D<T,DESCRIPTOR>::SuperLatticePhysExtern
 
 template <typename T, typename DESCRIPTOR>
 BlockLatticePhysExternalParticleVelocity2D<T,DESCRIPTOR>::BlockLatticePhysExternalParticleVelocity2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticePhysF2D<T,DESCRIPTOR>(blockLattice,converter,2)
 {
   this->getName() = "ExtParticleVelocityField";
@@ -70,8 +68,8 @@ BlockLatticePhysExternalParticleVelocity2D<T,DESCRIPTOR>::BlockLatticePhysExtern
 template <typename T, typename DESCRIPTOR>
 bool BlockLatticePhysExternalParticleVelocity2D<T,DESCRIPTOR>::operator() (T output[], const int input[])
 {
-  const T* velocity_numerator   = this->blockLattice.get(input).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>();
-  const T* velocity_denominator = this->blockLattice.get(input).template getFieldPointer<descriptors::VELOCITY_DENOMINATOR>();
+  auto velocity_numerator   = this->blockLattice.get(input).template getFieldPointer<descriptors::VELOCITY_NUMERATOR>();
+  auto velocity_denominator = this->blockLattice.get(input).template getFieldPointer<descriptors::VELOCITY_DENOMINATOR>();
 
   if (velocity_denominator[0] > std::numeric_limits<T>::epsilon()) {
     output[0]=this->_converter.getPhysVelocity(velocity_numerator[0]/velocity_denominator[0]);

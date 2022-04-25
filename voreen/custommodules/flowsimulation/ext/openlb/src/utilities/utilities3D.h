@@ -25,7 +25,10 @@
  * Groups all the 3D include files in the directory utilities.
  */
 
+#include "aDiff.h"
+#include "adHelpers.h"
 #include "benchmarkUtil.h"
+#include "calc.h"
 #include "timer.h"
 #include "vectorHelpers.h"
 #include "functorPtr.h"
@@ -33,3 +36,9 @@
 #include "hyperplane3D.h"
 #include "hyperplaneLattice3D.h"
 #include "anisoDiscr.h"
+#include "omath.h"
+#include "oalgorithm.h"
+#include "random.h"
+#include "typeIndexedContainers.h"
+#include "integrationTestUtils.h"
+#include "geometricOperations.h"

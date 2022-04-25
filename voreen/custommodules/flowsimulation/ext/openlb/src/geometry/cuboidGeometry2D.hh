@@ -139,8 +139,8 @@ bool CuboidGeometry2D<T>::getLatticeR(std::vector<T> physR, std::vector<int>& la
   /*  int iCtmp = get_iC(physR[0], physR[1]);
     if (iCtmp < getNc()) {
       latticeR[0] = iCtmp;
-      latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
-      latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+      latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+      latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
       return true;
     } else {
       return false;
@@ -153,8 +153,8 @@ bool CuboidGeometry2D<T>::getLatticeR(int latticeR[], const T physR[]) const
   int iCtmp = get_iC(physR[0], physR[1]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
     return true;
   }
   else {
@@ -169,8 +169,8 @@ bool CuboidGeometry2D<T>::getLatticeR(
   int iCtmp = get_iC(physR[0], physR[1]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() + .5);
     return true;
   }
   else {
@@ -184,8 +184,8 @@ bool CuboidGeometry2D<T>::getFloorLatticeR(std::vector<T> physR, std::vector<int
   int iCtmp = get_iC(physR[0], physR[1]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
     return true;
   }
   else {
@@ -200,8 +200,8 @@ bool CuboidGeometry2D<T>::getFloorLatticeR(
   int iCtmp = get_iC(physR[0], physR[1]);
   if (iCtmp < getNc()) {
     latticeR[0] = iCtmp;
-    latticeR[1] = (int)floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
-    latticeR[2] = (int)floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[1] = (int)util::floor( (physR[0] - _cuboids[latticeR[0]].getOrigin()[0] ) / _cuboids[latticeR[0]].getDeltaR() );
+    latticeR[2] = (int)util::floor( (physR[1] - _cuboids[latticeR[0]].getOrigin()[1] ) / _cuboids[latticeR[0]].getDeltaR() );
     return true;
   }
   else {
@@ -216,17 +216,17 @@ std::vector<T> CuboidGeometry2D<T>::getPhysR(int iCglob, int iX, int iY) const
   _cuboids[iCglob].getPhysR(&(physR[0]), iX, iY);
   for (int iDim = 0; iDim < 2; iDim++) {
     if (_periodicityOn[iDim]) {
-      //std::cout << iDim << _periodicityOn[iDim] <<":"<< _motherCuboid.getDeltaR()*(_motherCuboid.getExtend()[iDim]) << std::endl;
+      //std::cout << iDim << _periodicityOn[iDim] <<":"<< _motherCuboid.getDeltaR()*(_motherCuboid.getExtent()[iDim]) << std::endl;
       physR[iDim] = remainder( physR[iDim] - _motherCuboid.getOrigin()[iDim]
-                               + _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]),
-                               _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]));
+                               + _motherCuboid.getDeltaR() * (_motherCuboid.getExtent()[iDim]),
+                               _motherCuboid.getDeltaR() * (_motherCuboid.getExtent()[iDim]));
       // solving the rounding error problem for double
       if ( physR[iDim]*physR[iDim] < 0.001 * _motherCuboid.getDeltaR()*_motherCuboid.getDeltaR() ) {
         physR[iDim] = T();
       }
       // make it to mod instead remainer
       if ( physR[iDim] < 0 ) {
-        physR[iDim] += _motherCuboid.getDeltaR() * _motherCuboid.getExtend()[iDim];
+        physR[iDim] += _motherCuboid.getDeltaR() * _motherCuboid.getExtent()[iDim];
       }
       // add origin
       physR[iDim] += _motherCuboid.getOrigin()[iDim];
@@ -248,27 +248,35 @@ void CuboidGeometry2D<T>::getPhysR(T output[2], const int latticeR[3]) const
 }
 
 template<typename T>
+void CuboidGeometry2D<T>::getPhysR(T output[2], LatticeR<3> latticeR) const
+{
+  getPhysR(output, latticeR[0], latticeR[1], latticeR[2]);
+}
+
+template<typename T>
+void CuboidGeometry2D<T>::getPhysR(T output[2], const int iCglob, LatticeR<2> latticeR) const
+{
+  getPhysR(output, iCglob, latticeR[0], latticeR[1]);
+}
+
+
+template<typename T>
 void CuboidGeometry2D<T>::getPhysR(T output[2], const int iCglob, const int iX, const int iY) const
 {
   _cuboids[iCglob].getPhysR(output, iX, iY);
   for (int iDim = 0; iDim < 2; iDim++) {
     if (_periodicityOn[iDim]) {
-      //std::cout << iDim << _periodicityOn[iDim] <<":"<< _motherCuboid.getDeltaR()*(_motherCuboid.getExtend()[iDim]) << std::endl;
+      //std::cout << iDim << _periodicityOn[iDim] <<":"<< _motherCuboid.getDeltaR()*(_motherCuboid.getExtent()[iDim]) << std::endl;
       output[iDim] = remainder( output[iDim] - _motherCuboid.getOrigin()[iDim]
-                                + _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]),
-                                _motherCuboid.getDeltaR() * (_motherCuboid.getExtend()[iDim]));
+                                + _motherCuboid.getDeltaR() * (_motherCuboid.getExtent()[iDim]),
+                                _motherCuboid.getDeltaR() * (_motherCuboid.getExtent()[iDim]));
       // solving the rounding error problem for double
       if ( output[iDim]*output[iDim] < 0.001 * _motherCuboid.getDeltaR()*_motherCuboid.getDeltaR() ) {
-        if ( output[iDim] > 0 ) {
-          output[iDim] = _motherCuboid.getDeltaR() * _motherCuboid.getExtend()[iDim];
-        }
-        else {
-          output[iDim] = T();
-        }
+        output[iDim] = T();
       }
       // make it to mod instead remainer
       if ( output[iDim] < 0 ) {
-        output[iDim] += _motherCuboid.getDeltaR() * _motherCuboid.getExtend()[iDim];
+        output[iDim] += _motherCuboid.getDeltaR() * _motherCuboid.getExtent()[iDim];
       }
       // add origin
       output[iDim] += _motherCuboid.getOrigin()[iDim];
@@ -447,8 +455,8 @@ Cuboid2D<T> CuboidGeometry2D<T>::getMotherCuboid() const
                           + delta*(_cuboids[i].getNy()-1);
       }
   }
-  int nX = int(ceil((globPosXmax - globPosXmin)/delta))+1;
-  int nY = int(ceil((globPosYmax - globPosYmin)/delta))+1;
+  int nX = int(util::ceil((globPosXmax - globPosXmin)/delta))+1;
+  int nY = int(util::ceil((globPosYmax - globPosYmin)/delta))+1;
 
   found.init(globPosXmin, globPosYmin, delta, nX, nY);
 
@@ -553,10 +561,10 @@ void CuboidGeometry2D<T>::shrink(IndicatorF2D<T>& indicatorF)
         indicatorF(inside,&physR[0]);
         if (inside[0]) {
           fullCells++;
-          maxX = std::max(maxX, iX);
-          maxY = std::max(maxY, iY);
-          newX = std::min(newX, iX);
-          newY = std::min(newY, iY);
+          maxX = util::max(maxX, iX);
+          maxY = util::max(maxY, iY);
+          newX = util::min(newX, iX);
+          newY = util::min(newY, iY);
         }
       }
     }
@@ -586,7 +594,7 @@ void CuboidGeometry2D<T>::split(int iC, int p)
 }
 
 template<typename T>
-void CuboidGeometry2D<T>::getNeighbourhood(int cuboid, std::vector<int> neighbours, int offset)
+void CuboidGeometry2D<T>::getNeighbourhood(int cuboid, std::vector<int>& neighbours, int offset)
 {
   for (int iC = 0; iC < getNc(); iC++) {
     if (cuboid == iC) {

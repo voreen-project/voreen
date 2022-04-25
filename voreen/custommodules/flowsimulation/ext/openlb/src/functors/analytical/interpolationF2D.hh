@@ -27,16 +27,16 @@
 
 #include "interpolationF2D.h"
 #include "core/superLattice2D.h"
-#include "dynamics/lbHelpers.h"
+#include "dynamics/lbm.h"
 
 namespace olb {
 
 
 template <typename T, typename W>
 AnalyticalFfromBlockF2D<T,W>::AnalyticalFfromBlockF2D(
-  BlockF2D<W>& f, Cuboid2D<T>& cuboid, const int overlap)
+  BlockF2D<W>& f, Cuboid2D<T>& cuboid)
   : AnalyticalF2D<T,W>(f.getTargetDim()),
-    _f(f), _cuboid(cuboid), _overlap(overlap)
+    _f(f), _cuboid(cuboid)
 {
   this->getName() = "fromBlockF";
 }
@@ -48,14 +48,16 @@ bool AnalyticalFfromBlockF2D<T,W>::operator()(W output[], const T physC[])
   int latticeR[2];
   _cuboid.getFloorLatticeR(latticeR, physC);
 
-  if ( latticeR[0] >= -_overlap && latticeR[0] + 1 < _cuboid.getNx() + _overlap &&
-       latticeR[1] >= -_overlap && latticeR[1] + 1 < _cuboid.getNy() + _overlap ) {
+  auto& block = _f.getBlockStructure();
+  auto padding = std::min(1, block.getPadding());
+
+  if (LatticeR<2>(latticeR) >= -padding && LatticeR<2>(latticeR) < block.getExtent()+padding-1) {
     const int& locX = latticeR[0];
     const int& locY = latticeR[1];
 
     Vector<T,2> physRiC;
     Vector<T,2> physCv(physC);
-    _cuboid.getPhysR(physRiC.data(), locX, locY);
+    _cuboid.getPhysR(physRiC.data(), {locX, locY});
 
     // compute weights
     Vector<W,2> d = (physCv - physRiC) * (1. / _cuboid.getDeltaR());
@@ -107,30 +109,21 @@ bool AnalyticalFfromBlockF2D<T,W>::operator()(W output[], const T physC[])
 
 template <typename T, typename W>
 AnalyticalFfromSuperF2D<T,W>::AnalyticalFfromSuperF2D(SuperF2D<T>& f,
-    bool communicateToAll, int overlap, bool communicateOverlap)
+    bool communicateToAll, bool communicateOverlap)
   : AnalyticalF2D<T,W>(f.getTargetDim()),
     _communicateToAll(communicateToAll),
     _communicateOverlap(communicateOverlap),
     _f(f),
-    _cuboidGeometry(_f.getSuperStructure().getCuboidGeometry()),
-    _overlap(overlap)
+    _cuboidGeometry(_f.getSuperStructure().getCuboidGeometry())
 {
   this->getName() = "fromSuperF";
 
-  if (overlap == -1) {
-    _overlap = _f.getSuperStructure().getOverlap();
-  }
-
   LoadBalancer<T>& load = _f.getSuperStructure().getLoadBalancer();
-
-  if ( _f.getBlockFSize() == load.size() ) {
-    for (int iC = 0; iC < load.size(); ++iC) {
-      this->_blockF.emplace_back(
-        new AnalyticalFfromBlockF2D<T>(_f.getBlockF(iC),
-                                       _cuboidGeometry.get(load.glob(iC)),
-                                       _overlap)
-      );
-    }
+  for (int iC = 0; iC < load.size(); ++iC) {
+    this->_blockF.emplace_back(
+      new AnalyticalFfromBlockF2D<T>(_f.getBlockF(iC),
+                                     _cuboidGeometry.get(load.glob(iC)))
+    );
   }
 }
 
@@ -153,71 +146,9 @@ bool AnalyticalFfromSuperF2D<T,W>::operator() (T output[], const T physC[])
   int dataSize = 0;
   int dataFound = 0;
 
-  int latticeC[3] = {};
-
   LoadBalancer<T>& load = _f.getSuperStructure().getLoadBalancer();
-
   for (int iC = 0; iC < load.size(); ++iC) {
-    latticeC[0] = load.glob(iC);
-    Cuboid2D<T>& cuboid = _cuboidGeometry.get(latticeC[0]);
-    cuboid.getFloorLatticeR(latticeR, physC);
-
-    // latticeR within cuboid extended by overlap
-    if ( latticeR[0] >= -_overlap && latticeR[0] + 1 < cuboid.getNx() + _overlap &&
-         latticeR[1] >= -_overlap && latticeR[1] + 1 < cuboid.getNy() + _overlap ) {
-      if (_blockF.empty()) {
-        const int& locX = latticeR[0];
-        const int& locY = latticeR[1];
-
-        Vector<T,2> physRiC;
-        Vector<T,2> physCv(physC);
-        cuboid.getPhysR(physRiC.data(), locX, locY);
-
-        // compute weights
-        Vector<W,2> d = (physCv - physRiC) * (1. / cuboid.getDeltaR());
-        Vector<W,2> e = 1. - d;
-
-        T output_tmp[_f.getTargetDim()];
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output_tmp[iD] = T();
-        }
-
-        latticeC[1] = locX;
-        latticeC[2] = locY;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * e[0] * e[1];
-          output_tmp[iD] = T();
-        }
-
-        latticeC[1] = locX;
-        latticeC[2] = locY + 1;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * e[0] * d[1];
-          output_tmp[iD] = T();
-        }
-
-        latticeC[1] = locX + 1;
-        latticeC[2] = locY;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * d[0] * e[1];
-          output_tmp[iD] = T();
-        }
-
-        latticeC[1] = locX + 1;
-        latticeC[2] = locY + 1;
-        _f(output_tmp,latticeC);
-        for (int iD = 0; iD < _f.getTargetDim(); ++iD) {
-          output[iD] += output_tmp[iD] * d[0] * d[1];
-          output_tmp[iD] = T();
-        }
-      }
-      else {
-        _blockF[iC]->operator()(output, physC);
-      }
-
+    if (_blockF[iC]->operator()(output, physC)) {
       dataSize += _f.getTargetDim();
       ++dataFound;
     }

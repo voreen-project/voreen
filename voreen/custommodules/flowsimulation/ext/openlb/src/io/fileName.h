@@ -53,7 +53,6 @@ std::string createFileName(std::string name, std::string functor, int iT=0);
 /// to write functors instantaneously, without adding
 std::string createFileName(std::string name, std::string functor, int iT, int iC);
 
-
 }  // namespace olb
 
 #endif

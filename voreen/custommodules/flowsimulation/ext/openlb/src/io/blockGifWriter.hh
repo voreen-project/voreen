@@ -52,13 +52,15 @@ void BlockGifWriter<T>::write(BlockF2D<T>& f, T minValue, T maxValue, int iT,
   if ( f.getTargetDim() != 1 ) {
     clout << "Error: Functor targetDim is not 1. " << std::endl;
     exit(-1);
-  } else {
+  }
+  else {
     if ( singleton::mpi().getRank() == 0 ) {
       std::string fullNamePpm;
       if ( name == "emptyName") {
         fullNamePpm = createFileName( singleton::directories().getImageOutDir(),
                                       f.getName(), iT);
-      } else {
+      }
+      else {
         fullNamePpm = createFileName( singleton::directories().getImageOutDir(),
                                       name, iT);
       }
@@ -98,9 +100,9 @@ void BlockGifWriter<T>::write(BlockF2D<T>& f, T minValue, T maxValue, int iT,
 template< typename T >
 void BlockGifWriter<T>::write(BlockF2D<T>& f, int iT, std::string const& name)
 {
-  // determine min-/maxValue
+  // determine util::min-/maxValue
   int i[2] = {0,0};
-  // initialize min-/maxValue
+  // initialize util::min-/maxValue
   T minValue[1];
   T maxValue[1];
   f(minValue,i);
@@ -121,7 +123,7 @@ void BlockGifWriter<T>::write(BlockF2D<T>& f, int iT, std::string const& name)
     minValue[0] = T();
     maxValue[0] = T(1);
   }
-  // call write() with min-/maxValue
+  // call write() with util::min-/maxValue
   write(f, minValue[0], maxValue[0], iT, name);
 }
 
@@ -133,12 +135,14 @@ void BlockGifWriter<T>::write(int iT)
   if ( _pointerVec.empty() ) {
     // secure code. doesn't appear on console ??
     clout << "Error: Please add functor via addFunctor()";
-  } else {
+  }
+  else {
     int i = 0;
     for ( auto it = _pointerVec.cbegin(); it != _pointerVec.cend(); ++it, ++i) {
       if (_autoScale[i]) {
         write(**it, iT, _name[i]);
-      } else {
+      }
+      else {
         write(**it, _minValue[i], _maxValue[i], iT, _name[i]);
       }
     }

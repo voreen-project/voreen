@@ -1,6 +1,6 @@
 /*  This file is part of the OpenLB library
  *
- *  Copyright (C) 2013 Albert Mink, Lukas Baron, Mathias J. Krause
+ *  Copyright (C) 2012 Lukas Baron, Mathias J. Krause, Albert Mink
  *  E-mail contact: info@openlb.net
  *  The most recent release of OpenLB can be downloaded at
  *  <http://www.openlb.net/>
@@ -29,129 +29,78 @@
 namespace olb {
 
 
-// BlockF2D
 template <typename T>
-BlockF2D<T>::BlockF2D(BlockStructure2D& blockStructure, int targetDim)
+BlockF2D<T>::BlockF2D(BlockStructureD<2>& blockStructure, int targetDim)
   : GenericF<T,int>(targetDim,2), _blockStructure(&blockStructure) { }
 
+  //added from old
 template <typename T>
 BlockF2D<T>::BlockF2D(int targetDim)
   : GenericF<T,int>(targetDim,2), _blockStructure(nullptr) { }
 
 template <typename T>
-BlockStructure2D& BlockF2D<T>::getBlockStructure()
+BlockStructureD<2>& BlockF2D<T>::getBlockStructure() //const
 {
   return *_blockStructure;
 }
 
+  //added from old
 template <typename T>
-void BlockF2D<T>::setBlockStructure(BlockStructure2D* blockStructure)
+void BlockF2D<T>::setBlockStructure(BlockStructureD<2>* blockStructure)
 {
   _blockStructure = blockStructure;
 }
 
-//template <typename T>
-//std::vector<T> BlockF2D<T>::getMinValue()
-//{
-//  T min[this->getTargetDim()];
-//  T minTmp[this->getTargetDim()];
-//  this->operator()(min,0,0);
-//  for (int iX = 1; iX < _blockStructure.getNx(); ++iX) {
-//    for (int iY = 1; iY < _blockStructure.getNy(); ++iY) {
-//      this->operator()(minTmp,iX,iY);
-//      for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-//        if (min[iDim] > minTmp[iDim] ) {
-//          min[iDim] = minTmp[iDim];
-//        }
-//      }
-//    }
-//  }
-//  std::vector<T> minV(min,min+this->getTargetDim());
-//  return minV;
-//}
-
-
-//template <typename T>
-//std::vector<T> BlockF2D<T>::getMaxValue()
-//{
-//  T max[this->getTargetDim()];
-//  T maxTmp[this->getTargetDim()];
-//  this->operator()(max,0,0);
-//  for (int iX = 1; iX < _blockStructure.getNx(); ++iX) {
-//    for (int iY = 1; iY < _blockStructure.getNy(); ++iY) {
-//      this->operator()(maxTmp,iX,iY);
-//      for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-//        if (max[iDim] > maxTmp[iDim] ) {
-//          max[iDim] = maxTmp[iDim];
-//        }
-//      }
-//    }
-//  }
-//  std::vector<T> maxV(max,max+this->getTargetDim());
-//  return maxV;
-//}
-
-
 template <typename T,typename BaseType>
-BlockDataF2D<T,BaseType>::BlockDataF2D(BlockData2D<T,BaseType>& blockData)
+BlockDataF2D<T,BaseType>::BlockDataF2D(BlockData<2,T,BaseType>& blockData)
   : BlockF2D<T>(blockData, blockData.getSize()),
-    _blockData(blockData)
+    _blockData(&blockData),
+    _owning(false)
 { }
 
 template <typename T,typename BaseType>
 BlockDataF2D<T,BaseType>::BlockDataF2D(BlockF2D<BaseType>& f)
   : BlockF2D<T>(f.getBlockStructure(), f.getTargetDim()),
-    _blockDataStorage(new BlockData2D<T,BaseType>(f)),
-    _blockData(*_blockDataStorage)
+    _blockData(new BlockData<2,T,BaseType>(f)),
+    _owning(true)
 { }
 
 template <typename T,typename BaseType>
 BlockDataF2D<T,BaseType>::BlockDataF2D(int nx, int ny, int size)
-  // hacky solution to both managing BlockData2D using std::unique_ptr and
-  // passing it down the line to the base class
-  : BlockF2D<T>(*(new BlockData2D<T,BaseType>(nx, ny, size)), size),
-    _blockDataStorage(static_cast<BlockData2D<T,BaseType>*>(&(this->getBlockStructure()))),
-    _blockData(*_blockDataStorage)
+// hacky solution to both managing BlockData2D using std::unique_ptr and
+// passing it down the line to the base class
+  : BlockF2D<T>(*(new BlockData<2,T,BaseType>({{nx, ny}, 0}, size)), size),
+    _blockData(static_cast<BlockData<2,T,BaseType>*>(&(this->getBlockStructure()))),
+    _owning(true)
 { }
 
 template <typename T,typename BaseType>
-BlockData2D<T,BaseType>& BlockDataF2D<T,BaseType>::getBlockData()
+BlockDataF2D<T,BaseType>::~BlockDataF2D()
 {
-  return _blockData;
+  if (_owning) {
+    delete _blockData;
+  }
+}
+
+template <typename T,typename BaseType>
+BlockData<2,T,BaseType>& BlockDataF2D<T,BaseType>::getBlockData()
+{
+  return *_blockData;
 }
 
 template <typename T, typename BaseType>
-bool BlockDataF2D<T,BaseType>::operator()(T output[], const int input[])
+bool BlockDataF2D<T,BaseType>::operator() (BaseType output[], const int input[])
 {
   for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-    output[iDim] = static_cast<T>(_blockData.get(input[0], input[1], iDim));
+    output[iDim] = _blockData->get(input, iDim);
   }
   return true;
 }
 
 
-template <typename T,typename BaseType>
-BlockDataViewF2D<T,BaseType>::BlockDataViewF2D(BlockData2D<T,BaseType>& blockData, int overlap)
-  : BlockDataF2D<T,BaseType>(blockData),
-    _overlap(overlap)
-{ }
-
-template <typename T, typename BaseType>
-bool BlockDataViewF2D<T,BaseType>::operator() (T output[], const int input[])
-{
-  for (int iDim = 0; iDim < this->getTargetDim(); ++iDim) {
-    output[iDim] = this->_blockData.get(input[0] + _overlap,
-                                        input[1] + _overlap,
-                                        iDim);
-  }
-  return true;
-}
-
-
-// BlockIdendity2D
 template <typename T>
 BlockIdentity2D<T>::BlockIdentity2D(BlockF2D<T>& f)
-  : BlockF2D<T>(f.getBlockStructure() ,f.getTargetDim() ), _f(f)
+  : BlockF2D<T>(f.getBlockStructure(),f.getTargetDim() ), _f(f)
 {
   this->getName() = _f.getName();
   std::swap( _f._ptrCalcC, this->_ptrCalcC );
@@ -160,35 +109,132 @@ BlockIdentity2D<T>::BlockIdentity2D(BlockF2D<T>& f)
 template <typename T>
 bool BlockIdentity2D<T>::operator()(T output[], const int input[])
 {
-  _f(output,input);
+  return _f(output,input);
+}
+
+
+template <typename T>
+BlockExtractComponentF2D<T>::BlockExtractComponentF2D(BlockF2D<T>& f, int extractDim)
+  : BlockF2D<T>(f.getBlockStructure(),1 ), _f(f), _extractDim(extractDim)
+{
+  this->getName() = _f.getName();
+}
+
+template <typename T>
+int BlockExtractComponentF2D<T>::getExtractDim()
+{
+  return _extractDim;
+}
+
+template <typename T>
+bool BlockExtractComponentF2D<T>::operator()(T output[], const int input[])
+{
+  std::vector<T> outTmp(_f.getTargetDim(), T{});
+  _f(outTmp.data(), input);
+  output[0] = outTmp[_extractDim];
   return true;
 }
 
 
-// BlockLatticeF2D
-template <typename T, typename DESCRIPTOR>
-BlockLatticeF2D<T,DESCRIPTOR>::BlockLatticeF2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockStructure, int targetDim)
-  : BlockF2D<T>(blockStructure, targetDim), _blockLattice(blockStructure) { }
+template <typename T>
+BlockExtractComponentIndicatorF2D<T>::BlockExtractComponentIndicatorF2D(
+  BlockF2D<T>& f, int extractDim, BlockIndicatorF2D<T>& indicatorF)
+  : BlockExtractComponentF2D<T>(f, extractDim),
+    _indicatorF(indicatorF)
+{
+  this->getName() = f.getName();
+}
+
+template <typename T>
+bool BlockExtractComponentIndicatorF2D<T>::operator()(T output[], const int input[])
+{
+  output[0] = T{};
+  if (_indicatorF(input)) {
+    return BlockExtractComponentF2D<T>::operator()(output, input);
+  }
+  return true;
+}
+
+
+template <typename T>
+BlockExtractIndicatorF2D<T>::BlockExtractIndicatorF2D(
+  BlockF2D<T>& f, BlockIndicatorF2D<T>& indicatorF)
+  : BlockF2D<T>(f.getBlockStructure(), f.getTargetDim()),
+    _f(f),
+    _indicatorF(indicatorF)
+{
+  this->getName() = f.getName();
+}
+
+template <typename T>
+bool BlockExtractIndicatorF2D<T>::operator()(T output[], const int input[])
+{
+  for (int i = 0; i < this->getTargetDim(); ++i) {
+    output[i] = T{};
+  }
+  if (_indicatorF(input)) {
+    _f(output, input);
+  }
+  return true;
+}
+
 
 template <typename T, typename DESCRIPTOR>
-BlockLatticeStructure2D<T,DESCRIPTOR>& BlockLatticeF2D<T,DESCRIPTOR>::getBlockLattice()
+BlockLatticeF2D<T,DESCRIPTOR>::BlockLatticeF2D
+(BlockLattice<T,DESCRIPTOR>& blockStructure, int targetDim)
+  : BlockF2D<T>(blockStructure, targetDim), _blockLattice(blockStructure)
+{ }
+/*
+template <typename T, typename DESCRIPTOR>
+BlockLatticeF2D<T,DESCRIPTOR>::BlockLatticeF2D(BlockLatticeF2D<T,DESCRIPTOR> const& rhs)
+  : BlockF2D<T>(rhs.getBlockStructure(), rhs.getTargetDim() ), _blockLattice(rhs.getBlock())
+{ }
+
+template <typename T, typename DESCRIPTOR>
+BlockLatticeF2D<T,DESCRIPTOR>& BlockLatticeF2D<T,DESCRIPTOR>::operator=(BlockLatticeF2D<T,DESCRIPTOR> const& rhs)
+{
+  BlockLatticeF2D<T,DESCRIPTOR> tmp(rhs);
+  return tmp;
+}
+*/
+template <typename T, typename DESCRIPTOR>
+BlockLattice<T,DESCRIPTOR>& BlockLatticeF2D<T, DESCRIPTOR>::getBlock()
 {
   return _blockLattice;
 }
 
 
 template <typename T, typename DESCRIPTOR>
+BlockLatticeIdentity2D<T,DESCRIPTOR>::BlockLatticeIdentity2D(
+  BlockLatticeF2D<T,DESCRIPTOR>& f)
+  : BlockLatticeF2D<T,DESCRIPTOR>(f.getBlock(),f.getTargetDim()),
+    _f(f)
+{
+  this->getName() = _f.getName();
+  std::swap( _f._ptrCalcC, this->_ptrCalcC );
+}
+
+template <typename T, typename DESCRIPTOR>
+bool BlockLatticeIdentity2D<T,DESCRIPTOR>::operator()(T output[], const int input[])
+{
+  return _f(output,input);
+}
+
+
+template <typename T, typename DESCRIPTOR>
 BlockLatticePhysF2D<T,DESCRIPTOR>::BlockLatticePhysF2D
-(BlockLatticeStructure2D<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, int targetDim)
+(BlockLattice<T,DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter, int targetDim)
   : BlockLatticeF2D<T,DESCRIPTOR>(blockLattice, targetDim), _converter(converter)
 { }
 
 template <typename T, typename DESCRIPTOR, typename TDESCRIPTOR>
 BlockLatticeThermalPhysF2D<T,DESCRIPTOR,TDESCRIPTOR>::BlockLatticeThermalPhysF2D
-(BlockLatticeStructure2D<T,TDESCRIPTOR>& blockLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim)
+(BlockLattice<T,TDESCRIPTOR>& blockLattice, const ThermalUnitConverter<T,DESCRIPTOR,TDESCRIPTOR>& converter, int targetDim)
   : BlockLatticeF2D<T,TDESCRIPTOR>(blockLattice, targetDim), _converter(converter)
 { }
+
+
+
 
 } // end namespace olb
 

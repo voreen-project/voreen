@@ -33,10 +33,9 @@
 #include "superBaseF3D.h"
 #include "functors/analytical/indicator/indicatorBaseF3D.h"
 #include "indicator/superIndicatorF3D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
-#include "geometry/superGeometry3D.h"
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
+#include "geometry/superGeometry.h"
 #include "blockBaseF3D.h"
-#include "core/blockLatticeStructure3D.h"
 #include "communication/mpiManager.h"
 #include "utilities/vectorHelpers.h"
 
@@ -44,20 +43,20 @@ namespace olb {
 
 template<typename T, typename DESCRIPTOR>
 SuperLatticeDissipation3D<T, DESCRIPTOR>::SuperLatticeDissipation3D(
-  SuperLattice3D<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  SuperLattice<T, DESCRIPTOR>& sLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : SuperLatticeF3D<T, DESCRIPTOR>(sLattice, 1), _converter(converter)
 {
   this->getName() = "dissipation";
   int maxC = this->_sLattice.getLoadBalancer().size();
   this->_blockF.reserve(maxC);
   for (int iC = 0; iC < maxC; iC++) {
-    this->_blockF.emplace_back(new BlockLatticeDissipation3D<T, DESCRIPTOR>(this->_sLattice.getBlockLattice(iC),this->_converter));
+    this->_blockF.emplace_back(new BlockLatticeDissipation3D<T, DESCRIPTOR>(this->_sLattice.getBlock(iC),this->_converter));
   }
 }
 
 template<typename T, typename DESCRIPTOR>
 BlockLatticeDissipation3D<T, DESCRIPTOR>::BlockLatticeDissipation3D(
-  BlockLatticeStructure3D<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
+  BlockLattice<T, DESCRIPTOR>& blockLattice, const UnitConverter<T,DESCRIPTOR>& converter)
   : BlockLatticeF3D<T, DESCRIPTOR>(blockLattice, 1), _converter(converter)
 {
   this->getName() = "dissipation";
@@ -80,7 +79,7 @@ bool BlockLatticeDissipation3D<T, DESCRIPTOR>::operator()(T output[], const int 
   T nuLattice = _converter.getLatticeViscosity();
   T omega = 1. / _converter.getLatticeRelaxationTime();
   output[0] = PiNeqNormSqr * nuLattice
-              * pow(omega * descriptors::invCs2<T,DESCRIPTOR>(), 2) / rho / 2.;
+              * util::pow(omega * descriptors::invCs2<T,DESCRIPTOR>(), 2) / rho / 2.;
 
   return true;
 }

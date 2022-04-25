@@ -33,13 +33,12 @@
 #include "functors/genericF.h"
 #include "analyticalF.h"
 #include "functors/lattice/superBaseF2D.h"
-#include "geometry/superGeometry2D.h"
+#include "geometry/superGeometry.h"
 
 #include "core/superLattice2D.h"
-#include "dynamics/lbHelpers.h"  // for computation of lattice rho and velocity
+#include "dynamics/lbm.h"  // for computation of lattice rho and velocity
 #include "utilities/vectorHelpers.h"  // for normalize
 
-using namespace olb::util;
 
 namespace olb {
 
@@ -59,7 +58,7 @@ PowerLaw2D<T>::PowerLaw2D(std::vector<T> axisPoint, std::vector<T> axisDirection
 }
 
 template <typename T>
-PowerLaw2D<T>::PowerLaw2D(SuperGeometry2D<T>& superGeometry, int material, T maxVelocity, T distance2Wall, T exponent) : AnalyticalF2D<T,T>(2)
+PowerLaw2D<T>::PowerLaw2D(SuperGeometry<T,2>& superGeometry, int material, T maxVelocity, T distance2Wall, T exponent) : AnalyticalF2D<T,T>(2)
 {
   this->getName() = "PowerLaw2D";
   _axisPoint.resize(2);
@@ -82,10 +81,10 @@ PowerLaw2D<T>::PowerLaw2D(SuperGeometry2D<T>& superGeometry, int material, T max
 template <typename T>
 bool PowerLaw2D<T>::operator()(T output[], const T x[])
 {
-  T d = fabs(_axisDirection[1]*(x[0] - _axisPoint[0]) - _axisDirection[0]*(x[1] - _axisPoint[1]));
-  output[0] = _maxVelocity*_axisDirection[0]*(1. - pow(d/_radius,_exponent));
-  output[1] = _maxVelocity*_axisDirection[1]*(1. - pow(d/_radius,_exponent));
-  if ( 1. - pow(d/_radius,_exponent)  < 0.) {
+  T d = util::fabs(_axisDirection[1]*(x[0] - _axisPoint[0]) - _axisDirection[0]*(x[1] - _axisPoint[1]));
+  output[0] = _maxVelocity*_axisDirection[0]*(1. - util::pow(d/_radius,_exponent));
+  output[1] = _maxVelocity*_axisDirection[1]*(1. - util::pow(d/_radius,_exponent));
+  if ( 1. - util::pow(d/_radius,_exponent)  < 0.) {
     output[0] = T();
     output[1] = T();
   }
@@ -101,7 +100,7 @@ Poiseuille2D<T>::Poiseuille2D(std::vector<T> axisPoint, std::vector<T> axisDirec
 
 
 template <typename T>
-Poiseuille2D<T>::Poiseuille2D(SuperGeometry2D<T>& superGeometry, int material, T maxVelocity, T distance2Wall) : PowerLaw2D<T>(superGeometry, material, maxVelocity, distance2Wall, 2)
+Poiseuille2D<T>::Poiseuille2D(SuperGeometry<T,2>& superGeometry, int material, T maxVelocity, T distance2Wall) : PowerLaw2D<T>(superGeometry, material, maxVelocity, distance2Wall, 2)
 {
   this->getName() = "Poiseuille2D";
 }
@@ -144,7 +143,7 @@ AnalyticalPorousVelocity2D<T>::AnalyticalPorousVelocity2D(std::vector<T> axisDir
 template <typename T>
 T AnalyticalPorousVelocity2D<T>::getPeakVelocity()
 {
-  T uMax = K / mu*gradP*(1. - 1./(cosh((sqrt(1./K))*radius)));
+  T uMax = K / mu*gradP*(1. - 1./(util::cosh((util::sqrt(1./K))*radius)));
 
   return uMax/eps;
 };
@@ -153,8 +152,8 @@ T AnalyticalPorousVelocity2D<T>::getPeakVelocity()
 template <typename T>
 bool AnalyticalPorousVelocity2D<T>::operator()(T output[], const T input[])
 {
-  output[0] = K / mu*gradP*(1. - (cosh((sqrt(1./K))*(input[1] - radius)))/(cosh((sqrt(1./K))*radius)));
-  output[1] = K / mu*gradP*(1. - (cosh((sqrt(1./K))*(input[0] - radius)))/(cosh((sqrt(1./K))*radius)));
+  output[0] = K / mu*gradP*(1. - (util::cosh((util::sqrt(1./K))*(input[1] - radius)))/(util::cosh((util::sqrt(1./K))*radius)));
+  output[1] = K / mu*gradP*(1. - (util::cosh((util::sqrt(1./K))*(input[0] - radius)))/(util::cosh((util::sqrt(1./K))*radius)));
 
   output[0] *= axisDirection[0]/eps;
   output[1] *= axisDirection[1]/eps;
@@ -169,7 +168,7 @@ bool AnalyticalPorousVelocity2D<T>::operator()(T output[], const T input[])
 // constructor to obtain Cartesian coordinates of polar coordinates,
 // with _polarOrigin, in x-y-plane
 template<typename T, typename S>
-PolarToCartesian2D<T, S>::PolarToCartesian2D(std::vector<T> polarOrigin)
+PolarToCartesian2D<T, S>::PolarToCartesian2D(olb::Vector<T, 3> polarOrigin)
   : AnalyticalF2D<T, S>(2),
     _polarOrigin(polarOrigin)
 {
@@ -181,8 +180,8 @@ PolarToCartesian2D<T, S>::PolarToCartesian2D(std::vector<T> polarOrigin)
 template<typename T, typename S>
 bool PolarToCartesian2D<T, S>::operator()(T output[], const S x[])
 {
-  output[0] = x[0]*cos(x[1]) + _polarOrigin[0];
-  output[1] = x[0]*sin(x[1]) + _polarOrigin[1];
+  output[0] = x[0]*util::cos(x[1]) + _polarOrigin[0];
+  output[1] = x[0]*util::sin(x[1]) + _polarOrigin[1];
   return true;
 }
 
@@ -195,23 +194,23 @@ CartesianToPolar2D<T, S>::CartesianToPolar2D(T cartesianOriginX,
     T orientationX, T orientationY, T orientationZ)
   : AnalyticalF2D<T, S>(2)
 {
-  _cartesianOrigin.push_back(cartesianOriginX);
-  _cartesianOrigin.push_back(cartesianOriginY);
-  _cartesianOrigin.push_back(cartesianOriginZ);
+  _cartesianOrigin[0] = cartesianOriginX;
+  _cartesianOrigin[1] = cartesianOriginY;
+  _cartesianOrigin[2] = cartesianOriginZ;
 
-  _axisDirection.push_back(axisDirectionX);
-  _axisDirection.push_back(axisDirectionY);
-  _axisDirection.push_back(axisDirectionZ);
+  _axisDirection[0] = axisDirectionX;
+  _axisDirection[1] = axisDirectionY;
+  _axisDirection[2] = axisDirectionZ;
 
-  _orientation.push_back(orientationX);
-  _orientation.push_back(orientationY);
-  _orientation.push_back(orientationZ);
+  _orientation[0] = orientationX;
+  _orientation[1] = orientationY;
+  _orientation[2] = orientationZ;
 }
 
 template<typename T, typename S>
-CartesianToPolar2D<T, S>::CartesianToPolar2D(std::vector<T> cartesianOrigin,
-    std::vector<T> axisDirection,
-    std::vector<T> orientation)
+CartesianToPolar2D<T, S>::CartesianToPolar2D(olb::Vector<T, 3> cartesianOrigin,
+	olb::Vector<T, 3> axisDirection,
+	olb::Vector<T, 3> orientation)
   : AnalyticalF2D<T, S>(2),
     _cartesianOrigin(cartesianOrigin),
     _axisDirection(axisDirection),
@@ -242,12 +241,12 @@ bool CartesianToPolar2D<T, S>::operator()(T output[], const S x[])
   // if axis has to be rotated
   if (!( util::nearZero(normalAxisDir[0]) && util::nearZero(normalAxisDir[1]) && util::nearZero(normalAxisDir[2]-1) ) ) {
 
-    if ( !util::nearZero(util::norm(_orientation)) ) {
+    if ( !util::nearZero(olb::norm(_orientation)) ) {
       normal = _orientation;
     }
 
     // normal is orientation direction
-    AngleBetweenVectors3D<T, S> angle(fromVector3(e3), fromVector3(normal));
+    AngleBetweenVectors3D<T, S> angle(util::fromVector3(e3), util::fromVector3(normal));
     T tmp[3] = {_axisDirection[0],_axisDirection[1],_axisDirection[2]};
     T alpha[1] = {};
     angle(alpha, tmp);
@@ -255,7 +254,7 @@ bool CartesianToPolar2D<T, S>::operator()(T output[], const S x[])
     // cross is rotation axis
     //Vector<T, 3> cross = crossProduct3D(e3, axisDirection);
     // rotation with angle alpha to rotAxisDir
-    RotationRoundAxis3D<T, S> rotRAxis(_cartesianOrigin, fromVector3(normal), -alpha[0]);
+    RotationRoundAxis3D<T, S> rotRAxis(_cartesianOrigin, util::fromVector3(normal), -alpha[0]);
     T x_tmp[3] = {};
     x_tmp[0] = x[0];
     x_tmp[1] = x[1];
@@ -277,12 +276,12 @@ bool CartesianToPolar2D<T, S>::operator()(T output[], const S x[])
     distance += difference[i]*difference[i];
   }
 
-  distance = sqrt(distance);
+  distance = util::sqrt(distance);
   T phi[1] = {};
 
   if (distance > T()) {
     Vector<T, 3> e1(T(1), T(), T());
-    AngleBetweenVectors3D<T, S> angle(fromVector3(e1), fromVector3(e3));
+    AngleBetweenVectors3D<T, S> angle(util::fromVector3(e1), util::fromVector3(e3));
 
     T x_help[3] = {difference[0],difference[1],0.};
     angle(phi, x_help);

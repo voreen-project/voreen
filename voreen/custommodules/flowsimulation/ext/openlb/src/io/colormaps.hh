@@ -25,7 +25,7 @@
 #define COLORMAPS_HH
 
 #include "colormaps.h"
-#include <cmath>
+#include "utilities/omath.h"
 
 namespace olb {
 
@@ -50,13 +50,13 @@ LinearFunction<T>* LinearFunction<T>::clone() const
 
 template <typename T>
 PowerLawFunction<T>::PowerLawFunction(T x1_, T x2_, T y1_, T y2_, T b_)
-  : x1(std::pow(x1_,b_)), x2(std::pow(x2_,b_)), y1(y1_), y2(y2_), b(b_)
+  : x1(util::pow(x1_,b_)), x2(util::pow(x2_,b_)), y1(y1_), y2(y2_), b(b_)
 { }
 
 template <typename T>
 T PowerLawFunction<T>::operator() (T x) const
 {
-  return ( (y2-y1) * std::pow(x,b) + x2*y1-x1*y2 )/(x2-x1);
+  return ( (y2-y1) * util::pow(x,b) + x2*y1-x1*y2 )/(x2-x1);
 }
 
 template <typename T>
@@ -396,22 +396,26 @@ ColorMap<T> generateMap(std::string mapName)
              generateEarthRed<T>(),
              generateEarthGreen<T>(),
              generateEarthBlue<T>() );
-  } else if (mapName == "water") {
+  }
+  else if (mapName == "water") {
     return ColorMap<T> (
              generateWaterRed<T>(),
              generateWaterGreen<T>(),
              generateWaterBlue<T>() );
-  } else if (mapName == "air") {
+  }
+  else if (mapName == "air") {
     return ColorMap<T> (
              generateAirRed<T>(),
              generateAirGreen<T>(),
              generateAirBlue<T>() );
-  } else if (mapName == "fire") {
+  }
+  else if (mapName == "fire") {
     return ColorMap<T> (
              generateFireRed<T>(),
              generateFireGreen<T>(),
              generateFireBlue<T>() );
-  } else if (mapName == "leeloo") {
+  }
+  else if (mapName == "leeloo") {
     return ColorMap<T> (
              generateLeeLooRed<T>(),
              generateLeeLooGreen<T>(),
