@@ -31,7 +31,7 @@
 #include "voreen/core/ports/genericport.h"
 #include "modules/plotting/ports/plotport.h"
 #include "modules/plotting/datastructures/plotdata.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 namespace voreen {
 
@@ -78,7 +78,7 @@ private:
     void exportVelocityCurve();
 
     VolumeListPort volumeListPort_;
-    FlowParametrizationPort parameterPort_;
+    FlowSimulationConfigPort parameterPort_;
     PlotPort outport_;
 
     StringOptionProperty outputQuantity_;

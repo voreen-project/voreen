@@ -22,10 +22,10 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/flowsimulationmodule.cpp
 
     # datastructures
-    ${MOD_DIR}/datastructures/flowparameters.cpp
+    ${MOD_DIR}/datastructures/flowsimulationconfig.cpp
     
     # ports
-    ${MOD_DIR}/ports/flowparametrizationport.cpp
+    ${MOD_DIR}/ports/flowsimulationconfigport.cpp
 
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.cpp
@@ -40,7 +40,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/connectedcomponentselector.cpp
-    ${MOD_DIR}/processors/volume/debugvolumes.cpp
+#    ${MOD_DIR}/processors/volume/debugvolumes.cpp
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.cpp
     ${MOD_DIR}/processors/volume/phaseunwrapping.cpp
     ${MOD_DIR}/processors/volume/vectordecompose.cpp
@@ -57,6 +57,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumetimestep.cpp
 
     # utils
+    ${MOD_DIR}/utils/serializationhelper.cpp
     ${MOD_DIR}/utils/utils.cpp
 )
 
@@ -64,10 +65,10 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/flowsimulationmodule.h
 
     # datastructures
-    ${MOD_DIR}/datastructures/flowparameters.h
+    ${MOD_DIR}/datastructures/flowsimulationconfig.h
 
     # ports
-    ${MOD_DIR}/ports/flowparametrizationport.h
+    ${MOD_DIR}/ports/flowsimulationconfigport.h
 
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.h
@@ -82,7 +83,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/connectedcomponentselector.h
-    ${MOD_DIR}/processors/volume/debugvolumes.h
+#    ${MOD_DIR}/processors/volume/debugvolumes.h
     ${MOD_DIR}/processors/volume/flowtestdatagenerator.h
     ${MOD_DIR}/processors/volume/phaseunwrapping.h
     ${MOD_DIR}/processors/volume/vectordecompose.h
@@ -99,6 +100,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumetimestep.h
 
     # utils
+    ${MOD_DIR}/utils/serializationhelper.h
     ${MOD_DIR}/utils/utils.h
 )
 
@@ -145,46 +147,65 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     SET(CMAKE_CXX_STANDARD 17)
     SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+    ADD_DEFINITIONS("-DPLATFORM_CPU_SISD")
     IF(VRN_MODULE_OPENMP)
-        ADD_DEFINITIONS("-DPARALLEL_MODE_OMP")
+        ADD_DEFINITIONS("-DPARALLEL_MODE=OMP")
     ELSE()
         MESSAGE(WARNING "OpenMP module strongly recommended!")
     ENDIF()
 
-    SET(OLB_CXX_FLAGS "-std=c++17")
+    SET(OLB_OPTIONS "")
+
+    # Set CXX FLAGS.
+    SET(OLB_CXXFLAGS -std=c++17)
     IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        LIST(APPEND OLB_CXX_FLAGS "-g -DOLB_DEBUG")
+        SET(OLB_CXXFLAGS ${OLB_CXXFLAGS} -g -DOLB_DEBUG)
     ELSEIF(CMAKE_BUILD_TYPE STREQUAL "Release")
-        LIST(APPEND OLB_CXX_FLAGS "-O3 -Wall -march=native -mtune=native")
+        SET(OLB_CXXFLAGS ${OLB_CXXFLAGS} -O3 -Wall -march=native -mtune=native)
     ENDIF()
 
+    # Set parallel mode.
     SET(OLB_PARALLEL_MODE "OFF" CACHE STRING "OpenLB Parallel Mode")
     SET_PROPERTY(CACHE OLB_PARALLEL_MODE PROPERTY STRINGS "OFF" "MPI" "OMP" "HYBRID")
-#    IF(${OLB_PARALLEL_MODE} MATCHES "OMP")
-#        ADD_DEFINITIONS("-DOLB_PRECOMPILED")
-#    ENDIF()
-
-    SET(OLB_PLATFORMS "CPU_SISD") # mandatory
-    OPTION(OLB_PLATFORM_CPU_SIMD "Enable OpenLB SIMD Platform?" OFF)
-    IF(OLB_PLATFORM_CPU_SIMD)
-        LIST(APPEND OLB_PLATFORMS "CPU_SIMD")
+    LIST(APPEND OLB_OPTIONS "PARALLEL_MODE=${OLB_PARALLEL_MODE}")
+    IF(${OLB_PARALLEL_MODE} STREQUAL "OMP" OR ${OLB_PARALLEL_MODE} STREQUAL "HYBRID")
+        LIST(APPEND OLB_OPTIONS "OMPFLAGS=-fopenmp")
     ENDIF()
+
+    # Set default compiler.
+    SET(OLB_CXX "g++")
+    SET(OLB_CC "gcc")
+
+    # Set platforms.
+    SET(OLB_PLATFORMS "CPU_SISD") # mandatory
+#    # Only available on intel platforms?
+#    OPTION(OLB_PLATFORM_CPU_SIMD "Enable OpenLB SIMD Platform?" OFF)
+#    IF(OLB_PLATFORM_CPU_SIMD)
+#        LIST(APPEND OLB_PLATFORMS "CPU_SIMD")
+#    ENDIF()
     OPTION(OLB_PLATFORM_GPU_CUDA "Enable OpenLB CUDA Platform?" OFF)
     IF(OLB_PLATFORM_GPU_CUDA)
+        SET(OLB_CXX "nvcc")
+        SET(OLB_CC "nvcc")
         LIST(APPEND OLB_PLATFORMS "GPU_CUDA")
         # TODO: Possible to auto-detect arch?
         SET(OLB_PLATFORM_CUDA_ARCH 60 CACHE STRING "CUDA ARCH - see rules.mk")
         SET_PROPERTY(CACHE OLB_PLATFORM_CUDA_ARCH PROPERTY STRINGS 20 30 35 37 50 52 53 60 61 62 70 72 75 80 86 87)
+        LIST(APPEND OLB_OPTIONS "CUDA_ARCH=${OLB_PLATFORM_CUDA_ARCH}")
     ENDIF()
+    LIST(APPEND OLB_OPTIONS "CXX=${OLB_CXX}" "CC=${OLB_CC}" "CXXFLAGS=\"${OLB_CXXFLAGS}\"" "PLATFORMS=\"${OLB_PLATFORMS}\"")
 
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
-
     LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_INCLUDE_DIR})
+
+    # Add OpenLB third party libraries.
+    LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_DIR}/external/zlib)
+    LIST(APPEND MOD_INCLUDE_DIRECTORIES ${OpenLB_DIR}/external/tinyxml)
 
     # It currently seems to be not possible to execute the build before all other builds,
     # so the user needs to manually build the OpenLB target first..
-    ADD_CUSTOM_TARGET(OpenLB COMMAND BUILDTYPE=${OLB_BUILDTYPE} make WORKING_DIRECTORY ${OpenLB_DIR})
+    ADD_CUSTOM_TARGET(OpenLB COMMAND ${OLB_OPTIONS} make WORKING_DIRECTORY ${OpenLB_DIR}/voreen)
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}

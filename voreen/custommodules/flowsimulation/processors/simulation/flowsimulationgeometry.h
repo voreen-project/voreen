@@ -30,8 +30,7 @@
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/properties/matrixproperty.h"
 
-#include "../../datastructures/flowparameters.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 namespace voreen {
 
@@ -63,8 +62,8 @@ protected:
 
 private:
 
-    FlowParametrizationPort flowParametrizationInport_;
-    FlowParametrizationPort flowParametrizationOutport_;
+    FlowSimulationConfigPort flowParametrizationInport_;
+    FlowSimulationConfigPort flowParametrizationOutport_;
     GeometryPort geometryPort_;
 
     OptionProperty<FlowSimulationGeometryType> geometryType_;

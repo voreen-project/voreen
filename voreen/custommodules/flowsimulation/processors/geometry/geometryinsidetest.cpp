@@ -97,7 +97,7 @@ void GeometryInsideTest::process() {
     T spacing = tgt::max(inputGeometry->getBoundingBox(true).diagonal()) / dimensions_.get();
     STLreader<T> stlReader(path_.get(), spacing, 1.0, method_.getValue());
     Cuboid3D<T> cuboid(stlReader, spacing);
-    BlockGeometry3D<T> geometry(cuboid);
+    BlockGeometry3D<T> geometry(cuboid, 0);
     geometry.rename(OUTSIDE, INSIDE, stlReader);
 
     tgt::svec3 dim(geometry.getNx(), geometry.getNy(), geometry.getNz());

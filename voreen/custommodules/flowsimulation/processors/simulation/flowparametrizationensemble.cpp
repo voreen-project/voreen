@@ -68,20 +68,19 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
 
 void FlowParametrizationEnsemble::process() {
 
-    FlowParameterSetEnsemble* flowParametrizationList = new FlowParameterSetEnsemble(ensembleName_.get());
-    flowParametrizationList->setSimulationTime(simulationTime_.get());
-    flowParametrizationList->setNumTimeSteps(numTimeSteps_.get());
-    flowParametrizationList->setOutputResolution(outputResolution_.get());
-    flowParametrizationList->setOutputFileFormat(outputFileFormat_.get());
+    FlowSimulationConfig* config = new FlowSimulationConfig(ensembleName_.get());
+    config->setSimulationTime(simulationTime_.get());
+    config->setNumTimeSteps(numTimeSteps_.get());
+    config->setOutputResolution(outputResolution_.get());
+    config->setOutputFileFormat(outputFileFormat_.get());
 
     int flowFeatures = FF_NONE;
     for(const InteractiveListProperty::Instance& instance : flowFeatures_.getInstances()) {
         flowFeatures |=  flowFeatureIds_[instance.getItemId()];
     }
-    flowParametrizationList->setFlowFeatures(flowFeatures);
+    config->setFlowFeatures(flowFeatures);
 
-    outport_.setData(flowParametrizationList);
-
+    outport_.setData(config);
 }
 
 void FlowParametrizationEnsemble::addFeature(const std::string& name, int id) {

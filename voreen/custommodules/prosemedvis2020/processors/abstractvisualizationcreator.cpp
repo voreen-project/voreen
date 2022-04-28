@@ -220,7 +220,7 @@ namespace voreen {
         }
 
         //Set FlowParameter
-        FlowParameterSetEnsemble* controlFlowParameterSetEnsemble = new FlowParameterSetEnsemble("Control");
+        FlowSimulationConfig* controlFlowParameterSetEnsemble = new FlowSimulationConfig("Control");
         FlowIndicator indicator;
         indicator.type_ = FlowIndicatorType::FIT_MEASURE;
         indicator.center_ = std::get<0>(controlInterpolation);
@@ -229,7 +229,7 @@ namespace voreen {
         controlFlowParameterSetEnsemble->addFlowIndicator(indicator);
         controlParameterOutport.setData(controlFlowParameterSetEnsemble);
 
-        FlowParameterSetEnsemble* diseasedFlowParameterSetEnsemble = new FlowParameterSetEnsemble("Diseased");
+        FlowSimulationConfig* diseasedFlowParameterSetEnsemble = new FlowSimulationConfig("Diseased");
         indicator.type_ = FlowIndicatorType::FIT_MEASURE;
         indicator.center_ = std::get<0>(diseasedInterpolation);
         indicator.normal_ = std::get<1>(diseasedInterpolation);
@@ -237,7 +237,7 @@ namespace voreen {
         diseasedFlowParameterSetEnsemble->addFlowIndicator(indicator);
         diseasedParameterOutport.setData(diseasedFlowParameterSetEnsemble);
 
-        FlowParameterSetEnsemble* treatedFlowParameterSetEnsemble = new FlowParameterSetEnsemble("Treated");
+        FlowSimulationConfig* treatedFlowParameterSetEnsemble = new FlowSimulationConfig("Treated");
         indicator.type_ = FlowIndicatorType::FIT_MEASURE;
         indicator.center_ = std::get<0>(treatedInterpolation);
         indicator.normal_ = std::get<1>(treatedInterpolation);

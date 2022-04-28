@@ -25,6 +25,8 @@
 
 #include "flowparametrizationrun.h"
 
+#include "../../utils/serializationhelper.h"
+
 #define PARAMETER_DISCRETIZATION_BEGIN(PROPERTY, TYPE) \
     int samples ## PROPERTY = samples_.get(); \
     if(PROPERTY ## _.get().x == PROPERTY ## _.get().y) { \
@@ -182,8 +184,8 @@ void FlowParametrizationRun::fluidChanged() {
 void FlowParametrizationRun::addParametrizations() {
 
     std::string name = parametrizationName_.get();
-    for(const FlowParameterSet& params : flowParameters_) {
-        if(params.getName().find(name) != std::string::npos) {
+    for(const Parameters& params : flowParameters_) {
+        if(params.name_.find(name) != std::string::npos) {
             VoreenApplication::app()->showMessageBox("Warning", "Already parametrization added with the same prefix");
             LWARNING("Already parametrization with prefix " << name);
             return;
@@ -197,35 +199,36 @@ void FlowParametrizationRun::addParametrizations() {
     PARAMETER_DISCRETIZATION_BEGIN(smagorinskyConstant, float)
     PARAMETER_DISCRETIZATION_BEGIN(inletVelocityMultiplier, float)
 
-    FlowParameterSet parameters(name);
-    parameters.setSpatialResolution(spatialResolution);
-    parameters.setRelaxationTime(relaxationTime);
-    parameters.setCharacteristicLength(characteristicLength_.get() * 0.001f); // [mm] to [m]
-    parameters.setCharacteristicVelocity(characteristicVelocity_.get());
-    parameters.setViscosity(viscosity * 10e-6f); // Due to interface value range.
-    parameters.setDensity(density);
-    parameters.setTurbulenceModel(turbulenceModel_.getValue());
-    parameters.setSmagorinskyConstant(smagorinskyConstant);
-    parameters.setWallBoundaryCondition(wallBoundaryCondition_.getValue());
-    parameters.setInletVelocityMultiplier(inletVelocityMultiplier);
-    parameters.setLatticePerturbation(latticePerturbation_.get());
+    Parameters parameters;
+    parameters.name_ = name;
+    parameters.spatialResolution_ = spatialResolution;
+    parameters.relaxationTime_ = relaxationTime;
+    parameters.characteristicLength_ = characteristicLength_.get() * 0.001f; // [mm] to [m]
+    parameters.characteristicVelocity_ = characteristicVelocity_.get();
+    parameters.viscosity_ = viscosity * 10e-6f; // Due to interface value range.
+    parameters.density_ = density;
+    parameters.turbulenceModel_ = turbulenceModel_.getValue();
+    parameters.smagorinskyConstant_ = smagorinskyConstant;
+    parameters.wallBoundaryCondition_ = wallBoundaryCondition_.getValue();
+    parameters.inletVelocityMultiplier_ = inletVelocityMultiplier;
+    parameters.latticePerturbation_ = latticePerturbation_.get();
     flowParameters_.emplace_back(parameters);
 
     std::vector<std::string> row;
     row.push_back(parameters.isValid() ? "✓" : "✗");
-    row.push_back(parameters.getName());
+    row.push_back(parameters.name_);
     row.push_back(std::to_string(parameters.getReynoldsNumber()));
-    row.push_back(std::to_string(parameters.getSpatialResolution()));
-    row.push_back(std::to_string(parameters.getRelaxationTime()));
-    row.push_back(std::to_string(parameters.getCharacteristicLength()));
-    row.push_back(std::to_string(parameters.getCharacteristicVelocity()));
-    row.push_back(std::to_string(parameters.getViscosity()));
-    row.push_back(std::to_string(parameters.getDensity()));
+    row.push_back(std::to_string(parameters.spatialResolution_));
+    row.push_back(std::to_string(parameters.relaxationTime_));
+    row.push_back(std::to_string(parameters.characteristicLength_));
+    row.push_back(std::to_string(parameters.characteristicVelocity_));
+    row.push_back(std::to_string(parameters.viscosity_));
+    row.push_back(std::to_string(parameters.density_));
     row.push_back(turbulenceModel_.getDescription());
-    row.push_back(std::to_string(parameters.getSmagorinskyConstant()));
+    row.push_back(std::to_string(parameters.smagorinskyConstant_));
     row.push_back(wallBoundaryCondition_.getDescription());
-    row.push_back(std::to_string(parameters.getInletVelocityMultiplier()));
-    row.push_back(std::to_string(parameters.getLatticePerturbation()));
+    row.push_back(std::to_string(parameters.inletVelocityMultiplier_));
+    row.push_back(std::to_string(parameters.latticePerturbation_));
     parametrizations_.addRow(row);
 
     PARAMETER_DISCRETIZATION_END
@@ -254,15 +257,15 @@ void FlowParametrizationRun::clearParametrizations() {
 
 void FlowParametrizationRun::process() {
 
-    FlowParameterSetEnsemble* flowParametrizationList = new FlowParameterSetEnsemble(*inport_.getData());
+    FlowSimulationConfig* config = new FlowSimulationConfig(*inport_.getData());
 
-    for (const FlowParameterSet& flowParameters : flowParameters_) {
-        if(addInvalidParametrizations_.get() || flowParameters.isValid()) {
-            flowParametrizationList->addFlowParameterSet(flowParameters);
+    for (const Parameters& parameters : flowParameters_) {
+        if(addInvalidParametrizations_.get() || parameters.isValid()) {
+            config->addFlowParameterSet(parameters);
         }
     }
 
-    outport_.setData(flowParametrizationList);
+    outport_.setData(config);
 }
 
 void FlowParametrizationRun::adjustPropertiesToInput() {
@@ -279,12 +282,12 @@ void FlowParametrizationRun::adjustPropertiesToInput() {
 
 void FlowParametrizationRun::serialize(Serializer& s) const {
     Processor::serialize(s);
-    s.serialize("flowParameters", flowParameters_);
+    serializeVector<ParametersSerializable, Parameters>(s, "flowParameters", flowParameters_);
 }
 
 void FlowParametrizationRun::deserialize(Deserializer& s) {
     Processor::deserialize(s);
-    s.deserialize("flowParameters", flowParameters_);
+    deserializeVector<ParametersSerializable, Parameters>(s, "flowParameters", flowParameters_);
 }
 
 }   // namespace

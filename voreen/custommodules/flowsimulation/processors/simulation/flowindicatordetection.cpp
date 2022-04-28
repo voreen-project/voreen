@@ -27,6 +27,7 @@
 
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 #include "voreen/core/utils/hashing.h"
+#include "../../utils/serializationhelper.h"
 #include "../../utils/utils.h"
 
 namespace {
@@ -239,14 +240,14 @@ void FlowIndicatorDetection::adjustPropertiesToInput() {
 void FlowIndicatorDetection::serialize(Serializer& s) const {
     Processor::serialize(s);
     s.serialize("vesselGraphHash", vesselGraphHash_);
-    s.serialize("flowIndicators", flowIndicators_);
+    serializeVector<FlowIndicatorSerializable, FlowIndicator>(s, "flowIndicators", flowIndicators_);
     s.serialize("flowIndicatorSettings", flowIndicatorSettings_);
 }
 
 void FlowIndicatorDetection::deserialize(Deserializer& s) {
     Processor::deserialize(s);
     s.deserialize("vesselGraphHash", vesselGraphHash_);
-    s.deserialize("flowIndicators", flowIndicators_);
+    deserializeVector<FlowIndicatorSerializable, FlowIndicator>(s, "flowIndicators", flowIndicators_);
     try {
         s.deserialize("flowIndicatorSettings", flowIndicatorSettings_);
     } catch(SerializationException&) {
@@ -287,7 +288,7 @@ bool FlowIndicatorDetection::isReady() const {
 void FlowIndicatorDetection::process() {
 
     // Here, we just set the output according to our currently set indicators.
-    FlowParameterSetEnsemble* flowParameterSetEnsemble = new FlowParameterSetEnsemble(*parameterInport_.getData());
+    FlowSimulationConfig* flowParameterSetEnsemble = new FlowSimulationConfig(*parameterInport_.getData());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         // Candidates won't be added until an automatic or manual selection was performed.
@@ -566,7 +567,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     // Default is candidate. However, we set initial values as if it was a velocity inlet,
     // since it might be classified as one later on.
     FlowIndicator indicator;
-    indicator.id_ = flowIndicators_.size() + FlowParameterSetEnsemble::getFlowIndicatorIdOffset(); // TODO: Should be determined by FlowParameterSetEnsemble.
+    indicator.id_ = flowIndicators_.size() + FlowSimulationConfig::getFlowIndicatorIdOffset(); // TODO: Should be determined by FlowParameterSetEnsemble.
     indicator.name_ = "Indicator " + std::to_string(indicator.id_);
     indicator.type_ = FlowIndicatorType::FIT_CANDIDATE;
     indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;

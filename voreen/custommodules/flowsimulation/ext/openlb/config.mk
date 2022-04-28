@@ -1,25 +1,24 @@
-# Example build config for OpenLB using CUDA on single GPU systems
-#
-# Tested using CUDA 11.4
-#
-# Usage:
-#  - Copy this file to OpenLB root as `config.mk`
-#  - Run `make clean; make`
-#  - Switch to example directory, e.g. `examples/laminar/cavity3dBenchmark`
-#  - Run `make`
-#  - Start the simulation using `./cavity3d`
+#CXX             := <set by voreen>
+#CC              := <set by voreen>
 
-CXX             := nvcc
-CC              := nvcc
+#LDFLAGS         := <set by voreen>
 
-CXXFLAGS        := -O3
-CXXFLAGS        += -std=c++17 
+#CXXFLAGS        := <set by voreen>
 
-PARALLEL_MODE   := NONE
+#PARALLEL_MODE   := <set by voreen>
 
-PLATFORMS       := CPU_SISD GPU_CUDA
+#PLATFORMS       := <set by voreen>
 
-# for e.g. RTX 30* (Ampere), see table in `rules.mk` for other options
-CUDA_ARCH       := 60
+#CUDA_ARCH       := <set by voreen>
+
+#MPIFLAGS        := <set by voreen>
+#OMPFLAGS        := <set by voreen>
 
 USE_EMBEDDED_DEPENDENCIES := ON
+
+# debug defaults:
+#PARALLEL_MODE:=OFF
+#CXX:=g++
+#CC:=gcc
+#CXXFLAGS:=-std=c++17
+#PLATFORMS:=CPU_SISD

@@ -75,10 +75,10 @@ FlowSimulationGeometry::FlowSimulationGeometry()
 void FlowSimulationGeometry::process() {
 
     // Add indicators.
-    auto* flowParametrizationList = new FlowParameterSetEnsemble(*flowParametrizationInport_.getData());
+    auto* config = new FlowSimulationConfig(*flowParametrizationInport_.getData());
 
     // Add a ramp up that lasts half of the simulated time.
-    float rampUpTime = flowParametrizationList->getSimulationTime() * 0.5f;
+    float rampUpTime = config->getSimulationTime() * 0.5f;
 
     FlowIndicator inlet;
     inlet.type_ = FIT_VELOCITY;
@@ -87,16 +87,16 @@ void FlowSimulationGeometry::process() {
     inlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, 0.0f);
     inlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
     inlet.radius_ = radius_.get();
-    flowParametrizationList->addFlowIndicator(inlet);
+    config->addFlowIndicator(inlet);
 
     FlowIndicator outlet;
     outlet.type_ = FIT_PRESSURE;
     outlet.center_ = transformation_.get() * tgt::vec3(0.0f, 0.0f, length_.get());
     outlet.normal_ = transformation_.get().getRotationalPart() * tgt::vec3(0.0f, 0.0f, 1.0f);
     outlet.radius_ = radius_.get();
-    flowParametrizationList->addFlowIndicator(outlet);
+    config->addFlowIndicator(outlet);
 
-    flowParametrizationOutport_.setData(flowParametrizationList);
+    flowParametrizationOutport_.setData(config);
 
     // Generate geometry.
     auto* geometry = new GlMeshGeometryUInt32Normal();

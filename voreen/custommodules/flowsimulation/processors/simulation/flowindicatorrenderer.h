@@ -31,7 +31,7 @@
 #include "voreen/core/properties/colorproperty.h"
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 namespace voreen {
 
@@ -64,7 +64,7 @@ private:
     void renderDisk(const FlowIndicator& indicator) const;
     void renderCone(const FlowIndicator& indicator) const;
 
-    FlowParametrizationPort inport_;
+    FlowSimulationConfigPort inport_;
 
     BoolProperty enable_;
     ColorProperty velocityBoundaryColor_;

@@ -33,9 +33,7 @@
 
 #include "modules/flowanalysis/utils/flowutils.h"
 
-#define VRN_OPENLB_VOREEN_INTEGRATION
-#include "../../ext/openlb/simulations/simulation_core.h"
-#undef VRN_OPENLB_VOREEN_INTEGRATION
+#include "../../ext/openlb/voreen/simulation_core.h"
 
 #include <thread>
 
@@ -55,7 +53,7 @@ public:
     }
     virtual bool operator() (T output[], const T input[]) {
         // Store simulation positions in world coordinates.
-        tgt::vec3 pos = tgt::Vector3<T>::fromPointer(input) / VOREEN_LENGTH_TO_SI;
+        tgt::vec3 pos = tgt::vec3(tgt::Vector3<T>::fromPointer(input)) / VOREEN_LENGTH_TO_SI;
         tgt::vec3 vel = sampler_.sample(pos) * multiplier_;
 
         for(size_t i=0; i<3; i++) {
@@ -210,14 +208,14 @@ bool FlowSimulation::isReady() const {
 }
 
 void FlowSimulation::adjustPropertiesToInput() {
-    const FlowParameterSetEnsemble* flowParameterSetEnsemble = parameterPort_.getData();
-    if(!flowParameterSetEnsemble || flowParameterSetEnsemble->empty()) {
+    const FlowSimulationConfig* config = parameterPort_.getData();
+    if(!config || config->empty()) {
         selectedParametrization_.setMinValue(-1);
         selectedParametrization_.setMaxValue(-1);
     }
     else {
         selectedParametrization_.setMinValue(0);
-        selectedParametrization_.setMaxValue(static_cast<int>(flowParameterSetEnsemble->size()) - 1);
+        selectedParametrization_.setMaxValue(static_cast<int>(config->size()) - 1);
         selectedParametrization_.set(0);
     }
 }
@@ -265,12 +263,12 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     const VolumeList* measuredData = measuredDataPort_.getThreadSafeData();
 
     tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
-    auto flowParameterSetEnsemble = parameterPort_.getThreadSafeData();
-    if(!flowParameterSetEnsemble || flowParameterSetEnsemble->empty()) {
+    auto config = parameterPort_.getThreadSafeData();
+    if(!config || config->empty()) {
         throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
     }
 
-    if(flowParameterSetEnsemble->getFlowFeatures() == FF_NONE) {
+    if(config->getFlowFeatures() == FF_NONE) {
         throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
     }
 
@@ -286,7 +284,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         }
     }
     else {
-        for(const auto& indicator : flowParameterSetEnsemble->getFlowIndicators()) {
+        for(const auto& indicator : config->getFlowIndicators()) {
             if(indicator.type_ == FIT_VELOCITY && indicator.flowProfile_ == FP_VOLUME) {
                 throw InvalidInputException("Volume input required", InvalidInputException::S_ERROR);
             }
@@ -310,12 +308,12 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         throw InvalidInputException("No output directory selected", InvalidInputException::S_WARNING);
     }
 
-    std::string simulationPath = simulationResults_.get() + "/" + flowParameterSetEnsemble->getName() + "/";
+    std::string simulationPath = simulationResults_.get() + "/" + config->getName() + "/";
     if (!tgt::FileSystem::createDirectoryRecursive(simulationPath)) {
         throw InvalidInputException("Output directory could not be created", InvalidInputException::S_ERROR);
     }
 
-    size_t selectedParametrization = FlowParameterSetEnsemble::ALL_PARAMETER_SETS;
+    size_t selectedParametrization = FlowSimulationConfig::ALL_PARAMETER_SETS;
     if(!simulateAllParametrizations_.get()) {
         selectedParametrization = static_cast<size_t>(selectedParametrization_.get());
     }
@@ -323,7 +321,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     return FlowSimulationInput{
             geometryPath,
             measuredData,
-            flowParameterSetEnsemble,
+            config,
             selectedParametrization,
             simulationPath,
             deleteOldSimulations_.get()
@@ -336,9 +334,9 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     olb::olbInit(nullptr, nullptr);
 
     // Run either all or just a single simulation.
-    if(input.selectedParametrization == FlowParameterSetEnsemble::ALL_PARAMETER_SETS) {
+    if(input.selectedParametrization == FlowSimulationConfig::ALL_PARAMETER_SETS) {
         progressReporter.setProgress(0.0f);
-        size_t numRuns = input.parameterSetEnsemble->size();
+        size_t numRuns = input.config->size();
         for(size_t i=0; i<numRuns; i++) {
             // Define run input.
             FlowSimulationInput runInput = input;
@@ -367,13 +365,13 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                    ProgressReporter& progressReporter) const {
 
     const VolumeList* measuredData = input.measuredData;
-    const FlowParameterSetEnsemble& parameterSetEnsemble = *input.parameterSetEnsemble;
-    const FlowParameterSet& parameters = parameterSetEnsemble.at(input.selectedParametrization);
+    const FlowSimulationConfig& config = *input.config;
+    const Parameters& parameters = config.at(input.selectedParametrization);
 
-    LINFO("Starting simulation run: " << parameters.getName());
+    LINFO("Starting simulation run: " << parameters.name_);
     progressReporter.setProgress(0.0f);
 
-    std::string simulationResultPath = input.simulationResultPath + parameters.getName() + "/";
+    std::string simulationResultPath = input.simulationResultPath + parameters.name_ + "/";
     if (input.deleteOldSimulations && tgt::FileSystem::dirExists(simulationResultPath)) {
         tgt::FileSystem::deleteDirectoryRecursive(simulationResultPath);
     }
@@ -384,14 +382,13 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     singleton::directories().setOutputDir(simulationResultPath);
 
-    const int N = parameters.getSpatialResolution();
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
-            N, // Resolution that charPhysLength is resolved by.
-            (T) parameters.getRelaxationTime(), // Relaxation time
-            (T) parameters.getCharacteristicLength(),         // charPhysLength: reference length of simulation geometry
-            (T) parameters.getCharacteristicVelocity(),       // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
-            (T) parameters.getViscosity(),                    // physViscosity: physical kinematic viscosity in __m^2 / s__
-            (T) parameters.getDensity()                       // physDensity: physical density in __kg / m^3__
+            parameters.spatialResolution_,              // Resolution that charPhysLength is resolved by.
+            (T) parameters.relaxationTime_,             // Relaxation time
+            (T) parameters.characteristicLength_,       // charPhysLength: reference length of simulation geometry
+            (T) parameters.characteristicVelocity_,     // charPhysVelocity: maximal/highest expected velocity during simulation in __m / s__
+            (T) parameters.viscosity_,                  // physViscosity: physical kinematic viscosity in __m^2 / s__
+            (T) parameters.density_                     // physDensity: physical density in __kg / m^3__
     );
 
     // Prints the converter log as console output
@@ -417,7 +414,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     LINFO("Preparing Geometry ...");
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
 
-    prepareGeometry(converter, extendedDomain, stlReader, superGeometry, parameterSetEnsemble.getFlowIndicators());
+    prepareGeometry(converter, extendedDomain, stlReader, superGeometry, config.getFlowIndicators());
 
     interruptionPoint();
 
@@ -426,26 +423,30 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     SuperLattice<T, DESCRIPTOR> lattice(superGeometry);
     prepareLattice(lattice, converter,
                    stlReader, superGeometry,
-                   measuredData,
-                   parameterSetEnsemble,
+                   config.getFlowIndicators(),
                    parameters);
 
     interruptionPoint();
 
     // === 4th Step: Main Loop  ===
-    const int maxIteration = converter.getLatticeTime(parameterSetEnsemble.getSimulationTime());
+    const int maxIteration = converter.getLatticeTime(config.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, measuredData, parameterSetEnsemble, parameters);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
         bool success = getResults(lattice, converter, iteration, maxIteration, superGeometry, stlReader,
-                                  parameterSetEnsemble, parameters, simulationResultPath);
+                                  simulationResultPath,
+                                  config.getNumTimeSteps(),
+                                  config.getOutputResolution(),
+                                  config.getOutputFileFormat(),
+                                  config.getFlowFeatures(),
+                                  parameters);
         if(!success) {
             break;
         }
@@ -461,7 +462,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         progressReporter.setProgress(progress);
     }
     progressReporter.setProgress(1.0f);
-    LINFO("Finished simulation run: " << parameters.getName());
+    LINFO("Finished simulation run: " << parameters.name_);
 }
 
 }   // namespace

@@ -160,7 +160,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     // ports
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
-    , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
+    , configPort_(Port::INPORT, "parameterPort", "Simulation Config", false)
     , useLocalInstance_("useLocalInstance", "Use local Instance", false)
     , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , stopThreads_("stopThreads", "Stop Runs")
@@ -193,7 +193,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     addPort(measuredDataPort_); // Currently ignored.
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
-    addPort(parameterPort_);
+    addPort(configPort_);
 
     addProperty(useLocalInstance_);
     ON_CHANGE_LAMBDA(useLocalInstance_, [this] {
@@ -213,12 +213,6 @@ FlowSimulationCluster::FlowSimulationCluster()
     ON_CHANGE(stopThreads_, FlowSimulationCluster, threadsStopped);
     stopThreads_.setGroupID("local-instance");
     setPropertyGroupGuiName("local-instance", "Local Instance");
-#ifndef WIN32
-    // This is essentially a workaround for OpenLB not being compilable using MSVC.
-    // So we compile it, e. g. using cygwin, and treat it as a local compute node.
-    // TODO: see below!
-    setPropertyGroupVisible("local-instance", false);
-#endif
 
     addProperty(workloadManager_);
     ON_CHANGE(workloadManager_, FlowSimulationCluster, workloadManagerChanged);
@@ -307,7 +301,7 @@ bool FlowSimulationCluster::isReady() const {
         return false;
     }
 
-    if(!parameterPort_.isReady()) {
+    if(!configPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");
         return false;
     }
@@ -374,14 +368,14 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    const FlowParameterSetEnsemble* flowParametrization = parameterPort_.getData();
-    if (!flowParametrization || flowParametrization->empty()) {
+    const FlowSimulationConfig* config = configPort_.getData();
+    if (!config || config->empty()) {
         VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
         LERROR("No parametrization");
         return;
     }
 
-    if(flowParametrization->getFlowFeatures() == FF_NONE) {
+    if(config->getFlowFeatures() == FF_NONE) {
         VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
         LERROR("No flow feature selected");
         return;
@@ -390,12 +384,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     LINFO("Configuring and enqueuing Simulations '" << simulationType_.get() << "'");
 
     // (Re-)compile code on cluster, if desired.
-#ifdef WIN32
     if (!useLocalInstance_.get() && compileOnUpload_.get()) {
-#else
-    if (compileOnUpload_.get()) {
-#endif
-
         VoreenApplication::app()->showMessageBox("Information", "Compiling program, this may take a while...");
 
         // Execute compile script on the cluster.
@@ -410,7 +399,7 @@ void FlowSimulationCluster::enqueueSimulations() {
         }
     }
 
-    std::string simulationPathSource = uploadDataPath_.get() + "/" + flowParametrization->getName() + "/";
+    std::string simulationPathSource = uploadDataPath_.get() + "/" + config->getName() + "/";
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/" +
                                      toolchain_.get() + "/simulations/" + simulationType_.get() + "/";
@@ -452,9 +441,9 @@ void FlowSimulationCluster::enqueueSimulations() {
     }
 
     // Create configurations.
-    for(size_t i=0; i<flowParametrization->size(); i++) {
+    for(size_t i=0; i<config->size(); i++) {
 
-        std::string parameterPathSource = simulationPathSource + flowParametrization->at(i).getName() + "/";
+        std::string parameterPathSource = simulationPathSource + config->at(i).name_ + "/";
         tgt::FileSystem::createDirectoryRecursive(parameterPathSource);
 
         // Create parameter configuration file and commit to cluster.
@@ -464,7 +453,7 @@ void FlowSimulationCluster::enqueueSimulations() {
             LERROR("Could not write parameter file");
             continue;
         }
-        parameterFile << flowParametrization->toXMLString(i);
+        parameterFile << config->toXMLString(i);
         parameterFile.close();
 
         std::string submissionScriptFilename = parameterPathSource + "submit.cmd";
@@ -473,11 +462,10 @@ void FlowSimulationCluster::enqueueSimulations() {
             LERROR("Could not write submission script file");
             continue;
         }
-        submissionScriptFile << generateSubmissionScript(flowParametrization->at(i).getName());
+        submissionScriptFile << generateSubmissionScript(config->at(i).name_);
         submissionScriptFile.close();
     }
 
-#ifdef WIN32
     // Allow to use a local simulation program.
     if (useLocalInstance_.get()) {
 
@@ -485,23 +473,23 @@ void FlowSimulationCluster::enqueueSimulations() {
 
         // Move directory to the very same place, the local instance is located.
         simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
-        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + flowParametrization->getName(), true);
+        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config->getName(), true);
 
         std::vector<std::string> failed;
         if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
-            for (size_t i = 0; i < flowParametrization->size(); i++) {
-                std::string config = flowParametrization->at(i).getName();
-                if (!copyDirectory(simulationPathSource + "/" + config, simulationPathDest + "/" + config, false)) {
-                    failed.push_back(config);
+            for (size_t i = 0; i < config->size(); i++) {
+                std::string name = config->at(i).name_;
+                if (!copyDirectory(simulationPathSource + "/" + name, simulationPathDest + "/" + name, false)) {
+                    failed.push_back(name);
                 }
             }
         }
 
         // Enqueue jobs.
-        for (size_t i = 0; i < flowParametrization->size(); i++) {
+        for (size_t i = 0; i < config->size(); i++) {
 
-            std::string ensemble = flowParametrization->getName();
-            std::string run = flowParametrization->at(i).getName();
+            std::string ensemble = config->getName();
+            std::string run = config->at(i).name_;
 
             if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
                 LWARNING("Configuration " << ensemble << "/" << run << " is already present, skipping..");
@@ -522,7 +510,6 @@ void FlowSimulationCluster::enqueueSimulations() {
 
         return;
     }
-#endif
 
     // Copy data to cluster.
     std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
@@ -538,18 +525,18 @@ void FlowSimulationCluster::enqueueSimulations() {
 
     // Enqueue simulations.
     std::vector<std::string> failed;
-    for(size_t i=0; i<flowParametrization->size(); i++) {
+    for(size_t i=0; i<config->size(); i++) {
 
-        progress_.setProgress(i * 1.0f / flowParametrization->size());
+        progress_.setProgress(i * 1.0f / config->size());
 
         std::string localSimulationPath = programPath_.get() + "/" + toolchain_.get() + "/simulations/" + simulationType_.get() + "/" +
-                                          flowParametrization->getName() + "/" + flowParametrization->at(i).getName();
+                config->getName() + "/" + config->at(i).name_;
 
         // Enqueue job.
         command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateEnqueueScript(localSimulationPath);
         ret = executeCommand(command);
         if (ret != EXIT_SUCCESS) {
-            failed.push_back(flowParametrization->at(i).getName());
+            failed.push_back(config->at(i).name_);
         }
     }
 
@@ -580,11 +567,11 @@ void FlowSimulationCluster::fetchResults() {
     std::string address = username + "@" + clusterAddress;
     std::string simulationPath = dataPath_.get() + "/" + username + "/simulations/" + simulationType_.get();
     std::string source = address + ":" + simulationPath;
-    const FlowParameterSetEnsemble* parametrizationList = parameterPort_.getData();
-    if (parametrizationList) {
-        source += "/" + parametrizationList->getName();
+    const FlowSimulationConfig* config = configPort_.getData();
+    if (config) {
+        source += "/" + config->getName();
 
-        std::string dest = directory + "/" + parametrizationList->getName();
+        std::string dest = directory + "/" + config->getName();
         if (!tgt::FileSystem::dirExists(dest) && !tgt::FileSystem::createDirectory(dest)) {
             LERROR("Could not create ensemble directory: " << dest);
             return;
@@ -592,18 +579,18 @@ void FlowSimulationCluster::fetchResults() {
 
         std::vector<std::string> failed;
         bool deletionFailed = false;
-        for(const FlowParameterSet& parameters : parametrizationList->getFlowParameterSets()) {
+        for(const Parameters& parameters : config->getFlowParameterSets()) {
             std::string command = "scp -r ";
-            command += source + "/" + parameters.getName() + " ";
+            command += source + "/" + parameters.name_ + " ";
             command += dest;
 
             int ret = executeCommand(command);
             if (ret != EXIT_SUCCESS) {
-                failed.push_back(parametrizationList->getName() + "/" + parameters.getName());
+                failed.push_back(config->getName() + "/" + parameters.name_);
             }
 
             if(deleteOnDownload_.get()) {
-                command = "ssh " + address + " \"rm -rf " + simulationPath + "/" + parametrizationList->getName() + "/" + parameters.getName() + "\"";
+                command = "ssh " + address + " \"rm -rf " + simulationPath + "/" + config->getName() + "/" + parameters.name_ + "\"";
                 ret = executeCommand(command);
                 if (ret != EXIT_SUCCESS) {
                     deletionFailed = true;
@@ -693,7 +680,7 @@ std::string FlowSimulationCluster::generateEnqueueScript(const std::string& para
 }
 
 std::string FlowSimulationCluster::generateSubmissionScript(const std::string& parametrizationName) const {
-    tgtAssert(parameterPort_.hasData(), "no data");
+    tgtAssert(configPort_.hasData(), "no data");
     std::stringstream script;
 
     if(workloadManager_.get() == "qsub") {
@@ -705,14 +692,14 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << "#$ -M " << emailAddress_.get() << std::endl;
         script << "# Report on finished and abort." << std::endl;
         script << "#$ -m bea" << std::endl;
-        script << "#$ -N " << parameterPort_.getData()->getName() << "_" << parametrizationName << std::endl;
+        script << "#$ -N " << configPort_.getData()->getName() << "_" << parametrizationName << std::endl;
         script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
-               << "/" << parameterPort_.getData()->getName() << "/" << parametrizationName << std::endl;
+               << "/" << configPort_.getData()->getName() << "/" << parametrizationName << std::endl;
         script << "# This is the file to be executed." << std::endl;
         script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
                << "/" << simulationType_.get();
         // First argument: ensemble name
-        script << " " << parameterPort_.getData()->getName();
+        script << " " << configPort_.getData()->getName();
         // Second argument: run name
         script << " " << parametrizationName;
         // Third argument: output directory
@@ -753,7 +740,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
                << std::setw(2) << std::setfill('0') << minutes << ":00" << std::endl;
         script << std::endl;
         script << "# set name of job" << std::endl;
-        script << "#SBATCH --job-name=" << parameterPort_.getData()->getName() << "-" << parametrizationName
+        script << "#SBATCH --job-name=" << configPort_.getData()->getName() << "-" << parametrizationName
                << std::endl;
         script << std::endl;
         script << "# mail alert at start, end and abortion of execution" << std::endl;
@@ -777,7 +764,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
                << "/" << simulationType_.get();
         // First argument: ensemble name
-        script << " " << parameterPort_.getData()->getName();
+        script << " " << configPort_.getData()->getName();
         // Second argument: run name
         script << " " << parametrizationName;
         // Third argument: output directory

@@ -32,7 +32,7 @@
 #include "voreen/core/properties/numeric/intervalproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 namespace voreen {
 
@@ -73,10 +73,10 @@ private:
     void removeParametrization();
     void clearParametrizations();
 
-    std::vector<FlowParameterSet> flowParameters_;
+    std::vector<Parameters> flowParameters_;
 
-    FlowParametrizationPort inport_;
-    FlowParametrizationPort outport_;
+    FlowSimulationConfigPort inport_;
+    FlowSimulationConfigPort outport_;
 
     StringProperty parametrizationName_;
     IntIntervalProperty spatialResolution_;

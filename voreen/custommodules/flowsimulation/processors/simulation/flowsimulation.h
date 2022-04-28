@@ -30,7 +30,7 @@
 
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/volumeport.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 #include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 
@@ -39,7 +39,7 @@ namespace voreen {
 struct FlowSimulationInput {
     std::string geometryPath;
     const VolumeList* measuredData;
-    const FlowParameterSetEnsemble* parameterSetEnsemble;
+    const FlowSimulationConfig* config;
     size_t selectedParametrization;
     std::string simulationResultPath;
     bool deleteOldSimulations;
@@ -81,7 +81,7 @@ private:
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;
-    FlowParametrizationPort parameterPort_;
+    FlowSimulationConfigPort parameterPort_;
 
     FileDialogProperty simulationResults_;
     BoolProperty deleteOldSimulations_;

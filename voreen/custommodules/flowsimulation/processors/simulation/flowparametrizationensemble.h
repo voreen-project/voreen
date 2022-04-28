@@ -32,7 +32,7 @@
 #include "voreen/core/properties/floatproperty.h"
 #include "voreen/core/properties/intproperty.h"
 
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 #include "modules/base/properties/interactivelistproperty.h"
 
@@ -66,7 +66,7 @@ private:
 
     void addFeature(const std::string& name, int id);
 
-    FlowParametrizationPort outport_;
+    FlowSimulationConfigPort outport_;
 
     StringProperty ensembleName_;
     FloatProperty simulationTime_;

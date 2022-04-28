@@ -30,7 +30,7 @@
 
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/volumeport.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 #include "voreen/core/properties/buttonproperty.h"
 #include "voreen/core/properties/stringproperty.h"
@@ -82,7 +82,7 @@ private:
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;
-    FlowParametrizationPort parameterPort_;
+    FlowSimulationConfigPort configPort_;
 
     StringOptionProperty workloadManager_;
     BoolProperty useLocalInstance_;

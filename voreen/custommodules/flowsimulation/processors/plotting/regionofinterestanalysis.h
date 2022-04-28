@@ -31,7 +31,7 @@
 #include "voreen/core/ports/genericport.h"
 #include "modules/plotting/ports/plotport.h"
 #include "modules/plotting/datastructures/plotdata.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 namespace voreen {
 

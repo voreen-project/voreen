@@ -38,7 +38,7 @@
 #include "processors/simulation/flowsimulationcluster.h"
 #include "processors/simulation/flowsimulationgeometry.h"
 #include "processors/volume/connectedcomponentselector.h"
-#include "processors/volume/debugvolumes.h"
+//#include "processors/volume/debugvolumes.h"
 #include "processors/volume/flowtestdatagenerator.h"
 #include "processors/volume/phaseunwrapping.h"
 #include "processors/volume/vectordecompose.h"
@@ -80,7 +80,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 
     // processors
     registerProcessor(new ConnectedComponentSelector());
-    registerProcessor(new DebugVolumes());
+//    registerProcessor(new DebugVolumes());
     registerProcessor(new GeometryClose());
     registerProcessor(new GeometrySmoothNormals());
     registerProcessor(new UnalignedSliceViewer());

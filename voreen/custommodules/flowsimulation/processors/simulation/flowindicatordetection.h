@@ -30,8 +30,7 @@
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
-#include "../../datastructures/flowparameters.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 #include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 
@@ -143,10 +142,10 @@ private:
      */
     void buildTable();
 
-    FlowParametrizationPort parameterInport_;
+    FlowSimulationConfigPort parameterInport_;
     VesselGraphPort vesselGraphPort_;
     VolumePort volumePort_;
-    FlowParametrizationPort parameterOutport_;
+    FlowSimulationConfigPort parameterOutport_;
 
     StringTableProperty flowIndicatorTable_;
     ButtonProperty cloneFlowIndicator_;
