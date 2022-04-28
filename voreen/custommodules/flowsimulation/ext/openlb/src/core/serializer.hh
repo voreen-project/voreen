@@ -41,27 +41,27 @@ namespace olb {
 
 ////////// class Serializer //////////////////
 
-Serializer::Serializer(Serializable& serializable, std::string fileName)
+inline Serializer::Serializer(Serializable& serializable, std::string fileName)
   : _serializable(serializable), _iBlock(0), _size(0), _fileName(fileName)
 { }
 
 
-void Serializer::resetCounter()
+inline void Serializer::resetCounter()
 {
   _iBlock = 0;
 }
 
-std::size_t Serializer::getSize() const
+inline std::size_t Serializer::getSize() const
 {
   return _size;
 }
 
-bool* Serializer::getNextBlock(std::size_t& sizeBlock, bool loadingMode)
+inline bool* Serializer::getNextBlock(std::size_t& sizeBlock, bool loadingMode)
 {
   return _serializable.getBlock(_iBlock++, sizeBlock, loadingMode);
 }
 
-bool Serializer::load(std::string fileName, bool enforceUint)
+inline bool Serializer::load(std::string fileName, bool enforceUint)
 {
   validateFileName(fileName);
 
@@ -77,7 +77,7 @@ bool Serializer::load(std::string fileName, bool enforceUint)
   }
 }
 
-bool Serializer::save(std::string fileName, bool enforceUint)
+inline bool Serializer::save(std::string fileName, bool enforceUint)
 {
   validateFileName(fileName);
 
@@ -95,20 +95,20 @@ bool Serializer::save(std::string fileName, bool enforceUint)
   }
 }
 
-bool Serializer::load(const std::uint8_t* buffer)
+inline bool Serializer::load(const std::uint8_t* buffer)
 {
   buffer2serializer(*this, buffer);
   _serializable.postLoad();
   return true;
 }
 
-bool Serializer::save(std::uint8_t* buffer)
+inline bool Serializer::save(std::uint8_t* buffer)
 {
   serializer2buffer(*this, buffer);
   return true;
 }
 
-void Serializer::computeSize(bool enforceRecompute)
+inline void Serializer::computeSize(bool enforceRecompute)
 {
   // compute size (only if it wasn't computed yet or is enforced)
   if (enforceRecompute || _size == 0) {
@@ -116,7 +116,7 @@ void Serializer::computeSize(bool enforceRecompute)
   }
 }
 
-void Serializer::validateFileName(std::string &fileName)
+inline void Serializer::validateFileName(std::string &fileName)
 {
   if (fileName == "") {
     fileName = _fileName;
@@ -126,7 +126,7 @@ void Serializer::validateFileName(std::string &fileName)
   }
 }
 
-const std::string Serializer::getFullFileName(const std::string& fileName)
+inline const std::string Serializer::getFullFileName(const std::string& fileName)
 {
   return singleton::directories().getLogOutDir() + createParallelFileName(fileName) + ".dat";
 }
@@ -135,25 +135,25 @@ const std::string Serializer::getFullFileName(const std::string& fileName)
 
 /////////////// Serializable //////////////////////////
 
-bool Serializable::save(std::string fileName, const bool enforceUint)
+inline bool Serializable::save(std::string fileName, const bool enforceUint)
 {
   Serializer tmpSerializer(*this, fileName);
   return tmpSerializer.save();
 }
 
-bool Serializable::load(std::string fileName, const bool enforceUint)
+inline bool Serializable::load(std::string fileName, const bool enforceUint)
 {
   Serializer tmpSerializer(*this, fileName);
   return tmpSerializer.load();
 }
 
-bool Serializable::save(std::uint8_t* buffer)
+inline bool Serializable::save(std::uint8_t* buffer)
 {
   Serializer tmpSerializer(*this);
   return tmpSerializer.save(buffer);
 }
 
-bool Serializable::load(const std::uint8_t* buffer)
+inline bool Serializable::load(const std::uint8_t* buffer)
 {
   Serializer tmpSerializer(*this);
   return tmpSerializer.load(buffer);

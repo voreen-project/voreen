@@ -33,61 +33,61 @@ namespace olb {
 namespace util {
 
 // Max
-template< typename T > constexpr T max( T a, meta::id_t<T> b )
+template< typename T > constexpr inline T max( T a, meta::id_t<T> b )
 {
   return std::max(a, b);
 }
-template< typename T, class Compare > constexpr T max( T a, meta::id_t<T> b, Compare comp )
+template< typename T, class Compare > constexpr inline T max( T a, meta::id_t<T> b, Compare comp )
 {
   return std::max(a, b, comp);
 }
-template< typename T > constexpr T max( std::initializer_list<T> ilist )
+template< typename T > constexpr inline T max( std::initializer_list<T> ilist )
 {
   return std::max(ilist);
 }
-template< typename T, class Compare > constexpr T max( std::initializer_list<T> ilist, Compare comp )
+template< typename T, class Compare > constexpr inline T max( std::initializer_list<T> ilist, Compare comp )
 {
   return std::max(ilist, comp);
 }
 
 template <>
-float max<float>(float x, float y) any_platform
+inline float max<float>(float x, float y) any_platform
 {
   return std::fmax(x, y);
 }
 
 template <>
-double max<double> (double x, double y) any_platform
+inline double max<double> (double x, double y) any_platform
 {
   return std::fmax(x, y);
 }
 
 // Min
-template< typename T > constexpr T min( T a, meta::id_t<T> b )
+template< typename T > constexpr inline T min( T a, meta::id_t<T> b )
 {
   return std::min(a, b);
 }
-template< typename T, class Compare > constexpr T min( T a, meta::id_t<T> b, Compare comp )
+template< typename T, class Compare > constexpr inline T min( T a, meta::id_t<T> b, Compare comp )
 {
   return std::min(a, b, comp);
 }
-template< typename T > constexpr T min( std::initializer_list<T> ilist )
+template< typename T > constexpr inline T min( std::initializer_list<T> ilist )
 {
   return std::min(ilist);
 }
-template< typename T, class Compare > constexpr T min( std::initializer_list<T> ilist, Compare comp )
+template< typename T, class Compare > constexpr inline T min( std::initializer_list<T> ilist, Compare comp )
 {
   return std::min(ilist, comp);
 }
 
 template <>
-float min<float>(float x, float y) any_platform
+inline float min<float>(float x, float y) any_platform
 {
   return std::fmin(x, y);
 }
 
 template <>
-double min<double>(double x, double y) any_platform
+inline double min<double>(double x, double y) any_platform
 {
   return std::fmin(x, y);
 }

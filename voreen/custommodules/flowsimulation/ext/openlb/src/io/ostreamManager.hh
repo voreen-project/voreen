@@ -33,20 +33,20 @@
 
 namespace olb {
 
-bool OMBuf::multiOutput = 0;
+inline bool OMBuf::multiOutput = 0;
 
-OMBuf::OMBuf()
+inline OMBuf::OMBuf()
   : output(nullptr), text("")
 { }
 
-OMBuf::~OMBuf()
+inline OMBuf::~OMBuf()
 { }
 
-OMBuf::OMBuf(const OMBuf& rhs)
+inline OMBuf::OMBuf(const OMBuf& rhs)
   : output(rhs.output), text(rhs.text)
 { }
 
-OMBuf& OMBuf::operator=(const OMBuf& rhs)
+inline OMBuf& OMBuf::operator=(const OMBuf& rhs)
 {
   output = rhs.output;
   text = rhs.text;
@@ -54,16 +54,16 @@ OMBuf& OMBuf::operator=(const OMBuf& rhs)
   return *this;
 }
 
-OMBuf::OMBuf(std::ostream& str, std::string classname)
+inline OMBuf::OMBuf(std::ostream& str, std::string classname)
   : output(&str), text(classname)
 { }
 
-void OMBuf::setMultiOutput(bool b)
+inline void OMBuf::setMultiOutput(bool b)
 {
   (*this).multiOutput = b;
 }
 
-int OMBuf::sync()
+inline int OMBuf::sync()
 {
 #ifdef PARALLEL_MODE_MPI
   if (multiOutput==true) {
@@ -97,25 +97,25 @@ int OMBuf::sync()
 
 // class OstreamManager /////////////////////////////////
 
-OstreamManager::OstreamManager(std::string classname)
+inline OstreamManager::OstreamManager(std::string classname)
   : std::ostream(&buffer), buffer(std::cout, classname)
 { }
 
-OstreamManager::OstreamManager(std::ostream& str, std::string classname)
+inline OstreamManager::OstreamManager(std::ostream& str, std::string classname)
   : std::ostream(&buffer), buffer(str, classname)
 { }
 
-OstreamManager::OstreamManager(const OstreamManager& rhs)
+inline OstreamManager::OstreamManager(const OstreamManager& rhs)
   : std::ostream(&buffer), buffer(rhs.buffer)
 { }
 
-OstreamManager& OstreamManager::operator=(const OstreamManager& rhs)
+inline OstreamManager& OstreamManager::operator=(const OstreamManager& rhs)
 {
   buffer = rhs.buffer;
   return *this;
 }
 
-void OstreamManager::setMultiOutput(bool b)
+inline void OstreamManager::setMultiOutput(bool b)
 {
   buffer.setMultiOutput(b);
 }

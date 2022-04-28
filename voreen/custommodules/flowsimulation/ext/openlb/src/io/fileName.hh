@@ -31,7 +31,7 @@
 namespace olb {
 
 /// for .pvd masterFile
-std::string createFileName(std::string name)
+inline std::string createFileName(std::string name)
 {
   std::stringstream fNameStream;
   fNameStream << name;
@@ -39,7 +39,7 @@ std::string createFileName(std::string name)
 }
 
 /// used for .pvd file per timeStep iT
-std::string createFileName(std::string name, int iT)
+inline std::string createFileName(std::string name, int iT)
 {
   std::stringstream fNameStream;
   fNameStream << name  << "_"
@@ -48,7 +48,7 @@ std::string createFileName(std::string name, int iT)
 }
 
 /// for pararalle io, e.g. adds "_rank0000001" for rank=1
-std::string createParallelFileName(std::string name, bool withSize)
+inline std::string createParallelFileName(std::string name, bool withSize)
 {
   std::stringstream fNameStream;
 
@@ -64,7 +64,7 @@ std::string createParallelFileName(std::string name, bool withSize)
 }
 
 /// every thread writes his cuboids iC per timeStep iT
-std::string createFileName(std::string name,  int iT, int iC)
+inline std::string createFileName(std::string name,  int iT, int iC)
 {
   std::stringstream fNameStream;
   fNameStream << name  << "_"
@@ -74,7 +74,7 @@ std::string createFileName(std::string name,  int iT, int iC)
 }
 
 /// to write functors instantaneously, without adding
-std::string createFileName(std::string name, std::string functor, int iT)
+inline std::string createFileName(std::string name, std::string functor, int iT)
 {
   std::stringstream fNameStream;
   fNameStream << name <<"_"<< functor << "iT" << std::setw(7) << std::setfill('0') << iT;
@@ -82,7 +82,7 @@ std::string createFileName(std::string name, std::string functor, int iT)
 }
 
 /// to write functors instantaneously, without adding
-std::string createFileName(std::string name, std::string functor, int iT, int iC)
+inline std::string createFileName(std::string name, std::string functor, int iT, int iC)
 {
   std::stringstream fNameStream;
   fNameStream << name <<"_"<< functor << "iT" << std::setw(7) << std::setfill('0') << iT

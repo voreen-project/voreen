@@ -581,7 +581,7 @@ namespace olb {
 
   // multiple collision models
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::simulate(double dT, std::set<int> sActivityOfParticle, bool scale)
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::simulate(double dT, std::set<int> sActivityOfParticle, bool scale)
   {
     for (auto pS : _pSystems) {
       time_t delta = clock();
@@ -598,7 +598,7 @@ namespace olb {
   }
 
   template<>
-  bool SuperParticleSystem3D<double, MagneticParticle3D>::particleSActivityTest(int sActivity)
+  inline bool SuperParticleSystem3D<double, MagneticParticle3D>::particleSActivityTest(int sActivity)
   {
     for (auto pS : _pSystems) {
       for (auto p : pS->_particles) {
@@ -1347,7 +1347,7 @@ namespace olb {
   }
 
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind,  std::set<int>  material, double mas, double rad, int no, int id,
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind,  std::set<int>  material, double mas, double rad, int no, int id,
                                                                       std::vector<double> vel, std::vector<double> dMoment, std::vector<double> aVel, std::vector<double> torque, double magnetisation,
                                                                       int sActivity)
 
@@ -1580,7 +1580,7 @@ namespace olb {
 
 
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticlesdMomRandom()
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticlesdMomRandom()
   {
 
     for (auto pS : _pSystems) {
@@ -1691,7 +1691,7 @@ namespace olb {
   }
 
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticles(std::vector<double> dMoment,
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticles(std::vector<double> dMoment,
                                                                                std::vector<double> vel, std::vector<double> aVel, std::vector<double> torque, double magnetisation)
   {
     int i = 0;
@@ -1735,7 +1735,7 @@ namespace olb {
   }
 
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::prepareAgglomerates()
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::prepareAgglomerates()
   {
     for (auto pS : _pSystems) {
       std::list<MagneticParticle3D<double>*> particlesList;
@@ -1744,7 +1744,7 @@ namespace olb {
   }
 
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::initAggloParticles()
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::initAggloParticles()
   {
     for (auto pS : _pSystems) {
       pS->initAggloParticles() ;
@@ -1752,7 +1752,7 @@ namespace olb {
   }
 
   template<>
-  void SuperParticleSystem3D<double, MagneticParticle3D>::findAgglomerates(int iT, int itVtkOutputMagParticles)
+  inline void SuperParticleSystem3D<double, MagneticParticle3D>::findAgglomerates(int iT, int itVtkOutputMagParticles)
   {
     int pSi = 0;
     for (auto pS : _pSystems) {

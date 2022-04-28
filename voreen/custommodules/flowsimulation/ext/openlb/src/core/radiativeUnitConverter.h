@@ -232,7 +232,7 @@ void RadiativeUnitConverter<T, DESCRIPTOR>::write() const
 
 /// Documentation of implemented functions found in 5.2.2 Biomedical Optics, Principles and Imaging; Wang 2007
 
-double getThetaRefracted(double const& thetaIncident, double const& refractiveRelative)
+inline double getThetaRefracted(double const& thetaIncident, double const& refractiveRelative)
 {
   double thetaRefracted = M_PI/2.;
   if ( refractiveRelative * util::sin(thetaIncident) < 1 ) {
@@ -241,7 +241,7 @@ double getThetaRefracted(double const& thetaIncident, double const& refractiveRe
   return thetaRefracted;
 };
 
-double getFresnelFunction(double const& theta, double const& refractiveRelative)
+inline double getFresnelFunction(double const& theta, double const& refractiveRelative)
 {
   double thetaRefracted = getThetaRefracted(theta, refractiveRelative);
   double rf_1 = 0.5 * util::pow((refractiveRelative * util::cos(thetaRefracted) - util::cos(theta)) /
@@ -251,17 +251,17 @@ double getFresnelFunction(double const& theta, double const& refractiveRelative)
   return rf_1 + rf_2;   // eq.(5.115)
 };
 
-double R_phi_diff (double const& theta, double const& refractiveRelative)
+inline double R_phi_diff (double const& theta, double const& refractiveRelative)
 {
   return 2. * util::sin(theta) * util::cos(theta) * getFresnelFunction(theta,refractiveRelative);
 };
 
-double R_j_diff (double const& theta, double const& refractiveRelative)
+inline double R_j_diff (double const& theta, double const& refractiveRelative)
 {
   return 3. * util::sin(theta) * util::pow(util::cos(theta),2.) * getFresnelFunction(theta,refractiveRelative);
 };
 
-double getRefractionFunction(const double& refractiveRelative)
+inline double getRefractionFunction(const double& refractiveRelative)
 {
   int N = 10000.0;
   double h = (M_PI / 2.) /double(N);
@@ -275,7 +275,7 @@ double getRefractionFunction(const double& refractiveRelative)
   return (1 + R_eff) / (1 - R_eff);                     // eq.(5.111)    C_R = (1 + R_eff) / (1 - R_eff);
 };
 
-double getPartialBBCoefficient(double const& latticeDiffusionCoefficient, double const& relativeRefractiveIndex )
+inline double getPartialBBCoefficient(double const& latticeDiffusionCoefficient, double const& relativeRefractiveIndex )
 {
   double C_R = getRefractionFunction( relativeRefractiveIndex );
   return 2 - 2/(4*latticeDiffusionCoefficient*C_R +1);

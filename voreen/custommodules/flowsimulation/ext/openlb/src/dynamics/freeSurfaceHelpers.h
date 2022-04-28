@@ -67,10 +67,10 @@ void initialize(SuperLattice<T,DESCRIPTOR>& lattice);
 
 }
 
-any_platform FreeSurface::Flags operator&(FreeSurface::Flags lhs, FreeSurface::Flags rhs) {
+any_platform inline FreeSurface::Flags operator&(FreeSurface::Flags lhs, FreeSurface::Flags rhs) {
   return static_cast<FreeSurface::Flags>(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
 }
-any_platform FreeSurface::Flags operator|(FreeSurface::Flags lhs, FreeSurface::Flags rhs) {
+any_platform inline FreeSurface::Flags operator|(FreeSurface::Flags lhs, FreeSurface::Flags rhs) {
   return static_cast<FreeSurface::Flags>(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
 }
 

@@ -102,7 +102,7 @@ public:
 
   /// Add a number of identical particles randomly distributed in a given IndicatorF3D
   void addParticle(IndicatorF3D<T>& ind, T mas, T rad, int no = 1, std::vector<T> vel = {0., 0., 0.});
-  void addParticle(IndicatorF3D<T>& ind, T mas, T rad, int no, int id,
+  inline void addParticle(IndicatorF3D<T>& ind, T mas, T rad, int no, int id,
                    std::vector<T> vel, std::vector<T> dMoment, std::vector<T> aVel,
                    std::vector<T> torque, T magnetisation, int sActivity)
   {
@@ -113,7 +113,7 @@ public:
   /// and in given Material Number
   void addParticle(IndicatorF3D<T>& ind, std::set<int>  material, T mas, T rad, int no = 1,
                    std::vector<T> vel = {0., 0., 0.});
-  void addParticle(IndicatorF3D<T>& ind,  std::set<int>  material, T mas, T rad, int no, int id,
+  inline void addParticle(IndicatorF3D<T>& ind,  std::set<int>  material, T mas, T rad, int no, int id,
                    std::vector<T> vel, std::vector<T> dMoment, std::vector<T> aVel,
                    std::vector<T> torque, T magnetisation, int sActivity)
   {
@@ -202,7 +202,7 @@ public:
   /// Adds new generated particles to the list of non agglomerated Particles
   void initAggloParticles() {};
   /// Detects and manages particle agglomerates
-  void findAgglomerates(int iT, int itVtkOutputMagParticles) {};
+  inline void findAgglomerates(int iT, int itVtkOutputMagParticles) {};
 
   /// Tests if particles with specific sActivity exist
   bool particleSActivityTest(int sActivity)
@@ -356,17 +356,17 @@ protected:
 
 // Magnetic particle type
 template<>
-void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind, double mas,
+inline void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind, double mas,
     double rad, int no, int id,
     std::vector<double> vel, std::vector<double> dMoment, std::vector<double> aVel,
     std::vector<double> torque, double magnetisation, int sActivity);
 template<>
-void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind, double mas,
+inline void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind, double mas,
     double rad, int no, int id,
     std::vector<double> vel, std::vector<double> dMoment, std::vector<double> aVel,
     std::vector<double> torque, double magnetisation, int sActivity);
 template<>
-void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind,
+inline void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D<double>& ind,
     std::set<int>  material, double mas, double rad, int no, int id,
     std::vector<double> vel, std::vector<double> dMoment, std::vector<double> aVel,
     std::vector<double> torque, double magnetisation, int sActivity);
@@ -374,7 +374,7 @@ void SuperParticleSystem3D<double, MagneticParticle3D>::addParticle(IndicatorF3D
 template<>
 void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticlesdMomRandom();
 template<>
-void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticles(std::vector<double> dMoment,
+inline void SuperParticleSystem3D<double, MagneticParticle3D>::setMagneticParticles(std::vector<double> dMoment,
     std::vector<double> vel, std::vector<double> aVel,
     std::vector<double> torque, double magnetisation, int sActivity);
 template<>

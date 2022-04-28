@@ -50,7 +50,7 @@ namespace olb {
  * \param cosTheta util::cos(theta) of scattering event with net direction theta
  * \param g anisotropy factor
  */
-double henyeyGreenstein(double cosTheta, double g)
+inline double henyeyGreenstein(double cosTheta, double g)
 {
   return (1-g*g) / util::pow(1+g*g-2*g*cosTheta,1.5);
 }
@@ -104,7 +104,7 @@ std::array<double,q> testAnisotropyConservationColumn( const std::array<std::arr
  * \param a
  * \param b
  */
-std::vector<double> linespace( double const stepsize, double const a, double const b )
+inline std::vector<double> linespace( double const stepsize, double const a, double const b )
 {
   std::vector<double> linspace{}; // initalize to empty
   if ( util::nearZero( a-b ) ) {

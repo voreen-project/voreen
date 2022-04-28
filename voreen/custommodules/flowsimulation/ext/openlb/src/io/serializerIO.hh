@@ -37,7 +37,7 @@
 
 namespace olb {
 
-void serializer2ostr(Serializer& serializer, std::ostream& ostr, bool enforceUint)
+inline void serializer2ostr(Serializer& serializer, std::ostream& ostr, bool enforceUint)
 {
   serializer.resetCounter();
   // write binary size into first integer of stream
@@ -63,7 +63,7 @@ void serializer2ostr(Serializer& serializer, std::ostream& ostr, bool enforceUin
   serializer.resetCounter();
 }
 
-void istr2serializer(Serializer& serializer, std::istream& istr, bool enforceUint)
+inline void istr2serializer(Serializer& serializer, std::istream& istr, bool enforceUint)
 {
   //std::size_t binarySize = serializer.getSize();
   serializer.resetCounter();
@@ -93,7 +93,7 @@ void istr2serializer(Serializer& serializer, std::istream& istr, bool enforceUin
   serializer.resetCounter();
 }
 
-void serializer2buffer(Serializer& serializer, std::uint8_t* buffer)
+inline void serializer2buffer(Serializer& serializer, std::uint8_t* buffer)
 {
   serializer.resetCounter();
   std::size_t blockSize;
@@ -105,7 +105,7 @@ void serializer2buffer(Serializer& serializer, std::uint8_t* buffer)
   serializer.resetCounter();
 }
 
-void buffer2serializer(Serializer& serializer, const std::uint8_t* buffer)
+inline void buffer2serializer(Serializer& serializer, const std::uint8_t* buffer)
 {
   serializer.resetCounter();
   std::size_t blockSize;

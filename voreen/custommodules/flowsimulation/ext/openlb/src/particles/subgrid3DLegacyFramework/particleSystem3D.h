@@ -152,7 +152,7 @@ public:
   /// Compute all forces on particles
   void computeForce();
   // multiple collision models
-  void computeForce(std::set<int> sActivityOfParticle)
+  inline void computeForce(std::set<int> sActivityOfParticle)
   {
     computeForce();
   };
@@ -200,7 +200,7 @@ public:
   /// maximal velocity = _superGeometry.getCuboidGeometry().getMaxDeltaR()/dT
   void explicitEuler(T dT, bool scale = false);
   // multiple collision models
-  void explicitEuler(T dT, std::set<int> sActivityOfParticle, bool scale = false)
+  inline void explicitEuler(T dT, std::set<int> sActivityOfParticle, bool scale = false)
   {
     explicitEuler(dT, scale);
   };
@@ -228,7 +228,7 @@ public:
 
   /// returns deque of particles (no shadow particles)
   /// contained in a particleSystem3D
-  std::deque<PARTICLETYPE<T>>& getParticles()
+  inline std::deque<PARTICLETYPE<T>>& getParticles()
   {
     return _particles;
   }
@@ -243,31 +243,31 @@ public:
 
 protected:
   void integrateTorque(T dT);
-  void integrateTorqueMag(T dT) {};
+  inline void integrateTorqueMag(T dT) {};
   // multiple collision models
-  void integrateTorqueMag(T dT, std::set<int> sActivityOfParticle) {};
-  void resetMag() {};
+  inline void integrateTorqueMag(T dT, std::set<int> sActivityOfParticle) {};
+  inline void resetMag() {};
   // multiple collision models
-  void resetMag(std::set<int> sActivityOfParticle) {};
+  inline void resetMag(std::set<int> sActivityOfParticle) {};
 
   /// Collision models: Todo: enable for parallel mode
   /// Resets existing particle overlaps in the event of a collision
-  void setOverlapZero() {};
+  inline void setOverlapZero() {};
   /// For the combined use of setOverlapZero() and a mechanic contact force
-  void setOverlapZeroForCombinationWithMechContactForce() {};
+  inline void setOverlapZeroForCombinationWithMechContactForce() {};
   /// Resets existing particle overlaps in the event of a collision
   /// and applies the physics of an partial elastic impact
-  void partialElasticImpact(T restitutionCoeff) {};
+  inline void partialElasticImpact(T restitutionCoeff) {};
   /// Applies the physics of an partial elastic impact while multiple
   /// particle overlapping only to the particles with the least separation distance
-  void partialElasticImpactV2(T restitutionCoeff) {};
+  inline void partialElasticImpactV2(T restitutionCoeff) {};
   /// For the combined use of partialElasticImpact() and a mechanic contact force
-  void partialElasticImpactForCombinationWithMechContactForce(T restitutionCoeff) {};
+  inline void partialElasticImpactForCombinationWithMechContactForce(T restitutionCoeff) {};
 
   /// Detects and manages particle agglomerates
-  void findAgglomerates() {};
+  inline void findAgglomerates() {};
   /// Adds new generated particles to the list of non agglomerated Particles
-  void initAggloParticles() {};
+  inline void initAggloParticles() {};
 
   void addShadowParticle(PARTICLETYPE<T>& p);
 

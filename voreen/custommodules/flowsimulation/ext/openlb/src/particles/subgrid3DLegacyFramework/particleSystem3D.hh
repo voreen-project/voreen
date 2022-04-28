@@ -420,7 +420,7 @@ namespace olb {
   }
 
   template<typename T, template<typename U> class PARTICLETYPE>
-  void ParticleSystem3D<T, PARTICLETYPE>::explicitEuler(T dT, bool scale)
+  inline void ParticleSystem3D<T, PARTICLETYPE>::explicitEuler(T dT, bool scale)
   {
 
     T maxDeltaR = _superGeometry.getCuboidGeometry().getMaxDeltaR();
@@ -470,7 +470,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::explicitEuler(double dT, bool scale)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::explicitEuler(double dT, bool scale)
   {
     double maxDeltaR = _superGeometry.getCuboidGeometry().getMaxDeltaR();
     double maxFactor = double();
@@ -530,7 +530,7 @@ namespace olb {
 
   // multiple collision models
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::explicitEuler(double dT, std::set<int> sActivityOfParticle, bool scale)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::explicitEuler(double dT, std::set<int> sActivityOfParticle, bool scale)
   {
     double maxDeltaR = _superGeometry.getCuboidGeometry().getMaxDeltaR();
     double maxFactor = double();
@@ -1073,7 +1073,7 @@ namespace olb {
 
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::resetMag()
+  inline void ParticleSystem3D<double, MagneticParticle3D>::resetMag()
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1089,7 +1089,7 @@ namespace olb {
 
   // multiple collision models
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::resetMag(std::set<int> sActivityOfParticle)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::resetMag(std::set<int> sActivityOfParticle)
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1118,7 +1118,7 @@ namespace olb {
 
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::computeForce()
+  inline void ParticleSystem3D<double, MagneticParticle3D>::computeForce()
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1134,7 +1134,7 @@ namespace olb {
 
   // multiple collision models
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::computeForce(std::set<int> sActivityOfParticle)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::computeForce(std::set<int> sActivityOfParticle)
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1204,7 +1204,7 @@ namespace olb {
   */
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT)
   {
     for (auto& p : _particles) {
 
@@ -1239,7 +1239,7 @@ namespace olb {
 
   // multiple collision models
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT, std::set<int> sActivityOfParticle)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::integrateTorqueMag(double dT, std::set<int> sActivityOfParticle)
   {
 
     for (auto& p : _particles) {
@@ -1289,7 +1289,7 @@ namespace olb {
   }
 
   template<typename T, template<typename U> class PARTICLETYPE>
-  void ParticleSystem3D<T, PARTICLETYPE>::setStoredValues()
+  inline void ParticleSystem3D<T, PARTICLETYPE>::setStoredValues()
   {
 
     typename std::deque<PARTICLETYPE<T> >::iterator p;
@@ -1303,7 +1303,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::setOverlapZero()
+  inline void ParticleSystem3D<double, MagneticParticle3D>::setOverlapZero()
   {
 
     typename std::deque<MagneticParticle3D<double> >::iterator p;
@@ -1393,7 +1393,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::setOverlapZeroForCombinationWithMechContactForce()
+  inline void ParticleSystem3D<double, MagneticParticle3D>::setOverlapZeroForCombinationWithMechContactForce()
   {
 
     typename std::deque<MagneticParticle3D<double> >::iterator p;
@@ -1463,13 +1463,13 @@ namespace olb {
   }
 
   template<typename T, template<typename U> class PARTICLETYPE>
-  void ParticleSystem3D<T, PARTICLETYPE>::getMinDistParticle (std::vector<std::pair<size_t, T>> ret_matches)
+  inline void ParticleSystem3D<T, PARTICLETYPE>::getMinDistParticle (std::vector<std::pair<size_t, T>> ret_matches)
   {
     std::sort(ret_matches.begin(), ret_matches.end(), getMinDistPartObj);
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::partialElasticImpact(double restitutionCoeff)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::partialElasticImpact(double restitutionCoeff)
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1590,7 +1590,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::partialElasticImpactV2(double restitutionCoeff)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::partialElasticImpactV2(double restitutionCoeff)
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1729,7 +1729,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::partialElasticImpactForCombinationWithMechContactForce(double restitutionCoeff)
+  inline void ParticleSystem3D<double, MagneticParticle3D>::partialElasticImpactForCombinationWithMechContactForce(double restitutionCoeff)
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1855,7 +1855,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::findAgglomerates()
+  inline void ParticleSystem3D<double, MagneticParticle3D>::findAgglomerates()
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     int pInt = 0;
@@ -1982,7 +1982,7 @@ namespace olb {
   }
 
   template<>
-  void ParticleSystem3D<double, MagneticParticle3D>::initAggloParticles()
+  inline void ParticleSystem3D<double, MagneticParticle3D>::initAggloParticles()
   {
     typename std::deque<MagneticParticle3D<double> >::iterator p;
     static int pInt = 0;

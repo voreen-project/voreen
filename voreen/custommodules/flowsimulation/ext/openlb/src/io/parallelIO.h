@@ -109,11 +109,11 @@ private:
 // Class ParBuf
 ///////////////////////////////////////////////////////////////////
 
-ParBuf::ParBuf(std::streambuf* _originalBuf)
+inline ParBuf::ParBuf(std::streambuf* _originalBuf)
   : originalBuf(_originalBuf), mode(normal)
 { }
 
-std::streambuf::int_type
+inline std::streambuf::int_type
 ParBuf::overflow (std::streambuf::int_type c)
 {
   int_type returnVal = c;
@@ -132,19 +132,19 @@ ParBuf::overflow (std::streambuf::int_type c)
   return returnVal;
 }
 
-ParBuf::Modes
+inline ParBuf::Modes
 ParBuf::getMode() const
 {
   return mode;
 }
 
-void
+inline void
 ParBuf::setMode(ParBuf::Modes _mode)
 {
   mode = _mode;
 }
 
-std::streamsize
+inline std::streamsize
 ParBuf::xsputn(const char* s, std::streamsize num)
 {
 #ifdef PARALLEL_MODE_MPI
@@ -159,7 +159,7 @@ ParBuf::xsputn(const char* s, std::streamsize num)
 #endif
 }
 
-std::streambuf::int_type
+inline std::streambuf::int_type
 ParBuf::uflow()
 {
   int_type value;
@@ -176,7 +176,7 @@ ParBuf::uflow()
   return value;
 }
 
-std::streambuf::int_type
+inline std::streambuf::int_type
 ParBuf::underflow()
 {
   int_type value;
@@ -193,7 +193,7 @@ ParBuf::underflow()
   return value;
 }
 
-std::streamsize
+inline std::streamsize
 ParBuf::xsgetn (char* s, std::streamsize num)
 {
   std::streamsize sizeRead=0;
@@ -217,34 +217,34 @@ ParBuf::xsgetn (char* s, std::streamsize num)
 // Class olb_ofstream
 ///////////////////////////////////////////////////////////////////
 
-olb_ofstream::olb_ofstream() : std::ostream(nullptr), fbuf(), mybuf(&fbuf)
+inline olb_ofstream::olb_ofstream() : std::ostream(nullptr), fbuf(), mybuf(&fbuf)
 {
   this->init(&mybuf);
 }
 
-olb_ofstream::olb_ofstream(const char * filename, openmode mode)
+inline olb_ofstream::olb_ofstream(const char * filename, openmode mode)
   : std::ostream(nullptr), fbuf(), mybuf(&fbuf)
 {
   init(&mybuf);
   open(filename, mode);
 }
 
-olb_ofstream::~olb_ofstream()
+inline olb_ofstream::~olb_ofstream()
 { }
 
-std::streambuf*
+inline std::streambuf*
 olb_ofstream::rdbuf() const
 {
   return const_cast<ParBuf*>(&mybuf);
 }
 
-bool
+inline bool
 olb_ofstream::is_open()
 {
   return fbuf.is_open();
 }
 
-void
+inline void
 olb_ofstream::open(const char* filename, openmode mode)
 {
   int ok;
@@ -261,7 +261,7 @@ olb_ofstream::open(const char* filename, openmode mode)
   }
 }
 
-void
+inline void
 olb_ofstream::close()
 {
   int ok;
@@ -284,35 +284,35 @@ olb_ofstream::close()
 // Class olb_ifstream
 ///////////////////////////////////////////////////////////////////
 
-olb_ifstream::olb_ifstream() : std::istream(nullptr), fbuf(), mybuf(&fbuf)
+inline olb_ifstream::olb_ifstream() : std::istream(nullptr), fbuf(), mybuf(&fbuf)
 {
   init(&mybuf);
 }
 
-olb_ifstream::olb_ifstream(const char * filename, openmode mode)
+inline olb_ifstream::olb_ifstream(const char * filename, openmode mode)
   : std::istream(nullptr), fbuf(), mybuf(&fbuf)
 {
   init(&mybuf);
   open(filename, mode);
 }
 
-olb_ifstream::~olb_ifstream()
+inline olb_ifstream::~olb_ifstream()
 { }
 
-std::streambuf*
+inline std::streambuf*
 olb_ifstream::rdbuf() const
 {
   return const_cast<ParBuf*>(&mybuf);
 }
 
-bool
+inline bool
 olb_ifstream::is_open()
 {
   return fbuf.is_open();
 }
 
 
-void
+inline void
 olb_ifstream::open(const char* filename, openmode mode)
 {
   int ok;
@@ -329,7 +329,7 @@ olb_ifstream::open(const char* filename, openmode mode)
   }
 }
 
-void
+inline void
 olb_ifstream::close()
 {
   int ok;
@@ -351,34 +351,34 @@ olb_ifstream::close()
 // Class olb_fstream
 ///////////////////////////////////////////////////////////////////
 
-olb_fstream::olb_fstream() : std::iostream(nullptr), fbuf(), mybuf(&fbuf)
+inline olb_fstream::olb_fstream() : std::iostream(nullptr), fbuf(), mybuf(&fbuf)
 {
   this->init(&mybuf);
 }
 
-olb_fstream::olb_fstream(const char * filename, openmode mode)
+inline olb_fstream::olb_fstream(const char * filename, openmode mode)
   : std::iostream(nullptr), fbuf(), mybuf(&fbuf)
 {
   init(&mybuf);
   open(filename, mode);
 }
 
-olb_fstream::~olb_fstream()
+inline olb_fstream::~olb_fstream()
 { }
 
-std::streambuf*
+inline std::streambuf*
 olb_fstream::rdbuf() const
 {
   return const_cast<ParBuf*>(&mybuf);
 }
 
-bool
+inline bool
 olb_fstream::is_open()
 {
   return fbuf.is_open();
 }
 
-void
+inline void
 olb_fstream::open(const char* filename, openmode mode)
 {
   int ok;
@@ -395,7 +395,7 @@ olb_fstream::open(const char* filename, openmode mode)
   }
 }
 
-void
+inline void
 olb_fstream::close()
 {
   int ok;

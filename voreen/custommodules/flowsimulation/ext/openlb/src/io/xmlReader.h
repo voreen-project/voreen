@@ -117,7 +117,7 @@ protected:
 // methods with template
 
 template <typename T, unsigned DIM>
-bool XMLreader::read(util::ADf<T,DIM>& value, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read(util::ADf<T,DIM>& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   T tmp = T();
@@ -133,7 +133,7 @@ bool XMLreader::read(util::ADf<T,DIM>& value, bool verboseOn, bool exitIfMissing
 }
 
 template <typename T>
-bool XMLreader::read(std::vector<T>& values, bool verboseOn, bool exitIfMissing ) const
+inline bool XMLreader::read(std::vector<T>& values, bool verboseOn, bool exitIfMissing ) const
 {
   std::stringstream multiValueStr(_text);
   std::string word;
@@ -155,7 +155,7 @@ bool XMLreader::read(std::vector<T>& values, bool verboseOn, bool exitIfMissing 
 }
 
 template <typename T>
-T XMLreader::get(bool verboseOn, bool exitIfMissing) const
+inline T XMLreader::get(bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   T tmp = T();
@@ -169,7 +169,7 @@ T XMLreader::get(bool verboseOn, bool exitIfMissing) const
 }
 
 template<typename ParameterType>
-bool XMLreader::readOrWarn(OstreamManager& clout, std::string name_parameter_1, 
+inline bool XMLreader::readOrWarn(OstreamManager& clout, std::string name_parameter_1,
                    std::string name_parameter_2, std::string name_parameter_3,
                    ParameterType& var, bool defaultAvailable, bool exitIfMissing, bool showWarning) const
 {
@@ -218,7 +218,7 @@ bool XMLreader::readOrWarn(OstreamManager& clout, std::string name_parameter_1,
 }
 
 template<typename ParameterType>
-bool XMLreader::readOrWarn_3Parameters(OstreamManager& clout, std::string name_parameter_1,
+inline bool XMLreader::readOrWarn_3Parameters(OstreamManager& clout, std::string name_parameter_1,
                    std::string name_parameter_2, std::string name_parameter_3, std::string name_parameter_4,
                    ParameterType& var, bool defaultAvailable, bool exitIfMissing, bool showWarning) const
 {
@@ -285,16 +285,16 @@ bool XMLreader::readOrWarn_3Parameters(OstreamManager& clout, std::string name_p
   setWarningsOn(true);
 }
 
-XMLreader XMLreader::_notFound;
+inline XMLreader XMLreader::_notFound;
 
-XMLreader::XMLreader()
+inline XMLreader::XMLreader()
   : clout(std::cout,"XMLreader")
 {
   _name = "XML node not found";
   _warningsOn = true;
 }
 
-XMLreader::XMLreader( TiXmlNode* pParent)
+inline XMLreader::XMLreader( TiXmlNode* pParent)
   : clout(std::cout,"XMLreader")
 {
   _warningsOn = true;
@@ -306,7 +306,7 @@ XMLreader::XMLreader( TiXmlNode* pParent)
   }
 }
 
-XMLreader::XMLreader(const std::string& fName)
+inline XMLreader::XMLreader(const std::string& fName)
   : clout("XMLreader")
 {
   _warningsOn = true;
@@ -335,14 +335,14 @@ XMLreader::XMLreader(const std::string& fName)
 #endif
 }
 
-XMLreader::~XMLreader()
+inline XMLreader::~XMLreader()
 {
   for (unsigned int iNode=0; iNode<_children.size(); ++iNode) {
     delete _children[iNode];
   }
 }
 
-void XMLreader::mainProcessorIni( TiXmlNode* pParent )
+inline void XMLreader::mainProcessorIni( TiXmlNode* pParent )
 {
   assert (pParent->Type()==TiXmlNode::TINYXML_DOCUMENT || pParent->Type()==TiXmlNode::TINYXML_ELEMENT );
   if (pParent->Type() == TiXmlNode::TINYXML_DOCUMENT) {
@@ -398,7 +398,7 @@ void XMLreader::mainProcessorIni( TiXmlNode* pParent )
 #endif
 }
 
-void XMLreader::slaveProcessorIni()
+inline void XMLreader::slaveProcessorIni()
 {
 #ifdef PARALLEL_MODE_MPI  // parallel program execution
 
@@ -431,7 +431,7 @@ void XMLreader::slaveProcessorIni()
   while (type != TiXmlNode::TINYXML_UNKNOWN);
 }
 
-void XMLreader::print(int indent) const
+inline void XMLreader::print(int indent) const
 {
   std::string indentStr(indent, ' ');
   clout << indentStr << "[" << _name << "]" << std::endl;
@@ -443,7 +443,7 @@ void XMLreader::print(int indent) const
   }
 }
 
-XMLreader const& XMLreader::operator[] (std::string fName) const
+inline XMLreader const& XMLreader::operator[] (std::string fName) const
 {
   for (unsigned int iNode=0; iNode<_children.size(); ++iNode) {
     if (_children[iNode]->_name == fName) {
@@ -456,22 +456,22 @@ XMLreader const& XMLreader::operator[] (std::string fName) const
   return _notFound;
 }
 
-std::vector<XMLreader*>::const_iterator XMLreader::begin() const
+inline std::vector<XMLreader*>::const_iterator XMLreader::begin() const
 {
   return _children.begin();
 }
 
-std::vector<XMLreader*>::const_iterator XMLreader::end() const
+inline std::vector<XMLreader*>::const_iterator XMLreader::end() const
 {
   return _children.end();
 }
 
-std::string XMLreader::getName() const
+inline std::string XMLreader::getName() const
 {
   return _name;
 }
 
-void XMLreader::setWarningsOn(bool warnings) const
+inline void XMLreader::setWarningsOn(bool warnings) const
 {
   _warningsOn = warnings;
   for (unsigned int iNode=0; iNode<_children.size(); ++iNode) {
@@ -481,7 +481,7 @@ void XMLreader::setWarningsOn(bool warnings) const
 
 // template specialization for T=bool
 template <>
-bool XMLreader::read<bool>(bool& value, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read<bool>(bool& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   std::string word;
@@ -508,7 +508,7 @@ bool XMLreader::read<bool>(bool& value, bool verboseOn, bool exitIfMissing) cons
 
 // template specialization for T=int
 template <>
-bool XMLreader::read<int>(int& value, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read<int>(int& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   int tmp = int();
@@ -524,7 +524,7 @@ bool XMLreader::read<int>(int& value, bool verboseOn, bool exitIfMissing) const
 
 // template specialization for T=std::size_t
 template <>
-bool XMLreader::read<std::size_t>(std::size_t& value, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read<std::size_t>(std::size_t& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   std::size_t tmp = std::size_t();
@@ -540,7 +540,7 @@ bool XMLreader::read<std::size_t>(std::size_t& value, bool verboseOn, bool exitI
 
 // template specialization for T=double
 template <>
-bool XMLreader::read<double>(double& value, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read<double>(double& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   double tmp = double();
@@ -553,7 +553,7 @@ bool XMLreader::read<double>(double& value, bool verboseOn, bool exitIfMissing) 
 }
 
 template <>
-bool XMLreader::read<float>(float& value, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read<float>(float& value, bool verboseOn, bool exitIfMissing) const
 {
   std::stringstream valueStr(_text);
   float tmp = float();
@@ -568,7 +568,7 @@ bool XMLreader::read<float>(float& value, bool verboseOn, bool exitIfMissing) co
 }
 
 template <>
-bool XMLreader::read<std::string>(std::string& entry, bool verboseOn, bool exitIfMissing) const
+inline bool XMLreader::read<std::string>(std::string& entry, bool verboseOn, bool exitIfMissing) const
 {
   if (_name == "XML node not found") {
     return false;
@@ -586,7 +586,7 @@ bool XMLreader::read<std::string>(std::string& entry, bool verboseOn, bool exitI
   return true;
 }
 
-std::string XMLreader::getAttribute(const std::string& aName) const
+inline std::string XMLreader::getAttribute(const std::string& aName) const
 {
   std::map<std::string, std::string>::const_iterator it = _attributes.find(aName);
   if ( it == _attributes.end()) {
@@ -598,7 +598,7 @@ std::string XMLreader::getAttribute(const std::string& aName) const
 
 
 /// print warning if verbose mode is on and exit, if exItMissing is true
-void XMLreader::printWarning(std::string typeName, std::string value, bool verboseOn, bool exitIfMissing) const
+inline void XMLreader::printWarning(std::string typeName, std::string value, bool verboseOn, bool exitIfMissing) const
 {
 
   if ( verboseOn ) {
