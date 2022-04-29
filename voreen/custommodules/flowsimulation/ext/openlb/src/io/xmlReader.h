@@ -107,7 +107,6 @@ private:
   mutable bool _warningsOn;
   std::string _text;
   std::string _name;
-  static XMLreader _notFound;
 protected:
   mutable OstreamManager clout;
   std::map<std::string, std::string> _attributes;
@@ -285,8 +284,6 @@ inline bool XMLreader::readOrWarn_3Parameters(OstreamManager& clout, std::string
   setWarningsOn(true);
 }
 
-inline XMLreader XMLreader::_notFound;
-
 inline XMLreader::XMLreader()
   : clout(std::cout,"XMLreader")
 {
@@ -453,6 +450,7 @@ inline XMLreader const& XMLreader::operator[] (std::string fName) const
   if ( _warningsOn ) {
     clout << "Warning: cannot read value from node \"" << _name << "\"" << ", \"" << fName <<"\"" << std::endl;
   }
+  static XMLreader _notFound;
   return _notFound;
 }
 

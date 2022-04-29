@@ -33,8 +33,6 @@
 
 namespace olb {
 
-inline bool OMBuf::multiOutput = 0;
-
 inline OMBuf::OMBuf()
   : output(nullptr), text("")
 { }

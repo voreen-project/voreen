@@ -39,7 +39,7 @@ struct ompManager {
   void set_dynamic(int dynamicThreads);
 };
 
-void ompManager::init(bool verbose)
+inline void ompManager::init(bool verbose)
 {
   set_dynamic(0);
   size = omp_get_max_threads();
@@ -50,22 +50,22 @@ void ompManager::init(bool verbose)
   }
 }
 
-int ompManager::get_size() const
+inline int ompManager::get_size() const
 {
   return size;
 }
 
-int ompManager::get_rank() const
+inline int ompManager::get_rank() const
 {
   return rank;
 }
 
-void ompManager::set_dynamic(int dynamicThreads)
+inline void ompManager::set_dynamic(int dynamicThreads)
 {
   omp_set_dynamic(dynamicThreads);
 }
 
-ompManager omp;
+inline ompManager omp;
 #pragma omp threadprivate (omp)
 
 #endif

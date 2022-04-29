@@ -37,7 +37,7 @@ class OMBuf : public std::stringbuf {
 private:
   std::ostream* output;
   std::string text;
-  static bool multiOutput;
+  inline static bool multiOutput = false;
 public:
   OMBuf();
   ~OMBuf() override;
@@ -52,6 +52,8 @@ public:
     * 3) and flush the actual output stream*/
   int sync() override;
 };
+
+//bool OMBuf::multiOutput = false;
 
 inline void OMBuf::setMultiOutput(bool b)
 {
