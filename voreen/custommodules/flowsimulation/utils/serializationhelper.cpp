@@ -27,6 +27,14 @@
 
 namespace voreen {
 
+VelocityCurveSerializable::VelocityCurveSerializable() {
+}
+
+VelocityCurveSerializable::VelocityCurveSerializable(const VelocityCurve& other)
+    : VelocityCurve(other)
+{
+}
+
 void VelocityCurveSerializable::serialize(Serializer& s) const {
     s.serialize("peakVelocities", peakVelocities_);
     s.serialize("periodic", periodic_);
@@ -35,6 +43,14 @@ void VelocityCurveSerializable::serialize(Serializer& s) const {
 void VelocityCurveSerializable::deserialize(Deserializer& s) {
     s.deserialize("peakVelocities", peakVelocities_);
     s.deserialize("periodic", periodic_);
+}
+
+FlowIndicatorSerializable::FlowIndicatorSerializable() {
+}
+
+FlowIndicatorSerializable::FlowIndicatorSerializable(const FlowIndicator& other)
+    : FlowIndicator(other)
+{
 }
 
 void FlowIndicatorSerializable::serialize(Serializer& s) const {

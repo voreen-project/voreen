@@ -380,6 +380,45 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         return;
     }
 
+    VolumeSampler volumeSampler = [&] (UnitConverter<T, DESCRIPTOR> const& converter, float time, std::function<void(AnalyticalF3D<T,T>&)>& target, float multiplier=1.0f) {
+        // If a single time step is attached, we use it throughout the entire simulation.
+        if(measuredData->size() == 1) {
+            const VolumeBase* volume = measuredData->first();
+            VolumeRAMRepresentationLock data(measuredData->first());
+            SpatialSampler sampler(*data, volume->getRealWorldMapping(), VolumeRAM::LINEAR, volume->getWorldToVoxelMatrix());
+            MeasuredDataMapper mapper(converter, sampler, multiplier);
+            target(mapper);
+        }
+        else {
+            // If we have multiple time steps, we need to update the volume we sample from.
+            tgtAssert(measuredData->size() > 1, "expected more than 1 volume");
+
+            // Query time.
+            // Note that we periodically sample the volumes if the simulation time exceeds measurement time.
+            // TODO: Make adjustable.
+            float start = measuredData->first()->getTimestep();
+            float end   = measuredData->at(measuredData->size() - 1)->getTimestep();
+            time        = std::fmod(time - start, end - start);
+
+            // Find the volume whose time step is right before the current time.
+            size_t idx = 0;
+            while (idx < measuredData->size() - 1 && measuredData->at(idx + 1)->getTimestep() < time) idx++;
+
+            const VolumeBase* volume0 = measuredData->at(idx + 0);
+            VolumeRAMRepresentationLock data0(volume0);
+
+            const VolumeBase* volume1 = measuredData->at(idx + 1);
+            VolumeRAMRepresentationLock data1(volume1);
+
+            float alpha = (time - volume0->getTimestep()) / (volume1->getTimestep() - volume0->getTimestep());
+            SpatioTemporalSampler sampler(*data0, *data1, alpha, volume0->getRealWorldMapping(),
+                                          VolumeRAM::LINEAR, volume0->getWorldToVoxelMatrix());
+
+            MeasuredDataMapper mapper(converter, sampler, multiplier);
+            target(mapper);
+        }
+    };
+
     singleton::directories().setOutputDir(simulationResultPath);
 
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
@@ -434,7 +473,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters, volumeSampler);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();

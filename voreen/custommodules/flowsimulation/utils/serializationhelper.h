@@ -59,8 +59,6 @@ public:
 
     void serialize(Serializer& s) const;
     void deserialize(Deserializer& s);
-
-    static VelocityCurve createFromCSV(const std::string& file);
 };
 
 class FlowIndicatorSerializable : public FlowIndicator, public Serializable {

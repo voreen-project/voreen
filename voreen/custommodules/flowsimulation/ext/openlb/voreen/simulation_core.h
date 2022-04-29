@@ -49,6 +49,8 @@ using namespace voreen;
 
 namespace {
 
+using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
+
 class LatticePerturber : public AnalyticalF3D<T, T> {
 public:
     LatticePerturber(T maxNoise=1e-5)
@@ -280,22 +282,25 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
     lattice.initialize();
 }
 
-
 void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                         UnitConverter<T,DESCRIPTOR> const& converter,
                         int iteration,
                         SuperGeometry<T,3>& superGeometry,
                         const std::vector<FlowIndicator>& indicators,
-                        const Parameters& parameters)
+                        const Parameters& parameters,
+                        VolumeSampler volumeSampler = {}
+                        )
 {
+    float time = converter.getPhysTime(iteration);
+
     for(const auto& indicator : indicators) {
         if (indicator.type_ == FIT_VELOCITY) {
 
-            T targetPhysVelocity = indicator.velocityCurve_(converter.getPhysTime(iteration)) * parameters.inletVelocityMultiplier_;
+            T targetPhysVelocity = indicator.velocityCurve_(time) * parameters.inletVelocityMultiplier_;
             T targetLatticeVelocity = converter.getLatticeVelocity(targetPhysVelocity);
 
             // This function applies the velocity profile to the boundary condition and the lattice.
-            auto applyFlowProfile = [&] (AnalyticalF3D<T,T>& profile) {
+            std::function<void(AnalyticalF3D<T,T>&)> applyFlowProfile = [&] (AnalyticalF3D<T,T>& profile) {
                 if(parameters.wallBoundaryCondition_ == FBC_BOUZIDI) {
                     defineUBouzidi<T, DESCRIPTOR>(lattice, superGeometry, indicator.id_, profile);
                 } else if(parameters.wallBoundaryCondition_ == FBC_BOUNCE_BACK) {
@@ -332,56 +337,22 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                     applyFlowProfile(profile);
                     break;
                 }
-#if 0
-//#ifdef VRN_FLOWSIMULATION_USE_OPENLB
                 case FP_VOLUME:
                 {
-                    // For volume indicators, we normalize the velocity curve to [0, 1]
-                    // because multiplying the measurement by another velocity is confusing.
-                    // We keep, however, the velocity multiplier, so that we can basically
-                    // amplify the measurement.
-                    auto multiplier = tgt::clamp<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 0, 1);
-
-                    // If a single time step is attached, we use it throughout the entire simulation.
-                    if(measuredData->size() == 1) {
-                        const VolumeBase* volume = measuredData->first();
-                        VolumeRAMRepresentationLock data(measuredData->first());
-                        SpatialSampler sampler(*data, volume->getRealWorldMapping(), VolumeRAM::LINEAR, volume->getWorldToVoxelMatrix());
-                        MeasuredDataMapper mapper(converter, sampler, multiplier);
-                        applyFlowProfile(mapper);
+                    // TODO: Find better solution, e.g., a sampler shall be returned and applied in this scope.
+                    if(volumeSampler) {
+                        // For volume indicators, we normalize the velocity curve to [0, 1]
+                        // because multiplying the measurement by another velocity is confusing.
+                        // We keep, however, the velocity multiplier, so that we can basically
+                        // amplify the measurement.
+                        auto multiplier = std::min<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 1);
+                        volumeSampler(converter, time, applyFlowProfile, multiplier);
                     }
                     else {
-                        // If we have multiple time steps, we need to update the volume we sample from.
-                        tgtAssert(measuredData->size() > 1, "expected more than 1 volume");
-
-                        // Query time.
-                        // Note that we periodically sample the volumes if the simulation time exceeds measurement time.
-                        // TODO: Make adjustable.
-                        float start = measuredData->first()->getTimestep();
-                        float end   = measuredData->at(measuredData->size() - 1)->getTimestep();
-                        float time  = converter.getPhysTime(iteration);
-                        time        = std::fmod(time - start, end - start);
-
-                        // Find the volume whose time step is right before the current time.
-                        size_t idx = 0;
-                        while (idx < measuredData->size() - 1 && measuredData->at(idx + 1)->getTimestep() < time) idx++;
-
-                        const VolumeBase* volume0 = measuredData->at(idx + 0);
-                        VolumeRAMRepresentationLock data0(volume0);
-
-                        const VolumeBase* volume1 = measuredData->at(idx + 1);
-                        VolumeRAMRepresentationLock data1(volume1);
-
-                        float alpha = (time - volume0->getTimestep()) / (volume1->getTimestep() - volume0->getTimestep());
-                        SpatioTemporalSampler sampler(*data0, *data1, alpha, volume0->getRealWorldMapping(),
-                                                      VolumeRAM::LINEAR, volume0->getWorldToVoxelMatrix());
-
-                        MeasuredDataMapper mapper(converter, sampler, multiplier);
-                        applyFlowProfile(mapper);
+                        std::cerr << "No Volume Sampler defined!" << std::endl;
                     }
                     break;
                 }
-#endif
                 case FP_NONE:
                 default:
                     // Skip!

@@ -54,6 +54,7 @@ GeometryInsideTest::GeometryInsideTest()
         method_.addOption("fast", "Fast", 0);
         method_.addOption("accurate", "Accurate", 1);
     addProperty(dimensions_);
+    dimensions_.setTracking(false);
     addProperty(path_);
 }
 

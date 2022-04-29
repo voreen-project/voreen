@@ -316,7 +316,7 @@ void FlowSimulationCluster::process() {
     for (auto iter = runningThreads_.begin(); iter != runningThreads_.end();) {
         auto run = iter->get();
         if (run->isFinished()) {
-            LINFO("Run " << run->getName() << " finished " << (run->successful() ? "sucessfully" : "unsuccesfully"));
+            LINFO("Run " << run->getName() << " finished " << (run->successful() ? "successfully" : "unsuccessfully"));
             iter = runningThreads_.erase(iter);
             progress_.setProgress(static_cast<float>(++numFinishedThreads_) / static_cast<float>(numEnqueuedThreads_));
         }
