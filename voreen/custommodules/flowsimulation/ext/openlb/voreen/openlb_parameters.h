@@ -96,8 +96,7 @@ enum FlowTurbulenceModel {
     FTM_SMAGORINSKY_SHEAR_IMPROVED = 2,
     FTM_SMAGORINSKY_CONSISTENT = 3,
     FTM_SMAGORINSKY_CONSISTENT_STRAIN = 4,
-    FTM_SMAGORINSKY_DYNAMIC = 5,
-    FTM_BGK = 6,
+    FTM_BGK = 5,
 };
 
 class VelocityCurve {

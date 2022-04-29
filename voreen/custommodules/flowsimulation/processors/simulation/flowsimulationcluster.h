@@ -73,8 +73,16 @@ private:
 
     void threadsStopped();
     void workloadManagerChanged();
+    void refreshClusterCode();
     void enqueueSimulations();
     void fetchResults();
+
+    void stepCopyGeometryData(const std::string& simulationPathSource);
+    void stepCopyVolumeData(const std::string& simulationPathSource);
+    void stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource);
+
+    void runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
+    void runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
 
     std::string generateCompileScript() const;
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;
@@ -98,6 +106,7 @@ private:
     StringOptionProperty simulationType_;
 
     IntProperty configNodes_;
+    IntProperty configNumGPUs_;
     IntProperty configTasksPerNode_;
     IntProperty configCPUsPerTask_;
     IntProperty configMemory_;
@@ -107,7 +116,7 @@ private:
 
     FileDialogProperty simulationResults_;
     TempPathProperty uploadDataPath_;
-    BoolProperty compileOnUpload_;
+    ButtonProperty refreshClusterCode_;
     BoolProperty deleteOnDownload_;
     ButtonProperty triggerEnqueueSimulations_;
     ButtonProperty triggerFetchResults_;

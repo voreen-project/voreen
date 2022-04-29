@@ -89,10 +89,9 @@ FlowParametrizationRun::FlowParametrizationRun()
         characteristicVelocity_.setGroupID("numerical");
     addProperty(turbulenceModel_);
         turbulenceModel_.addOption("smagorinsky", "Smagorinsky", FTM_SMAGORINSKY);
-        //turbulenceModel_.addOption("smagorinskyShearImproved", "Shaer Improved Smagorinsky", FTM_SMAGORINSKY_SHEAR_IMPROVED); // Does not compile in OpenLB 1.4.
+        turbulenceModel_.addOption("smagorinskyShearImproved", "Shaer Improved Smagorinsky", FTM_SMAGORINSKY_SHEAR_IMPROVED); // Does not compile in OpenLB 1.4.
         turbulenceModel_.addOption("smagorinskyConsistent", "Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT);
         turbulenceModel_.addOption("smagorinskyConsistentStrain", "Strain Consistent Smagorinsky", FTM_SMAGORINSKY_CONSISTENT_STRAIN);
-        turbulenceModel_.addOption("smagorinskyDynamic", "Dynamic Smagorinsky", FTM_SMAGORINSKY_DYNAMIC);
         turbulenceModel_.addOption("BGK", "BGK", FTM_BGK);
         turbulenceModel_.setGroupID("numerical");
     addProperty(smagorinskyConstant_);

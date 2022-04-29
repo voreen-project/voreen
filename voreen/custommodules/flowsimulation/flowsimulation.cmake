@@ -149,7 +149,7 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
 
     ADD_DEFINITIONS("-DPLATFORM_CPU_SISD")
     IF(VRN_MODULE_OPENMP)
-        ADD_DEFINITIONS("-DPARALLEL_MODE=OMP")
+        ADD_DEFINITIONS("-DPARALLEL_MODE_OMP")
     ELSE()
         MESSAGE(WARNING "OpenMP module strongly recommended!")
     ENDIF()
@@ -176,6 +176,10 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     SET(OLB_CXX "g++")
     SET(OLB_CC "gcc")
 
+    IF(${OLB_PARALLEL_MODE} STREQUAL "MPI" OR ${OLB_PARALLEL_MODE} STREQUAL "HYBRID")
+        SET(OLB_CXX "mpic++")
+    ENDIF()
+
     # Set platforms.
     SET(OLB_PLATFORMS "CPU_SISD") # mandatory
 #    # Only available on intel platforms?
@@ -185,16 +189,23 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
 #    ENDIF()
     OPTION(OLB_PLATFORM_GPU_CUDA "Enable OpenLB CUDA Platform?" OFF)
     IF(OLB_PLATFORM_GPU_CUDA)
-        SET(OLB_CXX "nvcc")
+        SET(OLB_CXX "nvcc") # Overrides mpic++, which is intentional.
         SET(OLB_CC "nvcc")
+
         LIST(APPEND OLB_PLATFORMS "GPU_CUDA")
+
         # TODO: Possible to auto-detect arch?
         SET(OLB_PLATFORM_CUDA_ARCH 60 CACHE STRING "CUDA ARCH - see rules.mk")
         SET_PROPERTY(CACHE OLB_PLATFORM_CUDA_ARCH PROPERTY STRINGS 20 30 35 37 50 52 53 60 61 62 70 72 75 80 86 87)
         LIST(APPEND OLB_OPTIONS "CUDA_ARCH=${OLB_PLATFORM_CUDA_ARCH}")
+
+        IF(${OLB_PARALLEL_MODE} STREQUAL "MPI" OR ${OLB_PARALLEL_MODE} STREQUAL "HYBRID")
+            SET(OLB_CXXFLAGS ${OLB_CXXFLAGS} -lmpi_cxx -lmpi)
+        ENDIF()
     ELSE()
         SET(OLB_CXXFLAGS ${OLB_CXXFLAGS} -Wall -march=native -mtune=native)
     ENDIF()
+
     LIST(APPEND OLB_OPTIONS "CXX=${OLB_CXX}" "CC=${OLB_CC}" "CXXFLAGS=\"${OLB_CXXFLAGS}\"" "PLATFORMS=\"${OLB_PLATFORMS}\"")
 
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)

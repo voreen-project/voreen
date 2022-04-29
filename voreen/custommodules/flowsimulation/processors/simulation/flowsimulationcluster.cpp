@@ -173,7 +173,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , toolchain_("toolchain", "Toolchain")
     , simulationType_("simulationType", "Simulation Type")
     , configNodes_("configNodes", "Nodes", 1, 1, 2)
-    , configTasksPerNode_("configTasksPerNode", "Tasks per Node", 18, 1, 36)
+    , configNumGPUs_("configNumGPUs", "Num GPUs", 0, 0, 8)
+    , configTasksPerNode_("configTasksPerNode", "Tasks per Node", 9, 1, 36)
     , configCPUsPerTask_("configCPUsPerTask", "CPUs per Task", 4, 1, 36)
     , configMemory_("configMemory", "Memory (GB/Node)", 16, 1, 92)
     , configPartition_("configPartition", "Partition")
@@ -181,7 +182,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configTimeQuarters_("configTimeQuarters", "Max. Quarters (1/4h)", 1, 1, 4*24)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , uploadDataPath_("uploadDataPath", "Upload Data Path", "Upload Data Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT)
-    , compileOnUpload_("compileOnUpload", "Compile on Upload", false)
+    , refreshClusterCode_("refreshClusterCode", "Refresh Cluster Code")
     , deleteOnDownload_("deleteOnDownload", "Delete original Data", false)
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations")
     , triggerFetchResults_("triggerFetchResults", "Fetch Results")
@@ -202,7 +203,7 @@ FlowSimulationCluster::FlowSimulationCluster()
         if (!useLocalInstance_.get()) {
             workloadManagerChanged();
         }
-        compileOnUpload_.setVisibleFlag(!useLocalInstance_.get());
+        refreshClusterCode_.setVisibleFlag(!useLocalInstance_.get());
         deleteOnDownload_.setVisibleFlag(!useLocalInstance_.get());
         triggerFetchResults_.setVisibleFlag(!useLocalInstance_.get());
     });
@@ -233,15 +234,15 @@ FlowSimulationCluster::FlowSimulationCluster()
     toolchain_.setGroupID("cluster-general");
     toolchain_.addOption("foss", "foss");
     toolchain_.addOption("intel", "intel");
-    addProperty(simulationType_);
-    simulationType_.setGroupID("cluster-general");
-    simulationType_.addOption("default", "default");
-    //simulationType_.addOption("steered", "Steered"); // TODO: implement!
-    //simulationType_.addOption("aorta3d", "aorta3d");
+    //addProperty(simulationType_);
+    //simulationType_.setGroupID("cluster-general");
+    //simulationType_.addOption("default", "default");
     setPropertyGroupGuiName("cluster-general", "General Cluster Config");
 
     addProperty(configNodes_);
     configNodes_.setGroupID("cluster-resources");
+    addProperty(configNumGPUs_);
+    configNumGPUs_.setGroupID("cluster-resources");
     addProperty(configTasksPerNode_);
     configTasksPerNode_.setGroupID("cluster-resources");
     addProperty(configCPUsPerTask_);
@@ -263,8 +264,9 @@ FlowSimulationCluster::FlowSimulationCluster()
     simulationResults_.setGroupID("results");
     addProperty(uploadDataPath_);
     uploadDataPath_.setGroupID("results");
-    addProperty(compileOnUpload_);
-    compileOnUpload_.setGroupID("results");
+    addProperty(refreshClusterCode_);
+    ON_CHANGE(refreshClusterCode_, FlowSimulationCluster, refreshClusterCode);
+    refreshClusterCode_.setGroupID("results");
     addProperty(deleteOnDownload_);
     deleteOnDownload_.setGroupID("results");
     addProperty(triggerEnqueueSimulations_);
@@ -359,53 +361,37 @@ void FlowSimulationCluster::workloadManagerChanged() {
     }
 }
 
-void FlowSimulationCluster::enqueueSimulations() {
+void FlowSimulationCluster::refreshClusterCode() {
+    LINFO("Uploading program, this may take a while...");
 
-    const GlMeshGeometryBase* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
-    if (!geometryData) {
-        VoreenApplication::app()->showMessageBox("Error", "No simulation geometry. Did you perform the segmentation?", true);
-        LERROR("Invalid simulation geometry");
+    // Copy code to cluster.
+    //std::string modulePath = getModulePath(); // Does not work!
+    std::string modulePath = VoreenApplication::app()->getModulePath("flowsimulation");
+    std::string simulationPathSource = modulePath + "/ext/openlb";
+    std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get();
+    std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
+    int ret = executeCommand(command);
+    if (ret != EXIT_SUCCESS) {
+        VoreenApplication::app()->showMessageBox("Error", "Code could not be copied", true);
+        LERROR("Data could not be copied");
         return;
     }
 
-    const FlowSimulationConfig* config = configPort_.getData();
-    if (!config || config->empty()) {
-        VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
-        LERROR("No parametrization");
-        return;
+    LINFO("Compiling program, this may take a while...");
+
+    // Execute compile script on the cluster.
+    command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateCompileScript();
+    ret = executeCommand(command);
+
+    // Check if compilation was successful.
+    if (ret != EXIT_SUCCESS) {
+        VoreenApplication::app()->showMessageBox("Error", "Error compiling program", true);
+        LERROR("Error compiling program");
     }
-
-    if(config->getFlowFeatures() == FF_NONE) {
-        VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
-        LERROR("No flow feature selected");
-        return;
-    }
-
-    LINFO("Configuring and enqueuing Simulations '" << simulationType_.get() << "'");
-
-    // (Re-)compile code on cluster, if desired.
-    if (!useLocalInstance_.get() && compileOnUpload_.get()) {
-        VoreenApplication::app()->showMessageBox("Information", "Compiling program, this may take a while...");
-
-        // Execute compile script on the cluster.
-        std::string command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateCompileScript();
-        int ret = executeCommand(command);
-
-        // Check if compilation was successful.
-        if (ret != EXIT_SUCCESS) {
-            VoreenApplication::app()->showMessageBox("Error", "Could not compile program", true);
-            LERROR("Could not compile program");
-            return;
-        }
-    }
-
-    std::string simulationPathSource = uploadDataPath_.get() + "/" + config->getName() + "/";
-    tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
-    std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/" +
-                                     toolchain_.get() + "/simulations/" + simulationType_.get() + "/";
-
-    // Copy simulation geometry.
+}
+void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPathSource) {
     // TODO: support changing/multiple geometries.
+    const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
     tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
     std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
     try {
@@ -414,12 +400,11 @@ void FlowSimulationCluster::enqueueSimulations() {
         file.close();
     }
     catch (std::exception& e) {
-        VoreenApplication::app()->showMessageBox("Error", "Could not write geometry file", true);
-        LERROR("Could not write geometry file: " << e.what());
-        return;
+        std::string errorMessage = "Could not write geometry file";
+        throw VoreenException(errorMessage + e.what());
     }
-
-    // Copy velocity data.
+}
+void FlowSimulationCluster::stepCopyVolumeData(const std::string& simulationPathSource) {
     if(const VolumeList* volumeList = measuredDataPort_.getData()) {
         tgt::FileSystem::createDirectory(simulationPathSource + "velocity/");
         int nrLength = static_cast<int>(std::to_string(volumeList->size() - 1).size());
@@ -439,8 +424,8 @@ void FlowSimulationCluster::enqueueSimulations() {
             }
         }
     }
-
-    // Create configurations.
+}
+void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource) {
     for(size_t i=0; i<config->size(); i++) {
 
         std::string parameterPathSource = simulationPathSource + config->at(i).name_ + "/";
@@ -465,59 +450,52 @@ void FlowSimulationCluster::enqueueSimulations() {
         submissionScriptFile << generateSubmissionScript(config->at(i).name_);
         submissionScriptFile.close();
     }
+}
 
-    // Allow to use a local simulation program.
-    if (useLocalInstance_.get()) {
+void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
+    // Move directory to the very same place, the local instance is located.
+    simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
+    simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config->getName(), true);
 
-        // TODO: make platform independent.
-
-        // Move directory to the very same place, the local instance is located.
-        simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
-        simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config->getName(), true);
-
-        std::vector<std::string> failed;
-        if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
-            for (size_t i = 0; i < config->size(); i++) {
-                std::string name = config->at(i).name_;
-                if (!copyDirectory(simulationPathSource + "/" + name, simulationPathDest + "/" + name, false)) {
-                    failed.push_back(name);
-                }
-            }
-        }
-
-        // Enqueue jobs.
+    std::vector<std::string> failed;
+    if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
         for (size_t i = 0; i < config->size(); i++) {
-
-            std::string ensemble = config->getName();
-            std::string run = config->at(i).name_;
-
-            if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
-                LWARNING("Configuration " << ensemble << "/" << run << " is already present, skipping..");
-                continue;
+            std::string name = config->at(i).name_;
+            if (!copyDirectory(simulationPathSource + "/" + name, simulationPathDest + "/" + name, false)) {
+                failed.push_back(name);
             }
-
-            std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
-            std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
-            std::string name = ensemble + "-" + run;
-            waitingThreads_.emplace_back(std::unique_ptr<ExecutorProcess>(new ExecutorProcess(workingDirectory, runCommand, name)));
-            numEnqueuedThreads_++;
-            LINFO("Enqueued run " << name);
         }
-
-        if (!failed.empty()) {
-            VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued, they might already exist. See log for details.", true);
-        }
-
-        return;
     }
 
+    // Enqueue jobs.
+    for (size_t i = 0; i < config->size(); i++) {
+
+        std::string ensemble = config->getName();
+        std::string run = config->at(i).name_;
+
+        if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
+            LWARNING("Configuration " << ensemble << "/" << run << " is already present, skipping..");
+            continue;
+        }
+
+        std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
+        std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
+        std::string name = ensemble + "-" + run;
+        waitingThreads_.emplace_back(std::unique_ptr<ExecutorProcess>(new ExecutorProcess(workingDirectory, runCommand, name)));
+        numEnqueuedThreads_++;
+        LINFO("Enqueued run " << name);
+    }
+
+    if (!failed.empty()) {
+        VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued, they might already exist. See log for details.", true);
+    }
+}
+void FlowSimulationCluster::runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
     // Copy data to cluster.
     std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
     int ret = executeCommand(command);
     if (ret != EXIT_SUCCESS) {
-        VoreenApplication::app()->showMessageBox("Error", "Data could not be copied!", true);
-        LERROR("Data could not be copied");
-        return;
+        throw VoreenException("Data could not be copied");
     }
 
     // Don't delete data, will be handled by Voreen Temp. data!
@@ -529,8 +507,7 @@ void FlowSimulationCluster::enqueueSimulations() {
 
         progress_.setProgress(i * 1.0f / config->size());
 
-        std::string localSimulationPath = programPath_.get() + "/" + toolchain_.get() + "/simulations/" + simulationType_.get() + "/" +
-                config->getName() + "/" + config->at(i).name_;
+        std::string localSimulationPath = programPath_.get() + "/openlb/voreen/" + config->getName() + "/" + config->at(i).name_;
 
         // Enqueue job.
         command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateEnqueueScript(localSimulationPath);
@@ -540,6 +517,8 @@ void FlowSimulationCluster::enqueueSimulations() {
         }
     }
 
+    progress_.setProgress(1.0f);
+
     if (!failed.empty()) {
         VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued. See log for details.", true);
         LERROR("Could not enqueue runs: \n* " << strJoin(failed, "\n* "));
@@ -547,8 +526,58 @@ void FlowSimulationCluster::enqueueSimulations() {
     else {
         VoreenApplication::app()->showMessageBox("Information", "All runs successfully enqueued!");
     }
+}
 
-    progress_.setProgress(1.0f);
+void FlowSimulationCluster::enqueueSimulations() {
+
+    const GlMeshGeometryBase* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
+    if (!geometryData) {
+        VoreenApplication::app()->showMessageBox("Error", "No simulation geometry. Did you perform the segmentation?", true);
+        LERROR("Invalid simulation geometry");
+        return;
+    }
+
+    const FlowSimulationConfig* config = configPort_.getData();
+    if (!config || config->empty()) {
+        VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
+        LERROR("No parametrization");
+        return;
+    }
+
+    if(config->getFlowFeatures() == FF_NONE) {
+        VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
+        LERROR("No flow feature selected");
+        return;
+    }
+
+    LINFO("Configuring and enqueuing Simulations...");
+
+    std::string simulationPathSource = uploadDataPath_.get() + "/" + config->getName() + "/";
+    tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
+    std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/openlb/voreen/";
+
+    try {
+
+        // Copy simulation geometry.
+        stepCopyGeometryData(simulationPathSource);
+
+        // Copy velocity data.
+        stepCopyVolumeData(simulationPathSource);
+
+        // Create configurations.
+        stepCreateSimulationConfigs(config, simulationPathSource);
+
+        // Allow to use a local simulation program.
+        if (useLocalInstance_.get()) {
+            runLocal(config, simulationPathSource, simulationPathDest);
+        } else {
+            runCluster(config, simulationPathSource, simulationPathDest);
+        }
+    }
+    catch(VoreenException& e) {
+        LERROR(e.what());
+        VoreenApplication::app()->showMessageBox("Error", e.what(), true);
+    }
 }
 
 void FlowSimulationCluster::fetchResults() {
@@ -639,14 +668,24 @@ std::string FlowSimulationCluster::generateCompileScript() const {
     std::stringstream script;
     script << "\"";
 
+    // TODO: generate using properties.
+    //  Currently, there is no GPU support.
+    std::string options = "PARALLEL_MODE=HYBRID OMPFLAGS=-fopenmp PLATFORMS=CPU_SISD ";
+
     if(workloadManager_.get() == "qsub") {
-        script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
-        script << " && make";
+        script << "cd " << programPath_.get() << "/openlb/voreen";
+        script << " && make clean && " << options << "make";
     }
     else if(workloadManager_.get() == "slurm") {
-        script << "module load " << toolchain_.get();
-        script << " && cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get();
-        script << " && make";
+        if(toolchain_.get() == "intel") {
+            options += "CXX=mpicxx CC=icc CXXFLAGS='-std=c++17 -O3 -Wall -xHost -ipo' ";
+        }
+        else if(toolchain_.get() == "foss" ){
+            options += "CXX=mpic++ CC=gcc CXXFLAGS='-std=c++17 -Wall -march=native -mtune=native' ";
+        }
+        script << "module load palma/2021b"; // TODO: make adjustable.
+        script << " && cd " << programPath_.get() << "/openlb/voreen";
+        script << " && make clean && " << options << "make";
     }
 
     script << "\"";
@@ -666,8 +705,7 @@ std::string FlowSimulationCluster::generateEnqueueScript(const std::string& para
         script << " && qsub submit.cmd";
     }
     else if(workloadManager_.get() == "slurm") {
-        script << "module load " << toolchain_.get();
-        script << " && cd " << parametrizationPath;
+        script << "cd " << parametrizationPath;
 #ifdef WIN32
         // Using windows, the script's DOS line breaks need to be converted to UNIX line breaks.
         script << " && sed -i 's/\\r$//' submit.cmd";
@@ -721,6 +759,9 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << "# set the number of nodes" << std::endl;
         script << "#SBATCH --nodes=" << configNodes_.get() << std::endl;
         script << std::endl;
+        script << "# set the number of gpus" << std::endl;
+        script << "#SBATCH --gres=gpu:" << configNumGPUs_.get() << std::endl;
+        script << std::endl;
         script << "# MPI/OMP Hybrid config" << std::endl;
         script << "#SBATCH --ntasks-per-node=" << configTasksPerNode_.get() << std::endl;
         script << "#SBATCH --cpus-per-task=" << configCPUsPerTask_.get() << std::endl;
@@ -752,6 +793,8 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << "# send mail to this address" << std::endl;
         script << "#SBATCH --mail-user=" << emailAddress_.get() << std::endl;
         script << std::endl;
+        script << "module load palma/2021b" << std::endl; // TODO: make adjustable.
+        script << std::endl;
         script << "# run the application" << std::endl;
         if (configCPUsPerTask_.get() > 1) {
             script << "OMP_NUM_THREADS=" << configCPUsPerTask_.get() << " ";
@@ -759,10 +802,12 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         if (configTasksPerNode_.get() > 1) {
             script << "mpirun ";
         }
+        if (configNumGPUs_.get() > 1) {
+            script << "bash -c 'export CUDA_VISIBLE_DEVICES=${OMPI_COMM_WORLD_LOCAL_RANK}; ";
+        }
 
         // Add executable.
-        script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
-               << "/" << simulationType_.get();
+        script << programPath_.get() << "/openlb/voreen/simulation_cluster";
         // First argument: ensemble name
         script << " " << configPort_.getData()->getName();
         // Second argument: run name

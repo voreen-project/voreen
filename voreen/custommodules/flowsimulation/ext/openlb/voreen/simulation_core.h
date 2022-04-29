@@ -70,7 +70,7 @@ private:
 };
 
 // Stores data from stl file in geometry in form of material numbers
-void prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
+bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
                      IndicatorF3D<T>& indicator,
                      STLreader<T>& stlReader,
                      SuperGeometry<T,3>& superGeometry,
@@ -89,8 +89,8 @@ void prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
         Vector<T, 3> center(indicators[i].center_.x, indicators[i].center_.y, indicators[i].center_.z);
         center *= VOREEN_LENGTH_TO_SI;
 
-        // Add one voxel to account for rounding errors.
-        T radius = indicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength();
+        // Add one voxel to account for precision/rounding errors.
+        T radius = indicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
         T length = indicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
 
         // Define a local disk volume.
@@ -129,33 +129,8 @@ void prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
     //superGeometry.clean();
     // Removes all not needed boundary voxels inside the surface
     superGeometry.innerClean(MAT_COUNT);
-    superGeometry.checkForErrors();
+    return !superGeometry.checkForErrors();
 }
-
-/*
-// If any dynamics should be missing, we fix this by using "no dynamics" to prevent a crash.
-size_t fixupLattice(SuperLattice<T, DESCRIPTOR>& lattice) {
-    size_t errors = 0;
-    for (int iC = 0; iC < lattice.getLoadBalancer().size(); ++iC) {
-        auto& blockLattice = lattice.getBlock(iC);
-        for (int iX = 0; iX < blockLattice.getNx(); ++iX) {
-            for (int iY = 0; iY < blockLattice.getNy(); ++iY) {
-                for (int iZ = 0; iZ < blockLattice.getNz(); ++iZ) {
-                    auto cell = blockLattice.get(iX, iY, iZ);
-                    auto dynamics = cell.getDynamics();
-                    if (!dynamics) {
-                        errors++;
-                        //std::cerr << "no dynamics at: " << iX << ", " << iY << ", " << iZ << std::endl;
-                        //cell.defineDynamics(&instances::getNoDynamics<T, DESCRIPTOR>());
-                        // TODO: no longer required??
-                    }
-                }
-            }
-        }
-    }
-    return errors;
-}
-*/
 
 void defineBulkDynamics(FlowTurbulenceModel model,
                         SuperLattice<T, DESCRIPTOR>& lattice,
@@ -177,10 +152,6 @@ void defineBulkDynamics(FlowTurbulenceModel model,
             return;
         case FTM_SMAGORINSKY_CONSISTENT_STRAIN:
             lattice.defineDynamics<ConStrainSmagorinskyBGKdynamics<T, DESCRIPTOR>>(indicator);
-            lattice.setParameter<collision::LES::Smagorinsky>(0.1);
-            return;
-        case FTM_SMAGORINSKY_DYNAMIC:
-            lattice.defineDynamics<ConSmagorinskyBGKdynamics<T, DESCRIPTOR>>(indicator);
             lattice.setParameter<collision::LES::Smagorinsky>(0.1);
             return;
         case FTM_BGK:
@@ -245,17 +216,9 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
         }
         else if(indicator.type_ == FIT_PRESSURE) {
             defineBulkDynamics(parameters.turbulenceModel_, lattice, superGeometry, indicator.id_);
-            setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
+            //setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
         }
     }
-
-    /*
-    // If any dynamics should be missing up to this point, we fix this by using "no dynamics".
-    size_t errors = fixupLattice(lattice);
-    if(errors > 0) {
-        std::cout << "[fixupLattice] " << errors << " errors have been fixed" << std::endl;
-    }
-    */
 
     // Initial conditions
     AnalyticalConst3D<T, T> rhoF(1);
@@ -288,7 +251,7 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                         SuperGeometry<T,3>& superGeometry,
                         const std::vector<FlowIndicator>& indicators,
                         const Parameters& parameters,
-                        VolumeSampler volumeSampler = {}
+                        const VolumeSampler& volumeSampler = {}
                         )
 {
     float time = converter.getPhysTime(iteration);

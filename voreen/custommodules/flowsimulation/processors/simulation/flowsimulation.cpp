@@ -453,7 +453,11 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     LINFO("Preparing Geometry ...");
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
 
-    prepareGeometry(converter, extendedDomain, stlReader, superGeometry, config.getFlowIndicators());
+    bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, config.getFlowIndicators());
+    if(!success) {
+        LERROR("The model contains errors! Check resolution and geometry.");
+        return;
+    }
 
     interruptionPoint();
 

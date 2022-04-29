@@ -75,7 +75,7 @@ namespace voreen {
 FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     : VoreenModule(modulePath)
 {
-    setID("Flow Simulation");
+    setID("flowsimulation");
     setGuiName("Flow Simulation");
 
     // processors

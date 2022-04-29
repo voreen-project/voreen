@@ -3,7 +3,7 @@
 
 ////////// Globals //////////////////
 // Meta
-const std::string simulation = "default";
+const std::string simulation = "simulation_cluster";
 const std::string base = "/scratch/tmp/s_leis06/simulations/";
 
 // Config
@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
-    const int noOfCuboids = std::min( 16*parameters.getSpatialResolution(), 2*singleton::mpi().getSize() );
+    const int noOfCuboids = std::min( 16*parameters.spatialResolution_, 2*singleton::mpi().getSize() );
 #else
     const int noOfCuboids = 2;
 #endif
