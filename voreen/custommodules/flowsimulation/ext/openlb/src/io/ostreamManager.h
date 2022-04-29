@@ -53,6 +53,11 @@ public:
   int sync() override;
 };
 
+inline void OMBuf::setMultiOutput(bool b)
+{
+    (*this).multiOutput = b;
+}
+
 /// class for marking output with some text
 /** The principle of this class consists of writing all output first in a userdefined Buffer of type OMBuf. On a flush it spits out at first the userdefined text in squared brackets and afterwards everything from the buffer.
 An object of this class can be used (almost) exactly like a normal std::cout with the <<-Operator and std::endl.
@@ -100,6 +105,11 @@ public:
   /// enable message output for all MPI processes, disabled by default
   void setMultiOutput(bool b);
 };
+
+inline void OstreamManager::setMultiOutput(bool b)
+{
+    buffer.setMultiOutput(b);
+}
 
 } // namespace olb
 

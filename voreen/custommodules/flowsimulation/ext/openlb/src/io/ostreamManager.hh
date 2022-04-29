@@ -58,11 +58,6 @@ inline OMBuf::OMBuf(std::ostream& str, std::string classname)
   : output(&str), text(classname)
 { }
 
-inline void OMBuf::setMultiOutput(bool b)
-{
-  (*this).multiOutput = b;
-}
-
 inline int OMBuf::sync()
 {
 #ifdef PARALLEL_MODE_MPI
@@ -113,11 +108,6 @@ inline OstreamManager& OstreamManager::operator=(const OstreamManager& rhs)
 {
   buffer = rhs.buffer;
   return *this;
-}
-
-inline void OstreamManager::setMultiOutput(bool b)
-{
-  buffer.setMultiOutput(b);
 }
 
 } // namespace olb
