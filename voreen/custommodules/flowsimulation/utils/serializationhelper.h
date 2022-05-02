@@ -37,13 +37,21 @@ void serializeVector(Serializer& s, const std::string& key, const std::vector<S>
         result[i] = static_cast<T>(input[i]); // Enforced slicing!
     }
 
+#ifdef WIN32
+    s.serialize(key, result);
+#else
     s.template serialize(key, result);
+#endif
 }
 
 template<typename T, typename S>
 void deserializeVector(Deserializer& s, const std::string& key, std::vector<S>& output) {
     std::vector<T> result;
+#ifdef WIN32
+    s.deserialize(key, result);
+#else
     s.template deserialize(key, result);
+#endif
 
     output.resize(result.size());
     for(size_t i=0; i<output.size(); i++) {
@@ -51,7 +59,7 @@ void deserializeVector(Deserializer& s, const std::string& key, std::vector<S>& 
     }
 }
 
-class VelocityCurveSerializable : public VelocityCurve, public Serializable {
+class VRN_CORE_API VelocityCurveSerializable : public VelocityCurve, public Serializable {
 public:
 
     VelocityCurveSerializable();
@@ -61,7 +69,7 @@ public:
     void deserialize(Deserializer& s);
 };
 
-class FlowIndicatorSerializable : public FlowIndicator, public Serializable {
+class VRN_CORE_API FlowIndicatorSerializable : public FlowIndicator, public Serializable {
 public:
 
     FlowIndicatorSerializable();
@@ -71,7 +79,7 @@ public:
     void deserialize(Deserializer& s);
 };
 
-class ParametersSerializable : public Parameters, public Serializable {
+class VRN_CORE_API ParametersSerializable : public Parameters, public Serializable {
 public:
     ParametersSerializable();
     ParametersSerializable(const Parameters& other);

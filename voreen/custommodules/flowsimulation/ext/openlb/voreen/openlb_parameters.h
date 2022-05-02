@@ -32,10 +32,12 @@
 #include <string>
 #include <vector>
 
-#ifdef VRN_FLOWSIMULATION_USE_OPENLB
+#ifdef VRN_MODULE_FLOWSIMULATION
+#include "voreen/core/voreencoreapi.h"
 #include "tgt/vector.h"
 using vec3 = tgt::vec3;
 #else
+#define VRN_CORE_API
 typedef struct { float x, y, z; } vec3;
 #endif
 
@@ -99,7 +101,7 @@ enum FlowTurbulenceModel {
     FTM_BGK = 5,
 };
 
-class VelocityCurve {
+class VRN_CORE_API VelocityCurve {
 public:
 
     VelocityCurve();
@@ -149,7 +151,7 @@ struct FlowIndicator {
 /**
  * Datastructure used to represent flow parameters for setting up a flow simulation. It is used in the flowsimulation module.
  */
-class Parameters {
+class VRN_CORE_API Parameters {
 public:
 
     /** Constructor */

@@ -59,6 +59,9 @@ SET(MOD_CORE_SOURCES
     # utils
     ${MOD_DIR}/utils/serializationhelper.cpp
     ${MOD_DIR}/utils/utils.cpp
+    
+    # openlb
+    ${MOD_DIR}/ext/openlb/voreen/openlb_parameters.cpp
 )
 
 SET(MOD_CORE_HEADERS
@@ -102,6 +105,9 @@ SET(MOD_CORE_HEADERS
     # utils
     ${MOD_DIR}/utils/serializationhelper.h
     ${MOD_DIR}/utils/utils.h
+    
+    # openlb
+    ${MOD_DIR}/ext/openlb/voreen/openlb_parameters.h
 )
 
 IF(VRN_MODULE_VESSELNETWORKANALYSIS)

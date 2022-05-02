@@ -33,7 +33,8 @@
 #include <dirent.h>
 #include <functional>
 
-#include "openlb_parameters.hh"
+// We treat the parameters as header, it anyways only is included once.
+#include "openlb_parameters.cpp"
 
 using namespace olb;
 using namespace olb::descriptors;
