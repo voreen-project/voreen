@@ -33,10 +33,10 @@ ifneq ($(filter GPU_CUDA,$(PLATFORMS)),)
 ## | Volta             | 70, 72     |
 ## | Turing            | 75         |
 ## | Ampere            | 80, 86, 87 |
-	CUDA_ARCH ?= 60
+	CUDA_ARCH ?= 87
 
 	LDFLAGS += -lcuda -lcudadevrt -lcudart
-	CXXFLAGS += --generate-code=arch=compute_$(CUDA_ARCH),code=[compute_$(CUDA_ARCH),sm_$(CUDA_ARCH)]
+#	CXXFLAGS += --generate-code=arch=compute_$(CUDA_ARCH),code=[compute_$(CUDA_ARCH),sm_$(CUDA_ARCH)] # auto detect
 	CXXFLAGS += --extended-lambda --expt-relaxed-constexpr -x cu
 	CXXFLAGS += -Xcudafe "--diag_suppress=implicit_return_from_non_void_function --display_error_number --diag_suppress=20014 --diag_suppress=20011"
 endif

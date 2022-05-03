@@ -23,9 +23,6 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_OPENLB_PARAMETERS_HH
-#define VRN_OPENLB_PARAMETERS_HH
-
 #include "openlb_parameters.h"
 
 #include <algorithm>
@@ -229,5 +226,3 @@ bool Parameters::isValid() const {
 }
 
 }
-
-#endif
