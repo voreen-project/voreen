@@ -29,7 +29,7 @@ IF(WIN32)
     # set debug and release libraries
     IF(VRN_MSVC2015)            
         SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2015")
-    ELSEIF(VRN_MSVC2017)            
+    ELSEIF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
         SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2017")
     ENDIF()
 

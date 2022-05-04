@@ -54,6 +54,18 @@ ELSEIF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 Win64" OR
     SET(VRN_MSVC2017 TRUE)
     SET(VRN_MSVC TRUE)
     MESSAGE(STATUS "Visual Studio 2017 Build")
+ELSEIF("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 16 2019" AND
+    ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64" OR 
+    ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "" AND "${CMAKE_VS_PLATFORM_NAME_DEFAULT}" STREQUAL "x64")))
+    SET(VRN_MSVC2019 TRUE)
+    SET(VRN_MSVC TRUE)
+    MESSAGE(STATUS "Visual Studio 2019 Build")    
+ELSEIF("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 17 2022" AND
+    ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64" OR 
+    ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "" AND "${CMAKE_VS_PLATFORM_NAME_DEFAULT}" STREQUAL "x64")))
+    SET(VRN_MSVC2022 TRUE)
+    SET(VRN_MSVC TRUE)
+    MESSAGE(STATUS "Visual Studio 2022 Build")
 ELSEIF(${CMAKE_GENERATOR} MATCHES "Unix" OR ${CMAKE_GENERATOR} MATCHES "Ninja")
     SET(VRN_UNIX TRUE)
     MESSAGE(STATUS "Unix Build")
@@ -151,7 +163,7 @@ IF(VRN_MSVC)
         SET(CMAKE_SUPPRESS_REGENERATION TRUE)
     ENDIF()
     
-    # Windows deployment   
+    # Windows deployment
     IF(VRN_DEPLOYMENT)
         LIST(APPEND VRN_DEFINITIONS "-DVRN_DEPLOYMENT") 
         MESSAGE(STATUS "Windows deployment build:")
@@ -186,8 +198,50 @@ IF(VRN_MSVC)
                 INSTALL(FILES "${VS_DIR}/VC/Redist/MSVC/${VS_VER}/x64/Microsoft.VC141.CRT/vcruntime140.dll" DESTINATION .)
                 INSTALL(FILES "${VS_DIR}/VC/Redist/MSVC/${VS_VER}/x64/Microsoft.VC141.OpenMP/vcomp140.dll" DESTINATION .)
             ENDIF()
+        ELSEIF(VRN_MSVC2019 OR VRN_MSVC2022)
+            # this has to be a separate variable because $ENV{} doesn't like parentheses
+            SET(program_files_x86 "ProgramFiles(x86)")
+
+            # Set the Visual Studio version that vswhere should look for
+            IF(VRN_MSVC2019)
+                SET(vswhere_version "[16,17\)")
+            ELSE()
+                SET(vswhere_version "[17,18\)")
+            ENDIF()
+
+            # Execute vswhere to find the Visual Studio installation redist libraries path
+            SET(vswhere_path "$ENV{${program_files_x86}}\\Microsoft Visual Studio\\Installer\\vswhere.exe")
+            EXECUTE_PROCESS(
+                COMMAND ${vswhere_path} -version ${vswhere_version} -latest -find VC\\Redist\\MSVC\\*\\x64
+                RESULT_VARIABLE vswhere_result
+                OUTPUT_VARIABLE vswhere_output
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
+
+            # Convert backslashes to forward slashes
+            FILE(TO_CMAKE_PATH ${vswhere_output} vswhere_output)
+
+            # Check the result
+            IF(vswhere_result AND NOT vswhere_result EQUAL 0)
+                MESSAGE(WARNING "Failed to locate Visual Studio installation: ${vswhere_result}")
+            ELSE()
+
+                # Set the appropriate toolset version
+                IF(VRN_MSVC2019)
+                    SET(toolset_version "VC142")
+                ELSE()
+                    SET(toolset_version "VC143")
+                ENDIF()
+
+                # Install redist libraries
+                MESSAGE(STATUS "Visual Studio redist libraries located at: ${vswhere_output}")
+                INSTALL(FILES "${vswhere_output}/Microsoft.${toolset_version}.CRT/msvcp140.dll" DESTINATION .)
+                INSTALL(FILES "${vswhere_output}/Microsoft.${toolset_version}.CRT/vcruntime140.dll" DESTINATION .)
+                INSTALL(FILES "${vswhere_output}/Microsoft.${toolset_version}.OpenMP/vcomp140.dll" DESTINATION .)
+            ENDIF()
         ELSE()
-            MESSAGE(WARNING "Deploying redist libraries only supported for Visual Studio 2015 and 2017.")
+            MESSAGE(WARNING "Deploying redist libraries only supported for Visual Studio 2015-2022.")
         ENDIF()
     ELSE(VRN_DEPLOYMENT)
         # hardcode Voreen base path, if binary output dir has been modified and we are not in deployment mode
