@@ -93,7 +93,7 @@
                         <Property mapKey="addInvalidParametrizations" name="addInvalidParametrizations" value="false" />
                         <Property mapKey="addParametrizations" name="addParametrizations" />
                         <Property mapKey="characteristicLength" name="characteristicLength" value="10" />
-                        <Property mapKey="characteristicVelocity" name="characteristicVelocity" value="0.100000001" />
+                        <Property mapKey="characteristicVelocity" name="characteristicVelocity" value="0.200000003" />
                         <Property mapKey="clearParametrizations" name="clearParametrizations" />
                         <Property mapKey="density" minValue="988.099975586" maxValue="1000" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
                             <value x="998.210021973" y="998.210021973" />
@@ -125,11 +125,11 @@
                                 <item>
                                     <item value="✓" />
                                     <item value="test_parametrization" />
-                                    <item value="99.840263" />
+                                    <item value="199.680527" />
                                     <item value="20" />
                                     <item value="0.600000" />
                                     <item value="0.010000" />
-                                    <item value="0.100000" />
+                                    <item value="0.200000" />
                                     <item value="0.000010" />
                                     <item value="998.210022" />
                                     <item value="Smagorinsky" />
@@ -173,69 +173,10 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <flowParameters>
-                        <item name="test_parametrization" spatialResolution="20" relaxationTime="0.600000024" characteristicLength="0.010000001" characteristicVelocity="0.100000001" viscosity="0.000010016" density="998.210021973" turbulenceModel="1" smagorinskyConstant="0.100000001" wallBoundaryCondition="1" latticePerturbation="true" inletVelocityMultiplier="1" />
+                        <item name="test_parametrization" spatialResolution="20" relaxationTime="0.600000024" characteristicLength="0.010000001" characteristicVelocity="0.200000003" viscosity="0.000010016" density="998.210021973" turbulenceModel="1" smagorinskyConstant="0.100000001" wallBoundaryCondition="1" latticePerturbation="true" inletVelocityMultiplier="1" />
                     </flowParameters>
                 </Processor>
-                <Processor type="FlowSimulationCluster" name="FlowSimulationCluster" id="ref3">
-                    <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-454" y="-47" />
-                    </MetaData>
-                    <Properties>
-                        <Property mapKey="clusterAddress" name="clusterAddress" value="palma.uni-muenster.de" />
-                        <Property mapKey="configCPUsPerTask" name="configCPUsPerTask" value="4" />
-                        <Property mapKey="configMemory" name="configMemory" value="16" />
-                        <Property mapKey="configNodes" name="configNodes" value="1" />
-                        <Property mapKey="configNumGPUs" name="configNumGPUs" value="0" />
-                        <Property mapKey="configPartition" name="configPartition" value="normal" />
-                        <Property mapKey="configTasksPerNode" name="configTasksPerNode" value="18" />
-                        <Property mapKey="configTimeDays" name="configTimeDays" value="0" />
-                        <Property mapKey="configTimeQuarters" name="configTimeQuarters" value="1" />
-                        <Property mapKey="dataPath" name="dataPath" value="/scratch/tmp" />
-                        <Property mapKey="deleteOnDownload" name="deleteOnDownload" value="false" />
-                        <Property mapKey="emailAddress" name="emailAddress" value="s_leis06@uni-muenster.de" />
-                        <Property mapKey="institution" name="institution" value="slurm" />
-                        <Property mapKey="localInstancePath" name="localInstancePath" watchMode="3" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
-                        </Property>
-                        <Property mapKey="programPath" name="programPath" value="~/OpenLB" />
-                        <Property mapKey="progress" name="progress" />
-                        <Property mapKey="refreshClusterCode" name="refreshClusterCode" />
-                        <Property mapKey="simulationResults" name="simulationResults" watchMode="3" fileWatchEnabled="false">
-                            <paths noPathSet="true" />
-                        </Property>
-                        <Property mapKey="stopThreads" name="stopThreads" />
-                        <Property mapKey="toolchain" name="toolchain" value="foss" />
-                        <Property mapKey="triggerEnqueueSimulations" name="triggerEnqueueSimulations" />
-                        <Property mapKey="triggerFetchResults" name="triggerFetchResults" />
-                        <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
-                            <paths noPathSet="false">
-                                <paths>
-                                    <item value="../../../data/tmp/5f6a0bda-a230-45d7-a12f-321bfc1e5282/8defadd4-b4a3-4340-a7cb-e3416bc08640" />
-                                    <item value="data/tmp/5f6a0bda-a230-45d7-a12f-321bfc1e5282/8defadd4-b4a3-4340-a7cb-e3416bc08640" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5f6a0bda-a230-45d7-a12f-321bfc1e5282/8defadd4-b4a3-4340-a7cb-e3416bc08640" />
-                                </paths>
-                            </paths>
-                        </Property>
-                        <Property mapKey="useLocalInstance" name="useLocalInstance" value="false" />
-                        <Property mapKey="username" name="username" value="s_leis06" />
-                    </Properties>
-                    <Inports>
-                        <Port name="geometryDataPort" direction="1" portID="geometryDataPort" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties />
-                        </Port>
-                        <Port name="measuredDataPort" direction="1" portID="measuredDataPort" guiName="Measured Data Input" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties />
-                        </Port>
-                        <Port name="parameterPort" direction="1" portID="parameterPort" guiName="Parameterization" allowMultipleConnections="false" invalidationLevel="1">
-                            <Properties />
-                        </Port>
-                    </Inports>
-                    <Outports />
-                    <CoProcessorInports />
-                    <CoProcessorOutports />
-                    <InteractionHandlers />
-                </Processor>
-                <Processor type="FlowSimulation" name="FlowSimulation" id="ref4">
+                <Processor type="FlowSimulation" name="FlowSimulation" id="ref3">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-235" y="-46" />
                     </MetaData>
@@ -255,7 +196,7 @@
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="4:11.379 min remaining" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -276,7 +217,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryRenderer" name="GeometryRenderer" id="ref5">
+                <Processor type="GeometryRenderer" name="GeometryRenderer" id="ref4">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-88" y="-239" />
                     </MetaData>
@@ -453,10 +394,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="113" y="-52" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1107" y="732" width="489" height="445" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1056" y="706" width="489" height="445" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="1107" y="732" />
+                            <value x="1056" y="706" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="489" y="445" />
@@ -520,6 +461,65 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
+                <Processor type="FlowSimulationCluster" name="FlowSimulationCluster" id="ref5">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-454" y="-47" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="clusterAddress" name="clusterAddress" value="palma.uni-muenster.de" />
+                        <Property mapKey="configCPUsPerTask" name="configCPUsPerTask" value="4" />
+                        <Property mapKey="configMemory" name="configMemory" value="16" />
+                        <Property mapKey="configNodes" name="configNodes" value="1" />
+                        <Property mapKey="configNumGPUs" name="configNumGPUs" value="0" />
+                        <Property mapKey="configPartition" name="configPartition" value="normal" />
+                        <Property mapKey="configTasksPerNode" name="configTasksPerNode" value="9" />
+                        <Property mapKey="configTimeDays" name="configTimeDays" value="0" />
+                        <Property mapKey="configTimeQuarters" name="configTimeQuarters" value="1" />
+                        <Property mapKey="dataPath" name="dataPath" value="/scratch/tmp" />
+                        <Property mapKey="deleteOnDownload" name="deleteOnDownload" value="false" />
+                        <Property mapKey="emailAddress" name="emailAddress" value="s_leis06@uni-muenster.de" />
+                        <Property mapKey="institution" name="institution" value="slurm" />
+                        <Property mapKey="localInstancePath" name="localInstancePath" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="programPath" name="programPath" value="~" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="refreshClusterCode" name="refreshClusterCode" />
+                        <Property mapKey="simulationResults" name="simulationResults" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="stopThreads" name="stopThreads" />
+                        <Property mapKey="toolchain" name="toolchain" value="foss" />
+                        <Property mapKey="triggerEnqueueSimulations" name="triggerEnqueueSimulations" />
+                        <Property mapKey="triggerFetchResults" name="triggerFetchResults" />
+                        <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="../../../data/tmp/1e68698f-43f7-4221-a7ca-e727f19349b4/089a9cbe-d3e9-4d9c-a9b8-3a08f496b36f" />
+                                    <item value="data/tmp/1e68698f-43f7-4221-a7ca-e727f19349b4/089a9cbe-d3e9-4d9c-a9b8-3a08f496b36f" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/1e68698f-43f7-4221-a7ca-e727f19349b4/089a9cbe-d3e9-4d9c-a9b8-3a08f496b36f" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="useLocalInstance" name="useLocalInstance" value="false" />
+                        <Property mapKey="username" name="username" value="s_leis06" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometryDataPort" direction="1" portID="geometryDataPort" guiName="Geometry Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="measuredDataPort" direction="1" portID="measuredDataPort" guiName="Measured Data Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="parameterPort" direction="1" portID="parameterPort" guiName="Simulation Config" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
             </Processors>
             <Connections>
                 <Connection>
@@ -543,15 +543,7 @@
                         <Processor type="FlowSimulationGeometry" ref="ref0" />
                     </Outport>
                     <Inport name="geometryDataPort">
-                        <Processor type="FlowSimulationCluster" ref="ref3" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="geometry">
-                        <Processor type="FlowSimulationGeometry" ref="ref0" />
-                    </Outport>
-                    <Inport name="geometryDataPort">
-                        <Processor type="FlowSimulation" ref="ref4" />
+                        <Processor type="FlowSimulation" ref="ref3" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -559,7 +551,15 @@
                         <Processor type="FlowSimulationGeometry" ref="ref0" />
                     </Outport>
                     <Inport name="inport.geometry">
-                        <Processor type="GeometryRenderer" ref="ref5" />
+                        <Processor type="GeometryRenderer" ref="ref4" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry">
+                        <Processor type="FlowSimulationGeometry" ref="ref0" />
+                    </Outport>
+                    <Inport name="geometryDataPort">
+                        <Processor type="FlowSimulationCluster" ref="ref5" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -575,7 +575,7 @@
                         <Processor type="FlowParametrizationRun" ref="ref1" />
                     </Outport>
                     <Inport name="parameterPort">
-                        <Processor type="FlowSimulationCluster" ref="ref3" />
+                        <Processor type="FlowSimulation" ref="ref3" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -583,7 +583,7 @@
                         <Processor type="FlowParametrizationRun" ref="ref1" />
                     </Outport>
                     <Inport name="parameterPort">
-                        <Processor type="FlowSimulation" ref="ref4" />
+                        <Processor type="FlowSimulationCluster" ref="ref5" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -598,7 +598,7 @@
             <CoProcessorConnections>
                 <CoProcessorConnection>
                     <Outport name="coprocessor.geometryrenderer">
-                        <Processor type="GeometryRenderer" ref="ref5" />
+                        <Processor type="GeometryRenderer" ref="ref4" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
                         <Processor type="GeometryProcessor" ref="ref7" />

@@ -388,6 +388,10 @@ void FlowSimulationCluster::refreshClusterCode() {
         VoreenApplication::app()->showMessageBox("Error", "Error compiling program", true);
         LERROR("Error compiling program");
     }
+    else {
+        VoreenApplication::app()->showMessageBox("Finished", "Compilation finished", false);
+        LERROR("Compilation finished");
+    }
 }
 void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPathSource) {
     // TODO: support changing/multiple geometries.
@@ -683,7 +687,7 @@ std::string FlowSimulationCluster::generateCompileScript() const {
         else if(toolchain_.get() == "foss" ){
             options += "CXX=mpic++ CC=gcc CXXFLAGS='-std=c++17 -Wall -march=native -mtune=native' ";
         }
-        script << "module load palma/2021b"; // TODO: make adjustable.
+        script << "module load palma/2021a foss/2021a"; // TODO: make adjustable.
         script << " && cd " << programPath_.get() << "/openlb/voreen";
         script << " && make clean && " << options << "make";
     }
@@ -793,7 +797,7 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << "# send mail to this address" << std::endl;
         script << "#SBATCH --mail-user=" << emailAddress_.get() << std::endl;
         script << std::endl;
-        script << "module load palma/2021b" << std::endl; // TODO: make adjustable.
+        script << "module load palma/2021a foss/2021a" << std::endl; // TODO: make adjustable.
         script << std::endl;
         script << "# run the application" << std::endl;
         if (configCPUsPerTask_.get() > 1) {
