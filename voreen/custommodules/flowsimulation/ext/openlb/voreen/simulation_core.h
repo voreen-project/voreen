@@ -76,8 +76,8 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
                      SuperGeometry<T,3>& superGeometry,
                      const std::vector<FlowIndicator>& indicators)
 {
-    superGeometry.rename( MAT_EMPTY, MAT_WALL,  indicator );
-    superGeometry.rename( MAT_WALL,  MAT_FLUID, stlReader );
+    superGeometry.rename(MAT_EMPTY, MAT_WALL, indicator);
+    superGeometry.rename(MAT_WALL, MAT_FLUID, stlReader);
 
     superGeometry.clean();
 
@@ -94,14 +94,12 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
         T length = indicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
 
         // Define a local disk volume.
-        IndicatorCircle3D<T> flow(center[0], center[1], center[2],
-                                  normal[0], normal[1], normal[2],
-                                  radius);
+        IndicatorCircle3D<T> flow(center, normal, radius);
         IndicatorCylinder3D<T> layerFlow(flow, length);
 
         // Rename both, wall and fluid, since the indicator might also be inside the fluid domain.
-        superGeometry.rename(MAT_WALL, indicators[i].id_, layerFlow);
-        superGeometry.rename(MAT_FLUID, indicators[i].id_,  layerFlow);
+        //superGeometry.rename(MAT_WALL, indicators[i].id_, layerFlow);
+        superGeometry.rename(MAT_FLUID, indicators[i].id_, layerFlow);
 
         // Exclude area behind inlet and in front of outlet - it will otherwise cause unstable simulations.
         bool isInlet = indicators[i].type_ == FIT_VELOCITY;
@@ -109,16 +107,12 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
         if(isInlet || isOutlet) {
             T sign = isInlet ? T(-1) : T(1);
             center += sign * normal * T(length * 0.5 + converter.getConversionFactorLength());
-            IndicatorCircle3D<T> capFlowWall(center[0], center[1], center[2],
-                                             normal[0], normal[1], normal[2],
-                                             radius);
 
+            IndicatorCircle3D<T> capFlowWall(center, normal, radius);
             IndicatorCylinder3D<T> layerCapFlowWall(capFlowWall, 4 * converter.getConversionFactorLength());
             superGeometry.rename(MAT_FLUID, MAT_WALL, layerCapFlowWall);
 
-            IndicatorCircle3D<T> capFlowEmpty(center[0], center[1], center[2],
-                                              normal[0], normal[1], normal[2],
-                                              radius);
+            IndicatorCircle3D<T> capFlowEmpty(center, normal, radius);
             IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 2 * converter.getConversionFactorLength());
             superGeometry.rename(MAT_WALL, MAT_EMPTY, layerCapFlowEmpty);
         }
@@ -140,28 +134,25 @@ void defineBulkDynamics(FlowTurbulenceModel model,
     switch(model) {
         case FTM_SMAGORINSKY:
             lattice.defineDynamics<SmagorinskyBGKdynamics<T, DESCRIPTOR>>(indicator);
-            lattice.setParameter<collision::LES::Smagorinsky>(0.1);
             return;
-        case FTM_SMAGORINSKY_SHEAR_IMPROVED: // Does not compile in OpenLB 1.4.
+        case FTM_SMAGORINSKY_SHEAR_IMPROVED:
             lattice.defineDynamics<ShearSmagorinskyBGKdynamics<T, DESCRIPTOR>>(indicator);
-            lattice.setParameter<collision::LES::Smagorinsky>(0.1);
             return;
         case FTM_SMAGORINSKY_CONSISTENT:
             lattice.defineDynamics<ConSmagorinskyBGKdynamics<T, DESCRIPTOR>>(indicator);
-            lattice.setParameter<collision::LES::Smagorinsky>(0.1);
             return;
         case FTM_SMAGORINSKY_CONSISTENT_STRAIN:
             lattice.defineDynamics<ConStrainSmagorinskyBGKdynamics<T, DESCRIPTOR>>(indicator);
-            lattice.setParameter<collision::LES::Smagorinsky>(0.1);
             return;
         case FTM_BGK:
             lattice.defineDynamics<BGKdynamics<T, DESCRIPTOR>>(indicator);
             return;
         case FTM_NONE:
         default:
+            lattice.defineDynamics<NoDynamics>(indicator);
             return;
-    };
-};
+    }
+}
 
 // Set up the geometry of the simulation.
 void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
@@ -216,7 +207,7 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
         }
         else if(indicator.type_ == FIT_PRESSURE) {
             defineBulkDynamics(parameters.turbulenceModel_, lattice, superGeometry, indicator.id_);
-            //setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
+            setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
         }
     }
 
@@ -242,6 +233,7 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
 
     // Lattice initialize
     lattice.setParameter<descriptors::OMEGA>(omega);
+    lattice.setParameter<collision::LES::Smagorinsky>(0.1);
     lattice.initialize();
 }
 

@@ -188,11 +188,12 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
 
     # Set platforms.
     SET(OLB_PLATFORMS "CPU_SISD") # mandatory
-#    # Only available on intel platforms?
-#    OPTION(OLB_PLATFORM_CPU_SIMD "Enable OpenLB SIMD Platform?" OFF)
-#    IF(OLB_PLATFORM_CPU_SIMD)
-#        LIST(APPEND OLB_PLATFORMS "CPU_SIMD")
-#    ENDIF()
+
+    OPTION(OLB_PLATFORM_CPU_SIMD "Enable OpenLB SIMD Platform?" OFF)
+    IF(OLB_PLATFORM_CPU_SIMD)
+        LIST(APPEND OLB_PLATFORMS "CPU_SIMD")
+    ENDIF()
+
     OPTION(OLB_PLATFORM_GPU_CUDA "Enable OpenLB CUDA Platform?" OFF)
     IF(OLB_PLATFORM_GPU_CUDA)
         SET(OLB_CXX "nvcc") # Overrides mpic++, which is intentional.

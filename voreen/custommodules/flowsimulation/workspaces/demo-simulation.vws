@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="FlowSimulation" ref="ref4" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="0" y="0" />
                 </MetaItem>
@@ -92,7 +87,7 @@
                 </Processor>
                 <Processor type="FlowParametrizationRun" name="FlowParametrizationRun" id="ref1">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-378" y="-177" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-373" y="-181" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="addInvalidParametrizations" name="addInvalidParametrizations" value="false" />
@@ -139,7 +134,7 @@
                                     <item value="998.210022" />
                                     <item value="Smagorinsky" />
                                     <item value="0.100000" />
-                                    <item value="Bouzidi" />
+                                    <item value="Bounce-Back" />
                                     <item value="1.000000" />
                                     <item value="1" />
                                 </item>
@@ -160,7 +155,7 @@
                         <Property mapKey="viscosity" minValue="0.797219992" maxValue="1.350000024" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
                             <value x="1.001600027" y="1.001600027" />
                         </Property>
-                        <Property mapKey="wallBoundaryCondition" name="wallBoundaryCondition" value="bouzidi" />
+                        <Property mapKey="wallBoundaryCondition" name="wallBoundaryCondition" value="bounceBack" />
                     </Properties>
                     <Inports>
                         <Port name="inport" direction="1" portID="inport" guiName="Parameter Inport" allowMultipleConnections="false" invalidationLevel="1">
@@ -178,7 +173,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <flowParameters>
-                        <item name="test_parametrization" spatialResolution="20" relaxationTime="0.600000024" characteristicLength="0.010000001" characteristicVelocity="0.100000001" viscosity="0.000010016" density="998.210021973" turbulenceModel="1" smagorinskyConstant="0.100000001" wallBoundaryCondition="2" latticePerturbation="true" inletVelocityMultiplier="1" />
+                        <item name="test_parametrization" spatialResolution="20" relaxationTime="0.600000024" characteristicLength="0.010000001" characteristicVelocity="0.100000001" viscosity="0.000010016" density="998.210021973" turbulenceModel="1" smagorinskyConstant="0.100000001" wallBoundaryCondition="1" latticePerturbation="true" inletVelocityMultiplier="1" />
                     </flowParameters>
                 </Processor>
                 <Processor type="FlowSimulationCluster" name="FlowSimulationCluster" id="ref3">
@@ -187,10 +182,10 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="clusterAddress" name="clusterAddress" value="palma.uni-muenster.de" />
-                        <Property mapKey="compileOnUpload" name="compileOnUpload" value="false" />
                         <Property mapKey="configCPUsPerTask" name="configCPUsPerTask" value="4" />
                         <Property mapKey="configMemory" name="configMemory" value="16" />
                         <Property mapKey="configNodes" name="configNodes" value="1" />
+                        <Property mapKey="configNumGPUs" name="configNumGPUs" value="0" />
                         <Property mapKey="configPartition" name="configPartition" value="normal" />
                         <Property mapKey="configTasksPerNode" name="configTasksPerNode" value="18" />
                         <Property mapKey="configTimeDays" name="configTimeDays" value="0" />
@@ -204,10 +199,10 @@
                         </Property>
                         <Property mapKey="programPath" name="programPath" value="~/OpenLB" />
                         <Property mapKey="progress" name="progress" />
+                        <Property mapKey="refreshClusterCode" name="refreshClusterCode" />
                         <Property mapKey="simulationResults" name="simulationResults" watchMode="3" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
-                        <Property mapKey="simulationType" name="simulationType" value="default" />
                         <Property mapKey="stopThreads" name="stopThreads" />
                         <Property mapKey="toolchain" name="toolchain" value="foss" />
                         <Property mapKey="triggerEnqueueSimulations" name="triggerEnqueueSimulations" />
@@ -215,9 +210,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/91062734-7654-4c69-96af-2c75065a837f/f75777d6-8e4d-4fea-b01d-4da11a4fd8bf" />
-                                    <item value="data/tmp/91062734-7654-4c69-96af-2c75065a837f/f75777d6-8e4d-4fea-b01d-4da11a4fd8bf" />
-                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/91062734-7654-4c69-96af-2c75065a837f/f75777d6-8e4d-4fea-b01d-4da11a4fd8bf" />
+                                    <item value="../../../data/tmp/5f6a0bda-a230-45d7-a12f-321bfc1e5282/8defadd4-b4a3-4340-a7cb-e3416bc08640" />
+                                    <item value="data/tmp/5f6a0bda-a230-45d7-a12f-321bfc1e5282/8defadd4-b4a3-4340-a7cb-e3416bc08640" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/5f6a0bda-a230-45d7-a12f-321bfc1e5282/8defadd4-b4a3-4340-a7cb-e3416bc08640" />
                                 </paths>
                             </paths>
                         </Property>
@@ -242,7 +237,7 @@
                 </Processor>
                 <Processor type="FlowSimulation" name="FlowSimulation" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-236" y="-46" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-235" y="-46" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="deleteOldSimulations" name="deleteOldSimulations" value="true" />
@@ -256,12 +251,13 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim" />
                                     <item value="../../../Desktop/sim" />
-                                    <item value="/home/spider/Desktop/sim" />
+                                    <item value="/home/s_leis06/Desktop/sim" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1:15.419 min" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="4:11.379 min remaining" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
                     <Inports>
@@ -366,9 +362,9 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-64.762168884" y="-211.681930542" z="143.065460205" />
+                            <position x="-8.643170357" y="-118.42514801" z="-158.723388672" />
                             <focus x="0" y="0" z="50" />
-                            <upVector x="0.931126297" y="-0.341335028" z="-0.128430396" />
+                            <upVector x="0.819633484" y="-0.512179315" z="0.256657749" />
                             <trackball moveCenter="false">
                                 <center x="0" y="0" z="50" />
                             </trackball>
@@ -407,6 +403,7 @@
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
+                        <Property mapKey="useFloatRenderTargets" name="useFloatRenderTargets" value="false" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -456,10 +453,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="113" y="-52" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1432" y="549" width="489" height="445" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1107" y="732" width="489" height="445" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="1432" y="549" />
+                            <value x="1107" y="732" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="489" y="445" />
