@@ -152,9 +152,7 @@ RegionOfInterestAnalysisOutput RegionOfInterestAnalysis::compute(RegionOfInteres
         output.emplace_back(std::move(plotData));
 
         auto& segment = segments.at(j);
-        for(size_t k = 0; k < segment.size(); k++) {
-            rows[j].resize(segment.size()); // Add id column.
-        }
+        rows[j].resize(segment.size()); // Add id column.
     }
 
     progressReporter.setProgress(0.0f);
