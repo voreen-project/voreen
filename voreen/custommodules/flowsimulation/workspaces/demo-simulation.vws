@@ -7,7 +7,7 @@
                     <values />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="0" y="0" />
+                    <value x="-254" y="72" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
             </MetaData>
@@ -196,7 +196,7 @@
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="2:27.544 min remaining" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -212,7 +212,18 @@
                             <Properties />
                         </Port>
                     </Inports>
-                    <Outports />
+                    <Outports>
+                        <Port name="debugMaterialsPort" direction="0" portID="debugMaterialsPort" guiName="Debug Materials Port" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="debugVelocityPort" direction="0" portID="debugVelocityPort" guiName="Debug Velocity Port" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
@@ -269,7 +280,7 @@
                         <Property mapKey="pointSize" name="pointSize" value="1" />
                         <Property mapKey="polygonMode" name="polygonMode" value="fill" />
                         <Property mapKey="solidColor" name="solidColor">
-                            <value x="1" y="1" z="1" w="1" />
+                            <value x="0.806668222" y="0.806668222" z="0.806668222" w="0.219592586" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="REPLACE" />
                     </Properties>
@@ -292,22 +303,22 @@
                     </CoProcessorOutports>
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="GeometryProcessor" name="GeometryProcessor" id="ref7">
+                <Processor type="GeometryProcessor" name="GeometryProcessor" id="ref9">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="92" y="-184" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="30000" minValue="0.600000024" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="30120" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000416434">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="25000.630859375" minValue="0.500012636" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="25100.6328125" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000977914" id="ref17">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="-8.643170357" y="-118.42514801" z="-158.723388672" />
-                            <focus x="0" y="0" z="50" />
-                            <upVector x="0.819633484" y="-0.512179315" z="0.256657749" />
+                            <position x="-27.881492615" y="-36.954723358" z="-41.393592834" />
+                            <focus x="-0.125" y="-0.125" z="49.875" />
+                            <upVector x="-0.539327025" y="0.726016223" z="0.426646113" />
                             <trackball moveCenter="false">
-                                <center x="0" y="0" z="50" />
+                                <center x="-0.125" y="-0.125" z="49.875" />
                             </trackball>
                             <sceneLLF x="-10" y="-10" z="-10" />
                             <sceneURB x="10" y="10" z="110" />
@@ -349,7 +360,7 @@
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref19">
                                     <value x="489" y="445" />
                                 </Property>
                             </Properties>
@@ -359,7 +370,7 @@
                         <Port name="image.output" direction="0" portID="image.output" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref10">
+                                <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref14">
                                     <value x="489" y="445" />
                                 </Property>
                             </Properties>
@@ -391,13 +402,13 @@
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="Canvas" name="Canvas" id="ref8">
+                <Processor type="Canvas" name="Canvas" id="ref10">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="113" y="-52" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1056" y="706" width="489" height="445" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1423" y="679" width="489" height="445" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="1056" y="706" />
+                            <value x="1423" y="679" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="489" y="445" />
@@ -418,7 +429,7 @@
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref9">
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref13">
                                     <value x="489" y="445" />
                                 </Property>
                             </Properties>
@@ -495,9 +506,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/1e68698f-43f7-4221-a7ca-e727f19349b4/089a9cbe-d3e9-4d9c-a9b8-3a08f496b36f" />
-                                    <item value="data/tmp/1e68698f-43f7-4221-a7ca-e727f19349b4/089a9cbe-d3e9-4d9c-a9b8-3a08f496b36f" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/1e68698f-43f7-4221-a7ca-e727f19349b4/089a9cbe-d3e9-4d9c-a9b8-3a08f496b36f" />
+                                    <item value="../../../data/tmp/580438c5-c0dc-40f9-95a2-3c5c85d29287/9e23528d-db55-4039-94b9-a83edf5b9751" />
+                                    <item value="data/tmp/580438c5-c0dc-40f9-95a2-3c5c85d29287/9e23528d-db55-4039-94b9-a83edf5b9751" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/580438c5-c0dc-40f9-95a2-3c5c85d29287/9e23528d-db55-4039-94b9-a83edf5b9751" />
                                 </paths>
                             </paths>
                         </Property>
@@ -519,6 +530,416 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
+                </Processor>
+                <Processor type="SliceViewer" name="SliceViewer" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-271" y="53" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="applyChannelShift" name="applyChannelShift" value="false" />
+                        <Property mapKey="boundaryColor" name="boundaryColor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="boundaryWidth" name="boundaryWidth" value="1" />
+                        <Property mapKey="channelShift0" name="channelShift0">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift1" name="channelShift1">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift2" name="channelShift2">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="channelShift3" name="channelShift3">
+                            <value x="0" y="0" z="0" />
+                        </Property>
+                        <Property mapKey="fontSize" name="fontSize" value="14" />
+                        <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
+                        <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
+                        <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="true" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="true" mouseButtons="3" keyCode="0" modifier="0" shareEvents="true" />
+                        <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
+                        <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
+                        <Property mapKey="pickingMatrix" name="pickingMatrix">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="renderLegend" name="renderLegend" value="false" />
+                        <Property mapKey="renderSliceBoundaries" name="renderSliceBoundaries" value="true" />
+                        <Property mapKey="resetViewButton" name="resetViewButton" />
+                        <Property mapKey="resetchannelshift" name="resetchannelshift" />
+                        <Property mapKey="selectCenterSliceOnInputChange" name="selectCenterSliceOnInputChange" value="true" />
+                        <Property mapKey="showCursorInformation" name="showCursorInformation" value="onMove" />
+                        <Property mapKey="showSliceNumber" name="showSliceNumber" value="true" />
+                        <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" />
+                        <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
+                        <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="0" />
+                        <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
+                        <Property mapKey="sliceMousePos" name="sliceMousePos">
+                            <value x="-1" y="-1" z="-1" />
+                        </Property>
+                        <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
+                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="2" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="255" />
+                                </MetaItem>
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="256" y="1" z="1" />
+                                <domain x="0" y="4" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.100000001" split="false">
+                                        <colorL r="43" g="0" b="141" a="25" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.200000003" split="false">
+                                        <colorL r="92" g="2" b="250" a="51" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.300000012" split="false">
+                                        <colorL r="146" g="0" b="170" a="76" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.400000006" split="false">
+                                        <colorL r="196" g="7" b="87" a="102" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.5" split="false">
+                                        <colorL r="250" g="64" b="5" a="127" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.600000024" split="false">
+                                        <colorL r="255" g="121" b="0" a="153" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.699999988" split="false">
+                                        <colorL r="254" g="177" b="3" a="178" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.800000012" split="false">
+                                        <colorL r="252" g="234" b="2" a="204" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.899999976" split="false">
+                                        <colorL r="253" g="246" b="33" a="229" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="transferFunction4" name="transferFunction4" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="1024" y="1" z="1" />
+                                <domain x="0" y="1" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="voxelOffset" name="voxelOffset">
+                            <value x="0" y="0" />
+                        </Property>
+                        <Property mapKey="zoomFactor" name="zoomFactor" value="1" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.volumehandle" direction="1" portID="volumehandle.volumehandle" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="nearest" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.outport" direction="0" portID="image.outport" guiName="Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref16">
+                                    <value x="884" y="1046" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="mouseWheelHandler">
+                            <Properties>
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="98" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                        <Handler name="zoomHandler">
+                            <Properties>
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseButtons="98" keyCode="0" modifier="2" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
+                </Processor>
+                <Processor type="Canvas" name="Canvas 2" id="ref11">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-270" y="165" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="57" y="394" width="884" height="1046" />
+                        <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
+                            <value x="57" y="394" />
+                        </MetaItem>
+                        <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
+                            <value x="884" y="1046" />
+                        </MetaItem>
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="canvasSize" name="canvasSize">
+                            <value x="884" y="1046" />
+                        </Property>
+                        <Property mapKey="saveScreenshot" name="saveScreenshot" />
+                        <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="showCanvas" name="showCanvas" value="true" />
+                        <Property mapKey="showCursor" name="showCursor" value="true" />
+                        <Property mapKey="showFullScreen" name="showFullScreen" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref15">
+                                    <value x="884" y="1046" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StreamlineCreator" name="StreamlineCreator" id="ref8">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-105" y="56" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="absoluteMagnitudeThreshold" minValue="0" maxValue="5000" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="5000" />
+                        </Property>
+                        <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
+                        <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="false" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="5000" tracking="false" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="seedTime" name="seedTime" value="1652944786" tracking="false" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 335 ms" />
+                        <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
+                            <value x="10" y="10000" />
+                        </Property>
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volInport" direction="1" portID="volInport" guiName="Flow Volume Input (vec3)" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="streamlineOutport" direction="0" portID="streamlineOutport" guiName="Streamlines Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="StreamlineRenderer3D" name="StreamlineRenderer3D" id="ref12">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-106" y="153" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="25000.630859375" minValue="0.500012636" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="25100.6328125" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000977914" id="ref18">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <position x="-27.881492615" y="-36.954723358" z="-41.393592834" />
+                            <focus x="-0.125" y="-0.125" z="49.875" />
+                            <upVector x="-0.539327025" y="0.726016223" z="0.426646113" />
+                            <trackball moveCenter="false">
+                                <center x="-0.125" y="-0.125" z="49.875" />
+                            </trackball>
+                            <sceneLLF x="-10.131579399" y="-10.131579399" z="-0.126263797" />
+                            <sceneURB x="9.881579399" y="9.881579399" z="99.87625885" />
+                        </Property>
+                        <Property mapKey="colorProp" name="colorProp" value="velocity" />
+                        <Property mapKey="colorRotationMatrix" name="colorRotationMatrix">
+                            <value.row0 x="1" y="0" z="0" w="0" />
+                            <value.row1 x="0" y="1" z="0" w="0" />
+                            <value.row2 x="0" y="0" z="1" w="0" />
+                            <value.row3 x="0" y="0" z="0" w="1" />
+                        </Property>
+                        <Property mapKey="maximumIntensityProjection" name="maximumIntensityProjection" value="true" />
+                        <Property mapKey="rotationaroundx" name="rotationaroundx" value="0" />
+                        <Property mapKey="rotationaroundy" name="rotationaroundy" value="0" />
+                        <Property mapKey="rotationaroundz" name="rotationaroundz" value="0" />
+                        <Property mapKey="streamlineShaderProp" name="streamlineShaderProp">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <components>
+                                <item shaderType="0" originalFilename="streamlinerenderer3d.vert" modified="false" />
+                                <item shaderType="1" originalFilename="streamlinerenderer3d.frag" modified="false" />
+                            </components>
+                        </Property>
+                        <Property mapKey="streamlineStyle" name="streamlineStyle" value="lines" />
+                        <Property mapKey="tfProp" name="tfProp" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0.000005069" y="0.131847277" />
+                                </MetaItem>
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="0.000005069" y="0.131847277" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.100000001" split="false">
+                                        <colorL r="43" g="0" b="141" a="25" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.200000003" split="false">
+                                        <colorL r="92" g="2" b="250" a="51" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.300000012" split="false">
+                                        <colorL r="146" g="0" b="170" a="76" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.400000006" split="false">
+                                        <colorL r="196" g="7" b="87" a="102" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.5" split="false">
+                                        <colorL r="250" g="64" b="5" a="127" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.600000024" split="false">
+                                        <colorL r="255" g="121" b="0" a="153" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.699999988" split="false">
+                                        <colorL r="254" g="177" b="3" a="178" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.800000012" split="false">
+                                        <colorL r="252" g="234" b="2" a="204" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.899999976" split="false">
+                                        <colorL r="253" g="246" b="33" a="229" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="1" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="timeWindowSize" name="timeWindowSize" value="0" minValue="0" maxValue="0" />
+                        <Property mapKey="timeWindowStart" name="timeWindowStart" value="0" minValue="0" maxValue="0" />
+                    </Properties>
+                    <Inports>
+                        <Port name="streamlineInport" direction="1" portID="streamlineInport" guiName="Streamline Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="image.streamlines" direction="0" portID="image.streamlines" guiName="Streamline Image Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                                <Property mapKey="image.streamlines.renderSizeReceive" name="image.streamlines.renderSizeReceive" id="ref20">
+                                    <value x="489" y="445" />
+                                </Property>
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers>
+                        <Handler name="cameraHandler">
+                            <Properties>
+                                <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                            </Properties>
+                        </Handler>
+                    </InteractionHandlers>
                 </Processor>
             </Processors>
             <Connections>
@@ -587,11 +1008,59 @@
                     </Inport>
                 </Connection>
                 <Connection>
+                    <Outport name="debugMaterialsPort">
+                        <Processor type="FlowSimulation" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumehandle.volumehandle">
+                        <Processor type="SliceViewer" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="debugMaterialsPort">
+                        <Processor type="FlowSimulation" ref="ref3" />
+                    </Outport>
+                    <Inport name="seedMaskPort">
+                        <Processor type="StreamlineCreator" ref="ref8" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="debugVelocityPort">
+                        <Processor type="FlowSimulation" ref="ref3" />
+                    </Outport>
+                    <Inport name="volInport">
+                        <Processor type="StreamlineCreator" ref="ref8" />
+                    </Inport>
+                </Connection>
+                <Connection>
                     <Outport name="image.output">
-                        <Processor type="GeometryProcessor" ref="ref7" />
+                        <Processor type="GeometryProcessor" ref="ref9" />
                     </Outport>
                     <Inport name="image.input">
-                        <Processor type="Canvas" ref="ref8" />
+                        <Processor type="Canvas" ref="ref10" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.outport">
+                        <Processor type="SliceViewer" ref="ref7" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="Canvas" ref="ref11" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="streamlineOutport">
+                        <Processor type="StreamlineCreator" ref="ref8" />
+                    </Outport>
+                    <Inport name="streamlineInport">
+                        <Processor type="StreamlineRenderer3D" ref="ref12" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="image.streamlines">
+                        <Processor type="StreamlineRenderer3D" ref="ref12" />
+                    </Outport>
+                    <Inport name="image.input">
+                        <Processor type="GeometryProcessor" ref="ref9" />
                     </Inport>
                 </Connection>
             </Connections>
@@ -601,7 +1070,7 @@
                         <Processor type="GeometryRenderer" ref="ref4" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref7" />
+                        <Processor type="GeometryProcessor" ref="ref9" />
                     </Inport>
                 </CoProcessorConnection>
                 <CoProcessorConnection>
@@ -609,14 +1078,34 @@
                         <Processor type="FlowIndicatorRenderer" ref="ref2" />
                     </Outport>
                     <Inport name="coprocessor.geometryrenderers">
-                        <Processor type="GeometryProcessor" ref="ref7" />
+                        <Processor type="GeometryProcessor" ref="ref9" />
                     </Inport>
                 </CoProcessorConnection>
             </CoProcessorConnections>
             <PropertyLinks>
                 <PropertyLink>
-                    <SourceProperty ref="ref9" />
-                    <DestinationProperty ref="ref10" />
+                    <SourceProperty ref="ref13" />
+                    <DestinationProperty ref="ref14" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref15" />
+                    <DestinationProperty ref="ref16" />
+                    <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref17" />
+                    <DestinationProperty type="CameraProperty" ref="ref18" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref18" />
+                    <DestinationProperty type="CameraProperty" ref="ref17" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty ref="ref19" />
+                    <DestinationProperty ref="ref20" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
             </PropertyLinks>

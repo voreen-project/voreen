@@ -49,6 +49,46 @@ using namespace voreen;
 
 namespace {
 
+template<typename S>
+struct SimpleVolume {
+    std::vector<S> data;
+
+    Vector<int, 3> dimensions;
+    int numChannels;
+
+    Vector<T, 3> offset;
+    Vector<T, 3> spacing;
+
+    std::vector<S> minValues, maxValues;
+    S minMagnitude, maxMagnitude;
+
+    SimpleVolume(Vector<int, 3> dimensions, int numChannels)
+        : data(dimensions[0]*dimensions[1]*dimensions[2]*numChannels, S(0))
+        , dimensions(dimensions)
+        , numChannels(numChannels)
+        , minValues(numChannels, std::numeric_limits<S>::max())
+        , maxValues(numChannels, std::numeric_limits<S>::lowest())
+        , minMagnitude(std::numeric_limits<S>::max())
+        , maxMagnitude(0) {}
+
+    void setValue(S value, int x, int y, int z, int channel = 0) {
+        long index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
+        data[index] = value;
+    }
+    void setValue(S value, int index, int channel = 0) {
+        index = index*numChannels + channel;
+        data[index] = value;
+    }
+    S getValue(int x, int y, int z, int channel = 0) const {
+        long index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
+        return data[index];
+    }
+    S getValue(int index, int channel = 0) const {
+        index = index*numChannels + channel;
+        return data[index];
+    }
+};
+
 using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
 
 class LatticePerturber : public AnalyticalF3D<T, T> {
@@ -317,7 +357,82 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
     }
 }
 
-void writeVVDFile(STLreader<T>& stlReader,
+template<typename S>
+SimpleVolume<S> sampleVolume(IndicatorF3D<T>& indicator,
+                             UnitConverter<T,DESCRIPTOR>& converter,
+                             int outputResolution,
+                             SuperF3D<T, T>& feature) {
+
+    AnalyticalFfromSuperF3D<T> interpolateFeature(feature, true);
+
+    const Vector<T, 3>& min = indicator.getMin();
+    const Vector<T, 3>& max = indicator.getMax();
+
+    const Vector<T, 3> len = (max - min);
+    const T maxLen = std::max({len[0], len[1], len[2]});
+    const int longestSideN = std::round(maxLen / converter.getConversionFactorLength());
+    const int clampledLongestSideN = std::min<int>(outputResolution, longestSideN);
+    const T scaling = clampledLongestSideN / longestSideN;
+
+    const Vector<int, 3> gridResolution(std::round(len[0] / converter.getConversionFactorLength() * scaling),
+                                        std::round(len[1] / converter.getConversionFactorLength() * scaling),
+                                        std::round(len[2] / converter.getConversionFactorLength() * scaling));
+
+    // Init volume.
+    SimpleVolume<S> volume(gridResolution, feature.getTargetDim());
+
+    volume.offset = min;
+    volume.spacing = converter.getConversionFactorLength() / scaling;
+
+    for (int z = 0; z < volume.dimensions[2]; z++) {
+        for (int y = 0; y < volume.dimensions[1]; y++) {
+            for (int x = 0; x < volume.dimensions[0]; x++) {
+
+                T pos[3] = {volume.offset[0] + x * volume.spacing[0],
+                            volume.offset[1] + y * volume.spacing[1],
+                            volume.offset[2] + z * volume.spacing[2]};
+                std::vector<T> val(volume.numChannels, 0.0f);
+
+                if (pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
+                    pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
+                    interpolateFeature(val.data(), pos);
+
+                    // Update min/max.
+                    T magnitude = 0;
+                    for (int i = 0; i < feature.getTargetDim(); i++) {
+                        volume.minValues[i] = std::min<S>(volume.minValues[i], val[i]);
+                        volume.maxValues[i] = std::max<S>(volume.maxValues[i], val[i]);
+                        magnitude += val[i] * val[i];
+                    }
+
+                    // Update min/max magnitude.
+                    volume.minMagnitude = std::min<S>(volume.minMagnitude, magnitude);
+                    volume.maxMagnitude = std::max<S>(volume.maxMagnitude, magnitude);
+                }
+
+                // Downgrade to required type.
+                for (int i = 0; i < volume.numChannels; i++) {
+                    T value = val[i];
+                    if(std::numeric_limits<S>::is_integer) {
+                        value = std::round(value);
+                    }
+                    volume.setValue(static_cast<S>(value), x, y, z, i);
+                }
+            }
+        }
+    }
+
+    // Adapt to Voreen units.
+    volume.offset  *= (1/VOREEN_LENGTH_TO_SI);
+    volume.spacing *= (1/VOREEN_LENGTH_TO_SI);
+
+    volume.minMagnitude = std::sqrt(volume.minMagnitude);
+    volume.maxMagnitude = std::sqrt(volume.maxMagnitude);
+
+    return volume;
+}
+
+void writeVVDFile(IndicatorF3D<T>& indicator,
                   UnitConverter<T,DESCRIPTOR>& converter,
                   int iteration, int maxIteration,
                   int outputResolution,
@@ -326,21 +441,12 @@ void writeVVDFile(STLreader<T>& stlReader,
                   const std::string& name,
                   SuperLatticeF3D<T, DESCRIPTOR>& feature) {
 
-    const Vector<T, 3>& min = stlReader.getMin();
-    const Vector<T, 3>& max = stlReader.getMax();
-
-    const Vector<T, 3> len = (max - min);
-    const T maxLen = std::max({len[0], len[1], len[2]});
-    const int gridResolution = static_cast<int>(std::round(maxLen / converter.getConversionFactorLength()));
-    const int resolution = std::min(outputResolution, gridResolution);
-
-    Vector<T, 3> offset = min + (len - maxLen) * 0.5;
-    Vector<T, 3> spacing(maxLen / (resolution-1));
+    SimpleVolume<float> volume = sampleVolume<float>(indicator, converter, outputResolution, feature);
 
     // Determine format.
     // This could be done in a more dynamic way, but the code should be easily portable to the cluster.
     std::string format;
-    switch (feature.getTargetDim()) {
+    switch (volume.numChannels) {
         case 1:
             format = "float";
             break;
@@ -348,57 +454,9 @@ void writeVVDFile(STLreader<T>& stlReader,
             format = "Vector3(float)";
             break;
         default:
-            std::cerr << "Unhandled target dimensions" << std::endl;
+            std::cerr << "Unhandled number of channels" << std::endl;
             return;
     }
-
-    std::vector<float> rawFeatureData(resolution * resolution * resolution * feature.getTargetDim());
-    AnalyticalFfromSuperF3D<T> interpolateFeature(feature, true);
-
-    std::vector<T> minValue(feature.getTargetDim(), std::numeric_limits<T>::max());
-    std::vector<T> maxValue(feature.getTargetDim(), std::numeric_limits<T>::lowest());
-
-    T minMagnitude = std::numeric_limits<T>::max();
-    T maxMagnitude = 0;
-
-    for (int z = 0; z < resolution; z++) {
-        for (int y = 0; y < resolution; y++) {
-            for (int x = 0; x < resolution; x++) {
-
-                T pos[3] = {offset[0] + x * spacing[0], offset[1] + y * spacing[1], offset[2] + z * spacing[2]};
-                std::vector<T> val(feature.getTargetDim(), 0.0f);
-
-                if (pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
-                    pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
-                    interpolateFeature(&val[0], pos);
-
-                    // Update min/max.
-                    T magnitude = 0;
-                    for (int i = 0; i < feature.getTargetDim(); i++) {
-                        minValue[i] = std::min(minValue[i], val[i]);
-                        maxValue[i] = std::max(maxValue[i], val[i]);
-                        magnitude += val[i] * val[i];
-                    }
-
-                    minMagnitude = std::min(minMagnitude, magnitude);
-                    maxMagnitude = std::max(maxMagnitude, magnitude);
-                }
-
-                // Downgrade to float.
-                size_t index = z*resolution*resolution*feature.getTargetDim() + y*resolution*feature.getTargetDim() + x*feature.getTargetDim();
-                for (int i = 0; i < feature.getTargetDim(); i++) {
-                    rawFeatureData[index + i] = static_cast<float>(val[i]);
-                }
-            }
-        }
-    }
-
-    // Adapt to Voreen units.
-    offset  = offset  * (1/VOREEN_LENGTH_TO_SI);
-    spacing = spacing * (1/VOREEN_LENGTH_TO_SI);
-
-    minMagnitude = std::sqrt(minMagnitude);
-    maxMagnitude = std::sqrt(maxMagnitude);
 
     // Set output names.
     int maxIterationLen = static_cast<int>(std::to_string(maxIteration).length());
@@ -409,6 +467,7 @@ void writeVVDFile(STLreader<T>& stlReader,
     std::string vvdFilename = simulationOutputPath + featureFilename + ".vvd";
 
     const LatticeStatistics<T>& statistics = feature.getSuperLattice().getStatistics();
+
     std::fstream vvdFeatureFile(vvdFilename.c_str(), std::ios::out);
     vvdFeatureFile
             // Header.
@@ -417,15 +476,15 @@ void writeVVDFile(STLreader<T>& stlReader,
             << "<Volumes>"
             << "<Volume>"
             // Data.
-            << "<RawData filename=\"" << featureFilename << ".raw\" format=\"" << format << "\" x=\"" << resolution
-            << "\" y=\"" << resolution << "\" z=\"" << resolution << "\" />"
+            << "<RawData filename=\"" << featureFilename << ".raw\" format=\"" << format << "\" x=\"" << volume.dimensions[0]
+            << "\" y=\"" << volume.dimensions[1] << "\" z=\"" << volume.dimensions[2] << "\" />"
             // Mandatory Meta data.
             << "<MetaData>"
             << "<MetaItem name=\"" << META_DATA_NAME_OFFSET << "\" type=\"Vec3MetaData\">"
-            << "<value x=\"" << offset[0] << "\" y=\"" << offset[1] << "\" z=\"" << offset[2] << "\" />"
+            << "<value x=\"" << volume.offset[0] << "\" y=\"" << volume.offset[1] << "\" z=\"" << volume.offset[2] << "\" />"
             << "</MetaItem>"
             << "<MetaItem name=\"" << META_DATA_NAME_SPACING << "\" type=\"Vec3MetaData\">"
-            << "<value x=\"" << spacing[0] << "\" y=\"" << spacing[1] << "\" z=\"" << spacing[2] << "\" />"
+            << "<value x=\"" << volume.spacing[0] << "\" y=\"" << volume.spacing[1] << "\" z=\"" << volume.spacing[2] << "\" />"
             << "</MetaItem>"
             << "<MetaItem name=\"" << META_DATA_NAME_TIMESTEP << "\" type=\"FloatMetaData\" value=\"" << converter.getPhysTime(iteration) << "\" />"
             << "<MetaItem name=\"" << META_DATA_NAME_REAL_WORLD_MAPPING << "\" type=\"RealWorldMappingMetaData\"><value scale=\"1\" offset=\"0\" unit=\"\" /></MetaItem>"
@@ -449,26 +508,25 @@ void writeVVDFile(STLreader<T>& stlReader,
             // Derived data.
             << "<DerivedData>";
     // * VolumeMinMaxMagnitude
-    if (feature.getTargetDim() > 1) {
-        vvdFeatureFile
-                << "<DerivedItem type=\"VolumeMinMaxMagnitude\" minMagnitude=\"" << minMagnitude << "\" maxMagnitude=\"" << maxMagnitude << "\" minNormalizedMagnitude=\"" << minMagnitude << "\" maxNormalizedMagnitude=\"" << maxMagnitude << "\" />";
+    if (volume.numChannels > 1) {
+        vvdFeatureFile << "<DerivedItem type=\"VolumeMinMaxMagnitude\" minMagnitude=\"" << volume.minMagnitude << "\" maxMagnitude=\"" << volume.maxMagnitude << "\" minNormalizedMagnitude=\"" << volume.minMagnitude << "\" maxNormalizedMagnitude=\"" << volume.maxMagnitude << "\" />";
     }
     // * VolumeMinMax
     vvdFeatureFile << "<DerivedItem type=\"VolumeMinMax\"><minValues>";
-    for(int i=0; i<feature.getTargetDim(); i++) {
-        vvdFeatureFile << "<channel value=\"" << minValue[i] << "\" />";
+    for(int i=0; i<volume.numChannels; i++) {
+        vvdFeatureFile << "<channel value=\"" << volume.minValues[i] << "\" />";
     }
     vvdFeatureFile << "</minValues><maxValues>";
-    for(int i=0; i<feature.getTargetDim(); i++) {
-        vvdFeatureFile << "<channel value=\"" << maxValue[i] << "\" />";
+    for(int i=0; i<volume.numChannels; i++) {
+        vvdFeatureFile << "<channel value=\"" << volume.maxValues[i] << "\" />";
     }
     vvdFeatureFile << "</maxValues><minNormValues>";
-    for(int i=0; i<feature.getTargetDim(); i++) {
-        vvdFeatureFile << "<channel value=\"" << minValue[i] << "\" />";
+    for(int i=0; i<volume.numChannels; i++) {
+        vvdFeatureFile << "<channel value=\"" << volume.minValues[i] << "\" />";
     }
     vvdFeatureFile << "</minNormValues><maxNormValues>";
-    for(int i=0; i<feature.getTargetDim(); i++) {
-        vvdFeatureFile << "<channel value=\"" << maxValue[i] << "\" />";
+    for(int i=0; i<volume.numChannels; i++) {
+        vvdFeatureFile << "<channel value=\"" << volume.maxValues[i] << "\" />";
     }
     vvdFeatureFile
             << "</maxNormValues></DerivedItem>"
@@ -481,8 +539,8 @@ void writeVVDFile(STLreader<T>& stlReader,
     vvdFeatureFile.close();
 
     std::fstream rawFeatureFile(rawFilename.c_str(), std::ios::out | std::ios::binary);
-    size_t numBytes = rawFeatureData.size() * sizeof(float) / sizeof(char);
-    rawFeatureFile.write(reinterpret_cast<const char*>(rawFeatureData.data()), numBytes);
+    size_t numBytes = volume.data.size() * sizeof(float) / sizeof(char);
+    rawFeatureFile.write(reinterpret_cast<const char*>(volume.data.data()), numBytes);
     if (!rawFeatureFile.good()) {
         std::cerr << "Could not write " << name << " file" << std::endl;
     }
@@ -509,20 +567,6 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
         bool writeVTI = outputFormat == ".vti";
 
         SuperVTMwriter3D<T> vtmWriter( "results" );
-
-        // Always write debug data.
-        if(iteration == 0) {
-            SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
-            vtmWriter.write( geometry );
-
-            SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( lattice );
-            vtmWriter.write( cuboid );
-
-            SuperLatticeRank3D<T, DESCRIPTOR> rank( lattice );
-            vtmWriter.write( rank );
-
-            vtmWriter.createMasterFile();
-        }
 
         if(flowFeatures & FF_VELOCITY) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);

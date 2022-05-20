@@ -28,8 +28,11 @@
 #include "voreen/core/datastructures/geometry/geometrysequence.h"
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumefactory.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
+
+#include "voreen/core/utils/stringutils.h"
 
 #include "modules/flowanalysis/utils/flowutils.h"
 
@@ -140,7 +143,27 @@ std::unique_ptr<GlMeshGeometryBase> mergeGeometries(const GlMeshGeometryBase* lh
 
     return nullptr;
 }
+/*
+template <typename I>
+Volume* convertSimpleVolumeToVoreenVolume(const SimpleVolume<I>& volume) {
+    auto dimensions = tgt::ivec3::fromPointer(volume.dimensions.data());
+    auto spacing = tgt::Vector3<T>::fromPointer(volume.spacing.data());
+    auto offset = tgt::Vector3<T>::fromPointer(volume.offset.data());
 
+    std::string baseType = getBaseTypeFromType<I>();
+    std::string format = getFormatFromBaseTypeAndChannels(baseType, volume.numChannels);
+    auto* representation = VolumeFactory().create(format, dimensions);
+    for(size_t i=0, numVoxels = tgt::hmul(dimensions); i < numVoxels; i++) {
+        for (int channel = 0; channel < volume.numChannels; channel++) {
+            representation->voxel(i)[channel] = volume.getValue(i, channel), i, channel);
+        }
+    }
+
+    auto* output = new Volume(representation, spacing, offset);
+    output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(baseType));
+    return output;
+}
+*/
 }
 
 
@@ -153,6 +176,8 @@ FlowSimulation::FlowSimulation()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
+    , debugMaterialsPort_(Port::OUTPORT, "debugMaterialsPort", "Debug Materials Port", false, Processor::VALID)
+    , debugVelocityPort_(Port::OUTPORT, "debugVelocityPort", "Debug Velocity Port", false, Processor::VALID)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations", false)
@@ -163,6 +188,8 @@ FlowSimulation::FlowSimulation()
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
     addPort(parameterPort_);
+    addPort(debugMaterialsPort_);
+    addPort(debugVelocityPort_);
 
     addProperty(simulationResults_);
     simulationResults_.setGroupID("results");
@@ -181,6 +208,9 @@ FlowSimulation::FlowSimulation()
 }
 
 FlowSimulation::~FlowSimulation() {
+    if(VoreenApplication* app = VoreenApplication::app()) {
+        app->getCommandQueue()->removeAll(this);
+    }
 }
 
 bool FlowSimulation::isReady() const {
@@ -203,6 +233,8 @@ bool FlowSimulation::isReady() const {
         setNotReadyErrorMessage("Parameter Port not ready.");
         return false;
     }
+
+    // Node: debug ports are optional.
 
     return true;
 }
@@ -471,6 +503,46 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     interruptionPoint();
 
+    // Always write geometry debug data..
+    SuperVTMwriter3D<T> vtmWriter( "results" );
+    SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
+    vtmWriter.write( geometry );
+    vtmWriter.createMasterFile();
+/*
+    // And pass it to the outport.
+    if(VoreenApplication* app = VoreenApplication::app()) {
+        app->getCommandQueue()->removeAll(this);
+
+        auto* volume = convertSimpleVolumeToVoreenVolume(sampleVolume<int>(stlReader, converter, config.getOutputResolution(), geometry));
+
+        app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
+            debugMaterialsPort_.setData(volume, true);
+        }));
+    }
+*/
+    // And pass it to the outport.
+    if(VoreenApplication* app = VoreenApplication::app()) {
+        SimpleVolume<int> geometryVolume = sampleVolume<int>(extendedDomain, converter, config.getOutputResolution(), geometry);
+
+        auto dimensions = tgt::ivec3::fromPointer(geometryVolume.dimensions.data());
+        auto spacing = tgt::Vector3<T>::fromPointer(geometryVolume.spacing.data());
+        auto offset = tgt::Vector3<T>::fromPointer(geometryVolume.offset.data());
+
+        auto* representation = new VolumeRAM_UInt8(dimensions);
+        for(size_t i=0, numVoxels = tgt::hmul(dimensions); i < numVoxels; i++) {
+            representation->voxel(i) = geometryVolume.data[i];
+        }
+
+        auto* volume = new Volume(representation, spacing, offset);
+        volume->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint8_t>());
+
+        app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
+            debugMaterialsPort_.setData(volume, true);
+        }));
+    }
+
+    interruptionPoint();
+
     // === 4th Step: Main Loop  ===
     const int maxIteration = converter.getLatticeTime(config.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
@@ -490,6 +562,57 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                   config.getOutputFileFormat(),
                                   config.getFlowFeatures(),
                                   parameters);
+
+        /*
+        SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
+        auto volume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
+        someFunction(velocity, volume, debugVelocityPort_);
+
+        // Store last velocity.
+        if(VoreenApplication* app = VoreenApplication::app()) {
+            app->getCommandQueue()->removeAll(this);
+
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
+
+            auto* volume = convertSimpleVolumeToVoreenVolume();
+
+            app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
+                debugVelocityPort_.setData(volume, true);
+            }));
+        }
+         */
+
+        // Store last velocity.
+        const int outputIter = maxIteration / config.getNumTimeSteps();
+        if (iteration % outputIter == 0) {
+            if (VoreenApplication * app = VoreenApplication::app()) {
+                app->getCommandQueue()->removeAll(this);
+
+                SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
+
+                SimpleVolume<float> velocityVolume = sampleVolume<float>(extendedDomain, converter,
+                                                                         config.getOutputResolution(), velocity);
+
+                auto dimensions = tgt::ivec3::fromPointer(velocityVolume.dimensions.data());
+                auto spacing = tgt::Vector3<T>::fromPointer(velocityVolume.spacing.data());
+                auto offset = tgt::Vector3<T>::fromPointer(velocityVolume.offset.data());
+
+                auto* representation = new VolumeRAM_3xFloat(dimensions);
+                for (size_t i = 0, numVoxels = tgt::hmul(dimensions); i < numVoxels; i++) {
+                    for (int channel = 0; channel < velocityVolume.numChannels; channel++) {
+                        representation->setVoxelNormalized(velocityVolume.getValue(i, channel), i, channel);
+                    }
+                }
+
+                auto* volume = new Volume(representation, spacing, offset);
+                volume->setRealWorldMapping(RealWorldMapping());
+
+                app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
+                    debugVelocityPort_.setData(volume, true);
+                }));
+            }
+        }
+
         if(!success) {
             break;
         }

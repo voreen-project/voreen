@@ -83,6 +83,9 @@ private:
     VolumeListPort measuredDataPort_;
     FlowSimulationConfigPort parameterPort_;
 
+    mutable VolumePort debugMaterialsPort_;
+    mutable VolumePort debugVelocityPort_;
+
     FileDialogProperty simulationResults_;
     BoolProperty deleteOldSimulations_;
 
