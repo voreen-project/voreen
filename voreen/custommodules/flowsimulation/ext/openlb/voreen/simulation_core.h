@@ -374,9 +374,9 @@ SimpleVolume<S> sampleVolume(IndicatorF3D<T>& indicator,
     const int clampledLongestSideN = std::min<int>(outputResolution, longestSideN);
     const T scaling = clampledLongestSideN / longestSideN;
 
-    const Vector<int, 3> gridResolution(std::round(len[0] / converter.getConversionFactorLength() * scaling),
-                                        std::round(len[1] / converter.getConversionFactorLength() * scaling),
-                                        std::round(len[2] / converter.getConversionFactorLength() * scaling));
+    const Vector<int, 3> gridResolution(std::round(len[0] / converter.getConversionFactorLength() * scaling)+1,
+                                        std::round(len[1] / converter.getConversionFactorLength() * scaling)+1,
+                                        std::round(len[2] / converter.getConversionFactorLength() * scaling)+1);
 
     // Init volume.
     SimpleVolume<S> volume(gridResolution, feature.getTargetDim());
@@ -393,22 +393,20 @@ SimpleVolume<S> sampleVolume(IndicatorF3D<T>& indicator,
                             volume.offset[2] + z * volume.spacing[2]};
                 std::vector<T> val(volume.numChannels, 0.0f);
 
-                if (pos[0] >= min[0] && pos[1] >= min[1] && pos[2] >= min[2] &&
-                    pos[0] <= max[0] && pos[1] <= max[1] && pos[2] <= max[2]) {
-                    interpolateFeature(val.data(), pos);
+                // Retrieve data.
+                interpolateFeature(val.data(), pos);
 
-                    // Update min/max.
-                    T magnitude = 0;
-                    for (int i = 0; i < feature.getTargetDim(); i++) {
-                        volume.minValues[i] = std::min<S>(volume.minValues[i], val[i]);
-                        volume.maxValues[i] = std::max<S>(volume.maxValues[i], val[i]);
-                        magnitude += val[i] * val[i];
-                    }
-
-                    // Update min/max magnitude.
-                    volume.minMagnitude = std::min<S>(volume.minMagnitude, magnitude);
-                    volume.maxMagnitude = std::max<S>(volume.maxMagnitude, magnitude);
+                // Update min/max.
+                T magnitude = 0;
+                for (int i = 0; i < feature.getTargetDim(); i++) {
+                    volume.minValues[i] = std::min<S>(volume.minValues[i], val[i]);
+                    volume.maxValues[i] = std::max<S>(volume.maxValues[i], val[i]);
+                    magnitude += val[i] * val[i];
                 }
+
+                // Update min/max magnitude.
+                volume.minMagnitude = std::min<S>(volume.minMagnitude, magnitude);
+                volume.maxMagnitude = std::max<S>(volume.maxMagnitude, magnitude);
 
                 // Downgrade to required type.
                 for (int i = 0; i < volume.numChannels; i++) {
