@@ -962,7 +962,8 @@ VesselnessExtractorOutput VesselnessExtractor::compute(VesselnessExtractorInput 
 }
 
 void VesselnessExtractor::processComputeOutput(VesselnessExtractorOutput output) {
-    const VolumeBase* vol = HDF5VolumeReader().read(output)->at(0);
+    std::unique_ptr<VolumeList> volumes(HDF5VolumeReader().read(output));
+    const VolumeBase* vol = volumes->at(0);
     outport_.setData(vol);
 }
 
