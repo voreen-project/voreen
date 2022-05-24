@@ -28,13 +28,13 @@
 #include "voreen/core/datastructures/geometry/geometrysequence.h"
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/datastructures/volume/volumefactory.h"
+#include "voreen/core/datastructures/volume/volumeelement.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
-#include "voreen/core/utils/stringutils.h"
-
 #include "modules/flowanalysis/utils/flowutils.h"
+#include "modules/hdf5/io/hdf5volumereader.h"
+#include "modules/hdf5/io/hdf5volumewriter.h"
 
 #include "../../ext/openlb/voreen/simulation_core.h"
 
@@ -143,27 +143,23 @@ std::unique_ptr<GlMeshGeometryBase> mergeGeometries(const GlMeshGeometryBase* lh
 
     return nullptr;
 }
-/*
-template <typename I>
-Volume* convertSimpleVolumeToVoreenVolume(const SimpleVolume<I>& volume) {
+
+// Caution: The returned volume is bound to the life-time of the input volume.
+template <typename VolumeType, typename BaseType=typename VolumeElement<typename VolumeType::VoxelType>::BaseType>
+std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volume) {
+
     auto dimensions = tgt::ivec3::fromPointer(volume.dimensions.data());
     auto spacing = tgt::Vector3<T>::fromPointer(volume.spacing.data());
     auto offset = tgt::Vector3<T>::fromPointer(volume.offset.data());
 
-    std::string baseType = getBaseTypeFromType<I>();
-    std::string format = getFormatFromBaseTypeAndChannels(baseType, volume.numChannels);
-    auto* representation = VolumeFactory().create(format, dimensions);
-    for(size_t i=0, numVoxels = tgt::hmul(dimensions); i < numVoxels; i++) {
-        for (int channel = 0; channel < volume.numChannels; channel++) {
-            representation->voxel(i)[channel] = volume.getValue(i, channel), i, channel);
-        }
-    }
+    auto* data = reinterpret_cast<typename VolumeType::VoxelType*>(volume.data.data());
+    auto* representation = new VolumeType(data, dimensions, false);
 
-    auto* output = new Volume(representation, spacing, offset);
-    output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping(baseType));
+    std::unique_ptr<Volume> output(new Volume(representation, spacing, offset));
+    output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<BaseType>());
     return output;
 }
-*/
+
 }
 
 
@@ -393,6 +389,31 @@ void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
     // Nothing to do (yet).
 }
 
+void FlowSimulation::enqueueInsituResult(std::unique_ptr<Volume> volume, const std::string& filename, VolumePort& port) const {
+
+    auto* app = VoreenApplication::app();
+    if(!app) {
+        return;
+    }
+
+    try {
+        HDF5VolumeWriter().write(filename, volume.get());
+    } catch(tgt::FileException& e) {
+        LERROR(e.what());
+        return;
+    }
+
+    app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([filename, &port] {
+        port.clear();
+        try {
+            std::unique_ptr<VolumeList> volumes(HDF5VolumeReaderOriginal().read(filename));
+            port.setData(volumes->at(0), true);
+        } catch(tgt::FileException& e) {
+            LERROR(e.what());
+        }
+    }));
+}
+
 void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                    ProgressReporter& progressReporter) const {
 
@@ -467,25 +488,33 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // === 2nd Step: Prepare Geometry ===
 
-    // Instantiation of the STLreader class
-    // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
+    // Voxelization.
     STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
-    IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
 
-    // Instantiation of a cuboidGeometry with weights
+    // Instantiation.
+    IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
     const int noOfCuboids = 1;//std::thread::hardware_concurrency();
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
-
-    // Instantiation of a loadBalancer
     HeuristicLoadBalancer<T> loadBalancer(cuboidGeometry);
-
-    interruptionPoint();
-
-    // Instantiation of a superGeometry
-    LINFO("Preparing Geometry ...");
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
+    SuperLattice<T, DESCRIPTOR> lattice(superGeometry);
 
+    // Geometry preparation.
+    LINFO("Preparing Geometry ...");
     bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, config.getFlowIndicators());
+
+    // Now already write geometry debug data so that we can see what went wrong..
+    SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
+
+    // And pass it to the outport.
+    {
+        const Vector<T, 3> diag = extendedDomain.getMax() - extendedDomain.getMin();
+        const int len = std::round(std::max({diag[0], diag[1], diag[2]}) / converter.getConversionFactorLength());
+        SimpleVolume<uint8_t> geometryVolume = sampleVolume<uint8_t>(extendedDomain, converter, len, geometry);
+        auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume);
+        enqueueInsituResult(std::move(volume), simulationResultPath + "geometry.h5", debugMaterialsPort_);
+    }
+
     if(!success) {
         LERROR("The model contains errors! Check resolution and geometry.");
         return;
@@ -495,7 +524,6 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // === 3rd Step: Prepare Lattice ===
     LINFO("Preparing Lattice ...");
-    SuperLattice<T, DESCRIPTOR> lattice(superGeometry);
     prepareLattice(lattice, converter,
                    stlReader, superGeometry,
                    config.getFlowIndicators(),
@@ -503,49 +531,10 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     interruptionPoint();
 
-    // Always write geometry debug data..
-    SuperVTMwriter3D<T> vtmWriter( "results" );
-    SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
-    vtmWriter.write( geometry );
-    vtmWriter.createMasterFile();
-/*
-    // And pass it to the outport.
-    if(VoreenApplication* app = VoreenApplication::app()) {
-        app->getCommandQueue()->removeAll(this);
-
-        auto* volume = convertSimpleVolumeToVoreenVolume(sampleVolume<int>(stlReader, converter, config.getOutputResolution(), geometry));
-
-        app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
-            debugMaterialsPort_.setData(volume, true);
-        }));
-    }
-*/
-    // And pass it to the outport.
-    if(VoreenApplication* app = VoreenApplication::app()) {
-        SimpleVolume<int> geometryVolume = sampleVolume<int>(extendedDomain, converter, config.getOutputResolution(), geometry);
-
-        auto dimensions = tgt::ivec3::fromPointer(geometryVolume.dimensions.data());
-        auto spacing = tgt::Vector3<T>::fromPointer(geometryVolume.spacing.data());
-        auto offset = tgt::Vector3<T>::fromPointer(geometryVolume.offset.data());
-
-        auto* representation = new VolumeRAM_UInt8(dimensions);
-        for(size_t i=0, numVoxels = tgt::hmul(dimensions); i < numVoxels; i++) {
-            representation->voxel(i) = geometryVolume.data[i];
-        }
-
-        auto* volume = new Volume(representation, spacing, offset);
-        volume->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<uint8_t>());
-
-        app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
-            debugMaterialsPort_.setData(volume, true);
-        }));
-    }
-
-    interruptionPoint();
-
     // === 4th Step: Main Loop  ===
     const int maxIteration = converter.getLatticeTime(config.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
+    bool swapVelocityFile = true; // See below.
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -563,54 +552,18 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                   config.getFlowFeatures(),
                                   parameters);
 
-        /*
-        SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-        auto volume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
-        someFunction(velocity, volume, debugVelocityPort_);
-
-        // Store last velocity.
-        if(VoreenApplication* app = VoreenApplication::app()) {
-            app->getCommandQueue()->removeAll(this);
-
-            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-
-            auto* volume = convertSimpleVolumeToVoreenVolume();
-
-            app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
-                debugVelocityPort_.setData(volume, true);
-            }));
-        }
-         */
-
         // Store last velocity.
         const int outputIter = maxIteration / config.getNumTimeSteps();
         if (iteration % outputIter == 0) {
-            if (VoreenApplication * app = VoreenApplication::app()) {
-                app->getCommandQueue()->removeAll(this);
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
+            auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
+            auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
+            std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
+            enqueueInsituResult(std::move(volume), simulationResultPath + filename, debugVelocityPort_);
 
-                SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-
-                SimpleVolume<float> velocityVolume = sampleVolume<float>(extendedDomain, converter,
-                                                                         config.getOutputResolution(), velocity);
-
-                auto dimensions = tgt::ivec3::fromPointer(velocityVolume.dimensions.data());
-                auto spacing = tgt::Vector3<T>::fromPointer(velocityVolume.spacing.data());
-                auto offset = tgt::Vector3<T>::fromPointer(velocityVolume.offset.data());
-
-                auto* representation = new VolumeRAM_3xFloat(dimensions);
-                for (size_t i = 0, numVoxels = tgt::hmul(dimensions); i < numVoxels; i++) {
-                    for (int channel = 0; channel < velocityVolume.numChannels; channel++) {
-                        representation->setVoxelNormalized(velocityVolume.getValue(i, channel), i, channel);
-                    }
-                }
-
-                auto* volume = new Volume(representation, spacing, offset);
-                volume->setRealWorldMapping(RealWorldMapping());
-
-                app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
-                    debugVelocityPort_.setData(volume, true);
-                }));
-            }
+            // As the old file might still be in use, we need two files in order
+            // to ensure that we can write the current time step.
+            swapVelocityFile = !swapVelocityFile;
         }
 
         if(!success) {

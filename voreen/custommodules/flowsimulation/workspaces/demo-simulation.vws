@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="Background" ref="ref10" />
+                        <item type="FlowSimulation" ref="ref3" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -92,7 +92,7 @@
                 </Processor>
                 <Processor type="FlowParametrizationRun" name="FlowParametrizationRun" id="ref1">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-373" y="-181" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-375" y="-183" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="addInvalidParametrizations" name="addInvalidParametrizations" value="false" />
@@ -183,7 +183,7 @@
                 </Processor>
                 <Processor type="FlowSimulation" name="FlowSimulation" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-235" y="-46" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-236" y="-46" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="deleteOldSimulations" name="deleteOldSimulations" value="true" />
@@ -197,11 +197,11 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim" />
                                     <item value="../../../Desktop/sim" />
-                                    <item value="/home/spider/Desktop/sim" />
+                                    <item value="/home/s_leis06/Desktop/sim" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="10:40.575 min remaining" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 29.087 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -315,13 +315,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="25250" minValue="0.504999995" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="25351" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001384974" id="ref16">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="25000" minValue="0.5" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="25100" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001398824" id="ref16">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="22.874036789" y="67.86554718" z="42.021957397" />
+                            <position x="30.183103561" y="46.885936737" z="5.355205536" />
                             <focus x="-0.125" y="-0.125" z="49.875" />
-                            <upVector x="0.658391654" y="-0.749544442" z="0.068583064" />
+                            <upVector x="0.539689183" y="-0.748186409" z="0.385944009" />
                             <trackball moveCenter="false">
                                 <center x="-0.125" y="-0.125" z="49.875" />
                             </trackball>
@@ -410,10 +410,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="121" y="49" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1054" y="820" width="958" height="375" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="993" y="806" width="958" height="375" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="1054" y="820" />
+                            <value x="993" y="806" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="958" y="375" />
@@ -511,9 +511,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/e97bc0bd-03d5-4faf-b5eb-53d56870af43/22582af8-05eb-4af4-8dfd-78964b4e6044" />
-                                    <item value="data/tmp/e97bc0bd-03d5-4faf-b5eb-53d56870af43/22582af8-05eb-4af4-8dfd-78964b4e6044" />
-                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/e97bc0bd-03d5-4faf-b5eb-53d56870af43/22582af8-05eb-4af4-8dfd-78964b4e6044" />
+                                    <item value="../../../data/tmp/0e7f14ac-ef58-4dcc-b803-cbe0748e7ca5/80e3564c-e416-49fd-a4d3-1bdfd320e882" />
+                                    <item value="data/tmp/0e7f14ac-ef58-4dcc-b803-cbe0748e7ca5/80e3564c-e416-49fd-a4d3-1bdfd320e882" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/0e7f14ac-ef58-4dcc-b803-cbe0748e7ca5/80e3564c-e416-49fd-a4d3-1bdfd320e882" />
                                 </paths>
                             </paths>
                         </Property>
@@ -586,7 +586,7 @@
                         <Property mapKey="sliceIndex" name="sliceIndex" value="101" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="41" y="3" z="101" />
+                            <value x="41" y="8" z="101" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="2" computeHistogram="true">
@@ -733,10 +733,10 @@
                 <Processor type="Canvas" name="Canvas 2" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-270" y="165" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="57" y="344" width="884" height="1046" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="62" y="184" width="884" height="1046" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="57" y="344" />
+                            <value x="62" y="184" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="884" y="1046" />
@@ -783,7 +783,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="50" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1652944786" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 232 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 191 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
@@ -824,18 +824,18 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-106" y="153" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="25250" minValue="0.504999995" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="25351" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001384974" id="ref17">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="25000" minValue="0.5" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="25100" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.001398824" id="ref17">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="22.874036789" y="67.86554718" z="42.021957397" />
+                            <position x="30.183103561" y="46.885936737" z="5.355205536" />
                             <focus x="-0.125" y="-0.125" z="49.875" />
-                            <upVector x="0.658391654" y="-0.749544442" z="0.068583064" />
+                            <upVector x="0.539689183" y="-0.748186409" z="0.385944009" />
                             <trackball moveCenter="false">
                                 <center x="-0.125" y="-0.125" z="49.875" />
                             </trackball>
-                            <sceneLLF x="-10.625" y="-10.625" z="-0.625001192" />
-                            <sceneURB x="10.375" y="10.375" z="100.375" />
+                            <sceneLLF x="-10.125" y="-10.125" z="-0.125001162" />
+                            <sceneURB x="9.875" y="9.875" z="99.875" />
                         </Property>
                         <Property mapKey="colorProp" name="colorProp" value="velocity" />
                         <Property mapKey="colorRotationMatrix" name="colorRotationMatrix">
@@ -867,7 +867,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0.000000001" y="0.051465202" />
+                                <domain x="0.002998644" y="0.140736058" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -1161,6 +1161,11 @@
                     <SourceProperty ref="ref20" />
                     <DestinationProperty ref="ref21" />
                     <Evaluator type="LinkEvaluatorRenderSize" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="CameraProperty" ref="ref17" />
+                    <DestinationProperty type="CameraProperty" ref="ref16" />
+                    <Evaluator type="LinkEvaluatorCameraId" />
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>

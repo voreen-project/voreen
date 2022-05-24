@@ -46,7 +46,6 @@ struct FlowSimulationInput {
 };
 
 struct FlowSimulationOutput {
-    // Could add insitu results here.
 };
 
 /**
@@ -78,6 +77,7 @@ protected:
 private:
 
     void runSimulation(const FlowSimulationInput& input, ProgressReporter& progressReporter) const;
+    void enqueueInsituResult(std::unique_ptr<Volume> volume, const std::string& filename, VolumePort& port) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;

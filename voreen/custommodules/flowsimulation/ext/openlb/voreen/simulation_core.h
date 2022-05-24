@@ -247,7 +247,8 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
         }
         else if(indicator.type_ == FIT_PRESSURE) {
             defineBulkDynamics(parameters.turbulenceModel_, lattice, superGeometry, indicator.id_);
-            setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
+            //setInterpolatedPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
+            setLocalPressureBoundary<T,DESCRIPTOR>(lattice, omega, superGeometry.getMaterialIndicator(indicator.id_));
         }
     }
 
@@ -360,7 +361,7 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
 template<typename S>
 SimpleVolume<S> sampleVolume(IndicatorF3D<T>& indicator,
                              UnitConverter<T,DESCRIPTOR>& converter,
-                             int outputResolution,
+                             int maxOutputResolution,
                              SuperF3D<T, T>& feature) {
 
     AnalyticalFfromSuperF3D<T> interpolateFeature(feature, true);
@@ -368,11 +369,10 @@ SimpleVolume<S> sampleVolume(IndicatorF3D<T>& indicator,
     const Vector<T, 3>& min = indicator.getMin();
     const Vector<T, 3>& max = indicator.getMax();
 
-    const Vector<T, 3> len = (max - min);
+    const Vector<T, 3> len = max - min;
     const T maxLen = std::max({len[0], len[1], len[2]});
-    const int longestSideN = std::round(maxLen / converter.getConversionFactorLength());
-    const int clampledLongestSideN = std::min<int>(outputResolution, longestSideN);
-    const T scaling = clampledLongestSideN / longestSideN;
+    const int maxLenN = std::round(maxLen / converter.getConversionFactorLength());
+    const T scaling = std::min<T>(maxOutputResolution, maxLenN) / maxLenN;
 
     const Vector<int, 3> gridResolution(std::round(len[0] / converter.getConversionFactorLength() * scaling)+1,
                                         std::round(len[1] / converter.getConversionFactorLength() * scaling)+1,
@@ -565,6 +565,22 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
         bool writeVTI = outputFormat == ".vti";
 
         SuperVTMwriter3D<T> vtmWriter( "results" );
+
+        // Always write debug data.
+#ifndef VRN_MODULE_FLOWSIMULATION
+        if(iteration == 0) {
+            SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
+            vtmWriter.write( geometry );
+
+            SuperLatticeCuboid3D<T, DESCRIPTOR> cuboid( lattice );
+            vtmWriter.write( cuboid );
+
+            SuperLatticeRank3D<T, DESCRIPTOR> rank( lattice );
+            vtmWriter.write( rank );
+
+            vtmWriter.createMasterFile();
+        }
+#endif
 
         if(flowFeatures & FF_VELOCITY) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
