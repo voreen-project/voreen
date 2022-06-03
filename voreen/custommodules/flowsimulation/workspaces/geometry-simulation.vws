@@ -6,13 +6,8 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="FlowSimulation" ref="ref3" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="0" y="233.347946167" />
+                    <value x="-52.384235382" y="542.891174316" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.629960537" />
             </MetaData>
@@ -276,18 +271,18 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102187.5" minValue="0.375" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102596.25" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.00019309" id="ref28">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102304.3203125" minValue="2.046086311" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102713.5390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000196638" id="ref28">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="439.80871582" y="-258.084106445" z="291.210418701" />
-                            <focus x="46.461055756" y="76.07244873" z="248.423629761" />
-                            <upVector x="-0.002425512" y="0.033949453" z="0.999420643" />
+                            <position x="326.394348145" y="-235.678359985" z="509.759338379" />
+                            <focus x="50.552993774" y="77.023910522" z="218.638305664" />
+                            <upVector x="-0.040020101" y="0.2481924" z="0.967883706" />
                             <trackball moveCenter="false">
-                                <center x="50.400650024" y="76.895004272" z="218.638305664" />
+                                <center x="50.552993774" y="77.023910522" z="218.638305664" />
                             </trackball>
                             <sceneLLF x="-153.725646973" y="-127.231292725" z="14.512003899" />
-                            <sceneURB x="254.306427002" y="280.80078125" z="423.125427246" />
+                            <sceneURB x="254.306427002" y="280.80078125" z="422.748199463" />
                         </Property>
                         <Property mapKey="composeShader" name="composeShader">
                             <MetaData>
@@ -320,13 +315,13 @@
                                 <item shaderType="1" originalFilename="oit_blend.frag" modified="false" />
                             </components>
                         </Property>
-                        <Property mapKey="renderGeometries" name="renderGeometries" value="false" />
+                        <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
                         <Property mapKey="useFloatRenderTargets" name="useFloatRenderTargets" value="false" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
-                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref34">
+                                <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin">
                                     <value x="727" y="757" />
                                 </Property>
                             </Properties>
@@ -371,10 +366,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref13">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="140" y="644" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1180" y="385" width="727" height="757" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1560" y="614" width="727" height="757" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="1180" y="385" />
+                            <value x="1560" y="614" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="727" y="757" />
@@ -472,9 +467,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/583c96f1-57bb-426c-842b-78c5cba2791f" />
-                                    <item value="data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/583c96f1-57bb-426c-842b-78c5cba2791f" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/583c96f1-57bb-426c-842b-78c5cba2791f" />
+                                    <item value="../../../data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/21396b7b-4714-425b-9152-cd81ce3b5238" />
+                                    <item value="data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/21396b7b-4714-425b-9152-cd81ce3b5238" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/21396b7b-4714-425b-9152-cd81ce3b5238" />
                                 </paths>
                             </paths>
                         </Property>
@@ -497,7 +492,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="SliceViewer" name="SliceViewer" id="ref5">
+                <Processor type="SliceViewer" name="SliceViewer" id="ref8">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-320" y="125" />
                     </MetaData>
@@ -544,7 +539,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="1000" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="911" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -554,7 +549,7 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
-                                    <value x="0" y="255" />
+                                    <value x="-0.000026389" y="255" />
                                 </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
@@ -601,10 +596,13 @@
                         <Property mapKey="transferFunction2" name="transferFunction2" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="-0.000026847" y="1" />
+                                </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="-0.000026847" y="0.000028514" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -619,10 +617,13 @@
                         <Property mapKey="transferFunction3" name="transferFunction3" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="-0.000034019" y="1" />
+                                </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
-                                <texDimensions x="1024" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="-0.000034019" y="0.000027509" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -694,10 +695,10 @@
                 <Processor type="Canvas" name="Canvas 2" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-319" y="237" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="176" y="745" width="1622" height="1058" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="-306" y="868" width="1622" height="1058" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="176" y="745" />
+                            <value x="-306" y="868" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1622" y="1058" />
@@ -729,7 +730,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="StreamlineCreator" name="StreamlineCreator" id="ref6">
+                <Processor type="StreamlineCreator" name="StreamlineCreator" id="ref5">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-154" y="128" />
                     </MetaData>
@@ -744,7 +745,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="50" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1652944786" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 232 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 756 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
@@ -785,18 +786,18 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-155" y="225" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102187.5" minValue="0.375" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102596.25" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.00019309" id="ref29">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102304.3203125" minValue="2.046086311" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102713.5390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000196638" id="ref29">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="439.80871582" y="-258.084106445" z="291.210418701" />
-                            <focus x="46.461055756" y="76.07244873" z="248.423629761" />
-                            <upVector x="-0.002425512" y="0.033949453" z="0.999420643" />
+                            <position x="326.394348145" y="-235.678359985" z="509.759338379" />
+                            <focus x="50.552993774" y="77.023910522" z="218.638305664" />
+                            <upVector x="-0.040020104" y="0.24819243" z="0.967883825" />
                             <trackball moveCenter="false">
-                                <center x="50.400650024" y="76.895004272" z="218.638305664" />
+                                <center x="50.552993774" y="77.023910522" z="218.638305664" />
                             </trackball>
-                            <sceneLLF x="-10.625" y="-10.625" z="-0.625001192" />
-                            <sceneURB x="10.375" y="10.375" z="100.375" />
+                            <sceneLLF x="11.542007446" y="12.53635788" z="14.029659271" />
+                            <sceneURB x="89.563980103" y="141.511459351" z="423.246948242" />
                         </Property>
                         <Property mapKey="colorProp" name="colorProp" value="velocity" />
                         <Property mapKey="colorRotationMatrix" name="colorRotationMatrix">
@@ -828,7 +829,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0.000000001" y="0.051465202" />
+                                <domain x="0.000000001" y="0.000019514" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -963,9 +964,9 @@
                         <Property mapKey="path" name="path" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/1c47170c-5fcf-4465-98ef-1a02f7943390.stl" />
-                                    <item value="data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/1c47170c-5fcf-4465-98ef-1a02f7943390.stl" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/1c47170c-5fcf-4465-98ef-1a02f7943390.stl" />
+                                    <item value="../../../data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/3c32e238-d77b-4a4c-86d3-1661468ffb17.stl" />
+                                    <item value="data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/3c32e238-d77b-4a4c-86d3-1661468ffb17.stl" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/3c32e238-d77b-4a4c-86d3-1661468ffb17.stl" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1036,7 +1037,7 @@
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="3" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 26.021 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 5:23.764 min" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1089,7 +1090,7 @@
                     <Properties>
                         <Property mapKey="angleThreshold" name="angleThreshold" value="15" />
                         <Property mapKey="cloneFlowIndicator" name="cloneFlowIndicator" />
-                        <Property mapKey="flowIndicatorTable" name="flowIndicatorTable" columnCount="3" selectedRow="-1">
+                        <Property mapKey="flowIndicatorTable" name="flowIndicatorTable" columnCount="3" selectedRow="4">
                             <columnLabels>
                                 <item value="ID" />
                                 <item value="Name" />
@@ -1124,14 +1125,14 @@
                             </values>
                         </Property>
                         <Property mapKey="flowProfile" name="flowProfile" value="poiseuille" />
-                        <Property mapKey="flowType" name="flowType" value="velocity" />
+                        <Property mapKey="flowType" name="flowType" value="pressure" />
                         <Property mapKey="forceAxisAlignment" name="forceAxisAlignment" value="true" />
-                        <Property mapKey="indicatorName" name="indicatorName" value="Inlet" />
-                        <Property mapKey="invertDirection" name="invertDirection" value="false" />
+                        <Property mapKey="indicatorName" name="indicatorName" value="Indicator 7" />
+                        <Property mapKey="invertDirection" name="invertDirection" value="true" />
                         <Property mapKey="length" name="length" value="0" />
-                        <Property mapKey="position" name="position" value="0" />
-                        <Property mapKey="radius" name="radius" value="1" />
-                        <Property mapKey="relativeRadiusCorrection" name="relativeRadiusCorrection" value="1.090000033" />
+                        <Property mapKey="position" name="position" value="9" />
+                        <Property mapKey="radius" name="radius" value="7.599406242" />
+                        <Property mapKey="relativeRadiusCorrection" name="relativeRadiusCorrection" value="1.624179959" />
                         <Property mapKey="removeFlowIndicator" name="removeFlowIndicator" />
                         <Property mapKey="resetFlowIndicators" name="resetFlowIndicators" />
                         <Property mapKey="targetVelocity" name="targetVelocity" value="0" />
@@ -1140,7 +1141,7 @@
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="velocityCurvePeriodicity" name="velocityCurvePeriodicity" value="false" />
-                        <Property mapKey="velocityCurveType" name="velocityCurveType" value="heartBeat" />
+                        <Property mapKey="velocityCurveType" name="velocityCurveType" value="sinus" />
                     </Properties>
                     <Inports>
                         <Port name="floParametrization.inport" direction="1" portID="floParametrization.inport" guiName="Flow Parametrization Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -1168,9 +1169,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <flowIndicators>
-                        <item type_="2" id_="3" name="Indicator 3" radius="12.244773865" length="0" flowProfile="1">
+                        <item type_="2" id_="3" name="Indicator 3" radius="13.276691437" length="0" flowProfile="1">
                             <center x="76.812469482" y="92.493980408" z="38.585899353" />
-                            <normal x="-0" y="-0.376378417" z="-0.926466107" />
+                            <normal x="-0" y="-0" z="-1" />
                             <velocityCurve periodic="false">
                                 <peakVelocities>
                                     <value key="0" value="0" />
@@ -1235,9 +1236,9 @@
                                 </peakVelocities>
                             </velocityCurve>
                         </item>
-                        <item type_="2" id_="5" name="Indicator 5" radius="10.120094299" length="0" flowProfile="1">
-                            <center x="22.952236176" y="43.938156128" z="390.360565186" />
-                            <normal x="-0.737254143" y="-0.050843671" z="0.673699558" />
+                        <item type_="2" id_="5" name="Indicator 5" radius="12.57600975" length="0" flowProfile="1">
+                            <center x="31.673923492" y="43.938156128" z="382.148895264" />
+                            <normal x="-0" y="-0" z="1" />
                             <velocityCurve periodic="false">
                                 <peakVelocities>
                                     <value key="0" value="0" />
@@ -1274,9 +1275,9 @@
                                 </peakVelocities>
                             </velocityCurve>
                         </item>
-                        <item type_="2" id_="6" name="Indicator 6" radius="5.931478024" length="0" flowProfile="1">
+                        <item type_="2" id_="6" name="Indicator 6" radius="7.088840008" length="0" flowProfile="1">
                             <center x="54.778736115" y="50.823696136" z="412.343261719" />
-                            <normal x="-0" y="-0.228192806" z="0.973615944" />
+                            <normal x="-0" y="-0" z="1" />
                             <velocityCurve periodic="false">
                                 <peakVelocities>
                                     <value key="0" value="0" />
@@ -1313,9 +1314,9 @@
                                 </peakVelocities>
                             </velocityCurve>
                         </item>
-                        <item type_="2" id_="7" name="Indicator 7" radius="6.701835632" length="0" flowProfile="1">
-                            <center x="64.571502686" y="72.09236908" z="416.423583984" />
-                            <normal x="0.478360206" y="-0.430523843" z="0.765389204" />
+                        <item type_="2" id_="7" name="Indicator 7" radius="7.599406242" length="0" flowProfile="1">
+                            <center x="63.143398285" y="73.673500061" z="413.975402832" />
+                            <normal x="-0" y="-0" z="1" />
                             <velocityCurve periodic="false">
                                 <peakVelocities>
                                     <value key="0" value="0" />
@@ -1354,11 +1355,11 @@
                         </item>
                     </flowIndicators>
                     <flowIndicatorSettings>
-                        <item nodeId="0" edgeId="2" centerlinePosition="28" relativeRadiusCorrection="1.526329994" invertDirection="true" forceAxisAlignment="false" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
+                        <item nodeId="0" edgeId="2" centerlinePosition="28" relativeRadiusCorrection="1.654960036" invertDirection="true" forceAxisAlignment="true" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
                         <item nodeId="1" edgeId="0" centerlinePosition="3" relativeRadiusCorrection="1.090000033" invertDirection="false" forceAxisAlignment="true" velocityCurveType="heartBeat" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
-                        <item nodeId="2" edgeId="4" centerlinePosition="4" relativeRadiusCorrection="1.392379999" invertDirection="true" forceAxisAlignment="false" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
-                        <item nodeId="3" edgeId="5" centerlinePosition="5" relativeRadiusCorrection="1.639999986" invertDirection="true" forceAxisAlignment="false" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
-                        <item nodeId="4" edgeId="6" centerlinePosition="6" relativeRadiusCorrection="1.474840045" invertDirection="true" forceAxisAlignment="false" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
+                        <item nodeId="2" edgeId="4" centerlinePosition="15" relativeRadiusCorrection="1.670539975" invertDirection="true" forceAxisAlignment="true" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
+                        <item nodeId="3" edgeId="5" centerlinePosition="5" relativeRadiusCorrection="1.960000038" invertDirection="true" forceAxisAlignment="true" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
+                        <item nodeId="4" edgeId="6" centerlinePosition="9" relativeRadiusCorrection="1.624179959" invertDirection="true" forceAxisAlignment="true" velocityCurveType="sinus" velocityCurveDuration="0.25" targetVelocity="0" velocityCurveFile="" velocityCurvePeriodic="false" />
                     </flowIndicatorSettings>
                 </Processor>
                 <Processor type="GeometryClose" name="GeometryClose" id="ref17">
@@ -1580,9 +1581,9 @@
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/7ed510be-5b67-4523-a83e-a0bf9eac45a0.h5" />
-                                    <item value="data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/7ed510be-5b67-4523-a83e-a0bf9eac45a0.h5" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/d0decb7f-3fb2-4b00-9c5b-c300cd60a571/7ed510be-5b67-4523-a83e-a0bf9eac45a0.h5" />
+                                    <item value="../../../data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/6dbdd333-51e5-420c-8ae7-4ed073b83ece.h5" />
+                                    <item value="data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/6dbdd333-51e5-420c-8ae7-4ed073b83ece.h5" />
+                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/b938118f-544c-4706-83a0-36a97fb8d2dd/6dbdd333-51e5-420c-8ae7-4ed073b83ece.h5" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1670,21 +1671,21 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="SingleVolumeRaycaster" name="SingleVolumeRaycaster" id="ref8">
+                <Processor type="SingleVolumeRaycaster" name="SingleVolumeRaycaster" id="ref7">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="77" y="149" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102187.5" minValue="0.375" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102596.25" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.00019309" id="ref32">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102304.3203125" minValue="2.046086311" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102713.5390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000196638" id="ref32">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="439.80871582" y="-258.084106445" z="291.210418701" />
-                            <focus x="46.461055756" y="76.07244873" z="248.423629761" />
-                            <upVector x="-0.002425512" y="0.033949453" z="0.999420643" />
+                            <position x="326.394348145" y="-235.678359985" z="509.759338379" />
+                            <focus x="50.552993774" y="77.023910522" z="218.638305664" />
+                            <upVector x="-0.040020101" y="0.2481924" z="0.967883706" />
                             <trackball moveCenter="false">
-                                <center x="50.400650024" y="76.895004272" z="218.638305664" />
+                                <center x="50.552993774" y="77.023910522" z="218.638305664" />
                             </trackball>
                             <sceneLLF x="11.775650024" y="12.770000458" z="14.263301849" />
                             <sceneURB x="89.025650024" y="141.020004272" z="423.013305664" />
@@ -1772,9 +1773,9 @@
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="4353.0703125">
-                            <value x="2.410259247" y="1.61025238" z="1.319564819" w="1" />
-                            <Center x="50.400650024" y="76.895004272" z="218.638305664" />
-                            <LightPos x="-83.123397827" y="-219.669815063" z="-5.828197479" w="1" />
+                            <value x="2.562602997" y="1.73915863" z="1.319564819" w="1" />
+                            <Center x="50.552993774" y="77.023910522" z="218.638305664" />
+                            <LightPos x="-56.988952637" y="-202.742996216" z="-104.14339447" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -1957,7 +1958,7 @@
                         <Property mapKey="transFuncType" name="transFuncType" value="1D Keys Color Map" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="true" x="0" y="0" width="767" height="477" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="767" height="477" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
                                     <value x="0" y="7" />
                                 </MetaItem>
@@ -2103,7 +2104,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="OptimizedProxyGeometry" name="OptimizedProxyGeometry" id="ref7">
+                <Processor type="OptimizedProxyGeometry" name="OptimizedProxyGeometry" id="ref6">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="109" y="-69" />
                     </MetaData>
@@ -2223,18 +2224,18 @@
                 </Processor>
                 <Processor type="MeshEntryExitPoints" name="MeshEntryExitPoints" id="ref25">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="152" y="4" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="118" y="29" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102187.5" minValue="0.375" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102596.25" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.00019309" id="ref33">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="102304.3203125" minValue="2.046086311" frustLeft="-0.155330092" frustRight="0.155330092" frustBottom="-0.155330092" frustTop="0.155330092" frustNear="0.375" frustFar="102713.5390625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000196638" id="ref33">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="439.80871582" y="-258.084106445" z="291.210418701" />
-                            <focus x="46.461055756" y="76.07244873" z="248.423629761" />
-                            <upVector x="-0.002425512" y="0.033949453" z="0.999420643" />
+                            <position x="326.394348145" y="-235.678359985" z="509.759338379" />
+                            <focus x="50.552993774" y="77.023910522" z="218.638305664" />
+                            <upVector x="-0.040020104" y="0.24819243" z="0.967883825" />
                             <trackball moveCenter="false">
-                                <center x="50.400650024" y="76.895004272" z="218.638305664" />
+                                <center x="50.552993774" y="77.023910522" z="218.638305664" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -2254,7 +2255,7 @@
                         <Port name="image.entrypoints" direction="0" portID="image.entrypoints" guiName="Entry-points Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref35">
+                                <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive">
                                     <value x="727" y="757" />
                                 </Property>
                             </Properties>
@@ -2262,7 +2263,7 @@
                         <Port name="image.exitpoints" direction="0" portID="image.exitpoints" guiName="Exit-points Output" allowMultipleConnections="true" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
-                                <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref36">
+                                <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive">
                                     <value x="727" y="757" />
                                 </Property>
                             </Properties>
@@ -2320,16 +2321,8 @@
                     <Outport name="debugMaterialsPort">
                         <Processor type="FlowSimulation" ref="ref3" />
                     </Outport>
-                    <Inport name="volumehandle.volumehandle">
-                        <Processor type="SliceViewer" ref="ref5" />
-                    </Inport>
-                </Connection>
-                <Connection>
-                    <Outport name="debugMaterialsPort">
-                        <Processor type="FlowSimulation" ref="ref3" />
-                    </Outport>
                     <Inport name="seedMaskPort">
-                        <Processor type="StreamlineCreator" ref="ref6" />
+                        <Processor type="StreamlineCreator" ref="ref5" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -2337,7 +2330,7 @@
                         <Processor type="FlowSimulation" ref="ref3" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
-                        <Processor type="OptimizedProxyGeometry" ref="ref7" />
+                        <Processor type="OptimizedProxyGeometry" ref="ref6" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -2345,7 +2338,15 @@
                         <Processor type="FlowSimulation" ref="ref3" />
                     </Outport>
                     <Inport name="volumehandle.volumehandle">
-                        <Processor type="SingleVolumeRaycaster" ref="ref8" />
+                        <Processor type="SingleVolumeRaycaster" ref="ref7" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="debugMaterialsPort">
+                        <Processor type="FlowSimulation" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumehandle.volumehandle">
+                        <Processor type="SliceViewer" ref="ref8" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -2353,7 +2354,7 @@
                         <Processor type="FlowSimulation" ref="ref3" />
                     </Outport>
                     <Inport name="volInport">
-                        <Processor type="StreamlineCreator" ref="ref6" />
+                        <Processor type="StreamlineCreator" ref="ref5" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -2366,7 +2367,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="image.outport">
-                        <Processor type="SliceViewer" ref="ref5" />
+                        <Processor type="SliceViewer" ref="ref8" />
                     </Outport>
                     <Inport name="image.input">
                         <Processor type="Canvas" ref="ref11" />
@@ -2374,7 +2375,7 @@
                 </Connection>
                 <Connection>
                     <Outport name="streamlineOutport">
-                        <Processor type="StreamlineCreator" ref="ref6" />
+                        <Processor type="StreamlineCreator" ref="ref5" />
                     </Outport>
                     <Inport name="streamlineInport">
                         <Processor type="StreamlineRenderer3D" ref="ref12" />
@@ -2501,16 +2502,8 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="image.output">
-                        <Processor type="SingleVolumeRaycaster" ref="ref8" />
-                    </Outport>
-                    <Inport name="image.input">
-                        <Processor type="GeometryProcessor" ref="ref9" />
-                    </Inport>
-                </Connection>
-                <Connection>
                     <Outport name="proxygeometry.geometry">
-                        <Processor type="OptimizedProxyGeometry" ref="ref7" />
+                        <Processor type="OptimizedProxyGeometry" ref="ref6" />
                     </Outport>
                     <Inport name="proxgeometry.geometry">
                         <Processor type="MeshEntryExitPoints" ref="ref25" />
@@ -2521,7 +2514,7 @@
                         <Processor type="MeshEntryExitPoints" ref="ref25" />
                     </Outport>
                     <Inport name="image.entrypoints">
-                        <Processor type="SingleVolumeRaycaster" ref="ref8" />
+                        <Processor type="SingleVolumeRaycaster" ref="ref7" />
                     </Inport>
                 </Connection>
                 <Connection>
@@ -2529,7 +2522,7 @@
                         <Processor type="MeshEntryExitPoints" ref="ref25" />
                     </Outport>
                     <Inport name="image.exitpoints">
-                        <Processor type="SingleVolumeRaycaster" ref="ref8" />
+                        <Processor type="SingleVolumeRaycaster" ref="ref7" />
                     </Inport>
                 </Connection>
             </Connections>
@@ -2627,16 +2620,6 @@
                     <SourceProperty type="CameraProperty" ref="ref33" />
                     <DestinationProperty type="CameraProperty" ref="ref32" />
                     <Evaluator type="LinkEvaluatorCameraId" />
-                </PropertyLink>
-                <PropertyLink>
-                    <SourceProperty ref="ref34" />
-                    <DestinationProperty ref="ref35" />
-                    <Evaluator type="LinkEvaluatorRenderSize" />
-                </PropertyLink>
-                <PropertyLink>
-                    <SourceProperty ref="ref34" />
-                    <DestinationProperty ref="ref36" />
-                    <Evaluator type="LinkEvaluatorRenderSize" />
                 </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>

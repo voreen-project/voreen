@@ -91,21 +91,35 @@ struct SimpleVolume {
 
 using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
 
+class ZeroAnalyticalF3D : public AnalyticalF3D<T, T> {
+public:
+    ZeroAnalyticalF3D() : AnalyticalF3D<T, T>(3) {}
+    virtual bool operator() (T output[], const T input[]) {
+        for(size_t i=0; i<3; i++) {
+            output[i] = 0;
+        }
+        return true;
+    }
+} ZeroFunctor;
+
 class LatticePerturber : public AnalyticalF3D<T, T> {
 public:
-    LatticePerturber(T maxNoise=1e-5)
+    LatticePerturber(AnalyticalF3D<T, T>& original = ZeroFunctor, T maxNoise=1e-5)
         : AnalyticalF3D<T, T>(3)
+        , original_(original)
         , rnd_(std::bind(std::uniform_real_distribution<T>(-maxNoise, maxNoise), std::mt19937(time(nullptr))))
     {
     }
     virtual bool operator() (T output[], const T input[]) {
+        original_(output, input);
         for(size_t i=0; i<3; i++) {
-            output[i] = rnd_();
+            output[i] += rnd_();
         }
         return true;
     }
 
 private:
+    AnalyticalF3D<T, T>& original_;
     std::function<T()> rnd_;
 };
 

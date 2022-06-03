@@ -160,6 +160,31 @@ std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volum
     return output;
 }
 
+void indicateErroneousVoxels(SimpleVolume<uint8_t>& volume) {
+    const auto value = volume.maxValues[0] + 1;
+    auto dim = volume.dimensions;
+#ifdef VRN_MODULE_OPENMP
+#pragma omp parallel for
+#endif
+    for (int z = 1; z < dim[2] - 1; z++) {
+        for (int y = 1; y < dim[1] - 1; y++) {
+            for (int x = 1; x < dim[0] - 1; x++) {
+                if (volume.getValue(x, y, z) == 0) {
+                    for(int dz : {-1, 1}) {
+                        for(int dy : {-1, 1}) {
+                            for(int dx : {-1, 1}) {
+                                if(volume.getValue(x+dx, y+dy, z+dz) == 1) {
+                                    volume.setValue(value, x+dx, y+dy, z+dz);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 }
 
 
@@ -511,6 +536,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         const Vector<T, 3> diag = extendedDomain.getMax() - extendedDomain.getMin();
         const int len = std::round(std::max({diag[0], diag[1], diag[2]}) / converter.getConversionFactorLength());
         SimpleVolume<uint8_t> geometryVolume = sampleVolume<uint8_t>(extendedDomain, converter, len, geometry);
+        if(!success) indicateErroneousVoxels(geometryVolume);
         auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume);
         enqueueInsituResult(std::move(volume), simulationResultPath + "geometry.h5", debugMaterialsPort_);
     }
