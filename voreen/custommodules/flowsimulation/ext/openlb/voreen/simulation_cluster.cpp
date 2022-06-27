@@ -6,13 +6,6 @@
 const std::string simulation = "simulation_cluster";
 const std::string base = "/scratch/tmp/s_leis06/simulations/";
 
-// Config
-T simulationTime = 0.0;
-int numTimeSteps = 1;
-int outputResolution = 1;
-std::string outputFileFormat;
-int flowFeatures = FF_NONE;
-
 VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
     VelocityCurve curve;
 
@@ -145,14 +138,14 @@ int main(int argc, char* argv[]) {
 
     // Parse XML simulation config.
     XMLreader config("config.xml");
-    simulationTime          = std::atof(config["simulationTime"].getAttribute("value").c_str());
-    numTimeSteps            = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
-    outputResolution        = std::atoi(config["outputResolution"].getAttribute("value").c_str());
-    outputFileFormat        =           config["outputFileFormat"].getAttribute("value");
-    flowFeatures            = std::atoi(config["flowFeatures"].getAttribute("value").c_str());
+    T simulationTime             = std::atof(config["simulationTime"].getAttribute("value").c_str());
+    int numTimeSteps             = std::atoi(config["numTimeSteps"].getAttribute("value").c_str());
+    int outputResolution         = std::atoi(config["outputResolution"].getAttribute("value").c_str());
+    std::string outputFileFormat =           config["outputFileFormat"].getAttribute("value");
+    int flowFeatures             = std::atoi(config["flowFeatures"].getAttribute("value").c_str());
 
-    Parameters parameters = deserializeParameters(config["flowParameters"]);
-    std::vector<FlowIndicator> indicators = deserializeFlowIndicators(config["flowIndicators"]);
+    auto parameters = deserializeParameters(config["flowParameters"]);
+    auto indicators = deserializeFlowIndicators(config["flowIndicators"]);
 
     clout << "Found " << indicators.size() << " Flow Indicators" << std::endl;
 
@@ -192,8 +185,11 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a superGeometry
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
-
-    prepareGeometry(converter, extendedDomain, stlReader, superGeometry, indicators);
+    bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, indicators);
+    if(!success) {
+        clout << "The model contains errors! Check resolution and geometry." << std::endl;
+        return EXIT_FAILURE;
+    }
 
     // === 3rd Step: Prepare Lattice ===
     SuperLattice<T, DESCRIPTOR> lattice(superGeometry);
@@ -221,13 +217,18 @@ int main(int argc, char* argv[]) {
         lattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        getResults(lattice, converter, iteration, maxIteration, superGeometry, stlReader,
-                   singleton::directories().getLogOutDir(),
-                   numTimeSteps,
-                   outputResolution,
-                   outputFileFormat,
-                   flowFeatures,
-                   parameters);
+        bool success = getResults(lattice, converter, iteration, maxIteration, superGeometry, stlReader,
+                                  singleton::directories().getLogOutDir(),
+                                  numTimeSteps,
+                                  outputResolution,
+                                  outputFileFormat,
+                                  flowFeatures,
+                                  parameters);
+
+        if(!success) {
+            clout << "Simulation diverged!" << std::endl;
+            return EXIT_FAILURE;
+        }
 
         // === 8th Step: Check for convergence.
         converge.takeValue(lattice.getStatistics().getAverageEnergy(), true);

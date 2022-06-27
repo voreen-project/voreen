@@ -371,6 +371,10 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         selectedParametrization = static_cast<size_t>(selectedParametrization_.get());
     }
 
+    // Clear debug data, so their file handles of old volumes get closed and can be overwritten.
+    debugMaterialsPort_.clear();
+    debugVelocityPort_.clear();
+
     return FlowSimulationInput{
             geometryPath,
             measuredData,
@@ -560,7 +564,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     // === 4th Step: Main Loop  ===
     const int maxIteration = converter.getLatticeTime(config.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
-    bool swapVelocityFile = true; // See below.
+    bool swapVelocityFile = false; // See below.
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
