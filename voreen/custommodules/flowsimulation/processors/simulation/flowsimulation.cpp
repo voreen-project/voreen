@@ -199,7 +199,7 @@ FlowSimulation::FlowSimulation()
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , debugMaterialsPort_(Port::OUTPORT, "debugMaterialsPort", "Debug Materials Port", false, Processor::VALID)
     , debugVelocityPort_(Port::OUTPORT, "debugVelocityPort", "Debug Velocity Port", false, Processor::VALID)
-    , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulation"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", "", "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations", false)
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
@@ -271,6 +271,11 @@ void FlowSimulation::adjustPropertiesToInput() {
         selectedParametrization_.setMaxValue(static_cast<int>(config->size()) - 1);
         selectedParametrization_.set(0);
     }
+}
+
+void FlowSimulation::clearOutports() {
+    // We do not clear debug data.
+    // It may be available even if the processor is not ready.
 }
 
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
@@ -418,20 +423,55 @@ void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
     // Nothing to do (yet).
 }
 
-void FlowSimulation::enqueueInsituResult(std::unique_ptr<Volume> volume, const std::string& filename, VolumePort& port) const {
+void FlowSimulation::serialize(Serializer& s) const {
+    AsyncComputeProcessor::serialize(s);
+
+    if(debugMaterialsPort_.hasData()) {
+        s.serialize("debugMaterialsPortDataPath", debugMaterialsPort_.getData()->getOrigin());
+    }
+    if(debugVelocityPort_.hasData()) {
+        s.serialize("debugVelocityPortDataPath", debugVelocityPort_.getData()->getOrigin());
+    }
+}
+
+void FlowSimulation::deserialize(Deserializer& s) {
+    AsyncComputeProcessor::deserialize(s);
+
+    auto deserializeDebugData = [&] (const std::string& key, VolumePort& port) {
+        VolumeURL debugPortDataPath;
+
+        try {
+            s.deserialize(key, debugPortDataPath);
+        } catch (SerializationException& e) {
+            s.removeLastError();
+            return;
+        }
+
+        enqueueInsituResult(debugPortDataPath.getURL(), port);
+    };
+
+    deserializeDebugData("debugMaterialsPortDataPath", debugMaterialsPort_);
+    deserializeDebugData("debugVelocityPortDataPath", debugVelocityPort_);
+}
+
+void FlowSimulation::enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume) const {
 
     auto* app = VoreenApplication::app();
     if(!app) {
         return;
     }
 
-    try {
-        HDF5VolumeWriter().write(filename, volume.get());
-    } catch(tgt::FileException& e) {
-        LERROR(e.what());
-        return;
+    // Write volume to disk, if provided.
+    if(volume) {
+        try {
+            HDF5VolumeWriter().write(filename, volume.get());
+        } catch (tgt::FileException& e) {
+            LERROR(e.what());
+            return;
+        }
     }
 
+    // Enqueue setting of port data for synchronous execution.
     app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([filename, &port] {
         port.clear();
         try {
@@ -542,7 +582,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         SimpleVolume<uint8_t> geometryVolume = sampleVolume<uint8_t>(extendedDomain, converter, len, geometry);
         if(!success) indicateErroneousVoxels(geometryVolume);
         auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume);
-        enqueueInsituResult(std::move(volume), simulationResultPath + "geometry.h5", debugMaterialsPort_);
+        enqueueInsituResult(simulationResultPath + "geometry.h5", debugMaterialsPort_, std::move(volume));
     }
 
     if(!success) {
@@ -589,7 +629,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
             auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
             std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
-            enqueueInsituResult(std::move(volume), simulationResultPath + filename, debugVelocityPort_);
+            enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
 
             // As the old file might still be in use, we need two files in order
             // to ensure that we can write the current time step.

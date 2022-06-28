@@ -69,15 +69,19 @@ protected:
     }
 
     virtual void adjustPropertiesToInput();
+    virtual void clearOutports();
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
+    virtual void serialize(Serializer& s) const;
+    virtual void deserialize(Deserializer& s);
+
 private:
 
     void runSimulation(const FlowSimulationInput& input, ProgressReporter& progressReporter) const;
-    void enqueueInsituResult(std::unique_ptr<Volume> volume, const std::string& filename, VolumePort& port) const;
+    void enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume = nullptr) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort measuredDataPort_;
