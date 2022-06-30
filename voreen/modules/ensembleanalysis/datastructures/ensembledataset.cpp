@@ -172,8 +172,16 @@ TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData, f
     , volumeCache_(new VolumeCache(volumeData))
 {
     for(const auto& vol : volumeData) {
-        urls_.insert(std::make_pair(vol.first, vol.second->getOrigin()));
-        derivedData_.insert(std::make_pair(vol.first, DerivedData(vol.second, enforceDerivedData)));
+        std::string fieldName = vol.first;
+
+        // In case the Volume URL is empty, the volume most likely only is present in RAM.
+        // Since we still require a URL to identify the volume, we simply construct a unique URL.
+        VolumeURL url = vol.second->getOrigin();
+        if(url == VolumeURL()) {
+            url = VolumeURL("RAM", fieldName);
+        }
+        urls_.insert(std::make_pair(fieldName, url));
+        derivedData_.insert(std::make_pair(fieldName, DerivedData(vol.second, enforceDerivedData)));
     }
 }
 
