@@ -157,7 +157,7 @@ namespace voreen {
 		MeanData meandata;
 
 		// Set name:
-		meandata.name_ = getTracerName(p);
+		meandata.name_ = p->getColumnLabel(1);//getTracerName(p);
 
 		meandata.mean_ = new plot_t[rows];
 		meandata.std_ = new plot_t[rows];
@@ -268,8 +268,8 @@ namespace voreen {
 		}
 
 		for (MeanData m : data_mean) {
-			delete[]m.mean_;
-			delete[]m.std_;
+			delete[]m.mean_; m.mean_ = nullptr;
+			delete[]m.std_; m.std_ = nullptr;
 		}
 
 		// adjust label colors to colormap
