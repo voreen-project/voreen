@@ -60,6 +60,7 @@
 
 #ifdef VRN_MODULE_PLOTTING
 #include "processors/plotting/flowindicatoranalysis.h"
+#include "processors/plotting/flowprofilestacking.h"
 #include "processors/plotting/regionofinterestanalysis.h"
 #include "processors/plotting/roianalysis.h"
 #endif
@@ -111,6 +112,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 #endif
 #ifdef VRN_MODULE_PLOTTING
     registerProcessor(new FlowIndicatorAnalysis());
+    registerProcessor(new FlowProfileStacking());
     registerProcessor(new RegionOfInterestAnalysis());
     registerProcessor(new RoiAnalysis());
 #endif

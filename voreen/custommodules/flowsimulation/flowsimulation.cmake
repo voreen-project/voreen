@@ -122,11 +122,13 @@ ENDIF()
 IF(VRN_MODULE_PLOTTING)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
         ${MOD_DIR}/processors/plotting/flowindicatoranalysis.h
+        ${MOD_DIR}/processors/plotting/flowprofilestacking.h
         ${MOD_DIR}/processors/plotting/regionofinterestanalysis.h
         ${MOD_DIR}/processors/plotting/roianalysis.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
         ${MOD_DIR}/processors/plotting/flowindicatoranalysis.cpp
+        ${MOD_DIR}/processors/plotting/flowprofilestacking.cpp
         ${MOD_DIR}/processors/plotting/regionofinterestanalysis.cpp
         ${MOD_DIR}/processors/plotting/roianalysis.cpp
     )
