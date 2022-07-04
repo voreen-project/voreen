@@ -43,6 +43,7 @@ namespace tgt {
 class CanvasBackend;
 class CanvasBackendOwner {
 public:
+    virtual ~CanvasBackendOwner() {}
     virtual void onInitializeGL() = 0;
     virtual void onPaintGL() = 0;
     virtual void onResizeGL(int w, int h) = 0;

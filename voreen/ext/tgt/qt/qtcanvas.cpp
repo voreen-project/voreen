@@ -76,12 +76,15 @@ public:
 
     CanvasBackendQOpenGLWidget(CanvasBackendOwner* owner, const QSurfaceFormat& format)
         : CanvasBackend(owner)
+        , initialized_(false)
     {
         setFormat(format);
-        setUpdateBehavior(NoPartialUpdate);
         create(); // Creates internal window handle.
-        QResizeEvent event(this->size(), this->size());
-        QOpenGLWidget::resizeEvent(&event); // Enforces OpenGL initialization.
+        QResizeEvent event(size(), size());
+        resizeEvent(&event); // Enforces OpenGL initialization.
+
+        setUpdateBehavior(NoPartialUpdate);
+        initialized_ = true;
     }
 
     virtual QWidget* getWidget() {
@@ -126,8 +129,17 @@ protected:
     }
 
     virtual void resizeGL(int w, int h) {
-        owner_->onResizeGL(w, h);
+        // The very first resize event is triggered manually and here, the correct size is not
+        // reported (even if we set it, it's going to be 640x480 the first time).
+        // Hence, we need to ignore this very first event.
+        if(initialized_) {
+            owner_->onResizeGL(w, h);
+        }
     }
+
+private:
+
+    bool initialized_;
 };
 
 /**
@@ -142,15 +154,17 @@ public:
         : CanvasBackend(owner)
         , QOpenGLWindow(QOpenGLContext::globalShareContext(), NoPartialUpdate)
         , widget_(nullptr)
+        , initialized_(false)
     {
-
         setFormat(format);
         create();
-        QResizeEvent event(this->size(), this->size());
-        QOpenGLWindow::resizeEvent(&event); // Enforces OpenGL initialization.
+        QResizeEvent event(size(), size());
+        resizeEvent(&event); // Enforces OpenGL initialization.
 
         // Wrap the window inside a container widget.
         widget_ = QWidget::createWindowContainer(this);
+
+        initialized_ = true;
     }
 
     virtual QWidget* getWidget() {
@@ -194,14 +208,17 @@ protected:
     }
 
     virtual void resizeGL(int w, int h) {
-        // FIXME: Somehow width and height both are 0 the first time the function is called.
-        if(w > 0 && h > 0) {
+        // See CanvasBackendQOpenGLWidget::resizeGL. Only that in this case,
+        // w and h are reported to be 0, the first time.
+        if(initialized_) {
             owner_->onResizeGL(w, h);
         }
     }
 
 private:
+
     QWidget* widget_;
+    bool initialized_;
 };
 
 
