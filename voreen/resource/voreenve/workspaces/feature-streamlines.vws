@@ -55,18 +55,22 @@
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />
+                        <Property mapKey="integrationSteps" name="integrationSteps" value="1000" tracking="false" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="5000" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607446734" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 837 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 738 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
+                        <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
                             <value x="10" y="1000" />
                         </Property>
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="cm/s" />
                     </Properties>
                     <Inports>
                         <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">
@@ -148,8 +152,9 @@
                             <stepping x="1" y="1" z="1" />
                         </Property>
                         <Property mapKey="selectionModeProp" name="selectionModeProp" value="intersect" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 195 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 191 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                         <Property mapKey="usedGeometryColorProp" name="usedGeometryColorProp" useActiveColor="true" id="ref14">
                             <value x="0" y="1" z="0" w="1" />
@@ -186,13 +191,14 @@
                         <Property mapKey="enableProp" name="enableProp" value="false" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="physicalLengthRange" minValue="0" maxValue="299.623352051" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
-                            <value x="0" y="299.623352051" />
+                        <Property mapKey="physicalLengthRange" minValue="0" maxValue="481.531463623" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="false">
+                            <value x="0" y="0" />
                         </Property>
                         <Property mapKey="predicateFiltering" name="predicateFiltering" value="intersection" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 215 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Interrupted" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
                     <Inports>
@@ -230,8 +236,9 @@
                         <Property mapKey="minNumStreamlinesPerBundle" name="minNumStreamlinesPerBundle" value="5" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resampleSize" name="resampleSize" value="100" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 384 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 293 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
                     <Inports>
@@ -349,7 +356,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-157" y="711" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="438" y="269" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="422" y="102" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -359,7 +366,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="438" y="269" />
+                            <value x="422" y="102" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -488,6 +495,7 @@
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
+                        <Property mapKey="useFloatRenderTargets" name="useFloatRenderTargets" value="false" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">

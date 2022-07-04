@@ -53,7 +53,7 @@ PathlineCreator::PathlineCreator()
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 10.0f, 0.1f, 1000.0f)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
     , velocityUnitConversion_("velocityUnitConversion", "Input Velocity Unit")
-    , temporalIntegrationSteps_("temporalIntegrationSteps", "Temporal Integration Steps", 5, 1, 40, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
+    , temporalIntegrationSteps_("temporalIntegrationSteps", "Temporal Integration Steps", 5, 1, 100, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
     volumeListInport_.addCondition(new PortConditionVolumeListEnsemble());
     volumeListInport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
@@ -134,14 +134,6 @@ bool PathlineCreator::isReady() const {
     // Note: Seed Mask is optional!
 
     return true;
-}
-
-std::vector<std::reference_wrapper<Port>> PathlineCreator::getCriticalPorts() {
-    auto criticalPorts = AsyncComputeProcessor::getCriticalPorts();
-    criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
-        return port.get().getID() == seedMask_.getID();
-    }), criticalPorts.end());
-    return criticalPorts;
 }
 
 void PathlineCreator::adjustPropertiesToInput() {

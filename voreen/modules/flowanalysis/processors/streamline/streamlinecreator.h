@@ -43,10 +43,12 @@ class SpatialSampler;
 struct StreamlineCreatorInput {
     tgt::ivec2 streamlineLengthThreshold;
     tgt::vec2 absoluteMagnitudeThreshold;
+    float velocityUnitConversion;
+    int integrationSteps;
     float stopIntegrationAngleThreshold;
     VolumeRAM::Filter filterMode;
     PortDataPointer<VolumeBase> flowVolume;
-    PortDataPointer<VolumeBase> seedMask; // Might be used later on to restrict integration.
+    const VolumeBase* seedMask;
     std::vector<tgt::vec3> seedPoints;
     std::unique_ptr<StreamlineListBase> output;
 };
@@ -77,7 +79,6 @@ protected:
 
     virtual bool isReady() const;
     virtual void adjustPropertiesToInput();
-    virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
     virtual void setDescriptions() {
         setDescription("This processor is used to create streamlines from a vec3 volume. The resulting streamlines can be visualized or modified " \
@@ -90,12 +91,12 @@ protected:
 private:
 
     struct IntegrationInput {
-        tgt::vec3 dimensions;
-        tgt::vec3 stepSize;
-        tgt::mat4 voxelToWorldMatrix;
+        float stepSize;
+        float velocityUnitConversion;
         size_t upperLengthThreshold;
         tgt::vec2 absoluteMagnitudeThreshold;
         float stopIntegrationAngleThreshold;
+        std::function<bool(const tgt::vec3&)> bounds;
     };
 
     Streamline integrateStreamline(const tgt::vec3& start, const SpatialSampler& sampler, const IntegrationInput& input) const;
@@ -111,11 +112,13 @@ private:
     // streamline settings
     IntIntervalProperty streamlineLengthThreshold_;     ///< restrict number of elements
     FloatIntervalProperty absoluteMagnitudeThreshold_;  ///< only magnitudes in this interval are used
+    BoolProperty stopOutsideMask_;                      ///< stop integration if running outside mask
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
 
     // debug
+    FloatOptionProperty velocityUnitConversion_;
     IntProperty integrationSteps_;
 
     static const std::string loggerCat_;

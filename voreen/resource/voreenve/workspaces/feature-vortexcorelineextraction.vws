@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="Canvas" ref="ref11" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-90.714309692" y="287.261993408" />
                 </MetaItem>
@@ -273,6 +268,7 @@
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
+                        <Property mapKey="useFloatRenderTargets" name="useFloatRenderTargets" value="false" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
@@ -303,18 +299,18 @@
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="false" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="false" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="false" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="false" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="false" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="false" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -368,7 +364,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="649" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="554" y="177" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="629" y="140" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -378,7 +374,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="554" y="177" />
+                            <value x="629" y="140" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -699,18 +695,18 @@
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -725,18 +721,22 @@
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />
+                        <Property mapKey="integrationSteps" name="integrationSteps" value="1000" tracking="false" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="200" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607445778" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 324 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 194 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
+                        <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
                             <value x="10" y="1000" />
                         </Property>
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="cm/s" />
                     </Properties>
                     <Inports>
                         <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">

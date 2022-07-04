@@ -46,9 +46,12 @@ StreamlineCreator::StreamlineCreator()
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , streamlineLengthThreshold_("streamlineLengthThreshold", "Restrict streamline length", tgt::ivec2(10, 1000), 2, 10000)
     , absoluteMagnitudeThreshold_("absoluteMagnitudeThreshold", "Threshold of Magnitude (absolute)", tgt::vec2(0.0f, 1000.0f), 0.0f, 9999.99f)
+    , stopOutsideMask_("stopOutsideMask", "Stop outside Mask", false)
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
+    , velocityUnitConversion_("velocityUnitConversion", "Input Velocity Unit")
+    , integrationSteps_("integrationSteps", "Integration Steps", 100, 1, 10000, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
     volumeInport_.addCondition(new PortConditionVolumeChannelCount(3));
     addPort(volumeInport_);
@@ -68,6 +71,8 @@ StreamlineCreator::StreamlineCreator()
         absoluteMagnitudeThreshold_.setTracking(false);
         absoluteMagnitudeThreshold_.setNumDecimals(2);
         absoluteMagnitudeThreshold_.setGroupID("streamline");
+    addProperty(stopOutsideMask_);
+        stopOutsideMask_.setGroupID("streamline");
     addProperty(fitAbsoluteMagnitudeThreshold_);
         ON_CHANGE(fitAbsoluteMagnitudeThreshold_, StreamlineCreator, adjustPropertiesToInput);
         fitAbsoluteMagnitudeThreshold_.setGroupID("streamline");
@@ -78,6 +83,19 @@ StreamlineCreator::StreamlineCreator()
         filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
         filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
         filterMode_.setGroupID("streamline");
+    addProperty(velocityUnitConversion_);
+        // Chose the values such that multiplying with real world values we get mm(/s)
+        // which (for some reason) is the default voreen length unit.
+        velocityUnitConversion_.addOption("km/s", "km/s", 1000000.0f);
+        velocityUnitConversion_.addOption("m/s", "m/s", 1000.0f);
+        //velocityUnitConversion_.addOption("dm/s", "dm/s", 100.0f); // Quite unusual.
+        velocityUnitConversion_.addOption("cm/s", "cm/s", 10.0f);
+        velocityUnitConversion_.addOption("mm/s", "mm/s", 1.0f);
+        velocityUnitConversion_.set("m/s");
+        velocityUnitConversion_.setGroupID("streamline");
+    addProperty(integrationSteps_);
+        integrationSteps_.setTracking(false);
+        integrationSteps_.setGroupID("streamline");
     setPropertyGroupGuiName("streamline", "Streamline Settings");
 }
 
@@ -95,14 +113,6 @@ bool StreamlineCreator::isReady() const {
     // Note: Seed Mask is optional!
 
     return true;
-}
-
-std::vector<std::reference_wrapper<Port>> StreamlineCreator::getCriticalPorts() {
-    auto criticalPorts = AsyncComputeProcessor<ComputeInput, ComputeOutput>::getCriticalPorts();
-    criticalPorts.erase(std::remove_if(criticalPorts.begin(), criticalPorts.end(), [this] (const std::reference_wrapper<Port>& port){
-        return port.get().getID() == seedMask_.getID();
-    }), criticalPorts.end());
-    return criticalPorts;
 }
 
 void StreamlineCreator::adjustPropertiesToInput() {
@@ -135,7 +145,6 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
     // Set up random generator.
     std::function<float()> rnd(std::bind(std::uniform_real_distribution<float>(0.0f, 1.0f), std::mt19937(seedTime_.get())));
 
-    tgt::mat4 worldToVoxelMatrix = flowVolume->getWorldToVoxelMatrix();
     tgt::Bounds roi = flowVolume->getBoundingBox().getBoundingBox();
     auto numSeedPoints = static_cast<size_t>(numSeedPoints_.get());
 
@@ -157,7 +166,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
                     if(seedMaskLock->getVoxelNormalized(x, y, z) != 0.0f) {
                         tgt::vec3 pos = seedMaskVoxelToWorldMatrix * tgt::vec3(x, y, z);
                         if(roi.containsPoint(pos)) {
-                            seedPoints.emplace_back(worldToVoxelMatrix * pos);
+                            seedPoints.emplace_back(pos);
                         }
                     }
                 }
@@ -183,7 +192,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
 
             tgt::vec3 seedPoint(x, y, z);
             seedPoint = roi.getLLF() + seedPoint * roi.diagonal();
-            seedPoints.push_back(worldToVoxelMatrix * seedPoint);
+            seedPoints.push_back(seedPoint);
         }
     }
 
@@ -192,15 +201,18 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
         throw InvalidInputException("No seed points found", InvalidInputException::S_ERROR);
     }
 
+    auto mask = stopOutsideMask_.get() ? seedMask_.getData() : nullptr;
     std::unique_ptr<StreamlineListBase> output(new StreamlineList(flowVolume));
 
     return StreamlineCreatorInput {
             streamlineLengthThreshold_.get(),
             absoluteMagnitudeThreshold_.get(),
+            velocityUnitConversion_.getValue(),
+            integrationSteps_.get(),
             stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f,
             filterMode_.getValue(),
             volumeInport_.getThreadSafeData(),
-            seedMask_.getThreadSafeData(),
+            mask,
             std::move(seedPoints),
             std::move(output)
     };
@@ -210,25 +222,44 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
 
     PortDataPointer<VolumeBase> flowVolume = std::move(input.flowVolume);
     VolumeRAMRepresentationLock representation(flowVolume);
-    //const VolumeBase* seedMask_ = input.seedMask; // Currently not used.
+    const VolumeBase* seedMask = input.seedMask;
     std::vector<tgt::vec3> seedPoints = std::move(input.seedPoints);
-
-    // We use half the steps we had before.
-    tgt::vec3 stepSize = 0.5f * flowVolume->getSpacing() / tgt::max(flowVolume->getSpacing());
 
     size_t lowerLengthThreshold = input.streamlineLengthThreshold.x;
     size_t upperLengthThreshold = input.streamlineLengthThreshold.y;
 
-    const IntegrationInput integrationInput{
-        tgt::vec3(representation->getDimensions() - tgt::svec3::one),
-        stepSize,
-        flowVolume->getVoxelToWorldMatrix(),
-        upperLengthThreshold,
-        input.absoluteMagnitudeThreshold,
-        input.stopIntegrationAngleThreshold
+    // Temp. requirements.
+    const tgt::mat4 worldToVoxelMatrix = flowVolume->getWorldToVoxelMatrix();
+    const tgt::Bounds roi = flowVolume->getBoundingBox().getBoundingBox();
+    const RealWorldMapping rwm = flowVolume->getRealWorldMapping();
+
+    const float stepSize = 1.0f / input.integrationSteps;
+
+    std::function<bool(const tgt::vec3&)> bounds = [&] (const tgt::vec3& position) {
+        return roi.containsPoint(position);
     };
 
-    const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode);
+    if(seedMask) {
+        tgt::mat4 worldToVoxel = seedMask->getWorldToVoxelMatrix();
+        VolumeRAMRepresentationLock lock(seedMask);
+        bounds = [=] (const tgt::vec3& position) {
+            if(!roi.containsPoint(position)) {
+                return false;
+            }
+            return lock->getVoxelNormalized(worldToVoxel * position) != 0.0f;
+        };
+    }
+
+    const IntegrationInput integrationInput{
+            stepSize,
+            input.velocityUnitConversion,
+            upperLengthThreshold * input.integrationSteps,
+            input.absoluteMagnitudeThreshold,
+            input.stopIntegrationAngleThreshold,
+            bounds
+    };
+
+    const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode, worldToVoxelMatrix);
 
     ThreadedTaskProgressReporter progress(progressReporter, seedPoints.size());
     bool aborted = false;
@@ -297,7 +328,7 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
 
     // Resulting streamline.
     Streamline line;
-    line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, v));
+    line.addElementAtEnd(Streamline::StreamlineElement(r, v));
 
     bool lookupPositiveDirection = true;
     bool lookupNegativeDirection = true;
@@ -308,20 +339,17 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
         if (lookupPositiveDirection) {
 
             // Execute 4th order Runge-Kutta step.
-            tgt::vec3 k1 = tgt::normalize(v) * input.stepSize; //v != zero
-            tgt::vec3 k2 = sampler.sample(r + (k1 / 2.0f));
-            if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * input.stepSize;
-            tgt::vec3 k3 = sampler.sample(r + (k2 / 2.0f));
-            if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * input.stepSize;
-            tgt::vec3 k4 = sampler.sample(r + k3);
-            if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * input.stepSize;
+            tgt::vec3 k1 = v * input.stepSize * input.velocityUnitConversion;
+            tgt::vec3 k2 = sampler.sample(r + (k1 / 2.0f)) * input.stepSize * input.velocityUnitConversion;;
+            tgt::vec3 k3 = sampler.sample(r + (k2 / 2.0f)) * input.stepSize * input.velocityUnitConversion;
+            tgt::vec3 k4 = sampler.sample(r + k3) * input.stepSize * input.velocityUnitConversion;
             tgt::vec3 dr = ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
 
             // Update position.
             r += dr;
 
             // Check constrains.
-            lookupPositiveDirection &= (r == tgt::clamp(r, tgt::vec3::zero, input.dimensions)); // Ran out of bounds?
+            lookupPositiveDirection &= input.bounds(r);
             lookupPositiveDirection &= (r != line.getLastElement().position_); // Progress in current direction?
 
             v = sampler.sample(r);
@@ -333,7 +361,7 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
                                  (tgt::length(line.getLastElement().velocity_) * magnitude)) <= input.stopIntegrationAngleThreshold;
 
             if (lookupPositiveDirection) {
-                line.addElementAtEnd(Streamline::StreamlineElement(input.voxelToWorldMatrix * r, v));
+                line.addElementAtEnd(Streamline::StreamlineElement(r, v));
                 if (line.getNumElements() >= input.upperLengthThreshold) {
                     break;
                 }
@@ -343,20 +371,17 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
         if (lookupNegativeDirection) {
 
             // Execute 4th order Runge-Kutta step.
-            tgt::vec3 k1 = tgt::normalize(v_) * input.stepSize; // velR_ != zero
-            tgt::vec3 k2 = sampler.sample(r_ - (k1 / 2.0f));
-            if (k2 != tgt::vec3::zero) k2 = tgt::normalize(k2) * input.stepSize;
-            tgt::vec3 k3 = sampler.sample(r_ - (k2 / 2.0f));
-            if (k3 != tgt::vec3::zero) k3 = tgt::normalize(k3) * input.stepSize;
-            tgt::vec3 k4 = sampler.sample(r_ - k3);
-            if (k4 != tgt::vec3::zero) k4 = tgt::normalize(k4) * input.stepSize;
+            tgt::vec3 k1 = v_ * input.stepSize * input.velocityUnitConversion;
+            tgt::vec3 k2 = sampler.sample(r_ + (k1 / 2.0f)) * input.stepSize * input.velocityUnitConversion;;
+            tgt::vec3 k3 = sampler.sample(r_ + (k2 / 2.0f)) * input.stepSize * input.velocityUnitConversion;
+            tgt::vec3 k4 = sampler.sample(r_ + k3) * input.stepSize * input.velocityUnitConversion;
             tgt::vec3 dr_ = ((k1 / 6.0f) + (k2 / 3.0f) + (k3 / 3.0f) + (k4 / 6.0f));
 
             // Update position.
             r_ -= dr_;
 
             // Check constrains.
-            lookupNegativeDirection &= (r_ == tgt::clamp(r_, tgt::vec3::zero, input.dimensions)); // Ran out of bounds?
+            lookupNegativeDirection &= input.bounds(r_);
             lookupNegativeDirection &= (r_ != line.getFirstElement().position_); // Progress in current direction?
 
             v_ = sampler.sample(r_);
@@ -368,7 +393,7 @@ Streamline StreamlineCreator::integrateStreamline(const tgt::vec3& start, const 
                                  (tgt::length(line.getFirstElement().velocity_) * magnitude)) <= input.stopIntegrationAngleThreshold;
 
             if (lookupNegativeDirection) {
-                line.addElementAtFront(Streamline::StreamlineElement(input.voxelToWorldMatrix * r_, v_));
+                line.addElementAtFront(Streamline::StreamlineElement(r_, v_));
                 if (line.getNumElements() >= input.upperLengthThreshold) {
                     break;
                 }

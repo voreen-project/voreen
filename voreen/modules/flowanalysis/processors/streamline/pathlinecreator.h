@@ -49,7 +49,7 @@ struct PathlineCreatorInput {
     int reseedingSteps;
     VolumeRAM::Filter filterMode;
     PortDataPointer<VolumeList> flowVolumes;
-    const VolumeBase* seedMask; // Might be used later on to restrict integration.
+    const VolumeBase* seedMask;
     std::vector<tgt::vec3> seedPoints;
     std::unique_ptr<StreamlineListBase> output;
 };
@@ -80,7 +80,6 @@ protected:
 
     virtual bool isReady() const;
     virtual void adjustPropertiesToInput();
-    virtual std::vector<std::reference_wrapper<Port>> getCriticalPorts();
 
     virtual void setDescriptions() {
         setDescription("This processor is used to create pathlines from a sequence of vec3 volume. The resulting pathlines can be visualized or modified " \
