@@ -27,21 +27,32 @@
 #define VRN_PARALLELVECTORS_H
 
 #include <string>
-#include "voreen/core/processors/processor.h"
+#include "voreen/core/processors/asynccomputeprocessor.h"
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
-#include "voreen/core/processors/volumeprocessor.h"
-#include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/intproperty.h"
+#include "voreen/core/properties/boolproperty.h"
+#include "voreen/core/properties/vectorproperty.h"
 
 #include "modules/flowanalysis/ports/parallelvectorsolutionpointsport.h"
 
 namespace voreen {
 
+struct ParallelVectorsInput {
+    PortDataPointer<VolumeBase> v;
+    PortDataPointer<VolumeBase> w;
+    PortDataPointer<VolumeBase> jacobian;
+    PortDataPointer<VolumeBase> mask;
+    bool sujudiHaimes;
+};
+
+struct ParallelVectorsOutput {
+    std::unique_ptr<ParallelVectorSolutions> solutions;
+};
+
 /**
  * This processor implements the parallel vectors operator by Peikert and Roth and optional sujudi-haimes filtering.
  */
-class ParallelVectors : public Processor {
+class ParallelVectors : public AsyncComputeProcessor<ParallelVectorsInput, ParallelVectorsOutput> {
 public:
     ParallelVectors();
     virtual Processor* create() const { return new ParallelVectors(); }
@@ -50,13 +61,16 @@ public:
     virtual CodeState getCodeState() const { return CODE_STATE_TESTING; }
     virtual bool isReady() const;
 
-    static void Process(const VolumeRAM& v, const VolumeRAM& w, const VolumeRAM_Mat3Float* jacobian, const VolumeRAM* mask, ParallelVectorSolutions& outSolution, const RealWorldMapping& rwmV = RealWorldMapping(), const RealWorldMapping& rwmW = RealWorldMapping());
+    static void Process(const VolumeRAM& v, const VolumeRAM& w, const VolumeRAM_Mat3Float* jacobian, const VolumeRAM* mask, ParallelVectorSolutions& outSolution, const RealWorldMapping& rwmV = RealWorldMapping(), const RealWorldMapping& rwmW = RealWorldMapping(), ProgressReporter* progress = nullptr);
+
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
 
     static constexpr auto TetrahedraPerCube = 6;
     static constexpr auto TrianglesPerTetrahedron = 4;
 
 protected:
-    virtual void process();
 
     void setDescriptions() {
         setDescription("This processor implements the parallel vectors operator by Peikert and Roth and optional sujudi-haimes filtering. "

@@ -6,6 +6,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="ParallelVectors" ref="ref2" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-90.714309692" y="287.261993408" />
                 </MetaItem>
@@ -107,7 +112,14 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-490" y="154" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 359 ms" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="sujudiHaimes" name="sujudiHaimes" value="true" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
                     <Inports>
                         <Port name="in_jacobi" direction="1" portID="in_jacobi" guiName="Jacobi Matrix (Optional)" allowMultipleConnections="false" invalidationLevel="1">
@@ -364,7 +376,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-143" y="649" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="629" y="140" width="1024" height="1024" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="645" y="136" width="1024" height="1024" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -374,7 +386,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="629" y="140" />
+                            <value x="645" y="136" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1024" y="1024" />
@@ -727,7 +739,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="200" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1607445778" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 194 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 285 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />

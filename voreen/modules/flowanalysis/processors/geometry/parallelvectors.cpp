@@ -27,7 +27,6 @@
 
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
-#include "voreen/core/datastructures/volume/operators/volumeoperatorconvert.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 
 #include "tgt/matrix.h"
@@ -39,7 +38,7 @@
 namespace voreen {
 
 ParallelVectors::ParallelVectors()
-    : Processor()
+    : AsyncComputeProcessor<ParallelVectorsInput, ParallelVectorsOutput>()
     , _inV(Port::INPORT, "in_v", "Vector field V")
     , _inW(Port::INPORT, "in_w", "Vector field W")
     , _inJacobian(Port::INPORT, "in_jacobi", "Jacobi Matrix (Optional)")
@@ -58,7 +57,6 @@ ParallelVectors::ParallelVectors()
     addPort(_out);
 
     addProperty(_sujudiHaimes);
-    _sujudiHaimes.setReadOnlyFlag(true);
 }
 
 void ParallelVectors::onChangedJacobianData() {
@@ -72,29 +70,12 @@ bool ParallelVectors::isReady() const
         return false;
     }
 
-    const auto* volumeV = _inV.getData();
-    const auto* volumeW = _inW.getData();
-    const auto* volumeJacobi = _inJacobian.getData();
-    const auto* mask = _inMask.getData();
-
-    if (volumeV->getDimensions() != volumeW->getDimensions()
-        || (volumeJacobi && volumeV->getDimensions() != volumeJacobi->getDimensions())
-        || (mask && volumeV->getDimensions() != mask->getDimensions()))
-    {
-        setNotReadyErrorMessage("Input dimensions do not match");
-        return false;
-    }
-
-    const auto dim = volumeV->getDimensions();
-    if (std::min({dim.x, dim.y, dim.z}) < 2) {
-        setNotReadyErrorMessage("Input dimensions must be greater than 1 in each dimension");
-        return false;
-    }
+    // Note: Jacobian and mask are both optional.
 
     return true;
 }
 
-void ParallelVectors::Process(const VolumeRAM& v, const VolumeRAM& w, const VolumeRAM_Mat3Float* jacobian, const VolumeRAM* mask, ParallelVectorSolutions& outSolution, const RealWorldMapping& rwmV, const RealWorldMapping& rwmW) {
+void ParallelVectors::Process(const VolumeRAM& v, const VolumeRAM& w, const VolumeRAM_Mat3Float* jacobian, const VolumeRAM* mask, ParallelVectorSolutions& outSolution, const RealWorldMapping& rwmV, const RealWorldMapping& rwmW, ProgressReporter* progress) {
     const auto dim = v.getDimensions();
     auto triangleSolutions = std::vector<tgt::vec3>();
     auto triangleSolutionIndices = std::vector<int32_t>((dim.x - 1) * (dim.y - 1) * (dim.z - 1) * TetrahedraPerCube * TrianglesPerTetrahedron, -1);
@@ -127,10 +108,20 @@ void ParallelVectors::Process(const VolumeRAM& v, const VolumeRAM& w, const Volu
     }
     voxels.shrink_to_fit();
 
+    std::unique_ptr<ThreadedTaskProgressReporter> progressReporter;
+    if(progress) {
+        progressReporter.reset(new ThreadedTaskProgressReporter(*progress, voxels.size()));
+    }
+    bool aborted = false;
+
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
     for (long voxelIndex = 0; voxelIndex < static_cast<long>(voxels.size()); ++voxelIndex) {
+        if (aborted) {
+            continue;
+        }
+
         const auto x = voxels[voxelIndex].x;
         const auto y = voxels[voxelIndex].y;
         const auto z = voxels[voxelIndex].z;
@@ -272,11 +263,25 @@ void ParallelVectors::Process(const VolumeRAM& v, const VolumeRAM& w, const Volu
                                 triangleSolutionIndices[partnerTriangleSolutionIndex] = triangleSolutions.size();
                             triangleSolutions.push_back(pos);
                         }
-                        break;
                     }
+
+                    if(progressReporter && progressReporter->reportStepDone()) {
+#ifdef VRN_MODULE_OPENMP
+                        #pragma omp critical
+                        aborted = true;
+#else
+                        aborted = true;
+                        break;
+#endif
+                    }
+                    break;
                 }
             }
         }
+    }
+
+    if (aborted) {
+        throw boost::thread_interrupted();
     }
 
     outSolution.dimensions = dim;
@@ -284,32 +289,68 @@ void ParallelVectors::Process(const VolumeRAM& v, const VolumeRAM& w, const Volu
     outSolution.triangleSolutionIndices.swap(triangleSolutionIndices);
 }
 
-void ParallelVectors::process() {
+ParallelVectorsInput ParallelVectors::prepareComputeInput() {
+
+    if(!_inV.isReady() || !_inW.isReady()) {
+        throw InvalidInputException("V and W must both be defined", InvalidInputException::S_ERROR);
+    }
+
+    const auto* volumeV = _inV.getData();
+    const auto* volumeW = _inW.getData();
+    const auto* volumeJacobi = _inJacobian.getData();
+    const auto* mask = _inMask.getData();
+
+    if (volumeV->getDimensions() != volumeW->getDimensions()
+        || (volumeJacobi && volumeV->getDimensions() != volumeJacobi->getDimensions())
+        || (mask && volumeV->getDimensions() != mask->getDimensions()))
+    {
+        throw InvalidInputException("Input dimensions do not match", InvalidInputException::S_ERROR);
+    }
+
+    const auto dim = volumeV->getDimensions();
+    if (std::min({dim.x, dim.y, dim.z}) < 2) {
+        throw InvalidInputException("Input dimensions must be greater than 1 in each dimension", InvalidInputException::S_ERROR);
+    }
+
+    return {
+            _inV.getThreadSafeData(),
+            _inW.getThreadSafeData(),
+            _inJacobian.getThreadSafeData(),
+            _inMask.getThreadSafeData(),
+            _sujudiHaimes.get()
+    };
+}
+ParallelVectorsOutput ParallelVectors::compute(ParallelVectorsInput input, ProgressReporter& progressReporter) const {
 
     // Check for optional jacobian matrix.
     std::unique_ptr<VolumeRAMRepresentationLock> volumeJacobian;
-    if(_sujudiHaimes.get() && _inJacobian.hasData()) {
-        volumeJacobian.reset(new VolumeRAMRepresentationLock(_inJacobian.getData()));
+    if(input.sujudiHaimes && input.jacobian) {
+        volumeJacobian.reset(new VolumeRAMRepresentationLock(input.jacobian));
     }
     const auto* jacobian = volumeJacobian ? dynamic_cast<const VolumeRAM_Mat3Float*>(**volumeJacobian) : nullptr;
 
     // Check for optional mask.
     std::unique_ptr<VolumeRAMRepresentationLock> volumeMask;
-    if(_inMask.hasData()) {
-        volumeMask.reset(new VolumeRAMRepresentationLock(_inMask.getData()));
+    if(input.mask) {
+        volumeMask.reset(new VolumeRAMRepresentationLock(input.mask));
     }
     const auto* mask = volumeMask ? **volumeMask : nullptr;
 
     // Calculate solutions.
     auto solutions = std::unique_ptr<ParallelVectorSolutions>( new ParallelVectorSolutions() );
-    ParallelVectors::Process(**VolumeRAMRepresentationLock(_inV.getData()),
-                             **VolumeRAMRepresentationLock(_inW.getData()),
+    ParallelVectors::Process(**VolumeRAMRepresentationLock(input.v),
+                             **VolumeRAMRepresentationLock(input.w),
                              jacobian, mask, *solutions,
-                             _inV.getData()->getRealWorldMapping(),
-                             _inW.getData()->getRealWorldMapping()
-                              );
+                             input.v->getRealWorldMapping(),
+                             input.w->getRealWorldMapping(),
+                             &progressReporter
+    );
     solutions->voxelToWorldMatrix = _inV.getData()->getVoxelToWorldMatrix();
-    _out.setData(solutions.release());
+
+    return { std::move(solutions) };
+}
+void ParallelVectors::processComputeOutput(ParallelVectorsOutput output) {
+    _out.setData(output.solutions.release());
 }
 
 } // namespace voreen
