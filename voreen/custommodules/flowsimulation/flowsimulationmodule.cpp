@@ -51,6 +51,7 @@
 #include "processors/volume/volumelisttimestep.h"
 #include "processors/volume/volumemerger.h"
 #include "processors/volume/volumenoise.h"
+#include "processors/volume/volumeresampleproxy.h"
 #include "processors/volume/volumeselectormultichannel.h"
 #include "processors/volume/volumetimestep.h"
 
@@ -104,6 +105,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new VolumeListTimeStep());
     registerProcessor(new VolumeMerger());
     registerProcessor(new VolumeNoise());
+    registerProcessor(new VolumeResampleProxy());
     registerProcessor(new VolumeSelectorMultiChannel());
     registerProcessor(new VolumeTimestep());
     registerProcessor(new WallShearStress());

@@ -23,6 +23,7 @@ SET(MOD_CORE_SOURCES
 
     # datastructures
     ${MOD_DIR}/datastructures/flowsimulationconfig.cpp
+    ${MOD_DIR}/datastructures/volumeramremappingproxy.cpp
     
     # ports
     ${MOD_DIR}/ports/flowsimulationconfigport.cpp
@@ -53,6 +54,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volume/volumelisttimestep.cpp
     ${MOD_DIR}/processors/volume/volumemerger.cpp
     ${MOD_DIR}/processors/volume/volumenoise.cpp
+    ${MOD_DIR}/processors/volume/volumeresampleproxy.cpp
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.cpp
     ${MOD_DIR}/processors/volume/volumetimestep.cpp
 
@@ -69,6 +71,7 @@ SET(MOD_CORE_HEADERS
 
     # datastructures
     ${MOD_DIR}/datastructures/flowsimulationconfig.h
+    ${MOD_DIR}/datastructures/volumeramremappingproxy.h
 
     # ports
     ${MOD_DIR}/ports/flowsimulationconfigport.h
@@ -99,6 +102,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/volume/volumelisttimestep.h
     ${MOD_DIR}/processors/volume/volumemerger.h
     ${MOD_DIR}/processors/volume/volumenoise.h
+    ${MOD_DIR}/processors/volume/volumeresampleproxy.h
     ${MOD_DIR}/processors/volume/volumeselectormultichannel.h
     ${MOD_DIR}/processors/volume/volumetimestep.h
 

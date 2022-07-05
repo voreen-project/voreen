@@ -80,12 +80,12 @@ void Acceleration::Process(const VolumeRAM_Mat3Float& jacobian, const VolumeRAM&
 
     // If volume contains default real world mapping, we can use optimized code.
     if (rwm == RealWorldMapping()) {
-        if (velocity.getFormat() == VolumeGenerator3xFloat().getFormat()) {
-            optimizedProcess(jacobian, dynamic_cast<const VolumeRAM_3xFloat&>(velocity), outAcceleration);
+        if (auto maybeFloat = dynamic_cast<const VolumeRAM_3xFloat*>(&velocity)) {
+            optimizedProcess(jacobian, *maybeFloat, outAcceleration);
             return;
         }
-        else if (velocity.getFormat() == VolumeGenerator3xDouble().getFormat()) {
-            optimizedProcess(jacobian, dynamic_cast<const VolumeRAM_3xDouble&>(velocity), outAcceleration);
+        else if (auto maybeDouble = dynamic_cast<const VolumeRAM_3xDouble*>(&velocity)) {
+            optimizedProcess(jacobian, *maybeDouble, outAcceleration);
             return;
         }
     }
