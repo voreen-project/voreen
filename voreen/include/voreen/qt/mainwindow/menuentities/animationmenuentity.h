@@ -45,7 +45,6 @@ public:
     virtual ~AnimationMenuEntity();
     virtual QIcon getIcon() const {return QIcon(":/qt/icons/video.png");}
     virtual std::string getName() const {return "Animation";}
-    virtual std::string getShortCut() const {return "Ctrl+A";}
     virtual MenuCategory getMenuCategory() const {return MC_BASIC_TOOL;}
     virtual Qt::DockWidgetAreas getAllowedDockWidgetAreas() const {return Qt::NoDockWidgetArea;}
     virtual Qt::DockWidgetArea getInitialDockWidgetArea() const {return Qt::NoDockWidgetArea;}

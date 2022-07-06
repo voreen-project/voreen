@@ -70,6 +70,10 @@ ProcessorListWidget::ProcessorListWidget(QWidget* parent)
 
     edit_ = new LineEditResetWidget(this);
     edit_->setToolTip(tr("Filter processor list"));
+    QAction* searchAction = new QAction(this);
+    searchAction->setShortcut(tr("Ctrl+F"));
+    connect(searchAction, SIGNAL(triggered()), edit_, SLOT(setFocus()));
+    edit_->addAction(searchAction);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     QHBoxLayout* filterSortLayout = new QHBoxLayout();
