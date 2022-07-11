@@ -49,7 +49,7 @@ src_snapshot_unix:
     - tools/snapshot/make-snapshot.sh unix ${SNAPSHOT_NAME_UNIX} --force
   artifacts:
     paths:
-    - "voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
+    - "voreen/${SNAPSHOT_NAME_UNIX}.tar.gz"
     expire_in: 1 day
   except:
     variables:
@@ -64,7 +64,7 @@ src_snapshot_win32:
     - tools/snapshot/make-snapshot.sh win32 ${SNAPSHOT_NAME_WIN} --force
   artifacts:
     paths:
-    - "voreen/$SNAPSHOT_NAME_WIN.zip"
+    - "voreen/${SNAPSHOT_NAME_WIN}.zip"
     expire_in: 1 day
   except:
     variables:
@@ -78,10 +78,10 @@ build_deploy: #Builds from source snapshot!
   script:
     - export SRC_DIR=$(mktemp -d)
     - export BUILD_DIR=$(realpath $(mktemp -d))
-    - tar -xf "voreen/$SNAPSHOT_NAME_UNIX.tar.gz" --directory $SRC_DIR
-    - ls $SRC_DIR
-    - ls $SRC_DIR/$SNAPSHOT_NAME_UNIX
-    - ci/build_deploy.sh $BUILD_DIR $DEPLOY_INSTALL_DIR $SRC_DIR/$SNAPSHOT_NAME_UNIX
+    - tar -xf "voreen/${SNAPSHOT_NAME_UNIX}.tar.gz" --directory ${SRC_DIR}
+    - ls ${SRC_DIR}
+    - ls ${SRC_DIR}/${SNAPSHOT_NAME_UNIX}
+    - ci/build_deploy.sh $BUILD_DIR ${DEPLOY_INSTALL_DIR} ${SRC_DIR}/${SNAPSHOT_NAME_UNIX}
     - ${TOOLS_DIR}/snapshot/deployment-linux/linuxdeployment.sh ${DEPLOY_INSTALL_DIR} ${TOOLS_DIR}/snapshot/deployment-linux/
   artifacts:
     paths:
@@ -306,7 +306,7 @@ regressiontest_coreprofile:
     - xvfb-run --server-args="${XVFB_SERVER_ARGS}" -- ${COREPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COREPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COREPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COREPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 600 --noglclsharing || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COREPROFILE} regressiontest_reports/${IDENTIFIER_COREPROFILE}
     - mv ${IDENTIFIER_COREPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COREPROFILE variable!
-    - $(exit $EXITCODE) #propagate regressiontest exit code
+    - $(exit ${EXITCODE}) #propagate regressiontest exit code
   artifacts:
     reports:
       junit: regressiontest-junit.xml
@@ -324,7 +324,7 @@ regressiontest_compatprofile:
     - xvfb-run --server-args="${XVFB_SERVER_ARGS}" ${COMPATPROFILE_BUILD_DIR}/bin/regressiontest --voreentool ${COMPATPROFILE_BUILD_DIR}/bin/voreentool --datadir ${TEST_DATA_DIR} -t all --htmlReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-report.html --splitHtmlReport true --junitReport ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml --reportdir ${IDENTIFIER_COMPATPROFILE}/regressiontest_files --keepReferenceData --useCaching false --redirectStdOut true --logLevel info --timeout 600 --noglclsharing || EXITCODE=$? #save exit code of regressiontest, but do not stop, yet (need to upload results!)
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --add-ci-report=${IDENTIFIER_COMPATPROFILE} regressiontest_reports/${IDENTIFIER_COMPATPROFILE}
     - mv ${IDENTIFIER_COMPATPROFILE}/regressiontest-junit.xml ./ #actifacts session does not have access to IDENTIFIER_COMPATPROFILE variable!
-    - $(exit $EXITCODE) #propagate regressiontest exit code
+    - $(exit ${EXITCODE}) #propagate regressiontest exit code
   artifacts:
     reports:
       junit: regressiontest-junit.xml
@@ -342,7 +342,7 @@ deploy_src_unix:
   only:
     - schedules
   script:
-    - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_UNIX.tar.gz"
+    - export SNAPSHOT_NAME="voreen/${SNAPSHOT_NAME_UNIX}.tar.gz"
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-unix-nightly.tar.gz
   except:
     variables:
@@ -353,7 +353,7 @@ deploy_src_win:
   only:
     - schedules
   script:
-    - export SNAPSHOT_NAME="voreen/$SNAPSHOT_NAME_WIN.zip"
+    - export SNAPSHOT_NAME="voreen/${SNAPSHOT_NAME_WIN}.zip"
     - ${TOOLS_DIR}/additional/cloudsend.py --password=${REGRESSION_TEST_UPLOAD_PASSWORD} --file=${SNAPSHOT_NAME} voreen-src-win32-nightly.zip
   except:
     variables:

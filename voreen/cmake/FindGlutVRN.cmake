@@ -19,7 +19,7 @@ IF(WIN32)
         
         SET(GLUT_DEBUG_DLL          "${GLUT_DIR}/lib/msvc2015/freeglutd.dll")
         SET(GLUT_RELEASE_DLL        "${GLUT_DIR}/lib/msvc2015/freeglut.dll")
-    ELSEIF(VRN_MSVC2017)
+    ELSEIF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)
         SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2017/freeglutd.lib")
         SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2017/freeglut.lib")
         
