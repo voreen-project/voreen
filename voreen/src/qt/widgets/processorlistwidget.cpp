@@ -506,7 +506,9 @@ void ProcessorListWidget::processorsSelected(const QList<Processor*>& processors
         clearInfo();
     }
 
-    emit filterByProcessor(processors);
+    if(filterByProcessorSelection_->isChecked()) {
+        emit filterByProcessor(processors);
+    }
 }
 
 void ProcessorListWidget::resetSettings() {
