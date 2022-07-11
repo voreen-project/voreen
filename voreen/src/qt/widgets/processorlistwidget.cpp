@@ -60,6 +60,7 @@ ProcessorListWidget::ProcessorListWidget(QWidget* parent)
     , splitter_(new QSplitter(Qt::Vertical))
     , recentlyUsedModule_(0)
     , recentlyUsedProcessor_(0)
+    , selectedProcessor_(nullptr)
     , resetSettings_(false)
 {
     QPushButton* sortButton = new QPushButton(this);
@@ -87,6 +88,7 @@ ProcessorListWidget::ProcessorListWidget(QWidget* parent)
     connect(sortButton, SIGNAL(clicked()), this, SLOT(sortMenu()));
     connect(this, SIGNAL(sort(int)), tree_, SLOT(sort(int)));
     connect(this, SIGNAL(hideStatus(bool)), tree_, SLOT(hideStatus(bool)));
+    connect(this, SIGNAL(filterByProcessor(const QList<Processor*>&)), tree_, SLOT(processorsSelected(const QList<Processor*>&)));
 
     connect(this, SIGNAL(showModule(QString, bool)), tree_, SLOT(setModuleNameVisibility(QString, bool)));
 
@@ -113,6 +115,10 @@ ProcessorListWidget::ProcessorListWidget(QWidget* parent)
         moduleVisibility_[moduleName] = true;
         tree_->moduleVisibility_[moduleName] = true;
     }
+
+    filterByProcessorSelection_ = new QAction("Filter by Selection", this);
+    filterByProcessorSelection_->setCheckable(true);
+    connect(filterByProcessorSelection_, SIGNAL(triggered(bool)), this, SLOT(resetFilterByProcessor()));
 
     sortByCategory_ = new QAction("Sort by Category", this);
     sortByModule_ = new QAction("Sort by Module", this);
@@ -153,6 +159,7 @@ void ProcessorListWidget::loadSettings()
     QSettings settings;
     settings.beginGroup("ProcessorListWidget");
     if (!settings.contains("core")) {      // first time load without any data written in the settings
+        filterByProcessorSelection_->setChecked(true);
         sortByModuleThenCategory_->setChecked(true);         // first time and no data is stored in qsettings
         std::map<std::string, bool>::iterator it = moduleVisibility_.begin();
         while (it != moduleVisibility_.end()) {
@@ -172,6 +179,8 @@ void ProcessorListWidget::loadSettings()
         setModuleNameVisibility("Check All", true);
     }
     else {
+        filterByProcessorSelection_->setChecked(settings.value("fbs").toBool());
+
         if (settings.value("sbc").toBool()) {
             sortByCategory_->setChecked(true);
         }
@@ -265,6 +274,8 @@ void ProcessorListWidget::saveSettings() {
     }
     settings.setValue("filtertext", QString::fromStdString(tree_->filterText_));
 
+    settings.setValue("fbs", filterByProcessorSelection_->isChecked());
+
     settings.setValue("sbc", sortByCategory_->isChecked());
     settings.setValue("sbm", sortByModule_->isChecked());
     settings.setValue("sbmtc", sortByModuleThenCategory_->isChecked());
@@ -277,6 +288,14 @@ void ProcessorListWidget::saveSettings() {
     settings.setValue("processorListSize", tree_->height());
     settings.setValue("infoBoxSize", info_->height());
     settings.endGroup();
+}
+
+void ProcessorListWidget::resetFilterByProcessor() {
+    QList<Processor*> selection;
+    if(filterByProcessorSelection_->isChecked() && selectedProcessor_ != nullptr) {
+        selection << selectedProcessor_;
+    }
+    tree_->processorsSelected(selection);
 }
 
 void ProcessorListWidget::setInfo() {
@@ -376,6 +395,9 @@ void ProcessorListWidget::sortMenu() {
     sortActions->addAction(sortByCategory_);
     sortActions->addAction(sortByModule_);
     sortActions->addAction(sortByModuleThenCategory_);
+    // filter by selection
+    menu->addAction(filterByProcessorSelection_);
+    menu->addSeparator();
     // sort by category
     menu->addAction(sortByCategory_);
     // sort by module
@@ -475,10 +497,16 @@ void ProcessorListWidget::setModuleNameVisibility(std::string name, bool visibil
 }
 
 void ProcessorListWidget::processorsSelected(const QList<Processor*>& processors) {
-    if (processors.size() == 1)
-        setInfo(processors.front());
-    else
+    if (processors.size() == 1) {
+        selectedProcessor_ = processors.front();
+        setInfo(selectedProcessor_);
+    }
+    else {
+        selectedProcessor_ = nullptr;
         clearInfo();
+    }
+
+    emit filterByProcessor(processors);
 }
 
 void ProcessorListWidget::resetSettings() {
@@ -517,7 +545,8 @@ void ProcessorListWidget::keyReleaseEvent(QKeyEvent* event) {
     if (processor) {
         // Create a new processor in the Networkeditor.
         event->accept();
-        emit processorAdded(QString(processor->getId().c_str()));
+        emit processorAdded(QString(processor->getId().c_str()), selectedProcessor_);
+        edit_->setFocus(); // Restore focus.
     }
     else
         QWidget::keyReleaseEvent(event);
@@ -567,6 +596,16 @@ void ProcessorListTreeWidget::filter(const QString& text) {
         sortByModuleName();
     else if (sortType_ == ProcessorListTreeWidget::GroupTypeModuleCategory)
         sortByModuleThenCategory();
+}
+
+void ProcessorListTreeWidget::processorsSelected(const QList<Processor*>& processors) {
+    filterPortTypes_.clear();
+    for (auto* processor : processors) {
+        for (auto* port : processor->getOutports()) {
+            filterPortTypes_.insert(port->getClassName());
+        }
+    }
+    filter(QString::fromStdString(filterText_));
 }
 
 void ProcessorListTreeWidget::mousePressEvent(QMouseEvent *event) {
@@ -629,6 +668,11 @@ std::vector<const Processor*> ProcessorListTreeWidget::getVisibleProcessors() co
     std::vector<const Processor*> visibleProcessors;
     for (size_t i = 0; i < knownProcessors.size(); ++i) {
         const Processor* processor = knownProcessors[i];
+
+        if(!isProcessorApplicableForSelection(processor)) {
+            continue;
+        }
+
         QString procClassName = QString::fromStdString(processor->getClassName());
         if (codeState_.find(processor->getCodeState()) != codeState_.end()) {
             std::string moduleName = processor->getModuleName();
@@ -641,6 +685,20 @@ std::vector<const Processor*> ProcessorListTreeWidget::getVisibleProcessors() co
     }
 
     return visibleProcessors;
+}
+
+bool ProcessorListTreeWidget::isProcessorApplicableForSelection(const Processor* processor) const {
+
+    if(filterPortTypes_.empty()) {
+        return true;
+    }
+
+    for(auto* port : processor->getInports()) {
+        if(filterPortTypes_.find(port->getClassName()) != filterPortTypes_.end()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void ProcessorListTreeWidget::sortByCategory() {
@@ -773,6 +831,10 @@ QList<QTreeWidgetItem*> ProcessorListTreeWidget::createCategoryHierarchy(
     std::map<std::string, std::vector<const Processor*> > categoryToProcessorsMap; //< for processors with more sub-cats
     for (size_t i = 0; i<processors.size(); i++) {
         const Processor* curProc = processors.at(i);
+
+        if(!isProcessorApplicableForSelection(curProc)) {
+            continue;
+        }
 
         // extract sub-category string for current level
         std::vector<std::string> subcategories = strSplit(curProc->getCategory(), '/');

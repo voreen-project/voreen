@@ -47,7 +47,7 @@ QWidget* ProcessorListMenuEntity::createWidget() const {
     processorListWidget_->setMinimumSize(200, 200);
     QObject::connect(mainWindow_->getNetworkEditor(), SIGNAL(processorsSelected(const QList<Processor*>&)),
                     processorListWidget_, SLOT(processorsSelected(const QList<Processor*>&)));
-    QObject::connect(processorListWidget_, SIGNAL(processorAdded(QString)), mainWindow_->getNetworkEditor(), SLOT(processorAdded(QString)));
+    QObject::connect(processorListWidget_, SIGNAL(processorAdded(QString, Processor*)), mainWindow_->getNetworkEditor(), SLOT(processorAdded(QString, Processor*)));
 
     return processorListWidget_;
 }

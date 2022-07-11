@@ -34,6 +34,9 @@ Voreen Changelog
       o Greatly improve loading time and memory consumption of VTIVolumeReader
       o Fix precision issue with u32 values in VolumeFilterList (and potentially other processors)
       o Parallel Coordinates now properly display and are restricted to up to 256 axes (before was 128, displaying more was possible but erroneous)
+      o Improve VoreenVE GUI (opt-out): the processor list is now filtered by the currently selected processor. Only processors that can actually be connected to the selection will be shown. Additionally, the newly added processor will be connected to the old selection and becomes the new selection, allowing for more effectively creating networks.
+      o CTRL+A will no longer trigger the animation editor
+      o CTRL+F will set focus to the processor list search bar
 
 2021-01-28: Voreen 5.2.0
 ------------------------

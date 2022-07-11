@@ -396,7 +396,7 @@ void NetworkEditor::processorAdded(const Processor* processor) {
     }
 }
 
-void NetworkEditor::processorAdded(QString id) {
+void NetworkEditor::processorAdded(QString id, Processor* selectedProcessor) {
     if (!getProcessorNetwork())
         return;
 
@@ -414,21 +414,52 @@ void NetworkEditor::processorAdded(QString id) {
     std::string processorName = proc->getClassName();
     tgtAssert(!processorName.empty(), "Processor class name is empty");
 
-    QPoint position = viewport()->rect().center();
-    while (itemAt(position) != nullptr) {
-        position = QPoint(position.x() + 10, position.y() + 10);
-    }
-
+    // Add the processor to the network.
     getProcessorNetwork()->addProcessor(proc, processorName);
 
     tgtAssert(processorItemMap_.contains(proc), "processorItemMap didn't contain the processor");
     ProcessorGraphicsItem* item = processorItemMap_[proc];
     tgtAssert(item, "no ProcessorGraphicsItem for proc");
+
+    QPoint position = viewport()->rect().center();
+
+    // We heuristically connect to the first valid pair of ports.
+    if(selectedProcessor) {
+        bool connected = false;
+        for (auto* outport: selectedProcessor->getOutports()) {
+            for (auto* inport: proc->getInports()) {
+                if (outport->getClassName() == inport->getClassName()) {
+                    getProcessorNetwork()->connectPorts(outport, inport);
+                    connected = true;
+                    break;
+                }
+            }
+            if(connected) {
+                break;
+            }
+        }
+
+        tgtAssert(processorItemMap_.contains(selectedProcessor), "processorItemMap didn't contain the processor");
+        ProcessorGraphicsItem* selectedProcessorItem = processorItemMap_[selectedProcessor];
+        tgtAssert(selectedProcessorItem, "no ProcessorGraphicsItem for selectedProcessor");
+
+        position = mapFromScene(selectedProcessorItem->pos());
+        scene()->clearSelection();
+        item->setSelected(true);
+    }
+
+    // Find free space.
+    while (itemAt(position) != nullptr) {
+        position = QPoint(position.x() + 10, position.y() + 10);
+    }
+
     item->setPos(mapToScene(position));
     item->saveMeta();
+
     // make sure that the added processor is initialized
     evaluator_->initializeNetwork();
-    scene()->clearSelection();
+
+    updateSelectedItems();
 }
 
 void NetworkEditor::processorRemoved(const Processor* processor) {

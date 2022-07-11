@@ -135,7 +135,7 @@ public:
     void portConnectionRemoved(const Port* outport, const Port* inport);
 
 public slots:
-    void processorAdded(QString id);
+    void processorAdded(QString id, Processor* selectedProcessor);
 
 //---------------------------------------------------------------------------------------------------------------
 //                  scene transformations

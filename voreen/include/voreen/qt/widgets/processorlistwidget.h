@@ -87,6 +87,8 @@ protected:
     QTextBrowser* info_;
     QSplitter* splitter_;
 
+    QAction* filterByProcessorSelection_;
+
     QAction* sortByCategory_;            // sort by category
     QAction* sortByModule_;              // sort by module
     QAction* sortByModuleThenCategory_;  // sort by module then category
@@ -105,6 +107,7 @@ protected:
 
     VoreenModule* recentlyUsedModule_;
     const Processor* recentlyUsedProcessor_;
+    Processor* selectedProcessor_;
 
 protected slots:
     void reloadInfoText();
@@ -112,13 +115,15 @@ protected slots:
     void sortMenu();
     void setModuleNameVisibility(std::string, bool);
     void saveSettings();
+    void resetFilterByProcessor();
 
 signals:
     void sort(int);
     void hideStatus(bool);
     //void searchDescription(bool);
     void showModule(QString, bool);
-    void processorAdded(QString);
+    void processorAdded(QString, Processor*);
+    void filterByProcessor(const QList<Processor*>& processors);
 
 private:
     bool resetSettings_;
@@ -138,6 +143,7 @@ public:
 
 public slots:
     void filter(const QString& text);
+    void processorsSelected(const QList<Processor*>& processors);
 
     /// Sorts the Processorlist by category, modulename, or modulename then category
     void sort(int);
@@ -154,6 +160,7 @@ private:
     ProcessorListWidget* processorListWidget_;
 
     std::vector<const Processor*> getVisibleProcessors() const;
+    bool isProcessorApplicableForSelection(const Processor* processor) const;
 
     void sortByCategory();
     void sortByModuleName();
@@ -167,6 +174,7 @@ private:
 
     GroupType sortType_;
     std::string filterText_;
+    std::set<std::string> filterPortTypes_;
     bool showCodeState_;
     bool searchDescription_;
 
