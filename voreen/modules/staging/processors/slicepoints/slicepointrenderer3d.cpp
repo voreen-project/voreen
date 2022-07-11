@@ -47,19 +47,19 @@ SlicePointRenderer3D::SlicePointRenderer3D()
     // points
     , renderPoint0_("renderPoint0", "Render Point1", false)
     , pointColor0_("pointColor0", "Point1 Color", tgt::vec4(1.0f, 0.0f, 0.0f, 1.0f))
-    , pointPos0_("pointPos0", "Point1 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
+    , pointPos0_("pointPos0", "Point1 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX-1),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , renderPoint1_("renderPoint1", "Render Point2", false)
     , pointColor1_("pointColor1", "Point2 Color", tgt::vec4(0.0f, 1.0f, 0.0f, 1.0f))
-    , pointPos1_("pointPos1", "Point2 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
+    , pointPos1_("pointPos1", "Point2 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX-1),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , renderPoint2_("renderPoint2", "Render Point3", false)
     , pointColor2_("pointColor2", "Point3 Color", tgt::vec4(0.0f, 0.0f, 1.0f, 1.0f))
-    , pointPos2_("pointPos2", "Point3 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
+    , pointPos2_("pointPos2", "Point3 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX-1),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , renderPoint3_("renderPoint3", "Render Point4", false)
     , pointColor3_("pointColor3", "Point4 Color", tgt::vec4(1.0f, 1.0f, 0.0f, 1.0f))
-    , pointPos3_("pointPos3", "Point4 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX),
+    , pointPos3_("pointPos3", "Point4 Position", INVISIBLE, tgt::ivec3(-1), tgt::ivec3(INT_MAX-1),
                   Processor::INVALID_RESULT,NumericProperty<tgt::ivec3>::STATIC,Property::LOD_DEBUG)
     , shaderProp_("geometry.prg", "Shader", "trianglemesh.frag", "trianglemesh.vert", "trianglemesh.geom",
                   Processor::INVALID_PROGRAM,Property::LOD_DEBUG)
