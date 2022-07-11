@@ -40,6 +40,10 @@ EnsembleHash::EnsembleHash(const EnsembleDataset& dataset)
         unhashed << fieldName;
     }
 
+    for (const std::string& fieldName : dataset.getCommonFieldNames()) {
+        unhashed << fieldName;
+    }
+
     hash_ = VoreenHash::getHash(unhashed.str());
 }
 
