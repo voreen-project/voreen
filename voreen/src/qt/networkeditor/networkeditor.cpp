@@ -425,9 +425,16 @@ void NetworkEditor::processorAdded(QString id, Processor* selectedProcessor) {
 
     // We heuristically connect to the first valid pair of ports.
     if(selectedProcessor) {
+
+        std::vector<Port*> inports = proc->getInports();
+        inports.insert(inports.end(), proc->getCoProcessorInports().begin(), proc->getCoProcessorInports().end());
+
+        std::vector<Port*> outports = selectedProcessor->getOutports();
+        outports.insert(outports.end(), selectedProcessor->getCoProcessorOutports().begin(), selectedProcessor->getCoProcessorOutports().end());
+
         bool connected = false;
-        for (auto* outport: selectedProcessor->getOutports()) {
-            for (auto* inport: proc->getInports()) {
+        for (auto* outport: outports) {
+            for (auto* inport: inports) {
                 if (outport->getClassName() == inport->getClassName()) {
                     getProcessorNetwork()->connectPorts(outport, inport);
                     connected = true;

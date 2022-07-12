@@ -27,6 +27,7 @@
 
 #include "voreen/core/voreenmodule.h"
 #include "voreen/core/ports/port.h"
+#include "voreen/core/ports/coprocessorport.h"
 #include "voreen/core/properties/property.h"
 
 #include "voreen/qt/widgets/lineeditresetwidget.h"
@@ -606,6 +607,9 @@ void ProcessorListTreeWidget::processorsSelected(const QList<Processor*>& proces
         for (auto* port : processor->getOutports()) {
             filterPortTypes_.insert(port->getClassName());
         }
+        for (auto* port : processor->getCoProcessorOutports()) {
+            filterPortTypes_.insert(port->getClassName());
+        }
     }
     filter(QString::fromStdString(filterText_));
 }
@@ -700,6 +704,13 @@ bool ProcessorListTreeWidget::isProcessorApplicableForSelection(const Processor*
             return true;
         }
     }
+
+    for(auto* port : processor->getCoProcessorInports()) {
+        if(filterPortTypes_.find(port->getClassName()) != filterPortTypes_.end()) {
+            return true;
+        }
+    }
+
     return false;
 }
 
