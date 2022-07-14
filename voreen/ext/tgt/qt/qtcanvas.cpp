@@ -84,6 +84,7 @@ public:
         resizeEvent(&event); // Enforces OpenGL initialization.
 
         setUpdateBehavior(NoPartialUpdate);
+        setMouseTracking(true);
         initialized_ = true;
     }
 
@@ -163,6 +164,7 @@ public:
 
         // Wrap the window inside a container widget.
         widget_ = QWidget::createWindowContainer(this);
+        widget_->setMouseTracking(true);
 
         initialized_ = true;
     }
