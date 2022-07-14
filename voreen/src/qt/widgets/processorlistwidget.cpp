@@ -160,7 +160,7 @@ void ProcessorListWidget::loadSettings()
     QSettings settings;
     settings.beginGroup("ProcessorListWidget");
     if (!settings.contains("core")) {      // first time load without any data written in the settings
-        filterByProcessorSelection_->setChecked(true);
+        filterByProcessorSelection_->setChecked(false);
         sortByModuleThenCategory_->setChecked(true);         // first time and no data is stored in qsettings
         std::map<std::string, bool>::iterator it = moduleVisibility_.begin();
         while (it != moduleVisibility_.end()) {
@@ -675,10 +675,6 @@ std::vector<const Processor*> ProcessorListTreeWidget::getVisibleProcessors() co
     for (size_t i = 0; i < knownProcessors.size(); ++i) {
         const Processor* processor = knownProcessors[i];
 
-        if(!isProcessorApplicableForSelection(processor)) {
-            continue;
-        }
-
         QString procClassName = QString::fromStdString(processor->getClassName());
         if (codeState_.find(processor->getCodeState()) != codeState_.end()) {
             std::string moduleName = processor->getModuleName();
@@ -752,6 +748,7 @@ void ProcessorListTreeWidget::sortByModuleName() {
     for (size_t i = 0; i < visibleProcessors.size(); ++i) {
         moduleIdentifier = QString::fromStdString(visibleProcessors[i]->getModuleName());
         ProcessorListItem* tempListItem = new ProcessorListItem(visibleProcessors[i]->getClassName());
+        tempListItem->setDisabled(!isProcessorApplicableForSelection(visibleProcessors[i]));
 
         modules[moduleIdentifier]->addChild(tempListItem);
 
@@ -845,10 +842,6 @@ QList<QTreeWidgetItem*> ProcessorListTreeWidget::createCategoryHierarchy(
     for (size_t i = 0; i<processors.size(); i++) {
         const Processor* curProc = processors.at(i);
 
-        if(!isProcessorApplicableForSelection(curProc)) {
-            continue;
-        }
-
         // extract sub-category string for current level
         std::vector<std::string> subcategories = strSplit(curProc->getCategory(), '/');
         tgtAssert(subcategories.size() >(size_t)categoryLevel, "too few sub-categories for this category level");
@@ -864,6 +857,7 @@ QList<QTreeWidgetItem*> ProcessorListTreeWidget::createCategoryHierarchy(
         // if processor has no more sub-categories => add processor item directly
         if (subcategories.size() == static_cast<size_t>(categoryLevel + 1)) {
             ProcessorListItem* processorItem = new ProcessorListItem(curProc->getClassName());
+            processorItem->setDisabled(!isProcessorApplicableForSelection(curProc));
             curCategoryItem->addChild(processorItem);
             if (showCodeState_)
                 setCodeStateIcon(curProc->getClassName(), processorItem);
