@@ -56,7 +56,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     , isoValue_("isoValue", "Iso-Value", 0.5f, 0.0f, 1.0f)
     , multiChannelSimilarityMeasure_("multiChannelSimilarityMeasure", "Multi Field Similarity Measure")
     , weight_("weight", "Weight", 0.5f, 0.0f, 1.0f)
-    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 8192, 1, 131072)
+    , numSeedPoints_("numSeedPoints", "Number of Seed Points", 8192, 1, 10000000)
     , seedTime_("seedTime", "Current Random Seed", static_cast<int>(time(0)), std::numeric_limits<int>::min(), std::numeric_limits<int>::max())
     , clearCache_("clearCache", "Clear Cache", Processor::VALID, Property::LOD_ADVANCED)
 {
