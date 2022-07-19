@@ -258,7 +258,8 @@ void ConnectedComponentAnalysis::processComputeOutput(CCAComputeOutput output) {
     const std::string volumeFilePath = outputVolumeFilePath_.get();
     // outputVolume has been destroyed and thus closed by now.
     // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-    const VolumeBase* vol = HDF5VolumeReader().read(volumeFilePath)->at(0);
+    std::unique_ptr<VolumeList> volumes(HDF5VolumeReaderOriginal().read(volumeFilePath));
+    const VolumeBase* vol = volumes->at(0);
     outport_.setData(vol);
 }
 std::function<bool(const CCANodeMetaData&)> ConnectedComponentAnalysis::generateComponentConstraintTest(const VolumeBase& originVolume) const {

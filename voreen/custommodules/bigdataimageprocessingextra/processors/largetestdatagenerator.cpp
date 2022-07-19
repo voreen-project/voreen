@@ -1046,8 +1046,10 @@ void LargeTestDataGenerator::processComputeOutput(LargeTestDataGeneratorOutput o
     if(invalidation_ && *invalidation_ == LargeTestDataGeneratorInput::LargeTestDataInvalidation::All) {
         // outputVolume has been destroyed and thus closed by now.
         // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-        const VolumeBase* volNoisy = HDF5VolumeReader().read(output.outputVolumeNoisyFilePath)->at(0);
-        const VolumeBase* volGT = HDF5VolumeReader().read(output.outputVolumeGTFilePath)->at(0);
+        std::unique_ptr<VolumeList> volumes(HDF5VolumeReaderOriginal().read(output.outputVolumeNoisyFilePath));
+        const VolumeBase* volNoisy = volumes->at(0);
+        volumes.reset(HDF5VolumeReaderOriginal().read(output.outputVolumeGTFilePath));
+        const VolumeBase* volGT = volumes->at(0);
 
         outportNoisy_.setData(volNoisy);
         outportGT_.setData(volGT);

@@ -274,7 +274,8 @@ void BinaryMedian::processComputeOutput(BinaryMedianOutput output) {
     } else {
         // outputVolume has been destroyed and thus closed by now.
         // So we can open it again (and use HDF5VolumeReader's implementation to read all the metadata with the file)
-        const VolumeBase* vol = HDF5VolumeReader().read(output.outputVolumeFilePath)->at(0);
+        std::unique_ptr<VolumeList> volumes(HDF5VolumeReaderOriginal().read(output.outputVolumeFilePath));
+        const VolumeBase* vol = volumes->at(0);
         outport_.setData(vol);
     }
 }
