@@ -87,6 +87,26 @@ struct SimpleVolume {
         index = index*numChannels + channel;
         return data[index];
     }
+
+    S getValueLinear(float x, float y, float z, int channel = 0) const {
+
+        x = std::clamp<float>(x, 0, dimensions[0]);
+        y = std::clamp<float>(y, 0, dimensions[1]);
+        z = std::clamp<float>(z, 0, dimensions[2]);
+
+        vec3 llb{ std::floor(x), std::floor(y), std::floor(z) };
+        vec3 urf{ std::ceil(x), std::ceil(y), std::ceil(z) };
+        vec3 p{ x - llb.x, y - llb.y, z - llb.z };
+
+        return    getValue(llb.x, llb.y, llb.z, channel) * (1.f-p.x)*(1.f-p.y)*(1.f-p.z) // llB
+                + getValue(urf.x, llb.y, llb.z, channel) * (    p.x)*(1.f-p.y)*(1.f-p.z) // lrB
+                + getValue(urf.x, urf.y, llb.z, channel) * (    p.x)*(    p.y)*(1.f-p.z) // urB
+                + getValue(llb.x, urf.y, llb.z, channel) * (1.f-p.x)*(    p.y)*(1.f-p.z) // ulB
+                + getValue(llb.x, llb.y, urf.z, channel) * (1.f-p.x)*(1.f-p.y)*(    p.z) // llF
+                + getValue(urf.x, llb.y, urf.z, channel) * (    p.x)*(1.f-p.y)*(    p.z) // lrF
+                + getValue(urf.x, urf.y, urf.z, channel) * (    p.x)*(    p.y)*(    p.z) // urF
+                + getValue(llb.x, urf.y, urf.z, channel) * (1.f-p.x)*(    p.y)*(    p.z);// ulF
+    }
 };
 
 using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
@@ -145,7 +165,7 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
 
         // Add one voxel to account for precision/rounding errors.
         T radius = indicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
-        T length = indicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
+        T length = indicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 8;
 
         // Define a local disk volume.
         IndicatorCircle3D<T> flow(center, normal, radius);
@@ -167,17 +187,22 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
             superGeometry.rename(MAT_FLUID, MAT_WALL, layerCapFlowWall);
 
             IndicatorCircle3D<T> capFlowEmpty(center, normal, radius);
-            IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 2 * converter.getConversionFactorLength());
+            IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 4 * converter.getConversionFactorLength());
             superGeometry.rename(MAT_WALL, MAT_EMPTY, layerCapFlowEmpty);
+
+//            // Fill cut-off region.
+//            center += sign * normal * converter.getConversionFactorLength();
+//            floodRegion(superGeometry, center[0], center[1], center[2], MAT_FLUID);
         }
     }
 
-    // TODO: clean regions that are isolated from simulation domain.
     // Removes all not needed boundary voxels outside the surface
     //superGeometry.clean();
     // Removes all not needed boundary voxels inside the surface
     superGeometry.innerClean(MAT_COUNT);
-    return !superGeometry.checkForErrors();
+
+    // return !superGeometry.checkForErrors();
+    return true; // TODO: do not ignore return value, actually clean geometry.
 }
 
 void defineBulkDynamics(FlowTurbulenceModel model,
