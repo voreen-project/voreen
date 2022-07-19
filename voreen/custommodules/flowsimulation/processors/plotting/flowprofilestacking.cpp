@@ -47,9 +47,10 @@ FlowProfileStacking::FlowProfileStacking()
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
     , stackingMode_("stackingMode", "Stacking Mode")
     , selectedSegment_("selectedSegment", "Selected Segment", 0, 0, 0, Processor::VALID)
-    , r_("r_", "#samples R", 16, 2, 256)
-    , a_("a_", "#samples A", 32, 1, 256)
-    , z_("z_", "#samples Z", 32, 1, 256)
+    , numSamplesRadius_("r_", "Num Samples Radius", 16, 2, 256)
+    , numSamplesAngle_("a_", "Num Samples Angle", 32, 1, 256)
+    , numSamplesZ_("z_", "Num Samples Z", 32, 1, 256)
+    , zRange_("zRange_", "Z Range (%)", tgt::vec2(0.2, 0.8), 0.0, 1.0)
 {
     addPort(volumeListPort_);
     //volumeListPort_.addCondition(new PortConditionVolumeListEnsemble());
@@ -63,12 +64,14 @@ FlowProfileStacking::FlowProfileStacking()
     stackingMode_.addOption("modeValue", "Stacking of values");
     addProperty(selectedSegment_);
     ON_CHANGE(selectedSegment_, FlowProfileStacking, onSelectedSegmentChange);
-    addProperty(r_);
-    r_.setTracking(false);
-    addProperty(a_);
-    a_.setTracking(false);
-    addProperty(z_);
-    z_.setTracking(false);
+    addProperty(numSamplesRadius_);
+    numSamplesRadius_.setTracking(false);
+    addProperty(numSamplesAngle_);
+    numSamplesAngle_.setTracking(false);
+    addProperty(numSamplesZ_);
+    numSamplesZ_.setTracking(false);
+    addProperty(zRange_);
+    zRange_.setTracking(false);
 }
 
 void FlowProfileStacking::beforeProcess() {
@@ -103,9 +106,10 @@ FlowProfileStackingInput FlowProfileStacking::prepareComputeInput() {
     return FlowProfileStackingInput {
             std::move(volumes),
             std::move(resampleSegments),
-            r_.get(),
-            a_.get(),
-            z_.get(),
+            numSamplesRadius_.get(),
+            numSamplesAngle_.get(),
+            numSamplesZ_.get(),
+            zRange_.get(),
             stackingMode_.get() == "modeValue"
     };
 }
@@ -115,9 +119,10 @@ FlowProfileStackingOutput FlowProfileStacking::compute(FlowProfileStackingInput 
     auto volumes = std::move(input.volumes);
     auto segments = std::move(input.segments);
 
-    const int R = input.r_;
-    const int A = input.a_;
-    const int Z = input.z_;
+    const int R = input.numSamplesRadius_;
+    const int A = input.numSamplesAngle_;
+    const int Z = input.numSamplesZ_;
+    const tgt::vec2 zRange = input.zRange_;
     bool stackValues = input.values_;
 
     std::vector<std::unique_ptr<PlotData>> output;
@@ -126,7 +131,7 @@ FlowProfileStackingOutput FlowProfileStacking::compute(FlowProfileStackingInput 
     size_t numColumns = stackValues ? A*Z : volumes->size();
     for(size_t j = 0; j < segments.size(); j++) {
         std::unique_ptr<PlotData> plotData(new PlotData(1, numColumns));
-        plotData->setColumnLabel(0, "point");
+        plotData->setColumnLabel(0, "point index");
         if (!stackValues) {
             for (size_t i = 0; i < volumes->size(); i++) {
                 plotData->setColumnLabel(i + 1, volumes->at(i)->getModality().getName());
@@ -134,7 +139,8 @@ FlowProfileStackingOutput FlowProfileStacking::compute(FlowProfileStackingInput 
         }
         else {
             for (size_t i = 0; i < numColumns; i++) {
-                plotData->setColumnLabel(i + 1, std::to_string(i));
+                // FIXME: First volume is assumed to be representative.
+                plotData->setColumnLabel(i + 1, volumes->at(0)->getMetaDataValue<StringMetaData>("EnsembleMemberName", std::to_string(i)));
             }
         }
         output.emplace_back(std::move(plotData));
@@ -156,8 +162,8 @@ FlowProfileStackingOutput FlowProfileStacking::compute(FlowProfileStackingInput 
             auto& segment = segments.at(j);
 
             // Ali wants the first and last 20% of the domain to be removed.
-            auto lower_z = static_cast<float>(lock->getDimensions().z * 0.2f);
-            auto upper_z = static_cast<float>(lock->getDimensions().z * 0.8f);
+            auto lower_z = static_cast<float>(lock->getDimensions().z * zRange.x);
+            auto upper_z = static_cast<float>(lock->getDimensions().z * zRange.y);
 
             // Gather samples.
 #ifdef VRN_MODULE_OPENMP

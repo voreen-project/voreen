@@ -216,6 +216,10 @@ namespace voreen {
 			}
 		}
 
+        if(data_vec.empty()) {
+            return;
+        }
+
 		// create and configure PlotData
 		const PlotData* p_first = data_vec.front();
 		int amount_columns = static_cast<int>(COLUMNS_PER_TRACER_ * data_vec.size());
@@ -229,7 +233,7 @@ namespace voreen {
 
 		// create new PlotData
 		data_ = PlotData(1, amount_columns);
-		data_.setColumnLabel(0, "Time");
+		data_.setColumnLabel(0, data_vec.front()->getColumnLabel(0));
 
 		std::vector<MeanData> data_mean;
 

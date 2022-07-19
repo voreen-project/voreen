@@ -29,6 +29,7 @@
 #include "voreen/core/processors/asynccomputeprocessor.h"
 
 #include "voreen/core/ports/genericport.h"
+#include "voreen/core/properties/numeric/intervalproperty.h"
 #include "modules/plotting/ports/plotport.h"
 #include "modules/plotting/datastructures/plotdata.h"
 
@@ -37,9 +38,10 @@ namespace voreen {
 struct FlowProfileStackingInput {
     PortDataPointer<VolumeList> volumes;
     std::vector<std::vector<tgt::vec3>> segments;
-    int r_;
-    int a_;
-    int z_;
+    int numSamplesRadius_;
+    int numSamplesAngle_;
+    int numSamplesZ_;
+    tgt::vec2 zRange_;
     bool values_;
 };
 
@@ -80,9 +82,11 @@ private:
 
     StringOptionProperty stackingMode_;
     IntProperty selectedSegment_;
-    IntProperty r_;
-    IntProperty a_;
-    IntProperty z_;
+    IntProperty selectedSlice_;
+    IntProperty numSamplesRadius_;
+    IntProperty numSamplesAngle_;
+    IntProperty numSamplesZ_;
+    FloatIntervalProperty zRange_;
 
     std::vector<std::unique_ptr<PlotData>> plotData_;
 
