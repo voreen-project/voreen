@@ -242,7 +242,7 @@ namespace voreen {
 		}
 
 		// sort values by range between +Std and -Std
-		std::sort(data_mean.begin(), data_mean.end(), meandata_sort());
+		// std::sort(data_mean.begin(), data_mean.end(), meandata_sort()); // TODO: is that actually helpful?
 
 		// Set column names
 		for (int i = 0; i < data_mean.size(); ++i) {
