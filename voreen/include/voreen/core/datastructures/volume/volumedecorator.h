@@ -41,7 +41,7 @@ namespace voreen {
  */
 class VRN_CORE_API VolumeDecoratorIdentity : public VolumeBase, public VolumeObserver {
 public:
-    VolumeDecoratorIdentity(const VolumeBase* vhb);
+    VolumeDecoratorIdentity(const VolumeBase* vhb, bool ownsDecorated = false);
 
     virtual ~VolumeDecoratorIdentity();
 
@@ -107,6 +107,7 @@ protected:
     virtual void removeRepresentation(size_t i);
 
     const VolumeBase* base_;
+    bool ownsDecorated_;
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -122,22 +123,22 @@ public:
      * @param value New Value. The decorator takes ownership.
      * @param keepDerivedData Add derived data of volume to decorator
      */
-    VolumeDecoratorReplace(const VolumeBase* vhb, const std::string& key, MetaDataBase* value, bool keepDerivedData);
+    VolumeDecoratorReplace(const VolumeBase* vhb, const std::string& key, MetaDataBase* value, bool keepDerivedData, bool ownsDecorated = false);
     virtual ~VolumeDecoratorReplace() {
         stopRunningThreads();
-        delete value_;
+        metaData_.clear();
     }
 
     virtual std::vector<std::string> getMetaDataKeys() const;
     virtual const MetaDataBase* getMetaData(const std::string& key) const;
     virtual bool hasMetaData(const std::string& key) const;
 
-    MetaDataBase* getValue() const;
-    void setValue(MetaDataBase* value);
+    MetaDataBase* getValue(const std::string& key = "") const;
+    void setValue(MetaDataBase* value, const std::string& key = "");
 
 protected:
-    std::string key_;
-    MetaDataBase* value_;
+    std::map<std::string, std::unique_ptr<MetaDataBase>> metaData_;
+    const std::string key_; // Main key, for legacy reasons.
 };
 
 //-------------------------------------------------------------------------------------------------

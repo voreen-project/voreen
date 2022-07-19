@@ -38,10 +38,11 @@ namespace voreen {
 
 //---- constructor / destructor ----
 
-VolumeDecoratorIdentity::VolumeDecoratorIdentity(const VolumeBase* vhb)
+VolumeDecoratorIdentity::VolumeDecoratorIdentity(const VolumeBase* vhb, bool ownsDecorated)
     : VolumeBase()
     , VolumeObserver()
     , base_(vhb)
+    , ownsDecorated_(ownsDecorated)
 {
     tgtAssert(vhb, "null pointer passed as VolumeBase");
     vhb->Observable<VolumeObserver>::addObserver(this);
@@ -50,6 +51,11 @@ VolumeDecoratorIdentity::VolumeDecoratorIdentity(const VolumeBase* vhb)
 VolumeDecoratorIdentity::~VolumeDecoratorIdentity() {
     notifyDelete();
     stopRunningThreads();
+
+    if(ownsDecorated_) {
+        base_->Observable<VolumeObserver>::removeObserver(this);
+        delete base_;
+    }
 }
 
 const VolumeBase* VolumeDecoratorIdentity::getDecorated() const {
@@ -211,13 +217,13 @@ void VolumeDecoratorIdentity::volumeDataDelete(const VolumeBase* source) {
 //-------------------------------------------------------------------------------------------------
 
 VolumeDecoratorReplace::VolumeDecoratorReplace(const VolumeBase* vhb,
-    const std::string& key, MetaDataBase* value, bool keepDerivedData)
-    : VolumeDecoratorIdentity(vhb)
+    const std::string& key, MetaDataBase* value, bool keepDerivedData, bool ownsDecorated)
+    : VolumeDecoratorIdentity(vhb, ownsDecorated)
     , key_(key)
-    , value_(value)
 {
     tgtAssert(key != "", "empty key passed");
     tgtAssert(value, "null pointer passed as value");
+    metaData_[key_] = std::unique_ptr<MetaDataBase>(value);
 
     // create volume hash by concatenating hash of underlying volume with the replace item
     if (vhb->hasDerivedData<VolumeHash>()) {
@@ -246,8 +252,11 @@ std::vector<std::string> VolumeDecoratorReplace::getMetaDataKeys() const {
     if (base_) {
         std::vector<std::string> keys = base_->getMetaDataKeys();
 
-        if(!base_->hasMetaData(key_))
-            keys.push_back(key_);
+        for(const auto& kv : metaData_) {
+            const std::string& key = kv.first;
+            if (!base_->hasMetaData(key))
+                keys.push_back(key);
+        }
 
         return keys;
     }
@@ -261,8 +270,9 @@ const MetaDataBase* VolumeDecoratorReplace::getMetaData(const std::string& key) 
     if (!base_)
         return 0;
 
-    if(key == key_)
-        return value_;
+    auto iter = metaData_.find(key);
+    if(iter != metaData_.end())
+        return iter->second.get();
     else
         return base_->getMetaData(key);
 }
@@ -271,20 +281,29 @@ bool VolumeDecoratorReplace::hasMetaData(const std::string& key) const {
     if (!base_)
         return false;
 
-    if(key == key_)
+    if(metaData_.find(key) != metaData_.end())
         return true;
     else
         return base_->hasMetaData(key);
 }
 
-MetaDataBase* VolumeDecoratorReplace::getValue() const {
-    return value_;
+MetaDataBase* VolumeDecoratorReplace::getValue(const std::string& key) const {
+    if(key.empty()) {
+        // Fall back to main key.
+        return metaData_.at(key_).get();
+    }
+    return metaData_.at(key).get();
 }
 
-void VolumeDecoratorReplace::setValue(MetaDataBase* value) {
+void VolumeDecoratorReplace::setValue(MetaDataBase* value, const std::string& key) {
     notifyPendingDataInvalidation();
-    delete value_;
-    value_ = value;
+    if(key.empty()) {
+        // Fall back to main key.
+        metaData_.at(key_).get();
+    }
+    else {
+        metaData_[key].reset(value);
+    }
 }
 
 } // namespace
