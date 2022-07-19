@@ -27,6 +27,7 @@
 #define VRN_ENSEMBLE_UTILS_H
 
 #include "voreen/core/voreencoreapi.h"
+#include "voreen/core/datastructures/volume/volumedecorator.h"
 #include "voreen/core/io/volumereader.h"
 #include "voreen/core/io/volumeserializerpopulator.h"
 
@@ -35,7 +36,7 @@
 namespace voreen {
 
 class VolumeBase;
-class VolumeURL;
+struct VolumeURL;
 
 
 /**
@@ -86,6 +87,21 @@ public:
 private:
 
     VolumeSerializerPopulator volumeSerializerPopulator_;
+};
+
+/**
+ * This decorator adds ensemble member-specific meta data to a volume.
+ * The member name is a mandatory addition.
+ * @Note: It takes ownership of the volume.
+ */
+class VolumeDecoratorEnsembleMember : public VolumeDecoratorReplace {
+public:
+
+    static const std::string META_DATA_NAME_ENSEMBLE_MEMBER_NAME;
+
+    VolumeDecoratorEnsembleMember(const VolumeBase* vhb, const std::string& name)
+        : VolumeDecoratorReplace(vhb, META_DATA_NAME_ENSEMBLE_MEMBER_NAME, new StringMetaData(name), true, true)
+    {}
 };
 
 /**

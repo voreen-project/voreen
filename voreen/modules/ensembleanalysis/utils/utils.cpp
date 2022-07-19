@@ -253,4 +253,6 @@ VolumeBase* EnsembleVolumeReader::read(const VolumeURL& url) {
 }
 
 
+const std::string VolumeDecoratorEnsembleMember::META_DATA_NAME_ENSEMBLE_MEMBER_NAME("EnsembleMemberName");
+
 }

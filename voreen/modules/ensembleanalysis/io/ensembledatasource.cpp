@@ -203,7 +203,12 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
                 std::unique_ptr<VolumeBase> volumeHandle;
                 try {
-                    volumeHandle.reset(reader.read(subURL));
+                    // Read the volume.
+                    const VolumeBase* volume = reader.read(subURL);
+
+                    // Add member meta data.
+                    // TODO: Volume Cache needs to store meta data.
+                    volumeHandle.reset(new VolumeDecoratorEnsembleMember(volume, member));
                 }
                 catch (tgt::IOException& e) {
                     LERROR("Error reading " << subURL.getURL() << ": " << e.what());
