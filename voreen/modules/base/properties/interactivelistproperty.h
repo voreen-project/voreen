@@ -71,7 +71,7 @@ public:
     typedef std::function<std::string(const Instance&)> NameGenerator;
 
     InteractiveListProperty(const std::string& id, const std::string& guiText, bool allowDuplication = false,
-                        int invalidationLevel=Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT);
+                        int invalidationLevel=Processor::INVALID_RESULT, Property::LevelOfDetail lod = Property::LOD_DEFAULT, bool serializeItems = false);
     InteractiveListProperty();
     virtual ~InteractiveListProperty();
 
@@ -281,6 +281,8 @@ private:
 
     std::string itemLabel_;
     std::string instanceLabel_;
+
+    bool serializeItems_;
 };
 
 } // namespace voreen

@@ -78,10 +78,11 @@ void InteractiveListProperty::Instance::setName(const std::string& name) {
 
 
 InteractiveListProperty::InteractiveListProperty(const std::string& id, const std::string& guiText, bool allowDuplication,
-                            int invalidationLevel, Property::LevelOfDetail lod)
+                            int invalidationLevel, Property::LevelOfDetail lod, bool serializeItems)
     : Property(id, guiText, invalidationLevel, lod)
     , allowDuplication_(allowDuplication)
     , selectedInstance_(-1)
+    , serializeItems_(serializeItems)
 {
     // Setup default name generator.
     nameGenerator_ =
@@ -115,6 +116,10 @@ void InteractiveListProperty::deserialize(Deserializer& s) {
 
     std::vector<std::string> oldItems;
     s.deserialize("items", oldItems);
+
+    if(serializeItems_) {
+        items_ = oldItems;
+    }
 
     // Reordering items invalidates instances.
     // Therefore, we need to remap old ids to their current equivalent.
