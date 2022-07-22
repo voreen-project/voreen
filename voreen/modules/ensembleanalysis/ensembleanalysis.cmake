@@ -38,6 +38,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/similaritymatrixsource.cpp
 
     #Processors
+    ${MOD_DIR}/processors/ensemblechannelmerger.cpp
+    ${MOD_DIR}/processors/ensemblecolor.cpp
     ${MOD_DIR}/processors/ensemblefilter.cpp
     ${MOD_DIR}/processors/ensembleinformation.cpp
     ${MOD_DIR}/processors/ensemblemeancreator.cpp
@@ -85,6 +87,8 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/similaritymatrixsource.h
 
     #Processors
+    ${MOD_DIR}/processors/ensemblechannelmerger.h
+    ${MOD_DIR}/processors/ensemblecolor.h
     ${MOD_DIR}/processors/ensemblefilter.h
     ${MOD_DIR}/processors/ensembleinformation.h
     ${MOD_DIR}/processors/ensemblemeancreator.h

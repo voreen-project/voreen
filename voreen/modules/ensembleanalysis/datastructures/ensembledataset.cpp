@@ -38,6 +38,16 @@ namespace voreen {
 // class TimeStep::VolumeCache
 ///////////////////////////////////////////////////
 
+VolumeURL TimeStep::VolumeCache::getOrConstructURL(std::pair<std::string, const VolumeBase*> volume) {
+    // In case the Volume URL is empty, the volume most likely only is present in RAM.
+    // Since we still require a URL to identify the volume, we simply construct a unique URL.
+    VolumeURL url = volume.second->getOrigin();
+    if(url == VolumeURL()) {
+        url = VolumeURL("RAM", volume.first);
+    }
+    return url;
+}
+
 TimeStep::VolumeCache::VolumeCache()
 {
 }
@@ -46,7 +56,7 @@ TimeStep::VolumeCache::VolumeCache(const std::map<std::string, const VolumeBase*
     for(const auto& vol : volumeData) {
         const VolumeBase* volume = vol.second;
         volume->Observable<VolumeObserver>::addObserver(static_cast<const VolumeObserver*>(this));
-        cacheEntries_.insert(std::make_pair(volume->getOrigin().getURL(), VolumeCacheEntry{volume, false}));
+        cacheEntries_.insert(std::make_pair(getOrConstructURL(vol).getURL(), VolumeCacheEntry{volume, false}));
     }
 }
 
@@ -173,14 +183,7 @@ TimeStep::TimeStep(const std::map<std::string, const VolumeBase*>& volumeData, f
 {
     for(const auto& vol : volumeData) {
         std::string fieldName = vol.first;
-
-        // In case the Volume URL is empty, the volume most likely only is present in RAM.
-        // Since we still require a URL to identify the volume, we simply construct a unique URL.
-        VolumeURL url = vol.second->getOrigin();
-        if(url == VolumeURL()) {
-            url = VolumeURL("RAM", fieldName);
-        }
-        urls_.insert(std::make_pair(fieldName, url));
+        urls_.insert(std::make_pair(fieldName, VolumeCache::getOrConstructURL(vol)));
         derivedData_.insert(std::make_pair(fieldName, DerivedData(vol.second, enforceDerivedData)));
     }
 }
@@ -352,22 +355,28 @@ void EnsembleMember::deserialize(Deserializer& s) {
 
 //////////// Field
 
-EnsembleDataset::FieldMetaData::FieldMetaData()
+EnsembleFieldMetaData::EnsembleFieldMetaData()
     : valueRange_(tgt::vec2::zero)
     , magnitudeRange_(tgt::vec2::zero)
     , numChannels_(0)
+    , homogeneousDimensions_(false)
+    , dimensions_(tgt::svec3::zero)
 {}
 
-void EnsembleDataset::FieldMetaData::serialize(Serializer& s) const {
+void EnsembleFieldMetaData::serialize(Serializer& s) const {
     s.serialize("valueRange", valueRange_);
     s.serialize("magnitudeRange", magnitudeRange_);
     s.serialize("numChannels", numChannels_);
+    s.serialize("homogeneousDimensions", homogeneousDimensions_);
+    s.serialize("dimensions", dimensions_);
 }
 
-void EnsembleDataset::FieldMetaData::deserialize(Deserializer& s) {
+void EnsembleFieldMetaData::deserialize(Deserializer& s) {
     s.deserialize("valueRange", valueRange_);
     s.deserialize("magnitudeRange", magnitudeRange_);
     s.deserialize("numChannels", numChannels_);
+    s.optionalDeserialize("homogeneousDimensions", homogeneousDimensions_, false);
+    s.optionalDeserialize("dimensions", dimensions_, tgt::svec3::zero);
 }
 
 //////////// EnsembleDataset
@@ -508,11 +517,13 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
             }
 
             bool firstFieldElement = fieldMetaData_.find(fieldName) == fieldMetaData_.end();
-            FieldMetaData& fieldMetaData = fieldMetaData_[fieldName];
+            EnsembleFieldMetaData& fieldMetaData = fieldMetaData_[fieldName];
             if(firstFieldElement) {
                 fieldMetaData.valueRange_ = minMax;
                 fieldMetaData.magnitudeRange_ = minMaxMagnitude;
                 fieldMetaData.numChannels_ = volume->getNumChannels();
+                fieldMetaData.homogeneousDimensions_ = true;
+                fieldMetaData.dimensions_ = volume->getDimensions();
             }
             else {
                 fieldMetaData.valueRange_.x = std::min(fieldMetaData.valueRange_.x, minMax.x);
@@ -522,6 +533,10 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
                 if(fieldMetaData.numChannels_ != volume->getNumChannels()) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels differs per field, taking min.");
                     fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());
+                }
+                if(fieldMetaData.homogeneousDimensions_ && volume->getDimensions() != fieldMetaData.dimensions_) {
+                    fieldMetaData.homogeneousDimensions_ = false;
+                    fieldMetaData.dimensions_ = tgt::svec3::zero;
                 }
             }
 
@@ -634,18 +649,20 @@ const tgt::Bounds& EnsembleDataset::getCommonBounds() const {
 }
 
 const tgt::vec2& EnsembleDataset::getValueRange(const std::string& field) const {
-    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
-    return fieldMetaData_.at(field).valueRange_;
+    return getFieldMetaData(field).valueRange_;
 }
 
 const tgt::vec2& EnsembleDataset::getMagnitudeRange(const std::string& field) const {
-    tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
-    return fieldMetaData_.at(field).magnitudeRange_;
+    return getFieldMetaData(field).magnitudeRange_;
 }
 
 size_t EnsembleDataset::getNumChannels(const std::string& field) const {
+    return getFieldMetaData(field).numChannels_;
+}
+
+const EnsembleFieldMetaData& EnsembleDataset::getFieldMetaData(const std::string& field) const {
     tgtAssert(fieldMetaData_.find(field) != fieldMetaData_.end(), "Field not available");
-    return fieldMetaData_.at(field).numChannels_;
+    return fieldMetaData_.at(field);
 }
 
 const std::vector<std::string>& EnsembleDataset::getUniqueFieldNames() const {

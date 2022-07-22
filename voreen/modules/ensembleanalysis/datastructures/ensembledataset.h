@@ -129,6 +129,9 @@ private:
     class VolumeCache : public VolumeObserver {
     public:
 
+        // Constructs a URL, if none was present.
+        static VolumeURL getOrConstructURL(std::pair<std::string, const VolumeBase*> volume);
+
         VolumeCache();
         explicit VolumeCache(const std::map<std::string, const VolumeBase*>& volumeData);
         virtual ~VolumeCache();
@@ -210,6 +213,22 @@ private:
 };
 
 /**
+ * This struct provides meta information about a field within an ensemble dataset.
+ */
+struct EnsembleFieldMetaData : public Serializable {
+    tgt::vec2 valueRange_;
+    tgt::vec2 magnitudeRange_;
+    size_t numChannels_;
+    bool homogeneousDimensions_;
+    tgt::svec3 dimensions_;
+
+    EnsembleFieldMetaData();
+
+    void serialize(Serializer& s) const override;
+    void deserialize(Deserializer& s) override;
+};
+
+/**
  * Datastructure used to represent the structure of an ensemble dataset.
  */
 class VRN_CORE_API EnsembleDataset : public DataInvalidationObservable, public Serializable {
@@ -285,19 +304,27 @@ public:
     /**
      * Returns the scalar value range of the specified field.
      * @see VolumeMinMax
+     * @deprecated use getFieldMetaData instead.
      */
     const tgt::vec2& getValueRange(const std::string& field) const;
 
     /**
      * Returns the magnitude value range of the specified field.
      * @see VolumeMinMaxMagnitude
+     * @deprecated use getFieldMetaData instead.
      */
     const tgt::vec2& getMagnitudeRange(const std::string& field) const;
 
     /**
      * Returns the number of channels used by the specified field.
+     * @deprecated use getFieldMetaData instead.
      */
     size_t getNumChannels(const std::string& field) const;
+
+    /**
+     * Returns meta data gathered for the specified field.
+     */
+    const EnsembleFieldMetaData& getFieldMetaData(const std::string& field) const;
 
     /**
      * Returns the enclosing bounds of all time steps of all runs in world coordinates.
@@ -341,23 +368,12 @@ public:
 
 private:
 
-    struct FieldMetaData : public Serializable {
-        tgt::vec2 valueRange_;
-        tgt::vec2 magnitudeRange_;
-        size_t numChannels_;
-
-        FieldMetaData();
-
-        void serialize(Serializer& s) const override;
-        void deserialize(Deserializer& s) override;
-    };
-
 
     std::vector<EnsembleMember> members_;
     std::vector<std::string> uniqueFieldNames_;
     std::vector<std::string> commonFieldNames_;
 
-    std::map<std::string, FieldMetaData> fieldMetaData_;
+    std::map<std::string, EnsembleFieldMetaData> fieldMetaData_;
     std::set<std::string> allParameters_;
 
     size_t minNumTimeSteps_;

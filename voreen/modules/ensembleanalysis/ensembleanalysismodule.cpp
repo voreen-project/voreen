@@ -31,6 +31,8 @@
 #include "io/similaritymatrixsave.h"
 #include "io/similaritymatrixsource.h"
 
+#include "processors/ensemblechannelmerger.h"
+#include "processors/ensemblecolor.h"
 #include "processors/ensemblefilter.h"
 #include "processors/ensembleinformation.h"
 #include "processors/ensemblemeancreator.h"
@@ -62,6 +64,8 @@ EnsembleAnalysisModule::EnsembleAnalysisModule(const std::string& modulePath)
     addProperty(forceDiskRepresentation_);
 
     // Processors
+    registerProcessor(new EnsembleChannelMerger());
+    registerProcessor(new EnsembleColor());
     registerProcessor(new EnsembleDataSource());
     registerProcessor(new EnsembleFilter);
     registerProcessor(new EnsembleMeanCreator());
