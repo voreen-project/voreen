@@ -94,10 +94,10 @@ ParallelCoordinatesAxes::ParallelCoordinatesAxes( const std::string& filepath )
                 s.deserialize("rawDataPath", tmp);
                 size_t numValues = members_.size() * fields_.size() * timesteps_ * samples_;
                 values_.resize(numValues);
-                size_t numbytes = values_.size() * sizeof(float);
+                size_t numBytes = values_.size() * sizeof(float);
 
                 std::fstream rawin(tmp.getPath().c_str(), std::ios::in | std::ios::binary);
-                rawin.read(reinterpret_cast<char*>(values_.data()), numbytes);
+                rawin.read(reinterpret_cast<char*>(values_.data()), numBytes);
             }
         }
         LINFOC("voreen.ParallelCoordinateAxes", "Loaded successfully");
@@ -132,14 +132,15 @@ void ParallelCoordinatesAxes::serialize( const std::string& filepath, bool binar
             s.serialize("values", values_);
         }
         else {
-            s.serialize("rawDataPath", VoreenFilePathHelper(filepath));
-
             std::string rawname = tgt::FileSystem::fullBaseName(filepath) + ".raw";
-            const char* data = reinterpret_cast<const char*>(values_.data());
-            size_t numbytes = values_.size() * sizeof(float);
+
+            s.serialize("rawDataPath", VoreenFilePathHelper(rawname));
+
+            size_t numValues = members_.size() * fields_.size() * timesteps_ * samples_;
+            size_t numBytes = numValues * sizeof(float);
 
             std::fstream rawout(rawname.c_str(), std::ios::out | std::ios::binary);
-            rawout.write(data, numbytes);
+            rawout.write(reinterpret_cast<const char*>(values_.data()), numBytes);
         }
         json.write(stream, true, false);
         LINFOC("voreen.ParallelCoordinateAxes", "Saved successfully");
