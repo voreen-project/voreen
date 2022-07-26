@@ -39,6 +39,7 @@ EnsembleChannelMerger::EnsembleChannelMerger()
     , fields_("fields", "Fields", false, Processor::VALID, Property::LOD_DEFAULT, true)
     , apply_("apply", "Apply")
     , reset_("reset", "Reset")
+    , autoUpdate_("autoUpdate", "Auto. Update", false)
 {
     addPort(ensembleInport_);
     ON_CHANGE(ensembleInport_, EnsembleChannelMerger, adjustToEnsemble);
@@ -64,6 +65,7 @@ EnsembleChannelMerger::EnsembleChannelMerger()
     ON_CHANGE(apply_, EnsembleChannelMerger, merge);
     addProperty(reset_);
     ON_CHANGE_LAMBDA(reset_, [this] { fields_.reset(); });
+    addProperty(autoUpdate_);
 }
 
 EnsembleChannelMerger::~EnsembleChannelMerger() {
@@ -74,6 +76,9 @@ Processor* EnsembleChannelMerger::create() const {
 }
 
 void EnsembleChannelMerger::process() {
+    if(autoUpdate_.get()) {
+        merge();
+    }
 }
 
 void EnsembleChannelMerger::merge() {
@@ -106,8 +111,6 @@ void EnsembleChannelMerger::merge() {
             std::string fieldName = "";
 
             std::vector<const VolumeBase*> channels;
-            float min, max, normMin, normMax;
-            float minMag, maxMag;
             for(const auto& instance: fields_.getInstances()) {
                 const VolumeBase* channel = members[i].getTimeSteps()[j].getVolume(instance.getName());
                 channels.push_back(channel);
@@ -164,7 +167,7 @@ void EnsembleChannelMerger::adjustToEnsemble() {
             fields_.clear();
 
             for (auto field: ensemble->getCommonFieldNames()) {
-                if(ensemble->getFieldMetaData(field).homogeneousDimensions_) {
+                if(ensemble->getFieldMetaData(field).hasHomogeneousDimensions()) {
                     fields_.addItem(field);
                 }
             }

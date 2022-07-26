@@ -359,15 +359,17 @@ EnsembleFieldMetaData::EnsembleFieldMetaData()
     : valueRange_(tgt::vec2::zero)
     , magnitudeRange_(tgt::vec2::zero)
     , numChannels_(0)
-    , homogeneousDimensions_(false)
     , dimensions_(tgt::svec3::zero)
 {}
+
+bool EnsembleFieldMetaData::hasHomogeneousDimensions() const {
+    return dimensions_ != tgt::svec3::zero;
+}
 
 void EnsembleFieldMetaData::serialize(Serializer& s) const {
     s.serialize("valueRange", valueRange_);
     s.serialize("magnitudeRange", magnitudeRange_);
     s.serialize("numChannels", numChannels_);
-    s.serialize("homogeneousDimensions", homogeneousDimensions_);
     s.serialize("dimensions", dimensions_);
 }
 
@@ -375,7 +377,6 @@ void EnsembleFieldMetaData::deserialize(Deserializer& s) {
     s.deserialize("valueRange", valueRange_);
     s.deserialize("magnitudeRange", magnitudeRange_);
     s.deserialize("numChannels", numChannels_);
-    s.optionalDeserialize("homogeneousDimensions", homogeneousDimensions_, false);
     s.optionalDeserialize("dimensions", dimensions_, tgt::svec3::zero);
 }
 
@@ -522,7 +523,6 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
                 fieldMetaData.valueRange_ = minMax;
                 fieldMetaData.magnitudeRange_ = minMaxMagnitude;
                 fieldMetaData.numChannels_ = volume->getNumChannels();
-                fieldMetaData.homogeneousDimensions_ = true;
                 fieldMetaData.dimensions_ = volume->getDimensions();
             }
             else {
@@ -534,8 +534,7 @@ void EnsembleDataset::addMember(const EnsembleMember& member) {
                     LERRORC("voreen.EnsembleDataSet", "Number of channels differs per field, taking min.");
                     fieldMetaData.numChannels_ = std::min(fieldMetaData.numChannels_, volume->getNumChannels());
                 }
-                if(fieldMetaData.homogeneousDimensions_ && volume->getDimensions() != fieldMetaData.dimensions_) {
-                    fieldMetaData.homogeneousDimensions_ = false;
+                if(fieldMetaData.hasHomogeneousDimensions() && volume->getDimensions() != fieldMetaData.dimensions_) {
                     fieldMetaData.dimensions_ = tgt::svec3::zero;
                 }
             }

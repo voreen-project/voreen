@@ -73,6 +73,7 @@ protected:
     InteractiveListProperty fields_;///< A list of all fields.
     ButtonProperty apply_;          ///< Apply settings.
     ButtonProperty reset_;          ///< Reset to input.
+    BoolProperty autoUpdate_;
 
     /// Hash value of last valid data.
     std::string hash_;

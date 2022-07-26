@@ -219,10 +219,11 @@ struct EnsembleFieldMetaData : public Serializable {
     tgt::vec2 valueRange_;
     tgt::vec2 magnitudeRange_;
     size_t numChannels_;
-    bool homogeneousDimensions_;
     tgt::svec3 dimensions_;
 
     EnsembleFieldMetaData();
+
+    bool hasHomogeneousDimensions() const;
 
     void serialize(Serializer& s) const override;
     void deserialize(Deserializer& s) override;
