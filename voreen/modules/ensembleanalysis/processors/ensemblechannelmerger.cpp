@@ -46,6 +46,8 @@ EnsembleChannelMerger::EnsembleChannelMerger()
     addPort(ensembleOutport_);
 
     addProperty(fields_);
+    fields_.setItemLabel("Available Fields");
+    fields_.setInstanceLabel("Merged Fields");
     ON_CHANGE_LAMBDA(fields_, [this] {
         if(!ensembleInport_.hasData()) {
             return;

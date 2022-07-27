@@ -170,8 +170,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , clusterAddress_("clusterAddress", "Cluster Address", "palma.uni-muenster.de")
     , programPath_("programPath", "Program Path", "~")
     , dataPath_("dataPath", "Data Path", "/scratch/tmp")
-    , toolchain_("toolchain", "Toolchain")
     , simulationType_("simulationType", "Simulation Type")
+    , configToolchain_("toolchain", "Toolchain")
     , configNodes_("configNodes", "Nodes", 1, 1, 2)
     , configNumGPUs_("configNumGPUs", "Num GPUs", 0, 0, 8)
     , configTasksPerNode_("configTasksPerNode", "Tasks per Node", 9, 1, 36)
@@ -180,9 +180,9 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configPartition_("configPartition", "Partition")
     , configTimeDays_("configTimeDays", "Max. Time Days", 0, 0, 6)
     , configTimeQuarters_("configTimeQuarters", "Max. Quarters (1/4h)", 1, 1, 4*24)
+    , refreshClusterCode_("refreshClusterCode", "Refresh Cluster Code")
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", VoreenApplication::app()->getTemporaryPath("simulations"), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , uploadDataPath_("uploadDataPath", "Upload Data Path", "Upload Data Path", VoreenApplication::app()->getTemporaryPath(), "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT)
-    , refreshClusterCode_("refreshClusterCode", "Refresh Cluster Code")
     , deleteOnDownload_("deleteOnDownload", "Delete original Data", false)
     , triggerEnqueueSimulations_("triggerEnqueueSimulations", "Enqueue Simulations")
     , triggerFetchResults_("triggerFetchResults", "Fetch Results")
@@ -203,7 +203,6 @@ FlowSimulationCluster::FlowSimulationCluster()
         if (!useLocalInstance_.get()) {
             workloadManagerChanged();
         }
-        refreshClusterCode_.setVisibleFlag(!useLocalInstance_.get());
         deleteOnDownload_.setVisibleFlag(!useLocalInstance_.get());
         triggerFetchResults_.setVisibleFlag(!useLocalInstance_.get());
     });
@@ -230,15 +229,15 @@ FlowSimulationCluster::FlowSimulationCluster()
     programPath_.setGroupID("cluster-general");
     addProperty(dataPath_);
     dataPath_.setGroupID("cluster-general");
-    addProperty(toolchain_);
-    toolchain_.setGroupID("cluster-general");
-    toolchain_.addOption("foss", "foss");
-    toolchain_.addOption("intel", "intel");
     //addProperty(simulationType_);
     //simulationType_.setGroupID("cluster-general");
     //simulationType_.addOption("default", "default");
     setPropertyGroupGuiName("cluster-general", "General Cluster Config");
 
+    addProperty(configToolchain_);
+    configToolchain_.setGroupID("cluster-resources");
+    configToolchain_.addOption("foss", "foss");
+    configToolchain_.addOption("intel", "intel");
     addProperty(configNodes_);
     configNodes_.setGroupID("cluster-resources");
     addProperty(configNumGPUs_);
@@ -258,15 +257,15 @@ FlowSimulationCluster::FlowSimulationCluster()
     configTimeDays_.setGroupID("cluster-resources");
     addProperty(configTimeQuarters_);
     configTimeQuarters_.setGroupID("cluster-resources");
+    addProperty(refreshClusterCode_);
+    ON_CHANGE(refreshClusterCode_, FlowSimulationCluster, refreshClusterCode);
+    refreshClusterCode_.setGroupID("cluster-resources");
     setPropertyGroupGuiName("cluster-resources", "Cluster Resource Config");
 
     addProperty(simulationResults_);
     simulationResults_.setGroupID("results");
     addProperty(uploadDataPath_);
     uploadDataPath_.setGroupID("results");
-    addProperty(refreshClusterCode_);
-    ON_CHANGE(refreshClusterCode_, FlowSimulationCluster, refreshClusterCode);
-    refreshClusterCode_.setGroupID("results");
     addProperty(deleteOnDownload_);
     deleteOnDownload_.setGroupID("results");
     addProperty(triggerEnqueueSimulations_);
@@ -390,7 +389,7 @@ void FlowSimulationCluster::refreshClusterCode() {
     }
     else {
         VoreenApplication::app()->showMessageBox("Finished", "Compilation finished", false);
-        LERROR("Compilation finished");
+        LINFO("Compilation finished");
     }
 }
 void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPathSource) {
@@ -672,22 +671,33 @@ std::string FlowSimulationCluster::generateCompileScript() const {
     std::stringstream script;
     script << "\"";
 
-    // TODO: generate using properties.
-    //  Currently, there is no GPU support.
-    std::string options = "PARALLEL_MODE=HYBRID OMPFLAGS=-fopenmp PLATFORMS=CPU_SISD ";
+    std::string options = "PARALLEL_MODE=HYBRID ";
+    if(configCPUsPerTask_.get() > 0) {
+        options += "OMPFLAGS=-fopenmp ";
+    }
+
+    std::string platforms = "CPU_SISD";// CPU_SIMD"; // Might be possible in a later OpenLB release.
+    if(configPartition_.get() == "gpu2080" && configNumGPUs_.get() > 0) {
+        options += " GPU_CUDA";
+    }
+    options += "PLATFORMS='" + platforms + "' ";
 
     if(workloadManager_.get() == "qsub") {
         script << "cd " << programPath_.get() << "/openlb/voreen";
         script << " && make clean && " << options << "make";
     }
     else if(workloadManager_.get() == "slurm") {
-        if(toolchain_.get() == "intel") {
+        script << "module load palma/2021a ";
+
+        if(configToolchain_.get() == "intel") {
+            script << "intel/2021a";
             options += "CXX=mpicxx CC=icc CXXFLAGS='-std=c++17 -O3 -Wall -xHost -ipo' ";
         }
-        else if(toolchain_.get() == "foss" ){
+        else if(configToolchain_.get() == "foss"){
+            script << "foss/2021a";
             options += "CXX=mpic++ CC=gcc CXXFLAGS='-std=c++17 -Wall -march=native -mtune=native' ";
         }
-        script << "module load palma/2021a foss/2021a"; // TODO: make adjustable.
+
         script << " && cd " << programPath_.get() << "/openlb/voreen";
         script << " && make clean && " << options << "make";
     }
@@ -735,10 +745,10 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
         script << "# Report on finished and abort." << std::endl;
         script << "#$ -m bea" << std::endl;
         script << "#$ -N " << configPort_.getData()->getName() << "_" << parametrizationName << std::endl;
-        script << "cd " << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+        script << "cd " << programPath_.get() << "/" << configToolchain_.get() << "/simulations/" << simulationType_.get()
                << "/" << configPort_.getData()->getName() << "/" << parametrizationName << std::endl;
         script << "# This is the file to be executed." << std::endl;
-        script << programPath_.get() << "/" << toolchain_.get() << "/simulations/" << simulationType_.get()
+        script << programPath_.get() << "/" << configToolchain_.get() << "/simulations/" << simulationType_.get()
                << "/" << simulationType_.get();
         // First argument: ensemble name
         script << " " << configPort_.getData()->getName();

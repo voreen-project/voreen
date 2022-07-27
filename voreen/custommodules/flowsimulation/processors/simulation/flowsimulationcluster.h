@@ -102,9 +102,9 @@ private:
     StringProperty clusterAddress_;
     StringProperty programPath_;
     StringProperty dataPath_;
-    StringOptionProperty toolchain_;
     StringOptionProperty simulationType_;
 
+    StringOptionProperty configToolchain_;
     IntProperty configNodes_;
     IntProperty configNumGPUs_;
     IntProperty configTasksPerNode_;
