@@ -85,6 +85,7 @@ SimilarityMatrixCreator::SimilarityMatrixCreator()
     multiChannelSimilarityMeasure_.addOption("crossproduct", "Crossproduct Magnitude", MEASURE_CROSSPRODUCT);
     multiChannelSimilarityMeasure_.addOption("split_channels", "Split Channels", MEASURE_SPLIT_CHANNELS);
     multiChannelSimilarityMeasure_.addOption("euclidean_norm", "Euclidean norm", MEASURE_EUCLIDEAN_NORM);
+    multiChannelSimilarityMeasure_.addOption("magnitude_and_angle", "Magnitude and Angle (Mult.)", MEASURE_MULT_MAGNITUDE_AND_ANGLE);
     multiChannelSimilarityMeasure_.set("euclidean_norm");
     ON_CHANGE_LAMBDA(multiChannelSimilarityMeasure_, [this] {
         weight_.setVisibleFlag(multiChannelSimilarityMeasure_.getValue() == MEASURE_JIANG);
@@ -145,6 +146,8 @@ std::string SimilarityMatrixCreator::calculateHash() const {
 
     hash = EnsembleHash(*inport_.getData()).getHash();
     hash += seedMask_.getHash();
+    hash += singleChannelSimilarityMeasure_.get();
+    hash += multiChannelSimilarityMeasure_.get();
     hash += std::to_string(seedTime_.get());
     hash += std::to_string(numSeedPoints_.get());
 
@@ -413,6 +416,13 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
         SimilarityMatrix& distanceMatrix = similarityMatrices->getSimilarityMatrix(fieldName);
         long size = static_cast<long>(distanceMatrix.getSize());
 
+        bool useSingleChannelMeasure = numChannels == 1
+                || input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE
+                || input.multiChannelSimilarityMeasure == MEASURE_MULT_MAGNITUDE_AND_ANGLE
+                || input.multiChannelSimilarityMeasure == MEASURE_SPLIT_CHANNELS;
+        bool useMultiChannelMeasure = !useSingleChannelMeasure
+                || input.multiChannelSimilarityMeasure == MEASURE_MULT_MAGNITUDE_AND_ANGLE;
+
         SubtaskProgressReporter flagsProgress(progress,tgt::vec2((fi+0.7f), (fi+1.0f)) / tgt::vec2(fieldNames.size()));
         ThreadedTaskProgressReporter threadedProgress(flagsProgress, size);
         bool aborted = false;
@@ -432,7 +442,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
 #endif
 
             for (long j = 0; j <= i; j++) {
-                if(numChannels == 1 || input.multiChannelSimilarityMeasure == MEASURE_MAGNITUDE || input.multiChannelSimilarityMeasure == MEASURE_SPLIT_CHANNELS) {
+                if(useSingleChannelMeasure) {
 
                     float intersectionSamples = 0.0f;
                     float unionSamples = 0.0f;
@@ -496,7 +506,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                     else
                         distanceMatrix(i, j) = 1.0f;
                 }
-                else {
+                if(useMultiChannelMeasure) {
 
                     Statistics statistics(false);
 
@@ -510,7 +520,8 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                             vector_j[channel] = Flags[index(j, k, channel)];
                         }
 
-                        if(input.multiChannelSimilarityMeasure == MEASURE_ANGLE) {
+                        if(input.multiChannelSimilarityMeasure == MEASURE_ANGLE
+                        || input.multiChannelSimilarityMeasure == MEASURE_MULT_MAGNITUDE_AND_ANGLE) {
                             if (vector_i != tgt::vec4::zero && vector_j != tgt::vec4::zero) {
                                 tgt::vec4 normVector_i = tgt::normalize(vector_i);
                                 tgt::vec4 normVector_j = tgt::normalize(vector_j);
@@ -569,7 +580,7 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                                 tgt::vec3 b = vector_j.xyz() / valueRange.y;
 
                                 float area = tgt::length(tgt::cross(a, b));
-                                // In case area is 0, we have to account for colinear vectors.
+                                // In case area is 0, we have to account for collinear vectors.
                                 if(area < std::numeric_limits<float>::epsilon()) {
                                     float length_a = tgt::length(a);
                                     float length_b = tgt::length(b);
@@ -600,9 +611,16 @@ SimilarityMatrixCreatorOutput SimilarityMatrixCreator::compute(SimilarityMatrixC
                         }
                     }
 
-                    distanceMatrix(i, j) = statistics.getMean();
-                    //DistanceMatrix(i, j) = statistics.getMedian(); // Needs collecting samples enabled
-                    //DistanceMatrix(i, j) = statistics.getRelStdDev();
+                    if(useSingleChannelMeasure) {
+                        distanceMatrix(i, j) = statistics.getMean();
+                        //DistanceMatrix(i, j) = statistics.getMedian(); // Needs collecting samples enabled
+                        //DistanceMatrix(i, j) = statistics.getRelStdDev();
+                    }
+                    else {
+                        // We combine the two measures as proposed by Leistikow et al. (see SimilarityMatrixCombine).
+                        distanceMatrix(i, j) = 1.0f - (1-distanceMatrix(i,j)) * (1-statistics.getMean());
+                    }
+
                 }
             }
 
