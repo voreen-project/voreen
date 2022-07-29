@@ -6,6 +6,14 @@
 const std::string simulation = "simulation_cluster";
 const std::string base = "/scratch/tmp/s_leis06/simulations/";
 
+enum ExitCodes {
+    EXIT_CODE_SUCCESS = EXIT_SUCCESS,
+    EXIT_CODE_FAILURE = EXIT_FAILURE,
+    EXIT_CODE_FINISHED = 6,
+    EXIT_CODE_CONVERGED = 7,
+    EXIT_CODE_DIVERGED = 8,
+};
+
 VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
     VelocityCurve curve;
 
@@ -208,6 +216,25 @@ int main(int argc, char* argv[]) {
     timer.start();
 
     const int maxIteration = converter.getLatticeTime(simulationTime);
+    auto checkpoint = [&] (int iteration, bool enforce=false) {
+        return getResults(
+                lattice,
+                superGeometry,
+                stlReader,
+                converter,
+                iteration,
+                maxIteration,
+                singleton::directories().getLogOutDir(),
+                numTimeSteps,
+                outputResolution,
+                outputFileFormat,
+                flowFeatures,
+                parameters,
+                enforce
+        );
+    };
+
+    ExitCodes exitCode = EXIT_CODE_FINISHED;
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -217,23 +244,23 @@ int main(int argc, char* argv[]) {
         lattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool success = getResults(lattice, converter, iteration, maxIteration, superGeometry, stlReader,
-                                  singleton::directories().getLogOutDir(),
-                                  numTimeSteps,
-                                  outputResolution,
-                                  outputFileFormat,
-                                  flowFeatures,
-                                  parameters);
-
-        if(!success) {
+        bool abort = checkpoint(iteration);
+        if(abort) {
             clout << "Simulation diverged!" << std::endl;
-            return EXIT_FAILURE;
+            exitCode = ExitCodes::EXIT_CODE_DIVERGED;
         }
 
         // === 8th Step: Check for convergence.
-        converge.takeValue(lattice.getStatistics().getAverageEnergy(), true);
-        if(converge.hasConverged()) {
-            clout << "Simulation converged!" << std::endl;
+        if(!abort) {
+            converge.takeValue(lattice.getStatistics().getAverageEnergy(), true);
+            if (converge.hasConverged()) {
+                clout << "Simulation converged!" << std::endl;
+                exitCode = ExitCodes::EXIT_CODE_CONVERGED;
+            }
+        }
+
+        if(abort) {
+            checkpoint(iteration, true);
             break;
         }
 
@@ -245,5 +272,5 @@ int main(int argc, char* argv[]) {
     timer.stop();
     timer.printSummary();
 
-    return EXIT_SUCCESS;
+    return exitCode;
 }

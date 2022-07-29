@@ -602,9 +602,28 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     interruptionPoint();
 
     // === 4th Step: Main Loop  ===
-    const int maxIteration = converter.getLatticeTime(config.getSimulationTime());
     util::ValueTracer<T> converge( converter.getLatticeTime(0.5), 1e-5);
     bool swapVelocityFile = false; // See below.
+
+    const int maxIteration = converter.getLatticeTime(config.getSimulationTime());
+    auto checkpoint = [&] (int iteration, bool enforce=false) {
+        return getResults(
+                lattice,
+                superGeometry,
+                stlReader,
+                converter,
+                iteration,
+                maxIteration,
+                simulationResultPath,
+                config.getNumTimeSteps(),
+                config.getOutputResolution(),
+                config.getOutputFileFormat(),
+                config.getFlowFeatures(),
+                parameters,
+                enforce
+        );
+    };
+
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
@@ -614,17 +633,14 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         lattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool success = getResults(lattice, converter, iteration, maxIteration, superGeometry, stlReader,
-                                  simulationResultPath,
-                                  config.getNumTimeSteps(),
-                                  config.getOutputResolution(),
-                                  config.getOutputFileFormat(),
-                                  config.getFlowFeatures(),
-                                  parameters);
+        bool abort = checkpoint(iteration);
+        if(abort) {
+            LWARNING("Simulation diverged!");
+        }
 
         // Store last velocity.
         const int outputIter = maxIteration / config.getNumTimeSteps();
-        if (iteration % outputIter == 0) {
+        if (abort || iteration % outputIter == 0) {
             SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
             auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
             auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
@@ -636,14 +652,17 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             swapVelocityFile = !swapVelocityFile;
         }
 
-        if(!success) {
-            break;
+        // === 8th Step: Check for convergence.
+        if(!abort) {
+            converge.takeValue(lattice.getStatistics().getAverageEnergy(), true);
+            if (converge.hasConverged()) {
+                LINFO("Simulation converged!");
+                abort = true;
+            }
         }
 
-        // === 8th Step: Check for convergence.
-        converge.takeValue(lattice.getStatistics().getAverageEnergy(), true);
-        if(converge.hasConverged()) {
-            LINFO("Simulation converged!");
+        if(abort) {
+            checkpoint(iteration, true);
             break;
         }
 

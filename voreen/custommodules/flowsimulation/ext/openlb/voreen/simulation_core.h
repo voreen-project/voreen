@@ -90,9 +90,9 @@ struct SimpleVolume {
 
     S getValueLinear(float x, float y, float z, int channel = 0) const {
 
-        x = std::clamp<float>(x, 0, dimensions[0]);
-        y = std::clamp<float>(y, 0, dimensions[1]);
-        z = std::clamp<float>(z, 0, dimensions[2]);
+        x = std::clamp<float>(x, 0, dimensions[0]-1);
+        y = std::clamp<float>(y, 0, dimensions[1]-1);
+        z = std::clamp<float>(z, 0, dimensions[2]-1);
 
         vec3 llb{ std::floor(x), std::floor(y), std::floor(z) };
         vec3 urf{ std::ceil(x), std::ceil(y), std::ceil(z) };
@@ -189,10 +189,6 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
             IndicatorCircle3D<T> capFlowEmpty(center, normal, radius);
             IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 4 * converter.getConversionFactorLength());
             superGeometry.rename(MAT_WALL, MAT_EMPTY, layerCapFlowEmpty);
-
-//            // Fill cut-off region.
-//            center += sign * normal * converter.getConversionFactorLength();
-//            floodRegion(superGeometry, center[0], center[1], center[2], MAT_FLUID);
         }
     }
 
@@ -585,20 +581,21 @@ void writeVVDFile(IndicatorF3D<T>& indicator,
 
 // Computes flux at inflow and outflow
 bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
-                 UnitConverter<T,DESCRIPTOR>& converter,
-                 int iteration, int maxIteration,
                  SuperGeometry<T,3>& superGeometry,
                  STLreader<T>& stlReader,
+                 UnitConverter<T,DESCRIPTOR>& converter,
+                 int iteration, int maxIteration,
                  const std::string& simulationOutputPath,
                  int numTimeSteps,
                  int outputResolution,
                  const std::string& outputFormat,
                  int flowFeatures,
-                 const Parameters& parameters)
+                 const Parameters& parameters,
+                 bool enforce = false)
 {
     const int outputIter = maxIteration / numTimeSteps;
 
-    if (iteration % outputIter == 0) {
+    if (iteration % outputIter == 0 || enforce) {
 
         bool writeVVD = outputFormat == ".vvd";
         bool writeVTI = outputFormat == ".vti";
