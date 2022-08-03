@@ -633,7 +633,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         lattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool abort = checkpoint(iteration);
+        bool abort = !checkpoint(iteration);
         if(abort) {
             LWARNING("Simulation diverged!");
         }

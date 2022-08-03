@@ -64,9 +64,12 @@ private:
     void renderDisk(const FlowIndicator& indicator) const;
     void renderCone(const FlowIndicator& indicator) const;
 
+    tgt::vec4 getColor(const FlowIndicator& indicator) const;
+
     FlowSimulationConfigPort inport_;
 
     BoolProperty enable_;
+    StringOptionProperty colorMode_;
     ColorProperty velocityBoundaryColor_;
     ColorProperty pressureBoundaryColor_;
     ColorProperty measureFluxColor_;

@@ -114,8 +114,10 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , cloneFlowIndicator_("cloneFlowIndicator", "Clone Flow Indicator")
     , removeFlowIndicator_("removeFlowIndicator", "Remove Flow Indicator")
     , resetFlowIndicators_("resetFlowIndicators", "Reset Flow Indicators")
+    , swapVelocityAndPressureBoundaries_("swapVelocityAndPressureBoundaries", "Swap Velocity and Pressure Boundaries")
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , indicatorName_("indicatorName", "Name")
+    , indicatorColor_("indicatorColor", "Color", tgt::vec4(1.0f))
     , centerlinePosition_("position", "Position", 0, 0, 0)
     , radius_("radius", "Radius (mm)", 1.0f, 0.0f, 10.0f)
     , length_("length", "Length (mm)", 0.0f, 0.0f, 10.0f)
@@ -157,6 +159,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         ON_CHANGE_LAMBDA(resetFlowIndicators_, [this] {
             detectFlowIndicators(true);
         });
+    addProperty(swapVelocityAndPressureBoundaries_);
+        swapVelocityAndPressureBoundaries_.setGroupID("detection");
+        ON_CHANGE(swapVelocityAndPressureBoundaries_, FlowIndicatorDetection, swapVelocityAndPressureBoundaries);
     addProperty(angleThreshold_);
         angleThreshold_.setGroupID("detection");
     setPropertyGroupGuiName("detection", "Detection");
@@ -166,6 +171,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
         indicatorName_.setGroupID("indicator");
         ON_CHANGE_LAMBDA(indicatorName_, [this] { onIndicatorConfigChange(false); });
         ON_CHANGE(indicatorName_, FlowIndicatorDetection, buildTable);
+    addProperty(indicatorColor_);
+        indicatorColor_.setGroupID("indicator");
+        ON_CHANGE_LAMBDA(indicatorColor_, [this] { onIndicatorConfigChange(false); });
     addProperty(centerlinePosition_);
         centerlinePosition_.setGroupID("indicator");
         ON_CHANGE_LAMBDA(centerlinePosition_, [this] { onIndicatorConfigChange(true); });
@@ -320,6 +328,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         }
 
         indicatorName_.set(indicator.name_);
+        indicatorColor_.set(indicator.color_);
         centerlinePosition_.set(settings.centerlinePosition_);
         radius_.set(indicator.radius_);
         relativeRadiusCorrection_.set(settings.relativeRadiusCorrection_);
@@ -344,6 +353,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     centerlinePosition_.setReadOnlyFlag(!settingsEditable);
 
     indicatorName_.setReadOnlyFlag(!validSelection);
+    indicatorColor_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
     relativeRadiusCorrection_.setReadOnlyFlag(!validSelection);
     length_.setReadOnlyFlag(!validSelection);
@@ -389,6 +399,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         FlowIndicator& indicator = flowIndicators_[indicatorIdx];
         indicator.type_ = indicatorType_.getValue();
         indicator.name_ = indicatorName_.get();
+        indicator.color_ = indicatorColor_.get();
         indicator.length_ = length_.get();
 
         if(needReinitialization) {
@@ -396,12 +407,14 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
             FlowIndicatorType type = indicator.type_;
             int id = indicator.id_;
             std::string name = indicator.name_;
+            tgt::vec4 color = indicator.color_;
             float length = indicator.length_;
 
             indicator = initializeIndicator(settings);
             indicator.type_ = type;
             indicator.id_ = id;
             indicator.name_ = name;
+            indicator.color_ = color;
             indicator.length_ = length;
         }
         else {
@@ -567,7 +580,7 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     // Default is candidate. However, we set initial values as if it was a velocity inlet,
     // since it might be classified as one later on.
     FlowIndicator indicator;
-    indicator.id_ = flowIndicators_.size() + FlowSimulationConfig::getFlowIndicatorIdOffset(); // TODO: Should be determined by FlowParameterSetEnsemble.
+    indicator.id_ = flowIndicators_.size() + FlowSimulationConfig::getFlowIndicatorIdOffset();
     indicator.name_ = "Indicator " + std::to_string(indicator.id_);
     indicator.type_ = FlowIndicatorType::FIT_CANDIDATE;
     indicator.flowProfile_ = FlowProfile::FP_POISEUILLE;
@@ -641,6 +654,42 @@ void FlowIndicatorDetection::buildTable() {
 
     selectedIndex = std::min(selectedIndex, flowIndicatorTable_.getNumRows()-1);
     flowIndicatorTable_.setSelectedRowIndex(selectedIndex);
+}
+
+void FlowIndicatorDetection::swapVelocityAndPressureBoundaries() {
+
+    int numPressureBoundaries = 0;
+    int numVelocityBoundaries = 0;
+    for (const FlowIndicator& indicator: flowIndicators_) {
+        if(indicator.type_ == FIT_PRESSURE) {
+            numPressureBoundaries++;
+        }
+        else if(indicator.type_ == FIT_VELOCITY)  {
+            numVelocityBoundaries++;
+        }
+    }
+
+    if(numVelocityBoundaries != 1 && numPressureBoundaries != 1) {
+        LERROR("Number of Velocity : Pressure Boundaries must be 1:n or n:1");
+        return;
+    }
+
+    for (FlowIndicator& indicator: flowIndicators_) {
+        if (indicator.type_ == FIT_PRESSURE) {
+            indicator.type_ = FIT_VELOCITY;
+            indicator.roleSwapped_ = !indicator.roleSwapped_;
+        }
+        else if (indicator.type_ == FIT_VELOCITY) {
+            indicator.type_ = FIT_PRESSURE;
+            indicator.roleSwapped_ = !indicator.roleSwapped_;
+        }
+        else {
+            indicator.roleSwapped_ = false;
+        }
+    }
+
+    buildTable();
+    updateIndicatorUI();
 }
 
 }   // namespace

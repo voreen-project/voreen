@@ -165,7 +165,7 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
 
         // Add one voxel to account for precision/rounding errors.
         T radius = indicators[i].radius_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
-        T length = indicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 8;
+        T length = indicators[i].length_ * VOREEN_LENGTH_TO_SI + converter.getConversionFactorLength() * 2;
 
         // Define a local disk volume.
         IndicatorCircle3D<T> flow(center, normal, radius);
@@ -179,7 +179,7 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
         bool isInlet = indicators[i].type_ == FIT_VELOCITY;
         bool isOutlet = indicators[i].type_ == FIT_PRESSURE;
         if(isInlet || isOutlet) {
-            T sign = isInlet ? T(-1) : T(1);
+            T sign = (isInlet ^ indicators[i].roleSwapped_) ? T(-1) : T(1);
             center += sign * normal * T(length * 0.5 + converter.getConversionFactorLength());
 
             IndicatorCircle3D<T> capFlowWall(center, normal, radius);
@@ -187,7 +187,7 @@ bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
             superGeometry.rename(MAT_FLUID, MAT_WALL, layerCapFlowWall);
 
             IndicatorCircle3D<T> capFlowEmpty(center, normal, radius);
-            IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 4 * converter.getConversionFactorLength());
+            IndicatorCylinder3D<T> layerCapFlowEmpty(capFlowEmpty, 2 * converter.getConversionFactorLength());
             superGeometry.rename(MAT_WALL, MAT_EMPTY, layerCapFlowEmpty);
         }
     }

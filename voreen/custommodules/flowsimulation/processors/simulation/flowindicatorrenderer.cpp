@@ -35,6 +35,7 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
     : GeometryRendererBase()
     , inport_(Port::INPORT, "parametrization", "Parametrization Input")
     , enable_("enable", "Enable", true)
+    , colorMode_("colorMode", "Color Mode", false)
     , velocityBoundaryColor_("velocityBoundaryColor", "Velocity Boundary Color", tgt::vec4(0.0f, 1.0f, 0.0f, 0.8f))
     , pressureBoundaryColor_("pressureBoundaryColor", "Pressure Boundary Color", tgt::vec4(1.0f, 0.0f, 0.0f, 0.8f))
     , measureFluxColor_("measureFluxColor", "Flux Measure Color", tgt::vec4(0.0f, 0.0f, 1.0f, 0.8f))
@@ -42,6 +43,10 @@ FlowIndicatorRenderer::FlowIndicatorRenderer()
     addPort(inport_);
 
     addProperty(enable_);
+    addProperty(colorMode_);
+    colorMode_.addOption("type", "Indicator Type");
+    colorMode_.addOption("color", "Indicator Color");
+
     addProperty(velocityBoundaryColor_);
     addProperty(pressureBoundaryColor_);
     addProperty(measureFluxColor_);
@@ -105,23 +110,43 @@ void FlowIndicatorRenderer::renderCone(const FlowIndicator& indicator) const {
     MatStack.popMatrix();
 }
 
+tgt::vec4 FlowIndicatorRenderer::getColor(const FlowIndicator& indicator) const {
+    if(colorMode_.get() == "type") {
+        switch (indicator.type_) {
+        case FIT_VELOCITY:
+            return velocityBoundaryColor_.get();
+        case FIT_PRESSURE:
+            return pressureBoundaryColor_.get();
+        case FIT_MEASURE:
+            return measureFluxColor_.get();
+        default:
+            return tgt::vec4::zero;
+        }
+    }
+    else if(colorMode_.get() == "color") {
+        return indicator.color_;
+    }
+    else {
+        LERROR("Unknown color mode");
+        return tgt::vec4::zero;
+    }
+}
+
 void FlowIndicatorRenderer::render() {
     if (!inport_.isReady() || !enable_.get())
         return;
 
     for(const FlowIndicator& indicator : inport_.getData()->getFlowIndicators()) {
+        IMode.color(getColor(indicator));
         if(indicator.type_ == FIT_VELOCITY) {
-            IMode.color(velocityBoundaryColor_.get());
             renderDisk(indicator);
             renderCone(indicator);
         }
         else if(indicator.type_ == FIT_PRESSURE) {
-            IMode.color(pressureBoundaryColor_.get());
             renderDisk(indicator);
             renderCone(indicator);
         }
         else if(indicator.type_ == FIT_MEASURE) {
-            IMode.color(measureFluxColor_.get());
             renderDisk(indicator);
         }
     }

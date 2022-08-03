@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
         lattice.collideAndStream();
 
         // === 7th Step: Computation and Output of the Results ===
-        bool abort = checkpoint(iteration);
+        bool abort = !checkpoint(iteration);
         if(abort) {
             clout << "Simulation diverged!" << std::endl;
             exitCode = ExitCodes::EXIT_CODE_DIVERGED;

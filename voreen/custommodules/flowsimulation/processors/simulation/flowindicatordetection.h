@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/volumeport.h"
+#include "voreen/core/properties/colorproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
 #include "../../ports/flowsimulationconfigport.h"
@@ -142,6 +143,13 @@ private:
      */
     void buildTable();
 
+    /**
+     * Since pressure conditions are more unstable for non-axis aligned situations than for example
+     * velocity boundary conditions, it may be useful to switch velocity and pressure boundaries,
+     * which is mathematically equivalent, but allows to choose an inlet/outlet is axis aligned.
+     */
+    void swapVelocityAndPressureBoundaries();
+
     FlowSimulationConfigPort parameterInport_;
     VesselGraphPort vesselGraphPort_;
     VolumePort volumePort_;
@@ -151,9 +159,11 @@ private:
     ButtonProperty cloneFlowIndicator_;
     ButtonProperty removeFlowIndicator_;
     ButtonProperty resetFlowIndicators_;
+    ButtonProperty swapVelocityAndPressureBoundaries_;
     IntProperty angleThreshold_;
 
     StringProperty indicatorName_;
+    ColorProperty indicatorColor_;
     IntProperty centerlinePosition_;
     FloatProperty radius_;
     FloatProperty relativeRadiusCorrection_;

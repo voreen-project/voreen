@@ -36,9 +36,11 @@
 #include "voreen/core/voreencoreapi.h"
 #include "tgt/vector.h"
 using vec3 = tgt::vec3;
+using vec4 = tgt::vec4;
 #else
 #define VRN_CORE_API
 typedef struct { float x, y, z; } vec3;
+typedef struct { float x, y, z, w; } vec4;
 #endif
 
 namespace voreen {
@@ -137,11 +139,13 @@ struct FlowIndicator {
     FlowIndicatorType type_{FIT_INVALID};       ///< FlowIndicator type, @see FlowIndicatorType.
     int id_{-1};                                ///< Unique identifier. Also used by OpenLB to indicate material.
     std::string name_{};                        ///< Optional name.
+    vec4 color_{1, 1, 1, 1};                    ///< Optional color.
 
     vec3 center_{0, 0, 0};                      ///< Center position of the circle shaped area in world space.
     vec3 normal_{0, 0, 0};                      ///< (Normalized) Normal vector defining the orientation.
     float radius_{0};                           ///< Radius of the disk.
     float length_{0};                           ///< Length of the disk/cylinder.
+    bool roleSwapped_{false};                   ///< Determines if this inlet serves as outlet and vice-versa.
 
     // Used by generating flow indicators:
     FlowProfile flowProfile_{FP_NONE};          ///< Flow profile, @see FlowProfile.
