@@ -409,6 +409,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
             std::string name = indicator.name_;
             tgt::vec4 color = indicator.color_;
             float length = indicator.length_;
+            bool roleSwapped = indicator.roleSwapped_;
 
             indicator = initializeIndicator(settings);
             indicator.type_ = type;
@@ -416,6 +417,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
             indicator.name_ = name;
             indicator.color_ = color;
             indicator.length_ = length;
+            indicator.roleSwapped_ = roleSwapped;
         }
         else {
             indicator.radius_ = radius_.get();
