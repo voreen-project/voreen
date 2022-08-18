@@ -381,7 +381,7 @@ std::vector<VolumeURL> QuadHidacVolumeReader::listVolumes(const std::string& url
 
     QuadHidacHeader header = readHeader(fileName);
 
-    float t = 0.0f;
+    //float t = 0.0f;
     for(int i=0; i<header.ntf; i++) {
         VolumeURL origin("i4d", fileName);
         origin.addSearchParameter("frame", itos(i));
@@ -389,8 +389,8 @@ std::vector<VolumeURL> QuadHidacVolumeReader::listVolumes(const std::string& url
         //origin.getMetaDataContainer().addMetaData("timestep", new FloatMetaData(static_cast<int>(t)));
         result.push_back(origin);
 
-        if((size_t)i < header.dt.size())
-            t += header.dt[i];
+        //if((size_t)i < header.dt.size())
+        //    t += header.dt[i];
     }
 
     return result;

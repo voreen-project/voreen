@@ -193,8 +193,8 @@ bool testSAXPY() {
     float* resultCPU = new float[maxDim];
     float* diffBuff = new float[maxDim];
     for (int i=0; i<maxDim; i++) {
-        x[i] = ((float)rand() / RAND_MAX) - 0.5f;
-        y[i] = ((float)rand() / RAND_MAX) * 2.f - 0.6f;
+        x[i] = ((float)rand() / (float)RAND_MAX) - 0.5f;
+        y[i] = ((float)rand() / (float)RAND_MAX) * 2.f - 0.6f;
     }
 
     int numTests = 0;
@@ -276,8 +276,8 @@ bool testSDOT() {
     float* x = new float[maxDim];
     float* y = new float[maxDim];
     for (int i=0; i<maxDim; i++) {
-        x[i] = ((float)rand() / RAND_MAX) - 0.5f;
-        y[i] = ((float)rand() / RAND_MAX) * 2.f - 0.6f;
+        x[i] = ((float)rand() / (float)RAND_MAX) - 0.5f;
+        y[i] = ((float)rand() / (float)RAND_MAX) * 2.f - 0.6f;
     }
 
     int numTests = 0;
@@ -348,7 +348,7 @@ bool testSNRM2() {
     // initialize test vectors
     float* x = new float[maxDim];
     for (int i=0; i<maxDim; i++) {
-        x[i] = ((float)rand() / RAND_MAX) - 0.5f;
+        x[i] = ((float)rand() / (float)RAND_MAX) - 0.5f;
     }
 
     int numTests = 0;
@@ -502,7 +502,7 @@ bool testSSpMVEll() {
             yCPU = new float[randMat.getNumRows()];
             diffBuff = new float[randMat.getNumRows()];
             for (size_t j=0; j<randMat.getNumCols(); ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 10.f - 5.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 10.f - 5.f;
 
             voreenBlasCL.sSpMVEll(randMat, x, yCL);
             voreenBlasCPU.sSpMVEll(randMat, x, yCPU);
@@ -536,7 +536,7 @@ bool testSSpMVEll() {
                 maxCols = 8.f;
             else
                 maxCols = 4.f;
-            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / RAND_MAX)*maxCols), 2, numCols);
+            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / (float)RAND_MAX)*maxCols), 2, numCols);
 
             EllpackMatrix<float> randMat(numRows, numCols, numColsPerRow);
             randMat.initializeBuffers();
@@ -547,7 +547,7 @@ bool testSSpMVEll() {
             yCPU = new float[randMat.getNumRows()];
             diffBuff = new float[randMat.getNumRows()];
             for (size_t j=0; j<randMat.getNumCols(); ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 10.f - 5.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 10.f - 5.f;
 
             voreenBlasCL.sSpMVEll(randMat, x, yCL);
             voreenBlasCPU.sSpMVEll(randMat, x, yCPU);
@@ -580,7 +580,7 @@ bool testSSpMVEll() {
                 maxCols = 8.f;
             else
                 maxCols = 4.f;
-            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / RAND_MAX)*maxCols), 2, numCols);
+            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / (float)RAND_MAX)*maxCols), 2, numCols);
 
             EllpackMatrix<float> randMat(numRows, numCols, numColsPerRow);
             randMat.initializeBuffers();
@@ -591,7 +591,7 @@ bool testSSpMVEll() {
             yCPU = new float[randMat.getNumRows()];
             diffBuff = new float[randMat.getNumRows()];
             for (size_t j=0; j<randMat.getNumCols(); ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 10.f - 5.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 10.f - 5.f;
 
             voreenBlasCL.sSpMVEll(randMat, x, yCL);
             voreenBlasCPU.sSpMVEll(randMat, x, yCPU);
@@ -715,7 +715,7 @@ bool testHSpMVEll() {
             yCPU = new float[randMat.getNumRows()];
             diffBuff = new float[randMat.getNumRows()];
             for (size_t j=0; j<randMat.getNumCols(); ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 10.f - 5.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 10.f - 5.f;
 
             voreenBlasCL.hSpMVEll(randMat, x, yCL);
             voreenBlasCPU.hSpMVEll(randMat, x, yCPU);
@@ -749,7 +749,7 @@ bool testHSpMVEll() {
                 maxCols = 8.f;
             else
                 maxCols = 4.f;
-            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / RAND_MAX)*maxCols), 2, numCols);
+            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / (float)RAND_MAX)*maxCols), 2, numCols);
 
             EllpackMatrix<int16_t> randMat(numRows, numCols, numColsPerRow);
             randMat.initializeBuffers();
@@ -760,7 +760,7 @@ bool testHSpMVEll() {
             yCPU = new float[randMat.getNumRows()];
             diffBuff = new float[randMat.getNumRows()];
             for (size_t j=0; j<randMat.getNumCols(); ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 10.f - 5.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 10.f - 5.f;
 
             voreenBlasCL.hSpMVEll(randMat, x, yCL);
             voreenBlasCPU.hSpMVEll(randMat, x, yCPU);
@@ -793,7 +793,7 @@ bool testHSpMVEll() {
                 maxCols = 8.f;
             else
                 maxCols = 4.f;
-            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / RAND_MAX)*maxCols), 2, numCols);
+            int numColsPerRow = tgt::clamp(tgt::iround((static_cast<float>(rand()) / (float)RAND_MAX)*maxCols), 2, numCols);
 
             EllpackMatrix<int16_t> randMat(numRows, numCols, numColsPerRow);
             randMat.initializeBuffers();
@@ -804,7 +804,7 @@ bool testHSpMVEll() {
             yCPU = new float[randMat.getNumRows()];
             diffBuff = new float[randMat.getNumRows()];
             for (size_t j=0; j<randMat.getNumCols(); ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 10.f - 5.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 10.f - 5.f;
 
             voreenBlasCL.hSpMVEll(randMat, x, yCL);
             voreenBlasCPU.hSpMVEll(randMat, x, yCPU);
@@ -859,8 +859,8 @@ bool testSSpInnerProductEll() {
             float* x = new float[numRows];
             float* y = new float[numRows];
             for (int j=0; j<numRows; ++j) {
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
-                y[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
+                y[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
             }
 
             float resultCL = voreenBlasCL.sSpInnerProductEll(randMat, x, y);
@@ -891,8 +891,8 @@ bool testSSpInnerProductEll() {
             float* x = new float[numRows];
             float* y = new float[numRows];
             for (int j=0; j<numRows; ++j) {
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
-                y[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
+                y[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
             }
 
             float resultCL = voreenBlasCL.sSpInnerProductEll(randMat, x, y);
@@ -923,8 +923,8 @@ bool testSSpInnerProductEll() {
             float* x = new float[numRows];
             float* y = new float[numRows];
             for (int j=0; j<numRows; ++j) {
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
-                y[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
+                y[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
             }
 
             float resultCL = voreenBlasCL.sSpInnerProductEll(randMat, x, y);
@@ -978,7 +978,7 @@ bool testSSpConjGradEll() {
             float* y = new float[numRows];
             float* tempBuf = new float[numRows];
             for (int j=0; j<numRows; ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 1.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 1.f;
 
             // compute GPU solution
             clock_t start, end;
@@ -1043,7 +1043,7 @@ bool testSSpConjGradEll() {
             float* y = new float[numRows];
             float* tempBuf = new float[numRows];
             for (int j=0; j<numRows; ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
 
             // compute GPU solution
             clock_t start, end;
@@ -1128,7 +1128,7 @@ bool testHSpConjGradEll() {
             float* y = new float[numRows];
             float* tempBuf = new float[numRows];
             for (int j=0; j<numRows; ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 1.f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 1.f;
 
             // compute GPU solution
             clock_t start, end;
@@ -1193,7 +1193,7 @@ bool testHSpConjGradEll() {
             float* y = new float[numRows];
             float* tempBuf = new float[numRows];
             for (int j=0; j<numRows; ++j)
-                x[j] = (static_cast<float>(rand()) / RAND_MAX) * 2.f - 0.5f;
+                x[j] = (static_cast<float>(rand()) / (float)RAND_MAX) * 2.f - 0.5f;
 
             // compute GPU solution
             clock_t start, end;
@@ -1262,13 +1262,13 @@ void randomizeEll(EllpackMatrix<float>& mat) {
             continue;
 
         // fill 1/10 of the cols only partially
-        size_t significantCols = tgt::iround(10.f * (static_cast<float>(rand()) / RAND_MAX) * mat.getNumColsPerRow() );
+        size_t significantCols = tgt::iround(10.f * (static_cast<float>(rand()) / (float)RAND_MAX) * mat.getNumColsPerRow() );
         significantCols = std::min(significantCols, mat.getNumColsPerRow());
         int lastCol = -1;
         for (size_t colIndex = 0; colIndex < significantCols; ++colIndex) {
-            size_t col = (lastCol + 1) + tgt::iround( (static_cast<float>(rand()) / RAND_MAX) * (mat.getNumColsPerRow()-1 - lastCol));
+            size_t col = (lastCol + 1) + tgt::iround( (static_cast<float>(rand()) / (float)RAND_MAX) * (mat.getNumColsPerRow()-1 - lastCol));
             if (col < mat.getNumColsPerRow()) {
-                float val = range.x + (static_cast<float>(rand()) / RAND_MAX) * (range.y - range.x);
+                float val = range.x + (static_cast<float>(rand()) / (float)RAND_MAX) * (range.y - range.x);
                 mat.setValueByIndex(row, col, colIndex, val);
                 lastCol = (int)col;
             }
@@ -1286,13 +1286,13 @@ void randomizeEll(EllpackMatrix<int16_t>& mat) {
             continue;
 
         // fill 1/10 of the cols only partially
-        size_t significantCols = tgt::iround(10.f * (static_cast<float>(rand()) / RAND_MAX) * mat.getNumColsPerRow() );
+        size_t significantCols = tgt::iround(10.f * (static_cast<float>(rand()) / (float)RAND_MAX) * mat.getNumColsPerRow() );
         significantCols = std::min(significantCols, mat.getNumColsPerRow());
         int lastCol = -1;
         for (size_t colIndex = 0; colIndex < significantCols; ++colIndex) {
-            size_t col = (lastCol + 1) + tgt::iround( (static_cast<float>(rand()) / RAND_MAX) * (mat.getNumColsPerRow()-1 - lastCol));
+            size_t col = (lastCol + 1) + tgt::iround( (static_cast<float>(rand()) / (float)RAND_MAX) * (mat.getNumColsPerRow()-1 - lastCol));
             if (col < mat.getNumColsPerRow()) {
-                int16_t val = static_cast<int16_t>(range.x + (static_cast<float>(rand()) / RAND_MAX) * (range.y - range.x));
+                int16_t val = static_cast<int16_t>(range.x + (static_cast<float>(rand()) / (float)RAND_MAX) * (range.y - range.x));
                 mat.setValueByIndex(row, col, colIndex, val);
                 lastCol = (int)col;
             }
@@ -1314,7 +1314,7 @@ void randomizeEllPositiveDefinite(EllpackMatrix<float>& mat) {
     uint8_t* volume = new uint8_t[numVoxels];
     bool* seeds = new bool[numVoxels];
     for (int i=0; i<numVoxels; i++) {
-        volume[i] = tgt::ifloor((static_cast<float>(rand()) / RAND_MAX) * 255.f);
+        volume[i] = tgt::ifloor((static_cast<float>(rand()) / (float)RAND_MAX) * 255.f);
         seeds[i] = false;
     }
 
@@ -1461,7 +1461,7 @@ void randomizeEllPositiveDefinite(EllpackMatrix<int16_t>& mat) {
     uint8_t* volume = new uint8_t[numVoxels];
     bool* seeds = new bool[numVoxels];
     for (int i=0; i<numVoxels; i++) {
-        volume[i] = tgt::ifloor((static_cast<float>(rand()) / RAND_MAX) * 255.f);
+        volume[i] = tgt::ifloor((static_cast<float>(rand()) / (float)RAND_MAX) * 255.f);
         seeds[i] = false;
     }
 
