@@ -461,9 +461,9 @@ std::string MultiVolumeRaycaster::generateHeader(const tgt::GpuCapabilities::GlV
 }
 
 void MultiVolumeRaycaster::adjustPropertyVisibilities() {
-    bool useLighting = !shadeMode1_.isSelected("none") |
-                       !shadeMode2_.isSelected("none") |
-                       !shadeMode3_.isSelected("none") |
+    bool useLighting = !shadeMode1_.isSelected("none") ||
+                       !shadeMode2_.isSelected("none") ||
+                       !shadeMode3_.isSelected("none") ||
                        !shadeMode4_.isSelected("none");
     setPropertyGroupVisible("lighting", useLighting);
 

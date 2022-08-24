@@ -1,0 +1,326 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSave" ref="ref2" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="Zoom" type="ZoomMetaData">
+                    <transform.row0 x="0.39685088396072388" y="0" z="0" />
+                    <transform.row1 x="0" y="0.39685088396072388" z="0" />
+                    <transform.row2 x="7676.314453125" y="-4512.15673828125" z="1" />
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="50.74609375" y="100" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.965936124" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeSource" name="VolumeSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-328" y="-80" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                        <Property mapKey="volumeURL" name="volumeURL" watchMode="1" fileWatchEnabled="false">
+                            <urls protocol="">
+                                <path noPathSet="false">
+                                    <paths>
+                                        <item value="input/walnut_medium.vvd" />
+                                        <item value="../../voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                        <item value="/git/voreen-testdata/voreen-testdata/input/walnut_medium.vvd" />
+                                    </paths>
+                                </path>
+                                <searchParameters>
+                                    <value key="preferredReader" value="VvdVolumeReader" />
+                                </searchParameters>
+                            </urls>
+                        </Property>
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumehandle.volumehandle" direction="0" portID="volumehandle.volumehandle" guiName="Volume Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="RandomWalker" name="RandomWalker Manual" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-628" y="120" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="beta" name="beta" value="11" tracking="false" />
+                        <Property mapKey="clipRegion" tracking="true">
+                            <bounds.llf x="0" y="0" z="0" />
+                            <bounds.urb x="110" y="83" z="101" />
+                            <minValue x="0" y="0" z="0" />
+                            <maxValue x="127" y="95" z="113" />
+                            <minRange x="0" y="0" z="0" />
+                            <maxRange x="2147483647" y="2147483647" z="2147483647" />
+                            <stepping x="1" y="1" z="1" />
+                        </Property>
+                        <Property mapKey="conjGradImplementation" name="conjGradImplementation" value="blasMP" />
+                        <Property mapKey="conjGradIterations" name="conjGradIterations" value="1000" tracking="false" />
+                        <Property mapKey="edgeWeightBalance" name="edgeWeightBalance" value="0" />
+                        <Property mapKey="edgeWeightTransFunc" name="edgeWeightTransFunc" domainFittingStrategy="1" computeHistogram="true">
+                            <MetaData>
+                                <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                            </MetaData>
+                            <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
+                                <texDimensions x="4096" y="1" z="1" />
+                                <domain x="23" y="29.020000458" />
+                                <threshold x="0" y="1" />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0" split="false">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.381249994" split="false">
+                                        <colorL r="255" g="255" b="255" a="255" />
+                                    </key>
+                                </Keys>
+                            </TransferFunction>
+                        </Property>
+                        <Property mapKey="enableClipping" name="enableClipping" value="true" />
+                        <Property mapKey="enableLevelOfDetail" name="enableLevelOfDetail" value="false" />
+                        <Property mapKey="enableTransFunc" name="enableTransFunc" value="false" />
+                        <Property mapKey="errorThreshold" name="errorThreshold" value="1" tracking="false" />
+                        <Property mapKey="foregroundThreshold" name="foregroundThreshold" value="0.5" tracking="false" />
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="lodBackgroundSeedThresh" name="lodBackgroundSeedThresh" value="0.01" />
+                        <Property mapKey="lodForegroundSeedThresh" name="lodForegroundSeedThresh" value="0.99000001" />
+                        <Property mapKey="lodMaxLevel" name="lodMaxLevel" value="2" />
+                        <Property mapKey="lodMaxResolution" name="lodMaxResolution">
+                            <value x="128" y="96" z="114" />
+                        </Property>
+                        <Property mapKey="lodMinLevel" name="lodMinLevel" value="0" />
+                        <Property mapKey="lodMinResolution" name="lodMinResolution">
+                            <value x="32" y="24" z="29" />
+                        </Property>
+                        <Property mapKey="lodSeedErosionKernelSize" name="lodSeedErosionKernelSize" value="3" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="5" tracking="false" />
+                        <Property mapKey="noiseModel" name="noiseModel" value="gaussian" />
+                        <Property mapKey="parameterEstimationNeighborhoodExtent" name="parameterEstimationNeighborhoodExtent" value="1" />
+                        <Property mapKey="preconditioner" name="preconditioner" value="jacobi" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="resampleOutputVolumes" name="resampleOutputVolumes" value="true" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 4.111 sec" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
+                        <Property mapKey="useAdaptiveParameterSetting" name="useAdaptiveParameterSetting" value="false" />
+                        <Property mapKey="usePrevProbAsInitialization" name="usePrevProbAsInitialization" value="false" />
+                    </Properties>
+                    <Inports>
+                        <Port name="geometry.seedsBackground" direction="1" portID="geometry.seedsBackground" guiName="geometry.seedsBackground" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="geometry.seedsForeground" direction="1" portID="geometry.seedsForeground" guiName="geometry.seedsForeground" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                        <Port name="volume.input" direction="1" portID="volume.input" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volume.seedsBackground" direction="1" portID="volume.seedsBackground" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="volume.seedsForeground" direction="1" portID="volume.seedsForeground" guiName="" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="volume.edgeweights" direction="0" portID="volume.edgeweights" guiName="volume.edgeweights" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="volume.probabilities" direction="0" portID="volume.probabilities" guiName="volume.probabilities" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                        <Port name="volume.segmentation" direction="0" portID="volume.segmentation" guiName="volume.segmentation" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySource" name="GeometrySource" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-34" y="-80" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/geometry/walnut-seeds-fg.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/walnut-seeds-fg.vge" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/walnut-seeds-fg.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="geometry" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="GeometrySource" name="GeometrySource 2" id="ref4">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="259" y="-80" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="addobjcolor" name="addobjcolor" value="false" />
+                        <Property mapKey="calcNormals" name="calcNormals" value="false" />
+                        <Property mapKey="clearGeometry" name="clearGeometry" />
+                        <Property mapKey="geometryFile" name="geometryFile" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="input/geometry/walnut-seeds-bg.vge" />
+                                    <item value="../../voreen-testdata/voreen-testdata/input/geometry/walnut-seeds-bg.vge" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/input/geometry/walnut-seeds-bg.vge" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="geometryType" name="geometryType" value="geometry" />
+                        <Property mapKey="loadGeometry" name="loadGeometry" />
+                        <Property mapKey="objcolor" name="objcolor">
+                            <value x="1" y="1" z="1" w="1" />
+                        </Property>
+                        <Property mapKey="skipItems" name="skipItems" value="0" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="geometry.pointlist" direction="0" portID="geometry.pointlist" guiName="PointList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave" id="ref2">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-596" y="220" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/random-walker-weights-grady.vvd" />
+                                    <item value="../../voreen-testdata/voreen-testdata/output/random-walker-weights-grady.vvd" />
+                                    <item value="/git/voreen-testdata/voreen-testdata/output/random-walker-weights-grady.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volume.input">
+                        <Processor type="RandomWalker" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volume.probabilities">
+                        <Processor type="RandomWalker" ref="ref1" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref3" />
+                    </Outport>
+                    <Inport name="geometry.seedsForeground">
+                        <Processor type="RandomWalker" ref="ref1" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="geometry.pointlist">
+                        <Processor type="GeometrySource" ref="ref4" />
+                    </Outport>
+                    <Inport name="geometry.seedsBackground">
+                        <Processor type="RandomWalker" ref="ref1" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>

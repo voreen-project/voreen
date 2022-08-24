@@ -185,7 +185,7 @@ tgt::vec3 VolumeCreateBase::getRandVec() const {
 }
 
 float VolumeCreateBase::getRandFloat() const {
-    return float(rand()) / RAND_MAX;
+    return float(rand()) / (float)RAND_MAX;
 }
 
 } // namespace

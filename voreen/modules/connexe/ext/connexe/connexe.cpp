@@ -304,10 +304,10 @@ int CountConnectedComponentsWithAllParams( void *inputBuf,
 					   int outputIsBinary )
 {
   const char *proc = "CountConnectedComponentsWithAllParams";
-  register int i;
+  int i;
   int v = theDim[0] * theDim[1] * theDim[2];
   unsigned short int *tmpBuf = (unsigned short int *)NULL;
-  register unsigned short int * resBuf;
+  unsigned short int * resBuf;
   typeConnectedComponent *components = (typeConnectedComponent *)NULL;
   int iThreshold = 0;
   int nbFoundCC;
@@ -353,7 +353,7 @@ int CountConnectedComponentsWithAllParams( void *inputBuf,
   switch( typeIn ) {
   case UCHAR_TYPE :
     {
-      register u8 *theBuf = (u8 *)inputBuf;
+      u8 *theBuf = (u8 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= iThreshold ) *resBuf = _hig_value_;
 	else *resBuf = 0;
@@ -362,7 +362,7 @@ int CountConnectedComponentsWithAllParams( void *inputBuf,
     break;
   case USHORT_TYPE :
     {
-      register u16 *theBuf = (u16 *)inputBuf;
+      u16 *theBuf = (u16 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= iThreshold ) *resBuf = _hig_value_;
 	else *resBuf = 0;
@@ -371,7 +371,7 @@ int CountConnectedComponentsWithAllParams( void *inputBuf,
     break;
   case FLOAT_TYPE :
     {
-      register r32 *theBuf = (r32 *)inputBuf;
+      r32 *theBuf = (r32 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= threshold ) *resBuf = _hig_value_;
 	else *resBuf = 0;
@@ -493,10 +493,10 @@ int HysteresisThresholdingWithAllParams( void *inputBuf,
 			    int outputIsBinary )
 {
   const char *proc = "HysteresisThresholdingWithAllParams";
-  register int i;
+  int i;
   int v = theDim[0] * theDim[1] * theDim[2];
   unsigned short int *tmpBuf = (unsigned short int *)NULL;
-  register unsigned short int * resBuf;
+  unsigned short int * resBuf;
   typeConnectedComponent *components = (typeConnectedComponent *)NULL;
   int nbFoundCC;
   int iLowThreshold = 0;
@@ -548,7 +548,7 @@ int HysteresisThresholdingWithAllParams( void *inputBuf,
   switch( typeIn ) {
   case UCHAR_TYPE :
     {
-      register u8 *theBuf = (u8 *)inputBuf;
+      u8 *theBuf = (u8 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= iHighThreshold ) *resBuf = _hig_value_;
 	else if ( *theBuf >= iLowThreshold ) *resBuf = _low_value_;
@@ -558,7 +558,7 @@ int HysteresisThresholdingWithAllParams( void *inputBuf,
     break;
   case USHORT_TYPE :
     {
-      register u16 *theBuf = (u16 *)inputBuf;
+      u16 *theBuf = (u16 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= iHighThreshold ) *resBuf = _hig_value_;
 	else if ( *theBuf >= iLowThreshold ) *resBuf = _low_value_;
@@ -568,7 +568,7 @@ int HysteresisThresholdingWithAllParams( void *inputBuf,
     break;
   case SSHORT :
     {
-      register s16 *theBuf = (s16 *)inputBuf;
+      s16 *theBuf = (s16 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= iHighThreshold ) *resBuf = _hig_value_;
 	else if ( *theBuf >= iLowThreshold ) *resBuf = _low_value_;
@@ -578,7 +578,7 @@ int HysteresisThresholdingWithAllParams( void *inputBuf,
     break;
   case FLOAT_TYPE :
     {
-      register r32 *theBuf = (r32 *)inputBuf;
+      r32 *theBuf = (r32 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= highThreshold ) *resBuf = _hig_value_;
 	else if ( *theBuf >= lowThreshold ) *resBuf = _low_value_;
@@ -588,7 +588,7 @@ int HysteresisThresholdingWithAllParams( void *inputBuf,
     break;
   case DOUBLE_TYPE :
     {
-      register r64 *theBuf = (r64 *)inputBuf;
+      r64 *theBuf = (r64 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	if ( *theBuf >= highThreshold ) *resBuf = _hig_value_;
 	else if ( *theBuf >= lowThreshold ) *resBuf = _low_value_;
@@ -1972,7 +1972,7 @@ static int RelabelConnectedComponents( void *inputBuf,
   switch( typeIn ) {
   case UCHAR_TYPE :
     {
-      register u8 *theBuf = (u8 *)inputBuf;
+      u8 *theBuf = (u8 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (u8)components[ (int)*resBuf ] .label;
       }
@@ -1980,7 +1980,7 @@ static int RelabelConnectedComponents( void *inputBuf,
     break;
   case SCHAR_TYPE :
     {
-      register s8 *theBuf = (s8 *)inputBuf;
+      s8 *theBuf = (s8 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (s8)components[ (int)*resBuf ] .label;
       }
@@ -1988,7 +1988,7 @@ static int RelabelConnectedComponents( void *inputBuf,
     break;
   case USHORT_TYPE :
     {
-      register u16 *theBuf = (u16 *)inputBuf;
+      u16 *theBuf = (u16 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (u16)components[ (int)*resBuf ] .label;
       }
@@ -1996,7 +1996,7 @@ static int RelabelConnectedComponents( void *inputBuf,
     break;
   case SSHORT :
     {
-      register s16 *theBuf = (s16 *)inputBuf;
+      s16 *theBuf = (s16 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (s16)components[ (int)*resBuf ] .label;
       }
@@ -2004,7 +2004,7 @@ static int RelabelConnectedComponents( void *inputBuf,
     break;
   case INT_TYPE :
     {
-      register s32 *theBuf = (s32 *)inputBuf;
+      s32 *theBuf = (s32 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (s32)components[ (int)*resBuf ] .label;
       }
@@ -2012,7 +2012,7 @@ static int RelabelConnectedComponents( void *inputBuf,
     break;
   case FLOAT_TYPE :
     {
-      register r32 *theBuf = (r32 *)inputBuf;
+      r32 *theBuf = (r32 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (r32)components[ (int)*resBuf ] .label;
       }
@@ -2020,7 +2020,7 @@ static int RelabelConnectedComponents( void *inputBuf,
     break;
   case DOUBLE_TYPE :
     {
-      register r64 *theBuf = (r64 *)inputBuf;
+      r64 *theBuf = (r64 *)inputBuf;
       for ( i=0; i<v; i++, theBuf++, resBuf++ ) {
 	*theBuf = (r64)components[ (int)*resBuf ] .label;
       }
