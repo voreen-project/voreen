@@ -83,6 +83,16 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
                             return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
                 }
             }
+            case RW_NOISE_VARIABLE_GAUSSIAN: {
+                switch(input.parameterEstimationNeighborhoodExtent_) {
+                    case 1: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelVariableGaussian<1>>(input);
+                    case 2: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelVariableGaussian<2>>(input);
+                    case 3: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelVariableGaussian<3>>(input);
+                    default:
+                            LERRORC("voreen.RandomWalker.RandomWalker", "Invalid ttest extent: " << input.parameterEstimationNeighborhoodExtent_);
+                            return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
+                }
+            }
             case RW_NOISE_POISSON:
                 return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelPoisson>(input);
             default:
@@ -173,6 +183,7 @@ RandomWalker::RandomWalker()
     noiseModel_.addOption("gaussian_bian", "Gaussian with mean filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEAN);
     noiseModel_.addOption("gaussian_bian_median", "Gaussian with median filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
     noiseModel_.addOption("ttest", "T-Test (Bian 2016)", RW_NOISE_TTEST);
+    noiseModel_.addOption("variable_gaussian", "Gaussian with variable sigma (Drees 2022)", RW_NOISE_VARIABLE_GAUSSIAN);
     noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
     noiseModel_.addOption("shot", "Poisson", RW_NOISE_POISSON);
     noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
@@ -1007,7 +1018,12 @@ void RandomWalker::updateGuiState() {
     bool adaptiveEnabled = useAdaptiveParameterSetting_.get();
     beta_.setVisibleFlag(!adaptiveEnabled);
     noiseModel_.setVisibleFlag(adaptiveEnabled);
-    parameterEstimationNeighborhoodExtent_.setVisibleFlag(adaptiveEnabled && noiseModel_.getValue() == RW_NOISE_TTEST);
+    parameterEstimationNeighborhoodExtent_.setVisibleFlag(adaptiveEnabled && (
+                noiseModel_.getValue() == RW_NOISE_TTEST
+                || noiseModel_.getValue() == RW_NOISE_VARIABLE_GAUSSIAN
+                || noiseModel_.getValue() == RW_NOISE_GAUSSIAN
+                || noiseModel_.getValue() == RW_NOISE_POISSON
+                ));
     enableTransFunc_.setVisibleFlag(!adaptiveEnabled);
     if(adaptiveEnabled) {
         enableTransFunc_.set(false);

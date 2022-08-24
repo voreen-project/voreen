@@ -367,4 +367,48 @@ float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>
 
     return w;
 }
+
+float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
+    auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
+    auto neighborhood1 = neighborhoods.first;
+    auto neighborhood2 = neighborhoods.second;
+
+
+    if(neighborhood1.size() > neighborhood2.size()) {
+        neighborhood1.resize(neighborhood2.size());
+    } else if(neighborhood1.size() < neighborhood2.size()) {
+        neighborhood2.resize(neighborhood1.size());
+    }
+    size_t n = neighborhood1.size();
+    assert(n == neighborhood2.size());
+
+    float sum1 = std::accumulate(neighborhood1.begin(), neighborhood1.end(), 0.0f);
+    float sum2 = std::accumulate(neighborhood2.begin(), neighborhood2.end(), 0.0f);
+
+    float mean1 = sum1/n;
+    float mean2 = sum2/n;
+
+    float var1 = variance_of(neighborhood1, mean1);
+    float var2 = variance_of(neighborhood2, mean2);
+
+
+    float nom = std::sqrt(var1*var2);
+    float denom = (var1+var2)*0.5 + square((mean1-mean2)*0.5);
+
+    if(denom == 0.0f) {
+        return 1.0f;
+    }
+
+    float quotient = nom/denom;
+
+    assert(n>=4);
+    float exponent = (n-3.0)/2;
+    float w = std::pow(quotient, exponent);
+
+
+    assert(!std::isnan(w) && std::isfinite(w) && w >= 0);
+
+    return w;
+}
+
 }

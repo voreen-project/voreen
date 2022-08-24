@@ -39,6 +39,7 @@ enum RWNoiseModel {
     RW_NOISE_POISSON,
     RW_NOISE_GAUSSIAN_BIAN_MEAN,
     RW_NOISE_GAUSSIAN_BIAN_MEDIAN,
+    RW_NOISE_VARIABLE_GAUSSIAN,
     RW_NOISE_TTEST,
 };
 
@@ -120,6 +121,7 @@ struct RWNoiseModelGaussianBianMedian {
 
 VolumeAtomic<tgt::ivec3> findBestCenters(const VolumeAtomic<float>& image, const VolumeAtomic<float>& mean, const VolumeAtomic<float>& variance, int filter_extent);
 float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
+float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 
 // Parameter estimation according to
 //
@@ -150,6 +152,33 @@ struct RWNoiseModelTTest {
     }
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
         return evalTTest(image, best_centers, voxel, neighbor, filter_extent);
+    }
+};
+template<int filter_extent>
+struct RWNoiseModelVariableGaussian {
+
+    VolumeAtomic<float> image;
+    VolumeAtomic<tgt::ivec3> best_centers;
+
+    RWNoiseModelVariableGaussian(RWNoiseModelVariableGaussian&&) = default;
+
+    static RWNoiseModelVariableGaussian prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+
+        VolumeAtomic<float> image = vol.copy();
+        VolumeAtomic<float> mean = meanFilter<filter_extent>(image);
+        VolumeAtomic<float> variance = variances<filter_extent>(image, mean);
+
+        auto bestCenters = findBestCenters(image, mean, variance, filter_extent);
+        return RWNoiseModelVariableGaussian {
+            std::move(image),
+            std::move(bestCenters),
+        };
+    }
+    static RWNoiseModelVariableGaussian prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return RWNoiseModelVariableGaussian::prepare(toVolumeAtomicFloat(vol), rwm);
+    }
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+        return evalVariableGaussian(image, best_centers, voxel, neighbor, filter_extent);
     }
 };
 
