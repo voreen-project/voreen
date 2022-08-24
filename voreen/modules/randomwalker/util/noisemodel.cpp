@@ -24,6 +24,7 @@
  ***********************************************************************************/
 
 #include "noisemodel.h"
+#include <numeric>
 
 namespace voreen {
 
@@ -37,10 +38,10 @@ static float square(float s) {
     return s*s;
 }
 
-static float variance_of(const float* begin, const float* end, float mean) {
+static float variance_of(const std::vector<float>& vec, float mean) {
 
     float sq_sum = 0.0f;
-    size_t n = std::distance(begin, end);
+    size_t n = vec.size();
 #if defined(WIN32) && _MSC_VER < 1922
 #pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
 #else
@@ -49,14 +50,14 @@ static float variance_of(const float* begin, const float* end, float mean) {
 #endif
 #endif
     for(size_t i = 0; i<n; ++i) {
-        sq_sum += square(mean-begin[i]);
+        sq_sum += square(mean-vec[i]);
     }
     float variance = sq_sum/(n-1);
 
     return variance;
 };
 
-static void process_non_overlap_single(const float* image, tgt::ivec3 imagedim, tgt::ivec3 begin, tgt::ivec3 end, tgt::ivec3 overlap_begin, tgt::ivec3 overlap_end, float*& output_cur, float& sum) {
+static void process_non_overlap_single(const float* image, tgt::ivec3 imagedim, tgt::ivec3 begin, tgt::ivec3 end, tgt::ivec3 overlap_begin, tgt::ivec3 overlap_end, float*& output_cur) {
     size_t sliceSize = imagedim.y * imagedim.x;
     size_t lineSize = imagedim.x;
     for (size_t z = begin.z; z < static_cast<int>(end.z); ++z) {
@@ -81,7 +82,6 @@ static void process_non_overlap_single(const float* image, tgt::ivec3 imagedim, 
                     float val = image[i];
                     *output_cur = val;
                     ++output_cur;
-                    sum += val;
                 }
             }
         }
@@ -143,7 +143,7 @@ VolumeAtomic<tgt::ivec3> findBestCenters(const VolumeAtomic<float>& image, const
     return best_centers;
 }
 
-float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
+static std::pair<std::vector<float>, std::vector<float>> collect_neighborhoods(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
     tgt::ivec3 p1, p2;
 
     // Force weight function to be symmetric. If we don't explicitly do
@@ -181,17 +181,15 @@ float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>
     tgt::ivec3 overlap_begin = tgt::max(begin1, begin2);
     tgt::ivec3 overlap_end = tgt::max(tgt::min(end1, end2), overlap_begin);
 
-    float sum1 = 0.0f;
     std::vector<float> n1final;
-    n1final.reserve(num_voxels_max);
+    n1final.resize(num_voxels_max);
     float* n1_begin = n1final.data();
     float* n1_cur = n1_begin;
 
     tgt::ivec3 from_b1_to_b2 = best_center2-best_center1;
 
-    float sum2 = 0.0f;
     std::vector<float> n2final;
-    n2final.reserve(num_voxels_max);
+    n2final.resize(num_voxels_max);
     float* n2_begin = n2final.data();
     float* n2_cur = n2_begin;
 
@@ -254,21 +252,19 @@ float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>
                         float val1 = image.voxel(i);
                         *n1_cur = val1;
                         ++n1_cur;
-                        sum1 += val1;
 
                         size_t i2 = i2base - i;
                         tgtAssert(i2 < tgt::hmul(dim) ,"invalid index");
                         float val2 = image.voxel(i2);
                         *n2_cur = val2;
                         ++n2_cur;
-                        sum2 += val2;
                     }
                 }
             }
         }
     } else {
-        process_non_overlap_single(image.voxel(), dim, begin1, end1, overlap_begin, overlap_end, n1_cur, sum1);
-        process_non_overlap_single(image.voxel(), dim, begin2, end2, overlap_begin, overlap_end, n2_cur, sum2);
+        process_non_overlap_single(image.voxel(), dim, begin1, end1, overlap_begin, overlap_end, n1_cur);
+        process_non_overlap_single(image.voxel(), dim, begin2, end2, overlap_begin, overlap_end, n2_cur);
         size_t neighborhood_counter = 0;
         for (size_t z = overlap_begin.z; z < overlap_end.z; ++z) {
 
@@ -304,24 +300,41 @@ float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>
 
     auto o = o1begin;
     for(; o!=o1end; ++o) {
-        sum1 += o->first;
         *n1_cur = o->first;
         ++n1_cur;
     }
     for(; o!=o2end; ++o) {
-        sum2 += o->first;
         *n2_cur = o->first;
         ++n2_cur;
     }
-    float n1 = std::distance(n1_begin, n1_cur);
-    float n2 = std::distance(n2_begin, n2_cur);
+
+    size_t n1 = std::distance(n1_begin, n1_cur);
+    size_t n2 = std::distance(n2_begin, n2_cur);
+
+    n1final.resize(n1);
+    n2final.resize(n2);
+
+    return std::make_pair(n1final, n2final);
+}
+
+float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
+    auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
+    auto neigh1 = neighborhoods.first;
+    auto neigh2 = neighborhoods.second;
+
+
+    float n1 = neigh1.size();
+    float n2 = neigh2.size();
+
+    float sum1 = std::accumulate(neigh1.begin(), neigh1.end(), 0.0f);
+    float sum2 = std::accumulate(neigh2.begin(), neigh2.end(), 0.0f);
 
     float mean1 = sum1/n1;
     float mean2 = sum2/n2;
 
     float min_variance = 0.000001;
-    float var1 = std::max(min_variance, variance_of(n1_begin, n1_cur, mean1));
-    float var2 = std::max(min_variance, variance_of(n2_begin, n2_cur, mean2));
+    float var1 = std::max(min_variance, variance_of(neigh1, mean1));
+    float var2 = std::max(min_variance, variance_of(neigh2, mean2));
 
     float sn1 = var1/n1;
     float sn2 = var2/n2;
