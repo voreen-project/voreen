@@ -24,7 +24,7 @@
                                     <paths>
                                         <item value="input/flow/aneurysm.vvd" />
                                         <item value="../test-data/voreen-testdata/input/flow/aneurysm.vvd" />
-                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/aneurysm.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/flow/aneurysm.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -57,7 +57,7 @@
                                     <paths>
                                         <item value="input/flow/jacobian.vvd" />
                                         <item value="../test-data/voreen-testdata/input/flow/jacobian.vvd" />
-                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/jacobian.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/flow/jacobian.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -83,7 +83,14 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-123" y="-183" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
+                        <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
+                        <Property mapKey="progressDisplay" name="progressDisplay" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
+                        <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="sujudiHaimes" name="sujudiHaimes" value="true" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
+                        <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                     </Properties>
                     <Inports>
                         <Port name="in_jacobi" direction="1" portID="in_jacobi" guiName="Jacobi Matrix (Optional)" allowMultipleConnections="false" invalidationLevel="1">
@@ -138,7 +145,7 @@
                                     <paths>
                                         <item value="input/flow/acceleration.vvd" />
                                         <item value="../test-data/voreen-testdata/input/flow/acceleration.vvd" />
-                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/acceleration.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/flow/acceleration.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -193,7 +200,7 @@
                                 <paths>
                                     <item value="output/corelines.vge" />
                                     <item value="../test-data/voreen-testdata/output/corelines.vge" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/corelines.vge" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/corelines.vge" />
                                 </paths>
                             </paths>
                         </Property>

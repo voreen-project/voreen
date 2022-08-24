@@ -7,7 +7,7 @@
                     <values />
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="-431.06942749" y="-344.015014648" />
+                    <value x="-470.69418335" y="-366.829284668" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="1.665624976" />
             </MetaData>
@@ -36,7 +36,7 @@
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="hash" name="hash" value="a5ab9131c2fdd9b9db12ae519fecad90" />
+                        <Property mapKey="hash" name="hash" value="fef2f274191fef4036504bb40a053e52" />
                         <Property mapKey="loadDataset" name="loadDataset" />
                         <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
                             <columnLabels>
@@ -134,7 +134,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="ParallelCoordinatesAxesCreator" name="ParallelCoordinatesAxesCreator" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref1">
+                <Processor type="ParallelCoordinatesAxesCreator" name="ParallelCoordinatesAxesCreator" hash="fef2f274191fef4036504bb40a053e52" id="ref1">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-724" y="-477" />
                     </MetaData>
@@ -220,13 +220,14 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_required_memory" name="property_required_memory" value="4.5 MB" />
+                        <Property mapKey="property_required_memory" name="property_required_memory" value="1.1 MB" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
-                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
+                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="8192" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
                         <Property mapKey="sampleRegion" name="sampleRegion" value="common" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                     </Properties>
                     <Inports>
@@ -276,7 +277,7 @@
                         <item value="Velocity(3)" />
                     </axesLabels>
                 </Processor>
-                <Processor type="ParallelCoordinatesAxesCreator" name="Aggregated" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref2">
+                <Processor type="ParallelCoordinatesAxesCreator" name="Aggregated" hash="fef2f274191fef4036504bb40a053e52" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-419" y="-480" />
                     </MetaData>
@@ -362,13 +363,14 @@
                                 </item>
                             </values>
                         </Property>
-                        <Property mapKey="property_required_memory" name="property_required_memory" value="4.5 MB" />
+                        <Property mapKey="property_required_memory" name="property_required_memory" value="1.1 MB" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611539031" />
-                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
+                        <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="8192" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
                         <Property mapKey="sampleRegion" name="sampleRegion" value="common" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                     </Properties>
                     <Inports>

@@ -22,7 +22,7 @@
                                 <paths>
                                     <item value="input/ensemble/magnitude_similarity.vsm" />
                                     <item value="../test-data/voreen-testdata/input/ensemble/magnitude_similarity.vsm" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/magnitude_similarity.vsm" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/ensemble/magnitude_similarity.vsm" />
                                 </paths>
                             </paths>
                         </Property>
@@ -50,7 +50,7 @@
                                 <paths>
                                     <item value="input/ensemble/angle_similarity.vsm" />
                                     <item value="../test-data/voreen-testdata/input/ensemble/angle_similarity.vsm" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/angle_similarity.vsm" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/ensemble/angle_similarity.vsm" />
                                 </paths>
                             </paths>
                         </Property>
@@ -80,6 +80,7 @@
                         <Property mapKey="similarityCombinationMethod" name="similarityCombinationMethod" value="method-max" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                     </Properties>
                     <Inports>
@@ -110,6 +111,7 @@
                         <Property mapKey="similarityCombinationMethod" name="similarityCombinationMethod" value="method-multiply" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
                     </Properties>
                     <Inports>
@@ -138,7 +140,7 @@
                                 <paths>
                                     <item value="output/combined_similarity_max.vsm" />
                                     <item value="../test-data/voreen-testdata/output/combined_similarity_max.vsm" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/combined_similarity_max.vsm" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/combined_similarity_max.vsm" />
                                 </paths>
                             </paths>
                         </Property>
@@ -164,7 +166,7 @@
                                 <paths>
                                     <item value="output/combined_similarity_mult.vsm" />
                                     <item value="../test-data/voreen-testdata/output/combined_similarity_mult.vsm" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/combined_similarity_mult.vsm" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/combined_similarity_mult.vsm" />
                                 </paths>
                             </paths>
                         </Property>

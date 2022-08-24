@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="Canvas" ref="ref2" />
+                        <item type="ParallelCoordinatesSource" ref="ref0" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -27,7 +27,7 @@
                                 <paths>
                                     <item value="input/ensemble/parallelcoordinates.vpc" />
                                     <item value="../test-data/voreen-testdata/input/ensemble/parallelcoordinates.vpc" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/parallelcoordinates.vpc" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/ensemble/parallelcoordinates.vpc" />
                                 </paths>
                             </paths>
                         </Property>
@@ -50,9 +50,9 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-598" y="-448" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="event_property_hover" name="event_property_hover" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="event_property_mouse" name="event_property_mouse" enabled="true" mouseAction="127" mouseButtons="5" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="property_density_blending" name="property_density_blending" value="true" />
+                        <Property mapKey="event_property_hover" name="event_property_hover" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="event_property_mouse" name="event_property_mouse" enabled="true" mouseButtons="5" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="property_density_blending" name="property_density_blending" value="false" />
                         <Property mapKey="property_density_selected_samples" name="property_density_selected_samples" value="1" />
                         <Property mapKey="property_density_visible_samples" name="property_density_visible_samples" value="1" />
                         <Property mapKey="property_field_interval" minValue="0" maxValue="2570.014404297" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
@@ -105,6 +105,47 @@
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                             </Options>
+                        </Property>
+                        <Property mapKey="property_selected_member_intern" name="property_selected_member_intern">
+                            <selectedRow />
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                            </values>
                         </Property>
                         <Property mapKey="property_selected_samples" name="property_selected_samples" />
                         <Property mapKey="property_selected_timestep" name="property_selected_timestep" value="0" />
@@ -361,10 +402,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-557" y="-337" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="590" y="326" width="893" height="680" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="601" y="318" width="893" height="680" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="590" y="326" />
+                            <value x="601" y="318" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="893" y="680" />
@@ -380,7 +421,7 @@
                                 <paths>
                                     <item value="output/parallelcoordinates.png" />
                                     <item value="../test-data/voreen-testdata/output/parallelcoordinates.png" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates.png" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/parallelcoordinates.png" />
                                 </paths>
                             </paths>
                         </Property>

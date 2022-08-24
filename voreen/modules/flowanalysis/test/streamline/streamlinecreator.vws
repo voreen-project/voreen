@@ -22,18 +22,22 @@
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />
+                        <Property mapKey="integrationSteps" name="integrationSteps" value="100" tracking="false" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="500" tracking="false" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="250" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1608054168" tracking="false" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
+                        <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
                             <value x="10" y="1000" />
                         </Property>
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="cm/s" />
                     </Properties>
                     <Inports>
                         <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">
@@ -74,7 +78,7 @@
                                     <paths>
                                         <item value="input/flow/aneurysm.vvd" />
                                         <item value="../test-data/voreen-testdata/input/flow/aneurysm.vvd" />
-                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/aneurysm.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/flow/aneurysm.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -107,7 +111,7 @@
                                     <paths>
                                         <item value="input/flow/aneurysm_mask.vvd" />
                                         <item value="../test-data/voreen-testdata/input/flow/aneurysm_mask.vvd" />
-                                        <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/flow/aneurysm_mask.vvd" />
+                                        <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/flow/aneurysm_mask.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -138,18 +142,22 @@
                         </Property>
                         <Property mapKey="filterModeProp" name="filterModeProp" value="linear" />
                         <Property mapKey="fitAbsoluteMagnitude" name="fitAbsoluteMagnitude" value="true" />
+                        <Property mapKey="integrationSteps" name="integrationSteps" value="100" tracking="false" />
                         <Property mapKey="invalidationMode" name="invalidationMode" value="invalidateRestart" />
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
-                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="500" tracking="false" />
+                        <Property mapKey="numSeedPoints" name="numSeedPoints" value="250" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1608054168" tracking="false" />
                         <Property mapKey="statusDisplay" name="statusDisplay" value="Finished" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
+                        <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="streamlineLengthThreshold" minValue="2" maxValue="10000" minRange="0" maxRange="2147483647" stepping="1" tracking="false">
                             <value x="10" y="1000" />
                         </Property>
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="true" />
+                        <Property mapKey="velocityUnitConversion" name="velocityUnitConversion" value="cm/s" />
                     </Properties>
                     <Inports>
                         <Port name="seedMaskPort" direction="1" portID="seedMaskPort" guiName="Seed Mask (optional)" allowMultipleConnections="false" invalidationLevel="1">
@@ -188,7 +196,7 @@
                                 <paths>
                                     <item value="output/streamlines_unmasked.vsd" />
                                     <item value="../test-data/voreen-testdata/output/streamlines_unmasked.vsd" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/streamlines_unmasked.vsd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/streamlines_unmasked.vsd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -222,7 +230,7 @@
                                 <paths>
                                     <item value="output/streamlines.vsd" />
                                     <item value="../test-data/voreen-testdata/output/streamlines.vsd" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/streamlines.vsd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/streamlines.vsd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -256,7 +264,7 @@
                                 <paths>
                                     <item value="output/streamlines_with_volume.vsd" />
                                     <item value="../test-data/voreen-testdata/output/streamlines_with_volume.vsd" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/streamlines_with_volume.vsd" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/streamlines_with_volume.vsd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -290,7 +298,7 @@
                                 <paths>
                                     <item value="output/streamlines.csv" />
                                     <item value="../test-data/voreen-testdata/output/streamlines.csv" />
-                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/streamlines.csv" />
+                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/streamlines.csv" />
                                 </paths>
                             </paths>
                         </Property>
