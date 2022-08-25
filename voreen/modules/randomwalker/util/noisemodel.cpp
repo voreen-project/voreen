@@ -88,60 +88,6 @@ static void process_non_overlap_single(const float* image, tgt::ivec3 imagedim, 
     }
 }
 
-VolumeAtomic<tgt::ivec3> findBestCenters(const VolumeAtomic<float>& image, const VolumeAtomic<float>& mean, const VolumeAtomic<float>& variance, int filter_extent) {
-    struct MeanMulAdd {
-        float mean;
-        float mul;
-        float add;
-    };
-    tgt::ivec3 dim = image.getDimensions();
-
-    std::vector<MeanMulAdd> mean_mul_add;
-    size_t n = mean.getNumVoxels();
-    mean_mul_add.reserve(n);
-
-    for(int i = 0; i<n; ++i) {
-        MeanMulAdd mma;
-        mma.mean = mean.voxel(i);
-        float var = std::max(variance.voxel(i), 0.000001f);
-        mma.add = 0.5*std::log(var);
-        mma.mul = 0.5/var;
-        mean_mul_add.push_back(mma);
-    }
-
-    VolumeAtomic<tgt::ivec3> best_centers(dim);
-
-    VRN_FOR_EACH_VOXEL(p, tgt::ivec3::zero, dim) {
-        float f = image.voxel(p);
-
-        const tgt::ivec3 extent(filter_extent);
-
-        tgt::ivec3 begin = tgt::max(tgt::ivec3::zero, p - extent);
-        tgt::ivec3 end = tgt::min(dim, p + tgt::ivec3::one + extent);
-
-        float min = std::numeric_limits<float>::infinity();
-        size_t argmin_index = 0;
-
-        VRN_FOR_EACH_VOXEL_INDEX(l, begin, end, dim, {
-            //float pdf_val = gaussian_pdf(f, mean.voxel(n), variance.voxel(n));
-            // Instead of evaluating and maximizing the gaussian pdf (which
-            // is expensive) we minimize the negative log instead.
-            const auto& mma = mean_mul_add[l];
-            float val = square(f-mma.mean) * mma.mul + mma.add;
-            tgtAssert(std::isfinite(val) && !std::isnan(val), "invalid val");
-            if(min > val) {
-                min = val;
-                argmin_index = l;
-            }
-        })
-
-        tgt::ivec3 argmin = linearCoordToCubic(argmin_index, dim);
-        tgtAssert(tgt::max(tgt::abs(p - argmin)) <= filter_extent, "invalid pos");
-        best_centers.voxel(p) = argmin;
-    }
-
-    return best_centers;
-}
 
 static std::pair<std::vector<float>, std::vector<float>> collect_neighborhoods(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
     tgt::ivec3 p1, p2;
@@ -411,4 +357,53 @@ float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<
     return w;
 }
 
+std::vector<GaussianParametersVariableSigma> GaussianParametersVariableSigma::create(const VolumeAtomic<float>& image, int filter_extent) {
+    VolumeAtomic<float> mean = meanFilter(image, filter_extent);
+    VolumeAtomic<float> variance = variances(image, mean, filter_extent);
+
+    std::vector<GaussianParametersVariableSigma> mean_mul_add;
+    size_t n = mean.getNumVoxels();
+    mean_mul_add.reserve(n);
+
+    for(int i = 0; i<n; ++i) {
+        GaussianParametersVariableSigma mma;
+        mma.mean = mean.voxel(i);
+        float var = std::max(variance.voxel(i), 0.000001f);
+        mma.add = 0.5*std::log(var);
+        mma.mul = 0.5/var;
+        mean_mul_add.push_back(mma);
+    }
+
+    return mean_mul_add;
+}
+float GaussianParametersVariableSigma::fit(GaussianParametersVariableSigma params, float f) {
+    // Instead of computing the exp, we maximize the log
+    return - (square(f-params.mean) * params.mul + params.add);
+}
+
+
+float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
+    auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
+    auto neighborhood1 = neighborhoods.first;
+    auto neighborhood2 = neighborhoods.second;
+
+
+    if(neighborhood1.size() > neighborhood2.size()) {
+        neighborhood1.resize(neighborhood2.size());
+    } else if(neighborhood1.size() < neighborhood2.size()) {
+        neighborhood2.resize(neighborhood1.size());
+    }
+    size_t n = neighborhood1.size();
+    assert(n == neighborhood2.size());
+
+    float sum1 = std::accumulate(neighborhood1.begin(), neighborhood1.end(), 0.0f);
+    float sum2 = std::accumulate(neighborhood2.begin(), neighborhood2.end(), 0.0f);
+
+    float exponent = std::lgamma((sum1+sum2+2.0f)*0.5f) - (std::lgamma(sum1+1) + std::lgamma(sum2+1))*0.5f;
+    float w = std::exp(exponent);
+
+    assert(!std::isnan(w) && std::isfinite(w) && w >= 0);
+
+    return w;
+}
 }

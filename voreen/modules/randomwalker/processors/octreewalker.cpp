@@ -1338,7 +1338,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                         newBrickAddr = processOctreeBrick<RW_NOISE_TTEST>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_POISSON:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_POISSON>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_POISSON>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     default:
                         tgtAssert(false, "Invalid noise model selected");

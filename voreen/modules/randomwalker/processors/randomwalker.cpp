@@ -79,7 +79,7 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
                 return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_VARIABLE_GAUSSIAN>(input, {input.parameterEstimationNeighborhoodExtent_});
             }
             case RW_NOISE_POISSON:
-                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_POISSON>(input, {});
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_POISSON>(input, {input.parameterEstimationNeighborhoodExtent_});
             default:
                 tgtAssert(false, "Invalid noise model");
         }
