@@ -378,6 +378,7 @@ void SliceViewer::beforeProcess() {
         mousePosition_ = tgt::ivec2(-1);
         lastPickingPosition_ = tgt::ivec3(-1);
         updatePropertyConfiguration();
+        invalidateOctreeTexture();
 
         const VolumeBase* inputVolume = inport_.getData();
         transferFunc1_.setVolume(inputVolume, 0);
