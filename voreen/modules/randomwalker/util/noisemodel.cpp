@@ -381,6 +381,36 @@ float GaussianParametersVariableSigma::fit(GaussianParametersVariableSigma param
     return - (square(f-params.mean) * params.mul + params.add);
 }
 
+float evalConstGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, float variance_inv, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
+    auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
+    auto neighborhood1 = neighborhoods.first;
+    auto neighborhood2 = neighborhoods.second;
+
+
+    if(neighborhood1.size() > neighborhood2.size()) {
+        neighborhood1.resize(neighborhood2.size());
+    } else if(neighborhood1.size() < neighborhood2.size()) {
+        neighborhood2.resize(neighborhood1.size());
+    }
+    size_t n = neighborhood1.size();
+    assert(n == neighborhood2.size());
+
+    float sum1 = std::accumulate(neighborhood1.begin(), neighborhood1.end(), 0.0f);
+    float sum2 = std::accumulate(neighborhood2.begin(), neighborhood2.end(), 0.0f);
+
+    float mean1 = sum1/n;
+    float mean2 = sum2/n;
+
+    float diff = mean1-mean2;
+
+    float coeff = square(diff) * variance_inv / 8.0f * n;
+
+    float w = std::exp(-coeff);
+
+    assert(!std::isnan(w) && std::isfinite(w) && w >= 0);
+
+    return w;
+}
 
 float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
     auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
@@ -406,4 +436,5 @@ float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec
 
     return w;
 }
+
 }

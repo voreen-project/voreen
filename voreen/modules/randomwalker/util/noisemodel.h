@@ -88,7 +88,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
     RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
         VolumeAtomic<float> mean = meanFilter3x3x3(vol);
-        float variance = estimateVariance3x3x3(vol, mean);
+        float variance = estimateVariance(vol, mean, 1);
 
         const int k = 1;
         const int N=2*k+1;
@@ -127,7 +127,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
     RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
         VolumeAtomic<float> mean = medianFilter3x3x3(vol);
-        float variance = estimateVariance3x3x3(vol, mean);
+        float variance = estimateVariance(vol, mean, 1);
 
         // TODO: This is for 2D (value from Angs paper) and seems to work fine.
         // However, it is unclear if a better value for 3D can be found.
@@ -150,6 +150,7 @@ VolumeAtomic<tgt::ivec3> findBestCenters(const VolumeAtomic<float>& image, const
 float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
+float evalConstGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, float variance_inv, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 
 // Parameter estimation according to
 //
@@ -218,30 +219,37 @@ struct RWNoiseModelParameters<RW_NOISE_VARIABLE_GAUSSIAN> {
 
 template<>
 struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN> {
-
     VolumeAtomic<float> values;
+    VolumeAtomic<tgt::ivec3> best_centers;
     float variance_inv;
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
-        float voxelIntensity = values.voxel(voxel);
-        float neighborIntensity = values.voxel(neighbor);
+    int filter_extent;
 
-        float beta = 0.125f * betaBias * variance_inv;
-        float intDiff = (voxelIntensity - neighborIntensity);
-        float intDiffSqr = intDiff*intDiff;
-        float weight = exp(-beta * intDiffSqr);
-        return weight;
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+        return evalConstGaussian(values, best_centers, variance_inv, voxel, neighbor, filter_extent);
     }
 };
 template<>
 struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN> {
+    int filter_extent;
 
     RWNoiseModelWeights<RW_NOISE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-        VolumeAtomic<float> mean = meanFilter3x3x3(vol);
-        float variance = estimateVariance3x3x3(vol, mean);
+        VolumeAtomic<float> mean = meanFilter(vol, filter_extent);
+        float variance = estimateVariance(vol, mean, filter_extent);
+        tgtAssert(variance > 0, "Invalid variance");
+
+        float variance_inv = 1.0f/variance;
+
+        auto bestCenters = findBestCenters(vol, mean.voxel(), [&] (float mu, float sample) {
+            float diff = mu-sample;
+            float coeff = diff*diff * variance_inv * 0.5f;
+            return -coeff;
+        }, filter_extent);
 
         return RWNoiseModelWeights<RW_NOISE_GAUSSIAN> {
             vol.copy(),
+            std::move(bestCenters),
             1.0f/variance,
+            filter_extent,
         };
     }
     RWNoiseModelWeights<RW_NOISE_GAUSSIAN> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
@@ -269,6 +277,9 @@ struct RWNoiseModelParameters<RW_NOISE_POISSON> {
         VolumeAtomic<float> parameters = meanFilter(image, filter_extent);
 
         auto bestCenters = findBestCenters(image, parameters.voxel(), [] (float lambda, float sample) {
+            if(lambda == 0) {
+                return sample == 0 ? 0.0f : -std::numeric_limits<float>::infinity();
+            }
             return -lambda + std::log(lambda) * sample - std::lgamma(sample + 1);
         }, filter_extent);
 

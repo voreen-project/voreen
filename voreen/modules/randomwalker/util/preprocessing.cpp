@@ -136,8 +136,8 @@ VolumeAtomic<float> medianFilter3x3x3(const VolumeAtomic<float>& img) {
     return res;
 }
 
-float estimateVariance3x3x3(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean) {
-    const int k = 1;
+float estimateVariance(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean, int filter_extent) {
+    const int k = filter_extent;
     const tgt::ivec3 extent(k);
     const tgt::ivec3 start(extent);
     const tgt::ivec3 end(tgt::ivec3(img.getDimensions()) - extent);
@@ -155,10 +155,13 @@ float estimateVariance3x3x3(const VolumeAtomic<float>& img, const VolumeAtomic<f
         float diff = estimation - val;
 
         sumOfDifferences += diff * diff;
+        tgtAssert(sumOfDifferences >= 0, "Invalid variance");
     }
     float neighborhoodFactor = static_cast<float>(numNeighborhoodVoxels)/static_cast<float>(numNeighborhoodVoxels-1);
+    tgtAssert(neighborhoodFactor >= 0, "Invalid variance");
 
     float varianceEstimation = sumOfDifferences/numVoxels * neighborhoodFactor;
+    tgtAssert(varianceEstimation >= 0, "Invalid variance");
 
     return varianceEstimation;
 }

@@ -32,7 +32,7 @@ namespace voreen {
 
 VolumeAtomic<float> meanFilter3x3x3(const VolumeAtomic<float>& img);
 VolumeAtomic<float> medianFilter3x3x3(const VolumeAtomic<float>& img);
-float estimateVariance3x3x3(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean);
+float estimateVariance(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean, int filter_extent);
 VolumeAtomic<float> toVolumeAtomicFloat(const VolumeRAM& img);
 VolumeAtomic<float> applyRWM(const VolumeAtomic<float>& vol, RealWorldMapping rwm);
 VolumeAtomic<float> applyRWM(const VolumeRAM& vol, RealWorldMapping rwm);

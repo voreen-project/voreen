@@ -66,20 +66,18 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
 
     if(input.useAdaptiveParameterSetting_) {
         switch(input.noiseModel_) {
-            case RW_NOISE_GAUSSIAN:
-                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN>(input, {});
             case RW_NOISE_GAUSSIAN_BIAN_MEAN:
                 return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN_BIAN_MEAN>(input, {});
             case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
                 return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN_BIAN_MEDIAN>(input, {});
-            case RW_NOISE_TTEST: {
+            case RW_NOISE_TTEST:
                 return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_TTEST>(input, {input.parameterEstimationNeighborhoodExtent_});
-            }
-            case RW_NOISE_VARIABLE_GAUSSIAN: {
-                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_VARIABLE_GAUSSIAN>(input, {input.parameterEstimationNeighborhoodExtent_});
-            }
+            case RW_NOISE_GAUSSIAN:
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN>(input, {input.parameterEstimationNeighborhoodExtent_});
             case RW_NOISE_POISSON:
                 return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_POISSON>(input, {input.parameterEstimationNeighborhoodExtent_});
+            case RW_NOISE_VARIABLE_GAUSSIAN:
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_VARIABLE_GAUSSIAN>(input, {input.parameterEstimationNeighborhoodExtent_});
             default:
                 tgtAssert(false, "Invalid noise model");
         }

@@ -1325,9 +1325,6 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             {
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
                 switch (input.noiseModel_) {
-                    case RW_NOISE_GAUSSIAN:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
-                        break;
                     case RW_NOISE_GAUSSIAN_BIAN_MEAN:
                         newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
@@ -1336,6 +1333,12 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                         break;
                     case RW_NOISE_TTEST:
                         newBrickAddr = processOctreeBrick<RW_NOISE_TTEST>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        break;
+                    case RW_NOISE_GAUSSIAN:
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        break;
+                    case RW_NOISE_VARIABLE_GAUSSIAN:
+                        newBrickAddr = processOctreeBrick<RW_NOISE_VARIABLE_GAUSSIAN>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_POISSON:
                         newBrickAddr = processOctreeBrick<RW_NOISE_POISSON>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
