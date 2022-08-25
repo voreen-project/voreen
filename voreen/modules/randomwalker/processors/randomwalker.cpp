@@ -118,7 +118,7 @@ RandomWalker::RandomWalker()
     outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false),
     outportEdgeWeights_(Port::OUTPORT, "volume.edgeweights", "volume.edgeweights", false),
     usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED),
-    useAdaptiveParameterSetting_("useAdaptiveParameterSetting", "Use Adaptive Weight Functions", false),
+    useAdaptiveParameterSetting_("useAdaptiveParameterSetting", "Use Automatic Weight Functions", false),
     noiseModel_("noiseModel", "Noise Model"),
     beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
