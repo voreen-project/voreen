@@ -188,7 +188,7 @@ OctreeWalker::OctreeWalker()
         ON_CHANGE_LAMBDA(noiseModel_, [this] () {
             RWNoiseModel m = noiseModel_.getValue();
             betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_GAUSSIAN_BIAN_MEAN || m == RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
-            parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST);
+            parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST || m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_VARIABLE_GAUSSIAN);
         });
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
