@@ -73,10 +73,10 @@ struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
     float diff_variance_inv;
 
     RWNoiseModelWeights(RWNoiseModelWeights&&) = default;
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         float voxelIntensity = mean.voxel(voxel);
         float neighborIntensity = mean.voxel(neighbor);
-        float beta = 2.0f * betaBias * diff_variance_inv;
+        float beta = 2.0f * diff_variance_inv;
         float intDiff = (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
@@ -113,10 +113,10 @@ struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
     VolumeAtomic<float> mean;
     float diff_variance_inv;
 
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         float voxelIntensity = mean.voxel(voxel);
         float neighborIntensity = mean.voxel(neighbor);
-        float beta = 2.0f * betaBias * diff_variance_inv;
+        float beta = 2.0f * diff_variance_inv;
         float intDiff = (voxelIntensity - neighborIntensity);
         float intDiffSqr = intDiff*intDiff;
         float weight = exp(-beta * intDiffSqr);
@@ -163,7 +163,7 @@ struct RWNoiseModelWeights<RW_NOISE_TTEST> {
     VolumeAtomic<tgt::ivec3> best_centers;
     int filter_extent;
 
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         return evalTTest(image, best_centers, voxel, neighbor, filter_extent);
     }
 };
@@ -192,7 +192,7 @@ struct RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> {
     VolumeAtomic<float> image;
     VolumeAtomic<tgt::ivec3> best_centers;
     int filter_extent;
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         return evalVariableGaussian(image, best_centers, voxel, neighbor, filter_extent);
     }
 };
@@ -224,7 +224,7 @@ struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN> {
     float variance_inv;
     int filter_extent;
 
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         return evalConstGaussian(values, best_centers, variance_inv, voxel, neighbor, filter_extent);
     }
 };
@@ -264,7 +264,7 @@ struct RWNoiseModelWeights<RW_NOISE_POISSON> {
     VolumeAtomic<tgt::ivec3> best_centers;
     int filter_extent;
 
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         return evalPoisson(values, best_centers, voxel, neighbor, filter_extent);
     }
 };

@@ -93,7 +93,6 @@ struct OctreeWalkerInput {
     std::vector<PortDataPointer<Geometry>> foregroundGeomSeeds_;
     std::vector<PortDataPointer<Geometry>> backgroundGeomSeeds_;
     int minWeight_;
-    int betaBias_;
     int parameterEstimationNeighborhoodExtent_;
     const VoreenBlas* blas_;
     VoreenBlas::ConjGradPreconditioner precond_;
@@ -169,7 +168,6 @@ private:
 
     OptionProperty<RWNoiseModel> noiseModel_;
     IntProperty minEdgeWeight_;
-    IntProperty betaBias_;
     IntProperty parameterEstimationNeighborhoodExtent_;
     StringOptionProperty preconditioner_;
     IntProperty errorThreshold_;

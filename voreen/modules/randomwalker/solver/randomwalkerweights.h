@@ -91,7 +91,7 @@ struct RandomWalkerEdgeWeightAdaptive: public RandomWalkerEdgeWeight {
     {
     }
     float edgeWeight(const tgt::ivec3& voxel, const tgt::ivec3& neighbor) {
-        float weight = model_.getEdgeWeight(voxel, neighbor, 1.0f);
+        float weight = model_.getEdgeWeight(voxel, neighbor);
         return std::max(minWeight_, weight);
     }
 private:

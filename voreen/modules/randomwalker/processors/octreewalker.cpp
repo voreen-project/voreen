@@ -154,7 +154,6 @@ OctreeWalker::OctreeWalker()
     , outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false)
     , noiseModel_("noiseModel", "Noise Model")
     , minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10)
-    , betaBias_("betaBias", "Beta Bias: 2^v", 0, -10, 10, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , parameterEstimationNeighborhoodExtent_("parameterEstimationNeighborhoodExtent", "Extent", 1, 1, 3)
     , preconditioner_("preconditioner", "Preconditioner")
     , errorThreshold_("errorThreshold", "Error Threshold: 10^(-t)", 2, 0, 10)
@@ -187,15 +186,11 @@ OctreeWalker::OctreeWalker()
         noiseModel_.setGroupID("rwparam");
         ON_CHANGE_LAMBDA(noiseModel_, [this] () {
             RWNoiseModel m = noiseModel_.getValue();
-            betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_GAUSSIAN_BIAN_MEAN || m == RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
             parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST || m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_VARIABLE_GAUSSIAN);
         });
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
         minEdgeWeight_.setTracking(false);
-    addProperty(betaBias_);
-        betaBias_.setGroupID("rwparam");
-        betaBias_.setTracking(false);
     addProperty(parameterEstimationNeighborhoodExtent_);
         parameterEstimationNeighborhoodExtent_.setGroupID("rwparam");
         parameterEstimationNeighborhoodExtent_.setTracking(false);
@@ -434,7 +429,6 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         inportForegroundSeeds_.getThreadSafeAllData(),
         inportBackgroundSeeds_.getThreadSafeAllData(),
         minEdgeWeight_.get(),
-        betaBias_.get(),
         parameterEstimationNeighborhoodExtent_.get(),
         voreenBlas,
         precond,
@@ -895,11 +889,11 @@ private:
 };
 
 template<RWNoiseModel NoiseModel>
-static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RWNoiseModelWeights<NoiseModel>& model, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
+static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RWNoiseModelWeights<NoiseModel>& model, const tgt::svec3& volDim, float minWeight, tgt::vec3 spacing) {
 
     float minSpacing = tgt::min(spacing);
     auto edgeWeight = [&] (tgt::vec3 voxel, tgt::vec3 neighbor) {
-        float weight = model.getEdgeWeight(voxel, neighbor, betaBias);
+        float weight = model.getEdgeWeight(voxel, neighbor);
         weight = std::max(weight, minWeight);
 
         return weight;
@@ -1093,7 +1087,6 @@ static uint64_t processOctreeBrick(RWNoiseModelParameters<NoiseModel> parameters
     ProfileAllocation profmatrows(ramProfiler, 7 * systemSize * sizeof(size_t));
 
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minWeight_));
-    float betaBias = pow(2.f, static_cast<float>(input.betaBias_));
 
     auto rwm = input.volume_.getRealWorldMapping();
 
@@ -1105,7 +1098,7 @@ static uint64_t processOctreeBrick(RWNoiseModelParameters<NoiseModel> parameters
 
     tgt::vec3 spacing = input.volume_.getSpacing();
 
-    processVoxelWeights<NoiseModel>(seeds, mat, vec.data(), volIndexToRow.data(), model, walkerBlockDim, minWeight, betaBias, spacing);
+    processVoxelWeights<NoiseModel>(seeds, mat, vec.data(), volIndexToRow.data(), model, walkerBlockDim, minWeight, spacing);
 
     for(int i=0; i<10; ++i) {
         int iterations;
