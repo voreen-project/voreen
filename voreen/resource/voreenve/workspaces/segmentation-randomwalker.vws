@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="RandomWalker" ref="ref6" />
+                        <item type="SingleVolumeRaycaster" ref="ref8" />
                     </values>
                 </MetaItem>
                 <MetaItem name="Zoom" type="ZoomMetaData">
@@ -25,13 +25,13 @@
                 <Processor type="Canvas" name="Canvas" id="ref36">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-263" y="919" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="400" y="25" width="1405" height="1189" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="0" y="0" width="1501" height="1147" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="0" />
                         </MetaItem>
                         <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
-                            <value x="1405" y="1189" />
+                            <value x="1501" y="1147" />
                         </MetaItem>
                         <MetaItem name="preferedDevelopmentCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedDevelopmentCanvasPosition" type="IVec2MetaData">
@@ -42,15 +42,15 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="400" y="25" />
+                            <value x="131" y="194" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
-                            <value x="1405" y="1189" />
+                            <value x="1501" y="1130" />
                         </MetaItem>
                     </MetaData>
                     <Properties>
                         <Property mapKey="canvasSize" name="canvasSize">
-                            <value x="1405" y="1189" />
+                            <value x="1501" y="1147" />
                         </Property>
                         <Property mapKey="saveScreenshot" name="saveScreenshot" />
                         <Property mapKey="screenshotFilename" name="screenshotFilename" watchMode="1" fileWatchEnabled="false">
@@ -64,7 +64,7 @@
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref119">
-                                    <value x="1405" y="1189" />
+                                    <value x="1501" y="1147" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -85,36 +85,36 @@
                         </Property>
                         <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
                         <Property mapKey="maximized" name="maximized" value="0" />
-                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseAction="103" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="showGrid" name="showGrid" value="true" />
                     </Properties>
                     <Inports>
                         <Port name="inport1" direction="1" portID="inport1" guiName="Image1 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport1.renderSizeOrigin" name="inport1.renderSizeOrigin" id="ref115">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport2" direction="1" portID="inport2" guiName="Image2 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport2.renderSizeOrigin" name="inport2.renderSizeOrigin" id="ref129">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport3" direction="1" portID="inport3" guiName="Image3 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport3.renderSizeOrigin" name="inport3.renderSizeOrigin" id="ref121">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
                         <Port name="inport4" direction="1" portID="inport4" guiName="Image4 Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="inport4.renderSizeOrigin" name="inport4.renderSizeOrigin" id="ref123">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -124,7 +124,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="outport.renderSizeReceive" name="outport.renderSizeReceive" id="ref120">
-                                    <value x="1405" y="1189" />
+                                    <value x="1501" y="1147" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -140,13 +140,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="false" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref109">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028031873" id="ref109">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="722" y="373" />
                             </MetaData>
-                            <position x="1.480469465" y="2.973496437" z="1.162559271" />
+                            <position x="-2.931365013" y="0.74305445" z="-1.841363668" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="-0.302473158" y="-0.29094696" z="0.907667339" />
+                            <upVector x="0.179292336" y="0.953143895" z="0.243661657" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -176,12 +176,13 @@
                             </components>
                         </Property>
                         <Property mapKey="renderGeometries" name="renderGeometries" value="true" />
+                        <Property mapKey="useFloatRenderTargets" name="useFloatRenderTargets" value="false" />
                     </Properties>
                     <Inports>
                         <Port name="image.input" direction="1" portID="image.input" guiName="Image Input" allowMultipleConnections="false" invalidationLevel="1">
                             <Properties>
                                 <Property mapKey="image.input.renderSizeOrigin" name="image.input.renderSizeOrigin" id="ref117">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -191,7 +192,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.output.renderSizeReceive" name="image.output.renderSizeReceive" id="ref116">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -206,18 +207,18 @@
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="false" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="false" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="false" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="false" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="false" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="false" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="false" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="31" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="false" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="31" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="false" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="31" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="false" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="false" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="false" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="false" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="false" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="false" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="false" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="false" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -256,7 +257,7 @@
                         <Property mapKey="yColor" name="yColor" id="ref41">
                             <value x="0" y="1" z="0" w="1" />
                         </Property>
-                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="49" id="ref112" />
+                        <Property mapKey="ySliceIndex" name="ySliceIndex" value="54" id="ref112" />
                         <Property mapKey="zColor" name="zColor" id="ref43">
                             <value x="0" y="0" z="1" w="1" />
                         </Property>
@@ -308,15 +309,15 @@
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
                         <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
-                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="17" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseAction="18" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref69">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.191919178" y="0" z="0" w="114.863639832" />
-                            <value.row2 x="0" y="0.191919193" z="0" w="0.075777411" />
+                            <value.row1 x="-0.198952883" y="0" z="0" w="122.107337952" />
+                            <value.row2 x="0" y="0.198952883" z="0" w="0.075777411" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="renderLegend" name="renderLegend" value="false" />
@@ -418,7 +419,7 @@
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref124">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -428,12 +429,12 @@
                     <InteractionHandlers>
                         <Handler name="mouseWheelHandler">
                             <Properties>
-                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="2" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="2" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="zoomHandler">
                             <Properties>
-                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseAction="23" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -495,13 +496,15 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="minEdgeWeight" name="minEdgeWeight" value="5" tracking="false" />
                         <Property mapKey="noiseModel" name="noiseModel" value="gaussian" />
+                        <Property mapKey="parameterEstimationNeighborhoodExtent" name="parameterEstimationNeighborhoodExtent" value="1" />
                         <Property mapKey="preconditioner" name="preconditioner" value="jacobi" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="resampleOutputVolumes" name="resampleOutputVolumes" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="28.910 sec remaining" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.775 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="useAdaptiveParameterSetting" name="useAdaptiveParameterSetting" value="false" />
+                        <Property mapKey="useAdaptiveParameterSetting" name="useAdaptiveParameterSetting" value="true" />
                         <Property mapKey="usePrevProbAsInitialization" name="usePrevProbAsInitialization" value="false" />
                     </Properties>
                     <Inports>
@@ -563,7 +566,7 @@
                         <Property mapKey="boundingBoxColor" name="boundingBoxColor">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="0.800000012" />
                         </Property>
-                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="clearROIs" name="clearROIs" id="ref137" />
                         <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
                         <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
                         <Property mapKey="fillRegions" name="fillRegions" value="false" />
@@ -578,14 +581,14 @@
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
-                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
-                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="0" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref57">
                             <value x="0" y="1" z="1" w="1" />
@@ -597,6 +600,7 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -606,8 +610,8 @@
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref71">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.191919178" y="0" z="0" w="114.863639832" />
-                            <value.row2 x="0" y="0.191919193" z="0" w="0.075777411" />
+                            <value.row1 x="-0.198952883" y="0" z="0" w="122.107337952" />
+                            <value.row2 x="0" y="0.198952883" z="0" w="0.075777411" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -646,57 +650,7 @@
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
-                    <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="66" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="343" y="140" />
-                                <item x="346" y="139" />
-                                <item x="353" y="131" />
-                                <item x="358" y="124" />
-                                <item x="368" y="113" />
-                                <item x="378" y="103" />
-                                <item x="390" y="92" />
-                                <item x="402" y="79" />
-                                <item x="413" y="70" />
-                                <item x="418" y="65" />
-                                <item x="419" y="63" />
-                                <item x="422" y="61" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row1 x="-0.186775669" y="0" z="0" w="103.999641418" />
-                            <trafoMatrix.row2 x="0" y="0.18708609" z="0" w="0" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="0" y="1" z="1" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                        <Region type="RegionOfInterestGeometry" layer="66" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="409" y="569" />
-                                <item x="407" y="568" />
-                                <item x="398" y="564" />
-                                <item x="395" y="561" />
-                                <item x="381" y="548" />
-                                <item x="371" y="539" />
-                                <item x="358" y="530" />
-                                <item x="347" y="520" />
-                                <item x="337" y="508" />
-                                <item x="328" y="497" />
-                                <item x="323" y="476" />
-                                <item x="321" y="471" />
-                                <item x="319" y="458" />
-                                <item x="318" y="456" />
-                                <item x="318" y="454" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row1 x="-0.186775669" y="0" z="0" w="103.999641418" />
-                            <trafoMatrix.row2 x="0" y="0.18708609" z="0" w="0" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="0" y="1" z="1" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                    </RegionsOfInterest>
+                    <RegionsOfInterest />
                 </Processor>
                 <Processor type="Compositor" name="Slice+Overlays (X)" id="ref14">
                     <MetaData>
@@ -747,7 +701,7 @@
                         <Property mapKey="boundingBoxColor" name="boundingBoxColor">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="0.800000012" />
                         </Property>
-                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="clearROIs" name="clearROIs" id="ref134" />
                         <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
                         <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
                         <Property mapKey="fillRegions" name="fillRegions" value="false" />
@@ -762,13 +716,13 @@
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
-                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
-                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
                         <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref54">
@@ -781,6 +735,7 @@
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -790,8 +745,8 @@
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref70">
                             <value.row0 x="0" y="0" z="1" w="0" />
-                            <value.row1 x="-0.191919178" y="0" z="0" w="114.863639832" />
-                            <value.row2 x="0" y="0.191919193" z="0" w="0.075777411" />
+                            <value.row1 x="-0.198952883" y="0" z="0" w="122.107337952" />
+                            <value.row2 x="0" y="0.198952883" z="0" w="0.075777411" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -833,32 +788,21 @@
                     <RegionsOfInterest>
                         <Region type="RegionOfInterestGeometry" layer="66" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="226" y="373" />
-                                <item x="226" y="369" />
-                                <item x="228" y="361" />
-                                <item x="228" y="357" />
-                                <item x="231" y="345" />
-                                <item x="235" y="331" />
-                                <item x="241" y="315" />
-                                <item x="249" y="301" />
-                                <item x="256" y="289" />
-                                <item x="266" y="277" />
-                                <item x="278" y="265" />
-                                <item x="289" y="259" />
-                                <item x="296" y="256" />
-                                <item x="319" y="253" />
-                                <item x="337" y="252" />
-                                <item x="354" y="252" />
-                                <item x="370" y="252" />
-                                <item x="385" y="252" />
-                                <item x="396" y="252" />
-                                <item x="403" y="253" />
-                                <item x="409" y="253" />
+                                <item x="395" y="346" />
+                                <item x="395" y="344" />
+                                <item x="397" y="342" />
+                                <item x="397" y="340" />
+                                <item x="399" y="338" />
+                                <item x="399" y="336" />
+                                <item x="399" y="334" />
+                                <item x="399" y="332" />
+                                <item x="400" y="329" />
+                                <item x="400" y="326" />
                             </points>
-                            <viewport x="605" y="604" />
+                            <viewport x="750" y="573" />
                             <trafoMatrix.row0 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row1 x="-0.186775669" y="0" z="0" w="103.999641418" />
-                            <trafoMatrix.row2 x="0" y="0.18708609" z="0" w="0" />
+                            <trafoMatrix.row1 x="-0.198952883" y="0" z="0" w="122.107337952" />
+                            <trafoMatrix.row2 x="0" y="0.198952883" z="0" w="0.075777411" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="1" y="0.196078002" z="0" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
@@ -1216,15 +1160,15 @@ void main() {
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
                         <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
-                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="17" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseAction="18" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref72">
-                            <value.row0 x="0.191919193" y="0" z="0" w="-6.742422581" />
+                            <value.row0 x="0.198952883" y="0" z="0" w="-13.98611927" />
                             <value.row1 x="0" y="0" z="1" w="0" />
-                            <value.row2 x="0" y="0.191919193" z="0" w="-0.691919327" />
+                            <value.row2 x="0" y="0.198952883" z="0" w="-0.691919327" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                         <Property mapKey="renderLegend" name="renderLegend" value="false" />
@@ -1237,10 +1181,10 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref95" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="49" id="ref65" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="54" id="ref65" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="27" y="49" z="109" />
+                            <value x="-1" y="-1" z="-1" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" guiName="Transfer Function (XZ)" domainFittingStrategy="1" computeHistogram="true" id="ref79">
@@ -1326,7 +1270,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref122">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1336,12 +1280,12 @@ void main() {
                     <InteractionHandlers>
                         <Handler name="mouseWheelHandler">
                             <Properties>
-                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="2" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="2" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="zoomHandler">
                             <Properties>
-                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseAction="23" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -1355,7 +1299,7 @@ void main() {
                         <Property mapKey="boundingBoxColor" name="boundingBoxColor">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="0.800000012" />
                         </Property>
-                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="clearROIs" name="clearROIs" id="ref133" />
                         <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
                         <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
                         <Property mapKey="fillRegions" name="fillRegions" value="false" />
@@ -1370,25 +1314,26 @@ void main() {
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
-                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
-                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
                         <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref55">
                             <value x="1" y="0.196078002" z="0" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="49" id="ref63" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="54" id="ref63" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -1397,9 +1342,9 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref73">
-                            <value.row0 x="0.191919193" y="0" z="0" w="-6.742422581" />
+                            <value.row0 x="0.198952883" y="0" z="0" w="-13.98611927" />
                             <value.row1 x="0" y="0" z="1" w="0" />
-                            <value.row2 x="0" y="0.191919193" z="0" w="-0.691919327" />
+                            <value.row2 x="0" y="0.198952883" z="0" w="-0.691919327" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1439,26 +1384,24 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="49" geometryMode="2" size="3" antialiasing="false">
+                        <Region type="RegionOfInterestGeometry" layer="54" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="251" y="282" />
-                                <item x="256" y="277" />
-                                <item x="266" y="268" />
-                                <item x="277" y="260" />
-                                <item x="291" y="255" />
-                                <item x="306" y="251" />
-                                <item x="313" y="251" />
-                                <item x="331" y="251" />
-                                <item x="351" y="251" />
-                                <item x="368" y="251" />
-                                <item x="386" y="252" />
-                                <item x="400" y="254" />
-                                <item x="405" y="255" />
+                                <item x="372" y="269" />
+                                <item x="372" y="266" />
+                                <item x="373" y="262" />
+                                <item x="374" y="257" />
+                                <item x="378" y="248" />
+                                <item x="379" y="243" />
+                                <item x="380" y="240" />
+                                <item x="381" y="237" />
+                                <item x="382" y="235" />
+                                <item x="384" y="233" />
+                                <item x="385" y="231" />
                             </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
+                            <viewport x="750" y="573" />
+                            <trafoMatrix.row0 x="0.198952883" y="0" z="0" w="-13.98611927" />
                             <trafoMatrix.row1 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row2 x="0" y="0.209714368" z="0" w="-6.833739281" />
+                            <trafoMatrix.row2 x="0" y="0.198952883" z="0" w="-0.691919327" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="1" y="0.196078002" z="0" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
@@ -1491,9 +1434,9 @@ void main() {
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
                         <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
-                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="false" mouseAction="3" mouseButtons="1" keyCode="0" modifier="192" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="false" mouseAction="17" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseAction="18" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="false" mouseButtons="1" keyCode="0" modifier="192" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="false" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix">
@@ -1610,7 +1553,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref128">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1620,12 +1563,12 @@ void main() {
                     <InteractionHandlers>
                         <Handler name="mouseWheelHandler">
                             <Properties>
-                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="zoomHandler">
                             <Properties>
-                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="false" mouseAction="23" mouseButtons="98" keyCode="0" modifier="192" shareEvents="false" />
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="false" mouseButtons="98" keyCode="0" modifier="192" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -1639,7 +1582,7 @@ void main() {
                         <Property mapKey="boundingBoxColor" name="boundingBoxColor">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="0.800000012" />
                         </Property>
-                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="clearROIs" name="clearROIs" id="ref136" />
                         <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
                         <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
                         <Property mapKey="fillRegions" name="fillRegions" value="false" />
@@ -1654,25 +1597,26 @@ void main() {
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
-                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
-                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref58">
                             <value x="0" y="1" z="1" w="1" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="49" id="ref64" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="54" id="ref64" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -1681,9 +1625,9 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref74">
-                            <value.row0 x="0.191919193" y="0" z="0" w="-6.742422581" />
+                            <value.row0 x="0.198952883" y="0" z="0" w="-13.98611927" />
                             <value.row1 x="0" y="0" z="1" w="0" />
-                            <value.row2 x="0" y="0.191919193" z="0" w="-0.691919327" />
+                            <value.row2 x="0" y="0.198952883" z="0" w="-0.691919327" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
                     </Properties>
@@ -1723,45 +1667,52 @@ void main() {
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="49" geometryMode="2" size="3" antialiasing="false">
+                        <Region type="RegionOfInterestGeometry" layer="54" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="63" y="404" />
-                                <item x="63" y="390" />
-                                <item x="63" y="367" />
-                                <item x="62" y="340" />
-                                <item x="56" y="293" />
-                                <item x="55" y="269" />
-                                <item x="54" y="251" />
-                                <item x="53" y="241" />
-                                <item x="53" y="234" />
-                                <item x="53" y="231" />
+                                <item x="215" y="418" />
+                                <item x="218" y="420" />
+                                <item x="220" y="422" />
+                                <item x="223" y="423" />
+                                <item x="229" y="427" />
+                                <item x="233" y="430" />
+                                <item x="237" y="432" />
+                                <item x="241" y="434" />
+                                <item x="244" y="436" />
+                                <item x="248" y="438" />
+                                <item x="252" y="441" />
+                                <item x="257" y="443" />
+                                <item x="262" y="447" />
+                                <item x="266" y="449" />
+                                <item x="273" y="453" />
+                                <item x="281" y="457" />
+                                <item x="290" y="461" />
+                                <item x="301" y="468" />
+                                <item x="311" y="474" />
+                                <item x="322" y="481" />
+                                <item x="334" y="486" />
+                                <item x="345" y="492" />
+                                <item x="357" y="497" />
+                                <item x="366" y="502" />
+                                <item x="377" y="506" />
+                                <item x="388" y="511" />
+                                <item x="401" y="516" />
+                                <item x="413" y="521" />
+                                <item x="426" y="524" />
+                                <item x="440" y="528" />
+                                <item x="456" y="533" />
+                                <item x="473" y="539" />
+                                <item x="487" y="542" />
+                                <item x="503" y="546" />
+                                <item x="514" y="549" />
+                                <item x="522" y="552" />
+                                <item x="525" y="553" />
+                                <item x="527" y="553" />
+                                <item x="529" y="554" />
                             </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
+                            <viewport x="750" y="573" />
+                            <trafoMatrix.row0 x="0.198952883" y="0" z="0" w="-13.98611927" />
                             <trafoMatrix.row1 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row2 x="0" y="0.209714368" z="0" w="-6.833739281" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="0" y="1" z="1" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                        <Region type="RegionOfInterestGeometry" layer="49" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="563" y="289" />
-                                <item x="563" y="281" />
-                                <item x="563" y="259" />
-                                <item x="563" y="231" />
-                                <item x="563" y="199" />
-                                <item x="562" y="171" />
-                                <item x="561" y="141" />
-                                <item x="560" y="128" />
-                                <item x="560" y="122" />
-                                <item x="560" y="117" />
-                                <item x="560" y="115" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row2 x="0" y="0.209714368" z="0" w="-6.833739281" />
+                            <trafoMatrix.row2 x="0" y="0.198952883" z="0" w="-0.691919327" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="0" y="1" z="1" w="1" />
                             <maskColor x="1" y="1" z="1" w="1" />
@@ -1794,9 +1745,9 @@ void main() {
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
                         <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
-                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="false" mouseAction="3" mouseButtons="1" keyCode="0" modifier="192" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="false" mouseAction="17" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseAction="18" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="false" mouseButtons="1" keyCode="0" modifier="192" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="false" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix">
@@ -1815,7 +1766,7 @@ void main() {
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xz-plane" id="ref96" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="49" id="ref83" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (XZ)" value="54" id="ref83" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -1913,7 +1864,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref127">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -1923,12 +1874,12 @@ void main() {
                     <InteractionHandlers>
                         <Handler name="mouseWheelHandler">
                             <Properties>
-                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="zoomHandler">
                             <Properties>
-                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="false" mouseAction="23" mouseButtons="98" keyCode="0" modifier="192" shareEvents="false" />
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="false" mouseButtons="98" keyCode="0" modifier="192" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -2324,14 +2275,14 @@ void main() {
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
                         <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
-                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseAction="3" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseAction="17" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseAction="18" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix" id="ref75">
-                            <value.row0 x="0.182336181" y="0" z="0" w="-0.135326862" />
-                            <value.row1 x="0" y="-0.182336181" z="0" w="98.007125854" />
+                            <value.row0 x="0.170666665" y="0" z="0" w="-0.135326833" />
+                            <value.row1 x="0" y="-0.170666665" z="0" w="92.749282837" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -2348,7 +2299,7 @@ void main() {
                         <Property mapKey="sliceIndex" name="sliceIndex" guiName="Slice Number (YZ)" value="59" id="ref66" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
-                            <value x="-1" y="-1" z="-1" />
+                            <value x="4" y="86" z="59" />
                         </Property>
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" guiName="Transfer Function (YZ)" domainFittingStrategy="1" computeHistogram="true" id="ref80">
@@ -2446,7 +2397,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref131">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -2456,12 +2407,12 @@ void main() {
                     <InteractionHandlers>
                         <Handler name="mouseWheelHandler">
                             <Properties>
-                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="2" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="2" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="zoomHandler">
                             <Properties>
-                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseAction="23" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -2475,7 +2426,7 @@ void main() {
                         <Property mapKey="boundingBoxColor" name="boundingBoxColor">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="0.800000012" />
                         </Property>
-                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="clearROIs" name="clearROIs" guiName="Clear Foreground Seeds" id="ref132" />
                         <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
                         <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
                         <Property mapKey="fillRegions" name="fillRegions" value="false" />
@@ -2490,14 +2441,14 @@ void main() {
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
-                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
-                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseAction="2" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseButtons="4" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="0" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref56">
                             <value x="1" y="0.196078002" z="0" w="1" />
@@ -2509,6 +2460,7 @@ void main() {
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -2517,8 +2469,8 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref76">
-                            <value.row0 x="0.182336181" y="0" z="0" w="-0.135326862" />
-                            <value.row1 x="0" y="-0.182336181" z="0" w="98.007125854" />
+                            <value.row0 x="0.170666665" y="0" z="0" w="-0.135326833" />
+                            <value.row1 x="0" y="-0.170666665" z="0" w="92.749282837" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -2558,73 +2510,7 @@ void main() {
                     <CoProcessorInports />
                     <CoProcessorOutports />
                     <InteractionHandlers />
-                    <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="242" y="306" />
-                                <item x="246" y="301" />
-                                <item x="256" y="291" />
-                                <item x="263" y="285" />
-                                <item x="277" y="269" />
-                                <item x="291" y="255" />
-                                <item x="303" y="244" />
-                                <item x="310" y="238" />
-                                <item x="313" y="235" />
-                                <item x="314" y="233" />
-                            </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="-0.209366396" z="0" w="110.728652954" />
-                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="1" y="0.196078002" z="0" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="412" y="360" />
-                                <item x="414" y="359" />
-                                <item x="415" y="357" />
-                                <item x="417" y="353" />
-                                <item x="421" y="349" />
-                                <item x="425" y="344" />
-                                <item x="428" y="339" />
-                                <item x="432" y="334" />
-                                <item x="436" y="330" />
-                                <item x="439" y="327" />
-                                <item x="442" y="323" />
-                                <item x="445" y="321" />
-                                <item x="447" y="318" />
-                                <item x="449" y="316" />
-                                <item x="451" y="314" />
-                                <item x="453" y="312" />
-                                <item x="455" y="310" />
-                                <item x="456" y="308" />
-                                <item x="458" y="307" />
-                                <item x="459" y="305" />
-                                <item x="461" y="303" />
-                                <item x="463" y="301" />
-                                <item x="464" y="299" />
-                                <item x="465" y="297" />
-                                <item x="466" y="295" />
-                                <item x="468" y="292" />
-                                <item x="470" y="290" />
-                                <item x="471" y="288" />
-                                <item x="472" y="286" />
-                                <item x="473" y="284" />
-                                <item x="474" y="282" />
-                                <item x="475" y="280" />
-                                <item x="476" y="278" />
-                            </points>
-                            <viewport x="703" y="574" />
-                            <trafoMatrix.row0 x="0.182076812" y="0" z="0" w="-0.5" />
-                            <trafoMatrix.row1 x="0" y="-0.182076812" z="0" w="99.75604248" />
-                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="1" y="0.196078002" z="0" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                    </RegionsOfInterest>
+                    <RegionsOfInterest />
                 </Processor>
                 <Processor type="RegionOfInterest2D" name="ROI Background (Z)" id="ref27">
                     <MetaData>
@@ -2635,7 +2521,7 @@ void main() {
                         <Property mapKey="boundingBoxColor" name="boundingBoxColor">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="0.800000012" />
                         </Property>
-                        <Property mapKey="clearROIs" name="clearROIs" />
+                        <Property mapKey="clearROIs" name="clearROIs" guiName="Clear Background Seeds" id="ref135" />
                         <Property mapKey="deleteLastRoi" name="deleteLastRoi" />
                         <Property mapKey="deleteLastRoiInSlice" name="deleteLastRoiInSlice" />
                         <Property mapKey="fillRegions" name="fillRegions" value="false" />
@@ -2650,14 +2536,14 @@ void main() {
                             <value x="1" y="1" z="1" w="1" />
                         </Property>
                         <Property mapKey="minRoiPointDistance" name="minRoiPointDistance" value="2" />
-                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseAction="7" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseAction="8" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
-                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseAction="2" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseAction="2" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
-                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseAction="2" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
-                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseAction="7" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseAction="7" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
-                        <Property mapKey="numberOfRois" name="numberOfRois" value="2" />
+                        <Property mapKey="mouseEvent.addROI" name="mouseEvent.addROI" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.clearROIs" name="mouseEvent.clearROIs" enabled="false" mouseButtons="1" keyCode="0" modifier="2" shareEvents="true" />
+                        <Property mapKey="mouseEvent.removeClosestROIInCurSlice_" name="mouseEvent.removeClosestROIInCurSlice_" enabled="true" mouseButtons="4" keyCode="0" modifier="1" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROI" name="mouseEvent.removeLastROI" enabled="false" mouseButtons="4" keyCode="0" modifier="4" shareEvents="false" />
+                        <Property mapKey="mouseEvent.removeLastROIInCurSlice" name="mouseEvent.removeLastROIInCurSlice" enabled="false" mouseButtons="2" keyCode="0" modifier="2" shareEvents="false" />
+                        <Property mapKey="mouseEvent.scaleROI" name="mouseEvent.scaleROI" enabled="false" mouseButtons="4" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="mouseEvent.shiftROI" name="mouseEvent.shiftROI" enabled="false" mouseButtons="1" keyCode="0" modifier="768" shareEvents="false" />
+                        <Property mapKey="numberOfRois" name="numberOfRois" value="1" />
                         <Property mapKey="renderCurrentLayerOnly" name="renderCurrentLayerOnly" value="true" />
                         <Property mapKey="roiColor" name="roiColor" id="ref59">
                             <value x="0" y="1" z="1" w="1" />
@@ -2669,6 +2555,7 @@ void main() {
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -2677,8 +2564,8 @@ void main() {
                         </Property>
                         <Property mapKey="size" name="size" value="3" />
                         <Property mapKey="transformationMatrix" name="transformationMatrix" id="ref77">
-                            <value.row0 x="0.182336181" y="0" z="0" w="-0.135326862" />
-                            <value.row1 x="0" y="-0.182336181" z="0" w="98.007125854" />
+                            <value.row0 x="0.170666665" y="0" z="0" w="-0.135326833" />
+                            <value.row1 x="0" y="-0.170666665" z="0" w="92.749282837" />
                             <value.row2 x="0" y="0" z="1" w="0" />
                             <value.row3 x="0" y="0" z="0" w="1" />
                         </Property>
@@ -2721,149 +2608,47 @@ void main() {
                     <RegionsOfInterest>
                         <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="556" y="505" />
-                                <item x="554" y="505" />
-                                <item x="551" y="504" />
-                                <item x="546" y="504" />
-                                <item x="542" y="504" />
-                                <item x="537" y="502" />
-                                <item x="534" y="502" />
-                                <item x="528" y="502" />
-                                <item x="521" y="501" />
-                                <item x="513" y="501" />
-                                <item x="505" y="499" />
-                                <item x="496" y="499" />
-                                <item x="486" y="498" />
-                                <item x="478" y="498" />
-                                <item x="465" y="497" />
-                                <item x="453" y="496" />
-                                <item x="439" y="492" />
-                                <item x="425" y="491" />
-                                <item x="408" y="487" />
-                                <item x="394" y="483" />
-                                <item x="382" y="481" />
-                                <item x="371" y="478" />
-                                <item x="359" y="476" />
-                                <item x="349" y="474" />
-                                <item x="341" y="471" />
-                                <item x="333" y="466" />
-                                <item x="327" y="462" />
-                                <item x="318" y="458" />
-                                <item x="312" y="454" />
-                                <item x="305" y="448" />
-                                <item x="295" y="443" />
-                                <item x="291" y="441" />
-                                <item x="286" y="439" />
-                                <item x="280" y="437" />
-                                <item x="273" y="436" />
-                                <item x="266" y="432" />
-                                <item x="257" y="430" />
-                                <item x="248" y="428" />
-                                <item x="239" y="426" />
-                                <item x="229" y="425" />
-                                <item x="218" y="425" />
-                                <item x="204" y="425" />
-                                <item x="197" y="425" />
-                                <item x="184" y="424" />
-                                <item x="172" y="422" />
-                                <item x="159" y="421" />
-                                <item x="149" y="417" />
-                                <item x="138" y="414" />
-                                <item x="128" y="410" />
-                                <item x="121" y="405" />
-                                <item x="114" y="399" />
-                                <item x="106" y="392" />
-                                <item x="98" y="385" />
-                                <item x="89" y="375" />
-                                <item x="79" y="364" />
-                                <item x="73" y="359" />
-                                <item x="63" y="347" />
-                                <item x="54" y="335" />
-                                <item x="47" y="323" />
-                                <item x="41" y="310" />
-                                <item x="36" y="298" />
-                                <item x="34" y="291" />
-                                <item x="33" y="285" />
-                                <item x="33" y="280" />
-                                <item x="32" y="277" />
-                                <item x="31" y="274" />
-                                <item x="31" y="271" />
+                                <item x="371" y="426" />
+                                <item x="373" y="426" />
+                                <item x="379" y="429" />
+                                <item x="390" y="434" />
+                                <item x="396" y="438" />
+                                <item x="418" y="447" />
+                                <item x="429" y="452" />
+                                <item x="441" y="457" />
+                                <item x="452" y="462" />
+                                <item x="463" y="467" />
+                                <item x="474" y="470" />
+                                <item x="501" y="478" />
+                                <item x="515" y="482" />
+                                <item x="526" y="485" />
+                                <item x="535" y="488" />
+                                <item x="544" y="491" />
+                                <item x="555" y="493" />
+                                <item x="560" y="494" />
+                                <item x="563" y="496" />
+                                <item x="565" y="497" />
+                                <item x="567" y="498" />
+                                <item x="569" y="498" />
+                                <item x="572" y="500" />
+                                <item x="574" y="501" />
+                                <item x="576" y="502" />
+                                <item x="579" y="503" />
+                                <item x="581" y="504" />
+                                <item x="583" y="505" />
+                                <item x="586" y="507" />
+                                <item x="589" y="508" />
+                                <item x="591" y="509" />
+                                <item x="593" y="510" />
+                                <item x="595" y="511" />
+                                <item x="598" y="512" />
+                                <item x="600" y="513" />
+                                <item x="602" y="514" />
+                                <item x="604" y="515" />
                             </points>
-                            <viewport x="605" y="604" />
-                            <trafoMatrix.row0 x="0.209917352" y="0" z="0" w="0" />
-                            <trafoMatrix.row1 x="0" y="-0.209366396" z="0" w="110.728652954" />
-                            <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
-                            <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
-                            <roiColor x="0" y="1" z="1" w="1" />
-                            <maskColor x="1" y="1" z="1" w="1" />
-                        </Region>
-                        <Region type="RegionOfInterestGeometry" layer="59" geometryMode="2" size="3" antialiasing="false">
-                            <points>
-                                <item x="669" y="189" />
-                                <item x="669" y="187" />
-                                <item x="669" y="185" />
-                                <item x="668" y="183" />
-                                <item x="668" y="181" />
-                                <item x="666" y="179" />
-                                <item x="665" y="177" />
-                                <item x="665" y="175" />
-                                <item x="663" y="173" />
-                                <item x="663" y="171" />
-                                <item x="660" y="166" />
-                                <item x="659" y="164" />
-                                <item x="659" y="162" />
-                                <item x="651" y="151" />
-                                <item x="649" y="147" />
-                                <item x="647" y="144" />
-                                <item x="645" y="142" />
-                                <item x="644" y="140" />
-                                <item x="643" y="138" />
-                                <item x="642" y="136" />
-                                <item x="639" y="134" />
-                                <item x="638" y="132" />
-                                <item x="637" y="130" />
-                                <item x="635" y="129" />
-                                <item x="633" y="127" />
-                                <item x="631" y="124" />
-                                <item x="624" y="118" />
-                                <item x="624" y="116" />
-                                <item x="622" y="115" />
-                                <item x="620" y="113" />
-                                <item x="617" y="111" />
-                                <item x="615" y="109" />
-                                <item x="611" y="107" />
-                                <item x="609" y="105" />
-                                <item x="607" y="103" />
-                                <item x="605" y="101" />
-                                <item x="602" y="99" />
-                                <item x="600" y="98" />
-                                <item x="597" y="95" />
-                                <item x="594" y="93" />
-                                <item x="591" y="90" />
-                                <item x="589" y="90" />
-                                <item x="588" y="88" />
-                                <item x="585" y="86" />
-                                <item x="583" y="84" />
-                                <item x="581" y="82" />
-                                <item x="579" y="81" />
-                                <item x="578" y="79" />
-                                <item x="576" y="78" />
-                                <item x="575" y="76" />
-                                <item x="573" y="75" />
-                                <item x="571" y="74" />
-                                <item x="570" y="72" />
-                                <item x="568" y="72" />
-                                <item x="566" y="71" />
-                                <item x="564" y="70" />
-                                <item x="562" y="69" />
-                                <item x="560" y="67" />
-                                <item x="558" y="66" />
-                                <item x="556" y="64" />
-                                <item x="554" y="64" />
-                            </points>
-                            <viewport x="702" y="594" />
-                            <trafoMatrix.row0 x="0.182336181" y="0" z="0" w="-2.870369434" />
-                            <trafoMatrix.row1 x="0" y="-0.182336181" z="0" w="97.460121155" />
+                            <viewport x="750" y="573" />
+                            <trafoMatrix.row0 x="0.170666665" y="0" z="0" w="-0.135326833" />
+                            <trafoMatrix.row1 x="0" y="-0.170666665" z="0" w="92.749282837" />
                             <trafoMatrix.row2 x="0" y="0" z="1" w="0" />
                             <trafoMatrix.row3 x="0" y="0" z="0" w="1" />
                             <roiColor x="0" y="1" z="1" w="1" />
@@ -2897,9 +2682,9 @@ void main() {
                         <Property mapKey="interactionLevelOfDetail" name="interactionLevelOfDetail" value="1" />
                         <Property mapKey="legendAlignment" name="legendAlignment" value="NW" />
                         <Property mapKey="legendLineLength" name="legendLineLength" value="80" />
-                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="false" mouseAction="3" mouseButtons="1" keyCode="0" modifier="192" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="false" mouseAction="17" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseAction="18" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.Shift" name="mouseEvent.Shift" enabled="false" mouseButtons="1" keyCode="0" modifier="192" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionMove" name="mouseEvent.cursorPositionMove" enabled="false" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.cursorPositionPress" name="mouseEvent.cursorPositionPress" enabled="false" mouseButtons="127" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="numSlicesPerCol" name="numSlicesPerCol" value="1" />
                         <Property mapKey="numSlicesPerRow" name="numSlicesPerRow" value="1" />
                         <Property mapKey="pickingMatrix" name="pickingMatrix">
@@ -3016,7 +2801,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref130">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -3026,12 +2811,12 @@ void main() {
                     <InteractionHandlers>
                         <Handler name="mouseWheelHandler">
                             <Properties>
-                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseAction="23" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="mouseWheelHandler" name="mouseWheelHandler" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                         <Handler name="zoomHandler">
                             <Properties>
-                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="false" mouseAction="23" mouseButtons="98" keyCode="0" modifier="192" shareEvents="false" />
+                                <Property mapKey="zoomHandler" name="zoomHandler" enabled="false" mouseButtons="98" keyCode="0" modifier="192" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -3430,7 +3215,7 @@ void main() {
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-testdata/voreen-testdata" />
+                                    <item value="../../../git/voreen-testdata/voreen-testdata" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
                                     <item value="/git/voreen-testdata/voreen-testdata" />
                                 </paths>
@@ -3571,13 +3356,13 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-764" y="191" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref107">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028031873" id="ref107">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                             </MetaData>
-                            <position x="1.480469465" y="2.973496437" z="1.162559271" />
+                            <position x="-2.931365013" y="0.74305445" z="-1.841363668" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="-0.302473158" y="-0.29094696" z="0.907667339" />
+                            <upVector x="0.179292336" y="0.953143895" z="0.243661657" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -3600,7 +3385,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.entrypoints.renderSizeReceive" name="image.entrypoints.renderSizeReceive" id="ref125">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -3608,7 +3393,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.exitpoints.renderSizeReceive" name="image.exitpoints.renderSizeReceive" id="ref126">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -3619,36 +3404,36 @@ void main() {
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
                 <Processor type="SingleVolumeRaycaster" name="SingleVolumeRaycaster" id="ref8">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-810" y="290" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-810" y="288" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref106">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028031873" id="ref106">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="751" y="346" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="1.480469465" y="2.973496437" z="1.162559271" />
+                            <position x="-2.931365013" y="0.74305445" z="-1.841363668" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="-0.302473158" y="-0.29094696" z="0.907667339" />
+                            <upVector x="0.179292336" y="0.953143895" z="0.243661657" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -3744,7 +3529,7 @@ void main() {
                             </MetaData>
                             <value x="1.274953842" y="0.828774214" z="0.828774214" w="1" />
                             <Center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <LightPos x="-0.815875292" y="0.238712311" z="1.524010539" w="1" />
+                            <LightPos x="-0.100384951" y="1.138917089" z="-1.318345308" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -3753,7 +3538,7 @@ void main() {
                         <Property mapKey="raycast.prg" name="raycast.prg">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="1920" y="0" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -3865,7 +3650,7 @@ void main() {
                             </MetaData>
                             <TransferFunction type="TransFuncGaussian" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="256" y="1" z="1" />
-                                <domain x="0" y="1" />
+                                <domain x="0" y="0" />
                                 <threshold x="0" y="1" />
                                 <Curves>
                                     <curve type="TransFuncMappingCurve" intensity="0.5" width="0.01" baseValue="0" split="false" unicolor="true" active="true">
@@ -3920,10 +3705,13 @@ void main() {
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transFuncType" name="transFuncType" value="1D Keys Color Map" />
-                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
+                        <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="0" computeHistogram="true">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" />
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" width="658" height="477" />
+                                <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
+                                    <value x="0" y="1" />
+                                </MetaItem>
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="256" y="1" z="1" />
@@ -4038,14 +3826,14 @@ void main() {
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-997" y="291" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028314985" id="ref108">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="500" minValue="0.01" frustLeft="-0.041421361" frustRight="0.041421361" frustBottom="-0.041421361" frustTop="0.041421361" frustNear="0.100000001" frustFar="900.17199707" fovy="45.000003815" eyeMode="1" eyeSeparation="1" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.028031873" id="ref108">
                             <MetaData>
                                 <MetaItem name="EditorWindow" type="WindowStateMetaData" visible="false" x="124" y="457" />
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="1.480469465" y="2.973496437" z="1.162559271" />
+                            <position x="-2.931365013" y="0.74305445" z="-1.841363668" />
                             <focus x="-0.0078125" y="-0.0078125" z="-0.0078125" />
-                            <upVector x="-0.302473158" y="-0.29094696" z="0.907667339" />
+                            <upVector x="0.179292336" y="0.953143895" z="0.243661657" />
                             <trackball moveCenter="false">
                                 <center x="-0.0078125" y="-0.0078125" z="-0.0078125" />
                             </trackball>
@@ -4056,7 +3844,7 @@ void main() {
                         <Property mapKey="renderSlice.XZ" name="renderSlice.XZ" value="true" />
                         <Property mapKey="renderSlice.YZ" name="renderSlice.YZ" value="true" />
                         <Property mapKey="sliceNumber.XY" name="sliceNumber.XY" value="59" id="ref105" />
-                        <Property mapKey="sliceNumber.XZ" name="sliceNumber.XZ" value="49" id="ref104" />
+                        <Property mapKey="sliceNumber.XZ" name="sliceNumber.XZ" value="54" id="ref104" />
                         <Property mapKey="sliceNumber.YZ" name="sliceNumber.YZ" value="66" id="ref103" />
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="1" computeHistogram="true">
@@ -4151,7 +3939,7 @@ void main() {
                             <Properties>
                                 <Property mapKey="blockEvents" name="blockEvents" value="false" />
                                 <Property mapKey="image.outport.renderSizeReceive" name="image.outport.renderSizeReceive" id="ref118">
-                                    <value x="702" y="594" />
+                                    <value x="750" y="573" />
                                 </Property>
                             </Properties>
                         </Port>
@@ -4162,18 +3950,18 @@ void main() {
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -4207,7 +3995,7 @@ void main() {
                         <Property mapKey="texture" name="texture" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../../../voreen-testdata/voreen-testdata" />
+                                    <item value="../../../git/voreen-testdata/voreen-testdata" />
                                     <item value="../../voreen-testdata/voreen-testdata" />
                                     <item value="/git/voreen-testdata/voreen-testdata" />
                                 </paths>
@@ -4312,9 +4100,9 @@ void main() {
                             <urls protocol="">
                                 <path noPathSet="false">
                                     <paths>
-                                        <item value="../volumes/walnut.vvd" />
--                                       <item value="resource/voreenve/volumes/walnut.vvd" />
--                                       <item value="/git/voreen-develop/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="../../../git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="resource/voreenve/volumes/walnut.vvd" />
+                                        <item value="/git/voreen0/voreen/resource/voreenve/volumes/walnut.vvd" />
                                     </paths>
                                 </path>
                                 <searchParameters>
@@ -5455,6 +5243,46 @@ void main() {
                     <DestinationProperty type="TransFunc1DKeysProperty" ref="ref80" />
                     <Evaluator type="LinkEvaluatorTransFunc1DKeysId" />
                 </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref132" />
+                    <DestinationProperty type="ButtonProperty" ref="ref133" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref133" />
+                    <DestinationProperty type="ButtonProperty" ref="ref132" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref133" />
+                    <DestinationProperty type="ButtonProperty" ref="ref134" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref134" />
+                    <DestinationProperty type="ButtonProperty" ref="ref133" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref135" />
+                    <DestinationProperty type="ButtonProperty" ref="ref136" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref136" />
+                    <DestinationProperty type="ButtonProperty" ref="ref135" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref136" />
+                    <DestinationProperty type="ButtonProperty" ref="ref137" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
+                <PropertyLink>
+                    <SourceProperty type="ButtonProperty" ref="ref137" />
+                    <DestinationProperty type="ButtonProperty" ref="ref136" />
+                    <Evaluator type="LinkEvaluatorButtonId" />
+                </PropertyLink>
             </PropertyLinks>
         </ProcessorNetwork>
         <Animation />
@@ -5463,9 +5291,18 @@ void main() {
                 <item value="Input" />
                 <item value="2D Rendering" />
                 <item value="Random Walker" />
+                <item value="Seeds" />
                 <item value="Output" />
             </PropertyGroups>
             <GroupMembership>
+                <value key="ROI Background (Z).clearROIs">
+                    <First value="Seeds" />
+                    <Second value="1" />
+                </value>
+                <value key="ROI Foreground (Z).clearROIs">
+                    <First value="Seeds" />
+                    <Second value="0" />
+                </value>
                 <value key="RandomWalker.beta">
                     <First value="Random Walker" />
                     <Second value="5" />
