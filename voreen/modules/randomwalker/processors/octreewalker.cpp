@@ -177,18 +177,19 @@ OctreeWalker::OctreeWalker()
 
     // random walker properties
     addProperty(noiseModel_);
+        noiseModel_.addOption("gaussian", "Gaussian with constant variance (Drees 2022)", RW_NOISE_GAUSSIAN);
+        noiseModel_.addOption("shot", "Poisson (Drees 2022)", RW_NOISE_POISSON);
+        noiseModel_.addOption("variable_gaussian", "Gaussian with signal-dependent variance (Drees 2022)", RW_NOISE_VARIABLE_GAUSSIAN);
         noiseModel_.addOption("gaussian_bian", "Gaussian with mean filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEAN);
         noiseModel_.addOption("gaussian_bian_median", "Gaussian with median filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
         noiseModel_.addOption("ttest", "T-Test (Bian 2016)", RW_NOISE_TTEST);
-        noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
-        noiseModel_.addOption("shot", "Shot", RW_NOISE_POISSON);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
         noiseModel_.setGroupID("rwparam");
-    ON_CHANGE_LAMBDA(noiseModel_, [this] () {
-        RWNoiseModel m = noiseModel_.getValue();
-        betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_GAUSSIAN_BIAN_MEAN || m == RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
-        parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST);
-    });
+        ON_CHANGE_LAMBDA(noiseModel_, [this] () {
+            RWNoiseModel m = noiseModel_.getValue();
+            betaBias_.setVisibleFlag(m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_GAUSSIAN_BIAN_MEAN || m == RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
+            parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST);
+        });
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
         minEdgeWeight_.setTracking(false);

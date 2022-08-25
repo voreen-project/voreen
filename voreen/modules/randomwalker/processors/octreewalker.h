@@ -138,9 +138,12 @@ protected:
     virtual void setDescriptions() {
         setDescription("Performs a semi-automatic octree volume segmentation using a hierarchical 3D random walker algorithm."
                 "<br><br>"
-                "This processor implements the algorithm described in the article <b>Hierarchical Random Walker Segmentation for Large Volumetric Biomedical Data</b> (Drees et al.), which you are kindly asked to cite if you find it useful in your research."
+                "This processor implements the algorithm described in the article <b>Hierarchical Random Walker Segmentation for Large Volumetric Biomedical Data</b>, Dominik Drees, Florian Eilers and Xiaoyi Jiang (2022), which you are kindly asked to cite if you find it useful in your research."
                 "<br><br>"
-                "More details on the automatic parameter setting methods (Gaussian and T-Test based) can be found in <b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b> (Bian and Jiang) and <b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b> (Bian and Jiang)"
+                "For details on the automatic weight functions refer to the following publications:<br><br>"
+                "<b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b>, Ang Bian and Xioayi Jiang (2016)<br><br>"
+                "<b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b>, Ang Bian and Xioayi Jiang (2016)<br><br>"
+                "<b>A Bhattacharyya Coefficient-Based Framework for Noise Model-Aware Random Walker Image Segmentation</b>, Dominik Drees, Florian Eilers, Ang Bian and Xioayi Jiang (2022)<br><br>"
                 );
     }
 
