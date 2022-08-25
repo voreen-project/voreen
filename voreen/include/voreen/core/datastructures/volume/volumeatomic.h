@@ -255,8 +255,6 @@ protected:
     T* data_;
     bool ownsData_;
 
-    tgt::vec2 elementRange_;
-
     mutable T minValue_;
     mutable T maxValue_;
     mutable bool minMaxValid_;
@@ -338,8 +336,6 @@ VolumeAtomic<T>::VolumeAtomic(const tgt::svec3& dimensions, bool allocMem)
     : VolumeRAM(dimensions)
     , data_(0)
     , ownsData_(true)
-    , elementRange_(static_cast<float>(VolumeElement<T>::rangeMinElement()),
-        static_cast<float>(VolumeElement<T>::rangeMaxElement()))
     , minMaxValid_(false)
 {
     if (allocMem) {
@@ -360,8 +356,6 @@ VolumeAtomic<T>::VolumeAtomic(T* data,
     : VolumeRAM(dimensions)
     , data_(data)
     , ownsData_(takeOwnership)
-    , elementRange_(static_cast<float>(VolumeElement<T>::rangeMinElement()),
-         static_cast<float>(VolumeElement<T>::rangeMaxElement()))
     , minMaxValid_(false)
 {
 }
@@ -371,7 +365,6 @@ VolumeAtomic<T>::VolumeAtomic(VolumeAtomic<T>&& other)
     : VolumeRAM(other.dimensions_)
     , data_(other.data_)
     , ownsData_(other.ownsData_)
-    , elementRange_(other.elementRange_)
     , minMaxValid_(other.minMaxValid_)
 {
     other.data_ = nullptr;
@@ -620,7 +613,8 @@ inline size_t VolumeAtomic<T>::calcPos(const tgt::svec3& dimensions, const tgt::
 
 template<class T>
 tgt::vec2 VolumeAtomic<T>::elementRange() const {
-    return elementRange_;
+    return tgt::vec2(static_cast<float>(VolumeElement<T>::rangeMinElement()),
+        static_cast<float>(VolumeElement<T>::rangeMaxElement()));
 }
 
 template<class T>
