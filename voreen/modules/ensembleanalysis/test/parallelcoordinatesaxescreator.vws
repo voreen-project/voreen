@@ -6,6 +6,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="ParallelCoordinatesSave" ref="ref4" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-470.69418335" y="-366.829284668" />
                 </MetaItem>
@@ -32,7 +37,7 @@
                                 <paths>
                                     <item value="input/ensemble/aneurysm" />
                                     <item value="../test-data/voreen-testdata/input/ensemble/aneurysm" />
-                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/ensemble/aneurysm" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/aneurysm" />
                                 </paths>
                             </paths>
                         </Property>
@@ -430,7 +435,7 @@
                                 <paths>
                                     <item value="output/parallelcoordinates.vpc" />
                                     <item value="../test-data/voreen-testdata/output/parallelcoordinates.vpc" />
-                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/parallelcoordinates.vpc" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates.vpc" />
                                 </paths>
                             </paths>
                         </Property>
@@ -456,7 +461,7 @@
                                 <paths>
                                     <item value="output/parallelcoordinates_aggregated.vpc" />
                                     <item value="../test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
-                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates_aggregated.vpc" />
                                 </paths>
                             </paths>
                         </Property>

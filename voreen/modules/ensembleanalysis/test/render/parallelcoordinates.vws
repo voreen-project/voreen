@@ -6,11 +6,6 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="ParallelCoordinatesSource" ref="ref0" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-431.06942749" y="-344.015014648" />
                 </MetaItem>
@@ -27,7 +22,7 @@
                                 <paths>
                                     <item value="input/ensemble/parallelcoordinates.vpc" />
                                     <item value="../test-data/voreen-testdata/input/ensemble/parallelcoordinates.vpc" />
-                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/input/ensemble/parallelcoordinates.vpc" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/input/ensemble/parallelcoordinates.vpc" />
                                 </paths>
                             </paths>
                         </Property>
@@ -402,10 +397,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref2">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-557" y="-337" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="601" y="318" width="893" height="680" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="1471" y="503" width="893" height="680" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="601" y="318" />
+                            <value x="1471" y="503" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="893" y="680" />
@@ -421,7 +416,7 @@
                                 <paths>
                                     <item value="output/parallelcoordinates.png" />
                                     <item value="../test-data/voreen-testdata/output/parallelcoordinates.png" />
-                                    <item value="/home/s_leis06/programming/voreen/test-data/voreen-testdata/output/parallelcoordinates.png" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/parallelcoordinates.png" />
                                 </paths>
                             </paths>
                         </Property>
