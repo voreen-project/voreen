@@ -118,7 +118,7 @@ RandomWalker::RandomWalker()
     outportProbabilities_(Port::OUTPORT, "volume.probabilities", "volume.probabilities", false),
     outportEdgeWeights_(Port::OUTPORT, "volume.edgeweights", "volume.edgeweights", false),
     usePrevProbAsInitialization_("usePrevProbAsInitialization", "Use Previous Probabilities as Initialization", false, Processor::VALID, Property::LOD_ADVANCED),
-    useAdaptiveParameterSetting_("useAdaptiveParameterSetting", "Use Adaptive Parameter Setting", false),
+    useAdaptiveParameterSetting_("useAdaptiveParameterSetting", "Use Adaptive Weight Functions", false),
     noiseModel_("noiseModel", "Noise Model"),
     beta_("beta", "Edge Weight Scale: 2^beta", 12, 0, 20),
     minEdgeWeight_("minEdgeWeight", "Min Edge Weight: 10^(-t)", 5, 0, 10),
@@ -163,12 +163,12 @@ RandomWalker::RandomWalker()
     addProperty(useAdaptiveParameterSetting_);
     useAdaptiveParameterSetting_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
     addProperty(noiseModel_);
+    noiseModel_.addOption("gaussian", "Gaussian with constant variance (Drees 2022)", RW_NOISE_GAUSSIAN);
+    noiseModel_.addOption("shot", "Poisson (Drees 2022)", RW_NOISE_POISSON);
+    noiseModel_.addOption("variable_gaussian", "Gaussian with signal-dependent variance (Drees 2022)", RW_NOISE_VARIABLE_GAUSSIAN);
     noiseModel_.addOption("gaussian_bian", "Gaussian with mean filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEAN);
     noiseModel_.addOption("gaussian_bian_median", "Gaussian with median filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
     noiseModel_.addOption("ttest", "T-Test (Bian 2016)", RW_NOISE_TTEST);
-    noiseModel_.addOption("variable_gaussian", "Gaussian with variable sigma (Drees 2022)", RW_NOISE_VARIABLE_GAUSSIAN);
-    noiseModel_.addOption("gaussian", "Gaussian", RW_NOISE_GAUSSIAN);
-    noiseModel_.addOption("shot", "Poisson", RW_NOISE_POISSON);
     noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
     noiseModel_.onChange(MemberFunctionCallback<RandomWalker>(this, &RandomWalker::updateGuiState));
     addProperty(beta_);

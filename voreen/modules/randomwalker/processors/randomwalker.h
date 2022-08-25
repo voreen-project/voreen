@@ -125,7 +125,10 @@ protected:
                 "Performs a semi-automatic volume segmentation using the 3D random walker algorithm. "
                 "<p>See: <a href=\"http://voreen.uni-muenster.de/?q=random-walker\" >voreen.uni-muenster.de/?q=random-walker</a></p>"
                 "<br><br>"
-                "More details on the automatic parameter setting methods (Gaussian and T-Test based) can be found in <b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b> (Bian and Jiang) and <b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b> (Bian and Jiang)"
+                "For details on the automatic weight functions refer to the following publications:<br><br>"
+                "<b>Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation</b>, Ang Bian and Xioayi Jiang (2016)<br><br>"
+                "<b>T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model</b>, Ang Bian and Xioayi Jiang (2016)<br><br>"
+                "<b>A Bhattacharyya Coefficient-Based Framework for Noise Model-Aware Random Walker Image Segmentation</b>, Dominik Drees, Florian Eilers, Ang Bian and Xioayi Jiang (2022)<br><br>"
                 );
     }
 
