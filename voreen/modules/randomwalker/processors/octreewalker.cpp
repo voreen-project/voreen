@@ -893,8 +893,8 @@ private:
     const VolumeAtomic<float>& brick_;
 };
 
-template<typename NoiseModel>
-static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, NoiseModel& model, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
+template<RWNoiseModel NoiseModel>
+static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatrix<float>& mat, float* vec, size_t* volumeIndexToRowTable, RWNoiseModelWeights<NoiseModel>& model, const tgt::svec3& volDim, float minWeight, float betaBias, tgt::vec3 spacing) {
 
     float minSpacing = tgt::min(spacing);
     auto edgeWeight = [&] (tgt::vec3 voxel, tgt::vec3 neighbor) {
@@ -962,8 +962,8 @@ static void processVoxelWeights(const RandomWalkerSeedsBrick& seeds, EllpackMatr
     }
 }
 
-template<typename NoiseModel>
-static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasNewSeedConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex, const ProfileDataCollector& ramProfiler, const ProfileDataCollector& vramProfiler) {
+template<RWNoiseModel NoiseModel>
+static uint64_t processOctreeBrick(RWNoiseModelParameters<NoiseModel> parameters, OctreeWalkerInput& input, VolumeOctreeNodeLocation& outputNodeGeometry, Histogram1D& histogram, uint16_t& min, uint16_t& max, uint16_t& avg, bool& hasNewSeedConflicts, OctreeBrickPoolManagerBase& outputPoolManager, LocatedVolumeOctreeNode* outputRoot, const LocatedVolumeOctreeNodeConst& inputRoot, boost::optional<LocatedVolumeOctreeNode> prevRoot, PointSegmentListGeometryVec3& foregroundSeeds, PointSegmentListGeometryVec3& backgroundSeeds, std::mutex& clMutex, const ProfileDataCollector& ramProfiler, const ProfileDataCollector& vramProfiler) {
     auto canSkipChildren = [&] (float min, float max) {
         float parentValueRange = max-min;
         bool minMaxSkip = max < 0.5-input.binaryPruningDelta_ || min > 0.5+input.binaryPruningDelta_;
@@ -1096,7 +1096,7 @@ static uint64_t processOctreeBrick(OctreeWalkerInput& input, VolumeOctreeNodeLoc
 
     auto rwm = input.volume_.getRealWorldMapping();
 
-    auto model = NoiseModel::prepare(inputNeighborhood.data_, rwm);
+    auto model = parameters.prepare(inputNeighborhood.data_, rwm);
     ProfileAllocation noiseModelSize(ramProfiler, volIndexToRow.size() * sizeof(float) * 4); //Assuming worst case: ttest
 
     auto vec = std::vector<float>(systemSize, 0.0f);
@@ -1326,34 +1326,19 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
                 switch (input.noiseModel_) {
                     case RW_NOISE_GAUSSIAN:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussian>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_GAUSSIAN_BIAN_MEAN:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBianMean>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelGaussianBianMedian>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEDIAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
-                    case RW_NOISE_TTEST: {
-                        switch(input.parameterEstimationNeighborhoodExtent_) {
-                            case 1:
-                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
-                                break;
-                            case 2:
-                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<2>>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
-                                break;
-                            case 3:
-                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<3>>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
-                                break;
-                            default:
-                                LERRORC("voreen.RandomWalker.OctreeWalker", "Invalid ttest extent: " << input.parameterEstimationNeighborhoodExtent_);
-                                newBrickAddr = processOctreeBrick<RWNoiseModelTTest<1>>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
-                                break;
-                        }
+                    case RW_NOISE_TTEST:
+                        newBrickAddr = processOctreeBrick<RW_NOISE_TTEST>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
-                    }
                     case RW_NOISE_POISSON:
-                        newBrickAddr = processOctreeBrick<RWNoiseModelPoisson>(input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_POISSON>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     default:
                         tgtAssert(false, "Invalid noise model selected");

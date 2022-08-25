@@ -43,17 +43,38 @@ enum RWNoiseModel {
     RW_NOISE_TTEST,
 };
 
+template<RWNoiseModel N>
+struct RWNoiseModelParameters {
+};
+
+template<RWNoiseModel N>
+struct RWNoiseModelWeights {
+};
+
 // Parameter estimation according to
 //
 // A. Bian, X Jiang: Statistical Modeling Based Adaptive Parameter Setting for Random Walk Segmentation
 // https://link.springer.com/chapter/10.1007%2F978-3-319-48680-2_61
-struct RWNoiseModelGaussianBianMean {
+template<>
+struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
     VolumeAtomic<float> mean;
     float diff_variance_inv;
 
-    RWNoiseModelGaussianBianMean(RWNoiseModelGaussianBianMean&&) = default;
+    RWNoiseModelWeights(RWNoiseModelWeights&&) = default;
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
+        float voxelIntensity = mean.voxel(voxel);
+        float neighborIntensity = mean.voxel(neighbor);
+        float beta = 2.0f * betaBias * diff_variance_inv;
+        float intDiff = (voxelIntensity - neighborIntensity);
+        float intDiffSqr = intDiff*intDiff;
+        float weight = exp(-beta * intDiffSqr);
+        return weight;
+    }
+};
 
-    static RWNoiseModelGaussianBianMean prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+template<>
+struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
         VolumeAtomic<float> mean = meanFilter3x3x3(vol);
         float variance = estimateVariance3x3x3(vol, mean);
 
@@ -65,14 +86,21 @@ struct RWNoiseModelGaussianBianMean {
         float diff_variance = variance * correction_factor;
         diff_variance = std::max(diff_variance, std::numeric_limits<float>::min());
 
-        return RWNoiseModelGaussianBianMean {
+        return RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
             std::move(mean),
             1.0f/diff_variance,
         };
     }
-    static RWNoiseModelGaussianBianMean prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return RWNoiseModelGaussianBianMean::prepare(toVolumeAtomicFloat(vol), rwm);
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return prepare(toVolumeAtomicFloat(vol), rwm);
     }
+};
+
+template<>
+struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
+    VolumeAtomic<float> mean;
+    float diff_variance_inv;
+
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
         float voxelIntensity = mean.voxel(voxel);
         float neighborIntensity = mean.voxel(neighbor);
@@ -83,13 +111,9 @@ struct RWNoiseModelGaussianBianMean {
         return weight;
     }
 };
-struct RWNoiseModelGaussianBianMedian {
-    VolumeAtomic<float> mean;
-    float diff_variance_inv;
-
-    RWNoiseModelGaussianBianMedian(RWNoiseModelGaussianBianMedian&&) = default;
-
-    static RWNoiseModelGaussianBianMedian prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+template<>
+struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
         VolumeAtomic<float> mean = medianFilter3x3x3(vol);
         float variance = estimateVariance3x3x3(vol, mean);
 
@@ -100,22 +124,13 @@ struct RWNoiseModelGaussianBianMedian {
         float diff_variance = variance * correction_factor;
         diff_variance = std::max(diff_variance, std::numeric_limits<float>::min());
 
-        return RWNoiseModelGaussianBianMedian {
+        return RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
             std::move(mean),
             1.0f/diff_variance,
         };
     }
-    static RWNoiseModelGaussianBianMedian prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return RWNoiseModelGaussianBianMedian::prepare(toVolumeAtomicFloat(vol), rwm);
-    }
-    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
-        float voxelIntensity = mean.voxel(voxel);
-        float neighborIntensity = mean.voxel(neighbor);
-        float beta = 2.0f * betaBias * diff_variance_inv;
-        float intDiff = (voxelIntensity - neighborIntensity);
-        float intDiffSqr = intDiff*intDiff;
-        float weight = exp(-beta * intDiffSqr);
-        return weight;
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return prepare(toVolumeAtomicFloat(vol), rwm);
     }
 };
 
@@ -127,79 +142,75 @@ float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<
 //
 // A. Bian, X Jiang: T-Test Based Adaptive Random Walk Segmentation Under Multiplicative Speckle Noise Model
 // https://link.springer.com/chapter/10.1007%2F978-3-319-54427-4_41
-template<int filter_extent>
-struct RWNoiseModelTTest {
 
+template<>
+struct RWNoiseModelWeights<RW_NOISE_TTEST> {
     VolumeAtomic<float> image;
     VolumeAtomic<tgt::ivec3> best_centers;
+    int filter_extent;
 
-    RWNoiseModelTTest(RWNoiseModelTTest&&) = default;
-
-    static RWNoiseModelTTest prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-
-        VolumeAtomic<float> image = vol.copy();
-        VolumeAtomic<float> mean = meanFilter<filter_extent>(image);
-        VolumeAtomic<float> variance = variances<filter_extent>(image, mean);
-
-        auto bestCenters = findBestCenters(image, mean, variance, filter_extent);
-        return RWNoiseModelTTest {
-            std::move(image),
-            std::move(bestCenters),
-        };
-    }
-    static RWNoiseModelTTest prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return RWNoiseModelTTest::prepare(toVolumeAtomicFloat(vol), rwm);
-    }
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
         return evalTTest(image, best_centers, voxel, neighbor, filter_extent);
     }
 };
-template<int filter_extent>
-struct RWNoiseModelVariableGaussian {
+template<>
+struct RWNoiseModelParameters<RW_NOISE_TTEST> {
+    int filter_extent;
 
-    VolumeAtomic<float> image;
-    VolumeAtomic<tgt::ivec3> best_centers;
-
-    RWNoiseModelVariableGaussian(RWNoiseModelVariableGaussian&&) = default;
-
-    static RWNoiseModelVariableGaussian prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-
+    RWNoiseModelWeights<RW_NOISE_TTEST> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
         VolumeAtomic<float> image = vol.copy();
-        VolumeAtomic<float> mean = meanFilter<filter_extent>(image);
-        VolumeAtomic<float> variance = variances<filter_extent>(image, mean);
+        VolumeAtomic<float> mean = meanFilter(image, filter_extent);
+        VolumeAtomic<float> variance = variances(image, mean, filter_extent);
 
         auto bestCenters = findBestCenters(image, mean, variance, filter_extent);
-        return RWNoiseModelVariableGaussian {
+        return RWNoiseModelWeights<RW_NOISE_TTEST> {
             std::move(image),
             std::move(bestCenters),
+            filter_extent,
         };
     }
-    static RWNoiseModelVariableGaussian prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return RWNoiseModelVariableGaussian::prepare(toVolumeAtomicFloat(vol), rwm);
+    RWNoiseModelWeights<RW_NOISE_TTEST> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return prepare(toVolumeAtomicFloat(vol), rwm);
     }
+};
+
+template<>
+struct RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> {
+    VolumeAtomic<float> image;
+    VolumeAtomic<tgt::ivec3> best_centers;
+    int filter_extent;
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
         return evalVariableGaussian(image, best_centers, voxel, neighbor, filter_extent);
     }
 };
+template<>
+struct RWNoiseModelParameters<RW_NOISE_VARIABLE_GAUSSIAN> {
+    int filter_extent;
 
-struct RWNoiseModelGaussian {
-    VolumeAtomic<float> values;
-    float variance_inv;
+    RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
 
-    RWNoiseModelGaussian(RWNoiseModelGaussian&&) = default;
+        VolumeAtomic<float> image = vol.copy();
+        VolumeAtomic<float> mean = meanFilter(image, filter_extent);
+        VolumeAtomic<float> variance = variances(image, mean, filter_extent);
 
-    static RWNoiseModelGaussian prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-        VolumeAtomic<float> mean = meanFilter3x3x3(vol);
-        float variance = estimateVariance3x3x3(vol, mean);
-
-        return RWNoiseModelGaussian {
-            vol.copy(),
-            1.0f/variance,
+        auto bestCenters = findBestCenters(image, mean, variance, filter_extent);
+        return RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> {
+            std::move(image),
+            std::move(bestCenters),
+            filter_extent,
         };
     }
-    static RWNoiseModelGaussian prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return RWNoiseModelGaussian::prepare(toVolumeAtomicFloat(vol), rwm);
+    RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return prepare(toVolumeAtomicFloat(vol), rwm);
     }
+};
+
+
+template<>
+struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN> {
+
+    VolumeAtomic<float> values;
+    float variance_inv;
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
         float voxelIntensity = values.voxel(voxel);
         float neighborIntensity = values.voxel(neighbor);
@@ -211,21 +222,28 @@ struct RWNoiseModelGaussian {
         return weight;
     }
 };
-struct RWNoiseModelPoisson {
+template<>
+struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN> {
+
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+        VolumeAtomic<float> mean = meanFilter3x3x3(vol);
+        float variance = estimateVariance3x3x3(vol, mean);
+
+        return RWNoiseModelWeights<RW_NOISE_GAUSSIAN> {
+            vol.copy(),
+            1.0f/variance,
+        };
+    }
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return prepare(toVolumeAtomicFloat(vol), rwm);
+    }
+};
+
+
+template<>
+struct RWNoiseModelWeights<RW_NOISE_POISSON> {
     VolumeAtomic<float> values;
 
-    RWNoiseModelPoisson(RWNoiseModelPoisson&&) = default;
-
-    static RWNoiseModelPoisson prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
-        return RWNoiseModelPoisson {
-            applyRWM(vol, rwm),
-        };
-    }
-    static RWNoiseModelPoisson prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
-        return RWNoiseModelPoisson {
-            applyRWM(vol, rwm),
-        };
-    }
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor, float betaBias) const {
         float voxelIntensity = values.voxel(voxel);
         float neighborIntensity = values.voxel(neighbor);
@@ -236,6 +254,19 @@ struct RWNoiseModelPoisson {
         float d = sqrt(voxelIntensity) - sqrt(neighborIntensity);
         weight = exp(-beta * d * d);
         return weight;
+    }
+};
+template<>
+struct RWNoiseModelParameters<RW_NOISE_POISSON> {
+    RWNoiseModelWeights<RW_NOISE_POISSON> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm) {
+        return RWNoiseModelWeights<RW_NOISE_POISSON> {
+            applyRWM(vol, rwm),
+        };
+    }
+    RWNoiseModelWeights<RW_NOISE_POISSON> prepare(const VolumeRAM& vol, RealWorldMapping rwm) {
+        return RWNoiseModelWeights<RW_NOISE_POISSON> {
+            applyRWM(vol, rwm),
+        };
     }
 };
 

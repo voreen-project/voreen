@@ -38,16 +38,16 @@ VolumeAtomic<float> applyRWM(const VolumeAtomic<float>& vol, RealWorldMapping rw
 VolumeAtomic<float> applyRWM(const VolumeRAM& vol, RealWorldMapping rwm);
 
 template<int extent>
-VolumeAtomic<float> meanFilter(const VolumeAtomic<float>& img);
-template<int extent>
-VolumeAtomic<float> variances(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean);
+VolumeAtomic<float> meanFilterTemplate(const VolumeAtomic<float>& img);
+VolumeAtomic<float> meanFilter(const VolumeAtomic<float>& img, int extent);
+VolumeAtomic<float> variances(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean, int extent);
 
 /// ----------------------------------------------------------------------------
 /// Implementation -------------------------------------------------------------
 /// ----------------------------------------------------------------------------
 
 template<int extent>
-VolumeAtomic<float> meanFilter(const VolumeAtomic<float>& img) {
+VolumeAtomic<float> meanFilterTemplate(const VolumeAtomic<float>& img) {
     const tgt::ivec3 start(0);
     const tgt::ivec3 end(img.getDimensions());
     const size_t numVoxels = tgt::hmul(img.getDimensions());
@@ -81,36 +81,6 @@ VolumeAtomic<float> meanFilter(const VolumeAtomic<float>& img) {
     conv(tmp, tmp2, 2);
 
     return tmp2;
-}
-
-template<int extent>
-VolumeAtomic<float> variances(const VolumeAtomic<float>& img, const VolumeAtomic<float>& mean) {
-    tgtAssert(img.getDimensions() == mean.getDimensions(), "Dimension mismatch");
-
-    const tgt::ivec3 start(0);
-    const tgt::ivec3 end(img.getDimensions());
-    const size_t numVoxels = tgt::hmul(img.getDimensions());
-
-    const int k = extent;
-    const int N=2*k+1;
-    const tgt::ivec3 neighborhoodSize(k);
-
-    VolumeAtomic<float> output(img.getDimensions());
-    VRN_FOR_EACH_VOXEL(center, start, end) {
-        const tgt::ivec3 neighborhoodStart = tgt::max(start, center - neighborhoodSize);
-        const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
-
-        float sum = 0.0f;
-        VRN_FOR_EACH_VOXEL(p, neighborhoodStart, neighborhoodEnd) {
-            float diff = img.voxel(p) - mean.voxel(p);
-            sum += diff*diff;
-        }
-
-        const int numNeighborhoodVoxels = tgt::hmul(neighborhoodEnd-neighborhoodStart);
-
-        output.voxel(center) = sum/(numNeighborhoodVoxels-1);
-    }
-    return output;
 }
 
 }

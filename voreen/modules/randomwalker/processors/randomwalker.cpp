@@ -50,15 +50,14 @@
 
 namespace voreen {
 
-template<typename NoiseModel>
-static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromPropertiesAdaptive(const RandomWalkerInput& input) {
+template<RWNoiseModel NoiseModel>
+static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromPropertiesAdaptive(const RandomWalkerInput& input, RWNoiseModelParameters<NoiseModel> parameters) {
     float beta = 0.5;
     float minWeight = 1.f / pow(10.f, static_cast<float>(input.minEdgeWeight_));
-    RWNoiseModel noiseModel = input.noiseModel_;
 
     auto rwm = input.inputHandle_->getRealWorldMapping();
-    auto model = NoiseModel::prepare(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);
-    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<NoiseModel>(std::move(model), minWeight));
+    auto model = parameters.prepare(*input.inputHandle_->getRepresentation<VolumeRAM>(), rwm);
+    std::unique_ptr<RandomWalkerEdgeWeight> edgeWeightFun(new RandomWalkerEdgeWeightAdaptive<RWNoiseModelWeights<NoiseModel>>(std::move(model), minWeight));
 
     return tgt::make_unique<RandomWalkerWeights>(std::move(edgeWeightFun), input.inputHandle_->getDimensions());
 }
@@ -68,33 +67,19 @@ static std::unique_ptr<RandomWalkerWeights> getEdgeWeightsFromProperties(const R
     if(input.useAdaptiveParameterSetting_) {
         switch(input.noiseModel_) {
             case RW_NOISE_GAUSSIAN:
-                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussian>(input);
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN>(input, {});
             case RW_NOISE_GAUSSIAN_BIAN_MEAN:
-                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBianMean>(input);
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN_BIAN_MEAN>(input, {});
             case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
-                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelGaussianBianMedian>(input);
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_GAUSSIAN_BIAN_MEDIAN>(input, {});
             case RW_NOISE_TTEST: {
-                switch(input.parameterEstimationNeighborhoodExtent_) {
-                    case 1: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
-                    case 2: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<2>>(input);
-                    case 3: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<3>>(input);
-                    default:
-                            LERRORC("voreen.RandomWalker.RandomWalker", "Invalid ttest extent: " << input.parameterEstimationNeighborhoodExtent_);
-                            return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
-                }
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_TTEST>(input, {input.parameterEstimationNeighborhoodExtent_});
             }
             case RW_NOISE_VARIABLE_GAUSSIAN: {
-                switch(input.parameterEstimationNeighborhoodExtent_) {
-                    case 1: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelVariableGaussian<1>>(input);
-                    case 2: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelVariableGaussian<2>>(input);
-                    case 3: return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelVariableGaussian<3>>(input);
-                    default:
-                            LERRORC("voreen.RandomWalker.RandomWalker", "Invalid ttest extent: " << input.parameterEstimationNeighborhoodExtent_);
-                            return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelTTest<1>>(input);
-                }
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_VARIABLE_GAUSSIAN>(input, {input.parameterEstimationNeighborhoodExtent_});
             }
             case RW_NOISE_POISSON:
-                return getEdgeWeightsFromPropertiesAdaptive<RWNoiseModelPoisson>(input);
+                return getEdgeWeightsFromPropertiesAdaptive<RW_NOISE_POISSON>(input, {});
             default:
                 tgtAssert(false, "Invalid noise model");
         }
