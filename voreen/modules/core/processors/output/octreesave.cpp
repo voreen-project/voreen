@@ -223,6 +223,7 @@ OctreeSave::OctreeSave()
 #endif
             outputFormat_.addOption("vvd", "VVD (Voreen Volume Data)", VOL_VVD);
             outputFormat_.addOption("vvod", "VVOD (Voreen Volume Octree Data)", VOL_VVOD);
+            outputFormat_.selectByValue(VOL_VVOD);
             ON_CHANGE(outputFormat_, OctreeSave, outputFormatChanged);
         addProperty(outputProp_);
             outputProp_.setGroupID("saving");
