@@ -54,6 +54,7 @@ public:
         MAX,
         MEAN,
         MIN,
+        MEDIAN,
     };
 
     /**

@@ -224,6 +224,14 @@ namespace {
             return std::max(hxx, lxx);
         }
     };
+    struct HalfSampleMedian {
+        static inline uint16_t halfsample(const uint16_t& lll, const uint16_t& llh, const uint16_t& lhl, const uint16_t& lhh, const uint16_t& hll, const uint16_t& hlh, const uint16_t& hhl, const uint16_t& hhh) {
+            std::array<uint16_t, 8> vals {{lll, llh, lhl, lhh, hll, hlh, hhl, hhh}};
+            const int MEDPOS = 4; // This introduces a bias towards higher values, but what can you do...
+            std::nth_element(vals.begin(), vals.begin()+MEDPOS, vals.end());
+            return vals[MEDPOS];
+        }
+    };
 } // namespace anonymous
 
 namespace voreen {
@@ -1339,6 +1347,8 @@ VolumeOctreeNode* VolumeOctree::createParentNode(VolumeOctreeNode* children[8], 
     case MAX: return createParentNodeWithHalfsampling<HalfSampleMax>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
     case MIN: return createParentNodeWithHalfsampling<HalfSampleMin>(children, octreeOptimization, homogeneityThreshold,
+                brickUrb, avgValues, minValues, maxValues);
+    case MEDIAN: return createParentNodeWithHalfsampling<HalfSampleMedian>(children, octreeOptimization, homogeneityThreshold,
                 brickUrb, avgValues, minValues, maxValues);
     default:
         tgtAssert(false, "Invalid half sample mode");

@@ -182,6 +182,7 @@ OctreeCreator::OctreeCreator()
     aggregationFunction_.addOption("mean", "Mean", VolumeOctree::MEAN);
     aggregationFunction_.addOption("min", "Min", VolumeOctree::MIN);
     aggregationFunction_.addOption("max", "Max", VolumeOctree::MAX);
+    aggregationFunction_.addOption("median", "Median (approx)", VolumeOctree::MEDIAN);
     aggregationFunction_.selectByValue(VolumeOctree::MEAN);
     addProperty(aggregationFunction_);
     homogeneityThreshold_.setTracking(false);
