@@ -381,6 +381,18 @@ float GaussianParametersVariableSigma::fit(GaussianParametersVariableSigma param
     return - (square(f-params.mean) * params.mul + params.add);
 }
 
+float bhattacharyyaConstGaussian(float mean1, float mean2, float variance_inv, float n) {
+    float diff = mean1-mean2;
+
+    float coeff = diff*diff * variance_inv / 8.0f * n;
+
+    float w = std::exp(-coeff);
+
+    assert(!std::isnan(w) && std::isfinite(w) && w >= 0);
+
+    return w;
+}
+
 float evalConstGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, float variance_inv, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
     auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
     auto neighborhood1 = neighborhoods.first;
@@ -401,14 +413,32 @@ float evalConstGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt
     float mean1 = sum1/n;
     float mean2 = sum2/n;
 
-    float diff = mean1-mean2;
+    return bhattacharyyaConstGaussian(mean1, mean2, variance_inv, n);
+}
 
-    float coeff = square(diff) * variance_inv / 8.0f * n;
+float bhattacharyyaPoisson(float sum1, float sum2) {
+    const float APPROX_THRESHOLD = 1000;
 
-    float w = std::exp(-coeff);
+    float mean = (sum1+sum2)*0.5f;
+    float exponent;
 
+    if(sum1 < APPROX_THRESHOLD && sum2 < APPROX_THRESHOLD) {
+        float t1 = std::lgamma(mean+1.0f);
+        float t2 = std::lgamma(sum1+1.0f);
+        float t3 = std::lgamma(sum2+1.0f);
+        float t4 = (t2+t3)*0.5f;
+
+        exponent =  t1 - t4;
+    } else {
+        // Use approximation if values are getting too big for lgamma
+        float s1 = std::sqrt(sum1);
+        float s2 = std::sqrt(sum2);
+        float diff = s1-s2;
+        exponent = -0.5f * (diff*diff);
+    }
+
+    float w = std::exp(exponent);
     assert(!std::isnan(w) && std::isfinite(w) && w >= 0);
-
     return w;
 }
 
@@ -429,12 +459,7 @@ float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec
     float sum1 = std::accumulate(neighborhood1.begin(), neighborhood1.end(), 0.0f);
     float sum2 = std::accumulate(neighborhood2.begin(), neighborhood2.end(), 0.0f);
 
-    float exponent = std::lgamma((sum1+sum2+2.0f)*0.5f) - (std::lgamma(sum1+1) + std::lgamma(sum2+1))*0.5f;
-    float w = std::exp(exponent);
-
-    assert(!std::isnan(w) && std::isfinite(w) && w >= 0);
-
-    return w;
+    return bhattacharyyaPoisson(sum1, sum2);
 }
 
 }

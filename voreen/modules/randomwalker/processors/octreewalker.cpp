@@ -51,6 +51,7 @@
 #include "voreen/core/datastructures/transfunc/1d/transfunc1d.h"
 
 #include <climits>
+#include <random>
 
 #ifdef VRN_MODULE_OPENMP
 #include <omp.h>
@@ -182,11 +183,13 @@ OctreeWalker::OctreeWalker()
         noiseModel_.addOption("gaussian_bian", "Gaussian with mean filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEAN);
         noiseModel_.addOption("gaussian_bian_median", "Gaussian with median filter (Bian 2016)", RW_NOISE_GAUSSIAN_BIAN_MEDIAN);
         noiseModel_.addOption("ttest", "T-Test (Bian 2016)", RW_NOISE_TTEST);
+        //noiseModel_.addOption("gaussian_hierarchical", "Gaussian with constant variance (Drees 2022), hierarchical", RW_NOISE_GAUSSIAN_HIERARCHICAL); // This really does not work too well :(
+        noiseModel_.addOption("shot_hierarchical", "Poisson (Drees 2022), hierarchical", RW_NOISE_POISSON_HIERARCHICAL);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
         noiseModel_.setGroupID("rwparam");
         ON_CHANGE_LAMBDA(noiseModel_, [this] () {
             RWNoiseModel m = noiseModel_.getValue();
-            parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST || m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_VARIABLE_GAUSSIAN);
+            parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST || m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_VARIABLE_GAUSSIAN || m == RW_NOISE_POISSON_HIERARCHICAL || m == RW_NOISE_GAUSSIAN_HIERARCHICAL);
         });
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
@@ -1090,7 +1093,7 @@ static uint64_t processOctreeBrick(RWNoiseModelParameters<NoiseModel> parameters
 
     auto rwm = input.volume_.getRealWorldMapping();
 
-    auto model = parameters.prepare(inputNeighborhood.data_, rwm);
+    auto model = parameters.prepare(inputNeighborhood.data_, rwm, outputNodeGeometry.level_);
     ProfileAllocation noiseModelSize(ramProfiler, volIndexToRow.size() * sizeof(float) * 4); //Assuming worst case: ttest
 
     auto vec = std::vector<float>(systemSize, 0.0f);
@@ -1172,7 +1175,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     const size_t numChannels = 1;
     const size_t maxLevel = input.octree_.getNumLevels()-1;
 
-    auto& brickPoolManager = *input.brickPoolManager_;
+    auto& outputBrickPoolManager = *input.brickPoolManager_;
 
     boost::optional<LocatedVolumeOctreeNode> prevRoot = [&] () -> boost::optional<LocatedVolumeOctreeNode> {
         if(input.previousResult_) {
@@ -1244,8 +1247,58 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 }
             );
     }
-
     LocatedVolumeOctreeNodeConst inputRoot = input.octree_.getLocatedRootNode();
+
+    float variance;
+    if(input.noiseModel_ == RW_NOISE_GAUSSIAN_HIERARCHICAL) {
+        const size_t num_sample_bricks = 10;
+        const size_t max_tries = 100;
+
+        size_t num_sampled = 0;
+        size_t try_ = 0;
+        variance = 0.0f;
+
+        auto dimInBricks = volumeDim/brickDim;
+        size_t numBricks = tgt::hmul(dimInBricks);
+
+        auto rng_seed = 1;
+        std::mt19937 prng(rng_seed);
+        std::uniform_int_distribution<size_t> distr(0, numBricks+1);
+
+        const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
+
+        while(try_ < max_tries && num_sampled < num_sample_bricks) {
+            try_ += 1;
+
+            size_t nodeIndex = distr(prng);
+            tgt::svec3 posInBricks = linearCoordToCubic(nodeIndex, dimInBricks);
+            tgt::svec3 samplePos = posInBricks * brickDim;
+
+            auto node = inputRoot.findChildNode(samplePos, brickDim, 0, false);
+            if(node.node().isHomogeneous()) {
+                continue;
+            }
+            BrickPoolBrickConst brick(node.node().getBrickAddress(), brickDim, inputPoolManager);
+
+            // Crop brick data to valid values
+            auto nodeBrickDim = node.location().voxelURB() - node.location().voxelLLF();
+            std::unique_ptr<VolumeAtomic<uint16_t>> brickData(brick.data().getSubVolume(nodeBrickDim));
+
+            auto brickFloat = toVolumeAtomicFloat(*brickData);
+
+            const int extent = 1;
+            auto mean = meanFilter(brickFloat, extent);
+            float var = estimateVariance(brickFloat, mean, extent);
+
+            variance += var;
+            num_sampled += 1;
+        }
+
+        variance /= num_sampled;
+
+        LINFO("Estimated variance: " << variance);
+    }
+
 
     PointSegmentListGeometryVec3 foregroundSeeds;
     PointSegmentListGeometryVec3 backgroundSeeds;
@@ -1320,22 +1373,27 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                 VolumeOctreeNodeLocation outputNodeGeometry(level, node.llf, node.urb);
                 switch (input.noiseModel_) {
                     case RW_NOISE_GAUSSIAN_BIAN_MEAN:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEDIAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_BIAN_MEDIAN>({}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_TTEST:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_TTEST>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_TTEST>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_GAUSSIAN:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_VARIABLE_GAUSSIAN:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_VARIABLE_GAUSSIAN>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_VARIABLE_GAUSSIAN>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     case RW_NOISE_POISSON:
-                        newBrickAddr = processOctreeBrick<RW_NOISE_POISSON>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, brickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        newBrickAddr = processOctreeBrick<RW_NOISE_POISSON>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        break;
+                    case RW_NOISE_GAUSSIAN_HIERARCHICAL:
+                        newBrickAddr = processOctreeBrick<RW_NOISE_GAUSSIAN_HIERARCHICAL>({input.parameterEstimationNeighborhoodExtent_, variance}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                    case RW_NOISE_POISSON_HIERARCHICAL:
+                        newBrickAddr = processOctreeBrick<RW_NOISE_POISSON_HIERARCHICAL>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     default:
                         tgtAssert(false, "Invalid noise model selected");
@@ -1371,8 +1429,8 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     const tgt::svec3 begin(0);
                     const tgt::svec3 end(prevNode.geometry_.brickDimensions());
                     {
-                        BrickPoolBrickConst prevBrick(prevNode.node().getBrickAddress(), brickDim, brickPoolManager);
-                        BrickPoolBrickConst currentBrick(newBrickAddr, brickDim, brickPoolManager);
+                        BrickPoolBrickConst prevBrick(prevNode.node().getBrickAddress(), brickDim, outputBrickPoolManager);
+                        BrickPoolBrickConst currentBrick(newBrickAddr, brickDim, outputBrickPoolManager);
 
                         VRN_FOR_EACH_VOXEL(pos, begin, end) {
                             uint16_t current = currentBrick.data().voxel(pos);
@@ -1383,7 +1441,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                     }
                     float reldiff = static_cast<float>(maxDiff) / 0xffff;
                     if(reldiff < input.incrementalSimilarityThreshold_) {
-                        brickPoolManager.deleteBrick(newBrickAddr);
+                        outputBrickPoolManager.deleteBrick(newBrickAddr);
                         tgtAssert((level == 0) == prevNode.node_->isLeaf(), "Previous node is leaf, but not at bottom");
 
                         newNode = prevNode.node_;
@@ -1456,7 +1514,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     std::vector<Histogram1D*> octreeHistograms;
     octreeHistograms.push_back(new Histogram1D(histogram));
-    auto octree = new VolumeOctree(outputRootNode.node_, &brickPoolManager, std::move(octreeHistograms), brickDim, input.octree_.getDimensions(), numChannels);
+    auto octree = new VolumeOctree(outputRootNode.node_, &outputBrickPoolManager, std::move(octreeHistograms), brickDim, input.octree_.getDimensions(), numChannels);
     auto output = tgt::make_unique<Volume>(octree, &input.volume_);
 
     float min = static_cast<float>(globalMin)/0xffff;
