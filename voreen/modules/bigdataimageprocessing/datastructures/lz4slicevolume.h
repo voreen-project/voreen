@@ -110,6 +110,14 @@ public:
         , slab_(std::move(other.slab_))
     {
     }
+    LZ4WriteableSlab& operator=(LZ4WriteableSlab&& other)
+    {
+        if(&other != this) {
+            this->~LZ4WriteableSlab();
+            new(this) LZ4WriteableSlab(std::move(other));
+        }
+        return *this;
+    }
     ~LZ4WriteableSlab();
 
 private:
@@ -285,7 +293,9 @@ LZ4WriteableSlab<Voxel>::LZ4WriteableSlab(LZ4SliceVolume<Voxel>& volume, size_t 
 
 template<typename Voxel>
 LZ4WriteableSlab<Voxel>::~LZ4WriteableSlab() {
-    volume_.writeSlab(slab_, zBegin_);
+    if(slab_.getData() != nullptr) {
+        volume_.writeSlab(slab_, zBegin_);
+    }
 }
 
 /// LZ4SliceVolume -------------------------------------------------------------
