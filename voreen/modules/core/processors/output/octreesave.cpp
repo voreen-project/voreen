@@ -345,7 +345,7 @@ void OctreeSave::cleanupFilename() {
         std::string extension;
         switch(outputFormat_.getValue()) {
             case VOL_VVOD:
-                extension = vvodWriter_->getSupportedExtensions().at(0);
+                extension = "vvod";
                 break;
             case VOL_VVD:
                 extension = "vvd";
