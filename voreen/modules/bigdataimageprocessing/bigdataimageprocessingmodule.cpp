@@ -27,6 +27,7 @@
 
 #include "processors/connectedcomponentanalysis.h"
 #include "processors/largevolumeformatconversion.h"
+#include "processors/largevolumedistancetransform.h"
 #include "processors/volumeargmax.h"
 #include "processors/volumefilterlist.h"
 #include "processors/volumeresampletransformation.h"
@@ -50,6 +51,7 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
 
     registerProcessor(new ConnectedComponentAnalysis());
     registerProcessor(new LargeVolumeFormatConversion());
+    registerProcessor(new LargeVolumeDistanceTransform());
     registerProcessor(new NucleiClusterSplitting());
     registerProcessor(new VolumeArgMax());
     registerProcessor(new VolumeFilterList());

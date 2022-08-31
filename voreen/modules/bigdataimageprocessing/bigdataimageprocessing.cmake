@@ -64,6 +64,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
     ${MOD_DIR}/processors/largevolumeformatconversion.cpp
+    ${MOD_DIR}/processors/largevolumedistancetransform.cpp
     ${MOD_DIR}/processors/volumeargmax.cpp
     ${MOD_DIR}/processors/volumefilterlist.cpp
     ${MOD_DIR}/processors/volumeresampletransformation.cpp
@@ -112,6 +113,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
     ${MOD_DIR}/processors/largevolumeformatconversion.h
+    ${MOD_DIR}/processors/largevolumedistancetransform.h
     ${MOD_DIR}/processors/volumeargmax.h
     ${MOD_DIR}/processors/volumefilterlist.h
     ${MOD_DIR}/processors/volumeresampletransformation.h
