@@ -81,10 +81,13 @@ static inline T square(T i) {
 }
 
 template<int outerDim, int innerDim, typename InputSlice, typename OutputSlice, typename InitValFunc, typename FinalValFunc>
-static void dt_slice_pass(InputSlice& inputSlice, OutputSlice& outputSlice, tgt::ivec3 dim, InitValFunc initValFunc, FinalValFunc finalValFunc) {
+static void dt_slice_pass(InputSlice& inputSlice, OutputSlice& outputSlice, tgt::ivec3 dim, tgt::vec3 spacingVec, InitValFunc initValFunc, FinalValFunc finalValFunc) {
     const int n = dim[innerDim];
-    std::vector<int> v(n+1, 0); // Locations of parabolas in lower envelope
-    std::vector<float> z(n+1, 0); // Locations of boundaries between parabolas
+    std::vector<int> v(n+1, 0); // Locations of parabolas in lower envelope, voxel coordinates
+    std::vector<float> z(n+1, 0); // Locations of boundaries between parabolas, physical coordinates (i.e., including spacing)
+
+    float spacing = spacingVec[innerDim];
+    tgtAssert(spacing > 0, "Invalid spacing");
 
     for(int x = 0; x < dim[outerDim]; ++x) {
         auto f = [&] (int i) {
@@ -106,7 +109,9 @@ static void dt_slice_pass(InputSlice& inputSlice, OutputSlice& outputSlice, tgt:
             }
 jmp:
             int vk = v[k];
-            float s = ((fq - f(vk)) + (square(q) - square(vk))) / (2*(q - vk)); //note: q > vk
+            float qs = spacing * q;
+            float vks = spacing * vk;
+            float s = ((fq - f(vk)) + (square(qs) - square(vks))) / (2*(qs - vks)); //note: q > vk
             tgtAssert(!std::isnan(s), "s is nan");
 
             if(s <= z[k]) {
@@ -128,13 +133,15 @@ jmp:
 
         k = 0;
         for(int q = 0; q < n; ++q) {
-            while(z[k+1] < q) {
+            float qs = spacing * q;
+            while(z[k+1] < qs) {
                 k += 1;
             }
             tgt::svec3 slicePos(q,q,0);
             slicePos[outerDim] = x;
             int vk = v[k];
-            float val = f(vk) + square(q-vk);
+            float vks = spacing * vk;
+            float val = f(vk) + square(qs-vks);
             outputSlice->voxel(slicePos) = finalValFunc(val);
         }
     }
@@ -144,6 +151,7 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
     const VolumeBase& vol = *input.inputVolume_;
     const tgt::svec3 dim = vol.getDimensions();
     const tgt::svec3 sliceDim(dim.x, dim.y, 1);
+    const tgt::vec3 spacing = vol.getSpacing();
 
     LZ4SliceVolumeBuilder<float> gBuilder(input.outputPath_,
             LZ4SliceVolumeMetadata(dim)
@@ -189,7 +197,7 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
                     g = 0;
                 } else {
                     // Foreground
-                    g += 1;
+                    g += spacing.z;
                 }
             }
         }
@@ -210,8 +218,9 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
                     float& gPrev = prevSlice->voxel(slicePos);
                     float& g = gSlice->voxel(slicePos);
 
-                    if(gPrev < g) {
-                        g = gPrev + 1;
+                    float ng = gPrev + spacing.z;
+                    if(ng < g) {
+                        g = ng;
                     }
                 }
             }
@@ -233,8 +242,8 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
 
         auto gSlice = gvol.getWriteableSlice(z);
         auto fSlice = builder.getNextWriteableSlice();
-        dt_slice_pass<0,1>(gSlice, tmpSlicePtr, dim, [] (float v) {return square(v);}, [] (float v) {return v;});
-        dt_slice_pass<1,0>(tmpSlicePtr, fSlice, dim, [] (float v) {return v;}, [] (float v) {return std::sqrt(v);});
+        dt_slice_pass<0,1>(gSlice, tmpSlicePtr, dim, spacing, [] (float v) {return square(v);}, [] (float v) {return v;});
+        dt_slice_pass<1,0>(tmpSlicePtr, fSlice, dim, spacing, [] (float v) {return v;}, [] (float v) {return std::sqrt(v);});
     }
 
     progressReporter.setProgress(1.f);
