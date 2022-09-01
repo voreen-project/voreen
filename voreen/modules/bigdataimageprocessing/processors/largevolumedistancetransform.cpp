@@ -80,6 +80,66 @@ static inline T square(T i) {
     return i*i;
 }
 
+template<int outerDim, int innerDim, typename InputSlice, typename OutputSlice, typename InitValFunc, typename FinalValFunc>
+static void dt_slice_pass(InputSlice& inputSlice, OutputSlice& outputSlice, tgt::ivec3 dim, InitValFunc initValFunc, FinalValFunc finalValFunc) {
+    const int n = dim[innerDim];
+    std::vector<int> v(n+1, 0); // Locations of parabolas in lower envelope
+    std::vector<float> z(n+1, 0); // Locations of boundaries between parabolas
+
+    for(int x = 0; x < dim[outerDim]; ++x) {
+        auto f = [&] (int i) {
+            tgt::svec3 slicePos(i,i,0);
+            slicePos[outerDim] = x;
+            float g = inputSlice->voxel(slicePos);
+            return initValFunc(g);
+        };
+
+        v[0] = 0;
+        z[0] = -std::numeric_limits<float>::infinity();
+        z[1] = std::numeric_limits<float>::infinity();
+        int k = 0;
+
+        for(int q = 1; q < n; ++q) {
+            float fq = f(q);
+            if(std::isinf(fq)) {
+                continue;
+            }
+jmp:
+            int vk = v[k];
+            float s = ((fq - f(vk)) + (square(q) - square(vk))) / (2*(q - vk)); //note: q > vk
+            tgtAssert(!std::isnan(s), "s is nan");
+
+            if(s <= z[k]) {
+                if(k > 0) {
+                    k -= 1;
+                    goto jmp;
+                } else {
+                    v[k] = q;
+                    z[k] = s;
+                    z[k+1] = std::numeric_limits<float>::infinity();
+                }
+            } else {
+                k += 1;
+                v[k] = q;
+                z[k] = s;
+                z[k+1] = std::numeric_limits<float>::infinity();
+            }
+        }
+
+        k = 0;
+        for(int q = 0; q < n; ++q) {
+            while(z[k+1] < q) {
+                k += 1;
+            }
+            tgt::svec3 slicePos(q,q,0);
+            slicePos[outerDim] = x;
+            int vk = v[k];
+            float val = f(vk) + square(q-vk);
+            outputSlice->voxel(slicePos) = finalValFunc(val);
+        }
+    }
+}
+
 LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::compute(LargeVolumeDistanceTransform::ComputeInput input, ProgressReporter& progressReporter) const {
     const VolumeBase& vol = *input.inputVolume_;
     const tgt::svec3 dim = vol.getDimensions();
@@ -165,135 +225,16 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
             .withSpacing(vol.getSpacing())
             .withPhysicalToWorldTransformation(vol.getPhysicalToWorldMatrix()));
 
-    // y and x scans
     auto tmpSlice = VolumeAtomic<float>(sliceDim);
+    auto tmpSlicePtr = &tmpSlice;
+    // y and x scans
     for(size_t z=0; z<dim.z; ++z) {
         progressReporter.setProgress(static_cast<float>(z)/dim.z);
 
         auto gSlice = gvol.getWriteableSlice(z);
         auto fSlice = builder.getNextWriteableSlice();
-
-        {
-            const int n = dim.y;
-            std::vector<int> v(n+1, 0); // Locations of parabolas in lower envelope
-            std::vector<float> z(n+1, 0); // Locations of boundaries between parabolas
-
-            for(int x = 0; x < dim.x; ++x) {
-                auto f = [&] (int i) {
-                    tgt::svec3 slicePos(x,i,0);
-                    float g = gSlice->voxel(slicePos);
-                    // We have to square here since we have not done it in the z-passes
-                    // TODO: maybe we can do that
-                    return square(g);
-                };
-
-                v[0] = 0;
-                z[0] = -std::numeric_limits<float>::infinity();
-                z[1] = std::numeric_limits<float>::infinity();
-                int k = 0;
-
-                for(int q = 1; q < n; ++q) {
-                    float fq = f(q);
-                    if(std::isinf(fq)) {
-                        continue;
-                    }
-jmp:
-                    int vk = v[k];
-                    float s = ((fq - f(vk)) + (square(q) - square(vk))) / (2*(q - vk)); //note: q > vk
-                    tgtAssert(!std::isnan(s), "bleh"); // this will happen if fv and fq are inf
-
-                    if(s <= z[k]) {
-                        if(k > 0) {
-                            k -= 1;
-                            goto jmp;
-                        } else {
-                            v[k] = q;
-                            z[k] = s;
-                            z[k+1] = std::numeric_limits<float>::infinity();
-                        }
-                    } else {
-                        k += 1;
-                        v[k] = q;
-                        z[k] = s;
-                        z[k+1] = std::numeric_limits<float>::infinity();
-                    }
-                }
-
-                int maxk = k;
-                k = 0;
-                for(int q = 0; q < n; ++q) {
-                    while(z[k+1] < q) {
-                        tgtAssert(k < maxk, "bleh");
-                        k += 1;
-                    }
-                    tgt::svec3 slicePos(x,q,0);
-                    int vk = v[k];
-                    float val = f(vk) + square(q-vk);
-                    tgtAssert(val >= 0, "temporary check");
-                    tmpSlice.voxel(slicePos) = val;
-                }
-            }
-        }
-
-        {
-            const int n = dim.x;
-            std::vector<int> v(n+1, 0); // Locations of parabolas in lower envelope
-            std::vector<float> z(n+1, 0); // Locations of boundaries between parabolas
-
-            for(int y = 0; y < dim.y; ++y) {
-                auto f = [&] (int i) {
-                    tgt::svec3 slicePos(i,y,0);
-                    float g = tmpSlice.voxel(slicePos);
-                    return g;
-                };
-
-                v[0] = 0;
-                z[0] = -std::numeric_limits<float>::infinity();
-                z[1] = std::numeric_limits<float>::infinity();
-                int k = 0;
-
-                for(int q = 1; q < n; ++q) {
-                    float fq = f(q);
-                    if(std::isinf(fq)) {
-                        continue;
-                    }
-jmp2:
-                    int vk = v[k];
-                    float s = ((fq - f(vk)) + (square(q) - square(vk))) / (2*(q - vk)); //note: q > vk
-                    tgtAssert(!std::isnan(s), "bleh"); // this will happen if fv and fq are inf
-
-                    if(s <= z[k]) {
-                        if(k > 0) {
-                            k -= 1;
-                            goto jmp2;
-                        } else {
-                            v[k] = q;
-                            z[k] = s;
-                            z[k+1] = std::numeric_limits<float>::infinity();
-                        }
-                    } else {
-                        k += 1;
-                        v[k] = q;
-                        z[k] = s;
-                        z[k+1] = std::numeric_limits<float>::infinity();
-                    }
-                }
-
-                int maxk = k;
-                k = 0;
-                for(int q = 0; q < n; ++q) {
-                    while(z[k+1] < q) {
-                        tgtAssert(k < maxk, "bleh");
-                        k += 1;
-                    }
-                    tgt::svec3 slicePos(q,y,0);
-                    int vk = v[k];
-                    float val = f(vk) + square(q-vk);
-                    tgtAssert(val >= 0, "temporary check");
-                    fSlice->voxel(slicePos) = std::sqrt(val);
-                }
-            }
-        }
+        dt_slice_pass<0,1>(gSlice, tmpSlicePtr, dim, [] (float v) {return square(v);}, [] (float v) {return v;});
+        dt_slice_pass<1,0>(tmpSlicePtr, fSlice, dim, [] (float v) {return v;}, [] (float v) {return std::sqrt(v);});
     }
 
     progressReporter.setProgress(1.f);
