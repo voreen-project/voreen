@@ -33,13 +33,13 @@
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/intproperty.h"
 #include "voreen/core/properties/temppathproperty.h"
-#include "../datastructures/lz4slicevolume.h"
 
 namespace voreen {
 
 struct LargeVolumeDistanceTransformInput {
-    std::string outputPath_;
     const VolumeBase* inputVolume_;
+    std::string outputPath_;
+    float binarizationThreshold_;
 };
 struct LargeVolumeDistanceTransformOutput {
     std::unique_ptr<Volume> outputVolume_;
@@ -76,6 +76,7 @@ private:
     VolumePort inport_;
     VolumePort outport_;
 
+    FloatProperty binarizationThreshold_;
     TempPathProperty outputVolumeFilePath_;
 
     static const std::string loggerCat_; ///< category used in logging

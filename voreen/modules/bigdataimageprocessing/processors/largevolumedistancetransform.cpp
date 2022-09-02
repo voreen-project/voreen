@@ -25,6 +25,7 @@
 
 #include "largevolumedistancetransform.h"
 #include "voreen/core/utils/stringutils.h"
+#include "voreen/core/datastructures/volume/volumeminmax.h"
 
 #include "../algorithm/distancetransform.h"
 
@@ -38,10 +39,15 @@ LargeVolumeDistanceTransform::LargeVolumeDistanceTransform()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "volumehandle.input", "Volume Input")
     , outport_(Port::OUTPORT, "volumehandle.output", "Volume Output",false)
+    , binarizationThreshold_("binarizationThreshold", "Threshold", 0.5f, 0.0f, std::numeric_limits<float>::max(), Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , outputVolumeFilePath_("outputVolumeFilePath", "Output volume file path", "Output volume file path", "", LZ4SliceVolumeBase::FILE_EXTENSION)
 {
     addPort(inport_);
     addPort(outport_);
+
+    addProperty(binarizationThreshold_);
+        binarizationThreshold_.setTracking(false);
+        binarizationThreshold_.setGroupID("binarization");
 
     addProperty(outputVolumeFilePath_);
 }
@@ -53,7 +59,22 @@ Processor* LargeVolumeDistanceTransform::create() const {
 }
 
 void LargeVolumeDistanceTransform::adjustPropertiesToInput() {
-    //
+    const VolumeBase* input = inport_.getData();
+    if(!input) {
+        return;
+    }
+    if(!input->hasDerivedData<VolumeMinMax>()) {
+        LINFO("Calculating VolumeMinMax. This may take a while...");
+    }
+
+    const VolumeMinMax* mm = input->getDerivedData<VolumeMinMax>();
+    float min = mm->getMin();
+    float max = mm->getMax();
+    if(min != max) {
+        binarizationThreshold_.setMinValue(min);
+        binarizationThreshold_.setMaxValue(max);
+        binarizationThreshold_.adaptDecimalsToRange(4);
+    }
 }
 
 LargeVolumeDistanceTransform::ComputeInput LargeVolumeDistanceTransform::prepareComputeInput() {
@@ -66,15 +87,15 @@ LargeVolumeDistanceTransform::ComputeInput LargeVolumeDistanceTransform::prepare
     }
 
     return LargeVolumeDistanceTransform::ComputeInput {
+        inport_.getThreadSafeData(),
         outputVolumeFilePath_.get(),
-        inport_.getThreadSafeData()
+        binarizationThreshold_.get(),
     };
 }
 
 
 LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::compute(LargeVolumeDistanceTransform::ComputeInput input, ProgressReporter& progressReporter) const {
-    const float binarizationThreshold = 0.5f;
-    auto res = compute_distance_transform(*input.inputVolume_, binarizationThreshold, input.outputPath_, progressReporter);
+    auto res = compute_distance_transform(*input.inputVolume_, input.binarizationThreshold_, input.outputPath_, progressReporter);
 
     return {
         std::move(res).toVolume(),

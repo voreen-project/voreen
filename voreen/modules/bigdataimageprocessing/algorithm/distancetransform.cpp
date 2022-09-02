@@ -108,6 +108,19 @@ LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float bi
     const tgt::svec3 sliceDim(dim.x, dim.y, 1);
     const tgt::vec3 spacing = vol.getSpacing();
 
+    float binarizationThresholdNormalized;
+    if(vol.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
+        // If the input volume does not have a RealWorldMapping we need to convert the binarizationThreshold to a normalized value.
+        binarizationThresholdNormalized = vol.getRealWorldMapping().realWorldToNormalized(binarizationThreshold);
+    } else {
+        // If the input volume does not have a RealWorldMapping we expect RW values to be normalized.
+        binarizationThresholdNormalized = binarizationThreshold;
+    }
+
+    auto isBackground = [&] (float value) {
+        return value < binarizationThresholdNormalized;
+    };
+
     LZ4SliceVolumeBuilder<float> gBuilder(outputPath,
             LZ4SliceVolumeMetadata(dim)
             .withOffset(vol.getOffset())
@@ -124,11 +137,9 @@ LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float bi
                 tgt::svec3 slicePos(x,y,0);
                 float val = inputSlice->getVoxelNormalized(slicePos);
                 float& g = gSlice.voxel(slicePos);
-                if(val < binarizationThreshold) {
-                    // Background
+                if(isBackground(val)) {
                     g = 0;
                 } else {
-                    // Foreground
                     g = std::numeric_limits<float>::infinity();
                 }
             }
@@ -145,11 +156,9 @@ LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float bi
                 tgt::svec3 slicePos(x,y,0);
                 float val = inputSlice->getVoxelNormalized(slicePos);
                 float& g = gSlice.voxel(slicePos);
-                if(val < binarizationThreshold) {
-                    // Background
+                if(isBackground(val)) {
                     g = 0;
                 } else {
-                    // Foreground
                     g += spacing.z;
                 }
             }
