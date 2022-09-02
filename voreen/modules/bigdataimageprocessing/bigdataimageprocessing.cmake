@@ -59,6 +59,7 @@ ENDIF()
 SET(MOD_CORE_MODULECLASS BigDataImageProcessingModule)
 
 SET(MOD_CORE_SOURCES
+    ${MOD_DIR}/algorithm/distancetransform.cpp
     ${MOD_DIR}/datastructures/lz4slicevolume.cpp
     ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
     ${MOD_DIR}/io/volumedisklz4.cpp
@@ -108,6 +109,7 @@ SET(MOD_CORE_SOURCES
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/algorithm/intervalwalker.h
     ${MOD_DIR}/algorithm/streamingcomponents.h
+    ${MOD_DIR}/algorithm/distancetransform.h
     ${MOD_DIR}/datastructures/lz4slicevolume.h
     ${MOD_DIR}/io/lz4slicevolumefilereader.h
     ${MOD_DIR}/io/volumedisklz4.h
