@@ -25,7 +25,6 @@
 
 #include "largevolumedistancetransform.h"
 #include "voreen/core/utils/stringutils.h"
-#include "voreen/core/datastructures/volume/volumeminmax.h"
 
 #include "tgt/vector.h"
 
@@ -53,10 +52,6 @@ Processor* LargeVolumeDistanceTransform::create() const {
 
 void LargeVolumeDistanceTransform::adjustPropertiesToInput() {
     //
-}
-
-template<typename OutputFormat>
-void processDispatch(const VolumeBase& input, std::unique_ptr<Volume>& output, const std::string& outputPath, ProgressReporter& progressReporter) {
 }
 
 LargeVolumeDistanceTransform::ComputeInput LargeVolumeDistanceTransform::prepareComputeInput() {
@@ -162,7 +157,7 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
     const float binarizationThreshold = 0.5f;
 
     VolumeAtomic<float> gSlice(sliceDim);
-    // z-scan 1
+    // z-scan 1: calculate distances in forward direction
     {
         const size_t z = 0;
         std::unique_ptr<VolumeRAM> inputSlice(vol.getSlice(z));
@@ -205,9 +200,13 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
     }
     auto gvol = std::move(gBuilder).finalize();
 
-    // z-scan 2
+    auto tmpSlice = VolumeAtomic<float>(sliceDim);
+    auto tmpSlicePtr = &tmpSlice;
+
+    // z-scan 2, propagate distances in other direction
+    // also, directly do y- and x- passes on the slices while they are loaded.
     {
-        auto prevSlice = gvol.getWriteableSlice(dim.z-1);
+        auto prevZSlice = gvol.loadSlice(dim.z-1);
         for(int z = dim.z-2; z >= 0; --z) {
             progressReporter.setProgress(static_cast<float>(z)/dim.z);
 
@@ -215,7 +214,7 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
             for(size_t y = 0; y < dim.y; ++y) {
                 for(size_t x = 0; x < dim.x; ++x) {
                     tgt::svec3 slicePos(x,y,0);
-                    float& gPrev = prevSlice->voxel(slicePos);
+                    float& gPrev = prevZSlice.voxel(slicePos);
                     float& g = gSlice->voxel(slicePos);
 
                     float ng = gPrev + spacing.z;
@@ -224,32 +223,17 @@ LargeVolumeDistanceTransform::ComputeOutput LargeVolumeDistanceTransform::comput
                     }
                 }
             }
-            prevSlice = std::move(gSlice);
+            prevZSlice = gSlice->copy();
+
+            // Now do x and y passes on current slice to finalize it.
+            dt_slice_pass<0,1>(gSlice, tmpSlicePtr, dim, spacing, [] (float v) {return square(v);}, [] (float v) {return v;});
+            dt_slice_pass<1,0>(tmpSlicePtr, gSlice, dim, spacing, [] (float v) {return v;}, [] (float v) {return std::sqrt(v);});
         }
-    }
-
-    LZ4SliceVolumeBuilder<float> builder(input.outputPath_+ "foobar", //TODO
-            LZ4SliceVolumeMetadata(dim)
-            .withOffset(vol.getOffset())
-            .withSpacing(vol.getSpacing())
-            .withPhysicalToWorldTransformation(vol.getPhysicalToWorldMatrix()));
-
-    auto tmpSlice = VolumeAtomic<float>(sliceDim);
-    auto tmpSlicePtr = &tmpSlice;
-    // y and x scans
-    for(size_t z=0; z<dim.z; ++z) {
-        progressReporter.setProgress(static_cast<float>(z)/dim.z);
-
-        auto gSlice = gvol.getWriteableSlice(z);
-        auto fSlice = builder.getNextWriteableSlice();
-        dt_slice_pass<0,1>(gSlice, tmpSlicePtr, dim, spacing, [] (float v) {return square(v);}, [] (float v) {return v;});
-        dt_slice_pass<1,0>(tmpSlicePtr, fSlice, dim, spacing, [] (float v) {return v;}, [] (float v) {return std::sqrt(v);});
     }
 
     progressReporter.setProgress(1.f);
     return {
-        std::move(builder).finalize().toVolume()
-        //std::move(gvol).toVolume()
+        std::move(gvol).toVolume()
     };
 }
 void LargeVolumeDistanceTransform::processComputeOutput(LargeVolumeDistanceTransform::ComputeOutput output) {
