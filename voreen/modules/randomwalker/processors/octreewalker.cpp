@@ -66,6 +66,7 @@ namespace voreen {
 namespace {
 
 const std::string PREV_RESULT_FILE_NAME = "prev_result.vvod";
+const std::string PREV_RESULT_VALID_FILE_NAME = "prev_result_valid.token";
 const std::string PREV_RESULT_OCTREE_KEY = "Octree";
 const std::string PREV_RESULT_FOREGROUND_KEY = "foregroundSeeds";
 const std::string PREV_RESULT_BACKGROUND_KEY = "backgroundSeeds";
@@ -298,38 +299,45 @@ void OctreeWalker::deserialize(Deserializer& s) {
         s.removeLastError();
     }
 
-    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + PREV_RESULT_FILE_NAME);
+    std::unique_ptr<VolumeOctree> previousOctree(nullptr);
 
-    std::unique_ptr<VolumeOctree> previousOctree;
+
+    std::string previousResultFile = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + PREV_RESULT_FILE_NAME);
 
     PointSegmentListGeometryVec3 foregroundSeeds;
     PointSegmentListGeometryVec3 backgroundSeeds;
+    if(!prevResultPath_.empty()) {
+        if(tgt::FileSystem::fileExists(prevResultPath_ + "/" + PREV_RESULT_VALID_FILE_NAME)) {
+            if(tgt::FileSystem::fileExists(previousResultFile)) {
+                XmlDeserializer d(prevResultPath_);
 
-    if(!prevResultPath_.empty() && tgt::FileSystem::fileExists(previousResultFile)) {
-        XmlDeserializer d(prevResultPath_);
+                previousOctree.reset(new VolumeOctree());
+                try {
+                    std::ifstream fs(previousResultFile);
+                    d.read(fs);
+                    d.deserialize(PREV_RESULT_OCTREE_KEY, *previousOctree);
 
-        previousOctree.reset(new VolumeOctree());
-        try {
-            std::ifstream fs(previousResultFile);
-            d.read(fs);
-            d.deserialize(PREV_RESULT_OCTREE_KEY, *previousOctree);
+                    resultPath_.set(prevResultPath_);
 
-            resultPath_.set(prevResultPath_);
-
-            try {
-                d.deserialize(PREV_RESULT_FOREGROUND_KEY, foregroundSeeds);
-                d.deserialize(PREV_RESULT_BACKGROUND_KEY, backgroundSeeds);
-            } catch (SerializationException& e) {
-                d.removeLastError();
-                LWARNING("No foreground/background seed present from previous result." << e.what());
+                    try {
+                        d.deserialize(PREV_RESULT_FOREGROUND_KEY, foregroundSeeds);
+                        d.deserialize(PREV_RESULT_BACKGROUND_KEY, backgroundSeeds);
+                    } catch (SerializationException& e) {
+                        d.removeLastError();
+                        LWARNING("No foreground/background seed present from previous result." << e.what());
+                    }
+                } catch (std::exception& e) {
+                    LERROR("Failed to deserialize previous solution: " << e.what());
+                    previousOctree.reset(nullptr);
+                } catch (SerializationException& e) {
+                    d.removeLastError();
+                    LERROR("Failed to deserialize previous solution: " << e.what());
+                    previousOctree.reset(nullptr);
+                }
             }
-        } catch (std::exception& e) {
-            LERROR("Failed to deserialize previous solution: " << e.what());
-            previousOctree.reset(nullptr);
-        } catch (SerializationException& e) {
-            d.removeLastError();
-            LERROR("Failed to deserialize previous solution: " << e.what());
-            previousOctree.reset(nullptr);
+        } else {
+            // This may happen if Voreen crashed or was killed during execution.
+            LERROR("Skipping deserialization of invalid previous solution");
         }
     }
 
@@ -1205,9 +1213,18 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     std::unordered_set<const VolumeOctreeNode*> nodesToSave;
 
     LocatedVolumeOctreeNode outputRootNode(nullptr, maxLevel, tgt::svec3(0), volumeDim);
+
+    // Mark previous solution as invalid during computation in case Voreen is killed or crashes
+    std::string valid_token_path = prevResultPath_ + "/" + PREV_RESULT_VALID_FILE_NAME;
+    tgt::FileSystem::deleteFile(valid_token_path);
+
     // If computation is canceled: Delete new nodes, but spare nodes that are part of another tree.
     tgt::ScopeGuard nodeCleanup([&] () {
         freeTreeComponents(&outputRootNode.node(), nodesToSave, *brickPoolManager_);
+
+        // The previous result is still valid after interuption _and_ cleanup
+        std::ofstream f(valid_token_path);
+        f.flush();
     });
 
     uint16_t globalMin = 0xffff;
@@ -1573,6 +1590,10 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
     s.serialize(PREV_RESULT_FOREGROUND_KEY, previousResult_->foregroundSeeds_);
     s.serialize(PREV_RESULT_BACKGROUND_KEY, previousResult_->backgroundSeeds_);
     s.write(fs);
+
+    // Finally, the cache result can be marked as valid
+    std::ofstream f(prevResultPath_ + "/" + PREV_RESULT_VALID_FILE_NAME);
+    f.flush();
 }
 void OctreeWalker::clearPreviousResults() {
     // First: Reset output
