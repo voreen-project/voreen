@@ -35,6 +35,15 @@ namespace voreen {
 
 LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float binarizationThreshold, std::string outputPath, ProgressReporter& progressReporter);
 
+enum MedialStructureType {
+    MedialStructureType_Point = 3,
+    MedialStructureType_Line = 2,
+    MedialStructureType_Surface = 1,
+};
+
+// Warning: This is only somewhat working and creates a lot of noisy and disconnected structures.
+LZ4SliceVolume<uint8_t> compute_medial_structures(const VolumeBase& vol, float binarizationThreshold, MedialStructureType structureType, std::string outputPath, ProgressReporter& progressReporter);
+
 }   //namespace
 
 #endif

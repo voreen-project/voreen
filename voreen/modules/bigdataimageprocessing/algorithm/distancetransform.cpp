@@ -104,6 +104,7 @@ jmp:
 }
 
 LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float binarizationThreshold, std::string outputPath, ProgressReporter& progressReporter) {
+    // TODO fix progress reporting
     const tgt::svec3 dim = vol.getDimensions();
     const tgt::svec3 sliceDim(dim.x, dim.y, 1);
     const tgt::vec3 spacing = vol.getSpacing();
@@ -201,6 +202,132 @@ LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float bi
     progressReporter.setProgress(1.f);
 
     return gvol;
+}
+
+static bool is_peak(float l, float c, float r) {
+    return l < c && c >= r || l <= c && c > r;
+    //return l < c && c >= r;
+}
+
+static void count_peaks_z(LZ4WriteableSlab<uint8_t>& counts, const VolumeAtomic<float>& prev, const VolumeAtomic<float>& current, const VolumeAtomic<float>& next) {
+    const tgt::svec3 dim = counts->getDimensions();
+    tgtAssert(dim == prev.getDimensions(), "Dim mismatch");
+    tgtAssert(dim == current.getDimensions(), "Dim mismatch");
+    tgtAssert(dim == next.getDimensions(), "Dim mismatch");
+
+    size_t n = tgt::hmul(dim);
+    for(size_t i = 0; i < n; ++i) {
+        float p = prev.voxel(i);
+        float c = current.voxel(i);
+        float n = next.voxel(i);
+        if(is_peak(p, c, n)) {
+            counts->voxel(i) += 1;
+        }
+    }
+}
+
+static void count_peaks_xy(LZ4WriteableSlab<uint8_t>& counts, const VolumeAtomic<float>& vals) {
+    const tgt::ivec3 dim = counts->getDimensions();
+    tgtAssert(dim == (tgt::ivec3)vals.getDimensions(), "Dim mismatch");
+    tgtAssert(dim.x >= 3, "x dim too small");
+    tgtAssert(dim.y >= 3, "x dim too small");
+
+
+    for(int y = 1; y < dim.y-1; ++y) {
+        for(int x = 1; x < dim.x-1; ++x) {
+            tgt::svec3 slicePos(x,y,0);
+
+            float c = vals.voxel(slicePos);
+            bool peak_x = is_peak(vals.voxel(x-1, y, 0), c, vals.voxel(x+1, y, 0));
+            bool peak_y = is_peak(vals.voxel(x, y-1, 0), c, vals.voxel(x, y+1, 0));
+            counts->voxel(slicePos) += (uint8_t) peak_x + (uint8_t) peak_y;
+        }
+    }
+
+    auto count_y = [&] (int x, int y) {
+        tgt::svec3 slicePos(x,y,0);
+
+        float c = vals.voxel(slicePos);
+        bool peak_y = is_peak(vals.voxel(x, y-1, 0), c, vals.voxel(x, y+1, 0));
+        counts->voxel(slicePos) += (uint8_t) peak_y;
+    };
+    for(int y = 1; y < dim.y-1; ++y) {
+        count_y(0, y);
+        count_y(dim.x-1, y);
+    }
+
+    auto count_x = [&] (int x, int y) {
+        tgt::svec3 slicePos(x,y,0);
+
+        float c = vals.voxel(slicePos);
+        bool peak_x = is_peak(vals.voxel(x-1, y, 0), c, vals.voxel(x+1, y, 0));
+        counts->voxel(slicePos) += (uint8_t) peak_x;
+    };
+    for(int x = 1; x < dim.x-1; ++x) {
+        count_x(x, 0);
+        count_x(x, dim.y-1);
+    }
+}
+
+static void find_structures(LZ4WriteableSlab<uint8_t>& counts, MedialStructureType type) {
+    const tgt::ivec3 dim = counts->getDimensions();
+    size_t n = tgt::hmul(dim);
+
+    for(size_t i = 0; i < n; ++i) {
+        auto& c = counts->voxel(i);
+        c = c >= type ? 255 : 0;
+    }
+}
+
+LZ4SliceVolume<uint8_t> compute_medial_structures(const VolumeBase& vol, float binarizationThreshold, MedialStructureType structureType, std::string outputPath, ProgressReporter& progressReporter) {
+    // TODO fix progress paths
+
+    std::string outputPathTmp = VoreenApplication::app()->getUniqueTmpFilePath();
+
+    // TODO: Squared distances would also be fine and faster
+    auto distances = compute_distance_transform(vol, binarizationThreshold, outputPathTmp, progressReporter);
+
+    const tgt::ivec3 dim = vol.getDimensions();
+    const tgt::svec3 sliceDim(dim.x, dim.y, 1);
+
+    LZ4SliceVolumeBuilder<uint8_t> builder(outputPath,
+            LZ4SliceVolumeMetadata(dim)
+            .withOffset(vol.getOffset())
+            .withSpacing(vol.getSpacing())
+            .withPhysicalToWorldTransformation(vol.getPhysicalToWorldMatrix()));
+
+
+    VolumeAtomic<float> prevSlice(tgt::svec3::zero);
+    VolumeAtomic<float> currentSlice(tgt::svec3::zero);
+    VolumeAtomic<float> nextSlice(tgt::svec3::zero);
+    for(int z = 0; z < dim.z; ++z) {
+        progressReporter.setProgress(static_cast<float>(z)/dim.z);
+        std::unique_ptr<VolumeRAM> inputSlice(vol.getSlice(z));
+
+        if(z < dim.z-1) {
+            nextSlice = distances.loadSlice(z+1);
+        }
+        if(z == 0) {
+            currentSlice = distances.loadSlice(z);
+        }
+
+        auto countSlice = builder.getNextWriteableSlice();
+        countSlice->fill(0);
+
+        count_peaks_xy(countSlice, currentSlice);
+        if(z > 0 && z < dim.z-1) {
+            count_peaks_z(countSlice, prevSlice, currentSlice, nextSlice);
+        }
+
+        find_structures(countSlice, structureType);
+
+        prevSlice = std::move(currentSlice);
+        currentSlice = std::move(nextSlice);
+    }
+
+    std::move(distances).deleteFromDisk();
+
+    return std::move(builder).finalize();
 }
 
 }   // namespace
