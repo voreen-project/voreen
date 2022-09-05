@@ -151,10 +151,14 @@ struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
 VolumeAtomic<tgt::ivec3> findBestCenters(const VolumeAtomic<float>& image, const VolumeAtomic<float>& mean, const VolumeAtomic<float>& variance, int filter_extent);
 float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
-float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
+float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent, int level);
 float evalConstGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, float variance_inv, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 float bhattacharyyaPoisson(float sum1, float sum2);
 float bhattacharyyaConstGaussian(float mean1, float mean2, float variance_inv, float n);
+
+inline int num_voxels_in_level(int level) {
+    return 1 << (3*level); //8^level
+}
 
 // Parameter estimation according to
 //
@@ -267,9 +271,16 @@ struct RWNoiseModelWeights<RW_NOISE_POISSON> {
     VolumeAtomic<float> values;
     VolumeAtomic<tgt::ivec3> best_centers;
     int filter_extent;
+    int level;
 
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
-        return evalPoisson(values, best_centers, voxel, neighbor, filter_extent);
+        // Theoretically, choosing level here should be better since the noise
+        // distribution is not poisson otherwise, but in practice always
+        // choosing 0 appears to yield better results...
+        //float evalLevel = level;
+        float evalLevel = 0;
+
+        return evalPoisson(values, best_centers, voxel, neighbor, filter_extent, evalLevel);
     }
 };
 template<>
@@ -291,6 +302,7 @@ struct RWNoiseModelParameters<RW_NOISE_POISSON> {
             std::move(image),
             std::move(bestCenters),
             filter_extent,
+            level,
         };
     }
     RWNoiseModelWeights<RW_NOISE_POISSON> prepare(const VolumeRAM& vol, RealWorldMapping rwm, int level=0) {
@@ -354,7 +366,7 @@ struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_HIERARCHICAL> {
             float mean1 = values.voxel(voxel);
             float mean2 = values.voxel(neighbor);
 
-            int n = 1;// << level; //8^level
+            int n = num_voxels_in_level(level);
 
             return bhattacharyyaConstGaussian(mean1, mean2, variance_inv, n);
         }
@@ -401,12 +413,12 @@ struct RWNoiseModelWeights<RW_NOISE_POISSON_HIERARCHICAL> {
 
     float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
         if(level == 0) {
-            return evalPoisson(values, best_centers, voxel, neighbor, filter_extent);
+            return evalPoisson(values, best_centers, voxel, neighbor, filter_extent, level);
         } else {
             float v1 = values.voxel(voxel);
             float v2 = values.voxel(neighbor);
 
-            int mult = 1 << (3*level); //8^level
+            int mult = num_voxels_in_level(level);
             float sum1 = v1*mult;
             float sum2 = v2*mult;
 

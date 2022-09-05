@@ -442,7 +442,7 @@ float bhattacharyyaPoisson(float sum1, float sum2) {
     return w;
 }
 
-float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent) {
+float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent, int level) {
     auto neighborhoods = collect_neighborhoods(image, best_centers, voxel, neighbor, filter_extent);
     auto neighborhood1 = neighborhoods.first;
     auto neighborhood2 = neighborhoods.second;
@@ -456,8 +456,13 @@ float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec
     size_t n = neighborhood1.size();
     assert(n == neighborhood2.size());
 
+    int mult = num_voxels_in_level(level);
+
     float sum1 = std::accumulate(neighborhood1.begin(), neighborhood1.end(), 0.0f);
     float sum2 = std::accumulate(neighborhood2.begin(), neighborhood2.end(), 0.0f);
+
+    sum1 *= mult;
+    sum2 *= mult;
 
     return bhattacharyyaPoisson(sum1, sum2);
 }
