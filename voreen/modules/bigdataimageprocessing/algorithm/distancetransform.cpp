@@ -104,10 +104,11 @@ jmp:
 }
 
 LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float binarizationThreshold, std::string outputPath, ProgressReporter& progressReporter) {
-    // TODO fix progress reporting
     const tgt::svec3 dim = vol.getDimensions();
     const tgt::svec3 sliceDim(dim.x, dim.y, 1);
     const tgt::vec3 spacing = vol.getSpacing();
+
+    SubtaskProgressReporterCollection<2> tasks(progressReporter);
 
     float binarizationThresholdNormalized;
     if(vol.hasMetaData(VolumeBase::META_DATA_NAME_REAL_WORLD_MAPPING)) {
@@ -148,7 +149,7 @@ LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float bi
         gBuilder.pushSlice(gSlice);
     }
     for(size_t z = 1; z < dim.z; ++z) {
-        progressReporter.setProgress(static_cast<float>(z)/dim.z);
+        tasks.get<0>().setProgress(static_cast<float>(z)/dim.z);
         std::unique_ptr<VolumeRAM> inputSlice(vol.getSlice(z));
 
 
@@ -176,7 +177,7 @@ LZ4SliceVolume<float> compute_distance_transform(const VolumeBase& vol, float bi
     {
         auto prevZSlice = gvol.loadSlice(dim.z-1);
         for(int z = dim.z-2; z >= 0; --z) {
-            progressReporter.setProgress(static_cast<float>(z)/dim.z);
+            tasks.get<1>().setProgress(static_cast<float>(z)/dim.z);
 
             auto gSlice = gvol.getWriteableSlice(z);
             for(size_t y = 0; y < dim.y; ++y) {
@@ -280,12 +281,11 @@ static void find_structures(LZ4WriteableSlab<uint8_t>& counts, MedialStructureTy
 }
 
 LZ4SliceVolume<uint8_t> compute_medial_structures(const VolumeBase& vol, float binarizationThreshold, MedialStructureType structureType, std::string outputPath, ProgressReporter& progressReporter) {
-    // TODO fix progress paths
+    SubtaskProgressReporterCollection<2> tasks(progressReporter);
 
     std::string outputPathTmp = VoreenApplication::app()->getUniqueTmpFilePath();
 
-    // TODO: Squared distances would also be fine and faster
-    auto distances = compute_distance_transform(vol, binarizationThreshold, outputPathTmp, progressReporter);
+    auto distances = compute_distance_transform(vol, binarizationThreshold, outputPathTmp, tasks.get<0>());
 
     const tgt::ivec3 dim = vol.getDimensions();
     const tgt::svec3 sliceDim(dim.x, dim.y, 1);
@@ -301,7 +301,7 @@ LZ4SliceVolume<uint8_t> compute_medial_structures(const VolumeBase& vol, float b
     VolumeAtomic<float> currentSlice(tgt::svec3::zero);
     VolumeAtomic<float> nextSlice(tgt::svec3::zero);
     for(int z = 0; z < dim.z; ++z) {
-        progressReporter.setProgress(static_cast<float>(z)/dim.z);
+        tasks.get<1>().setProgress(static_cast<float>(z)/dim.z);
         std::unique_ptr<VolumeRAM> inputSlice(vol.getSlice(z));
 
         if(z < dim.z-1) {
@@ -326,6 +326,8 @@ LZ4SliceVolume<uint8_t> compute_medial_structures(const VolumeBase& vol, float b
     }
 
     std::move(distances).deleteFromDisk();
+
+    progressReporter.setProgress(1.0f);
 
     return std::move(builder).finalize();
 }
