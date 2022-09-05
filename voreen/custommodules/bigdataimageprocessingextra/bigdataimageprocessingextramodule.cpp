@@ -27,7 +27,6 @@
 
 #include "processors/binarymedian.h"
 #include "processors/fatcellquantification.h"
-#include "processors/largetestdatagenerator.h"
 #include "processors/largevolumemedialstructures.h"
 #include "processors/segmentationslicedensity.h"
 #include "processors/segmentationquantification.h"
@@ -46,7 +45,6 @@ BigDataImageProcessingExtraModule::BigDataImageProcessingExtraModule(const std::
 
     registerProcessor(new BinaryMedian());
     registerProcessor(new FatCellQuantification());
-    registerProcessor(new LargeTestDataGenerator());
     registerProcessor(new LargeVolumeMedialStructures());
     registerProcessor(new SegmentationSliceDensity());
     registerProcessor(new SegmentationQuantification());

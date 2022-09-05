@@ -59,11 +59,13 @@ ENDIF()
 SET(MOD_CORE_MODULECLASS BigDataImageProcessingModule)
 
 SET(MOD_CORE_SOURCES
+    ${MOD_DIR}/algorithm/boundshierarchy.h
     ${MOD_DIR}/algorithm/distancetransform.cpp
     ${MOD_DIR}/datastructures/lz4slicevolume.cpp
     ${MOD_DIR}/io/lz4slicevolumefilereader.cpp
     ${MOD_DIR}/io/volumedisklz4.cpp
     ${MOD_DIR}/processors/connectedcomponentanalysis.cpp
+    ${MOD_DIR}/processors/largetestdatagenerator.cpp
     ${MOD_DIR}/processors/largevolumedistancetransform.cpp
     ${MOD_DIR}/processors/largevolumeformatconversion.cpp
     ${MOD_DIR}/processors/volumeargmax.cpp
@@ -114,6 +116,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/lz4slicevolumefilereader.h
     ${MOD_DIR}/io/volumedisklz4.h
     ${MOD_DIR}/processors/connectedcomponentanalysis.h
+    ${MOD_DIR}/processors/largetestdatagenerator.h
     ${MOD_DIR}/processors/largevolumedistancetransform.h
     ${MOD_DIR}/processors/largevolumeformatconversion.h
     ${MOD_DIR}/processors/volumeargmax.h

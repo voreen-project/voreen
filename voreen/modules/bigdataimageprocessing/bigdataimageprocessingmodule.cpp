@@ -26,6 +26,7 @@
 #include "bigdataimageprocessingmodule.h"
 
 #include "processors/connectedcomponentanalysis.h"
+#include "processors/largetestdatagenerator.h"
 #include "processors/largevolumedistancetransform.h"
 #include "processors/largevolumeformatconversion.h"
 #include "processors/volumeargmax.h"
@@ -50,6 +51,7 @@ BigDataImageProcessingModule::BigDataImageProcessingModule(const std::string& mo
     setGuiName("Big Data Image Processing");
 
     registerProcessor(new ConnectedComponentAnalysis());
+    registerProcessor(new LargeTestDataGenerator());
     registerProcessor(new LargeVolumeDistanceTransform());
     registerProcessor(new LargeVolumeFormatConversion());
     registerProcessor(new NucleiClusterSplitting());

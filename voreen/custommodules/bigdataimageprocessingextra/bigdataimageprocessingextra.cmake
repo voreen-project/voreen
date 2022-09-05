@@ -14,7 +14,6 @@ SET(MOD_CORE_MODULECLASS BigDataImageProcessingExtraModule)
 SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/binarymedian.cpp
     ${MOD_DIR}/processors/fatcellquantification.cpp
-    ${MOD_DIR}/processors/largetestdatagenerator.cpp
     ${MOD_DIR}/processors/largevolumemedialstructures.cpp
     ${MOD_DIR}/processors/segmentationslicedensity.cpp
     ${MOD_DIR}/processors/segmentationquantification.cpp
@@ -24,10 +23,8 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/volumedetectionlinker.cpp
 )
 SET(MOD_CORE_HEADERS
-    ${MOD_DIR}/algorithm/boundshierarchy.h
     ${MOD_DIR}/processors/binarymedian.h
     ${MOD_DIR}/processors/fatcellquantification.h
-    ${MOD_DIR}/processors/largetestdatagenerator.h
     ${MOD_DIR}/processors/largevolumemedialstructures.h
     ${MOD_DIR}/processors/segmentationslicedensity.cpp
     ${MOD_DIR}/processors/segmentationslicedensity.h
