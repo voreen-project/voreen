@@ -31,7 +31,7 @@
 #include "voreen/core/utils/hashing.h"
 #include "../../modules/bigdataimageprocessing/algorithm/intervalwalker.h"
 #include "../algorithm/boundshierarchy.h"
-#include "custommodules/bigdataimageprocessingextra/ext/ziggurat.h"
+#include "../ext/ziggurat.h"
 
 #include "modules/hdf5/io/hdf5volumewriter.h"
 #include "modules/hdf5/io/hdf5volumereader.h"
