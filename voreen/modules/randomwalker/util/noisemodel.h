@@ -43,6 +43,7 @@ enum RWNoiseModel {
     RW_NOISE_TTEST,
     RW_NOISE_GAUSSIAN_HIERARCHICAL,
     RW_NOISE_POISSON_HIERARCHICAL,
+    RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL,
 };
 
 template<RWNoiseModel N>
@@ -88,7 +89,7 @@ struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
 
 template<>
 struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEAN> {
-    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0) {
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> mean = meanFilter3x3x3(vol);
         float variance = estimateVariance(vol, mean, 1);
 
@@ -127,7 +128,7 @@ struct RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
 };
 template<>
 struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> {
-    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0) {
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_BIAN_MEDIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> mean = medianFilter3x3x3(vol);
         float variance = estimateVariance(vol, mean, 1);
 
@@ -155,6 +156,7 @@ float evalPoisson(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec
 float evalConstGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>& best_centers, float variance_inv, tgt::svec3 voxel, tgt::svec3 neighbor, int filter_extent);
 float bhattacharyyaPoisson(float sum1, float sum2);
 float bhattacharyyaConstGaussian(float mean1, float mean2, float variance_inv, float n);
+float bhattacharyyaVarGaussian(float mean1, float mean2, float var1, float var2, size_t n);
 
 inline int num_voxels_in_level(int level) {
     return 1 << (3*level); //8^level
@@ -179,7 +181,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_TTEST> {
     int filter_extent;
 
-    RWNoiseModelWeights<RW_NOISE_TTEST> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0) {
+    RWNoiseModelWeights<RW_NOISE_TTEST> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> image = vol.copy();
         auto parameters = GaussianParametersVariableSigma::create(image, filter_extent);
 
@@ -208,7 +210,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_VARIABLE_GAUSSIAN> {
     int filter_extent;
 
-    RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0) {
+    RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> image = vol.copy();
         auto parameters = GaussianParametersVariableSigma::create(image, filter_extent);
 
@@ -240,7 +242,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN> {
     int filter_extent;
 
-    RWNoiseModelWeights<RW_NOISE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0) {
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> mean = meanFilter(vol, filter_extent);
         float variance = estimateVariance(vol, mean, filter_extent);
         tgtAssert(variance > 0, "Invalid variance");
@@ -287,7 +289,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_POISSON> {
     int filter_extent;
 
-    RWNoiseModelWeights<RW_NOISE_POISSON> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0) {
+    RWNoiseModelWeights<RW_NOISE_POISSON> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level=0, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> image = applyRWM(vol, rwm);
         VolumeAtomic<float> parameters = meanFilter(image, filter_extent);
 
@@ -378,7 +380,7 @@ struct RWNoiseModelParameters<RW_NOISE_GAUSSIAN_HIERARCHICAL> {
     int filter_extent;
     float variance;
 
-    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_HIERARCHICAL> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level) {
+    RWNoiseModelWeights<RW_NOISE_GAUSSIAN_HIERARCHICAL> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level, const VolumeAtomic<float>* variances=nullptr) {
         float variance_inv = 1.0f/variance;
 
         VolumeAtomic<tgt::ivec3> bestCenters(tgt::svec3(0,0,0), false);
@@ -430,7 +432,7 @@ template<>
 struct RWNoiseModelParameters<RW_NOISE_POISSON_HIERARCHICAL> {
     int filter_extent;
 
-    RWNoiseModelWeights<RW_NOISE_POISSON_HIERARCHICAL> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level) {
+    RWNoiseModelWeights<RW_NOISE_POISSON_HIERARCHICAL> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level, const VolumeAtomic<float>* variances=nullptr) {
         VolumeAtomic<float> image = applyRWM(vol, rwm);
 
         VolumeAtomic<tgt::ivec3> bestCenters(tgt::svec3(0,0,0), false);
@@ -453,6 +455,55 @@ struct RWNoiseModelParameters<RW_NOISE_POISSON_HIERARCHICAL> {
     }
     RWNoiseModelWeights<RW_NOISE_POISSON_HIERARCHICAL> prepare(const VolumeRAM& vol, RealWorldMapping rwm, int level) {
         return prepare(toVolumeAtomicFloat(vol), rwm, level);
+    }
+};
+
+template<>
+struct RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL> {
+    VolumeAtomic<float> image;
+    VolumeAtomic<float> variances;
+    VolumeAtomic<tgt::ivec3> best_centers;
+    int filter_extent;
+    int level;
+
+    float getEdgeWeight(tgt::svec3 voxel, tgt::svec3 neighbor) const {
+        if(level == 0) {
+            return evalVariableGaussian(image, best_centers, voxel, neighbor, filter_extent);
+        } else {
+            float mean1 = image.voxel(voxel);
+            float mean2 = image.voxel(neighbor);
+
+            float var1 = variances.voxel(voxel);
+            float var2 = variances.voxel(neighbor);
+
+            size_t n = num_voxels_in_level(level);
+
+            return bhattacharyyaVarGaussian(mean1, mean2, var1, var2, n);
+        }
+    }
+};
+template<>
+struct RWNoiseModelParameters<RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL> {
+    int filter_extent;
+
+    RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL> prepare(const VolumeAtomic<float>& vol, RealWorldMapping rwm, int level, const VolumeAtomic<float>* variances) {
+        VolumeAtomic<tgt::ivec3> bestCenters(tgt::svec3(0,0,0), false);
+        if(level == 0) {
+            auto parameters = GaussianParametersVariableSigma::create(vol, filter_extent);
+
+            bestCenters = findBestCenters(vol, parameters.data(), GaussianParametersVariableSigma::fit, filter_extent);
+        }
+
+        return RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL> {
+            vol.copy(),
+            variances->copy(),
+            std::move(bestCenters),
+            filter_extent,
+            level,
+        };
+    }
+    RWNoiseModelWeights<RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL> prepare(const VolumeRAM& vol, RealWorldMapping rwm, int level, const VolumeAtomic<float>* variances) {
+        return prepare(toVolumeAtomicFloat(vol), rwm, level, variances);
     }
 };
 

@@ -337,7 +337,9 @@ float evalVariableGaussian(const VolumeAtomic<float>& image, const VolumeAtomic<
     float var1 = variance_of(neighborhood1, mean1);
     float var2 = variance_of(neighborhood2, mean2);
 
-
+    return bhattacharyyaVarGaussian(mean1, mean2, var1, var2, n);
+}
+float bhattacharyyaVarGaussian(float mean1, float mean2, float var1, float var2, size_t n) {
     float nom = std::sqrt(var1*var2);
     float denom = (var1+var2)*0.5 + square((mean1-mean2)*0.5);
 
