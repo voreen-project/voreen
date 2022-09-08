@@ -83,6 +83,19 @@ private:
     std::unique_ptr<VolumeBase> volume_;    // ALWAYS stores reference to representation in previousOctree_, never null
 };
 
+struct VarianceTree {
+    std::unique_ptr<OctreeBrickPoolManagerMmap> brickPoolManager_;
+    LocatedVolumeOctreeNode root_;
+
+    static VarianceTree none();
+    bool isNone() const;
+    VarianceTree(std::unique_ptr<OctreeBrickPoolManagerMmap>&& brickPoolManager, LocatedVolumeOctreeNode root);
+    VarianceTree(VarianceTree&& other);
+    VarianceTree& operator=(VarianceTree&& other);
+    ~VarianceTree();
+};
+
+
 struct OctreeWalkerInput {
     VolumeOctree* previousResult_;
     PointSegmentListGeometryVec3* previousForegroundSeeds_;
@@ -102,12 +115,14 @@ struct OctreeWalkerInput {
     float binaryPruningDelta_;
     float incrementalSimilarityThreshold_;
     RWNoiseModel noiseModel_;
+    const VarianceTree& varianceTree_;
 };
 
 struct OctreeWalkerOutput {
     OctreeWalkerOutput(
         OctreeWalkerPreviousResult&& result,
         std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
+        VarianceTree&& varianceTree,
         std::chrono::duration<float> duration
     );
     ~OctreeWalkerOutput();
@@ -116,6 +131,7 @@ struct OctreeWalkerOutput {
     OctreeWalkerPreviousResult result_;
     std::unordered_set<const VolumeOctreeNode*> sharedNodes_;
     std::chrono::duration<float> duration_;
+    VarianceTree varianceTree_;
     bool movedOut_;
 };
 
@@ -194,6 +210,7 @@ private:
 
     boost::optional<OctreeWalkerPreviousResult> previousResult_;
     std::unique_ptr<OctreeBrickPoolManagerMmap> brickPoolManager_;
+    VarianceTree varianceTree_;
 
     // Clock and duration used for time keeping
     typedef std::chrono::steady_clock clock;

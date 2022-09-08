@@ -158,9 +158,11 @@ float unpackNormalizedFloat(uint16_t bits) {
 OctreeWalkerOutput::OctreeWalkerOutput(
     OctreeWalkerPreviousResult&& result,
     std::unordered_set<const VolumeOctreeNode*>&& sharedNodes,
+    VarianceTree&& varianceTree,
     std::chrono::duration<float> duration
 )   : result_(std::move(result))
     , sharedNodes_(std::move(sharedNodes))
+    , varianceTree_(std::move(varianceTree))
     , duration_(duration)
 { }
 
@@ -168,6 +170,7 @@ OctreeWalkerOutput::OctreeWalkerOutput(OctreeWalkerOutput&& other)
     : result_(std::move(other.result_))
     , sharedNodes_(std::move(other.sharedNodes_))
     , duration_(other.duration_)
+    , varianceTree_(std::move(other.varianceTree_))
     , movedOut_(other.movedOut_)
 {
 }
@@ -205,6 +208,7 @@ OctreeWalker::OctreeWalker()
     , resultPath_("resultPath", "Result Cache Path", "Result Cache Path", "", "", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
     , prevResultPath_("")
     , previousResult_(boost::none)
+    , varianceTree_(VarianceTree::none())
     , brickPoolManager_(nullptr)
 {
     // ports
@@ -484,52 +488,48 @@ static VolumeOctreeNodeGeneric<1>* buildVarianceTreeRecursively(const VolumeOctr
     }
 }
 
-struct VarianceTree {
-    std::unique_ptr<OctreeBrickPoolManagerMmap> brickPoolManager_;
-    LocatedVolumeOctreeNode root_;
+VarianceTree VarianceTree::none() {
+    return VarianceTree {
+        nullptr,
+        LocatedVolumeOctreeNode(nullptr, 0, tgt::svec3::zero, tgt::svec3::zero),
+    };
+}
 
-    static VarianceTree none() {
-        return VarianceTree {
-            nullptr,
-            LocatedVolumeOctreeNode(nullptr, 0, tgt::svec3::zero, tgt::svec3::zero),
-        };
+bool VarianceTree::isNone() const {
+    bool ret = brickPoolManager_.get() == nullptr;
+    tgtAssert((root_.node_ == nullptr) == ret, "invalid state");
+    return ret;
+}
+
+VarianceTree::VarianceTree(std::unique_ptr<OctreeBrickPoolManagerMmap>&& brickPoolManager, LocatedVolumeOctreeNode root)
+    : brickPoolManager_(std::move(brickPoolManager))
+    , root_(root)
+{
+}
+
+VarianceTree::VarianceTree(VarianceTree&& other)
+    : brickPoolManager_(std::move(other.brickPoolManager_))
+    , root_(other.root_)
+{
+    other.root_.node_ = nullptr;
+}
+VarianceTree& VarianceTree::operator=(VarianceTree&& other) {
+    if(this != &other) {
+        // Destruct the current object, but keep the memory.
+        this->~VarianceTree();
+        // Call the move constructor on the memory region of the current object.
+        new(this) VarianceTree(std::move(other));
     }
 
-    bool isNone() {
-        bool ret = brickPoolManager_.get() == nullptr;
-        tgtAssert((root_.node_ == nullptr) == ret, "invalid state");
-        return ret;
+    return *this;
+}
+VarianceTree::~VarianceTree() {
+    freeNodes(root_.node_);
+    if(brickPoolManager_) {
+        brickPoolManager_->deinitialize();
+        tgt::FileSystem::deleteDirectoryRecursive(brickPoolManager_->getBrickPoolPath());
     }
-
-    VarianceTree(std::unique_ptr<OctreeBrickPoolManagerMmap>&& brickPoolManager, LocatedVolumeOctreeNode root)
-        : brickPoolManager_(std::move(brickPoolManager))
-        , root_(root)
-    {
-    }
-
-    VarianceTree(VarianceTree&& other)
-        : brickPoolManager_(std::move(other.brickPoolManager_))
-        , root_(other.root_)
-    {
-        other.root_.node_ = nullptr;
-    }
-    VarianceTree& operator=(VarianceTree&& other) {
-        if(this != &other) {
-            // Destruct the current object, but keep the memory.
-            this->~VarianceTree();
-            // Call the move constructor on the memory region of the current object.
-            new(this) VarianceTree(std::move(other));
-        }
-
-        return *this;
-    }
-    ~VarianceTree() {
-        freeNodes(root_.node_);
-        if(brickPoolManager_) {
-            brickPoolManager_->deinitialize();
-        }
-    }
-};
+}
 
 static VarianceTree computeVarianceTree(const OctreeWalkerInput& input) {
     const OctreeBrickPoolManagerBase& inputPoolManager = *input.octree_.getBrickPoolManager();
@@ -559,6 +559,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     // clear previous results and update property ranges, if input volume has changed
     if (inportVolume_.hasChanged()) {
         outportProbabilities_.setData(0);
+        varianceTree_ = VarianceTree::none();
     }
     auto vol = inportVolume_.getThreadSafeData();
 
@@ -644,6 +645,7 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
         binaryPruningDelta_.get(),
         incrementalSimilarityThreshold_.get(),
         noiseModel_.getValue(),
+        varianceTree_,
     };
 }
 struct BrickNeighborhood {
@@ -1517,11 +1519,16 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
         LINFO("Estimated variance: " << variance);
     }
 
-    VarianceTree varianceTree = VarianceTree::none();
-    if(input.noiseModel_ == RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL) {
-        varianceTree = computeVarianceTree(input);
+    VarianceTree newVarianceTree = VarianceTree::none();
+    const VarianceTree* varianceTreePtr;
+    if(input.varianceTree_.isNone() && input.noiseModel_ == RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL) {
+        LINFO("Computing variance octree...");
+        newVarianceTree = computeVarianceTree(input);
+        varianceTreePtr = &newVarianceTree;
+    } else {
+        varianceTreePtr = &input.varianceTree_;
     }
-
+    const VarianceTree& varianceTree = *varianceTreePtr;
 
     PointSegmentListGeometryVec3 foregroundSeeds;
     PointSegmentListGeometryVec3 backgroundSeeds;
@@ -1765,6 +1772,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
             std::move(backgroundSeeds)
             ),
         std::move(nodesToSave),
+        std::move(newVarianceTree),
         finish - start
     );
 }
@@ -1799,6 +1807,10 @@ void OctreeWalker::processComputeOutput(ComputeOutput output) {
     s.serialize(PREV_RESULT_FOREGROUND_KEY, previousResult_->foregroundSeeds_);
     s.serialize(PREV_RESULT_BACKGROUND_KEY, previousResult_->backgroundSeeds_);
     s.write(fs);
+
+    if(!output.varianceTree_.isNone()) {
+        varianceTree_ = std::move(output.varianceTree_);
+    }
 
     // Finally, the cache result can be marked as valid
     std::ofstream f(prevResultPath_ + "/" + PREV_RESULT_VALID_FILE_NAME);
