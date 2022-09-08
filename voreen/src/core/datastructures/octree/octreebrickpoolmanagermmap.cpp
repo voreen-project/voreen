@@ -288,6 +288,9 @@ uint64_t OctreeBrickPoolManagerMmap::getBrickPoolMemoryUsed() const {
 std::string OctreeBrickPoolManagerMmap::getDescription() const {
     return "Brick Pool Manager that relies on the OS capabilities for brick caching.";
 }
+const std::string& OctreeBrickPoolManagerMmap::getBrickPoolPath() const {
+    return brickPoolPath_;
+}
 
 uint64_t OctreeBrickPoolManagerMmap::getBrickPoolMemoryAllocated() const {
     return 0; // No way to query this. No memory is explicitly allocated.

@@ -85,11 +85,13 @@ public:
     virtual uint64_t getBrickPoolMemoryUsed() const;
     virtual uint64_t getBrickPoolMemoryAllocated() const;
     virtual std::string getDescription() const;
+    const std::string& getBrickPoolPath() const;
 
     std::string storageFileName(uint64_t fileIndex) const;
 
     virtual void initialize(size_t brickMemorySizeInByte);
     virtual void deinitialize();
+
 private:
 
     std::string brickPoolPath_;                 //< directory where the buffer files are stored
