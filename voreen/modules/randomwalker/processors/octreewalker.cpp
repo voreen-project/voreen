@@ -73,11 +73,11 @@ const std::string PREV_RESULT_BACKGROUND_KEY = "backgroundSeeds";
 const std::string BRICK_BUFFER_SUBDIR =      "brickBuffer";
 const std::string BRICK_BUFFER_FILE_PREFIX = "buffer_";
 
-inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
+static inline size_t volumeCoordsToIndex(int x, int y, int z, const tgt::ivec3& dim) {
     return z*dim.y*dim.x + y*dim.x + x;
 }
 
-inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& dim) {
+static inline size_t volumeCoordsToIndex(const tgt::ivec3& coords, const tgt::ivec3& dim) {
     return coords.z*dim.y*dim.x + coords.y*dim.x + coords.x;
 }
 
@@ -117,14 +117,14 @@ static float brickToNorm(uint16_t val) {
     return static_cast<float>(val)*NORM_TO_BRICK_FACTOR;
 }
 
-constexpr size_t mask(size_t width) {
+static constexpr size_t mask(size_t width) {
     return (1 << width) - 1;
 }
 
-const size_t PACKING_EXPONENT_BITS = 7;
-const size_t PACKING_DIGIT_BITS = 16 - PACKING_EXPONENT_BITS;
+static const size_t PACKING_EXPONENT_BITS = 7;
+static const size_t PACKING_DIGIT_BITS = 16 - PACKING_EXPONENT_BITS;
 
-uint16_t packNormalizedFloat(float value) {
+static uint16_t packNormalizedFloat(float value) {
     tgtAssert(0.0f <= value && value < 1.0f, "Value not normalized");
     if(!std::isnormal(value)) {
         return 0;
@@ -140,7 +140,7 @@ uint16_t packNormalizedFloat(float value) {
     return exp | digit_bits;
 }
 
-float unpackNormalizedFloat(uint16_t bits) {
+static float unpackNormalizedFloat(uint16_t bits) {
     uint16_t exponent_bits = (bits >> PACKING_DIGIT_BITS) & mask(PACKING_EXPONENT_BITS);
     uint16_t digit_bits = bits & mask(PACKING_DIGIT_BITS);
 
@@ -152,7 +152,56 @@ float unpackNormalizedFloat(uint16_t bits) {
     return v;
 }
 
+static bool hasExtentParameter(RWNoiseModel n) {
+    switch(n) {
+        case RW_NOISE_GAUSSIAN:
+        case RW_NOISE_POISSON:
+        case RW_NOISE_VARIABLE_GAUSSIAN:
+        case RW_NOISE_TTEST:
+        case RW_NOISE_GAUSSIAN_HIERARCHICAL:
+        case RW_NOISE_POISSON_HIERARCHICAL:
+        case RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL:
+        case RW_NOISE_TTEST_HIERARCHICAL:
+            return true;
+        case RW_NOISE_GAUSSIAN_BIAN_MEAN:
+        case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
+            return false;
+    }
+}
 
+static bool requiresVarianceTree(RWNoiseModel n) {
+    switch(n) {
+        case RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL:
+        case RW_NOISE_TTEST_HIERARCHICAL:
+            return true;
+        case RW_NOISE_GAUSSIAN_BIAN_MEAN:
+        case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
+        case RW_NOISE_GAUSSIAN:
+        case RW_NOISE_POISSON:
+        case RW_NOISE_VARIABLE_GAUSSIAN:
+        case RW_NOISE_TTEST:
+        case RW_NOISE_GAUSSIAN_HIERARCHICAL:
+        case RW_NOISE_POISSON_HIERARCHICAL:
+            return false;
+    }
+}
+
+static bool requiresGlobalVarianceEstimate(RWNoiseModel n) {
+    switch(n) {
+        case RW_NOISE_GAUSSIAN_HIERARCHICAL:
+            return true;
+        case RW_NOISE_GAUSSIAN_BIAN_MEAN:
+        case RW_NOISE_GAUSSIAN_BIAN_MEDIAN:
+        case RW_NOISE_GAUSSIAN:
+        case RW_NOISE_POISSON:
+        case RW_NOISE_VARIABLE_GAUSSIAN:
+        case RW_NOISE_TTEST:
+        case RW_NOISE_POISSON_HIERARCHICAL:
+        case RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL:
+        case RW_NOISE_TTEST_HIERARCHICAL:
+            return false;
+    }
+}
 }
 
 OctreeWalkerOutput::OctreeWalkerOutput(
@@ -228,11 +277,12 @@ OctreeWalker::OctreeWalker()
         //noiseModel_.addOption("gaussian_hierarchical", "Gaussian with constant variance (Drees 2022), hierarchical", RW_NOISE_GAUSSIAN_HIERARCHICAL); // This really does not work too well :(
         noiseModel_.addOption("shot_hierarchical", "Poisson (Drees 2022), hierarchical", RW_NOISE_POISSON_HIERARCHICAL);
         noiseModel_.addOption("variable_gaussian_hierarchical", "Gaussian with signal-dependent variance (Drees 2022), hierarchical", RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL);
+        noiseModel_.addOption("ttest_hierarchical", "T-Test (Bian 2016), hierarchical", RW_NOISE_TTEST_HIERARCHICAL);
         noiseModel_.selectByValue(RW_NOISE_GAUSSIAN);
         noiseModel_.setGroupID("rwparam");
         ON_CHANGE_LAMBDA(noiseModel_, [this] () {
             RWNoiseModel m = noiseModel_.getValue();
-            parameterEstimationNeighborhoodExtent_.setVisibleFlag(m == RW_NOISE_TTEST || m == RW_NOISE_GAUSSIAN || m == RW_NOISE_POISSON || m == RW_NOISE_VARIABLE_GAUSSIAN || m == RW_NOISE_POISSON_HIERARCHICAL || m == RW_NOISE_GAUSSIAN_HIERARCHICAL);
+            parameterEstimationNeighborhoodExtent_.setVisibleFlag(hasExtentParameter(m));
         });
     addProperty(minEdgeWeight_);
         minEdgeWeight_.setGroupID("rwparam");
@@ -1223,7 +1273,7 @@ static uint64_t processOctreeBrick(RWNoiseModelParameters<NoiseModel> parameters
     ProfileAllocation neighborhoodAllocation(ramProfiler, inputNeighborhood.data_.getNumBytes());
 
     VolumeAtomic<float> varianceNeighborhood(tgt::svec3::zero, false);
-    if(input.noiseModel_ == RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL && outputNodeGeometry.level_ > 0) {
+    if(requiresVarianceTree(input.noiseModel_) && outputNodeGeometry.level_ > 0) {
         auto n = BrickNeighborhood::fromNode(outputNodeGeometry, outputNodeGeometry.level_, varianceTree.root_, brickDataSize, *varianceTree.brickPoolManager_, [&] (uint16_t v) { return unpackNormalizedFloat(v); });
         varianceNeighborhood = std::move(n.data_);
     }
@@ -1470,7 +1520,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
     LocatedVolumeOctreeNodeConst inputRoot = input.octree_.getLocatedRootNode();
 
     float variance;
-    if(input.noiseModel_ == RW_NOISE_GAUSSIAN_HIERARCHICAL) {
+    if(requiresGlobalVarianceEstimate(input.noiseModel_)) {
         const size_t num_sample_bricks = 10;
         const size_t max_tries = 100;
 
@@ -1521,7 +1571,7 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
 
     VarianceTree newVarianceTree = VarianceTree::none();
     const VarianceTree* varianceTreePtr;
-    if(input.varianceTree_.isNone() && input.noiseModel_ == RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL) {
+    if(input.varianceTree_.isNone() && requiresVarianceTree(input.noiseModel_)) {
         LINFO("Computing variance octree...");
         newVarianceTree = computeVarianceTree(input);
         varianceTreePtr = &newVarianceTree;
@@ -1627,6 +1677,9 @@ OctreeWalker::ComputeOutput OctreeWalker::compute(ComputeInput input, ProgressRe
                         break;
                     case RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL:
                         newBrickAddr = processOctreeBrick<RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, varianceTree, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
+                        break;
+                    case RW_NOISE_TTEST_HIERARCHICAL:
+                        newBrickAddr = processOctreeBrick<RW_NOISE_TTEST_HIERARCHICAL>({input.parameterEstimationNeighborhoodExtent_}, input, outputNodeGeometry, histogram, min, max, avg, hasNewSeedsConflicts, outputBrickPoolManager, level == maxLevel ? nullptr : &outputRootNode, inputRoot, prevRoot, varianceTree, foregroundSeeds, backgroundSeeds, clMutex, ramProfiler_, vramProfiler_);
                         break;
                     default:
                         tgtAssert(false, "Invalid noise model selected");

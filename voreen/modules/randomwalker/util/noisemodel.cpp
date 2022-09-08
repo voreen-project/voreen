@@ -278,9 +278,15 @@ float evalTTest(const VolumeAtomic<float>& image, const VolumeAtomic<tgt::ivec3>
     float mean1 = sum1/n1;
     float mean2 = sum2/n2;
 
+    float var1 = variance_of(neigh1, mean1);
+    float var2 = variance_of(neigh2, mean2);
+
+    return ttestFunction(mean1, mean2, var1, var2, n1, n2);
+}
+float ttestFunction(float mean1, float mean2, float var1, float var2, float n1, float n2) {
     float min_variance = 0.000001;
-    float var1 = std::max(min_variance, variance_of(neigh1, mean1));
-    float var2 = std::max(min_variance, variance_of(neigh2, mean2));
+    var1 = std::max(min_variance, var1);
+    var2 = std::max(min_variance, var2);
 
     float sn1 = var1/n1;
     float sn2 = var2/n2;
