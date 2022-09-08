@@ -587,6 +587,9 @@ OctreeWalker::ComputeInput OctreeWalker::prepareComputeInput() {
     int maxIterations = maxIterations_.get();
 
     prevResultPath_ = resultPath_.get();
+    if (prevResultPath_.empty() ||  !tgt::FileSystem::dirExists(tgt::FileSystem::parentDir(prevResultPath_))) {
+        throw InvalidInputException("Parent directory of previous result path " + prevResultPath_ + " does not exist.", InvalidInputException::S_ERROR);
+    }
     std::string brickPoolPath = tgt::FileSystem::cleanupPath(prevResultPath_ + "/" + BRICK_BUFFER_SUBDIR);
     if (!tgt::FileSystem::dirExists(brickPoolPath)) {
         tgt::FileSystem::createDirectoryRecursive(brickPoolPath);
