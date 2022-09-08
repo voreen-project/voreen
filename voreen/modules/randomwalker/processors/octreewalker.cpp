@@ -117,6 +117,42 @@ static float brickToNorm(uint16_t val) {
     return static_cast<float>(val)*NORM_TO_BRICK_FACTOR;
 }
 
+constexpr size_t mask(size_t width) {
+    return (1 << width) - 1;
+}
+
+const size_t PACKING_EXPONENT_BITS = 7;
+const size_t PACKING_DIGIT_BITS = 16 - PACKING_EXPONENT_BITS;
+
+uint16_t packNormalizedFloat(float value) {
+    tgtAssert(0.0f <= value && value < 1.0f, "Value not normalized");
+    if(!std::isnormal(value)) {
+        return 0;
+    }
+
+    uint32_t v;
+    std::memcpy(&v, &value, sizeof(v));
+
+    uint16_t exponent_bits = (v >> 23) & mask(PACKING_EXPONENT_BITS);
+    uint16_t digit_bits = (v >> (23-PACKING_DIGIT_BITS)) & mask(PACKING_DIGIT_BITS);
+
+    uint16_t exp = exponent_bits << PACKING_DIGIT_BITS;
+    return exp | digit_bits;
+}
+
+float unpackNormalizedFloat(uint16_t bits) {
+    uint16_t exponent_bits = (bits >> PACKING_DIGIT_BITS) & mask(PACKING_EXPONENT_BITS);
+    uint16_t digit_bits = bits & mask(PACKING_DIGIT_BITS);
+
+    uint32_t ieee_bits = digit_bits << (23-PACKING_DIGIT_BITS) | exponent_bits << 23;
+    float v;
+    std::memcpy(&v, &ieee_bits, sizeof(v));
+
+    tgtAssert(0 <= v && v < 1, "Unpacked invalid value");
+    return v;
+}
+
+
 }
 
 OctreeWalkerOutput::OctreeWalkerOutput(
@@ -362,44 +398,6 @@ void OctreeWalker::deserialize(Deserializer& s) {
     }
 }
 
-struct VarianceValue {
-    uint16_t bits_;
-    static const size_t EXPONENT_BITS = 8;
-    static const size_t DIGIT_BITS = 16 - EXPONENT_BITS;
-    static const uint16_t EXPONENT_MASK = ((1<<EXPONENT_BITS)-1) << DIGIT_BITS;
-    static const uint16_t DIGIT_MASK = (1<<DIGIT_BITS)-1;
-    explicit VarianceValue(uint16_t bits)
-        : bits_(bits)
-    {
-    }
-    static VarianceValue fromFloat(float value) {
-        tgtAssert(value < 1.0f, "value too large");
-        uint16_t exponent = std::min((uint16_t)std::ceil(-std::log2(value)-1), (uint16_t)((1<<EXPONENT_BITS)-1));
-        float mantissa = value*(1UL << exponent);
-        float digits_f = mantissa * (1UL << DIGIT_BITS);
-        uint16_t digits = digits_f;
-        return fromDigitsAndExponent(digits, exponent);
-    }
-    static VarianceValue fromDigitsAndExponent(uint16_t digits, uint16_t exponent) {
-        uint16_t exp = exponent << DIGIT_BITS;
-        tgtAssert((exp & EXPONENT_MASK) == exp, "too many bits");
-        tgtAssert((digits & DIGIT_MASK) == digits, "too many bits");
-        return VarianceValue { static_cast<uint16_t>(exp | digits) };
-    }
-    float toFloat() {
-        uint16_t exponent = (bits_ & EXPONENT_MASK) >> DIGIT_BITS;
-        uint16_t digits = bits_ & DIGIT_MASK;
-
-        float digits_f = (float)digits / (1UL << DIGIT_BITS);
-        float val = digits_f / (1UL << exponent);
-        tgtAssert(0 <= val && val < 1, "invalid val generated");
-        return val;
-    }
-    uint16_t bits() {
-        return bits_;
-    }
-};
-
 template<typename MeanFunc, typename VarFunc>
 static void compute_variance(tgt::svec3 basePos, tgt::svec3 halfBrickSize, VolumeAtomic<uint16_t>& outBrick, MeanFunc meanfunc, VarFunc varfunc) {
     VRN_FOR_EACH_VOXEL(i, tgt::svec3(0), halfBrickSize) {
@@ -410,7 +408,7 @@ static void compute_variance(tgt::svec3 basePos, tgt::svec3 halfBrickSize, Volum
             tgt::svec3 p = i*2UL+c;
 
             double mean = brickToNorm(meanfunc(p));
-            double var = VarianceValue(varfunc(p)).toFloat();
+            double var = unpackNormalizedFloat(varfunc(p));
 
             varsum += var;
             meansum += mean;
@@ -423,7 +421,7 @@ static void compute_variance(tgt::svec3 basePos, tgt::svec3 halfBrickSize, Volum
 
         double var = squaredterm - meansq;
 
-        uint16_t val = VarianceValue::fromFloat(var).bits();
+        uint16_t val = packNormalizedFloat(var);
         outBrick.voxel(basePos+i) = val;
     }
 }
@@ -1224,7 +1222,7 @@ static uint64_t processOctreeBrick(RWNoiseModelParameters<NoiseModel> parameters
 
     VolumeAtomic<float> varianceNeighborhood(tgt::svec3::zero, false);
     if(input.noiseModel_ == RW_NOISE_VARIABLE_GAUSSIAN_HIERARCHICAL && outputNodeGeometry.level_ > 0) {
-        auto n = BrickNeighborhood::fromNode(outputNodeGeometry, outputNodeGeometry.level_, varianceTree.root_, brickDataSize, *varianceTree.brickPoolManager_, [&] (uint16_t v) { return VarianceValue(v).toFloat(); });
+        auto n = BrickNeighborhood::fromNode(outputNodeGeometry, outputNodeGeometry.level_, varianceTree.root_, brickDataSize, *varianceTree.brickPoolManager_, [&] (uint16_t v) { return unpackNormalizedFloat(v); });
         varianceNeighborhood = std::move(n.data_);
     }
 
