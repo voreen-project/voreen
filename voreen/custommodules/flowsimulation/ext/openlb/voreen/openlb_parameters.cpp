@@ -41,14 +41,22 @@ VelocityCurve::VelocityCurve()
 
 float VelocityCurve::operator()(float t) const {
 
+    if(peakVelocities_.empty()) {
+        return 0.0f;
+    }
+
+    if(peakVelocities_.size() == 1) {
+        return peakVelocities_.begin()->second;
+    }
+
     if (isPeriodic()) {
         t = std::fmod(t - getStartTime(), getEndTime() - getStartTime());
     } else {
-        if (t < peakVelocities_.begin()->first) {
+        if (t <= peakVelocities_.begin()->first) {
             return peakVelocities_.begin()->second;
         }
 
-        if (t > peakVelocities_.rbegin()->first) {
+        if (t >= peakVelocities_.rbegin()->first) {
             return peakVelocities_.rbegin()->second;
         }
     }
@@ -60,7 +68,7 @@ float VelocityCurve::operator()(float t) const {
     };
 
     auto upper = std::lower_bound(peakVelocities_.begin(), peakVelocities_.end(), t, Comparator());
-    auto lower = upper++;
+    auto lower = upper--;
 
     float a = (t - lower->first) / (upper->first - lower->first);
 
@@ -120,11 +128,10 @@ VelocityCurve VelocityCurve::createLinearCurve(float duration, float maxValue) {
 }
 
 VelocityCurve VelocityCurve::createSinusoidalCurve(float duration, float maxValue, int steps) {
-    const float pi = 3.415926535f;
     VelocityCurve curve;
     for(int i=0; i<=steps; i++) {
         float ts = i * duration / steps;
-        float value = maxValue * (std::sin(-pi * 0.5f + i * pi / steps) + 1.0f) * 0.5f;
+        float value = maxValue * (std::sin(-M_PI * 0.5f + i * M_PI / steps) + 1.0f) * 0.5f;
         curve[ts] = value;
     }
 

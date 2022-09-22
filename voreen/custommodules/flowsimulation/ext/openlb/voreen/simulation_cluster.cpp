@@ -20,7 +20,7 @@ VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
     bool periodic = reader["periodic"].getAttribute("value") == "true";
     curve.setPeriodic(periodic);
 
-    XMLreader items = reader["peakVelocities"];
+    const XMLreader& items = reader["peakVelocities"];
     auto iter = items.begin();
     while(iter != items.end()) {
 
@@ -173,6 +173,9 @@ int main(int argc, char* argv[]) {
     converter.write(simulation.c_str());
 
     // === 2nd Step: Prepare Geometry ===
+    clout << "Meshing..." << std::endl;
+    olb::util::Timer<T> voxelizationTime(1);
+    voxelizationTime.start();
 
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
@@ -182,9 +185,9 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
-    const int noOfCuboids = std::min( 16*parameters.spatialResolution_, 2*singleton::mpi().getSize() );
+    const int noOfCuboids = std::min( 16*parameters.spatialResolution_, singleton::mpi().getSize() );
 #else
-    const int noOfCuboids = 2;
+    const int noOfCuboids = 1;
 #endif
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
 
@@ -194,12 +197,17 @@ int main(int argc, char* argv[]) {
     // Instantiation of a superGeometry
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
     bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, indicators);
+
+    voxelizationTime.stop();
+    voxelizationTime.printSummary();
+
     if(!success) {
         clout << "The model contains errors! Check resolution and geometry." << std::endl;
         return EXIT_FAILURE;
     }
 
     // === 3rd Step: Prepare Lattice ===
+    clout << "Lattice Initialization..." << std::endl;
     SuperLattice<T, DESCRIPTOR> lattice(superGeometry);
 
     olb::util::Timer<T> timer(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
@@ -211,7 +219,7 @@ int main(int argc, char* argv[]) {
     timer.printSummary();
 
     // === 4th Step: Main Loop with Timer ===
-    clout << "starting simulation..." << std::endl;
+    clout << "Starting simulation..." << std::endl;
     util::ValueTracer<T> converge(converter.getLatticeTime(0.5), 1e-5);
     timer.start();
 
@@ -243,6 +251,11 @@ int main(int argc, char* argv[]) {
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();
 
+        // Print some update
+        if(iteration % 10 == 0) {
+            timer.print(iteration);
+        }
+
         // === 7th Step: Computation and Output of the Results ===
         bool abort = !checkpoint(iteration);
         if(abort) {
@@ -260,6 +273,7 @@ int main(int argc, char* argv[]) {
         }
 
         if(abort) {
+            timer.update(iteration);
             checkpoint(iteration, true);
             break;
         }
