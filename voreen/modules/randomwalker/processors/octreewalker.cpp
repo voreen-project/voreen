@@ -459,7 +459,7 @@ static void compute_variance(tgt::svec3 basePos, tgt::svec3 halfBrickSize, Volum
         double meansum = 0;
         double meansqsum = 0;
         VRN_FOR_EACH_VOXEL(c, tgt::svec3(0), tgt::svec3(2)) {
-            tgt::svec3 p = i*2UL+c;
+            tgt::svec3 p = i*static_cast<size_t>(2)+c;
 
             double mean = brickToNorm(meanfunc(p));
             double var = unpackNormalizedFloat(varfunc(p));
@@ -490,7 +490,7 @@ static VolumeOctreeNodeGeneric<1>* buildVarianceTreeRecursively(const VolumeOctr
         tgtAssert(outputBrickAddr != OctreeBrickPoolManagerBase::NO_BRICK_ADDRESS, "No brick");
         BrickPoolBrick outputBrick(outputBrickAddr, brickDataSize, varianceBrickPoolManager);
 
-        const tgt::svec3 halfBrickSize = brickDataSize/2UL;
+        const tgt::svec3 halfBrickSize = brickDataSize/static_cast<size_t>(2);
 
         for(int i=0; i<8; ++i) {
             auto inputChildBase = inputNode.children_[i];

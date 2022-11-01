@@ -31,6 +31,10 @@
 #include <string>
 #include <sstream>
 
+namespace {
+    const float PI = 3.14159265358979323846f;
+}
+
 namespace voreen {
 
 VelocityCurve::VelocityCurve()
@@ -131,7 +135,7 @@ VelocityCurve VelocityCurve::createSinusoidalCurve(float duration, float maxValu
     VelocityCurve curve;
     for(int i=0; i<=steps; i++) {
         float ts = i * duration / steps;
-        float value = maxValue * (std::sin(-M_PI * 0.5f + i * M_PI / steps) + 1.0f) * 0.5f;
+        float value = maxValue * (std::sin(-PI * 0.5f + i * PI / steps) + 1.0f) * 0.5f;
         curve[ts] = value;
     }
 

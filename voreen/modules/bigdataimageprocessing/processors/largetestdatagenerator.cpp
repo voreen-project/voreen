@@ -223,8 +223,12 @@ struct Balls {
 
         auto rad = radius_.begin();
         auto cen = center_.begin();
+#if defined(WIN32) && _MSC_VER < 1922
+#pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
+#else
 #ifdef VRN_MODULE_OPENMP
 #pragma omp simd
+#endif
 #endif
         for(int i=0; i < size; ++i) {
             int radius = rad[i];
@@ -333,8 +337,12 @@ struct Cylinders {
         auto rad = radius_.begin();
         auto start = start_.begin();
         auto end = end_.begin();
+#if defined(WIN32) && _MSC_VER < 1922
+#pragma vector // MSVC equivalent of omp simd prior to MSVC 1922
+#else
 #ifdef VRN_MODULE_OPENMP
 #pragma omp simd
+#endif
 #endif
         for(int i=0; i < size; ++i) {
             float radius = radiusMult * rad[i];
