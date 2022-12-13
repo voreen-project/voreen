@@ -27,6 +27,8 @@
 
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
+#include "voreen/core/datastructures/callback/lambdacallback.h"
+
 namespace voreen {
 
 VolumeListAggregate::VolumeListAggregate()
@@ -34,9 +36,16 @@ VolumeListAggregate::VolumeListAggregate()
     , inport_(Port::INPORT, "volumelist.input", "Volume Input", false)
     , outport_(Port::OUTPORT, "volume.output", "Volume Output", false)
     , aggregationFunction_("aggregationFunction", "Aggregation Function")
+    , selectedId_("selectedId", "Selected ID", 0, 0, 100)
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
+    ON_CHANGE_LAMBDA(inport_, [this] {
+        if(auto* volumes = inport_.getData()) {
+            selectedId_.setMaxValue(volumes->size()-1);
+            selectedId_.setMinValue(0);
+        }
+    });
     addPort(outport_);
 
     addProperty(aggregationFunction_);
@@ -45,6 +54,12 @@ VolumeListAggregate::VolumeListAggregate()
     aggregationFunction_.addOption("max", "Max", MAX);
     aggregationFunction_.addOption("variance", "Variance", VARIANCE);
     aggregationFunction_.addOption("l2norm", "L2 Norm", L2_NORM);
+    aggregationFunction_.addOption("select", "Select Volume", SELECT);
+    ON_CHANGE_LAMBDA(aggregationFunction_, [this] {
+        selectedId_.setReadOnlyFlag(aggregationFunction_.getValue() != SELECT);
+    });
+
+    addProperty(selectedId_);
 }
 
 VolumeListAggregate::~VolumeListAggregate() {}
@@ -56,9 +71,13 @@ Processor* VolumeListAggregate::create() const {
 VolumeListAggregateInput VolumeListAggregate::prepareComputeInput() {
 
     auto list = inport_.getThreadSafeData();
-
     if(!list || list->empty()) {
         throw InvalidInputException("No volume input", InvalidInputException::S_WARNING);
+    }
+
+    if(aggregationFunction_.getValue() == SELECT) {
+        outport_.setData(list->at(selectedId_.get()), false);
+        throw InvalidInputException("", InvalidInputException::S_IGNORE);
     }
 
     return ComputeInput { std::move(list) };

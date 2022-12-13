@@ -69,13 +69,15 @@ private:
         MIN,
         MAX,
         VARIANCE,
-        L2_NORM
+        L2_NORM,
+        SELECT,
     };
 
     VolumeListPort inport_;
     VolumePort outport_;
 
     OptionProperty<AggregationFunction> aggregationFunction_;
+    IntProperty selectedId_;
 };
 
 }   //namespace
