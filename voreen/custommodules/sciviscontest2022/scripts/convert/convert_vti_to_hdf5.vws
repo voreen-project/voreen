@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+<VoreenData version="1">
+    <Workspace version="2" readonly="false" GlobalDescription="">
+        <ProcessorNetwork version="21">
+            <MetaData>
+                <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
+                    <values />
+                </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeListSave" ref="ref1" />
+                    </values>
+                </MetaItem>
+                <MetaItem name="ZoomCenter" type="Vec2MetaData">
+                    <value x="0" y="0" />
+                </MetaItem>
+                <MetaItem name="ZoomFactor" type="FloatMetaData" value="1" />
+            </MetaData>
+            <Processors>
+                <Processor type="VolumeListSource" name="VolumeListSource" id="ref0">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-246" y="-296" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="volumeURLList" name="volumeURLList" watchMode="1" fileWatchEnabled="false" numURLs="0" previewsVisible="true" />
+                    </Properties>
+                    <Inports />
+                    <Outports>
+                        <Port name="volumecollection" direction="0" portID="volumecollection" guiName="VolumeList Output" allowMultipleConnections="true" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeListSave" name="VolumeListSave" id="ref1">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-240" y="-176" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="baseName" name="baseName" value="volume_" />
+                        <Property mapKey="compressionLevel" name="compressionLevel" value="5" />
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="enableCompression" name="enableCompression" value="true" />
+                        <Property mapKey="enableShuffling" name="enableShuffling" value="false" />
+                        <Property mapKey="fileNameHDF5" name="fileNameHDF5" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="folderNameVVD" name="folderNameVVD" watchMode="3" fileWatchEnabled="false">
+                            <paths noPathSet="true" />
+                        </Property>
+                        <Property mapKey="outputFormat" name="outputFormat" value="hdf5" />
+                        <Property mapKey="progress" name="progress" />
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="useOriginFileNames_" name="useOriginFileNames_" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="VolumeList Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties />
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+            </Processors>
+            <Connections>
+                <Connection>
+                    <Outport name="volumecollection">
+                        <Processor type="VolumeListSource" ref="ref0" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeListSave" ref="ref1" />
+                    </Inport>
+                </Connection>
+            </Connections>
+            <CoProcessorConnections />
+            <PropertyLinks />
+        </ProcessorNetwork>
+        <Animation />
+        <ApplicationModeConfig MainCanvas="">
+            <PropertyGroups />
+            <GroupMembership />
+            <MenuEntityVisibility />
+        </ApplicationModeConfig>
+    </Workspace>
+</VoreenData>
