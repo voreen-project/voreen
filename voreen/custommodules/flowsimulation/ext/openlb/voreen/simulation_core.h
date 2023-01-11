@@ -72,7 +72,7 @@ struct SimpleVolume {
         , maxMagnitude(0) {}
 
     void setValue(S value, int x, int y, int z, int channel = 0) {
-        long index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
+        auto index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
         data[index] = value;
     }
     void setValue(S value, int index, int channel = 0) {
@@ -80,7 +80,7 @@ struct SimpleVolume {
         data[index] = value;
     }
     S getValue(int x, int y, int z, int channel = 0) const {
-        long index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
+        auto index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
         return data[index];
     }
     S getValue(int index, int channel = 0) const {

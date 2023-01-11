@@ -157,6 +157,8 @@ std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volum
 
     std::unique_ptr<Volume> output(new Volume(representation, spacing, offset));
     output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<BaseType>());
+    //output->addDerivedData(new VolumeMinMax(volume.minValues, volume.maxValues, volume.minValues, volume.maxValues));
+    //output->addDerivedData(new VolumeMinMaxMagnitude(volume.minMagnitude, volume.maxMagnitude, volume.minMagnitude, volume.maxMagnitude));
     return output;
 }
 
@@ -203,6 +205,7 @@ FlowSimulation::FlowSimulation()
     , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations", false)
     , selectedParametrization_("selectedSimulation", "Selected Parametrization", 0, 0, 0)
+    , numCuboids_("numCuboids", "Number of Cuboids", 1, 1, std::thread::hardware_concurrency(), Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
     addPort(geometryDataPort_);
     addPort(measuredDataPort_);
@@ -226,6 +229,10 @@ FlowSimulation::FlowSimulation()
     selectedParametrization_.setGroupID("results");
 
     setPropertyGroupGuiName("results", "Results");
+
+    addProperty(numCuboids_);
+    numCuboids_.setGroupID("debug");
+    setPropertyGroupGuiName("debug", "Debug");
 }
 
 FlowSimulation::~FlowSimulation() {
@@ -386,7 +393,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
             config,
             selectedParametrization,
             simulationPath,
-            deleteOldSimulations_.get()
+            deleteOldSimulations_.get(),
+            numCuboids_.get()
     };
 }
 
@@ -562,7 +570,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // Instantiation.
     IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
-    const int noOfCuboids = 1;//std::thread::hardware_concurrency();
+    const int noOfCuboids = input.numCuboids;
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
     HeuristicLoadBalancer<T> loadBalancer(cuboidGeometry);
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);

@@ -43,6 +43,7 @@ struct FlowSimulationInput {
     size_t selectedParametrization;
     std::string simulationResultPath;
     bool deleteOldSimulations;
+    int numCuboids;
 };
 
 struct FlowSimulationOutput {
@@ -95,6 +96,8 @@ private:
 
     BoolProperty simulateAllParametrizations_;
     IntProperty selectedParametrization_;
+
+    IntProperty numCuboids_;
 
     static const std::string loggerCat_;
 };
