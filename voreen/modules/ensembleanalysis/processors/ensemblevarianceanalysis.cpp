@@ -130,6 +130,10 @@ EnsembleVarianceAnalysisOutput EnsembleVarianceAnalysis::compute(EnsembleVarianc
     for (size_t r = 0; r < numMembers; r++) {
         size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
         const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
+        if(!vol) {
+            continue;
+        }
+
         RealWorldMapping rwmCurr = vol->getRealWorldMapping();
         VolumeRAMRepresentationLock lock(vol);
         tgt::Bounds bounds = vol->getBoundingBox().getBoundingBox();
@@ -230,9 +234,10 @@ void EnsembleVarianceAnalysis::adjustToEnsemble() {
     const EnsembleDataset* ensemble = ensembleInport_.getData();
 
     selectedField_.setOptions(std::deque<Option<std::string>>());
-    for(const std::string& field : ensemble->getCommonFieldNames()) {
+    for(const std::string& field : ensemble->getUniqueFieldNames()) {
         selectedField_.addOption(field, field);
     }
+    selectedField_.selectByIndex(0); // Revert to first field.
 
     time_.setMinValue(ensemble->getStartTime());
     time_.setMaxValue(ensemble->getEndTime());

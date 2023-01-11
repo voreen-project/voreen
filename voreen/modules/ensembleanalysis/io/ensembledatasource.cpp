@@ -179,10 +179,16 @@ void EnsembleDataSource::buildEnsembleDataset() {
 
         std::vector<TimeStep> timeSteps;
         for (const std::string& fileName : fileNames) {
+            tgtAssert(!fileName.empty(), "Empty filename");
+
+            // We ignore files that start with a dot.
+            if(fileName.front() == '.') {
+                continue;
+            }
 
             // Skip raw files. They belong to VVD files or can't be read anyway.
             std::string ext = tgt::FileSystem::fileExtension(fileName, true);
-            if (ext.empty() || ext == "raw") {
+            if (ext.empty() || ext == "raw" || ext == "dat") {
                 continue;
             }
 

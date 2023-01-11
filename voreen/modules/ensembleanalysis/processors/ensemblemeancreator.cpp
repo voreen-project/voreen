@@ -116,6 +116,10 @@ EnsembleMeanCreatorOutput EnsembleMeanCreator::compute(EnsembleMeanCreatorInput 
     for (size_t r = 0; r < numMembers; r++) {
         size_t t = ensemble->getMembers()[r].getTimeStep(input.time);
         const VolumeBase* vol = ensemble->getMembers()[r].getTimeSteps()[t].getVolume(field);
+        if(!vol) {
+            continue;
+        }
+
         RealWorldMapping rwm = vol->getRealWorldMapping();
         VolumeRAMRepresentationLock lock(vol);
         tgt::mat4 worldToVoxel = vol->getWorldToVoxelMatrix();
@@ -170,9 +174,10 @@ void EnsembleMeanCreator::adjustToEnsemble() {
     const EnsembleDataset* ensemble = inport_.getData();
 
     selectedField_.setOptions(std::deque<Option<std::string>>());
-    for(const std::string& field : ensemble->getCommonFieldNames()) {
+    for(const std::string& field : ensemble->getUniqueFieldNames()) {
         selectedField_.addOption(field, field);
     }
+    selectedField_.selectByIndex(0); // Revert to first field.
 
     time_.setMinValue(ensemble->getStartTime());
     time_.setMaxValue(ensemble->getEndTime());
