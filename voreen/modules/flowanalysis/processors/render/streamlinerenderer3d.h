@@ -29,6 +29,8 @@
 #include "voreen/core/processors/renderprocessor.h"
 
 #include "voreen/core/properties/cameraproperty.h"
+#include "voreen/core/properties/colorproperty.h"
+#include "voreen/core/properties/lightsourceproperty.h"
 #include "voreen/core/properties/optionproperty.h"
 #include "voreen/core/properties/shaderproperty.h"
 
@@ -119,6 +121,7 @@ private:
     RenderPort imgOutport_;
         //style
     OptionProperty<StreamlineStyle> streamlineStyle_;   ///< used to change streamline representations
+    FloatProperty lineWidth_;
         //color
     OptionProperty<StreamlineColorCoding> color_;       ///< color encoding
     TransFunc1DKeysProperty transferFunction_;          ///< tf for velocity color coding
@@ -130,7 +133,13 @@ private:
     BoolProperty enableMaximumIntensityProjection_;     ///< enables maximum intensity projection (MIP)
     FloatProperty timeWindowStart_;                     ///< start of time window for pathline rendering
     FloatProperty timeWindowSize_;                      ///< size of time window
-
+        //lighting
+    BoolProperty enableLighting_;
+    LightSourceProperty lightPosition_;                 ///< The position of the light source in world coordinates
+    ColorProperty lightAmbient_;                        ///< The light source's ambient color
+    ColorProperty lightDiffuse_;                        ///< The light source's diffuse color
+    ColorProperty lightSpecular_;                       ///< The light source's specular color
+    FloatProperty materialShininess_;                   ///< The material's specular exponent
         //must haves
     ShaderProperty streamlineShader_;                   ///< used for rendering
     bool requiresRecompileShader_;

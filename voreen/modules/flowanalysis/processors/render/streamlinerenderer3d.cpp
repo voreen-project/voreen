@@ -35,7 +35,6 @@ namespace voreen {
 
 // TODO: Should use Shaders!
 static const uint32_t GEOMETRY_TESSELATION = 8;
-static const float MIN_RADIUS = 0.0001f;
 
 std::string StreamlineRenderer3D::loggerCat_("flowanalysis.StreamlineRenderer3D");
 
@@ -47,6 +46,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     //properties
         //style
     , streamlineStyle_("streamlineStyle", "Streamline Style:")
+    , lineWidth_("lineWidth", "Line Width:", 1.0f, 1.0f, 10.0f)
         //color
     , color_("colorProp", "Color:")
     , transferFunction_("tfProp", "Color Map:")
@@ -58,6 +58,13 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     , enableMaximumIntensityProjection_("maximumIntensityProjection", "Enable Maximum Intensity Projection (MIP)", false)
     , timeWindowStart_("timeWindowStart", "Time Window Start", 0.0f, 0.0f, 1000.0f, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
     , timeWindowSize_("timeWindowSize", "Time Window Size", 0.0f, 0.0f, 1000.0f, Processor::INVALID_RESULT, FloatProperty::DYNAMIC)
+        //lighting
+    , enableLighting_("enableLighting", "Enable Lighting", false)
+    , lightPosition_("lightPosition", "Light Source Position", tgt::vec4(2.3f, 1.5f, 1.5f, 1.f), tgt::vec4(-10000), tgt::vec4(10000))
+    , lightAmbient_("lightAmbient", "Ambient Light", tgt::Color(0.4f, 0.4f, 0.4f, 1.f))
+    , lightDiffuse_("lightDiffuse", "Diffuse Light", tgt::Color(0.8f, 0.8f, 0.8f, 1.f))
+    , lightSpecular_("lightSpecular", "Specular Light", tgt::Color(0.6f, 0.6f, 0.6f, 1.f))
+    , materialShininess_("materialShininess", "Shininess", 60.f, 0.1f, 128.f)
         //must haves
     , streamlineShader_("streamlineShaderProp", "Shader:", "streamlinerenderer3d.frag", "streamlinerenderer3d.vert", ""/*"streamlinerenderer3d.geom"*/, Processor::INVALID_PROGRAM, Property::LOD_DEBUG)
     , requiresRecompileShader_(true)
@@ -75,6 +82,10 @@ StreamlineRenderer3D::StreamlineRenderer3D()
         streamlineStyle_.addOption("lines", "Lines", STYLE_LINES);
         streamlineStyle_.addOption("tubes", "Tubes", STYLE_TUBES);
         streamlineStyle_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
+    addProperty(lineWidth_);
+        ON_CHANGE_LAMBDA(lineWidth_, [this] {
+            requiresRebuild_ |= streamlineStyle_.getValue() != STYLE_LINES;
+        });
         // color
     addProperty(color_);
         color_.addOption("velocity" , "Velocity" , COLOR_VELOCITY);
@@ -112,7 +123,23 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addProperty(timeWindowSize_);
         timeWindowSize_.setNumDecimals(4);
         timeWindowSize_.setReadOnlyFlag(true);
-
+        //lighting
+    addProperty(enableLighting_);
+    ON_CHANGE_LAMBDA(enableLighting_, [this] {
+        bool lighting = enableLighting_.get();
+        setPropertyGroupVisible("lighting", lighting);
+    });
+    addProperty(lightPosition_);
+        lightPosition_.setGroupID("lighting");
+    addProperty(lightAmbient_);
+        lightAmbient_.setGroupID("lighting");
+    addProperty(lightDiffuse_);
+        lightDiffuse_.setGroupID("lighting");
+    addProperty(lightSpecular_);
+        lightSpecular_.setGroupID("lighting");
+    addProperty(materialShininess_);
+        materialShininess_.setGroupID("lighting");
+    setPropertyGroupGuiName("lighting", "Lighting Parameters");
         //must have
     addProperty(streamlineShader_);
     addProperty(camera_);
@@ -153,11 +180,24 @@ void StreamlineRenderer3D::process() {
     if(tgt::Shader* shader = streamlineShader_.getShader()) {
         shader->activate();
 
+        const tgt::Camera& camera = camera_.get();
+
         // set transformation uniforms
-        setGlobalShaderParameters(shader, &camera_.get(), imgOutport_.getSize());
+        setGlobalShaderParameters(shader, &camera, imgOutport_.getSize());
         shader->setUniform("velocityTransformMatrix_",streamlineInport_.getData()->getVelocityTransformMatrix());
         shader->setUniform("timeWindowStart_", timeWindowStart_.get());
         shader->setUniform("timeWindowSize_", timeWindowSize_.get());
+
+        shader->setUniform("enableLighting_", enableLighting_.get());
+        if(enableLighting_.get()) {
+            shader->setUniform("cameraPosition_", camera.getPosition());
+            shader->setUniform("lightSource_.position_", lightPosition_.get().xyz());
+            shader->setUniform("lightSource_.ambientColor_", lightAmbient_.get().xyz());
+            shader->setUniform("lightSource_.diffuseColor_", lightDiffuse_.get().xyz());
+            shader->setUniform("lightSource_.specularColor_", lightSpecular_.get().xyz());
+            //prog->setUniform("lightSource_.attenuation_", tgt::vec3(1.f, 0.f, 0.f));
+            shader->setUniform("shininess_", materialShininess_.get());
+        }
 
         switch(color_.getValue()) {
         case COLOR_VELOCITY:
@@ -191,11 +231,14 @@ void StreamlineRenderer3D::process() {
             LERROR("Unknown Color Coding");
         }
 
+        glLineWidth(lineWidth_.get());
+
         for(size_t i = 0; i < meshes_.size(); i++) {
             meshes_[i]->render();
         }
 
         // Restore state.
+        glLineWidth(1.0f);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ZERO);
         glDisable(GL_BLEND);
@@ -259,6 +302,7 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
 
 void StreamlineRenderer3D::onStyleChange() {
     requiresRebuild_ = true;
+    lineWidth_.setTracking(streamlineStyle_.getValue() == STYLE_LINES);
     /*
     //update shaders
     switch(streamlineStyleProp_.getValue()) {
@@ -408,7 +452,7 @@ GlMeshGeometryBase* StreamlineRenderer3D::createTubeGeometry(const Streamline& s
 
         uint32_t offset = static_cast<uint32_t>(k) * tesselation;
 
-        float radius = std::max(element.radius_, MIN_RADIUS);
+        float radius = std::max(element.radius_, lineWidth_.get());
         tgt::vec3 color = element.velocity_;
         tgt::vec4 v(0.0f, 0.0f, 0.0f, 1.0f);
         for (uint32_t i = 0; i < tesselation; i++) {
@@ -446,7 +490,7 @@ GlMeshGeometryBase* StreamlineRenderer3D::createArrowGeometry(const Streamline& 
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
 
-    float radius = std::max(streamline.getFirstElement().radius_, MIN_RADIUS); // FIXME: radius is only a rough approximation.
+    float radius = std::max(streamline.getFirstElement().radius_, lineWidth_.get()); // FIXME: radius is only a rough approximation.
     float length = streamline.getPhysicalLength();
 
     // Calculate the number of arrows the bundle will be split into.

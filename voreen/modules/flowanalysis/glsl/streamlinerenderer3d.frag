@@ -24,7 +24,26 @@
  ***********************************************************************************/
 
 #include "modules/mod_transfunc.frag"
-#include "modules/mod_shading.frag"
+
+/// This struct contains all information about a light source.
+struct LightSource {
+    vec3 position_;        // light position in world space
+    vec3 ambientColor_;    // ambient color (r,g,b)
+    vec3 diffuseColor_;    // diffuse color (r,g,b)
+    vec3 specularColor_;   // specular color (r,g,b)
+    vec3 attenuation_;     // attenuation (constant, linear, quadratic)
+};
+
+// uniforms needed for shading
+uniform float shininess_;       // material shininess parameter
+uniform LightSource lightSource_;
+
+uniform float timeWindowStart_;
+uniform float timeWindowSize_;
+
+uniform bool enableLighting_;
+uniform vec3 cameraPosition_;
+
 
 in vData {
     vec3 position;
@@ -33,8 +52,6 @@ in vData {
     float time;
 } frag;
 
-uniform float timeWindowStart_;
-uniform float timeWindowSize_;
 
 #ifdef COLOR_VELOCITY
     uniform TF_SAMPLER_TYPE transFuncTex_;      //< defined in generate header
@@ -50,6 +67,9 @@ uniform float timeWindowSize_;
     #error No color mode has been set
 #endif
 
+float pyt(float c) {
+    return sqrt(1.0 - c * c);
+}
 
 void main() {
 
@@ -69,6 +89,20 @@ void main() {
 
     if(color.a == 0.0)
         discard;
+
+    if(enableLighting_) {
+        vec3 L = normalize(frag.position - lightSource_.position_);
+        vec3 T = normalize(frag.velocity);
+        vec3 V = normalize(cameraPosition_ - frag.position);
+
+        vec3 ka = color.rgb * lightSource_.ambientColor_;
+        vec3 kd = color.rgb * lightSource_.diffuseColor_;
+        vec3 ks = color.rgb * lightSource_.specularColor_;
+
+        color.rgb = ka;
+        color.rgb += kd * pyt(dot(L, T));
+        color.rgb += ks * pow(abs(dot(L, T) * dot(V, T) - pyt(dot(L,T))*pyt(dot(V,T))), shininess_);
+    }
 
     FragData0 = color;
 }
