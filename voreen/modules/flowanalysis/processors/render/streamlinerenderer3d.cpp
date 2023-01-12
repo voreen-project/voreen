@@ -47,6 +47,7 @@ StreamlineRenderer3D::StreamlineRenderer3D()
         //style
     , streamlineStyle_("streamlineStyle", "Streamline Style:")
     , lineWidth_("lineWidth", "Line Width:", 1.0f, 1.0f, 10.0f)
+    , drawOutlines_("drawOutlines", "Draw Outlines", false)
         //color
     , color_("colorProp", "Color:")
     , transferFunction_("tfProp", "Color Map:")
@@ -81,11 +82,13 @@ StreamlineRenderer3D::StreamlineRenderer3D()
     addProperty(streamlineStyle_);
         streamlineStyle_.addOption("lines", "Lines", STYLE_LINES);
         streamlineStyle_.addOption("tubes", "Tubes", STYLE_TUBES);
+//        streamlineStyle_.addOption("arrows", "Arrows", STYLE_ARROWS); // May crash due to high memory consumption.
         streamlineStyle_.onChange(MemberFunctionCallback<StreamlineRenderer3D>(this, &StreamlineRenderer3D::onStyleChange));
     addProperty(lineWidth_);
         ON_CHANGE_LAMBDA(lineWidth_, [this] {
             requiresRebuild_ |= streamlineStyle_.getValue() != STYLE_LINES;
         });
+    addProperty(drawOutlines_);
         // color
     addProperty(color_);
         color_.addOption("velocity" , "Velocity" , COLOR_VELOCITY);
@@ -188,6 +191,16 @@ void StreamlineRenderer3D::process() {
         shader->setUniform("timeWindowStart_", timeWindowStart_.get());
         shader->setUniform("timeWindowSize_", timeWindowSize_.get());
 
+        // We render a black outline for simple streamlines.
+        if(streamlineStyle_.getValue() == STYLE_LINES && drawOutlines_.get()) {
+            glLineWidth(lineWidth_.get() + 2.0f); // Add one pixel wide outlines.
+            shader->setUniform("drawOutlines_", true);
+            for (size_t i = 0; i < meshes_.size(); i++) {
+                meshes_[i]->render();
+            }
+
+        }
+        shader->setUniform("drawOutlines_", false);
         shader->setUniform("enableLighting_", enableLighting_.get());
         if(enableLighting_.get()) {
             shader->setUniform("cameraPosition_", camera.getPosition());
@@ -216,6 +229,7 @@ void StreamlineRenderer3D::process() {
                 glDisable(GL_DEPTH_TEST);
             }
             else {
+                glDepthFunc(GL_LEQUAL);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 if(transferFunction_.get()->getAlphaMode() == TransFuncBase::TF_USE_ALPHA) {
                     glDisable(GL_DEPTH_TEST);
@@ -224,6 +238,7 @@ void StreamlineRenderer3D::process() {
             break;
         }
         case COLOR_DIRECTION:
+            glDepthFunc(GL_LEQUAL);
             shader->setUniform("colorRotationMatrix_", colorRotationMatrix_.get(), true);
             break;
         default:
@@ -238,6 +253,7 @@ void StreamlineRenderer3D::process() {
         }
 
         // Restore state.
+        glDepthFunc(GL_LESS);
         glLineWidth(1.0f);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ZERO);
@@ -303,19 +319,6 @@ void StreamlineRenderer3D::onStreamlineDataChange() {
 void StreamlineRenderer3D::onStyleChange() {
     requiresRebuild_ = true;
     lineWidth_.setTracking(streamlineStyle_.getValue() == STYLE_LINES);
-    /*
-    //update shaders
-    switch(streamlineStyleProp_.getValue()) {
-    case STYLE_LINES:
-    case STYLE_TUBES:
-    case STYLE_ARROWS:
-        requiresRecompileShader_ = true;
-        break;
-
-    default:
-        LERROR("Unsupported style");
-    }
-     */
 }
 
 void StreamlineRenderer3D::onColorChange() {
@@ -442,6 +445,7 @@ GlMeshGeometryBase* StreamlineRenderer3D::createTubeGeometry(const Streamline& s
     GlMeshGeometryUInt32Color* mesh = new GlMeshGeometryUInt32Color();
     mesh->setPrimitiveType(GL_TRIANGLES);
 
+    const float minRadius = lineWidth_.get() * 0.01f;
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
 
@@ -452,7 +456,7 @@ GlMeshGeometryBase* StreamlineRenderer3D::createTubeGeometry(const Streamline& s
 
         uint32_t offset = static_cast<uint32_t>(k) * tesselation;
 
-        float radius = std::max(element.radius_, lineWidth_.get());
+        float radius = std::max(element.radius_, minRadius);
         tgt::vec3 color = element.velocity_;
         tgt::vec4 v(0.0f, 0.0f, 0.0f, 1.0f);
         for (uint32_t i = 0; i < tesselation; i++) {
@@ -487,10 +491,11 @@ GlMeshGeometryBase* StreamlineRenderer3D::createArrowGeometry(const Streamline& 
     mesh->setPrimitiveType(GL_TRIANGLES);
 
     // Define some constants for easier access.
+    const float minRadius = lineWidth_.get() * 0.01f;
     const uint32_t tesselation = GEOMETRY_TESSELATION;
     const float angleStep = (tgt::PIf * 2.0f) / tesselation;
 
-    float radius = std::max(streamline.getFirstElement().radius_, lineWidth_.get()); // FIXME: radius is only a rough approximation.
+    float radius = std::max(streamline.getFirstElement().radius_, minRadius); // FIXME: radius is only a rough approximation.
     float length = streamline.getPhysicalLength();
 
     // Calculate the number of arrows the bundle will be split into.
@@ -513,7 +518,8 @@ GlMeshGeometryBase* StreamlineRenderer3D::createArrowGeometry(const Streamline& 
         const tgt::vec3& p0 = centroid.getElementAt(k).position_;
         const tgt::vec3& p1 = centroid.getElementAt(k+1).position_;
 
-        tgt::mat4 transformation = createTransformationMatrix(p0, p1 - p0);
+        //tgt::mat4 transformation = createTransformationMatrix(p0, p1 - p0);
+        tgt::mat4 transformation = createTransformationMatrix(p0, centroid.getElementAt(k).velocity_);
 
         uint32_t offset = static_cast<uint32_t>(mesh->getVertices().size());
 

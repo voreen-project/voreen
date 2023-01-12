@@ -38,12 +38,13 @@ struct LightSource {
 uniform float shininess_;       // material shininess parameter
 uniform LightSource lightSource_;
 
-uniform float timeWindowStart_;
-uniform float timeWindowSize_;
-
 uniform bool enableLighting_;
 uniform vec3 cameraPosition_;
 
+uniform bool drawOutlines_;
+
+uniform float timeWindowStart_;
+uniform float timeWindowSize_;
 
 in vData {
     vec3 position;
@@ -75,6 +76,11 @@ void main() {
 
     if(frag.time < timeWindowStart_ || frag.time > timeWindowStart_ + timeWindowSize_)
         discard;
+
+    if(drawOutlines_) {
+        FragData0 = vec4(0, 0, 0, 1);
+        return;
+    }
 
     vec4 color = vec4(1.0);
 #ifdef COLOR_VELOCITY

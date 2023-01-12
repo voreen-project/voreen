@@ -122,6 +122,7 @@ private:
         //style
     OptionProperty<StreamlineStyle> streamlineStyle_;   ///< used to change streamline representations
     FloatProperty lineWidth_;
+    BoolProperty drawOutlines_;
         //color
     OptionProperty<StreamlineColorCoding> color_;       ///< color encoding
     TransFunc1DKeysProperty transferFunction_;          ///< tf for velocity color coding
