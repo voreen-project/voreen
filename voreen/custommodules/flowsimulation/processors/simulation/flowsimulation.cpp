@@ -201,6 +201,7 @@ FlowSimulation::FlowSimulation()
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , debugMaterialsPort_(Port::OUTPORT, "debugMaterialsPort", "Debug Materials Port", false, Processor::VALID)
     , debugVelocityPort_(Port::OUTPORT, "debugVelocityPort", "Debug Velocity Port", false, Processor::VALID)
+    , debugPressurePort_(Port::OUTPORT, "debugPressurePort", "Debug Pressure Port", false, Processor::VALID)
     , simulationResults_("simulationResults", "Simulation Results", "Simulation Results", "", "", FileDialogProperty::DIRECTORY, Processor::VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , deleteOldSimulations_("deleteOldSimulations", "Delete old Simulations", false)
     , simulateAllParametrizations_("simulateAllParametrizations", "Simulate all Parametrizations", false)
@@ -214,6 +215,7 @@ FlowSimulation::FlowSimulation()
     addPort(parameterPort_);
     addPort(debugMaterialsPort_);
     addPort(debugVelocityPort_);
+    addPort(debugPressurePort_);
 
     addProperty(simulationResults_);
     simulationResults_.setGroupID("results");
@@ -386,6 +388,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     // Clear debug data, so their file handles of old volumes get closed and can be overwritten.
     debugMaterialsPort_.clear();
     debugVelocityPort_.clear();
+    debugPressurePort_.clear();
 
     return FlowSimulationInput{
             geometryPath,
@@ -440,6 +443,9 @@ void FlowSimulation::serialize(Serializer& s) const {
     if(debugVelocityPort_.hasData()) {
         s.serialize("debugVelocityPortDataPath", debugVelocityPort_.getData()->getOrigin());
     }
+    if(debugPressurePort_.hasData()) {
+        s.serialize("debugPressurePortDataPath", debugPressurePort_.getData()->getOrigin());
+    }
 }
 
 void FlowSimulation::deserialize(Deserializer& s) {
@@ -460,6 +466,7 @@ void FlowSimulation::deserialize(Deserializer& s) {
 
     deserializeDebugData("debugMaterialsPortDataPath", debugMaterialsPort_);
     deserializeDebugData("debugVelocityPortDataPath", debugVelocityPort_);
+    deserializeDebugData("debugPressurePortDataPath", debugPressurePort_);
 }
 
 void FlowSimulation::enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume) const {
@@ -649,11 +656,22 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         // Store last velocity.
         const int outputIter = maxIteration / config.getNumTimeSteps();
         if (abort || iteration % outputIter == 0) {
-            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-            auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
-            auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
-            std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
-            enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
+            {
+                // Write velocity file.
+                SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
+                auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
+                auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
+                std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
+                enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
+            }
+            {
+                // Write pressure file.
+                SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
+                auto pressureVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), pressure);
+                auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume);
+                std::string filename = "pressure" + std::to_string(swapVelocityFile) + ".h5";
+                enqueueInsituResult(simulationResultPath + filename, debugPressurePort_, std::move(volume));
+            }
 
             // As the old file might still be in use, we need two files in order
             // to ensure that we can write the current time step.

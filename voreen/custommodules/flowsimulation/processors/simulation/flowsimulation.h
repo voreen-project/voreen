@@ -90,6 +90,7 @@ private:
 
     mutable VolumePort debugMaterialsPort_;
     mutable VolumePort debugVelocityPort_;
+    mutable VolumePort debugPressurePort_;
 
     FileDialogProperty simulationResults_;
     BoolProperty deleteOldSimulations_;
