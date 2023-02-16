@@ -72,7 +72,8 @@ void GLSLProgram::freeDeclarations() {
 bool GLSLProgram::parse() {
     freeDeclarations();
 
-    PreprocessorVisitor preprocessor;
+    PreprocessorSymbolMap symbolmap;
+    PreprocessorVisitor preprocessor(symbolmap);
     preprocessor.setShaderHeader(shaderHeader_);
     std::ostringstream& program = preprocessor.translate(is_, VoreenApplication::app()->getBasePath()+"/glsl");
 

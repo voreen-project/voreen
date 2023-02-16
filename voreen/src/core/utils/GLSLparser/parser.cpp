@@ -244,7 +244,7 @@ bool Parser::reduce(ParserActionReduce* const r) {
 
         if (! symbols_.empty())
         {
-            if ((*(symbols_.top()) != *it) && (! isProxySymbol(*it, symbols_.top()->getSymbolID())) )
+            if (/*fix */(symbols_.top()->getSymbolID() != *it) && (! isProxySymbol(*it, symbols_.top()->getSymbolID())) )
             {
                 log_ << "fatal error: top symbol ('" << symbolID2String(symbols_.top()->getSymbolID());
                 log_ << "') does not match the symbol in the production's body ('";

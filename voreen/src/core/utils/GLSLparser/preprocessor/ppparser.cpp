@@ -165,7 +165,7 @@ void PreprocessorParser::expandParseTree(const int productionID,
                 const IdentifierToken* const id =
                     dynamic_cast<const IdentifierToken* const>(reductionBody[4]->getToken());
 
-                if ((list != 0) && (id != 0))
+                if ((list != 0) && (id != 0)) // Fix some bugs in preprocessor macro replacement
                     pushNode(new DefineDirective(id->toString(), list, true));
             }
             break;

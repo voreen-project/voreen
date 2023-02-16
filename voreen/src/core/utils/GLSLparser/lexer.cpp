@@ -261,7 +261,11 @@ ConstantToken* Lexer::scanNumber(const int tokenID) {
                     base = ConstantToken::BASE_16;
                 } else if (nextChar() == '.')
                     type = ConstantToken::TYPE_FLOAT;
-                else {
+                else 
+                  /* Patch for strings such as 000000.1: */
+                  if (nextChar() != '0')
+                  /* --- */
+                {
                     pred = &isOctalDigit;
                     base = ConstantToken::BASE_8;
                 }
@@ -280,10 +284,18 @@ ConstantToken* Lexer::scanNumber(const int tokenID) {
 
                 case 'f':
                 case 'F':
-                    atEnd = true;
-                    if (type == ConstantToken::TYPE_FLOAT) {
-                        numberString += readChar();
-                        ++pos;
+                    if (pred == &isHexDigit)
+                    {
+                      if (! (*pred)(nextChar()))
+                        atEnd = true;
+                    }
+                    else
+                    {
+                      atEnd = true;
+                      if (type == ConstantToken::TYPE_FLOAT) {
+                          numberString += readChar();
+                          ++pos;
+                      }
                     }
                     break;
 
@@ -292,15 +304,27 @@ ConstantToken* Lexer::scanNumber(const int tokenID) {
                         type = ConstantToken::TYPE_FLOAT;
                         numberString += readChar();
                         ++pos;
+
+                        // patch for parsing lines such as "float f = 5.;"
+                        if (! (*pred)(nextChar()))
+                          atEnd = true;
+                        // --
                     }
                     break;
 
                 case 'e':
                 case 'E':
-                    if (type == ConstantToken::TYPE_FLOAT) {
-                        hasExponent = true;
-                        numberString += readChar();
-                        ++pos;
+                    if (pred == &isHexDigit)
+                    {
+                      if (! (*pred)(nextChar()))
+                        atEnd = true;
+                    }
+                    else
+                    {
+                      type = ConstantToken::TYPE_FLOAT;
+                      hasExponent = true;
+                      numberString += readChar();
+                      ++pos;
                     }
                     break;
 

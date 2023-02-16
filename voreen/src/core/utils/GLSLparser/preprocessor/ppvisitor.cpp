@@ -32,9 +32,63 @@ namespace voreen {
 
 namespace glslparser {
 
-PreprocessorVisitor::PreprocessorVisitor()
+/*
+** PreprocessorSymbolMap
+*/
+PreprocessorSymbolMap::PreprocessorSymbolMap()
+{
+}
+
+PreprocessorSymbolMap::~PreprocessorSymbolMap()
+{
+  clear();
+}
+
+bool PreprocessorSymbolMap::insertSymbol(PreprocessorSymbol* newSymbol)
+{
+  std::pair<typename SymbolMap::iterator, bool> res = symbols.insert(std::make_pair(newSymbol->getID(), newSymbol));
+  return res.second;
+}
+  
+PreprocessorSymbol* PreprocessorSymbolMap::findSymbol(const std::string& symbol) const
+{
+  SymbolMap::const_iterator it = symbols.find(symbol);
+  if (it != symbols.end())
+    return it->second;
+  for (size_t i = 0; i < antecedants.size(); ++i)
+  {
+    PreprocessorSymbol* res = antecedants[i]->findSymbol(symbol);
+    if (res)
+      return res;
+  }
+  return nullptr;
+}
+
+void PreprocessorSymbolMap::addAntecedant(PreprocessorSymbolMap& antecedant)
+  {antecedants.push_back(&antecedant);}
+
+void PreprocessorSymbolMap::clear()
+{
+  for (SymbolMap::iterator it = symbols.begin(); it != symbols.end(); ++it)
+    delete it->second;
+  symbols.clear();
+  antecedants.clear();
+}
+
+void PreprocessorSymbolMap::getSymbolsMap(SymbolMap& res)
+{
+  for (size_t i = 0; i < antecedants.size(); ++i)
+    antecedants[i]->getSymbolsMap(res);
+  for (SymbolMap::iterator it = symbols.begin(); it != symbols.end(); ++it)
+    res[it->first] = it->second;
+}
+
+/*
+** PreprocessorVisitor
+*/
+PreprocessorVisitor::PreprocessorVisitor(PreprocessorSymbolMap& symbols)
     : translation_(std::ios_base::out | std::ios_base::in),
-    symbols_("global")
+    symbols_(symbols)
 {
     // TODO: replace the value returned by this macro with the correct one when it is
     // expanded or invoked.
@@ -382,8 +436,9 @@ int PreprocessorVisitor::visitNode(TextNode* const n) {
     if (n == 0)
         return 0;
 
-    typedef std::map<std::string, PreprocessorSymbol*> SymbolsMap;
-    const SymbolsMap& symbols = symbols_.getSymbolsMap();
+    typedef PreprocessorSymbolMap::SymbolMap SymbolsMap;
+    SymbolsMap symbols;
+    symbols_.getSymbolsMap(symbols);
 
     std::string text = n->getRawText();
 
@@ -617,6 +672,12 @@ std::string PreprocessorVisitor::adjustIncludeFile(const std::string& fileName) 
     return fullPath;
 }
 
+static bool isPreprocessorSeparator(char c)
+{
+  return isalnum(c) == 0;
+}
+//static std::ofstream ppVisitorOstr("C:\\Temp\\ppvisitor.txt");
+
 bool PreprocessorVisitor::expandMacro(std::string& input, PreprocessorSymbol* const symbol) const
 {
     if (symbol == 0)
@@ -624,32 +685,38 @@ bool PreprocessorVisitor::expandMacro(std::string& input, PreprocessorSymbol* co
 
     const std::string& name = symbol->getID();
 
+    //std::cout << "PP ExpandMacro " << name << "..." << std::endl;
     bool expanded = false;
-    for (size_t pos = input.find(name, 0), lastPos = 0; pos != std::string::npos;
-        pos = input.find(name, lastPos))
+    for (size_t pos = input.find(name, 0), lastPos = 0; pos != std::string::npos; pos = input.find(name, lastPos))
     {
         std::string body = symbol->getBody()->toString(terminals_);
-        expanded = true;
-        lastPos = pos + name.size();
+        size_t endPos = pos + name.size();
 
-        if (symbol->isFunction()) {
+        //std::cout << "  Match " << pos << " " << (pos == 0 || isPreprocessorSeparator(input[pos - 1]) ? "true" : "false") << " " << 
+        //               (endPos >= input.size() || isPreprocessorSeparator(input[endPos]) ? "true" : "false") << std::endl;
+
+        if ((pos == 0 || isPreprocessorSeparator(input[pos - 1])) &&
+            (endPos >= input.size() || isPreprocessorSeparator(input[endPos])))
+        {
+          expanded = true;
+          if (symbol->isFunction())
+          {
             const std::vector<std::string>& formals = symbol->getFormals();
-            std::vector<std::string> parameters = readParameters(input, lastPos);
-
-            if (symbol->getNumFormals() == parameters.size()) {
-                for (size_t i = 0; i < parameters.size(); ++i)
-                    body = replace(body, formals[i], parameters[i]);
+            std::vector<std::string> parameters = readParameters(input, endPos);
+            if (symbol->getNumFormals() == parameters.size())
+            {
+              //ppVisitorOstr << "Body: " << body;
+              for (size_t i = 0; i < parameters.size(); ++i)
+                body = replace(body, formals[i], parameters[i]);
+              //ppVisitorOstr << " ==> " << body << std::endl;
             }
+          }
 
-            std::string macroInvocation = input.substr(pos, lastPos - pos);
-            input = replace(input, macroInvocation, body);
-        } else {
-            std::string macroInvocation = input.substr(pos, lastPos - pos);
-            input = replace(input, macroInvocation, body);
-            break;
+          input = input.substr(0, pos) + body + input.substr(endPos);
         }
-    }
 
+        lastPos = pos + 1;
+    }
     return expanded;
 }
 
@@ -660,6 +727,7 @@ std::vector<std::string> PreprocessorVisitor::readParameters(const std::string& 
 
     bool readingParameter = false;
     size_t startPos = std::string::npos;
+    size_t parenthesisLevel = 0; // added support for nested parenthesis expressions like "vec3 col = IMG_NORM_PIXEL(inputImage, (floor(uv/_amount)*_amount/RENDERSIZE.xy)).rgb;"
     for (size_t i = offset; i < input.size(); ++i) {
         const char top = input[i];
 
@@ -669,28 +737,67 @@ std::vector<std::string> PreprocessorVisitor::readParameters(const std::string& 
             continue;
         }
 
-        if ((top == '(') && (! readingParameter)) {
-            startPos = i + 1;
+        if (top == '(')
+        {
+          ++parenthesisLevel;
+          if (!readingParameter) {
+            startPos = i + (parenthesisLevel == 1 ? 1 : 0); // exclude first opening parenthesis
             continue;
+          }
         }
 
         if (startPos != std::string::npos) {
-            if (top == ',') {
+            if (top == ',' && parenthesisLevel == 1) {
                 params.push_back(input.substr(startPos, (i - startPos)));
                 readingParameter = false;
                 startPos = i + 1;
             } else if (top == ')') {
+              --parenthesisLevel;
+              if (parenthesisLevel == 0)
+              {
                 if (i > startPos)
                     params.push_back(input.substr(startPos, (i - startPos)));
                 offset = i + 1;
                 break;
+              }
+              else
+                readingParameter = true;
             } else
                 readingParameter = true;
         }
     }   // for
 
+    /*ppVisitorOstr << "INPUT: " << input.substr(initialOffset, 20);
+    for (size_t i = 0; i < params.size(); ++i)
+      ppVisitorOstr << (i == 0 ? " ==> " : ", ") << params[i];
+    ppVisitorOstr << std::endl;*/
     return params;
 }
+
+static bool isPPSeparatorForMacroExpansion(const std::string& str, int index)
+{
+  if (index < 0 || index >= (int)str.length())
+    return true;
+
+  char top = str[static_cast<size_t>(index)];
+  return isPreprocessorSeparator(top) || top == '_';
+}
+static size_t searchPPOccurence(const std::string& in, const std::string& search, size_t startIndex)
+{
+  for (; startIndex < in.length();)
+  {
+    size_t res = in.find(search, startIndex);
+    if (res == std::string::npos)
+      return res;
+    if (isPPSeparatorForMacroExpansion(in, (int)res - 1) && isPPSeparatorForMacroExpansion(in, (int)(res + search.length())))
+      return res;
+    startIndex = res + 1;
+  }
+  return std::string::npos;
+}
+// ---
+
+
 
 std::string PreprocessorVisitor::replace(const std::string& in, const std::string& search,
                                          const std::string& replacement) const
@@ -699,8 +806,9 @@ std::string PreprocessorVisitor::replace(const std::string& in, const std::strin
     std::ostringstream out;
 
     size_t lastPos = 0;
-    for (size_t pos = in.find(search, 0); pos != std::string::npos;
-        pos = in.find(search, lastPos))
+    // replaced in.find(search, index) by searchPPOccurence(in, search, index) // to fix #define TOTO(X) XaXa X 
+                                                                               // TOTO(1) ==> 1a1a 1 (instead of XaXa 1)
+    for (size_t pos = searchPPOccurence(in, search, 0); pos != std::string::npos; pos = searchPPOccurence(in, search, lastPos))
     {
         out << in.substr(lastPos, pos - lastPos);
         out << replacement;

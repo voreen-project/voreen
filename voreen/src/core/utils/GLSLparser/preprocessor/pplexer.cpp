@@ -213,6 +213,49 @@ Token* PreprocessorLexer::scan() {
 // protected methods
 //
 
+static std::string tokenToString(Token& token, TerminalsMap& terminals)
+{
+  GenericToken<std::string>* stringToken = dynamic_cast<GenericToken<std::string>* >(&token);
+  if (stringToken)
+    return stringToken->getValue();
+  return terminals.findLexeme(token.getTokenID());
+}
+
+static void patchDirectiveTokensForParenthesisBug(std::deque<Token*>& tokenList)
+{
+  // Workaround the fact that the preprocessor is not able to parse lines formatted as:
+  // #define IDENTIFIER (some math expression)
+  // such as for example:
+  // #define ONE (1.0) 
+  PreprocessorTerminals terminals;
+  if (tokenList.size() >= 5 && tokenToString(*tokenList[0], terminals) == "#define" &&
+    tokenList[1]->getTokenID() == PreprocessorTerminals::ID_IDENTIFIER &&
+    tokenList[2]->getTokenID() == PreprocessorTerminals::ID_LPAREN)
+  {
+    int level = 1;
+    size_t i;
+    bool atLeastOneNonIdentifier = false;
+    for (i = 3; i < tokenList.size() && level > 0; ++i)
+    {
+      int tokenId = tokenList[i]->getTokenID();
+      if (tokenId == PreprocessorTerminals::ID_LPAREN)
+        ++level;
+      else if (tokenId == PreprocessorTerminals::ID_RPAREN)
+        --level;
+      else if (tokenId != PreprocessorTerminals::ID_IDENTIFIER && tokenId != PreprocessorTerminals::ID_COMMA)
+        atLeastOneNonIdentifier = true;
+    }
+    if (i != tokenList.size() || level != 0.0 || !atLeastOneNonIdentifier)
+      return; // not concerned (counter example: "#define TOTO(x) vec2(0.0)")
+
+    for (size_t j = 2; j < tokenList.size(); ++j)
+    {
+      std::string token = tokenToString(*tokenList[j], terminals);
+      delete tokenList[j];
+      tokenList[j] = new TextToken(PreprocessorTerminals::ID_TEXT, token);
+    }
+  }
+}
 std::deque<Token*> PreprocessorLexer::scanDirective(const std::string& directive) const {
     std::deque<Token*> tokenList;
 
@@ -248,6 +291,7 @@ std::deque<Token*> PreprocessorLexer::scanDirective(const std::string& directive
             continue;
 
         bool consumed = true;
+        bool breaked = false; // fix
 
         // at first determine characters which correspond to preprocessor operators
         //
@@ -275,7 +319,16 @@ std::deque<Token*> PreprocessorLexer::scanDirective(const std::string& directive
                 break;
 
             case '+':
-                tokenList.push_back(new Token(PreprocessorTerminals::ID_PLUS));
+                if (next != '+' && next != '=') // fix: added this condition
+                  tokenList.push_back(new Token(PreprocessorTerminals::ID_PLUS));
+                else
+                {
+                  // fix--: properly parse ++ and += operators inside macro definitions
+                  std::string str(&top, 1);
+                  ++pos;
+                  str += directive[pos];
+                  tokenList.push_back(new TextToken(PreprocessorTerminals::ID_TEXT, str));
+                }
                 break;
 
             case '-':
@@ -299,7 +352,12 @@ std::deque<Token*> PreprocessorLexer::scanDirective(const std::string& directive
                 break;
 
             case '/':
-                tokenList.push_back(new Token(PreprocessorTerminals::ID_OP_DIV));
+              // skip whole end of line if reaching a comment 
+              // (comments are otherwise embedded inside directives such as "#define toto 1.0 // hello")
+                if (next == '/')
+                  breaked = true;
+                else
+                  tokenList.push_back(new Token(PreprocessorTerminals::ID_OP_DIV));
                 break;
 
             case '%':
@@ -366,15 +424,17 @@ std::deque<Token*> PreprocessorLexer::scanDirective(const std::string& directive
                 break;
         }   // switch (top)
 
+        if (breaked)  // fix
+          break;
         if (consumed == true)
             continue;
 
         if ((isAlpha(top) == true) || (top == '#')) {
             std::string identifier(&top, 1);
             for (++pos; pos < directive.length(); ++pos) {
-                const char top = directive[pos];
-                if ((isAlpha(top) == true) || (isDigit(top) == true))
-                    identifier += top;
+                const char ctop = directive[pos];
+                if ((isAlpha(ctop) == true) || (isDigit(ctop) == true))
+                    identifier += ctop;
                 else {
                     --pos;
                     break;
@@ -396,6 +456,7 @@ std::deque<Token*> PreprocessorLexer::scanDirective(const std::string& directive
             tokenList.push_back(new TextToken(PreprocessorTerminals::ID_TEXT, std::string(&top, 1)));
     }   // for (pos < length)
 
+    patchDirectiveTokensForParenthesisBug(tokenList); // FIX
     return tokenList;
 }
 

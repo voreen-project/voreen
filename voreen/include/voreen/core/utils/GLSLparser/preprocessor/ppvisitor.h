@@ -37,9 +37,33 @@ namespace voreen {
 
 namespace glslparser {
 
+class PreprocessorSymbolMap
+{
+public:
+  typedef std::map<std::string, PreprocessorSymbol* > SymbolMap;
+  
+  PreprocessorSymbolMap();
+  ~PreprocessorSymbolMap();
+
+  // Antecedants
+  void addAntecedant(PreprocessorSymbolMap& antecedant);
+
+  // Local symbols
+  bool insertSymbol(PreprocessorSymbol* newSymbol);
+  PreprocessorSymbol* findSymbol(const std::string& symbol) const;
+  void getSymbolsMap(SymbolMap& res);
+  
+  // Clear
+  void clear();
+  
+private:
+  SymbolMap symbols;
+  std::vector<PreprocessorSymbolMap* > antecedants;
+};
+
 class PreprocessorVisitor : public ParseTreeVisitor {
 public:
-    PreprocessorVisitor();
+    PreprocessorVisitor(PreprocessorSymbolMap& symbols);
     virtual ~PreprocessorVisitor();
 
     virtual bool visit(ParseTreeNode* const node);
@@ -52,6 +76,12 @@ public:
 
     std::ostringstream& translate(std::istream* const is, const std::string& path = "");
     std::ostringstream& translate(ParseTreeNode* const node);
+
+    const PreprocessorSymbolMap& getSymbols() const
+      {return symbols_;}
+    
+    PreprocessorSymbolMap& getSymbols()
+      {return symbols_;}
 
 private:
     int visitNode(Expression* const n);
@@ -131,11 +161,10 @@ private:
     std::string replace(const std::string& in, const std::string& search,
         const std::string& replacement) const;
 
-private:
+protected:
     std::ostringstream translation_;
 
-    typedef SymbolTable<PreprocessorSymbol> PPSymbolMap;
-    PPSymbolMap symbols_;
+    PreprocessorSymbolMap& symbols_;
 
     PreprocessorTerminals terminals_;
 

@@ -114,8 +114,13 @@ public:
 
     std::string toString(const PreprocessorTerminals& terminals) const {
         std::ostringstream oss;
-
+        
+        bool isFirst = true; //  FIX Indentation
         for (std::list<Token*>::const_iterator it = tokens_.begin(); it != tokens_.end(); ++it) {
+            if (isFirst)
+              isFirst = false;
+            else
+              oss << " ";
             GenericToken<std::string>* const strToken =
                 dynamic_cast<GenericToken<std::string>* const>(*it);
             if (strToken != 0)

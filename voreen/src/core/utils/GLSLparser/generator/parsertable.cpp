@@ -119,7 +119,9 @@ std::string ParserTableRow::generateCode(const std::string& symbolVar, const boo
     // used by the parser.
     //
     for (CasesMap::iterator it = cases.begin(); it != cases.end(); ++it) {
-        const std::list<GrammarSymbol*>& symbols = it->second;
+        std::list<GrammarSymbol*> symbols = it->second; 
+        symbols.sort([](GrammarSymbol* a, GrammarSymbol* b) {return a->getSymbolID() < b->getSymbolID(); }); // fix sort
+
         for (std::list<GrammarSymbol*>::const_iterator itSym = symbols.begin();
             itSym != symbols.end(); ++itSym)
         {
