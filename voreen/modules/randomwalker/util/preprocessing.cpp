@@ -250,8 +250,9 @@ VolumeAtomic<float> variances(const VolumeAtomic<float>& img, const VolumeAtomic
         const tgt::ivec3 neighborhoodEnd = tgt::min(end, center + neighborhoodSize + tgt::ivec3(1));
 
         float sum = 0.0f;
+        float voxel_mean = mean.voxel(center);
         VRN_FOR_EACH_VOXEL(p, neighborhoodStart, neighborhoodEnd) {
-            float diff = img.voxel(p) - mean.voxel(p);
+            float diff = img.voxel(p) - voxel_mean;
             sum += diff*diff;
         }
 
