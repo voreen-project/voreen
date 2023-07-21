@@ -319,7 +319,7 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
     }
     else if (IntBoundingBoxProperty* typedProp = dynamic_cast<IntBoundingBoxProperty*>(property)) {
         tgt::ivec3 llf, urb;
-        if (!PyArg_ParseTuple(args, "ss(iii)(iii):setPropertyValue", &processorName, &propertyID,
+        if (!PyArg_ParseTuple(args, "ss((iii)(iii)):setPropertyValue", &processorName, &propertyID,
                               &llf.x, &llf.y, &llf.z, &urb.x, &urb.y, &urb.z))
             return 0;
 
@@ -329,7 +329,7 @@ static PyObject* voreen_setPropertyValue(PyObject* /*self*/, PyObject* args) {
     }
     else if (FloatBoundingBoxProperty* typedProp = dynamic_cast<FloatBoundingBoxProperty*>(property)) {
         tgt::vec3 llf, urb;
-        if (!PyArg_ParseTuple(args, "ss(fff)(fff):setPropertyValue", &processorName, &propertyID,
+        if (!PyArg_ParseTuple(args, "ss((fff)(fff)):setPropertyValue", &processorName, &propertyID,
                               &llf.x, &llf.y, &llf.z, &urb.x, &urb.y, &urb.z))
             return 0;
 
