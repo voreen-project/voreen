@@ -6,6 +6,9 @@ IF(NOT VRN_MODULE_FLOWANALYSIS)
     MESSAGE(FATAL_ERROR "FlowSimulation Module requires Flow Analysis Module")
 ENDIF()
 
+IF(NOT VRN_MODULE_VTK) # for loading pvd files
+    MESSAGE(WARNING "FlowSimulation Module requires VTK Module for loading .pvd files")
+ENDIF()
 IF(NOT VRN_MODULE_PYTHON) # for converting
     MESSAGE(WARNING "FlowSimulation Module requires Python Module for converter scripts")
 ENDIF()
@@ -113,6 +116,15 @@ SET(MOD_CORE_HEADERS
     # openlb
     ${MOD_DIR}/ext/openlb/voreen/openlb_parameters.h
 )
+
+IF(VRN_MODULE_VTK)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/simulation/flowsimulationresult.h
+    )
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/simulation/flowsimulationresult.cpp
+    )
+ENDIF()
 
 IF(VRN_MODULE_VESSELNETWORKANALYSIS)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}

@@ -111,7 +111,7 @@ namespace voreen {
 class ExecutorProcess {
 public:
 
-    ExecutorProcess(const std::string& cd, const std::string& command, const std::string& name)
+    ExecutorProcess(const std::string& cd, const std::string& command, const std::string& name, bool detach)
         : cd_(cd)
         , command_(command)
         , name_(name)
@@ -127,11 +127,13 @@ public:
 
     void run() {
         // We need to change the current working directory accordingly,
-        // but also need to restore the old one afterwards.
+        // but also need to restore the old one afterward.
         auto path = boost::filesystem::current_path();
         boost::filesystem::current_path(cd_);
-        process_ = boost::process::child(command_);        
-        //process_.detach(); // Could uncomment this line if we want the simulations to continue running after voreen is closed.
+        process_ = boost::process::child(command_);
+        if (detach_) {
+            process_.detach();
+        }
         boost::filesystem::current_path(path);
     }
 
@@ -148,6 +150,7 @@ private:
     std::string cd_;
     std::string command_;
     std::string name_;
+    bool detach_;
 
     boost::process::child process_;
 };
@@ -163,7 +166,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     , configPort_(Port::INPORT, "parameterPort", "Simulation Config", false)
     , useLocalInstance_("useLocalInstance", "Use local Instance", false)
     , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , stopThreads_("stopThreads", "Stop Runs")
+    , detachProcesses_("detachProcesses", "Detach Processes", false)
+    , stopProcesses_("stopProcesses", "Stop Runs")
     , workloadManager_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
     , emailAddress_("emailAddress", "E-Mail Address", "s_leis06@uni-muenster.de")
@@ -209,9 +213,11 @@ FlowSimulationCluster::FlowSimulationCluster()
     useLocalInstance_.setGroupID("local-instance");
     addProperty(localInstancePath_);
     localInstancePath_.setGroupID("local-instance");
-    addProperty(stopThreads_);
-    ON_CHANGE(stopThreads_, FlowSimulationCluster, threadsStopped);
-    stopThreads_.setGroupID("local-instance");
+    addProperty(detachProcesses_);
+    detachProcesses_.setGroupID("local-instance");
+    addProperty(stopProcesses_);
+    ON_CHANGE(stopProcesses_, FlowSimulationCluster, threadsStopped);
+    stopProcesses_.setGroupID("local-instance");
     setPropertyGroupGuiName("local-instance", "Local Instance");
 
     addProperty(workloadManager_);
@@ -484,7 +490,11 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
         std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
         std::string name = ensemble + "-" + run;
-        waitingThreads_.emplace_back(std::unique_ptr<ExecutorProcess>(new ExecutorProcess(workingDirectory, runCommand, name)));
+        waitingThreads_.emplace_back(
+                std::unique_ptr<ExecutorProcess>(
+                        new ExecutorProcess(workingDirectory, runCommand, name, detachProcesses_.get())
+                )
+        );
         numEnqueuedThreads_++;
         LINFO("Enqueued run " << name);
     }

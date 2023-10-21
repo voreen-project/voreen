@@ -55,6 +55,10 @@
 #include "processors/volume/volumeselectormultichannel.h"
 #include "processors/volume/volumetimestep.h"
 
+#ifdef VRN_MODULE_VTK
+#include "processors/simulation/flowsimulationresult.h"
+#endif
+
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
 #include "processors/simulation/flowindicatordetection.h"
 #endif
@@ -109,6 +113,9 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new VolumeSelectorMultiChannel());
     registerProcessor(new VolumeTimestep());
     registerProcessor(new WallShearStress());
+#ifdef VRN_MODULE_VTK
+    registerProcessor(new FlowSimulationResult());
+#endif
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerProcessor(new FlowIndicatorDetection());
 #endif

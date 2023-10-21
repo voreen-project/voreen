@@ -95,7 +95,8 @@ private:
     StringOptionProperty workloadManager_;
     BoolProperty useLocalInstance_;
     FileDialogProperty localInstancePath_;
-    ButtonProperty stopThreads_;
+    BoolProperty detachProcesses_;
+    ButtonProperty stopProcesses_;
 
     StringProperty username_;
     StringProperty emailAddress_;
