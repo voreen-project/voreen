@@ -77,6 +77,7 @@ protected:
 private:
 
     void onFileChange();
+    std::string getFileForConfig() const;
 
     std::vector<std::string> loadPvdFile(std::string filename) const;
 
@@ -88,6 +89,7 @@ private:
     BoolProperty selectMostRecentTimeStep_;
 
     std::vector<std::string> timeStepPaths_;
+    std::map<std::string, std::string> fieldToPath_;
 
     static const std::string loggerCat_;
 };

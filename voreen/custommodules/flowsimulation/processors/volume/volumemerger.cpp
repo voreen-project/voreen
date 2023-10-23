@@ -53,6 +53,22 @@ Processor* VolumeMerger::create() const {
     return new VolumeMerger();
 }
 
+void VolumeMerger::setPadding(int padding) {
+    padding_.set(padding);
+}
+
+int VolumeMerger::getPadding() const {
+    return padding_.get();
+}
+
+void VolumeMerger::setAllowIntersections(bool allowIntersections) {
+    allowIntersections_.set(allowIntersections);
+}
+
+bool VolumeMerger::getAllowIntersections() const {
+    return allowIntersections_.get();
+}
+
 VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     if(!inport_.hasData()) {
         throw InvalidInputException("No input", InvalidInputException::S_WARNING);

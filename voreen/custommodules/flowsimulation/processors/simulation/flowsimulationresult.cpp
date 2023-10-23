@@ -27,10 +27,17 @@
 
 #include "modules/vtk/io/vtmvolumereader.h"
 #include "custommodules/flowsimulation/processors/volume/volumemerger.h"
+#include "modules/vtk/io/vtivolumereader.h"
 
 #include <vtkXMLDataParser.h>
 #include <vtkXMLUtilities.h>
-
+#include <vtkSmartPointer.h>
+#include <vtkMultiBlockDataSet.h>
+#include <vtkXMLMultiBlockDataReader.h>
+#include <vtkImageData.h>
+#include <vtkImageResample.h>
+#include <vtkCompositeDataIterator.h>
+#include <vtkImageAppend.h>
 
 
 namespace voreen {
@@ -74,18 +81,22 @@ std::vector<std::string> FlowSimulationResult::loadPvdFile(std::string file) con
         return {};
     }
 
+    auto dirName = tgt::FileSystem::dirName(file);
+
     std::vector<std::string> files;
     for (int i = 0; i < collection->GetNumberOfNestedElements(); i++) {
         vtkXMLDataElement* dataSet = collection->GetNestedElement(i);
         if (dataSet) {
+            /*
             const char* timestepStr = dataSet->GetAttribute("timestep");
             if (timestepStr) {
                 int timestep = std::stoi(timestepStr);
                 std::cout << "Timestep: " << timestep << std::endl; // TODO: do we need this information?
             }
+            */
             const char* fileStr = dataSet->GetAttribute("file");
             if (fileStr) {
-                std::string path = tgt::FileSystem::dirName(file) + "/" + fileStr;
+                std::string path = dirName + "/" + fileStr;
                 files.emplace_back(path);
             }
         }
@@ -112,27 +123,91 @@ void FlowSimulationResult::onFileChange() {
         timeStep_.set(timeStep_.getMaxValue());
     }
 
-    // We query the first time step and first block as reference, to extract the fields.
-    VolumeURL url(timeStepPaths_[0]);
-    url.addSearchParameter("block", "0");
-    auto volumes = VTMVolumeReader().listVolumes(url.getURL());
+    std::vector<std::string> filesToQuery;
+    auto baseDir = tgt::FileSystem::dirName(pvdFile);
+    auto additionalFiles = tgt::FileSystem::listFiles(baseDir);
+    for (auto& file : additionalFiles) {
+        if (tgt::FileSystem::fileExtension(file, true) == "vtm") {
+            filesToQuery.emplace_back(baseDir + "/" + file);
+        }
+    }
+    filesToQuery.emplace_back(timeStepPaths_[0]);
 
     std::deque<Option<std::string>> options;
-    for (const auto& volume : volumes) {
-        auto name = volume.getMetaDataContainer().getMetaData("name")->toString();
-        options.push_back(Option<std::string>(name, name, name));
+    for (auto& file : filesToQuery) {
+        VolumeURL url(file);
+        url.addSearchParameter("block", "0");
+        auto volumes = VTMVolumeReader().listVolumes(url.getURL());
+
+        for (const auto& volume : volumes) {
+            auto name = volume.getMetaDataContainer().getMetaData("name")->toString();
+            options.emplace_back(Option<std::string>(name, name, name));
+            // TODO: there might be an error here
+            if (fieldToPath_.size() < additionalFiles.size()) {
+                fieldToPath_[name] = baseDir + "/" + file;
+            }
+        }
     }
+
     fields_.setOptions(options);
     fields_.invalidate();
 }
 
-FlowSimulationResult::ComputeInput FlowSimulationResult::prepareComputeInput() {
-    auto timeStep = timeStep_.get();
-    auto file = timeStepPaths_[timeStep];
-    auto field = fields_.get();
+std::string FlowSimulationResult::getFileForConfig() const {
+    auto path = fieldToPath_.find(fields_.get());
+    if(path != fieldToPath_.end()) {
+        return path->second;
+    }
+    else {
+        auto timeStep = timeStep_.get();
+        auto file = timeStepPaths_[timeStep];
+        return file;
+    }
+}
 
+FlowSimulationResult::ComputeInput FlowSimulationResult::prepareComputeInput() {
+    auto file = getFileForConfig();
+    auto field = fields_.get();
     return {file, field};
 }
+
+#if 0
+FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput input, ProgressReporter& progressReporter) const {
+    vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkSmartPointer<vtkXMLMultiBlockDataReader>::New();
+    reader->SetFileName(input.path.c_str());
+    reader->Update();
+
+    vtkSmartPointer<vtkImageAppend> imageAppend = vtkSmartPointer<vtkImageAppend>::New();
+
+    vtkMultiBlockDataSet* blockData = vtkMultiBlockDataSet::SafeDownCast(reader->GetOutput());
+    vtkCompositeDataIterator* iter = blockData->NewIterator();
+    for (iter->InitTraversal(); !iter->IsDoneWithTraversal(); iter->GoToNextItem()) {
+        vtkImageData* block = vtkImageData::SafeDownCast(iter->GetCurrentDataObject());
+        if(!block) // We only can handle image data.
+            continue;
+
+        imageAppend->AddInputData(block);
+    }
+    iter->Delete();
+    imageAppend->Update();
+
+    // Step 3: Optional - Resample the Data
+    vtkSmartPointer<vtkImageResample> resampler = vtkSmartPointer<vtkImageResample>::New();
+    resampler->SetInputData(imageAppend->GetOutput());
+    resampler->SetInterpolationModeToLinear();  // Set your preferred interpolation mode
+    //resampler->SetOutputSpacing(newSpacing);    // Set your desired spacing
+    //resampler->SetOutputOrigin(newOrigin);      // Set your desired origin
+    int extend[] = {100, 100, 100};
+    resampler->SetOutputExtent(extend);      // Set your desired extent
+    resampler->Update();
+    vtkSmartPointer<vtkImageData> resampledImageData = resampler->GetOutput();
+
+    auto volume = std::unique_ptr<Volume>(createVolumeFromVtkImageData(input.path, resampledImageData));
+
+    return { std::move(volume) };
+}
+
+#else
 
 FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     VolumeURL url(input.path);
@@ -140,17 +215,28 @@ FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput i
     std::unique_ptr<VolumeList> volumes(VTMVolumeReader().read(url.getURL()));
 
     VolumeMerger merger;
-    VolumeListPort* port = new VolumeListPort(Port::OUTPORT, "volumelist");
-    port->connect(merger.getPort("volumelist.input"));
-    port->setData(volumes.get(), false);
-    //dynamic_cast<VolumeListPort*>(merger.getPort("volumelist.input"))->setData(volumes.get(), false);
+    merger.setPadding(1);
+    merger.setAllowIntersections(true);
+    VolumeListPort port(Port::OUTPORT, "volumelist", "", false, Processor::VALID);
+    port.setProcessor(const_cast<FlowSimulationResult*>(this));
+    port.connect(merger.getPort("volumelist.input"));
+    port.setData(volumes.get(), false);
+
     auto computeInput = merger.prepareComputeInput();
     auto output = merger.compute(std::move(computeInput), progressReporter);
 
-    auto ref = std::move(output.outputVolume);
-    // auto ref = std::unique_ptr<VolumeBase>(volumes->first());
-    return { std::move(ref) };
+    // Clean up.
+    while (!volumes->empty()) {
+        delete volumes->first();
+    }
+
+    auto volume = std::move(output.outputVolume);
+    volume->setSpacing(volume->getSpacing() / VOREEN_LENGTH_TO_SI);
+    volume->setOffset(volume->getOffset() / VOREEN_LENGTH_TO_SI);
+
+    return { std::move(volume) };
 }
+#endif
 
 void FlowSimulationResult::processComputeOutput(ComputeOutput output) {
     outport_.setData(output.volume.release());

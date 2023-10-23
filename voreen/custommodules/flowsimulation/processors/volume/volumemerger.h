@@ -64,6 +64,12 @@ public:
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
+    virtual void setPadding(int padding);
+    virtual int getPadding() const;
+
+    virtual void setAllowIntersections(bool allowIntersections);
+    virtual bool getAllowIntersections() const;
+
 protected:
     virtual void setDescriptions() {
         setDescription("This processor merges a list of volumes with identical spacing and number of channels into a single one.\n"
