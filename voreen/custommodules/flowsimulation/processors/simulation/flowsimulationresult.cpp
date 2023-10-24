@@ -51,13 +51,14 @@ FlowSimulationResult::FlowSimulationResult()
     , outport_(Port::OUTPORT, "outport", "Outport")
     , inputFile_("inputFile", "Input File", "Load PVD file", "", "*.pvd", FileDialogProperty::OPEN_FILE, VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::OPTIONAL_ON)
     , fields_("fields", "Fields")
-    , timeStep_("timestep", "Timestep", 0, 0, 1000, INVALID_RESULT, IntProperty::DYNAMIC)
+    , timeStep_("timestep", "Timestep", 0, 0, 1, INVALID_RESULT, IntProperty::DYNAMIC)
     , selectMostRecentTimeStep_("selectMostRecentTimeStep", "Select Most Recent Timestep", true)
 {
     addPort(outport_);
     addProperty(inputFile_);
     ON_CHANGE(inputFile_, FlowSimulationResult, onFileChange);
     addProperty(fields_);
+    ON_CHANGE_LAMBDA(fields_, [this] { selectedField_ = fields_.get(); });
     addProperty(timeStep_);
     timeStep_.setTracking(false);
     addProperty(selectMostRecentTimeStep_);
@@ -107,9 +108,25 @@ std::vector<std::string> FlowSimulationResult::loadPvdFile(std::string file) con
 
 void FlowSimulationResult::onFileChange() {
 
+    // Don't do anything unless deserialization has finished.
+    if(firstProcessAfterDeserialization()) {
+        return;
+    }
+
+    fields_.setOptions(std::deque<Option<std::string>>());
+
+    if(!tgt::FileSystem::fileExists(inputFile_.get())) {
+        inputFile_.set("");
+        fields_.invalidate();
+        return;
+    }
+
     auto pvdFile = inputFile_.get();
 
     auto files = loadPvdFile(pvdFile);
+    if (files.empty()) {
+        LWARNING("File contains no time steps");
+    }
 
     // In case we have less time steps than before, this indicates that a different simulation has been loaded.
     if (files.size() < timeStepPaths_.size()) {
@@ -123,58 +140,81 @@ void FlowSimulationResult::onFileChange() {
         timeStep_.set(timeStep_.getMaxValue());
     }
 
-    std::vector<std::string> filesToQuery;
-    auto baseDir = tgt::FileSystem::dirName(pvdFile);
-    auto additionalFiles = tgt::FileSystem::listFiles(baseDir);
-    for (auto& file : additionalFiles) {
-        if (tgt::FileSystem::fileExtension(file, true) == "vtm") {
-            filesToQuery.emplace_back(baseDir + "/" + file);
-        }
-    }
-    filesToQuery.emplace_back(timeStepPaths_[0]);
+    auto queryFieldsFromFile = [&] (const std::string& file) {
+        std::vector<std::string> fields;
 
-    std::deque<Option<std::string>> options;
-    for (auto& file : filesToQuery) {
         VolumeURL url(file);
         url.addSearchParameter("block", "0");
         auto volumes = VTMVolumeReader().listVolumes(url.getURL());
 
         for (const auto& volume : volumes) {
             auto name = volume.getMetaDataContainer().getMetaData("name")->toString();
-            options.emplace_back(Option<std::string>(name, name, name));
-            // TODO: there might be an error here
-            if (fieldToPath_.size() < additionalFiles.size()) {
-                fieldToPath_[name] = baseDir + "/" + file;
+            fields.push_back(name);
+        }
+
+        return fields;
+    };
+
+    // Begin editing options.
+    fields_.blockCallbacks(true);
+
+    // We probe all vtm files in that directory, such as cuboid and material file.
+    // These are not mentioned in the pvd file.
+    auto baseDir = tgt::FileSystem::dirName(pvdFile);
+    auto additionalFiles = tgt::FileSystem::listFiles(baseDir);
+    for (auto& file : additionalFiles) {
+        if (tgt::FileSystem::fileExtension(file, true) == "vtm") {
+            auto fullPath = baseDir + "/" + file;
+            auto staticFields = queryFieldsFromFile(fullPath);
+            for (const auto& field : staticFields) {
+                fields_.addOption(field, field, fullPath);
             }
         }
     }
 
-    fields_.setOptions(options);
-    fields_.invalidate();
-}
-
-std::string FlowSimulationResult::getFileForConfig() const {
-    auto path = fieldToPath_.find(fields_.get());
-    if(path != fieldToPath_.end()) {
-        return path->second;
+    // We also probe the first time step contained in the pvd file, as it contains all the fields.
+    if (!timeStepPaths_.empty()) {
+        auto timeVaryingFields = queryFieldsFromFile(timeStepPaths_[0]);
+        for (const auto& field: timeVaryingFields) {
+            fields_.addOption(field, field, "");
+        }
     }
-    else {
-        auto timeStep = timeStep_.get();
-        auto file = timeStepPaths_[timeStep];
-        return file;
+
+    // End editing options.
+    fields_.blockCallbacks(false);
+
+    // Select previously selected field.
+    if (fields_.hasKey(selectedField_)) {
+        fields_.select(selectedField_);
     }
 }
 
 FlowSimulationResult::ComputeInput FlowSimulationResult::prepareComputeInput() {
-    auto file = getFileForConfig();
-    auto field = fields_.get();
-    return {file, field};
+    if(inputFile_.get().empty()) {
+        throw InvalidInputException("No input file specified.", InvalidInputException::S_WARNING);
+    }
+
+    std::string path = fields_.getValue();
+    if(path.empty()) {
+
+        if(timeStepPaths_.empty()) {
+            throw InvalidInputException("No time steps found.", InvalidInputException::S_WARNING);
+        }
+
+        auto timeStep = timeStep_.get();
+        path = timeStepPaths_[timeStep];
+    }
+
+    VolumeURL url(path);
+    url.addSearchParameter("name", fields_.getDescription());
+
+    return { url };
 }
 
 #if 0
 FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput input, ProgressReporter& progressReporter) const {
     vtkSmartPointer<vtkXMLMultiBlockDataReader> reader = vtkSmartPointer<vtkXMLMultiBlockDataReader>::New();
-    reader->SetFileName(input.path.c_str());
+    reader->SetFileName(input.url.getPath().c_str());
     reader->Update();
 
     vtkSmartPointer<vtkImageAppend> imageAppend = vtkSmartPointer<vtkImageAppend>::New();
@@ -210,9 +250,8 @@ FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput i
 #else
 
 FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput input, ProgressReporter& progressReporter) const {
-    VolumeURL url(input.path);
-    url.addSearchParameter("name", input.field);
-    std::unique_ptr<VolumeList> volumes(VTMVolumeReader().read(url.getURL()));
+
+    std::unique_ptr<VolumeList> volumes(VTMVolumeReader().read(input.url.getURL()));
 
     VolumeMerger merger;
     merger.setPadding(1);
@@ -222,19 +261,26 @@ FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput i
     port.connect(merger.getPort("volumelist.input"));
     port.setData(volumes.get(), false);
 
-    auto computeInput = merger.prepareComputeInput();
-    auto output = merger.compute(std::move(computeInput), progressReporter);
+    std::unique_ptr<Volume> result;
+    try {
+        auto computeInput = merger.prepareComputeInput();
+        auto output = merger.compute(std::move(computeInput), progressReporter);
+
+        result = std::move(output.outputVolume);
+        result->setSpacing(result->getSpacing() / VOREEN_LENGTH_TO_SI);
+        result->setOffset(result->getOffset() / VOREEN_LENGTH_TO_SI);
+    }
+    catch (InvalidInputException& e) {
+        LERRORC("VolumeMerger", e.what());
+        return {nullptr};
+    }
 
     // Clean up.
     while (!volumes->empty()) {
         delete volumes->first();
     }
 
-    auto volume = std::move(output.outputVolume);
-    volume->setSpacing(volume->getSpacing() / VOREEN_LENGTH_TO_SI);
-    volume->setOffset(volume->getOffset() / VOREEN_LENGTH_TO_SI);
-
-    return { std::move(volume) };
+    return { std::move(result) };
 }
 #endif
 
@@ -242,5 +288,14 @@ void FlowSimulationResult::processComputeOutput(ComputeOutput output) {
     outport_.setData(output.volume.release());
 }
 
+void FlowSimulationResult::serialize(Serializer& s) const {
+    AsyncComputeProcessor::serialize(s);
+    s.serialize("selectedField", selectedField_);
+}
+
+void FlowSimulationResult::deserialize(Deserializer& d) {
+    d.optionalDeserialize("selectedField", selectedField_, {});
+    AsyncComputeProcessor::deserialize(d);
+}
 
 }   // namespace

@@ -602,6 +602,59 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
 
         SuperVTMwriter3D<T> vtmWriter( "results" );
 
+        // TODO: In case the geometry does not change, we could keep the functor instances.
+        std::vector<std::unique_ptr<SuperLatticeF3D<T,DESCRIPTOR>>> functors;
+
+        if(flowFeatures & FF_VELOCITY) {
+            auto velocity = std::make_unique<SuperLatticePhysVelocity3D<T, DESCRIPTOR>>(lattice, converter);
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "velocity", *velocity);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*velocity);
+            }
+            functors.emplace_back(std::move(velocity));
+        }
+
+        if(flowFeatures & FF_MAGNITUDE) {
+            auto velocity = std::make_unique<SuperLatticePhysVelocity3D<T, DESCRIPTOR>>(lattice, converter);
+            auto magnitude = std::make_unique<SuperEuklidNorm3D<T, DESCRIPTOR>>(*velocity);
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "magnitude", *magnitude);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*magnitude);
+            }
+            functors.emplace_back(std::move(velocity));
+            functors.emplace_back(std::move(magnitude));
+        }
+
+        if(flowFeatures & FF_PRESSURE) {
+            auto pressure = std::make_unique<SuperLatticePhysPressure3D<T, DESCRIPTOR>>(lattice, converter);
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "pressure", *pressure);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*pressure);
+            }
+            functors.emplace_back(std::move(pressure));
+        }
+
+        if(flowFeatures & FF_WALLSHEARSTRESS) {
+            auto wallShearStress = std::make_unique<SuperLatticePhysWallShearStress3D<T, DESCRIPTOR>>(lattice, superGeometry, MAT_WALL, converter, stlReader);
+            if(writeVVD) {
+                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "wallShearStress", *wallShearStress);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*wallShearStress);
+            }
+            functors.emplace_back(std::move(wallShearStress));
+        }
+
         // Always write debug data.
 #ifndef VRN_MODULE_FLOWSIMULATION
         if(iteration == 0) {
@@ -618,51 +671,7 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
         }
 #endif
 
-        if(flowFeatures & FF_VELOCITY) {
-            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "velocity", velocity);
-            }
-            if(writeVTI) {
-                vtmWriter.write(velocity, iteration);
-            }
-        }
-
-        if(flowFeatures & FF_MAGNITUDE) {
-            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-            SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "magnitude", magnitude);
-            }
-            if(writeVTI) {
-                vtmWriter.write(magnitude, iteration);
-            }
-        }
-
-        if(flowFeatures & FF_PRESSURE) {
-            SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "pressure", pressure);
-            }
-            if(writeVTI) {
-                vtmWriter.write(pressure, iteration);
-            }
-        }
-
-        if(flowFeatures & FF_WALLSHEARSTRESS) {
-            SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(lattice, superGeometry, MAT_WALL,
-                                                                             converter, stlReader);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "wallShearStress", wallShearStress);
-            }
-            if(writeVTI) {
-                vtmWriter.write(wallShearStress, iteration);
-            }
-        }
+        vtmWriter.write(iteration);
 
         // Lattice statistics console output
         std::cout << "step="     << iteration << "; " <<

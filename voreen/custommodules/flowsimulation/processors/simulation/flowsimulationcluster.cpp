@@ -165,8 +165,9 @@ FlowSimulationCluster::FlowSimulationCluster()
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , configPort_(Port::INPORT, "parameterPort", "Simulation Config", false)
     , useLocalInstance_("useLocalInstance", "Use local Instance", false)
-    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , detachProcesses_("detachProcesses", "Detach Processes", false)
+    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , detachProcesses_("detachProcesses", "Detach Processes", true)
+    , overwriteExistingConfig_("overwriteExistingConfig", "Overwrite Existing Config", false)
     , stopProcesses_("stopProcesses", "Stop Runs")
     , workloadManager_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
@@ -215,6 +216,8 @@ FlowSimulationCluster::FlowSimulationCluster()
     localInstancePath_.setGroupID("local-instance");
     addProperty(detachProcesses_);
     detachProcesses_.setGroupID("local-instance");
+    //addProperty(overwriteExistingConfig_);
+    overwriteExistingConfig_.setGroupID("local-instance");
     addProperty(stopProcesses_);
     ON_CHANGE(stopProcesses_, FlowSimulationCluster, threadsStopped);
     stopProcesses_.setGroupID("local-instance");
@@ -378,7 +381,7 @@ void FlowSimulationCluster::refreshClusterCode() {
     int ret = executeCommand(command);
     if (ret != EXIT_SUCCESS) {
         VoreenApplication::app()->showMessageBox("Error", "Code could not be copied", true);
-        LERROR("Data could not be copied");
+        LERROR("Code could not be copied");
         return;
     }
 
@@ -470,6 +473,12 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
     if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
         for (size_t i = 0; i < config->size(); i++) {
             std::string name = config->at(i).name_;
+
+            std::string runPath = simulationPathDest + "/" + name;
+            if(tgt::FileSystem::dirExists(runPath) && overwriteExistingConfig_.get()) {
+                tgt::FileSystem::deleteDirectoryRecursive(runPath);
+            }
+
             if (!copyDirectory(simulationPathSource + "/" + name, simulationPathDest + "/" + name, false)) {
                 failed.push_back(name);
             }
@@ -483,7 +492,7 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
         std::string run = config->at(i).name_;
 
         if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
-            LWARNING("Configuration " << ensemble << "/" << run << " is already present, skipping..");
+            LWARNING("Configuration " << ensemble << "/" << run << " could not be copied, skipping..");
             continue;
         }
 

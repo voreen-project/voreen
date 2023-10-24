@@ -40,12 +40,11 @@
 namespace voreen {
 
 struct FlowSimulationResultInput {
-    std::string path;
-    std::string field;
+    VolumeURL url;
 };
 
 struct FlowSimulationResultOutput {
-    std::unique_ptr<VolumeBase> volume;
+    std::unique_ptr<Volume> volume;
 };
 
 /**
@@ -74,10 +73,12 @@ protected:
                        "This processor therefore assumes the .pvd structure as in openlb 1.6.");
     }
 
+    void serialize(Serializer& s) const override;
+    void deserialize(Deserializer& d) override;
+
 private:
 
     void onFileChange();
-    std::string getFileForConfig() const;
 
     std::vector<std::string> loadPvdFile(std::string filename) const;
 
@@ -89,7 +90,7 @@ private:
     BoolProperty selectMostRecentTimeStep_;
 
     std::vector<std::string> timeStepPaths_;
-    std::map<std::string, std::string> fieldToPath_;
+    std::string selectedField_;
 
     static const std::string loggerCat_;
 };

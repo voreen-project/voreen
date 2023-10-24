@@ -96,6 +96,7 @@ private:
     BoolProperty useLocalInstance_;
     FileDialogProperty localInstancePath_;
     BoolProperty detachProcesses_;
+    BoolProperty overwriteExistingConfig_;
     ButtonProperty stopProcesses_;
 
     StringProperty username_;
