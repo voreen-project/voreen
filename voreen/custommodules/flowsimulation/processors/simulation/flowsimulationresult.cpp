@@ -134,7 +134,10 @@ void FlowSimulationResult::onFileChange() {
     }
 
     timeStepPaths_ = std::move(files);
-    timeStep_.setMaxValue(timeStepPaths_.size() - 1);
+
+    if (!timeStepPaths_.empty()) {
+        timeStep_.setMaxValue(timeStepPaths_.size() - 1);
+    }
 
     if (selectMostRecentTimeStep_.get()) {
         timeStep_.set(timeStep_.getMaxValue());
