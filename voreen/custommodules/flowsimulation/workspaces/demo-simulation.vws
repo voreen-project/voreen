@@ -416,10 +416,17 @@
                 <Processor type="Canvas" name="Canvas" id="ref14">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="216" y="401" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="2783" y="142" width="1246" height="888" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="534" y="240" width="1246" height="888" />
+                        <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
+                        <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
+                            <value x="0" y="-25" />
+                        </MetaItem>
+                        <MetaItem name="preferedApplicationModeCanvasSize" type="IVec2MetaData">
+                            <value x="2141" y="1338" />
+                        </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="2783" y="142" />
+                            <value x="534" y="240" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1246" y="888" />
@@ -512,6 +519,7 @@
                                 </paths>
                             </paths>
                         </Property>
+                        <Property mapKey="overwriteExistingConfig" name="overwriteExistingConfig" value="true" />
                         <Property mapKey="programPath" name="programPath" value="~" />
                         <Property mapKey="progress" name="progress" />
                         <Property mapKey="refreshClusterCode" name="refreshClusterCode" />
@@ -531,9 +539,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/61859063-513f-4fbc-be80-3821cf85905d/26c91ed3-ba3c-4091-9c29-33334e24c513" />
-                                    <item value="data/tmp/61859063-513f-4fbc-be80-3821cf85905d/26c91ed3-ba3c-4091-9c29-33334e24c513" />
-                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/61859063-513f-4fbc-be80-3821cf85905d/26c91ed3-ba3c-4091-9c29-33334e24c513" />
+                                    <item value="../../../data/tmp/15807c28-4de8-49a4-8063-54c99923e488/626e0fc6-af31-488c-b3cf-9de7d59326f2" />
+                                    <item value="data/tmp/15807c28-4de8-49a4-8063-54c99923e488/626e0fc6-af31-488c-b3cf-9de7d59326f2" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/15807c28-4de8-49a4-8063-54c99923e488/626e0fc6-af31-488c-b3cf-9de7d59326f2" />
                                 </paths>
                             </paths>
                         </Property>
@@ -766,7 +774,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="50" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1652944786" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 158 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 135 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
@@ -870,7 +878,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.012210713" />
+                                <domain x="0" y="0.012210702" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -1014,7 +1022,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 292 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 166 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1051,7 +1059,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 360 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 273 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="true" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1326,7 +1334,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 275 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 273 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="true" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1829,7 +1837,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectedSegment" name="selectedSegment" value="0" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 234 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 127 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
