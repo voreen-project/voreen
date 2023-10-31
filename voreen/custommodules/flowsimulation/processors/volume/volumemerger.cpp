@@ -135,7 +135,8 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     // As per default, take maximum value when two are colliding.
     // TODO: Make user-defined.
     auto collisionFunction = [] (float lhs, float rhs) {
-        return std::max(lhs, rhs);
+        return rhs; // Will always select the last one.
+        // return std::max(lhs, rhs); // Problematic for vector valued functions.
     };
 
     return VolumeMergerComputeInput{
@@ -171,9 +172,9 @@ VolumeMergerComputeOutput VolumeMerger::compute(VolumeMergerComputeInput input, 
         for(long z=padding; z<dim.z-padding; z++) {
             for(long y=padding; y<dim.y-padding; y++) {
                 for(long x=padding; x<dim.x-padding; x++) {
+                    tgt::vec3 pos = mat * tgt::vec3(x, y, z);
                     for(size_t channel=0; channel < volumeData->getNumChannels(); channel++) {
                         float value = volumeData->getVoxelNormalized(x, y, z, channel);
-                        tgt::vec3 pos = mat * tgt::vec3(x, y, z);
                         float outputValue = outputVolumeData->getVoxelNormalized(pos, channel);
                         outputValue = input.collisionFunction_(outputValue, value);
                         outputVolumeData->setVoxelNormalized(outputValue, pos, channel);
