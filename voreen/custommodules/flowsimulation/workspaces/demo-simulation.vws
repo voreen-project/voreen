@@ -9,11 +9,6 @@
                         <item type="TextBoxMetaData" userType="65568" caption="Result Visualization" captionFontSize="9" x="-29" y="-696" width="700" height="1176" />
                     </values>
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="FlowSimulationResult" ref="ref15" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="109.613105774" y="1.259920835" />
                 </MetaItem>
@@ -61,10 +56,10 @@
                 </Processor>
                 <Processor type="FlowParametrizationEnsemble" name="FlowParametrizationEnsemble" id="ref6">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-431" y="-613" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-429" y="-613" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="ensembleName" name="ensembleName" value="test_ensemble" />
+                        <Property mapKey="ensembleName" name="ensembleName" value="test_ensemble1" />
                         <Property mapKey="flowFeatures" name="flowFeatures">
                             <items>
                                 <item value="Velocity" />
@@ -97,7 +92,7 @@
                 </Processor>
                 <Processor type="FlowParametrizationRun" name="FlowParametrizationRun" id="ref1">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-403" y="-387" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-401" y="-387" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="addInvalidParametrizations" name="addInvalidParametrizations" value="false" />
@@ -203,7 +198,7 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim" />
                                     <item value="../../../Desktop/sim" />
-                                    <item value="/home/s_leis06/Desktop/sim" />
+                                    <item value="/home/spider/Desktop/sim" />
                                 </paths>
                             </paths>
                         </Property>
@@ -326,13 +321,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7625" minValue="0.152500004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7655.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.002229377" id="ref27">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7625" minValue="0.152500004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7655.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.003088359" id="ref27">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="39.101566315" y="19.548631668" z="4.65742588" />
+                            <position x="28.679096222" y="14.722646713" z="11.239805222" />
                             <focus x="0.062500477" y="0.062500477" z="15.0625" />
-                            <upVector x="-0.191459388" y="-0.964278281" z="0.183059722" />
+                            <upVector x="-0.165229097" y="-0.98113811" z="0.100336298" />
                             <trackball moveCenter="false">
                                 <center x="0.062500477" y="0.062500477" z="15.0625" />
                             </trackball>
@@ -421,10 +416,10 @@
                 <Processor type="Canvas" name="Canvas" id="ref14">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="216" y="401" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="2783" y="256" width="1246" height="888" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="2783" y="142" width="1246" height="888" />
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="2783" y="256" />
+                            <value x="2783" y="142" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1246" y="888" />
@@ -513,7 +508,7 @@
                                 <paths>
                                     <item value="../ext/openlb/voreen/simulation_cluster" />
                                     <item value="custommodules/flowsimulation/ext/openlb/voreen/simulation_cluster" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/custommodules/flowsimulation/ext/openlb/voreen/simulation_cluster" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/custommodules/flowsimulation/ext/openlb/voreen/simulation_cluster" />
                                 </paths>
                             </paths>
                         </Property>
@@ -525,7 +520,7 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim" />
                                     <item value="../../../Desktop/sim" />
-                                    <item value="/home/s_leis06/Desktop/sim" />
+                                    <item value="/home/spider/Desktop/sim" />
                                 </paths>
                             </paths>
                         </Property>
@@ -536,9 +531,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/e60404c8-561f-4368-9f41-ffde0e7f0667/5eb51f43-2f5b-4398-997c-37c13c11a170" />
-                                    <item value="data/tmp/e60404c8-561f-4368-9f41-ffde0e7f0667/5eb51f43-2f5b-4398-997c-37c13c11a170" />
-                                    <item value="/home/s_leis06/programming/voreen/voreen/data/tmp/e60404c8-561f-4368-9f41-ffde0e7f0667/5eb51f43-2f5b-4398-997c-37c13c11a170" />
+                                    <item value="../../../data/tmp/61859063-513f-4fbc-be80-3821cf85905d/26c91ed3-ba3c-4091-9c29-33334e24c513" />
+                                    <item value="data/tmp/61859063-513f-4fbc-be80-3821cf85905d/26c91ed3-ba3c-4091-9c29-33334e24c513" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/61859063-513f-4fbc-be80-3821cf85905d/26c91ed3-ba3c-4091-9c29-33334e24c513" />
                                 </paths>
                             </paths>
                         </Property>
@@ -608,7 +603,7 @@
                         <Property mapKey="sliceAlignmentProp" name="sliceAlignmentProp" value="xy-plane" />
                         <Property mapKey="sliceCacheSize" name="sliceCacheSize" value="10" />
                         <Property mapKey="sliceExtracionTimeLimit" name="sliceExtracionTimeLimit" value="200" />
-                        <Property mapKey="sliceIndex" name="sliceIndex" value="63" id="ref39" />
+                        <Property mapKey="sliceIndex" name="sliceIndex" value="56" id="ref39" />
                         <Property mapKey="sliceLevelOfDetail" name="sliceLevelOfDetail" value="0" />
                         <Property mapKey="sliceMousePos" name="sliceMousePos">
                             <value x="-1" y="-1" z="-1" />
@@ -623,7 +618,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.393537551" />
+                                <domain x="0" y="0.0122682" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -771,7 +766,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="50" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1652944786" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 259 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 158 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
@@ -814,13 +809,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="147" y="-137" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7625" minValue="0.152500004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7655.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.002229377" id="ref28">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7625" minValue="0.152500004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7655.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.003088359" id="ref28">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="39.101566315" y="19.548631668" z="4.65742588" />
+                            <position x="28.679096222" y="14.722646713" z="11.239805222" />
                             <focus x="0.062500477" y="0.062500477" z="15.0625" />
-                            <upVector x="-0.191459388" y="-0.964278281" z="0.183059722" />
+                            <upVector x="-0.165229097" y="-0.98113811" z="0.100336298" />
                             <trackball moveCenter="false">
                                 <center x="0.062500477" y="0.062500477" z="15.0625" />
                             </trackball>
@@ -845,7 +840,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
                             <value x="2.362500429" y="1.562500358" z="16.5625" w="1" />
                             <Center x="0.062500477" y="0.062500477" z="15.0625" />
-                            <LightPos x="2.104845047" y="-0.211226195" z="2.305430412" w="1" />
+                            <LightPos x="1.821251512" y="-0.219282389" z="2.534749985" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -875,7 +870,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.389059782" />
+                                <domain x="0" y="0.012210713" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -1000,7 +995,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="FlowSimulationResult" name="Material" selectedField="" id="ref15">
+                <Processor type="FlowSimulationResult" name="Material" selectedField="geometry" id="ref15">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="165" y="-639" />
                     </MetaData>
@@ -1011,7 +1006,7 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
                                     <item value="../../../Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
-                                    <item value="/home/s_leis06/Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
+                                    <item value="/home/spider/Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1019,7 +1014,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 192 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 292 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1048,7 +1043,7 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
                                     <item value="../../../Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
-                                    <item value="/home/s_leis06/Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
+                                    <item value="/home/spider/Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1056,11 +1051,11 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 289 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 360 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="true" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
-                        <Property mapKey="timestep" name="timestep" value="20" minValue="-1" maxValue="20" tracking="false" id="ref36" />
+                        <Property mapKey="timestep" name="timestep" value="2" minValue="-1" maxValue="20" tracking="false" id="ref36" />
                     </Properties>
                     <Inports />
                     <Outports>
@@ -1119,13 +1114,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="321" y="-172" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7625" minValue="0.152500004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7655.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.002229377" id="ref31">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="7625" minValue="0.152500004" frustLeft="-0.041421358" frustRight="0.041421358" frustBottom="-0.041421358" frustTop="0.041421358" frustNear="0.100000001" frustFar="7655.5" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.003088359" id="ref31">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="39.101566315" y="19.548631668" z="4.65742588" />
+                            <position x="28.679096222" y="14.722646713" z="11.239805222" />
                             <focus x="0.062500477" y="0.062500477" z="15.0625" />
-                            <upVector x="-0.191459388" y="-0.964278281" z="0.183059722" />
+                            <upVector x="-0.165229097" y="-0.98113811" z="0.100336298" />
                             <trackball moveCenter="false">
                                 <center x="0.062500477" y="0.062500477" z="15.0625" />
                             </trackball>
@@ -1135,7 +1130,7 @@
                         <Property mapKey="renderSlice.XY" name="renderSlice.XY" value="true" />
                         <Property mapKey="renderSlice.XZ" name="renderSlice.XZ" value="true" />
                         <Property mapKey="renderSlice.YZ" name="renderSlice.YZ" value="true" />
-                        <Property mapKey="sliceNumber.XY" name="sliceNumber.XY" value="63" id="ref40" />
+                        <Property mapKey="sliceNumber.XY" name="sliceNumber.XY" value="56" id="ref40" />
                         <Property mapKey="sliceNumber.XZ" name="sliceNumber.XZ" value="0" />
                         <Property mapKey="sliceNumber.YZ" name="sliceNumber.YZ" value="0" />
                         <Property mapKey="textureMode" name="textureMode" value="3d-texture" />
@@ -1148,7 +1143,7 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="4096" y="1" z="1" />
-                                <domain x="0" y="0.393537551" />
+                                <domain x="0" y="0.0122682" />
                                 <threshold x="0" y="1" />
                                 <Keys>
                                     <key type="TransFuncMappingKey" intensity="0" split="false">
@@ -1323,7 +1318,7 @@
                                 <paths>
                                     <item value="../../../../../../Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
                                     <item value="../../../Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
-                                    <item value="/home/s_leis06/Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
+                                    <item value="/home/spider/Desktop/sim/simulation_cluster/test_ensemble/test_parametrization2/vtkData/results.pvd" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1331,7 +1326,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 289 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 275 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="true" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1458,7 +1453,7 @@
                         <Property mapKey="roiColor" name="roiColor">
                             <value x="1" y="1" z="0" w="0.5" />
                         </Property>
-                        <Property mapKey="roiLayer" name="roiLayer" value="63" id="ref54" />
+                        <Property mapKey="roiLayer" name="roiLayer" value="56" id="ref54" />
                         <Property mapKey="saveROIs" name="saveROIs" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
@@ -1515,84 +1510,49 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                     <RegionsOfInterest>
-                        <Region type="RegionOfInterestGeometry" layer="63" geometryMode="2" size="3" antialiasing="false">
+                        <Region type="RegionOfInterestGeometry" layer="56" geometryMode="2" size="3" antialiasing="false">
                             <points>
-                                <item x="196" y="222" />
-                                <item x="198" y="222" />
-                                <item x="201" y="222" />
-                                <item x="203" y="222" />
-                                <item x="205" y="223" />
-                                <item x="209" y="223" />
-                                <item x="214" y="223" />
-                                <item x="219" y="223" />
-                                <item x="225" y="223" />
-                                <item x="230" y="223" />
-                                <item x="236" y="223" />
-                                <item x="240" y="223" />
-                                <item x="246" y="223" />
-                                <item x="251" y="223" />
-                                <item x="256" y="223" />
-                                <item x="259" y="223" />
-                                <item x="261" y="223" />
-                                <item x="263" y="222" />
-                                <item x="265" y="222" />
-                                <item x="267" y="222" />
-                                <item x="269" y="222" />
-                                <item x="272" y="222" />
-                                <item x="274" y="222" />
-                                <item x="277" y="222" />
-                                <item x="279" y="222" />
-                                <item x="282" y="222" />
-                                <item x="286" y="222" />
-                                <item x="290" y="222" />
-                                <item x="294" y="222" />
-                                <item x="297" y="222" />
-                                <item x="302" y="223" />
-                                <item x="308" y="223" />
-                                <item x="312" y="223" />
-                                <item x="315" y="223" />
-                                <item x="318" y="223" />
-                                <item x="320" y="223" />
-                                <item x="322" y="223" />
-                                <item x="324" y="223" />
-                                <item x="327" y="224" />
-                                <item x="329" y="224" />
-                                <item x="332" y="224" />
-                                <item x="335" y="225" />
-                                <item x="339" y="225" />
-                                <item x="344" y="225" />
-                                <item x="349" y="225" />
-                                <item x="354" y="225" />
-                                <item x="357" y="225" />
-                                <item x="360" y="225" />
-                                <item x="364" y="225" />
-                                <item x="367" y="225" />
-                                <item x="369" y="225" />
-                                <item x="371" y="225" />
-                                <item x="373" y="225" />
-                                <item x="375" y="225" />
-                                <item x="377" y="225" />
-                                <item x="379" y="225" />
-                                <item x="382" y="225" />
-                                <item x="385" y="225" />
-                                <item x="388" y="224" />
-                                <item x="390" y="224" />
-                                <item x="393" y="224" />
-                                <item x="395" y="224" />
-                                <item x="397" y="224" />
-                                <item x="399" y="224" />
-                                <item x="401" y="223" />
-                                <item x="404" y="223" />
-                                <item x="406" y="222" />
-                                <item x="408" y="221" />
-                                <item x="410" y="221" />
-                                <item x="412" y="220" />
-                                <item x="414" y="220" />
-                                <item x="416" y="219" />
-                                <item x="418" y="218" />
-                                <item x="420" y="218" />
-                                <item x="422" y="218" />
-                                <item x="424" y="219" />
+                                <item x="206" y="227" />
+                                <item x="208" y="227" />
+                                <item x="210" y="227" />
+                                <item x="214" y="227" />
+                                <item x="220" y="227" />
+                                <item x="232" y="226" />
+                                <item x="241" y="225" />
+                                <item x="249" y="225" />
+                                <item x="258" y="224" />
+                                <item x="264" y="224" />
+                                <item x="272" y="223" />
+                                <item x="280" y="222" />
+                                <item x="287" y="222" />
+                                <item x="293" y="221" />
+                                <item x="301" y="220" />
+                                <item x="311" y="220" />
+                                <item x="320" y="220" />
+                                <item x="328" y="219" />
+                                <item x="336" y="219" />
+                                <item x="348" y="218" />
+                                <item x="356" y="218" />
+                                <item x="361" y="218" />
+                                <item x="367" y="218" />
+                                <item x="372" y="218" />
+                                <item x="378" y="218" />
+                                <item x="381" y="218" />
+                                <item x="384" y="218" />
+                                <item x="389" y="218" />
+                                <item x="392" y="218" />
+                                <item x="396" y="218" />
+                                <item x="399" y="218" />
+                                <item x="404" y="218" />
+                                <item x="406" y="218" />
+                                <item x="408" y="218" />
+                                <item x="411" y="217" />
+                                <item x="414" y="217" />
+                                <item x="416" y="217" />
+                                <item x="418" y="217" />
+                                <item x="420" y="217" />
+                                <item x="422" y="217" />
+                                <item x="424" y="216" />
                             </points>
                             <viewport x="623" y="444" />
                             <trafoMatrix.row0 x="0.094594598" y="0" z="0" w="-8.966216087" />
@@ -1869,7 +1829,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectedSegment" name="selectedSegment" value="0" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 143 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 234 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />

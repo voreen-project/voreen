@@ -216,7 +216,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     localInstancePath_.setGroupID("local-instance");
     addProperty(detachProcesses_);
     detachProcesses_.setGroupID("local-instance");
-    //addProperty(overwriteExistingConfig_);
+    addProperty(overwriteExistingConfig_);
     overwriteExistingConfig_.setGroupID("local-instance");
     addProperty(stopProcesses_);
     ON_CHANGE(stopProcesses_, FlowSimulationCluster, threadsStopped);
@@ -412,7 +412,7 @@ void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPa
         file.close();
     }
     catch (std::exception& e) {
-        std::string errorMessage = "Could not write geometry file";
+        std::string errorMessage = "Could not write geometry file: ";
         throw VoreenException(errorMessage + e.what());
     }
 }
@@ -469,20 +469,13 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
     simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
     simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config->getName(), true);
 
-    std::vector<std::string> failed;
-    if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
-        for (size_t i = 0; i < config->size(); i++) {
-            std::string name = config->at(i).name_;
+    if(tgt::FileSystem::dirExists(simulationPathDest) && overwriteExistingConfig_.get()) {
+        tgt::FileSystem::deleteDirectoryRecursive(simulationPathDest);
+    }
 
-            std::string runPath = simulationPathDest + "/" + name;
-            if(tgt::FileSystem::dirExists(runPath) && overwriteExistingConfig_.get()) {
-                tgt::FileSystem::deleteDirectoryRecursive(runPath);
-            }
-
-            if (!copyDirectory(simulationPathSource + "/" + name, simulationPathDest + "/" + name, false)) {
-                failed.push_back(name);
-            }
-        }
+    if(!copyDirectory(simulationPathSource, simulationPathDest, true)) {
+        VoreenApplication::app()->showMessageBox("Error", "Could not copy configurations, they might already exist", true);
+        return;
     }
 
     // Enqueue jobs.
@@ -490,11 +483,6 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
 
         std::string ensemble = config->getName();
         std::string run = config->at(i).name_;
-
-        if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
-            LWARNING("Configuration " << ensemble << "/" << run << " could not be copied, skipping..");
-            continue;
-        }
 
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
         std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
@@ -506,10 +494,6 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
         );
         numEnqueuedThreads_++;
         LINFO("Enqueued run " << name);
-    }
-
-    if (!failed.empty()) {
-        VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued, they might already exist. See log for details.", true);
     }
 }
 void FlowSimulationCluster::runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
@@ -575,6 +559,7 @@ void FlowSimulationCluster::enqueueSimulations() {
     LINFO("Configuring and enqueuing Simulations...");
 
     std::string simulationPathSource = uploadDataPath_.get() + "/" + config->getName() + "/";
+    tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/openlb/voreen/";
 
