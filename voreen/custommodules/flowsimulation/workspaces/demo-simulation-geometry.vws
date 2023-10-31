@@ -9,13 +9,8 @@
                         <item type="TextBoxMetaData" userType="65568" caption="Result Visualization" captionFontSize="9" x="-29" y="-696" width="914" height="1176" />
                     </values>
                 </MetaItem>
-                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
-                    <values>
-                        <item type="SliceViewer" ref="ref19" />
-                    </values>
-                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
-                    <value x="720.679870605" y="209.536865234" />
+                    <value x="455.583953857" y="203.187271118" />
                 </MetaItem>
                 <MetaItem name="ZoomFactor" type="FloatMetaData" value="0.629960716" />
             </MetaData>
@@ -228,13 +223,13 @@
                     <Properties>
                         <Property mapKey="adaptToScene" name="adaptToScene" value="true" />
                         <Property mapKey="applyOrderIndependentTransparency_" name="applyOrderIndependentTransparency_" value="true" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="40218.75" minValue="0.804374993" frustLeft="-0.310660183" frustRight="0.310660183" frustBottom="-0.310660183" frustTop="0.310660183" frustNear="0.75" frustFar="40379.625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000931197" id="ref35">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="40218.75" minValue="0.804374993" frustLeft="-0.310660183" frustRight="0.310660183" frustBottom="-0.310660183" frustTop="0.310660183" frustNear="0.75" frustFar="40379.625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000915654" id="ref35">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="274.329711914" y="238.65914917" z="-41.188934326" />
-                            <focus x="219.480682373" y="187.429138184" z="35.618556976" />
-                            <upVector x="-0.602356672" y="-0.494920701" z="0.626274765" />
+                            <position x="307.415344238" y="152.240844727" z="-39.543754578" />
+                            <focus x="221.835983276" y="170.279693604" z="25.862098694" />
+                            <upVector x="-0.881956697" y="0.120982967" z="0.455538809" />
                             <trackball moveCenter="false">
                                 <center x="221.835983276" y="170.279693604" z="25.862098694" />
                             </trackball>
@@ -323,7 +318,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref11">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="216" y="401" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="713" y="227" width="1246" height="888" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="727" y="284" width="1246" height="888" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -333,7 +328,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="713" y="227" />
+                            <value x="727" y="284" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1246" y="888" />
@@ -400,7 +395,7 @@
                 </Processor>
                 <Processor type="FlowSimulationCluster" name="FlowSimulationCluster" id="ref3">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-444" y="-274" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-442" y="-274" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="clusterAddress" name="clusterAddress" value="palma.uni-muenster.de" />
@@ -446,9 +441,9 @@
                         <Property mapKey="uploadDataPath" name="uploadDataPath" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/15807c28-4de8-49a4-8063-54c99923e488/5f120678-9584-4859-9637-012d24a2e82b" />
-                                    <item value="data/tmp/15807c28-4de8-49a4-8063-54c99923e488/5f120678-9584-4859-9637-012d24a2e82b" />
-                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/15807c28-4de8-49a4-8063-54c99923e488/5f120678-9584-4859-9637-012d24a2e82b" />
+                                    <item value="../../../data/tmp/26b11417-5f13-4d4d-acb0-0e1ad5efdf1a/fbc8d74e-ea3d-4f84-a560-ba2883f9a3ee" />
+                                    <item value="data/tmp/26b11417-5f13-4d4d-acb0-0e1ad5efdf1a/fbc8d74e-ea3d-4f84-a560-ba2883f9a3ee" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/26b11417-5f13-4d4d-acb0-0e1ad5efdf1a/fbc8d74e-ea3d-4f84-a560-ba2883f9a3ee" />
                                 </paths>
                             </paths>
                         </Property>
@@ -681,7 +676,7 @@
                         <Property mapKey="numSeedPoints" name="numSeedPoints" value="50" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="seedTime" name="seedTime" value="1652944786" tracking="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 190 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 221 ms" />
                         <Property mapKey="stopIntegrationAngleThreshold" name="stopIntegrationAngleThreshold" value="180" tracking="false" />
                         <Property mapKey="stopOutsideMask" name="stopOutsideMask" value="false" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
@@ -724,13 +719,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="147" y="-137" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="40218.75" minValue="0.804374993" frustLeft="-0.310660183" frustRight="0.310660183" frustBottom="-0.310660183" frustTop="0.310660183" frustNear="0.75" frustFar="40379.625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000931197" id="ref36">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="40218.75" minValue="0.804374993" frustLeft="-0.310660183" frustRight="0.310660183" frustBottom="-0.310660183" frustTop="0.310660183" frustNear="0.75" frustFar="40379.625" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000915654" id="ref36">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="274.329711914" y="238.65914917" z="-41.188934326" />
-                            <focus x="219.480682373" y="187.429138184" z="35.618556976" />
-                            <upVector x="-0.602356672" y="-0.494920701" z="0.626274765" />
+                            <position x="307.415344238" y="152.240844727" z="-39.543754578" />
+                            <focus x="221.835983276" y="170.279693604" z="25.862098694" />
+                            <upVector x="-0.881956697" y="0.120982967" z="0.455538809" />
                             <trackball moveCenter="false">
                                 <center x="221.835983276" y="170.279693604" z="25.862098694" />
                             </trackball>
@@ -755,7 +750,7 @@
                         <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="10">
                             <value x="224.135986328" y="171.779693604" z="27.362098694" w="1" />
                             <Center x="221.835983276" y="170.279693604" z="25.862098694" />
-                            <LightPos x="-0.709533095" y="-2.935698271" z="0.817467332" w="1" />
+                            <LightPos x="-0.974684834" y="-2.899894953" z="0.656210482" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -929,7 +924,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="true" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 283 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 244 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -966,7 +961,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 983 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 772 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="true" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1032,7 +1027,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="selectMostRecentTimeStep" name="selectMostRecentTimeStep" guiName="Auto select most recent timestep" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 636 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 751 ms" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="true" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -1516,9 +1511,9 @@
                         <Property mapKey="path" name="path" watchMode="3" fileWatchEnabled="false" useGeneratedPath="true">
                             <paths noPathSet="false">
                                 <paths>
-                                    <item value="../../../data/tmp/15807c28-4de8-49a4-8063-54c99923e488/60bbf84b-01da-43ca-9111-7d7cd0440928.stl" />
-                                    <item value="data/tmp/15807c28-4de8-49a4-8063-54c99923e488/60bbf84b-01da-43ca-9111-7d7cd0440928.stl" />
-                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/15807c28-4de8-49a4-8063-54c99923e488/60bbf84b-01da-43ca-9111-7d7cd0440928.stl" />
+                                    <item value="../../../data/tmp/26b11417-5f13-4d4d-acb0-0e1ad5efdf1a/ec5c5440-9aba-4345-a7ba-ccd282672d4c.stl" />
+                                    <item value="data/tmp/26b11417-5f13-4d4d-acb0-0e1ad5efdf1a/ec5c5440-9aba-4345-a7ba-ccd282672d4c.stl" />
+                                    <item value="/home/spider/programming/voreen-flow/voreen/data/tmp/26b11417-5f13-4d4d-acb0-0e1ad5efdf1a/ec5c5440-9aba-4345-a7ba-ccd282672d4c.stl" />
                                 </paths>
                             </paths>
                         </Property>
@@ -1589,7 +1584,7 @@
                         <Property mapKey="numRefinementIterations" name="numRefinementIterations" value="3" tracking="false" />
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="saveDebugData" name="saveDebugData" value="false" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.409 sec" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 2.239 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
                         <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
@@ -2437,7 +2432,7 @@
                         <Property mapKey="textureMode" name="textureMode" value="2d-texture" />
                         <Property mapKey="transferFunction" name="transferFunction" domainFittingStrategy="2" computeHistogram="true">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="0" width="682" height="477" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                                 <MetaItem name="TransFunc1DPropertyWidgetPainterZoom" type="Vec2MetaData">
                                     <value x="-3883.710205078" y="8258.357421875" />
                                 </MetaItem>
@@ -3179,6 +3174,10 @@
                     <First value="Run Simulation" />
                     <Second value="1" />
                 </value>
+                <value key="FlowSimulationCluster.simulationResults">
+                    <First value="Run Simulation" />
+                    <Second value="21" />
+                </value>
                 <value key="FlowSimulationCluster.stopProcesses">
                     <First value="Run Simulation" />
                     <Second value="2" />
@@ -3209,19 +3208,19 @@
                 </value>
                 <value key="Other.fields">
                     <First value="Results" />
-                    <Second value="8" />
+                    <Second value="9" />
                 </value>
                 <value key="Other.inputFile">
                     <First value="Results" />
-                    <Second value="7" />
+                    <Second value="8" />
                 </value>
                 <value key="Other.selectMostRecentTimeStep">
                     <First value="Results" />
-                    <Second value="10" />
+                    <Second value="11" />
                 </value>
                 <value key="Other.timestep">
                     <First value="Results" />
-                    <Second value="9" />
+                    <Second value="10" />
                 </value>
             </GroupMembership>
             <MenuEntityVisibility />
