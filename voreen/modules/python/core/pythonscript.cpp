@@ -285,6 +285,22 @@ bool PythonScript::checkCompileError(bool logErrors) {
     return false;
 }
 
+static PyCodeObject* pyframe_getcode(PyFrameObject* frame) {
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 10
+    return PyFrame_GetCode(frame);
+#else
+    return frame->f_code;
+#endif
+}
+
+static int pyframe_current_line(PyFrameObject* frame) {
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 10
+    return PyFrame_GetLineNumber(frame);
+#else
+    return PyCode_Addr2Line(pyframe_getcode(frame), frame->f_lasti);
+#endif
+}
+
 bool PythonScript::checkRuntimeError(bool logErrors) {
     using std::string;
 
@@ -319,12 +335,12 @@ bool PythonScript::checkRuntimeError(bool logErrors) {
         while (traceback) {
             PyFrameObject* frame = traceback->tb_frame;
             std::string stacktraceLine;
-            if (frame && frame->f_code) {
-                PyCodeObject* codeObject = frame->f_code;
+            if (frame && pyframe_getcode(frame)) {
+                PyCodeObject* codeObject = pyframe_getcode(frame);
                 if (PyUnicode_Check(codeObject->co_filename))
                     stacktraceLine.append(string("  File \"") + PyUnicodeAsString(codeObject->co_filename) + string("\", "));
 
-                errorLine_ = PyCode_Addr2Line(codeObject, frame->f_lasti);
+                errorLine_ = pyframe_current_line(frame);
                 stacktraceLine.append(string("line ") + itos(errorLine_));
 
                 if (PyUnicode_Check(codeObject->co_name))
