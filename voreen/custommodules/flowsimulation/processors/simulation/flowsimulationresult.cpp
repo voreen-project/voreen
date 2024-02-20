@@ -136,6 +136,7 @@ void FlowSimulationResult::onFileChange() {
     timeStepPaths_ = std::move(files);
 
     if (!timeStepPaths_.empty()) {
+        timeStep_.setMinValue(0);
         timeStep_.setMaxValue(timeStepPaths_.size() - 1);
     }
 
@@ -205,6 +206,9 @@ FlowSimulationResult::ComputeInput FlowSimulationResult::prepareComputeInput() {
         }
 
         auto timeStep = timeStep_.get();
+        if(timeStep < 0 || timeStep >= timeStepPaths_.size()) {
+            throw InvalidInputException("Invalid time step index.", InvalidInputException::S_WARNING);
+        }
         path = timeStepPaths_[timeStep];
     }
 
@@ -254,7 +258,14 @@ FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput i
 
 FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput input, ProgressReporter& progressReporter) const {
 
-    std::unique_ptr<VolumeList> volumes(VTMVolumeReader().read(input.url.getURL()));
+    std::unique_ptr<VolumeList> volumes;
+    try {
+        volumes = std::unique_ptr<VolumeList>(VTMVolumeReader().read(input.url.getURL()));
+    }
+    catch (std::exception& e) {
+        LERRORC("FlowSimulationResult", e.what());
+        return {nullptr};
+    }
 
     VolumeMerger merger;
     merger.setPadding(1);

@@ -28,6 +28,7 @@
 // processors
 #include "processors/features/wallshearstress.h"
 #include "processors/geometry/geometryclose.h"
+#include "processors/geometry/geometrymerge.h"
 #include "processors/geometry/geometrysmoothnormals.h"
 #include "processors/render/unalignedsliceviewer.h"
 #include "processors/simulation/flowcharacteristics.h"
@@ -89,6 +90,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new ConnectedComponentSelector());
 //    registerProcessor(new DebugVolumes());
     registerProcessor(new GeometryClose());
+    registerProcessor(new GeometryMerge());
     registerProcessor(new GeometrySmoothNormals());
     registerProcessor(new UnalignedSliceViewer());
     registerProcessor(new FlowCharacteristics());

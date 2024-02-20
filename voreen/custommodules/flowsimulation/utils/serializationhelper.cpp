@@ -38,11 +38,13 @@ VelocityCurveSerializable::VelocityCurveSerializable(const VelocityCurve& other)
 void VelocityCurveSerializable::serialize(Serializer& s) const {
     s.serialize("peakVelocities", peakVelocities_);
     s.serialize("periodic", periodic_);
+    s.serialize("scale", scale_);
 }
 
 void VelocityCurveSerializable::deserialize(Deserializer& s) {
     s.deserialize("peakVelocities", peakVelocities_);
     s.deserialize("periodic", periodic_);
+    s.optionalDeserialize("scale", scale_, 1.0f); // Maintain backwards compatibility.
 }
 
 FlowIndicatorSerializable::FlowIndicatorSerializable() {
@@ -105,6 +107,8 @@ void ParametersSerializable::serialize(Serializer& s) const {
     s.serialize("wallBoundaryCondition", wallBoundaryCondition_);
     s.serialize("latticePerturbation", latticePerturbation_);
     s.serialize("inletVelocityMultiplier", inletVelocityMultiplier_);
+    s.serialize("geometryFiles", geometryFiles_);
+    s.serialize("measuredDataFiles", measuredDataFiles_);
 }
 
 void ParametersSerializable::deserialize(Deserializer& s) {
@@ -124,6 +128,8 @@ void ParametersSerializable::deserialize(Deserializer& s) {
     wallBoundaryCondition_ = static_cast<FlowBoundaryCondition>(wallBoundaryCondition);
     s.optionalDeserialize("latticePerturbation", latticePerturbation_, false);
     s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
+    s.optionalDeserialize("geometryFiles", geometryFiles_, decltype(geometryFiles_)());
+    s.optionalDeserialize("measuredDataFiles", measuredDataFiles_, decltype(measuredDataFiles_)());
 }
 
 }

@@ -40,7 +40,7 @@
 
 #include <thread>
 
-namespace {
+namespace utils {
 
 using namespace voreen;
 
@@ -72,78 +72,6 @@ private:
     const float multiplier_;
 };
 
-template<typename T>
-struct TypedGeometryPair {
-
-    TypedGeometryPair(const Geometry* lhs, const Geometry* rhs)
-        : lhs_(dynamic_cast<const T*>(lhs)), rhs_(dynamic_cast<const T*>(rhs)) {}
-
-    operator bool () {
-        return lhs_ != nullptr && rhs_ != nullptr;
-    }
-
-    const T* lhs_;
-    const T* rhs_;
-};
-
-template<typename T>
-std::unique_ptr<GlMeshGeometryBase> mergeGeometriesTyped(const T* lhs, const T* rhs) {
-    tgtAssert(lhs, "lhs null");
-    tgtAssert(rhs, "rhs null");
-
-    auto merged = lhs->clone().release();
-    auto mergedTyped = static_cast<T*>(merged);
-
-    // Transform all vertex position to world space.
-    auto vertices = mergedTyped->getVertices();
-    for(auto& vertex : vertices) {
-        vertex.pos_ = mergedTyped->getTransformationMatrix() * vertex.pos_;
-    }
-    mergedTyped->setTransformationMatrix(tgt::mat4::identity);
-
-    // Copy over and transform vertices.
-    for(auto vertex : rhs->getVertices()) {
-        vertex.pos_ = rhs->getTransformationMatrix() * vertex.pos_;
-        vertices.emplace_back(vertex);
-    }
-    mergedTyped->setVertices(vertices);
-
-    // Add and adjust indices, if required.
-    if (lhs->usesIndexedDrawing()) {
-        auto indexOffset = lhs->getNumVertices();
-        for (auto index : rhs->getIndices()) {
-            mergedTyped->addIndex(index + indexOffset);
-        }
-    }
-
-    return std::unique_ptr<GlMeshGeometryBase>(mergedTyped);
-}
-
-
-std::unique_ptr<GlMeshGeometryBase> mergeGeometries(const GlMeshGeometryBase* lhs, const GlMeshGeometryBase* rhs) {
-    if(lhs->getPrimitiveType() != rhs->getPrimitiveType()) {
-        return nullptr;
-    }
-
-    if(lhs->getVertexLayout() != rhs->getVertexLayout()) {
-        return nullptr;
-    }
-
-    if(lhs->getIndexType() != rhs->getIndexType()) {
-        return nullptr;
-    }
-
-    if(lhs->usesIndexedDrawing() != rhs->usesIndexedDrawing()) {
-        return nullptr;
-    }
-
-    if(auto typedGeometry = TypedGeometryPair<GlMeshGeometryUInt32Normal>(lhs, rhs)) {
-        return mergeGeometriesTyped(typedGeometry.lhs_, typedGeometry.rhs_);
-    }
-
-    return nullptr;
-}
-
 // Caution: The returned volume is bound to the life-time of the input volume.
 template <typename VolumeType, typename BaseType=typename VolumeElement<typename VolumeType::VoxelType>::BaseType>
 std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volume) {
@@ -163,7 +91,7 @@ std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volum
 }
 
 void indicateErroneousVoxels(SimpleVolume<uint8_t>& volume) {
-    const auto value = volume.maxValues[0] + 1;
+    const auto errorValue = volume.maxValues[0] + 1;
     auto dim = volume.dimensions;
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
@@ -176,7 +104,7 @@ void indicateErroneousVoxels(SimpleVolume<uint8_t>& volume) {
                         for(int dy : {-1, 1}) {
                             for(int dx : {-1, 1}) {
                                 if(volume.getValue(x+dx, y+dy, z+dz) == 1) {
-                                    volume.setValue(value, x+dx, y+dy, z+dz);
+                                    volume.setValue(errorValue, x+dx, y+dy, z+dz);
                                 }
                             }
                         }
@@ -248,16 +176,6 @@ bool FlowSimulation::isReady() const {
         setNotReadyErrorMessage("Not initialized.");
         return false;
     }
-    if(!geometryDataPort_.isReady()) {
-        setNotReadyErrorMessage("Geometry Port not ready.");
-        return false;
-    }
-
-    // Note: measuredDataPort is optional!
-    if(measuredDataPort_.hasData() && !measuredDataPort_.isReady()) {
-        setNotReadyErrorMessage("Measured Data Port not ready.");
-        return false;
-    }
 
     if(!parameterPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");
@@ -289,39 +207,10 @@ void FlowSimulation::clearOutports() {
 
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
-    PortDataPointer<GlMeshGeometryBase> geometry(nullptr, false);
-
-    if(auto geometrySequence = dynamic_cast<const GeometrySequence*>(geometryDataPort_.getData())) {
-
-        std::vector<const GlMeshGeometryBase*> geometries;
-
-        for(size_t i=0; i<geometrySequence->getNumGeometries(); i++) {
-            auto geometry = dynamic_cast<const GlMeshGeometryBase*>(geometrySequence->getGeometry(i));
-            if(geometry) {
-                geometries.push_back(geometry);
-            }
-            else {
-                throw InvalidInputException("GeometrySequence contains non-GlMeshGeometry", InvalidInputException::S_WARNING);
-            }
-        }
-
-        if(!geometries.empty()) {
-            geometry = PortDataPointer<GlMeshGeometryBase>(geometries.front(), false);
-            for (size_t i=1; i<geometries.size(); i++) {
-                auto combined = mergeGeometries(geometry, geometries.at(i));
-
-                if(!combined) {
-                    throw InvalidInputException("Encountered Mesh of unexpected Type", InvalidInputException::S_ERROR);
-                }
-
-                geometry = PortDataPointer<GlMeshGeometryBase>(combined.release(), true);
-            }
-        }
+    std::unique_ptr<GlMeshGeometryBase> geometry;
+    if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
+        geometry.reset(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
     }
-    else if(auto geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
-        geometry = PortDataPointer<GlMeshGeometryBase>(geometryData, false);
-    }
-
     if (!geometry) {
         throw InvalidInputException("No GlMeshGeometry input", InvalidInputException::S_ERROR);
     }
@@ -364,12 +253,14 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     std::string geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
     try {
         std::ofstream file(geometryPath);
+        geometry->setTransformationMatrix(geometry->getTransformationMatrix() * config->getTransformationMatrix());
         geometry->exportAsStl(file);
         file.close();
     }
     catch (std::exception&) {
         throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
     }
+
 
     if(simulationResults_.get().empty()) {
         throw InvalidInputException("No output directory selected", InvalidInputException::S_WARNING);
@@ -523,7 +414,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             const VolumeBase* volume = measuredData->first();
             VolumeRAMRepresentationLock data(measuredData->first());
             SpatialSampler sampler(*data, volume->getRealWorldMapping(), VolumeRAM::LINEAR, volume->getWorldToVoxelMatrix());
-            MeasuredDataMapper mapper(converter, sampler, multiplier);
+            utils::MeasuredDataMapper mapper(converter, sampler, multiplier);
             target(mapper);
         }
         else {
@@ -551,7 +442,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             SpatioTemporalSampler sampler(*data0, *data1, alpha, volume0->getRealWorldMapping(),
                                           VolumeRAM::LINEAR, volume0->getWorldToVoxelMatrix());
 
-            MeasuredDataMapper mapper(converter, sampler, multiplier);
+            utils::MeasuredDataMapper mapper(converter, sampler, multiplier);
             target(mapper);
         }
     };
@@ -595,8 +486,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         const Vector<T, 3> diag = extendedDomain.getMax() - extendedDomain.getMin();
         const int len = std::round(std::max({diag[0], diag[1], diag[2]}) / converter.getConversionFactorLength());
         SimpleVolume<uint8_t> geometryVolume = sampleVolume<uint8_t>(extendedDomain, converter, len, geometry);
-        if(!success) indicateErroneousVoxels(geometryVolume);
-        auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume);
+        if(!success) utils::indicateErroneousVoxels(geometryVolume);
+        auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume);
         enqueueInsituResult(simulationResultPath + "geometry.h5", debugMaterialsPort_, std::move(volume));
     }
 
@@ -660,7 +551,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                 // Write velocity file.
                 SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
                 auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
-                auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
+                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
                 std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
                 enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
             }
@@ -668,7 +559,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                 // Write pressure file.
                 SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
                 auto pressureVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), pressure);
-                auto volume = wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume);
+                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume);
                 std::string filename = "pressure" + std::to_string(swapVelocityFile) + ".h5";
                 enqueueInsituResult(simulationResultPath + filename, debugPressurePort_, std::move(volume));
             }

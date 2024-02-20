@@ -115,6 +115,9 @@ public:
     void setPeriodic(bool enabled);
     bool isPeriodic() const;
 
+    void setScale(float scale);
+    float getScale() const;
+
     float getMinVelocity() const;
     float getMaxVelocity() const;
 
@@ -127,10 +130,12 @@ public:
     static VelocityCurve createSinusoidalCurve(float duration, float maxValue, int steps = 30);
     static VelocityCurve createHumanHeartBeat();
     static VelocityCurve createFromCSV(const std::string& file);
+    static VelocityCurve createFromMap(const std::map<float, float>& map);
 
 protected:
     std::map<float, float> peakVelocities_;
     bool periodic_;
+    float scale_;
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.
@@ -225,6 +230,18 @@ public:
      * Returns a factor that is multiplied with the inlet velocity.
      */
     float inletVelocityMultiplier_;
+
+    /**
+     * Contains all time frames for which a geometry file (.stl) exists.
+     * This must contain at least one element.
+     */
+    std::map<float, std::string> geometryFiles_;
+
+    /**
+     * Contains all time frames mapped to a measured data volume file.
+     * This may be empty.
+     */
+    std::map<float, std::string> measuredDataFiles_;
 
     /**
      * Returns Reynolds number.

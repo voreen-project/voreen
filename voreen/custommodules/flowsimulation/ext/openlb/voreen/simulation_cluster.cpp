@@ -14,46 +14,71 @@ enum ExitCodes {
     EXIT_CODE_DIVERGED = 8,
 };
 
-VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
-    VelocityCurve curve;
 
-    bool periodic = reader["periodic"].getAttribute("value") == "true";
-    curve.setPeriodic(periodic);
+template<typename T>
+T convertTo(const std::string& string);
 
-    const XMLreader& items = reader["peakVelocities"];
+template<>
+std::string convertTo(const std::string& string) {
+    return string;
+}
+
+template<>
+float convertTo(const std::string& string) {
+    return std::atof(string.c_str());
+}
+
+template<typename R, typename S>
+std::map<R, S> deserializeMap(const XMLreader& items) {
+    std::map<R, S> map;
+
     auto iter = items.begin();
     while(iter != items.end()) {
 
         // Read key.
         XMLreader* keyItem = *iter;
         if(keyItem->getName() != "key") {
-            std::cout << "VelocityCurve: Expected key, aborting..." << std::endl;
+            std::cout << "Expected key, aborting..." << std::endl;
             return {};
         }
 
-        float key = std::atof(keyItem->getAttribute("value").c_str());
+        auto key = convertTo<R>(keyItem->getAttribute("value"));
 
         // Go to next entry (which is expected to be the value for the key).
         if(++iter == items.end()) {
-            std::cout << "VelocityCurve: No matching value for key" << std::endl;
+            std::cout << "No matching value for key" << std::endl;
             return {};
         }
 
         // Read value.
         XMLreader* valueItem = *iter;
         if(valueItem->getName() != "value") {
-            std::cout << "VelocityCurve: Expected value, aborting..." << std::endl;
+            std::cout << "Expected value, aborting..." << std::endl;
             return {};
         }
 
-        float value = std::atof(valueItem->getAttribute("value").c_str());
+        auto value = convertTo<S>(valueItem->getAttribute("value"));
 
         // Add key-value pair.
-        curve[key] = value;
+        map[key] = value;
 
         // Next key-value pair.
         iter++;
     }
+
+    return map;
+}
+
+VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
+
+    auto values = deserializeMap<float, float>(reader["peakVelocities"]);
+    auto curve = VelocityCurve::createFromMap(values);
+
+    bool periodic = reader["periodic"].getAttribute("value") == "true";
+    curve.setPeriodic(periodic);
+
+    float scale = std::atof(reader["scale"].getAttribute("value").c_str());
+    curve.setScale(scale);
 
     return curve;
 }
@@ -72,6 +97,8 @@ Parameters deserializeParameters(const XMLreader& reader) {
     parameters.wallBoundaryCondition_ = static_cast<FlowBoundaryCondition>(std::atof(reader["wallBoundaryCondition"].getAttribute("value").c_str())); // Replaces: bouzidiOn = parameters["bouzidi"].getAttribute("value") == "true";
     parameters.inletVelocityMultiplier_ = std::atof(reader["inletVelocityMultiplier"].getAttribute("value").c_str());
     parameters.latticePerturbation_ = reader["latticePerturbation"].getAttribute("value") == "true";
+    parameters.geometryFiles_ = deserializeMap<float, std::string>(reader["geometryFiles"]);
+    parameters.measuredDataFiles_ = deserializeMap<float, std::string>(reader["measuredDataFiles"]);
     return parameters;
 }
 

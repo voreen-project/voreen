@@ -34,6 +34,7 @@ SET(MOD_CORE_SOURCES
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
+    ${MOD_DIR}/processors/geometry/geometrymerge.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
@@ -82,6 +83,7 @@ SET(MOD_CORE_HEADERS
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
+    ${MOD_DIR}/processors/geometry/geometrymerge.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h

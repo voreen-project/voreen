@@ -66,6 +66,7 @@ FlowIndicatorDetection::FlowIndicatorSettings::FlowIndicatorSettings(VGNodeID no
     , targetVelocity_(0.0f)
     , velocityCurveFile_()
     , velocityCurvePeriodic_(false)
+    , velocityCurveScale_(1.0f)
 {
 }
 
@@ -124,6 +125,8 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , relativeRadiusCorrection_("relativeRadiusCorrection", "Relative Radius Correction", 1.0f, 0.1f, 2.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , invertDirection_("invertDirection", "Invert Direction", false)
     , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
+    , adaptTransformation_("adaptTransformation", "Adapt Transformation to Scene")
+    , transformationMatrix_("transformationMatrix", "Transformation Matrix (Linking)", tgt::mat4::identity, tgt::mat4(-99999), tgt::mat4(99999))
     , indicatorType_("flowType", "Flow Type")
     , flowProfile_("flowProfile", "Flow Profile")
     , velocityCurveType_("velocityCurveType", "Velocity Curve Type")
@@ -131,6 +134,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , targetVelocity_("targetVelocity", "Target Velocity (m/s)", 0.0f, 0.0f, 10.0f)
     , velocityCurveFile_("velocityCurveFile", "Velocity Curve File", "Velocity Curve File", "", "*.csv", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, FileDialogProperty::ALWAYS_OFF)
     , velocityCurvePeriodicity_("velocityCurvePeriodicity", "Repeat Velocity Curve periodically", false)
+    , velocityCurveScale_("velocityCurveScale", "Scale Velocity Magnitude", 1.0f, 0.01f, 10.0f)
     , triggertBySelection_(false)
 {
     addPort(parameterInport_);
@@ -183,6 +187,12 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(forceAxisAlignment_);
         forceAxisAlignment_.setGroupID("indicator");
         ON_CHANGE_LAMBDA(forceAxisAlignment_, [this] { onIndicatorConfigChange(true); });
+    addProperty(transformationMatrix_);
+        //transformationMatrix_.setGroupID("indicator");
+        transformationMatrix_.setVisibleFlag(false);
+    addProperty(adaptTransformation_);
+        adaptTransformation_.setGroupID("indicator");
+        ON_CHANGE_LAMBDA(adaptTransformation_, [this] { adaptTransformation(); });
     addProperty(radius_);
         radius_.setGroupID("indicator");
         ON_CHANGE(radius_, FlowIndicatorDetection, onIndicatorConfigChange);
@@ -231,6 +241,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(velocityCurvePeriodicity_);
         velocityCurvePeriodicity_.setGroupID("velocity");
         ON_CHANGE(velocityCurvePeriodicity_, FlowIndicatorDetection, onIndicatorConfigChange);
+    addProperty(velocityCurveScale_);
+        velocityCurveScale_.setGroupID("velocity");
+        ON_CHANGE(velocityCurveScale_, FlowIndicatorDetection, onIndicatorConfigChange);
     setPropertyGroupGuiName("velocity", "Velocity Boundary");
 
     // Setup property visibility.
@@ -296,20 +309,28 @@ bool FlowIndicatorDetection::isReady() const {
 void FlowIndicatorDetection::process() {
 
     // Here, we just set the output according to our currently set indicators.
-    FlowSimulationConfig* flowParameterSetEnsemble = new FlowSimulationConfig(*parameterInport_.getData());
+    FlowSimulationConfig* config = new FlowSimulationConfig(*parameterInport_.getData());
+
+    // Set transformation matrix.
+    if (config->getTransformationMatrix() != tgt::mat4::identity &&
+        transformationMatrix_.get() != config->getTransformationMatrix()) {
+        LWARNING("Overriding transformation matrix");
+    }
+    config->setTransformationMatrix(transformationMatrix_.get());
 
     for(const FlowIndicator& indicator : flowIndicators_) {
         // Candidates won't be added until an automatic or manual selection was performed.
         if(indicator.type_ != FIT_CANDIDATE) {
-            flowParameterSetEnsemble->addFlowIndicator(indicator);
+            config->addFlowIndicator(indicator);
         }
     }
 
-    parameterOutport_.setData(flowParameterSetEnsemble);
+    parameterOutport_.setData(config);
 }
 
 void FlowIndicatorDetection::updateIndicatorUI() {
     bool validSelection = flowIndicatorTable_.getNumRows() > 0 && flowIndicatorTable_.getSelectedRowIndex() >= 0;
+    bool isRoleSwapped = false;
     if(validSelection) {
         triggertBySelection_ = true;
 
@@ -336,6 +357,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         invertDirection_.set(settings.invertDirection_);
         forceAxisAlignment_.set(settings.forceAxisAlignment_);
         indicatorType_.selectByValue(indicator.type_);
+        isRoleSwapped = indicator.roleSwapped_;
 
         flowProfile_.selectByValue(indicator.flowProfile_);
         velocityCurveType_.select(settings.velocityCurveType_);
@@ -343,6 +365,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         targetVelocity_.set(settings.targetVelocity_);
         velocityCurveFile_.set(settings.velocityCurveFile_);
         velocityCurvePeriodicity_.set(settings.velocityCurvePeriodic_);
+        velocityCurveScale_.set(settings.velocityCurveScale_);
 
         triggertBySelection_ = false;
     }
@@ -359,6 +382,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     length_.setReadOnlyFlag(!validSelection);
     invertDirection_.setReadOnlyFlag(!validSelection);
     forceAxisAlignment_.setReadOnlyFlag(!validSelection);
+    adaptTransformation_.setReadOnlyFlag(!validSelection);
     indicatorType_.setReadOnlyFlag(!validSelection);
 
     bool isVelocityBoundary = validSelection && indicatorType_.getValue() == FIT_VELOCITY;
@@ -373,6 +397,7 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     targetVelocity_.setReadOnlyFlag(!isSimpleCurveType || isVolumeCondition);
     velocityCurveFile_.setReadOnlyFlag(velocityCurveType_.get() != "custom");
     velocityCurvePeriodicity_.setReadOnlyFlag(!isVelocityBoundary);
+    velocityCurveScale_.setReadOnlyFlag(!isVelocityBoundary || !isRoleSwapped);
 }
 
 void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) {
@@ -395,6 +420,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         settings.targetVelocity_ = targetVelocity_.get();
         settings.velocityCurveFile_ = velocityCurveFile_.get();
         settings.velocityCurvePeriodic_ = velocityCurvePeriodicity_.get();
+        settings.velocityCurveScale_ = velocityCurveScale_.get();
 
         FlowIndicator& indicator = flowIndicators_[indicatorIdx];
         indicator.type_ = indicatorType_.getValue();
@@ -403,21 +429,17 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         indicator.length_ = length_.get();
 
         if(needReinitialization) {
-            // Backup id, type, length and name.
-            FlowIndicatorType type = indicator.type_;
-            int id = indicator.id_;
-            std::string name = indicator.name_;
-            tgt::vec4 color = indicator.color_;
-            float length = indicator.length_;
-            bool roleSwapped = indicator.roleSwapped_;
+            // initialization will overwrite some fields that we don't want to lose.
+            // Hence, we back them up.
+            const auto backup = indicator;
 
             indicator = initializeIndicator(settings);
-            indicator.type_ = type;
-            indicator.id_ = id;
-            indicator.name_ = name;
-            indicator.color_ = color;
-            indicator.length_ = length;
-            indicator.roleSwapped_ = roleSwapped;
+            indicator.type_ = backup.type_;
+            indicator.id_ = backup.id_;
+            indicator.name_ = backup.name_;
+            indicator.color_ = backup.color_;
+            indicator.length_ = backup.length_;
+            indicator.roleSwapped_ = backup.roleSwapped_;
         }
         else {
             indicator.radius_ = radius_.get();
@@ -516,6 +538,7 @@ VelocityCurve FlowIndicatorDetection::createCurveFromSettings(FlowIndicatorSetti
     }
 
     velocityCurve.setPeriodic(settings.velocityCurvePeriodic_);
+    velocityCurve.setScale(settings.velocityCurveScale_);
 
     return velocityCurve;
 }
@@ -660,18 +683,18 @@ void FlowIndicatorDetection::buildTable() {
 
 void FlowIndicatorDetection::swapVelocityAndPressureBoundaries() {
 
-    int numPressureBoundaries = 0;
-    int numVelocityBoundaries = 0;
+    std::vector<FlowIndicator> pressureBoundaries;
+    std::vector<FlowIndicator> velocityBoundaries;
     for (const FlowIndicator& indicator: flowIndicators_) {
         if(indicator.type_ == FIT_PRESSURE) {
-            numPressureBoundaries++;
+            pressureBoundaries.push_back(indicator);
         }
         else if(indicator.type_ == FIT_VELOCITY)  {
-            numVelocityBoundaries++;
+            velocityBoundaries.push_back(indicator);
         }
     }
 
-    if(numVelocityBoundaries != 1 && numPressureBoundaries != 1) {
+    if(velocityBoundaries.size() != 1 && pressureBoundaries.size() != 1) {
         LERROR("Number of Velocity : Pressure Boundaries must be 1:n or n:1");
         return;
     }
@@ -680,6 +703,16 @@ void FlowIndicatorDetection::swapVelocityAndPressureBoundaries() {
         if (indicator.type_ == FIT_PRESSURE) {
             indicator.type_ = FIT_VELOCITY;
             indicator.roleSwapped_ = !indicator.roleSwapped_;
+
+            if(indicator.roleSwapped_ && velocityBoundaries.size() == 1) {
+                auto refIndicator = velocityBoundaries.front();
+
+                indicator.velocityCurve_ = refIndicator.velocityCurve_;
+
+                // TODO: very bad heuristic. Should use a different one here or none at all.
+                float areaRatio = std::sqrt(indicator.radius_ / refIndicator.radius_);
+                indicator.velocityCurve_.setScale(areaRatio);
+            }
         }
         else if (indicator.type_ == FIT_VELOCITY) {
             indicator.type_ = FIT_PRESSURE;
@@ -692,6 +725,18 @@ void FlowIndicatorDetection::swapVelocityAndPressureBoundaries() {
 
     buildTable();
     updateIndicatorUI();
+}
+
+void FlowIndicatorDetection::adaptTransformation() {
+    size_t indicatorIdx = static_cast<size_t>(flowIndicatorTable_.getSelectedRowIndex());
+    if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
+        auto& indicator = flowIndicators_.at(indicatorIdx);
+
+        auto rotation = utils::createTransformationMatrix(indicator.center_, indicator.normal_).getRotationalPart();
+        tgt::mat4 transformationMatrix;
+        rotation.invert(transformationMatrix);
+        transformationMatrix_.set(transformationMatrix);
+    }
 }
 
 }   // namespace

@@ -111,20 +111,10 @@ struct SimpleVolume {
 
 using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
 
-class ZeroAnalyticalF3D : public AnalyticalF3D<T, T> {
-public:
-    ZeroAnalyticalF3D() : AnalyticalF3D<T, T>(3) {}
-    virtual bool operator() (T output[], const T input[]) {
-        for(size_t i=0; i<3; i++) {
-            output[i] = 0;
-        }
-        return true;
-    }
-} ZeroFunctor;
-
 class LatticePerturber : public AnalyticalF3D<T, T> {
+    static AnalyticalConst3D<T,T> Zero;
 public:
-    LatticePerturber(AnalyticalF3D<T, T>& original = ZeroFunctor, T maxNoise=1e-5)
+    LatticePerturber(AnalyticalF3D<T, T>& original = Zero, T maxNoise=1e-5)
         : AnalyticalF3D<T, T>(3)
         , original_(original)
         , rnd_(std::bind(std::uniform_real_distribution<T>(-maxNoise, maxNoise), std::mt19937(time(nullptr))))
@@ -142,6 +132,9 @@ private:
     AnalyticalF3D<T, T>& original_;
     std::function<T()> rnd_;
 };
+
+AnalyticalConst3D<T, T> LatticePerturber::Zero(0);
+
 
 // Stores data from stl file in geometry in form of material numbers
 bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,

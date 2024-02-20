@@ -39,6 +39,7 @@ namespace voreen {
 
 VelocityCurve::VelocityCurve()
     : periodic_(false)
+    , scale_(1.0f)
 {
     peakVelocities_[0.0f] = 0.0f;
 }
@@ -74,9 +75,11 @@ float VelocityCurve::operator()(float t) const {
     auto upper = std::lower_bound(peakVelocities_.begin(), peakVelocities_.end(), t, Comparator());
     auto lower = upper--;
 
-    float a = (t - lower->first) / (upper->first - lower->first);
+    const float alpha = (t - lower->first) / (upper->first - lower->first);
 
-    return (1.0f - a) * lower->second + a * upper->second;
+    const float value = (1.0f - alpha) * lower->second + alpha * upper->second;
+
+    return value * scale_;
 }
 
 float& VelocityCurve::operator[](float t) {
@@ -91,12 +94,20 @@ bool VelocityCurve::isPeriodic() const {
     return periodic_;
 }
 
+void VelocityCurve::setScale(float scale) {
+    scale_ = scale;
+}
+
+float VelocityCurve::getScale() const {
+    return scale_;
+}
+
 float VelocityCurve::getMinVelocity() const {
     float min = peakVelocities_.begin()->second;
     for (auto iter = ++peakVelocities_.begin(); iter != peakVelocities_.end(); iter++) {
         min = std::min(iter->second, min);
     }
-    return min;
+    return min * scale_;
 }
 
 float VelocityCurve::getMaxVelocity() const {
@@ -104,7 +115,7 @@ float VelocityCurve::getMaxVelocity() const {
     for (auto iter = ++peakVelocities_.begin(); iter != peakVelocities_.end(); iter++) {
         max = std::max(iter->second, max);
     }
-    return max;
+    return max * scale_;
 }
 
 float VelocityCurve::getStartTime() const {
@@ -205,6 +216,12 @@ VelocityCurve VelocityCurve::createFromCSV(const std::string& file) {
         throw std::runtime_error("Empty curve");
     }
 
+    return curve;
+}
+
+VelocityCurve VelocityCurve::createFromMap(const std::map<float, float>& map) {
+    VelocityCurve curve;
+    curve.peakVelocities_ = map;
     return curve;
 }
 
