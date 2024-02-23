@@ -62,7 +62,7 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
         array = imageData->GetPointData()->GetArray(name.c_str());
     }
     else {
-        // FIXME: Somehow it seems we need to substract 1 in each dimension for cell data?
+        // FIXME: Somehow it seems we need to subtract 1 in each dimension for cell data?
         dimensions -= tgt::svec3::one;
     }
     if(!array) {

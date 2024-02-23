@@ -27,7 +27,9 @@
 
 #include <vtkAbstractArray.h>
 #include <vtkImageData.h>
+#include <vtkImageReslice.h>
 #include <vtkSmartPointer.h>
+#include <vtkTransform.h>
 #include <vtkXMLImageDataWriter.h>
 
 #include "tgt/exception.h"
@@ -100,6 +102,25 @@ vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* vol
                 }
             }
         }
+    }
+
+    // We have to reslice the volume as vtkImageData does not store transformations.
+    auto transformationMatrix = volume->getPhysicalToWorldMatrix();
+    if (transformationMatrix != tgt::mat4::identity) {
+        vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+        auto matrix = tgt::Matrix4<double>(transformationMatrix);
+        transform->SetMatrix(matrix.elem);
+        transform->Inverse();
+
+        vtkSmartPointer<vtkImageReslice> reslice = vtkSmartPointer<vtkImageReslice>::New();
+        reslice->SetInputData(imageData);
+        reslice->SetResliceTransform(transform);
+        reslice->SetInterpolationModeToLinear();
+        reslice->AutoCropOutputOn();
+        reslice->Update();
+
+        // Override image data.
+        imageData = reslice->GetOutput();
     }
 
     return imageData;

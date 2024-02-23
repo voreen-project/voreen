@@ -37,6 +37,7 @@ Voreen Changelog
       o Improve VoreenVE GUI (opt-in): the processor list is now filtered by the currently selected processor. Only processors that can actually be connected to the selection will be selectable. Additionally, the newly added processor will be connected to the old selection and becomes the new selection, allowing for more effectively creating networks.
       o CTRL+A will no longer trigger the animation editor
       o CTRL+F will set focus to the processor list search bar
+      o VTIVolumeWriter will now reslice the input volume according to its transformation matrix as vtkImageData does not store transformations
 
 2021-01-28: Voreen 5.2.0
 ------------------------
