@@ -31,6 +31,10 @@
 
 #include "tgt/filesystem.h"
 
+#ifdef VRN_MODULE_HDF5
+#include "modules/hdf5/io/hdf5volumewriter.h"
+#endif
+
 #include <set>
 
 namespace voreen {
@@ -43,7 +47,7 @@ VolumeListSave::VolumeListSave()
     , outputFormat_("outputFormat", "Output Format")
     , fileNameHDF5_("fileNameHDF5", "Save as", "Select output file...",
         "", "Hierarchical Data Format 5 (*.h5 *.hdf5)", FileDialogProperty::SAVE_FILE)
-    , folderNameVVD_("folderNameVVD", "Save as", "Select output file...",
+    , folderNameAll_("folderNameVVD", "Save as", "Select output file...",
         "", "Voreen Volume Data (*.vvd)", FileDialogProperty::DIRECTORY, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
     , saveButton_("save", "Save")
     , progressProp_("progress", "Progress")
@@ -53,27 +57,15 @@ VolumeListSave::VolumeListSave()
     , enableCompression_("enableCompression", "Enable Compression", false, Processor::INVALID_PROGRAM, Property::LOD_ADVANCED)
     , compressionLevel_("compressionLevel", "Deflate Level", 1, 1, 9, Processor::INVALID_RESULT, NumericProperty<int>::STATIC, Property::LOD_ADVANCED)
     , enableShuffling_("enableShuffling", "Enable Shuffling", false, Processor::INVALID_RESULT, Property::LOD_ADVANCED)
-    , volumeSerializerPopulator_(nullptr)
-#ifdef VRN_MODULE_HDF5
-    , hdf5VolumeWriter_(nullptr)
-#endif
 {
     addPort(inport_);
 
     addProperty(outputFormat_);
-#ifdef VRN_MODULE_HDF5
-        outputFormat_.addOption("hdf5", "HDF5 (Hierarchical Data Format 5)", VOL_HDF5);
-        outputFormat_.setVisibleFlag(true);
-#else
-        // Only one option. We do not need to be able to change the output format
-        outputFormat_.setVisibleFlag(false);
-#endif
-        outputFormat_.addOption("vvd", "VVD (Voreen Volume Data)", VOL_VVD);
+        outputFormat_.setOptions(constructFormats());
         ON_CHANGE(outputFormat_, VolumeListSave, adaptToOutputFormat);
 
-
     addProperty(fileNameHDF5_);
-    addProperty(folderNameVVD_);
+    addProperty(folderNameAll_);
 
     addProperty(saveButton_);
         ON_CHANGE(saveButton_, VolumeListSave, saveVolumeList);
@@ -100,7 +92,6 @@ VolumeListSave::VolumeListSave()
 }
 
 VolumeListSave::~VolumeListSave() {
-    delete volumeSerializerPopulator_;
 }
 
 Processor* VolumeListSave::create() const {
@@ -110,29 +101,9 @@ Processor* VolumeListSave::create() const {
 void VolumeListSave::initialize() {
     VolumeProcessor::initialize();
 
-    tgtAssert(!volumeSerializerPopulator_, "serializer populator already created");
-    volumeSerializerPopulator_ = new VolumeSerializerPopulator();
-
-#ifdef VRN_MODULE_HDF5
-    tgtAssert(!hdf5VolumeWriter_, "hdf5VolumeWriter already created");
-    hdf5VolumeWriter_ = new HDF5VolumeWriter();
-#endif
-
     // Adapt to changed properties after deserialization
     adaptToOutputFormat();
     adaptToUseOriginFileNames();
-}
-
-void VolumeListSave::deinitialize() {
-    delete volumeSerializerPopulator_;
-    volumeSerializerPopulator_ = nullptr;
-
-#ifdef VRN_MODULE_HDF5
-    delete hdf5VolumeWriter_;
-    hdf5VolumeWriter_ = nullptr;
-#endif
-
-    VolumeProcessor::deinitialize();
 }
 
 void VolumeListSave::process() {
@@ -163,14 +134,13 @@ void VolumeListSave::saveVolumeList() {
 
     switch(outputFormat_.getValue()) {
 
-        case VOL_VVD:
+        case VOL_ALL:
             // Save to vvd
-            if (folderNameVVD_.get().empty()) {
+            if (folderNameAll_.get().empty()) {
                 LWARNING("No output folder specified.");
                 return;
             }
-            tgtAssert(volumeSerializerPopulator_, "no populator");
-            saveVolumes(inputList, std::bind(&VolumeListSave::saveVolumeVVD, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+            saveVolumes(inputList, std::bind(&VolumeListSave::saveVolume, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             break;
 
 #ifdef VRN_MODULE_HDF5
@@ -180,7 +150,6 @@ void VolumeListSave::saveVolumeList() {
                 LWARNING("No output file specified.");
                 return;
             }
-            tgtAssert(hdf5VolumeWriter_, "no hdf5VolumeWriter");
             saveVolumes(inputList, std::bind(&VolumeListSave::saveVolumeHDF5, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             break;
 #endif
@@ -190,16 +159,16 @@ void VolumeListSave::saveVolumeList() {
             tgtAssert(false, "Invalid output format.");
     }
 }
-void VolumeListSave::saveVolumeVVD(const std::string& volumeName, const VolumeList* volumeList, size_t i) {
+void VolumeListSave::saveVolume(const std::string& volumeName, const VolumeList* volumeList, size_t i) {
     tgtAssert(!volumeName.empty(), "no volumeName");
-    const VolumeSerializer* serializer = volumeSerializerPopulator_->getVolumeSerializer();
+    const VolumeSerializer* serializer = volumeSerializerPopulator_.getVolumeSerializer();
 
     // Change extension to vvd
     std::string basename = tgt::FileSystem::fullBaseName(tgt::FileSystem::cleanupPath(volumeName));
-    std::string fileName = basename + ".vvd";
+    std::string fileName = basename + "." + outputFormat_.getKey();
 
     try {
-        serializer->write(folderNameVVD_.get() + "/" + fileName, volumeList->at(i));
+        serializer->write(folderNameAll_.get() + "/" + fileName, volumeList->at(i));
     }
     catch (tgt::FileException& e) {
         LERROR("Failed to save volume to file '" << fileName << "': " << e.what());
@@ -220,7 +189,7 @@ void VolumeListSave::saveVolumeHDF5(const std::string& volumeName, const VolumeL
 
     try {
         // Write to HDF5 file, but only truncate for the first volume (i == 0)!
-        hdf5VolumeWriter_->write(fileNameHDF5_.get(), vol, volumeName, (i == 0), compressionLevel, chunkSize, enableShuffling_.get());
+        HDF5VolumeWriter().write(fileNameHDF5_.get(), vol, volumeName, (i == 0), compressionLevel, chunkSize, enableShuffling_.get());
     }
     catch (tgt::IOException& e) {
         LERROR("Failed to save volume " << volumeName << " to file '" << fileNameHDF5_.get() << "': " << e.what());
@@ -261,14 +230,14 @@ void VolumeListSave::saveVolumes(const VolumeList* inputList, std::function<void
 void VolumeListSave::adaptToOutputFormat() {
     // Only show the filedialogproperty suitable for current output format
     switch(outputFormat_.getValue()) {
-        case VOL_VVD:
+        case VOL_ALL:
             fileNameHDF5_.setVisibleFlag(false);
-            folderNameVVD_.setVisibleFlag(true);
+            folderNameAll_.setVisibleFlag(true);
             break;
 #ifdef VRN_MODULE_HDF5
         case VOL_HDF5:
             fileNameHDF5_.setVisibleFlag(true);
-            folderNameVVD_.setVisibleFlag(false);
+            folderNameAll_.setVisibleFlag(false);
             break;
 #endif
         default:
@@ -315,6 +284,39 @@ void VolumeListSave::adjustCompressionProperties() {
     enableCompression_.setReadOnlyFlag(!enabled);
     compressionLevel_.setReadOnlyFlag(!enabled);
     enableShuffling_.setReadOnlyFlag(!enabled);
+}
+
+std::deque<Option<VolumeListSave::OutputFormat>> VolumeListSave::constructFormats() const {
+    std::deque<Option<OutputFormat>> formats;
+
+    const std::vector<VolumeWriter*> volumeWriters = volumeSerializerPopulator_.getVolumeSerializer()->getWriters();
+    std::string vvdWriterFilter;
+    for (size_t i=0; i<volumeWriters.size(); i++) {
+        VolumeWriter* curWriter = volumeWriters.at(i);
+
+        // extensions
+        std::vector<std::string> extensionVec = curWriter->getSupportedExtensions();
+        for (size_t j=0; j<extensionVec.size(); j++) {
+            std::string extension = extensionVec.at(j);
+            std::string filterStr = curWriter->getFormatDescription() + " (*." + extension + ")";
+            if (extension == "vvd")
+                vvdWriterFilter = filterStr;
+            else
+#ifdef VRN_MODULE_HDF5
+                if (extension != "h5")
+#endif
+                    formats.push_back({extension, filterStr, VOL_ALL});
+        }
+    }
+
+    if (vvdWriterFilter != "")
+        formats.insert(formats.begin(), {"vvd", "VVD (Voreen Volume Data)", VOL_ALL});
+
+#ifdef VRN_MODULE_HDF5
+    formats.insert(formats.begin(), {"hdf5", "HDF5 (Hierarchical Data Format 5)", VOL_HDF5});
+#endif
+
+    return formats;
 }
 
 } // namespace voreen

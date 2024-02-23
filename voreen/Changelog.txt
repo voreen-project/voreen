@@ -13,6 +13,7 @@ Voreen Changelog
       o Add Wavefront OBJ file support to VesselGraphSave
       o Add (still experimental) VolumeRAMSwap disk representation to EnsembleAnalysisModule (enable by module properties) which enables loading of large ensembles without disk representation. Still it is recommended to use a format that natively supports disk representations, such as HDF5.
       o Add (still experimental) serialization of derived data of volumes as part of an ensemble which speeds up loading times immensely for ensembles without derived data, when using the 'Cached' loading strategy.
+      o VolumeListSave now allows to save all supported file formats
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
