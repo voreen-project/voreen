@@ -58,11 +58,11 @@ float VelocityCurve::operator()(float t) const {
         t = std::fmod(t - getStartTime(), getEndTime() - getStartTime());
     } else {
         if (t <= peakVelocities_.begin()->first) {
-            return peakVelocities_.begin()->second;
+            return peakVelocities_.begin()->second * scale_;
         }
 
         if (t >= peakVelocities_.rbegin()->first) {
-            return peakVelocities_.rbegin()->second;
+            return peakVelocities_.rbegin()->second * scale_;
         }
     }
 
@@ -73,6 +73,9 @@ float VelocityCurve::operator()(float t) const {
     };
 
     auto upper = std::lower_bound(peakVelocities_.begin(), peakVelocities_.end(), t, Comparator());
+    if (upper == peakVelocities_.begin()) {
+        return upper->second * scale_;
+    }
     auto lower = upper--;
 
     const float alpha = (t - lower->first) / (upper->first - lower->first);

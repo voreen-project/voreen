@@ -44,34 +44,6 @@ namespace utils {
 
 using namespace voreen;
 
-// Allow for simulation lattice initialization by volume data.
-class MeasuredDataMapper : public AnalyticalF3D<T, T> {
-public:
-    MeasuredDataMapper(UnitConverter<T, DESCRIPTOR> const& converter, const VelocitySampler& sampler, float multiplier = 1.0f)
-        : AnalyticalF3D<T, T>(3)
-        , converter_(converter)
-        , sampler_(sampler)
-        , multiplier_(multiplier)
-    {
-    }
-    virtual bool operator() (T output[], const T input[]) {
-        // Store simulation positions in world coordinates.
-        tgt::vec3 pos = tgt::vec3(tgt::Vector3<T>::fromPointer(input)) / VOREEN_LENGTH_TO_SI;
-        tgt::vec3 vel = sampler_.sample(pos) * multiplier_;
-
-        for(size_t i=0; i<3; i++) {
-            output[i] = converter_.getLatticeVelocity(vel[i]);
-        }
-
-        return true;
-    }
-
-private:
-    const UnitConverter<T, DESCRIPTOR>& converter_;
-    const VelocitySampler& sampler_;
-    const float multiplier_;
-};
-
 // Caution: The returned volume is bound to the life-time of the input volume.
 template <typename VolumeType, typename BaseType=typename VolumeElement<typename VolumeType::VoxelType>::BaseType>
 std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volume) {
@@ -125,6 +97,7 @@ const std::string FlowSimulation::loggerCat_("voreen.flowsimulation.FlowSimulati
 FlowSimulation::FlowSimulation()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
+    , segmentationDataPort_(Port::INPORT, "segmentationDataPort", "Segmentation Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , debugMaterialsPort_(Port::OUTPORT, "debugMaterialsPort", "Debug Materials Port", false, Processor::VALID)
@@ -137,6 +110,9 @@ FlowSimulation::FlowSimulation()
     , numCuboids_("numCuboids", "Number of Cuboids", 1, 1, std::thread::hardware_concurrency(), Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
     addPort(geometryDataPort_);
+    addPort(segmentationDataPort_);
+    segmentationDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    segmentationDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(1)));
     addPort(measuredDataPort_);
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
@@ -211,8 +187,23 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
         geometry.reset(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
     }
+
+    // Currently, we prefer the geometry files over the segmentation data.
+    std::map<float, std::string> segmentationDataUrls;
     if (!geometry) {
-        throw InvalidInputException("No GlMeshGeometry input", InvalidInputException::S_ERROR);
+        if (const auto* segmentationData = segmentationDataPort_.getData()) {
+            for (size_t i = 0; i < segmentationData->size(); i++) {
+                auto* volume = segmentationData->at(i);
+                segmentationDataUrls[volume->getTimestep()] = volume->getOrigin().getURL();
+            }
+        }
+
+        if(segmentationDataUrls.empty()) {
+            throw InvalidInputException("No boundary geometry input", InvalidInputException::S_ERROR);
+        }
+    }
+    else if (segmentationDataPort_.hasData()) {
+        LWARNING("Both geometry and segmentation input input present. Using geometry input.");
     }
 
     tgtAssert(measuredDataPort_.isDataInvalidationObservable(), "VolumeListPort must be DataInvalidationObservable!");
@@ -228,11 +219,14 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
     }
 
+    std::map<float, std::string> measuredDataUrls;
     if(measuredData && !measuredData->empty()) {
         LINFO("Configuring a steered simulation");
+        measuredDataUrls[measuredData->first()->getTimestep()] = measuredData->first()->getOrigin().getURL();
         // Check for volume compatibility
         for (size_t i = 1; i < measuredData->size(); i++) {
             VolumeBase* volumeTi = measuredData->at(i);
+            measuredDataUrls[volumeTi->getTimestep()] = volumeTi->getOrigin().getURL();
 
             if (measuredData->at(i-1)->getTimestep() >= volumeTi->getTimestep()) {
                 throw InvalidInputException("Time Steps of are not ordered", InvalidInputException::S_ERROR);
@@ -283,7 +277,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     return FlowSimulationInput{
             geometryPath,
-            measuredData,
+            segmentationDataUrls,
+            measuredDataUrls,
             config,
             selectedParametrization,
             simulationPath,
@@ -392,7 +387,8 @@ void FlowSimulation::enqueueInsituResult(const std::string& filename, VolumePort
 void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                    ProgressReporter& progressReporter) const {
 
-    const VolumeList* measuredData = input.measuredData;
+    const auto segmentationDataUrls = input.segmentationDataUrls_;
+    const auto measuredDataUrls = input.measuredDataUrls_;
     const FlowSimulationConfig& config = *input.config;
     const Parameters& parameters = config.at(input.selectedParametrization);
 
@@ -407,45 +403,6 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         LERROR("Output directory could not be created. It may already exist.");
         return;
     }
-
-    VolumeSampler volumeSampler = [&] (UnitConverter<T, DESCRIPTOR> const& converter, float time, std::function<void(AnalyticalF3D<T,T>&)>& target, float multiplier=1.0f) {
-        // If a single time step is attached, we use it throughout the entire simulation.
-        if(measuredData->size() == 1) {
-            const VolumeBase* volume = measuredData->first();
-            VolumeRAMRepresentationLock data(measuredData->first());
-            SpatialSampler sampler(*data, volume->getRealWorldMapping(), VolumeRAM::LINEAR, volume->getWorldToVoxelMatrix());
-            utils::MeasuredDataMapper mapper(converter, sampler, multiplier);
-            target(mapper);
-        }
-        else {
-            // If we have multiple time steps, we need to update the volume we sample from.
-            tgtAssert(measuredData->size() > 1, "expected more than 1 volume");
-
-            // Query time.
-            // Note that we periodically sample the volumes if the simulation time exceeds measurement time.
-            // TODO: Make adjustable.
-            float start = measuredData->first()->getTimestep();
-            float end   = measuredData->at(measuredData->size() - 1)->getTimestep();
-            time        = std::fmod(time - start, end - start);
-
-            // Find the volume whose time step is right before the current time.
-            size_t idx = 0;
-            while (idx < measuredData->size() - 1 && measuredData->at(idx + 1)->getTimestep() < time) idx++;
-
-            const VolumeBase* volume0 = measuredData->at(idx + 0);
-            VolumeRAMRepresentationLock data0(volume0);
-
-            const VolumeBase* volume1 = measuredData->at(idx + 1);
-            VolumeRAMRepresentationLock data1(volume1);
-
-            float alpha = (time - volume0->getTimestep()) / (volume1->getTimestep() - volume0->getTimestep());
-            SpatioTemporalSampler sampler(*data0, *data1, alpha, volume0->getRealWorldMapping(),
-                                          VolumeRAM::LINEAR, volume0->getWorldToVoxelMatrix());
-
-            utils::MeasuredDataMapper mapper(converter, sampler, multiplier);
-            target(mapper);
-        }
-    };
 
     singleton::directories().setOutputDir(simulationResultPath);
 
@@ -463,7 +420,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // === 2nd Step: Prepare Geometry ===
 
-    // Voxelization.
+    // Voxelization. For now, we only support a single geometry.
     STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
 
     // Instantiation.
@@ -533,7 +490,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters, volumeSampler);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();

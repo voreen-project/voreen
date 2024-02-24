@@ -235,13 +235,13 @@ public:
      * Contains all time frames for which a geometry file (.stl) exists.
      * This must contain at least one element.
      */
-    std::map<float, std::string> geometryFiles_;
+    std::map<float, std::string> geometryFiles_; // TODO: for now, they remain unused.
 
     /**
      * Contains all time frames mapped to a measured data volume file.
      * This may be empty.
      */
-    std::map<float, std::string> measuredDataFiles_;
+    std::map<float, std::string> measuredDataFiles_; // TODO: for now, they remain unused.
 
     /**
      * Returns Reynolds number.

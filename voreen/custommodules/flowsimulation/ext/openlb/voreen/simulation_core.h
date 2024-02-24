@@ -33,6 +33,18 @@
 #include <dirent.h>
 #include <functional>
 
+// TODO: filter only  what's necessary
+#include <vtkAbstractArray.h>
+#include <vtkCellData.h>
+#include <vtkDataArray.h>
+#include <vtkDoubleArray.h>
+#include <vtkFloatArray.h>
+#include <vtkImageData.h>
+#include <vtkIntArray.h>
+#include <vtkPointData.h>
+#include <vtkSmartPointer.h>
+#include <vtkXMLImageDataReader.h>
+
 #include "openlb_parameters.h"
 
 using namespace olb;
@@ -87,6 +99,9 @@ struct SimpleVolume {
         index = index*numChannels + channel;
         return data[index];
     }
+    S getValue(Vector<int, 3> pos, int channel = 0) const {
+        return getValue(pos[0], pos[1], pos[2], channel);
+    }
 
     S getValueLinear(float x, float y, float z, int channel = 0) const {
 
@@ -107,9 +122,166 @@ struct SimpleVolume {
                 + getValue(urf.x, urf.y, urf.z, channel) * (    p.x)*(    p.y)*(    p.z) // urF
                 + getValue(llb.x, urf.y, urf.z, channel) * (1.f-p.x)*(    p.y)*(    p.z);// ulF
     }
+
+    S getValueLinear(Vector<T, 3> pos, int channel = 0) const {
+        return getValueLinear(pos[0], pos[1], pos[1], channel);
+    }
+
+    Vector<T, 3> convertWorldToLattice(Vector<T, 3> worldCoordinates) const {
+        Vector<T, 3> voxelCoordinates = worldCoordinates - offset;
+        voxelCoordinates[0] /= spacing[0];
+        voxelCoordinates[1] /= spacing[1];
+        voxelCoordinates[2] /= spacing[2];
+        voxelCoordinates = voxelCoordinates;
+        return voxelCoordinates;
+    }
 };
 
-using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
+enum class InterpolationType {
+    NEAREST,
+    LINEAR,
+};
+/*
+class SpatialVolumeSampler : public AnalyticalF3D<T, T> {
+public:
+    SpatialVolumeSampler(const SimpleVolume<T>& volume, InterpolationType interpolationType)
+        : volume_(volume)
+        , interpolationType_(interpolationType)
+    {
+    }
+
+    S sample(const S& pos) const {
+        if (interpolationType_ == InterpolationType::NEAREST)
+            return volume_.getValue(std::round(pos.x), std::round(pos.y), std::round(pos.z), channel);
+        else if (interpolationType_ == InterpolationType::LINEAR)
+            return volume_.getValueLinear(pos.x, pos.y, pos.z, channel);
+    }
+private:
+    const SimpleVolume<T>& volume_;
+    InterpolationType interpolationType_;
+};
+
+class SpatioTemporalVolumeSampler : public AnalyticalF3D<T, T> {
+public:
+
+    SpatioTemporalSampler(const SimpleVolume<float>& volume0, const SimpleVolume<float>& volume1, float alpha, InterpolationType interpolationType)
+        : volume0_(volume0)
+        , volume1_(volume1)
+        , alpha_(alpha)
+    {
+
+    }
+
+private:
+
+    const SimpleVolume<float>& volume0_;
+    const SimpleVolume<float>& volume1_;
+    float alpha_;
+};
+
+
+class SegmentationIndicatorMapper : public IndicatorF3D<T> {
+public:
+
+    SegmentationIndicatorMapper(SimpleVolume<T>& volume, const UnitConverter<T, DESCRIPTOR>& converter)
+            : volume_(volume)
+            , converter_(converter)
+    {
+    }
+
+    virtual bool operator() (bool output[], const T input[]) {
+        tgt::vec3 pos = tgt::vec3(tgt::Vector3<T>::fromPointer(input)) / VOREEN_LENGTH_TO_SI;
+        output[0] = volume_.getValue(pos.x, pos.y, pos.z) > 0;
+        return true;
+    }
+
+private:
+
+    SimpleVolume<T>& volume_;
+    const UnitConverter<T, DESCRIPTOR>& converter_;
+
+};
+
+// Allow for simulation lattice initialization by volume data.
+class VolumeDataMapper : public AnalyticalF3D<T, T> {
+public:
+    VolumeDataMapper(UnitConverter<T, DESCRIPTOR> const& converter, const VelocitySampler& sampler, float multiplier = 1.0f)
+            : AnalyticalF3D<T, T>(3)
+            , converter_(converter)
+            , sampler_(sampler)
+            , multiplier_(multiplier)
+    {
+    }
+    virtual bool operator() (T output[], const T input[]) {
+        // Store simulation positions in world coordinates.
+        vec3 pos = tgt::vec3(tgt::Vector3<T>::fromPointer(input)) / VOREEN_LENGTH_TO_SI;
+        vec3 vel = sampler_.sample(pos) * multiplier_;
+
+        for(size_t i=0; i<3; i++) {
+            output[i] = converter_.getLatticeVelocity(vel[i]);
+        }
+
+        return true;
+    }
+
+private:
+    const UnitConverter<T, DESCRIPTOR>& converter_;
+    const VelocitySampler& sampler_;
+    const float multiplier_;
+};
+
+class VolumeTimeSeriesSampler {
+public:
+
+    VolumeTimeSeriesSampler(const std::map<float, SimpleVolume<float>>& volumeData, float multiplier=1.0f)
+        : volumeData_(volumeData)
+        , multiplier_(multiplier)
+    {
+    }
+
+    void createSampler(std::function<void(AnalyticalF3D<T,T>&)>& target, float time) {
+
+        // Query time.
+        // Note that we periodically sample the volumes if the simulation time exceeds measurement time.
+        // TODO: Make adjustable.
+        float start = volumeData_.begin()->first;
+        float end   = volumeData_.rbegin()->first;
+        time        = std::fmod(time - start, end - start);
+
+        auto upper = volumeData_.lower_bound(time);
+        if(volumeData_.size() == 1 || upper == volumeData_.begin()) {
+            const SimpleVolume<float> volume = volumeData_.begin()->second;
+            SpatialSampler sampler(volume, InterpolationType::LINEAR);
+            VolumeDataMapper mapper(converter, sampler, multiplier_);
+            target(mapper);
+        }
+        else {
+
+            // Find the volume whose time step is right before the current time.
+            auto lower = upper--;
+
+            float t0 = lower->first;
+            float t1 = upper->first;
+
+            const SimpleVolume<float>& volume0 = lower->second;
+            const SimpleVolume<float>& volume1 = upper->second;
+
+            float alpha = (time - t0) / (t1 - t0);
+            SpatioTemporalVolumeSampler sampler(volume0, volume1, alpha, InterpolationType::LINEAR);
+
+            VolumeDataMapper mapper(converter, sampler, multiplier_);
+            target(mapper);
+        }
+
+    }
+
+private:
+
+    const std::map<float, SimpleVolume<float>>& volumeData_;
+    float multiplier_;
+};
+*/
+
 
 class LatticePerturber : public AnalyticalF3D<T, T> {
     static AnalyticalConst3D<T,T> Zero;
@@ -134,6 +306,34 @@ private:
 };
 
 AnalyticalConst3D<T, T> LatticePerturber::Zero(0);
+
+
+SimpleVolume<float> simpleVolumeFromVTI(const std::string& path) {
+    vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
+    reader->SetFileName(path.c_str());
+    reader->Update();
+
+    vtkImageData* imageData = reader->GetOutput();
+    int* dims = imageData->GetDimensions();
+    int numChannels = imageData->GetNumberOfScalarComponents();
+    SimpleVolume<float> volume({dims[0], dims[1], dims[2]}, numChannels);
+    imageData->GetSpacing(volume.spacing[0], volume.spacing[1], volume.spacing[2]);
+    imageData->GetOrigin(volume.offset[0], volume.offset[1], volume.offset[2]);
+
+    for(int z = 0; z < dims[2]; z++) {
+        for(int y = 0; y < dims[1]; y++) {
+            for(int x = 0; x < dims[0]; x++) {
+                for(int channel = 0; channel < numChannels; channel++) {
+                    float value = imageData->GetScalarComponentAsFloat(x, y, z, channel);
+                    volume.setValue(value, x, y, z, channel);
+                }
+            }
+        }
+    }
+
+    return volume;
+}
+
 
 
 // Stores data from stl file in geometry in form of material numbers
@@ -311,8 +511,8 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                         int iteration,
                         SuperGeometry<T,3>& superGeometry,
                         const std::vector<FlowIndicator>& indicators,
-                        const Parameters& parameters,
-                        const VolumeSampler& volumeSampler = {}
+                        const Parameters& parameters
+                        //VolumeTimeSeriesSampler& sampler
                         )
 {
     float time = converter.getPhysTime(iteration);
@@ -363,18 +563,8 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                 }
                 case FP_VOLUME:
                 {
-                    // TODO: Find better solution, e.g., a sampler shall be returned and applied in this scope.
-                    if(volumeSampler) {
-                        // For volume indicators, we normalize the velocity curve to [0, 1]
-                        // because multiplying the measurement by another velocity is confusing.
-                        // We keep, however, the velocity multiplier, so that we can basically
-                        // amplify the measurement.
-                        auto multiplier = std::min<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 1);
-                        volumeSampler(converter, time, applyFlowProfile, multiplier);
-                    }
-                    else {
-                        std::cerr << "No Volume Sampler defined!" << std::endl;
-                    }
+                    //auto multiplier = std::min<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 1);
+                    //applyFlowProfile(sampler(time));
                     break;
                 }
                 case FP_NONE:

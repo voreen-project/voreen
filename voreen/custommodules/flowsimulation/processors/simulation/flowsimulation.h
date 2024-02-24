@@ -38,7 +38,8 @@ namespace voreen {
 
 struct FlowSimulationInput {
     std::string geometryPath;
-    const VolumeList* measuredData;
+    std::map<float, std::string> segmentationDataUrls_;
+    std::map<float, std::string> measuredDataUrls_;
     const FlowSimulationConfig* config;
     size_t selectedParametrization;
     std::string simulationResultPath;
@@ -85,6 +86,7 @@ private:
     void enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume = nullptr) const;
 
     GeometryPort geometryDataPort_;
+    VolumeListPort segmentationDataPort_;
     VolumeListPort measuredDataPort_;
     FlowSimulationConfigPort parameterPort_;
 
