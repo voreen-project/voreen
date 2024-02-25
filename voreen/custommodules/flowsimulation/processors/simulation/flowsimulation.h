@@ -82,6 +82,7 @@ protected:
 
 private:
 
+    std::map<float, std::string> checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation) const;
     void runSimulation(const FlowSimulationInput& input, ProgressReporter& progressReporter) const;
     void enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume = nullptr) const;
 

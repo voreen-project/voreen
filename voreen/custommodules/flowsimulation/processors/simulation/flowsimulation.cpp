@@ -28,6 +28,7 @@
 #include "voreen/core/datastructures/geometry/geometrysequence.h"
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumedecorator.h"
 #include "voreen/core/datastructures/volume/volumeelement.h"
 #include "voreen/core/datastructures/volume/volumeminmaxmagnitude.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
@@ -35,6 +36,9 @@
 #include "modules/flowanalysis/utils/flowutils.h"
 #include "modules/hdf5/io/hdf5volumereader.h"
 #include "modules/hdf5/io/hdf5volumewriter.h"
+#ifdef VRN_MODULE_VTK
+#include "modules/vtk/io/vtivolumewriter.h"
+#endif
 
 #include "../../ext/openlb/voreen/simulation_core.h"
 
@@ -183,6 +187,18 @@ void FlowSimulation::clearOutports() {
 
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
+    tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
+    auto config = parameterPort_.getThreadSafeData();
+    if(!config || config->empty()) {
+        throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
+    }
+
+    if(config->getFlowFeatures() == FF_NONE) {
+        throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
+    }
+
+    auto configTransformationMatrix = config->getTransformationMatrix();
+
     std::unique_ptr<GlMeshGeometryBase> geometry;
     if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
         geometry.reset(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
@@ -192,10 +208,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     std::map<float, std::string> segmentationDataUrls;
     if (!geometry) {
         if (const auto* segmentationData = segmentationDataPort_.getData()) {
-            for (size_t i = 0; i < segmentationData->size(); i++) {
-                auto* volume = segmentationData->at(i);
-                segmentationDataUrls[volume->getTimestep()] = volume->getOrigin().getURL();
-            }
+            segmentationDataUrls = checkAndConvertVolumeList(segmentationData, configTransformationMatrix);
         }
 
         if(segmentationDataUrls.empty()) {
@@ -209,29 +222,10 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     tgtAssert(measuredDataPort_.isDataInvalidationObservable(), "VolumeListPort must be DataInvalidationObservable!");
     const VolumeList* measuredData = measuredDataPort_.getThreadSafeData();
 
-    tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
-    auto config = parameterPort_.getThreadSafeData();
-    if(!config || config->empty()) {
-        throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
-    }
-
-    if(config->getFlowFeatures() == FF_NONE) {
-        throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
-    }
-
     std::map<float, std::string> measuredDataUrls;
     if(measuredData && !measuredData->empty()) {
         LINFO("Configuring a steered simulation");
-        measuredDataUrls[measuredData->first()->getTimestep()] = measuredData->first()->getOrigin().getURL();
-        // Check for volume compatibility
-        for (size_t i = 1; i < measuredData->size(); i++) {
-            VolumeBase* volumeTi = measuredData->at(i);
-            measuredDataUrls[volumeTi->getTimestep()] = volumeTi->getOrigin().getURL();
-
-            if (measuredData->at(i-1)->getTimestep() >= volumeTi->getTimestep()) {
-                throw InvalidInputException("Time Steps of are not ordered", InvalidInputException::S_ERROR);
-            }
-        }
+        measuredDataUrls = checkAndConvertVolumeList(measuredData, configTransformationMatrix);
     }
     else {
         for(const auto& indicator : config->getFlowIndicators()) {
@@ -389,6 +383,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     const auto segmentationDataUrls = input.segmentationDataUrls_;
     const auto measuredDataUrls = input.measuredDataUrls_;
+
     const FlowSimulationConfig& config = *input.config;
     const Parameters& parameters = config.at(input.selectedParametrization);
 
@@ -417,6 +412,9 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // Prints the converter log as console output
     converter.print();
+
+
+    VolumeTimeSeriesSampler sampler(converter, measuredDataUrls);
 
     // === 2nd Step: Prepare Geometry ===
 
@@ -490,7 +488,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters, &sampler);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();
@@ -545,6 +543,33 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     }
     progressReporter.setProgress(1.0f);
     LINFO("Finished simulation run: " << parameters.name_);
+}
+
+std::map<float, std::string> FlowSimulation::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation) const {
+    std::map<float, std::string> result;
+    for (size_t i = 0; i < volumes->size(); i++) {
+        VolumeBase* volume = volumes->at(i);
+        auto url = volume->getOrigin().getPath();
+        auto extension = tgt::FileSystem::fileExtension(url, true);
+        if (extension != "vti" || transformation != tgt::mat4::identity) {
+            url = strReplaceLast(url, extension, "vti");
+            if (!tgt::FileSystem::fileExists(url)) {
+#ifdef VRN_MODULE_VTK
+                LWARNING("Need to convert to vti..");
+                std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
+                        new VolumeDecoratorReplaceTransformation(volume, volume->getPhysicalToWorldMatrix() * transformation)
+                );
+
+                VTIVolumeWriter().write(url, transformedVolume.get());
+#else
+                throw InvalidInputException("Need to convert to vti, but VTI module not enabled", InvalidInputException::S_ERROR);
+#endif
+            }
+        }
+        result[volume->getTimestep()] = url;
+    }
+
+    return result;
 }
 
 }   // namespace
