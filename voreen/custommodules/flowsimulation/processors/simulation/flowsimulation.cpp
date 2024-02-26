@@ -199,14 +199,29 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     auto configTransformationMatrix = config->getTransformationMatrix();
 
-    std::unique_ptr<GlMeshGeometryBase> geometry;
-    if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
-        geometry.reset(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
-    }
-
-    // Currently, we prefer the geometry files over the segmentation data.
+    std::string geometryPath;
     std::map<float, std::string> segmentationDataUrls;
-    if (!geometry) {
+
+    if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
+        std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
+        geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
+
+        try {
+            std::ofstream file(geometryPath);
+            geometry->setTransformationMatrix(geometry->getTransformationMatrix() * config->getTransformationMatrix());
+            geometry->exportAsStl(file);
+            file.close();
+        }
+        catch (std::exception&) {
+            throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
+        }
+
+        if(segmentationDataPort_.hasData()) {
+            LWARNING("Both geometry and segmentation input input present. Using geometry input.");
+        }
+    }
+    else {
+
         if (const auto* segmentationData = segmentationDataPort_.getData()) {
             segmentationDataUrls = checkAndConvertVolumeList(segmentationData, configTransformationMatrix);
         }
@@ -214,9 +229,6 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         if(segmentationDataUrls.empty()) {
             throw InvalidInputException("No boundary geometry input", InvalidInputException::S_ERROR);
         }
-    }
-    else if (segmentationDataPort_.hasData()) {
-        LWARNING("Both geometry and segmentation input input present. Using geometry input.");
     }
 
     tgtAssert(measuredDataPort_.isDataInvalidationObservable(), "VolumeListPort must be DataInvalidationObservable!");
@@ -237,18 +249,6 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
         measuredData = nullptr;
         LINFO("Configuring an unsteered simulation");
     }
-
-    std::string geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
-    try {
-        std::ofstream file(geometryPath);
-        geometry->setTransformationMatrix(geometry->getTransformationMatrix() * config->getTransformationMatrix());
-        geometry->exportAsStl(file);
-        file.close();
-    }
-    catch (std::exception&) {
-        throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
-    }
-
 
     if(simulationResults_.get().empty()) {
         throw InvalidInputException("No output directory selected", InvalidInputException::S_WARNING);
@@ -413,16 +413,23 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     // Prints the converter log as console output
     converter.print();
 
-
-    VolumeTimeSeriesSampler sampler(converter, measuredDataUrls);
+    // TODO: This is not optimal.
+    VolumeTimeSeries segmentationTimeSeries(segmentationDataUrls);
+    VolumeTimeSeries measuredDataTimeSeries(measuredDataUrls);
 
     // === 2nd Step: Prepare Geometry ===
 
     // Voxelization. For now, we only support a single geometry.
-    STLreader<T> stlReader(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
+    std::unique_ptr<IndicatorF3D<T>> boundaryGeometry;
+    if(!input.geometryPath.empty()) {
+        boundaryGeometry.reset(new STLreader<T>(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1));
+    }
+    else {
+        boundaryGeometry.reset(new VolumeDataMapperIndicator(segmentationTimeSeries.createSampler(0.0f)));
+    }
 
     // Instantiation.
-    IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
+    IndicatorLayer3D<T> extendedDomain(*boundaryGeometry, converter.getConversionFactorLength());
     const int noOfCuboids = input.numCuboids;
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
     HeuristicLoadBalancer<T> loadBalancer(cuboidGeometry);
@@ -431,7 +438,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // Geometry preparation.
     LINFO("Preparing Geometry ...");
-    bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, config.getFlowIndicators());
+    bool success = prepareGeometry(converter, extendedDomain, *boundaryGeometry, superGeometry, config.getFlowIndicators());
 
     // Now already write geometry debug data so that we can see what went wrong..
     SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
@@ -456,7 +463,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     // === 3rd Step: Prepare Lattice ===
     LINFO("Preparing Lattice ...");
     prepareLattice(lattice, converter,
-                   stlReader, superGeometry,
+                   *boundaryGeometry, superGeometry,
                    config.getFlowIndicators(),
                    parameters);
 
@@ -471,7 +478,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         return getResults(
                 lattice,
                 superGeometry,
-                stlReader,
+                *boundaryGeometry,
                 converter,
                 iteration,
                 maxIteration,
@@ -488,7 +495,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters, &sampler);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters, &measuredDataTimeSeries);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();
@@ -505,7 +512,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             {
                 // Write velocity file.
                 SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-                auto velocityVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), velocity);
+                auto velocityVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), velocity);
                 auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
                 std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
                 enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
@@ -513,7 +520,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             {
                 // Write pressure file.
                 SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
-                auto pressureVolume = sampleVolume<float>(stlReader, converter, config.getOutputResolution(), pressure);
+                auto pressureVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), pressure);
                 auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume);
                 std::string filename = "pressure" + std::to_string(swapVelocityFile) + ".h5";
                 enqueueInsituResult(simulationResultPath + filename, debugPressurePort_, std::move(volume));
