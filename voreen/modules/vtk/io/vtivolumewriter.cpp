@@ -46,13 +46,16 @@ vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* vol
         throw VoreenException("Could not acquire RAM representation");
     }
 
+    // Voreen assumes millimeter instead of meter.
+    const float MM_TO_M = 0.001f;
+
     // Setup image data object.
     vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
     tgt::ivec3 dims = representation->getDimensions();
     imageData->SetDimensions(dims.x, dims.y, dims.z);
-    tgt::dvec3 spacing = volume->getSpacing();
+    tgt::dvec3 spacing = volume->getSpacing() * MM_TO_M;
     imageData->SetSpacing(spacing.x, spacing.y, spacing.z);
-    tgt::dvec3 origin = volume->getOffset();
+    tgt::dvec3 origin = volume->getOffset() * MM_TO_M;
     imageData->SetOrigin(origin.x, origin.y, origin.z);
     int numComponents = static_cast<int>(representation->getNumChannels());
 
