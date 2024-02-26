@@ -27,10 +27,14 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumedecorator.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "modules/core/io/rawvolumereader.h"
 #include "modules/core/io/vvdvolumewriter.h"
+#ifdef VRN_MODULE_VTK
+#include "modules/vtk/io/vtivolumewriter.h"
+#endif
 
 #include <boost/process.hpp>
 
@@ -162,6 +166,7 @@ FlowSimulationCluster::FlowSimulationCluster()
     : Processor()
     // ports
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
+    , geometryVolumeDataPort_(Port::INPORT, "geometryVolumeDataPort", "Segmentation Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , configPort_(Port::INPORT, "parameterPort", "Simulation Config", false)
     , useLocalInstance_("useLocalInstance", "Use local Instance", false)
@@ -196,7 +201,10 @@ FlowSimulationCluster::FlowSimulationCluster()
     , numFinishedThreads_(0)
 {
     addPort(geometryDataPort_);
-    addPort(measuredDataPort_); // Currently ignored.
+    addPort(geometryVolumeDataPort_);
+    geometryVolumeDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    geometryVolumeDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(1)));
+    addPort(measuredDataPort_);
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
     addPort(configPort_);
@@ -401,14 +409,24 @@ void FlowSimulationCluster::refreshClusterCode() {
         LINFO("Compilation finished");
     }
 }
+
 void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPathSource) {
     // TODO: support changing/multiple geometries.
-    const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
+
+    auto configTransformationMatrix = tgt::mat4::identity; //config->getTransformationMatrix();
+
+    std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryDataPort_.getData()->clone().release()));
+    if(!geometry) {
+        // In this case, we rather want to check for volumes.
+        throw VoreenException("No geometry data");
+    }
+
     tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
     std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
     try {
         std::ofstream file(geometryFilename);
-        geometryData->exportAsStl(file);
+        geometry->setTransformationMatrix(geometry->getTransformationMatrix() * configTransformationMatrix);
+        geometry->exportAsStl(file);
         file.close();
     }
     catch (std::exception& e) {
@@ -416,27 +434,27 @@ void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPa
         throw VoreenException(errorMessage + e.what());
     }
 }
-void FlowSimulationCluster::stepCopyVolumeData(const std::string& simulationPathSource) {
-    if(const VolumeList* volumeList = measuredDataPort_.getData()) {
-        tgt::FileSystem::createDirectory(simulationPathSource + "velocity/");
-        int nrLength = static_cast<int>(std::to_string(volumeList->size() - 1).size());
-        for(size_t i=0; i<volumeList->size(); i++) {
 
-            // Enumerate volumes.
-            std::ostringstream suffix;
-            suffix << std::setw(nrLength) << std::setfill('0') << i;
-            std::string volumeName = "velocity" + suffix.str() + ".vvd";
-            std::string velocityFilename = simulationPathSource + "velocity/ " + volumeName;
+void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, const std::string& simulationPathSource) {
+    tgt::FileSystem::createDirectory(simulationPathSource + "velocity/");
+    int nrLength = static_cast<int>(std::to_string(volumeList->size() - 1).size());
+    for(size_t i=0; i<volumeList->size(); i++) {
 
-            try {
-                VvdVolumeWriter().write(velocityFilename, volumeList->at(i));
-            } catch(SerializationException& e) {
-                LERROR("Could not write velocity file");
-                continue;
-            }
+        // Enumerate volumes.
+        std::ostringstream suffix;
+        suffix << std::setw(nrLength) << std::setfill('0') << i;
+        std::string volumeName = "velocity" + suffix.str() + ".vvd";
+        std::string velocityFilename = simulationPathSource + "velocity/ " + volumeName;
+
+        try {
+            VTIVolumeWriter().write(velocityFilename, volumeList->at(i));
+        } catch(SerializationException& e) {
+            LERROR("Could not write velocity file");
+            continue;
         }
     }
 }
+
 void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource) {
     for(size_t i=0; i<config->size(); i++) {
 
@@ -569,7 +587,7 @@ void FlowSimulationCluster::enqueueSimulations() {
         stepCopyGeometryData(simulationPathSource);
 
         // Copy velocity data.
-        stepCopyVolumeData(simulationPathSource);
+        stepCopyVolumeData(measuredDataPort_.getData(), simulationPathSource);
 
         // Create configurations.
         stepCreateSimulationConfigs(config, simulationPathSource);

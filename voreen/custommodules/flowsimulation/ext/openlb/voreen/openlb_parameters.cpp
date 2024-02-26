@@ -242,6 +242,7 @@ Parameters::Parameters()
     , wallBoundaryCondition_(FBC_NONE)
     , latticePerturbation_(false)
     , inletVelocityMultiplier_(0.0f)
+    , geometryIsMesh_(true)
 {
 }
 

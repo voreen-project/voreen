@@ -108,6 +108,7 @@ void ParametersSerializable::serialize(Serializer& s) const {
     s.serialize("latticePerturbation", latticePerturbation_);
     s.serialize("inletVelocityMultiplier", inletVelocityMultiplier_);
     s.serialize("geometryFiles", geometryFiles_);
+    s.serialize("geometryIsMesh", geometryIsMesh_);
     s.serialize("measuredDataFiles", measuredDataFiles_);
 }
 
@@ -129,6 +130,7 @@ void ParametersSerializable::deserialize(Deserializer& s) {
     s.optionalDeserialize("latticePerturbation", latticePerturbation_, false);
     s.optionalDeserialize("inletVelocityMultiplier", inletVelocityMultiplier_, 1.0f);
     s.optionalDeserialize("geometryFiles", geometryFiles_, decltype(geometryFiles_)());
+    s.optionalDeserialize("geometryIsMesh", geometryIsMesh_, true);
     s.optionalDeserialize("measuredDataFiles", measuredDataFiles_, decltype(measuredDataFiles_)());
 }
 

@@ -98,6 +98,7 @@ Parameters deserializeParameters(const XMLreader& reader) {
     parameters.inletVelocityMultiplier_ = std::atof(reader["inletVelocityMultiplier"].getAttribute("value").c_str());
     parameters.latticePerturbation_ = reader["latticePerturbation"].getAttribute("value") == "true";
     parameters.geometryFiles_ = deserializeMap<float, std::string>(reader["geometryFiles"]);
+    parameters.geometryIsMesh_ = reader["geometryIsMesh"].getAttribute("value") == "true";
     parameters.measuredDataFiles_ = deserializeMap<float, std::string>(reader["measuredDataFiles"]);
     return parameters;
 }
@@ -199,6 +200,8 @@ int main(int argc, char* argv[]) {
     // Writes the converter log in a file
     converter.write(simulation.c_str());
 
+    VolumeTimeSeries measuredDataTimeSeries(parameters.measuredDataFiles_);
+
     // === 2nd Step: Prepare Geometry ===
     clout << "Meshing..." << std::endl;
     olb::util::Timer<T> voxelizationTime(1);
@@ -206,9 +209,19 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
-    std::string geometryFileName = "../geometry/geometry.stl";
-    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
-    IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
+
+    // TODO: for now, we only support a single geomtry.
+    std::unique_ptr<IndicatorF3D<T>> boundaryGeometry;
+    std::unique_ptr<VolumeTimeSeries> geometryVolumeTimeSeries;
+    if(parameters.geometryIsMesh_) {
+        std::string geometryFileName = parameters.geometryFiles_.begin()->second;
+        boundaryGeometry.reset(new STLreader<T>(geometryFileName, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1));
+    }
+    else {
+        geometryVolumeTimeSeries.reset(new VolumeTimeSeries(parameters.geometryFiles_));
+        boundaryGeometry.reset(new VolumeDataMapperIndicator(geometryVolumeTimeSeries->createSampler(0.0f)));
+    }
+    IndicatorLayer3D<T> extendedDomain(*boundaryGeometry, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
@@ -223,7 +236,7 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a superGeometry
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
-    bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, indicators);
+    bool success = prepareGeometry(converter, extendedDomain, *boundaryGeometry, superGeometry, indicators);
 
     voxelizationTime.stop();
     voxelizationTime.printSummary();
@@ -240,7 +253,7 @@ int main(int argc, char* argv[]) {
     olb::util::Timer<T> timer(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
     timer.start();
 
-    prepareLattice(lattice, converter, stlReader, superGeometry, indicators, parameters);
+    prepareLattice(lattice, converter, *boundaryGeometry, superGeometry, indicators, parameters);
 
     timer.stop();
     timer.printSummary();
@@ -255,7 +268,7 @@ int main(int argc, char* argv[]) {
         return getResults(
                 lattice,
                 superGeometry,
-                stlReader,
+                *boundaryGeometry,
                 converter,
                 iteration,
                 maxIteration,

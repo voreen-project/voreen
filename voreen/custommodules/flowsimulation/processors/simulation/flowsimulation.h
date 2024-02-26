@@ -87,7 +87,7 @@ private:
     void enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume = nullptr) const;
 
     GeometryPort geometryDataPort_;
-    VolumeListPort segmentationDataPort_;
+    VolumeListPort geometryVolumeDataPort_;
     VolumeListPort measuredDataPort_;
     FlowSimulationConfigPort parameterPort_;
 

@@ -33,7 +33,7 @@
 #include "modules/plotting/datastructures/plotdata.h"
 #include "modules/ensembleanalysis/ports/ensembledatasetport.h"
 #include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
-#include "../../ports/flowparametrizationport.h"
+#include "../../ports/flowsimulationconfigport.h"
 
 #include <array>
 

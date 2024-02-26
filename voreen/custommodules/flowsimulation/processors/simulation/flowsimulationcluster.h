@@ -78,7 +78,7 @@ private:
     void fetchResults();
 
     void stepCopyGeometryData(const std::string& simulationPathSource);
-    void stepCopyVolumeData(const std::string& simulationPathSource);
+    void stepCopyVolumeData(const VolumeList* volumeList, const std::string& simulationPathSource);
     void stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource);
 
     void runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
@@ -89,6 +89,7 @@ private:
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
     GeometryPort geometryDataPort_;
+    VolumeListPort geometryVolumeDataPort_;
     VolumeListPort measuredDataPort_;
     FlowSimulationConfigPort configPort_;
 

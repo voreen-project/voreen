@@ -101,7 +101,7 @@ const std::string FlowSimulation::loggerCat_("voreen.flowsimulation.FlowSimulati
 FlowSimulation::FlowSimulation()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
-    , segmentationDataPort_(Port::INPORT, "segmentationDataPort", "Segmentation Input", false)
+    , geometryVolumeDataPort_(Port::INPORT, "geometryVolumeDataPort", "Segmentation Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , parameterPort_(Port::INPORT, "parameterPort", "Parameterization", false)
     , debugMaterialsPort_(Port::OUTPORT, "debugMaterialsPort", "Debug Materials Port", false, Processor::VALID)
@@ -114,9 +114,9 @@ FlowSimulation::FlowSimulation()
     , numCuboids_("numCuboids", "Number of Cuboids", 1, 1, std::thread::hardware_concurrency(), Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
     addPort(geometryDataPort_);
-    addPort(segmentationDataPort_);
-    segmentationDataPort_.addCondition(new PortConditionVolumeListEnsemble());
-    segmentationDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(1)));
+    addPort(geometryVolumeDataPort_);
+    geometryVolumeDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    geometryVolumeDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(1)));
     addPort(measuredDataPort_);
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
@@ -208,7 +208,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
         try {
             std::ofstream file(geometryPath);
-            geometry->setTransformationMatrix(geometry->getTransformationMatrix() * config->getTransformationMatrix());
+            geometry->setTransformationMatrix(geometry->getTransformationMatrix() * configTransformationMatrix);
             geometry->exportAsStl(file);
             file.close();
         }
@@ -216,13 +216,13 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
             throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
         }
 
-        if(segmentationDataPort_.hasData()) {
+        if(geometryVolumeDataPort_.hasData()) {
             LWARNING("Both geometry and segmentation input input present. Using geometry input.");
         }
     }
     else {
 
-        if (const auto* segmentationData = segmentationDataPort_.getData()) {
+        if (const auto* segmentationData = geometryVolumeDataPort_.getData()) {
             segmentationDataUrls = checkAndConvertVolumeList(segmentationData, configTransformationMatrix);
         }
 

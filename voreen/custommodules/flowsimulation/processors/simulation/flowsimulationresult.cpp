@@ -281,8 +281,8 @@ FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput i
         auto output = merger.compute(std::move(computeInput), progressReporter);
 
         result = std::move(output.outputVolume);
-        result->setSpacing(result->getSpacing() / VOREEN_LENGTH_TO_SI);
-        result->setOffset(result->getOffset() / VOREEN_LENGTH_TO_SI);
+        result->setSpacing(result->getSpacing());
+        result->setOffset(result->getOffset());
     }
     catch (InvalidInputException& e) {
         LERRORC("VolumeMerger", e.what());
