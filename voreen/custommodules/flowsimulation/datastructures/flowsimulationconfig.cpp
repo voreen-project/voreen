@@ -39,6 +39,7 @@ FlowSimulationConfig::FlowSimulationConfig(const std::string& name)
     , outputResolution_(0)
     , flowFeatures_(FF_NONE)
     , transformation_(tgt::mat4::identity)
+    , geometryIsMesh_(true)
 {
 }
 
@@ -52,6 +53,7 @@ FlowSimulationConfig::FlowSimulationConfig(const FlowSimulationConfig& origin)
     , flowIndicators_(origin.flowIndicators_)
     , flowParameters_(origin.flowParameters_)
     , transformation_(origin.transformation_)
+    , geometryIsMesh_(true)
 {
 }
 
@@ -118,6 +120,31 @@ tgt::mat4 FlowSimulationConfig::getInvertedTransformationMatrix() const {
 
 void FlowSimulationConfig::setTransformationMatrix(tgt::mat4 transformation) {
     transformation_ = transformation;
+}
+
+void FlowSimulationConfig::setGeometryFiles(const std::map<float, std::string>& geometryFiles, bool isMesh) {
+    notifyPendingDataInvalidation();
+    geometryFiles_ = geometryFiles;
+    geometryIsMesh_ = isMesh;
+}
+const std::map<float, std::string>& FlowSimulationConfig::getGeometryFiles() const {
+    return geometryFiles_;
+}
+
+void FlowSimulationConfig::setGeometryIsMesh(bool isMesh) {
+    notifyPendingDataInvalidation();
+    geometryIsMesh_ = isMesh;
+}
+bool FlowSimulationConfig::isGeometryMesh() const {
+    return geometryIsMesh_;
+}
+
+void FlowSimulationConfig::setMeasuredDataFiles(const std::map<float, std::string>& measuredDataFiles) {
+    notifyPendingDataInvalidation();
+    measuredDataFiles_ = measuredDataFiles;
+}
+const std::map<float, std::string>& FlowSimulationConfig::getMeasuredDataFiles() const {
+    return measuredDataFiles_;
 }
 
 void FlowSimulationConfig::addFlowIndicator(const FlowIndicator& flowIndicator) {
@@ -190,6 +217,9 @@ void FlowSimulationConfig::deserialize(Deserializer& s) {
     s.deserialize("outputFileFormat", outputFileFormat_);
     s.deserialize("flowFeatures", flowFeatures_);
     s.deserialize("transformation", transformation_);
+    s.optionalDeserialize("geometryFiles", geometryFiles_, decltype(geometryFiles_)());
+    s.optionalDeserialize("geometryIsMesh", geometryIsMesh_, true);
+    s.optionalDeserialize("measuredDataFiles", measuredDataFiles_, decltype(measuredDataFiles_)());
     deserializeVector<FlowIndicatorSerializable, FlowIndicator>(s, "flowIndicators", flowIndicators_);
     deserializeVector<ParametersSerializable, Parameters>(s, "flowParameters", flowParameters_);
 }
@@ -202,6 +232,9 @@ void FlowSimulationConfig::serializeInternal(Serializer& s, size_t param) const 
     s.serialize("outputFileFormat", outputFileFormat_);
     s.serialize("flowFeatures", flowFeatures_);
     s.serialize("transformation", transformation_);
+    s.serialize("geometryFiles", geometryFiles_);
+    s.serialize("geometryIsMesh", geometryIsMesh_);
+    s.serialize("measuredDataFiles", measuredDataFiles_);
     serializeVector<FlowIndicatorSerializable, FlowIndicator>(s, "flowIndicators", flowIndicators_);
     if(param == ALL_PARAMETER_SETS) {
         serializeVector<ParametersSerializable, Parameters>(s, "flowParametrizations", flowParameters_);

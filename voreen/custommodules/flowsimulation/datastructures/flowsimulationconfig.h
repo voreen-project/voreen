@@ -108,6 +108,29 @@ public:
     tgt::mat4 getInvertedTransformationMatrix() const;
 
     /**
+     * Returns all time frames for which a geometry file (.stl) exists.
+     * This must contain at least one element.
+     * @param geometryFiles geometry files, can be volumes
+     * @param isMesh determines if the specified paths are meshes or volumes
+     */
+    void setGeometryFiles(const std::map<float, std::string>& geometryFiles, bool isMesh=true);
+    const std::map<float, std::string>& getGeometryFiles() const;
+
+    /**
+     * Set if the geometry files are meshes or volumes.
+     * @param isMesh determines if the specified paths are meshes or volumes
+     */
+    void setGeometryIsMesh(bool isMesh);
+    bool isGeometryMesh() const;
+
+    /**
+     * Returns all time frames mapped to a measured data volume file.
+     * This may be empty.
+     */
+    void setMeasuredDataFiles(const std::map<float, std::string>& measuredDataFiles);
+    const std::map<float, std::string>& getMeasuredDataFiles() const;
+
+    /**
      * Add a flow indicator to the internal list.
      * Note: This will set the unique id within the parameter set ensemble.
      */
@@ -144,6 +167,9 @@ private:
     std::string outputFileFormat_; ///< output file format
     int flowFeatures_;             ///< bitmask storing flow features
     tgt::mat4 transformation_;     ///< transformation matrix for the domain (geometry, indicators, ...)
+    std::map<float, std::string> geometryFiles_; ///< geometry files, can be volumes
+    bool geometryIsMesh_;          ///< determines if the specified paths are meshes or volumes
+    std::map<float, std::string> measuredDataFiles_; ///< measured data files
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;

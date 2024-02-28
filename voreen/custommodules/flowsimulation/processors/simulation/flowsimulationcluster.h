@@ -77,12 +77,12 @@ private:
     void enqueueSimulations();
     void fetchResults();
 
-    void stepCopyGeometryData(const std::string& simulationPathSource);
-    void stepCopyVolumeData(const VolumeList* volumeList, const std::string& simulationPathSource);
-    void stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource);
+    void stepCopyGeometryData(FlowSimulationConfig& config, const std::string& simulationPathSource);
+    void stepCopyVolumeData(const VolumeList* volumeList, FlowSimulationConfig& config, const std::string& simulationPathSource);
+    void stepCreateSimulationConfigs(FlowSimulationConfig& config, const std::string& simulationPathSource);
 
-    void runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
-    void runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
+    void runLocal(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest);
+    void runCluster(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest);
 
     std::string generateCompileScript() const;
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;

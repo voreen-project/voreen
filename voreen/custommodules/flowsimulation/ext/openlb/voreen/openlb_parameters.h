@@ -232,23 +232,6 @@ public:
     float inletVelocityMultiplier_;
 
     /**
-     * Contains all time frames for which a geometry file (.stl) exists.
-     * This must contain at least one element.
-     */
-    std::map<float, std::string> geometryFiles_;
-
-    /**
-     * Determines if the geometry is a mesh (or if not, a volume).
-     */
-    bool geometryIsMesh_;
-
-    /**
-     * Contains all time frames mapped to a measured data volume file.
-     * This may be empty.
-     */
-    std::map<float, std::string> measuredDataFiles_;
-
-    /**
      * Returns Reynolds number.
      */
     float getReynoldsNumber() const;

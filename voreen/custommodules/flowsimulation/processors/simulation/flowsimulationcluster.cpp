@@ -410,14 +410,12 @@ void FlowSimulationCluster::refreshClusterCode() {
     }
 }
 
-void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPathSource) {
-    // TODO: support changing/multiple geometries.
-
-    auto configTransformationMatrix = tgt::mat4::identity; //config->getTransformationMatrix();
+void FlowSimulationCluster::stepCopyGeometryData(FlowSimulationConfig& config, const std::string& simulationPathSource) {
+    auto configTransformationMatrix = config.getTransformationMatrix();
 
     std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryDataPort_.getData()->clone().release()));
     if(!geometry) {
-        // In this case, we rather want to check for volumes.
+
         throw VoreenException("No geometry data");
     }
 
@@ -435,7 +433,8 @@ void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPa
     }
 }
 
-void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, const std::string& simulationPathSource) {
+#ifdef VRN_MODULE_VTK
+void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, FlowSimulationConfig& config,  const std::string& simulationPathSource) {
     tgt::FileSystem::createDirectory(simulationPathSource + "velocity/");
     int nrLength = static_cast<int>(std::to_string(volumeList->size() - 1).size());
     for(size_t i=0; i<volumeList->size(); i++) {
@@ -454,11 +453,16 @@ void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, con
         }
     }
 }
+#else
+void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, FlowSimulationConfig* config, const std::string& simulationPathSource) {
+    LERROR("VTK module not available");
+}
+#endif
 
-void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource) {
-    for(size_t i=0; i<config->size(); i++) {
+void FlowSimulationCluster::stepCreateSimulationConfigs(FlowSimulationConfig& config, const std::string& simulationPathSource) {
+    for(size_t i=0; i<config.size(); i++) {
 
-        std::string parameterPathSource = simulationPathSource + config->at(i).name_ + "/";
+        std::string parameterPathSource = simulationPathSource + config.at(i).name_ + "/";
         tgt::FileSystem::createDirectoryRecursive(parameterPathSource);
 
         // Create parameter configuration file and commit to cluster.
@@ -468,7 +472,7 @@ void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConf
             LERROR("Could not write parameter file");
             continue;
         }
-        parameterFile << config->toXMLString(i);
+        parameterFile << config.toXMLString(i);
         parameterFile.close();
 
         std::string submissionScriptFilename = parameterPathSource + "submit.cmd";
@@ -477,15 +481,15 @@ void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConf
             LERROR("Could not write submission script file");
             continue;
         }
-        submissionScriptFile << generateSubmissionScript(config->at(i).name_);
+        submissionScriptFile << generateSubmissionScript(config.at(i).name_);
         submissionScriptFile.close();
     }
 }
 
-void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
+void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest) {
     // Move directory to the very same place, the local instance is located.
     simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
-    simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config->getName(), true);
+    simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config.getName(), true);
 
     if(tgt::FileSystem::dirExists(simulationPathDest) && overwriteExistingConfig_.get()) {
         tgt::FileSystem::deleteDirectoryRecursive(simulationPathDest);
@@ -497,10 +501,10 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
     }
 
     // Enqueue jobs.
-    for (size_t i = 0; i < config->size(); i++) {
+    for (size_t i = 0; i < config.size(); i++) {
 
-        std::string ensemble = config->getName();
-        std::string run = config->at(i).name_;
+        std::string ensemble = config.getName();
+        std::string run = config.at(i).name_;
 
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
         std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
@@ -514,7 +518,7 @@ void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::st
         LINFO("Enqueued run " << name);
     }
 }
-void FlowSimulationCluster::runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
+void FlowSimulationCluster::runCluster(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest) {
     // Copy data to cluster.
     std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
     int ret = executeCommand(command);
@@ -527,17 +531,17 @@ void FlowSimulationCluster::runCluster(const FlowSimulationConfig* config, std::
 
     // Enqueue simulations.
     std::vector<std::string> failed;
-    for(size_t i=0; i<config->size(); i++) {
+    for(size_t i=0; i<config.size(); i++) {
 
-        progress_.setProgress(i * 1.0f / config->size());
+        progress_.setProgress(i * 1.0f / config.size());
 
-        std::string localSimulationPath = programPath_.get() + "/openlb/voreen/" + config->getName() + "/" + config->at(i).name_;
+        std::string localSimulationPath = programPath_.get() + "/openlb/voreen/" + config.getName() + "/" + config.at(i).name_;
 
         // Enqueue job.
         command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateEnqueueScript(localSimulationPath);
         ret = executeCommand(command);
         if (ret != EXIT_SUCCESS) {
-            failed.push_back(config->at(i).name_);
+            failed.push_back(config.at(i).name_);
         }
     }
 
@@ -561,14 +565,17 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    const FlowSimulationConfig* config = configPort_.getData();
-    if (!config || config->empty()) {
+    const FlowSimulationConfig* originalConfig = configPort_.getData();
+    if (!originalConfig || originalConfig->empty()) {
         VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
         LERROR("No parametrization");
         return;
     }
 
-    if(config->getFlowFeatures() == FF_NONE) {
+    // We need to create a copy here, since we modify the paths of the individual runs.
+    FlowSimulationConfig config(*originalConfig);
+
+    if(config.getFlowFeatures() == FF_NONE) {
         VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
         LERROR("No flow feature selected");
         return;
@@ -576,7 +583,7 @@ void FlowSimulationCluster::enqueueSimulations() {
 
     LINFO("Configuring and enqueuing Simulations...");
 
-    std::string simulationPathSource = uploadDataPath_.get() + "/" + config->getName() + "/";
+    std::string simulationPathSource = uploadDataPath_.get() + "/" + config.getName() + "/";
     tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/openlb/voreen/";
@@ -584,10 +591,10 @@ void FlowSimulationCluster::enqueueSimulations() {
     try {
 
         // Copy simulation geometry.
-        stepCopyGeometryData(simulationPathSource);
+        stepCopyGeometryData(config, simulationPathSource);
 
         // Copy velocity data.
-        stepCopyVolumeData(measuredDataPort_.getData(), simulationPathSource);
+        stepCopyVolumeData(measuredDataPort_.getData(), config, simulationPathSource);
 
         // Create configurations.
         stepCreateSimulationConfigs(config, simulationPathSource);
