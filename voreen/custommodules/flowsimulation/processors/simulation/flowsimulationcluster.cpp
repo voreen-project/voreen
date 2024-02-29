@@ -411,53 +411,39 @@ void FlowSimulationCluster::refreshClusterCode() {
 }
 
 void FlowSimulationCluster::stepCopyGeometryData(FlowSimulationConfig& config, const std::string& simulationPathSource) {
-    auto configTransformationMatrix = config.getTransformationMatrix();
-
-    std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryDataPort_.getData()->clone().release()));
-    if(!geometry) {
-
-        throw VoreenException("No geometry data");
-    }
-
-    tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
-    std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
-    try {
-        std::ofstream file(geometryFilename);
-        geometry->setTransformationMatrix(geometry->getTransformationMatrix() * configTransformationMatrix);
-        geometry->exportAsStl(file);
-        file.close();
-    }
-    catch (std::exception& e) {
-        std::string errorMessage = "Could not write geometry file: ";
-        throw VoreenException(errorMessage + e.what());
-    }
-}
-
-#ifdef VRN_MODULE_VTK
-void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, FlowSimulationConfig& config,  const std::string& simulationPathSource) {
-    tgt::FileSystem::createDirectory(simulationPathSource + "velocity/");
-    int nrLength = static_cast<int>(std::to_string(volumeList->size() - 1).size());
-    for(size_t i=0; i<volumeList->size(); i++) {
-
-        // Enumerate volumes.
-        std::ostringstream suffix;
-        suffix << std::setw(nrLength) << std::setfill('0') << i;
-        std::string volumeName = "velocity" + suffix.str() + ".vvd";
-        std::string velocityFilename = simulationPathSource + "velocity/ " + volumeName;
+    if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
+        std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
+        tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
+        std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
 
         try {
-            VTIVolumeWriter().write(velocityFilename, volumeList->at(i));
-        } catch(SerializationException& e) {
-            LERROR("Could not write velocity file");
-            continue;
+            std::ofstream file(geometryFilename);
+            geometry->setTransformationMatrix(geometry->getTransformationMatrix() * config.getTransformationMatrix());
+            geometry->exportAsStl(file);
+            file.close();
         }
+        catch (std::exception& e) {
+            std::string errorMessage = "Could not write geometry file: ";
+            throw VoreenException(errorMessage + e.what());
+        }
+        auto geometryFiles = std::map<float, std::string>();
+        geometryFiles[0.0f] = "geometry/geometry.stl";
+        config.setGeometryFiles(geometryFiles, true);
+    }
+    else if (const auto* segmentationData = geometryVolumeDataPort_.getData()) {
+        auto geometryFiles = checkAndConvertVolumeList(segmentationData, config.getTransformationMatrix(), simulationPathSource, "geometry");
+        config.setGeometryFiles(geometryFiles, false);
+    }
+
+    if (config.getGeometryFiles().empty()) {
+        throw VoreenException("No GlMeshGeometry data.");
     }
 }
-#else
-void FlowSimulationCluster::stepCopyVolumeData(const VolumeList* volumeList, FlowSimulationConfig* config, const std::string& simulationPathSource) {
-    LERROR("VTK module not available");
+
+void FlowSimulationCluster::stepCopyMeasurementData(const VolumeList* volumeList, FlowSimulationConfig& config, const std::string& simulationPathSource) {
+    auto measurementData = checkAndConvertVolumeList(volumeList, config.getTransformationMatrix(), simulationPathSource, "measured");
+    config.setMeasuredDataFiles(measurementData);
 }
-#endif
 
 void FlowSimulationCluster::stepCreateSimulationConfigs(FlowSimulationConfig& config, const std::string& simulationPathSource) {
     for(size_t i=0; i<config.size(); i++) {
@@ -593,8 +579,8 @@ void FlowSimulationCluster::enqueueSimulations() {
         // Copy simulation geometry.
         stepCopyGeometryData(config, simulationPathSource);
 
-        // Copy velocity data.
-        stepCopyVolumeData(measuredDataPort_.getData(), config, simulationPathSource);
+        // Copy measurement data.
+        stepCopyMeasurementData(measuredDataPort_.getData(), config, simulationPathSource);
 
         // Create configurations.
         stepCreateSimulationConfigs(config, simulationPathSource);
@@ -865,5 +851,42 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
 
     return script.str();
 }
+
+#ifdef VRN_MODULE_VTK
+std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& subdirectory) const {
+    tgt::FileSystem::createDirectory(simulationPathSource + subdirectory + "/");
+    int nrLength = static_cast<int>(std::to_string(volumes->size() - 1).size());
+
+    std::map<float, std::string> result;
+    for (size_t i = 0; i < volumes->size(); i++) {
+
+        // Enumerate volumes.
+        std::ostringstream suffix;
+        suffix << std::setw(nrLength) << std::setfill('0') << i;
+        std::string volumeName = subdirectory + suffix.str() + ".vti";
+        std::string path = simulationPathSource + subdirectory + "/" + volumeName;
+
+        VolumeBase* volume = volumes->at(i);
+        if(transformation != tgt::mat4::identity) {
+            std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
+                    new VolumeDecoratorReplaceTransformation(volume,
+                                                             volume->getPhysicalToWorldMatrix() * transformation)
+            );
+            VTIVolumeWriter().write(path, transformedVolume.get());
+        }
+        else {
+            VTIVolumeWriter().write(path, volume);
+        }
+
+        result[volume->getTimestep()] = path;
+    }
+
+    return result;
+}
+#else
+std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(const VolumeList*, tgt::mat4, const std::string&, const std::string&) const {
+    throw VoreenException("Need to convert to vti, but VTI module not enabled");
+}
+#endif
 
 }   // namespace

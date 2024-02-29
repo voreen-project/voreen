@@ -97,9 +97,6 @@ Parameters deserializeParameters(const XMLreader& reader) {
     parameters.wallBoundaryCondition_ = static_cast<FlowBoundaryCondition>(std::atof(reader["wallBoundaryCondition"].getAttribute("value").c_str())); // Replaces: bouzidiOn = parameters["bouzidi"].getAttribute("value") == "true";
     parameters.inletVelocityMultiplier_ = std::atof(reader["inletVelocityMultiplier"].getAttribute("value").c_str());
     parameters.latticePerturbation_ = reader["latticePerturbation"].getAttribute("value") == "true";
-    parameters.geometryFiles_ = deserializeMap<float, std::string>(reader["geometryFiles"]);
-    parameters.geometryIsMesh_ = reader["geometryIsMesh"].getAttribute("value") == "true";
-    parameters.measuredDataFiles_ = deserializeMap<float, std::string>(reader["measuredDataFiles"]);
     return parameters;
 }
 
@@ -180,6 +177,10 @@ int main(int argc, char* argv[]) {
     std::string outputFileFormat =           config["outputFileFormat"].getAttribute("value");
     int flowFeatures             = std::atoi(config["flowFeatures"].getAttribute("value").c_str());
 
+    auto geometryFiles           = deserializeMap<float, std::string>(config["geometryFiles"]);
+    bool geometryIsMesh          = config["geometryIsMesh"].getAttribute("value") == "true";
+    auto measuredDataFiles       = deserializeMap<float, std::string>(config["measuredDataFiles"]);
+
     auto parameters = deserializeParameters(config["flowParameters"]);
     auto indicators = deserializeFlowIndicators(config["flowIndicators"]);
 
@@ -200,7 +201,8 @@ int main(int argc, char* argv[]) {
     // Writes the converter log in a file
     converter.write(simulation.c_str());
 
-    VolumeTimeSeries measuredDataTimeSeries(parameters.measuredDataFiles_);
+    clout << "Loading measured data..." << std::endl;
+    VolumeTimeSeries measuredDataTimeSeries(measuredDataFiles);
 
     // === 2nd Step: Prepare Geometry ===
     clout << "Meshing..." << std::endl;
@@ -210,15 +212,15 @@ int main(int argc, char* argv[]) {
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
 
-    // TODO: for now, we only support a single geomtry.
+    // TODO: for now, we only support a single geometry.
     std::unique_ptr<IndicatorF3D<T>> boundaryGeometry;
     std::unique_ptr<VolumeTimeSeries> geometryVolumeTimeSeries;
-    if(parameters.geometryIsMesh_) {
-        std::string geometryFileName = parameters.geometryFiles_.begin()->second;
+    if(geometryIsMesh) {
+        std::string geometryFileName = geometryFiles.begin()->second;
         boundaryGeometry.reset(new STLreader<T>(geometryFileName, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1));
     }
     else {
-        geometryVolumeTimeSeries.reset(new VolumeTimeSeries(parameters.geometryFiles_));
+        geometryVolumeTimeSeries.reset(new VolumeTimeSeries(geometryFiles));
         boundaryGeometry.reset(new VolumeDataMapperIndicator(geometryVolumeTimeSeries->createSampler(0.0f)));
     }
     IndicatorLayer3D<T> extendedDomain(*boundaryGeometry, converter.getConversionFactorLength());

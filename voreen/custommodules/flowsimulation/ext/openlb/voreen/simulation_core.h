@@ -33,15 +33,8 @@
 #include <dirent.h>
 #include <functional>
 
-// TODO: filter only  what's necessary
-#include <vtkAbstractArray.h>
-#include <vtkCellData.h>
 #include <vtkDataArray.h>
-#include <vtkDoubleArray.h>
-#include <vtkFloatArray.h>
 #include <vtkImageData.h>
-#include <vtkIntArray.h>
-#include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 #include <vtkXMLImageDataReader.h>
 
@@ -210,13 +203,13 @@ public:
         auto pos = Vector<T, 3>(input[0], input[1], input[2]);
 
         if (alpha_ == 0) {
-            for(size_t i=0; i<getTargetDim(); i++) {
+            for(int i=0; i<getTargetDim(); i++) {
                 output[i] = volume0_.getValueLinear(volume0_.convertWorldToLatticeCoortinates(pos), i);
                 output[i] *= multiplier_;
             }
         }
         else {
-            for(size_t i=0; i<getTargetDim(); i++) {
+            for(int i=0; i<getTargetDim(); i++) {
                 auto v0 = volume0_.getValueLinear(volume0_.convertWorldToLatticeCoortinates(pos), i);
                 auto v1 = volume1_.getValueLinear(volume1_.convertWorldToLatticeCoortinates(pos), i);
 

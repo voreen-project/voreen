@@ -78,7 +78,7 @@ private:
     void fetchResults();
 
     void stepCopyGeometryData(FlowSimulationConfig& config, const std::string& simulationPathSource);
-    void stepCopyVolumeData(const VolumeList* volumeList, FlowSimulationConfig& config, const std::string& simulationPathSource);
+    void stepCopyMeasurementData(const VolumeList* volumeList, FlowSimulationConfig& config, const std::string& simulationPathSource);
     void stepCreateSimulationConfigs(FlowSimulationConfig& config, const std::string& simulationPathSource);
 
     void runLocal(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest);
@@ -87,6 +87,8 @@ private:
     std::string generateCompileScript() const;
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
+
+    std::map<float, std::string> checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& subdirectory) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort geometryVolumeDataPort_;
