@@ -26,8 +26,10 @@
 #include "vtivolumewriter.h"
 
 #include <vtkAbstractArray.h>
+#include <vtkDataArray.h>
 #include <vtkImageData.h>
 #include <vtkImageReslice.h>
+#include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
 #include <vtkXMLImageDataWriter.h>
@@ -106,6 +108,9 @@ vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* vol
             }
         }
     }
+
+    // Set the name of the array.
+    imageData->GetPointData()->GetArray(0)->SetName(volume->getModality().getName().c_str());
 
     // We have to reslice the volume as vtkImageData does not store transformations.
     auto transformationMatrix = volume->getPhysicalToWorldMatrix();

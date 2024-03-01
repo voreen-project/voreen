@@ -860,13 +860,14 @@ std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(co
     std::map<float, std::string> result;
     for (size_t i = 0; i < volumes->size(); i++) {
 
+        VolumeBase* volume = volumes->at(i);
+
         // Enumerate volumes.
         std::ostringstream suffix;
         suffix << std::setw(nrLength) << std::setfill('0') << i;
         std::string volumeName = subdirectory + suffix.str() + ".vti";
         std::string path = simulationPathSource + subdirectory + "/" + volumeName;
 
-        VolumeBase* volume = volumes->at(i);
         if(transformation != tgt::mat4::identity) {
             std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
                     new VolumeDecoratorReplaceTransformation(volume,
@@ -878,7 +879,8 @@ std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(co
             VTIVolumeWriter().write(path, volume);
         }
 
-        result[volume->getTimestep()] = path;
+        std::string url = path + "?fieldName=" + volume->getModality().getName();
+        result[volume->getTimestep()] = url;
     }
 
     return result;

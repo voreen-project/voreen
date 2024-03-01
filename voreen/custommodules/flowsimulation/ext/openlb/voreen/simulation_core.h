@@ -35,6 +35,7 @@
 
 #include <vtkDataArray.h>
 #include <vtkImageData.h>
+#include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 #include <vtkXMLImageDataReader.h>
 
@@ -86,32 +87,73 @@ struct SimpleVolume {
 
     /**
      * This functions loads / loads a VTI volume from a path.
-     * @param path
+     * @param url
      */
-    SimpleVolume(const std::string& path)
-        : SimpleVolume()
+    SimpleVolume(const std::string& url)
     {
+        static const std::string FIELD_SPECIFIER = "?fieldName=";
+        std::string path = url;
+
+        std::string fieldName = "";
+
+        // If the file contains multiple fields, we select the one declared
+        std::size_t pos = path.find(FIELD_SPECIFIER);
+        if(pos != std::string::npos) {
+            path = path.substr(0, pos);
+            fieldName = url.substr(pos + FIELD_SPECIFIER.length());
+        }
+
         vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
         reader->SetFileName(path.c_str());
         reader->Update();
 
         vtkImageData* imageData = reader->GetOutput();
+
+        vtkPointData* pointData = imageData->GetPointData();
+        if(pointData->GetNumberOfArrays() > 1 && !fieldName.empty()) {
+            pointData->SetActiveScalars(fieldName.c_str());
+        }
+
+        int extend[6];
+        imageData->GetExtent(extend);
+        int offsetX = extend[0];
+        int offsetY = extend[2];
+        int offsetZ = extend[4];
+
         dimensions = Vector<int, 3>(imageData->GetDimensions());
         numChannels = imageData->GetNumberOfScalarComponents();
+
         data.resize(dimensions[0]*dimensions[1]*dimensions[2]*numChannels, S(0));
+
+        minValues.resize(numChannels, std::numeric_limits<S>::max());
+        maxValues.resize(numChannels, std::numeric_limits<S>::lowest());
+
+        minMagnitude = std::numeric_limits<S>::max();
+        maxMagnitude = 0;
+
         imageData->GetSpacing(spacing[0], spacing[1], spacing[2]);
         imageData->GetOrigin(offset[0], offset[1], offset[2]);
 
         for(int z = 0; z < dimensions[2]; z++) {
             for(int y = 0; y < dimensions[1]; y++) {
                 for(int x = 0; x < dimensions[0]; x++) {
+                    S magnitude = 0;
                     for(int channel = 0; channel < numChannels; channel++) {
-                        float value = imageData->GetScalarComponentAsFloat(x, y, z, channel);
+                        float value = imageData->GetScalarComponentAsFloat(x+offsetX, y+offsetY, z+offsetZ, channel);
+                        S typedValue = static_cast<S>(value);
+                        minValues[channel] = std::min<S>(minValues[channel], value);
+                        maxValues[channel] = std::max<S>(maxValues[channel], value);
+                        magnitude += value * value;
                         setValue(value, x, y, z, channel);
                     }
+                    minMagnitude = std::min<S>(minMagnitude, magnitude);
+                    maxMagnitude = std::max<S>(maxMagnitude, magnitude);
                 }
             }
         }
+
+        minMagnitude = std::sqrt(minMagnitude);
+        maxMagnitude = std::sqrt(maxMagnitude);
     }
 
     void setValue(S value, int x, int y, int z, int channel = 0) {

@@ -556,23 +556,24 @@ std::map<float, std::string> FlowSimulation::checkAndConvertVolumeList(const Vol
     std::map<float, std::string> result;
     for (size_t i = 0; i < volumes->size(); i++) {
         VolumeBase* volume = volumes->at(i);
-        auto url = volume->getOrigin().getPath();
-        auto extension = tgt::FileSystem::fileExtension(url, true);
+        auto path = volume->getOrigin().getPath();
+        auto extension = tgt::FileSystem::fileExtension(path, true);
         if (extension != "vti" || transformation != tgt::mat4::identity) {
-            url = strReplaceLast(url, extension, "vti");
-            if (!tgt::FileSystem::fileExists(url)) {
+            path = strReplaceLast(path, extension, "vti");
+            if (!tgt::FileSystem::fileExists(path)) {
 #ifdef VRN_MODULE_VTK
                 LWARNING("Need to convert to vti..");
                 std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
                         new VolumeDecoratorReplaceTransformation(volume, volume->getPhysicalToWorldMatrix() * transformation)
                 );
 
-                VTIVolumeWriter().write(url, transformedVolume.get());
+                VTIVolumeWriter().write(path, transformedVolume.get());
 #else
                 throw InvalidInputException("Need to convert to vti, but VTI module not enabled", InvalidInputException::S_ERROR);
 #endif
             }
         }
+        std::string url = path + "?fieldName=" + volume->getModality().getName();
         result[volume->getTimestep()] = url;
     }
 
