@@ -37,10 +37,7 @@
 namespace voreen {
 
 struct FlowSimulationInput {
-    std::string geometryPath;
-    std::map<float, std::string> segmentationDataUrls_;
-    std::map<float, std::string> measuredDataUrls_;
-    const FlowSimulationConfig* config;
+    std::unique_ptr<FlowSimulationConfig> config;
     size_t selectedParametrization;
     std::string simulationResultPath;
     bool deleteOldSimulations;

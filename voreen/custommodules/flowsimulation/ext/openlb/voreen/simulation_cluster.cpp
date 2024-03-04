@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
     auto measuredDataFiles       = deserializeMap<float, std::string>(config["measuredDataFiles"]);
 
     auto parameters = deserializeParameters(config["flowParameters"]);
-    auto indicators = deserializeFlowIndicators(config["flowIndicators"]);
+    auto indicators = deserializeFlowIndicators(config["transformedFlowIndicators"]);
 
     clout << "Found " << indicators.size() << " Flow Indicators" << std::endl;
 

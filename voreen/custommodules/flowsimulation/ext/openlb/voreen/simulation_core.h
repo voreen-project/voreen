@@ -263,11 +263,19 @@ public:
         return true;
     }
 
+    Vector<double, 3> getMin() const {
+        return volume0_.offset;
+    }
+
+    Vector<double, 3> getMax() const {
+        return volume0_.offset + volume0_.spacing * volume0_.dimensions;
+    }
+
 private:
 
     const SimpleVolume<T>& volume0_;
     const SimpleVolume<T>& volume1_;
-    float alpha_;
+    const float alpha_;
 
     const float multiplier_;
 };
@@ -278,9 +286,8 @@ public:
     VolumeDataMapperIndicator(VolumeDataMapper&& mapper)
         : mapper_(std::move(mapper))
     {
-        // TODO: need to set bounds:
-        // Vector<T,3> _myMin;
-        // Vector<T,3> _myMax;
+        _myMin = mapper_.getMin();
+        _myMax = mapper_.getMax();
     }
 
     virtual bool operator() (bool output[1], const T input[3]) {

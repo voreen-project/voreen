@@ -116,6 +116,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , removeFlowIndicator_("removeFlowIndicator", "Remove Flow Indicator")
     , resetFlowIndicators_("resetFlowIndicators", "Reset Flow Indicators")
     , swapVelocityAndPressureBoundaries_("swapVelocityAndPressureBoundaries", "Swap Velocity and Pressure Boundaries")
+    , resetTransformation_("resetTransformation", "Reset Grid Transformation")
     , angleThreshold_("angleThreshold", "Angle Threshold", 15, 0, 90, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
     , indicatorName_("indicatorName", "Name")
     , indicatorColor_("indicatorColor", "Color", tgt::vec4(1.0f))
@@ -125,7 +126,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , relativeRadiusCorrection_("relativeRadiusCorrection", "Relative Radius Correction", 1.0f, 0.1f, 2.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , invertDirection_("invertDirection", "Invert Direction", false)
     , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
-    , adaptTransformation_("adaptTransformation", "Adapt Transformation to Scene")
+    , adaptTransformation_("adaptTransformation", "Align Grid to Indicator")
     , transformationMatrix_("transformationMatrix", "Transformation Matrix (Linking)", tgt::mat4::identity, tgt::mat4(-99999), tgt::mat4(99999))
     , indicatorType_("flowType", "Flow Type")
     , flowProfile_("flowProfile", "Flow Profile")
@@ -166,6 +167,9 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     addProperty(swapVelocityAndPressureBoundaries_);
         swapVelocityAndPressureBoundaries_.setGroupID("detection");
         ON_CHANGE(swapVelocityAndPressureBoundaries_, FlowIndicatorDetection, swapVelocityAndPressureBoundaries);
+    addProperty(resetTransformation_);
+        resetTransformation_.setGroupID("detection");
+        ON_CHANGE(resetTransformation_, FlowIndicatorDetection, resetTransformation);
     addProperty(angleThreshold_);
         angleThreshold_.setGroupID("detection");
     setPropertyGroupGuiName("detection", "Detection");
@@ -737,6 +741,10 @@ void FlowIndicatorDetection::adaptTransformation() {
         rotation.invert(transformationMatrix);
         transformationMatrix_.set(transformationMatrix);
     }
+}
+
+void FlowIndicatorDetection::resetTransformation() {
+    transformationMatrix_.set(tgt::mat4::identity);
 }
 
 }   // namespace

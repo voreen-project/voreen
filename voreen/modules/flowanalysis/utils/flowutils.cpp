@@ -30,9 +30,12 @@ namespace voreen {
 SpatialSampler::SpatialSampler(const VolumeRAM* volume,
                                const RealWorldMapping& rwm,
                                VolumeRAM::Filter filter,
-                               const tgt::mat4& toVoxelMatrix)
+                               const tgt::mat4& toVoxelMatrix,
+                               const tgt::mat4& velocityTransformationMatrix)
     : toVoxelMatrix_(toVoxelMatrix)
-    , transformationSet_(toVoxelMatrix_ != tgt::mat4::identity)
+    , toVoxelMatrixSet_(toVoxelMatrix_ != tgt::mat4::identity)
+    , velocityTransformationMatrix_(velocityTransformationMatrix)
+    , velocityTransformationMatrixSet_(velocityTransformationMatrix != tgt::mat4::identity)
 {
     switch(filter) {
     case VolumeRAM::NEAREST:
@@ -68,13 +71,17 @@ SpatialSampler::SpatialSampler(const VolumeRAM* volume,
 }
 
 tgt::vec3 SpatialSampler::sample(tgt::vec3 pos) const {
-
-    // Transform, if needed.
-    if(transformationSet_) {
+    if(toVoxelMatrixSet_) {
         pos = toVoxelMatrix_ * pos;
     }
 
-    return sampleFunction_(pos);
+    auto velocity = sampleFunction_(pos);
+
+    if(velocityTransformationMatrixSet_) {
+        velocity = velocityTransformationMatrix_ * velocity;
+    }
+
+    return velocity;
 }
 
 
@@ -83,9 +90,10 @@ SpatioTemporalSampler::SpatioTemporalSampler(const VolumeRAM* volume0,
                                              float alpha,
                                              const RealWorldMapping& rwm,
                                              VolumeRAM::Filter filter,
-                                             const tgt::mat4& toVoxelMatrix)
-    : filter0_(volume0, rwm, filter, toVoxelMatrix)
-    , filter1_(volume1, rwm, filter, toVoxelMatrix)
+                                             const tgt::mat4& toVoxelMatrix,
+                                             const tgt::mat4& velocityTransformationMatrix)
+    : filter0_(volume0, rwm, filter, toVoxelMatrix, velocityTransformationMatrix)
+    , filter1_(volume1, rwm, filter, toVoxelMatrix, velocityTransformationMatrix)
     , alpha_(alpha)
 {
     tgtAssert(alpha_ >= 0.0f && alpha_ <= 1.0f, "Alpha must be in range [0, 1]");

@@ -50,7 +50,7 @@ using namespace voreen;
 
 // Caution: The returned volume is bound to the life-time of the input volume.
 template <typename VolumeType, typename BaseType=typename VolumeElement<typename VolumeType::VoxelType>::BaseType>
-std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volume) {
+std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volume, tgt::mat4 physicalToWorldMatrix = tgt::mat4::identity) {
 
     auto dimensions = tgt::ivec3::fromPointer(volume.dimensions.data());
     auto spacing = tgt::Vector3<T>::fromPointer(volume.spacing.data());
@@ -60,6 +60,7 @@ std::unique_ptr<Volume> wrapSimpleIntoVoreenVolume(SimpleVolume<BaseType>& volum
     auto* representation = new VolumeType(data, dimensions, false);
 
     std::unique_ptr<Volume> output(new Volume(representation, spacing, offset));
+    output->setPhysicalToWorldMatrix(physicalToWorldMatrix);
     output->setRealWorldMapping(RealWorldMapping::createDenormalizingMapping<BaseType>());
     //output->addDerivedData(new VolumeMinMax(volume.minValues, volume.maxValues, volume.minValues, volume.maxValues));
     //output->addDerivedData(new VolumeMinMaxMagnitude(volume.minMagnitude, volume.maxMagnitude, volume.minMagnitude, volume.maxMagnitude));
@@ -188,29 +189,32 @@ void FlowSimulation::clearOutports() {
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
-    auto config = parameterPort_.getThreadSafeData();
-    if(!config || config->empty()) {
+    auto originalConfig = parameterPort_.getThreadSafeData();
+    if(!originalConfig || originalConfig->empty()) {
         throw InvalidInputException("No parameterization", InvalidInputException::S_ERROR);
     }
 
-    if(config->getFlowFeatures() == FF_NONE) {
+    if(originalConfig->getFlowFeatures() == FF_NONE) {
         throw InvalidInputException("No flow feature selected", InvalidInputException::S_WARNING);
     }
 
-    auto configTransformationMatrix = config->getTransformationMatrix();
+    std::unique_ptr<FlowSimulationConfig> config(new FlowSimulationConfig(*originalConfig));
 
-    std::string geometryPath;
-    std::map<float, std::string> segmentationDataUrls;
+    auto configTransformationMatrix = config->getTransformationMatrix();
 
     if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
         std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
-        geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
+        std::string geometryPath = VoreenApplication::app()->getUniqueTmpFilePath(".stl");
 
         try {
             std::ofstream file(geometryPath);
-            geometry->setTransformationMatrix(geometry->getTransformationMatrix() * configTransformationMatrix);
+            geometry->setTransformationMatrix(configTransformationMatrix * geometry->getTransformationMatrix());
             geometry->exportAsStl(file);
             file.close();
+
+            std::map<float, std::string> geometryFiles;
+            geometryFiles[0.0f] = geometryPath;
+            config->setGeometryFiles(geometryFiles, true);
         }
         catch (std::exception&) {
             throw InvalidInputException("Geometry could not be exported", InvalidInputException::S_ERROR);
@@ -223,12 +227,13 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     else {
 
         if (const auto* segmentationData = geometryVolumeDataPort_.getData()) {
-            segmentationDataUrls = checkAndConvertVolumeList(segmentationData, configTransformationMatrix);
+            auto geometryFiles = checkAndConvertVolumeList(segmentationData, configTransformationMatrix);
+            config->setGeometryFiles(geometryFiles, false);
         }
+    }
 
-        if(segmentationDataUrls.empty()) {
-            throw InvalidInputException("No boundary geometry input", InvalidInputException::S_ERROR);
-        }
+    if(config->getGeometryFiles().empty()) {
+        throw InvalidInputException("No boundary geometry input", InvalidInputException::S_ERROR);
     }
 
     tgtAssert(measuredDataPort_.isDataInvalidationObservable(), "VolumeListPort must be DataInvalidationObservable!");
@@ -237,7 +242,8 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     std::map<float, std::string> measuredDataUrls;
     if(measuredData && !measuredData->empty()) {
         LINFO("Configuring a steered simulation");
-        measuredDataUrls = checkAndConvertVolumeList(measuredData, configTransformationMatrix);
+        auto measuredDataFiles = checkAndConvertVolumeList(measuredData, configTransformationMatrix);
+        config->setMeasuredDataFiles(measuredDataFiles);
     }
     else {
         for(const auto& indicator : config->getFlowIndicators()) {
@@ -270,10 +276,7 @@ FlowSimulationInput FlowSimulation::prepareComputeInput() {
     debugPressurePort_.clear();
 
     return FlowSimulationInput{
-            geometryPath,
-            segmentationDataUrls,
-            measuredDataUrls,
-            config,
+            std::move(config),
             selectedParametrization,
             simulationPath,
             deleteOldSimulations_.get(),
@@ -291,13 +294,12 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
         progressReporter.setProgress(0.0f);
         size_t numRuns = input.config->size();
         for(size_t i=0; i<numRuns; i++) {
-            // Define run input.
-            FlowSimulationInput runInput = input;
-            runInput.selectedParametrization = i;
+            // Set run id.
+            input.selectedParametrization = i;
 
             // Run the ith simulation.
             SubtaskProgressReporter runProgressReporter(progressReporter, tgt::vec2(i, i+1)/tgt::vec2(numRuns));
-            runSimulation(runInput, runProgressReporter);
+            runSimulation(input, runProgressReporter);
         }
         progressReporter.setProgress(1.0f);
     }
@@ -381,11 +383,11 @@ void FlowSimulation::enqueueInsituResult(const std::string& filename, VolumePort
 void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                    ProgressReporter& progressReporter) const {
 
-    const auto segmentationDataUrls = input.segmentationDataUrls_;
-    const auto measuredDataUrls = input.measuredDataUrls_;
+    auto& config = *input.config;
 
-    const FlowSimulationConfig& config = *input.config;
     const Parameters& parameters = config.at(input.selectedParametrization);
+
+    auto physicalToWorldMatrix = config.getInvertedTransformationMatrix();
 
     LINFO("Starting simulation run: " << parameters.name_);
     progressReporter.setProgress(0.0f);
@@ -413,22 +415,21 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     // Prints the converter log as console output
     converter.print();
 
-    // TODO: This is not optimal.
-    VolumeTimeSeries segmentationTimeSeries(segmentationDataUrls);
-    VolumeTimeSeries measuredDataTimeSeries(measuredDataUrls);
+    VolumeTimeSeries measuredDataTimeSeries(config.getMeasuredDataFiles());
 
     // === 2nd Step: Prepare Geometry ===
 
     // Voxelization. For now, we only support a single geometry.
     std::unique_ptr<IndicatorF3D<T>> boundaryGeometry;
-    if(!input.geometryPath.empty()) {
-        boundaryGeometry.reset(new STLreader<T>(input.geometryPath, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1));
+    std::unique_ptr<VolumeTimeSeries> geometryVolumeTimeSeries;
+    if(config.isGeometryMesh()) {
+        std::string geometryFileName = config.getGeometryFiles().begin()->second;
+        boundaryGeometry.reset(new STLreader<T>(geometryFileName, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1));
     }
     else {
-        boundaryGeometry.reset(new VolumeDataMapperIndicator(segmentationTimeSeries.createSampler(0.0f)));
+        geometryVolumeTimeSeries.reset(new VolumeTimeSeries(config.getGeometryFiles()));
+        boundaryGeometry.reset(new VolumeDataMapperIndicator(geometryVolumeTimeSeries->createSampler(0.0f)));
     }
-
-    // Instantiation.
     IndicatorLayer3D<T> extendedDomain(*boundaryGeometry, converter.getConversionFactorLength());
     const int noOfCuboids = input.numCuboids;
     CuboidGeometry3D<T> cuboidGeometry(extendedDomain, converter.getConversionFactorLength(), noOfCuboids);
@@ -438,7 +439,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 
     // Geometry preparation.
     LINFO("Preparing Geometry ...");
-    bool success = prepareGeometry(converter, extendedDomain, *boundaryGeometry, superGeometry, config.getFlowIndicators());
+    bool success = prepareGeometry(converter, extendedDomain, *boundaryGeometry, superGeometry, config.getFlowIndicators(true));
 
     // Now already write geometry debug data so that we can see what went wrong..
     SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
@@ -449,7 +450,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         const int len = std::round(std::max({diag[0], diag[1], diag[2]}) / converter.getConversionFactorLength());
         SimpleVolume<uint8_t> geometryVolume = sampleVolume<uint8_t>(extendedDomain, converter, len, geometry);
         if(!success) utils::indicateErroneousVoxels(geometryVolume);
-        auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume);
+        auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_UInt8>(geometryVolume, physicalToWorldMatrix);
         enqueueInsituResult(simulationResultPath + "geometry.h5", debugMaterialsPort_, std::move(volume));
     }
 
@@ -464,7 +465,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     LINFO("Preparing Lattice ...");
     prepareLattice(lattice, converter,
                    *boundaryGeometry, superGeometry,
-                   config.getFlowIndicators(),
+                   config.getFlowIndicators(true),
                    parameters);
 
     interruptionPoint();
@@ -495,7 +496,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(), parameters, &measuredDataTimeSeries);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(true), parameters, &measuredDataTimeSeries);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();
@@ -513,7 +514,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                 // Write velocity file.
                 SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
                 auto velocityVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), velocity);
-                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume);
+                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume, physicalToWorldMatrix);
                 std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
                 enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
             }
@@ -521,7 +522,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                 // Write pressure file.
                 SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
                 auto pressureVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), pressure);
-                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume);
+                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume, physicalToWorldMatrix);
                 std::string filename = "pressure" + std::to_string(swapVelocityFile) + ".h5";
                 enqueueInsituResult(simulationResultPath + filename, debugPressurePort_, std::move(volume));
             }
@@ -553,25 +554,24 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 }
 
 std::map<float, std::string> FlowSimulation::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation) const {
+    int nrLength = static_cast<int>(std::to_string(volumes->size() - 1).size());
     std::map<float, std::string> result;
     for (size_t i = 0; i < volumes->size(); i++) {
         VolumeBase* volume = volumes->at(i);
         auto path = volume->getOrigin().getPath();
         auto extension = tgt::FileSystem::fileExtension(path, true);
         if (extension != "vti" || transformation != tgt::mat4::identity) {
-            path = strReplaceLast(path, extension, "vti");
-            if (!tgt::FileSystem::fileExists(path)) {
+            path = VoreenApplication::app()->getUniqueTmpFilePath(".vti");
 #ifdef VRN_MODULE_VTK
-                LWARNING("Need to convert to vti..");
-                std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
-                        new VolumeDecoratorReplaceTransformation(volume, volume->getPhysicalToWorldMatrix() * transformation)
-                );
+            LWARNING("Need to convert to vti..");
+            std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
+                    new VolumeDecoratorReplaceTransformation(volume, transformation * volume->getPhysicalToWorldMatrix())
+            );
 
-                VTIVolumeWriter().write(path, transformedVolume.get());
+            VTIVolumeWriter().writeVectorField(path, transformedVolume.get());
 #else
-                throw InvalidInputException("Need to convert to vti, but VTI module not enabled", InvalidInputException::S_ERROR);
+            throw InvalidInputException("Need to convert to vti, but VTI module not enabled", InvalidInputException::S_ERROR);
 #endif
-            }
         }
         std::string url = path + "?fieldName=" + volume->getModality().getName();
         result[volume->getTimestep()] = url;

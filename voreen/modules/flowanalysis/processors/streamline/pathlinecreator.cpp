@@ -52,6 +52,7 @@ PathlineCreator::PathlineCreator()
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , temporalResolution_("temporalResolution", "Temporal Resolution (ms)", 10.0f, 0.1f, 1000.0f)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
+    , transformVelocities_("transformVelocities", "Transform Velocities", false, InvalidationLevel::INVALID_RESULT, Property::LOD_ADVANCED)
     , velocityUnitConversion_("velocityUnitConversion", "Input Velocity Unit")
     , temporalIntegrationSteps_("temporalIntegrationSteps", "Temporal Integration Steps", 5, 1, 100, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
@@ -101,6 +102,8 @@ PathlineCreator::PathlineCreator()
         filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
         filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
         filterMode_.setGroupID("pathline");
+    addProperty(transformVelocities_);
+        transformVelocities_.setGroupID("pathline");
     addProperty(velocityUnitConversion_);
         // Chose the values such that multiplying with real world values we get mm(/s)
         // which (for some reason) is the default voreen length unit.
@@ -252,6 +255,7 @@ PathlineCreatorInput PathlineCreator::prepareComputeInput() {
             enableReseeding_.get(),
             reseedingInterval_.get(),
             filterMode_.getValue(),
+            transformVelocities_.get(),
             std::move(flowVolumes),
             mask,
             std::move(seedPoints),
@@ -272,6 +276,7 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
 
     // Temp. requirements.
     const tgt::mat4 worldToVoxelMatrix = referenceVolume->getWorldToVoxelMatrix();
+    const tgt::mat4 velocityTransformationMatrix = input.transformVelocites ? referenceVolume->getPhysicalToWorldMatrix().getRotationalPart() : tgt::mat4::identity;
     const tgt::Bounds roi = referenceVolume->getBoundingBox().getBoundingBox();
     const RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
 
@@ -319,7 +324,7 @@ PathlineCreatorOutput PathlineCreator::compute(PathlineCreatorInput input, Progr
         // Temporal integration loop.
         for(int t=0; t<input.temporalIntegrationSteps; t++) {
             float alpha = t * dt / input.temporalResolution;
-            SpatioTemporalSampler sampler(*currVol, *nextVol, alpha, rwm, input.filterMode, worldToVoxelMatrix);
+            SpatioTemporalSampler sampler(*currVol, *nextVol, alpha, rwm, input.filterMode, worldToVoxelMatrix, velocityTransformationMatrix);
 
             // Seeding. (If first step or reseeding interval is covered.
             if((i==0 && t==0) || (input.enableReseeding && t % input.reseedingSteps == 0)) {

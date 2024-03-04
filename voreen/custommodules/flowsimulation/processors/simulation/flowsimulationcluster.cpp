@@ -418,7 +418,7 @@ void FlowSimulationCluster::stepCopyGeometryData(FlowSimulationConfig& config, c
 
         try {
             std::ofstream file(geometryFilename);
-            geometry->setTransformationMatrix(geometry->getTransformationMatrix() * config.getTransformationMatrix());
+            geometry->setTransformationMatrix(config.getTransformationMatrix() * geometry->getTransformationMatrix());
             geometry->exportAsStl(file);
             file.close();
         }
@@ -871,12 +871,12 @@ std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(co
         if(transformation != tgt::mat4::identity) {
             std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
                     new VolumeDecoratorReplaceTransformation(volume,
-                                                             volume->getPhysicalToWorldMatrix() * transformation)
+                                                             transformation * volume->getPhysicalToWorldMatrix())
             );
-            VTIVolumeWriter().write(path, transformedVolume.get());
+            VTIVolumeWriter().writeVectorField(path, transformedVolume.get());
         }
         else {
-            VTIVolumeWriter().write(path, volume);
+            VTIVolumeWriter().writeVectorField(path, volume);
         }
 
         std::string url = path + "?fieldName=" + volume->getModality().getName();

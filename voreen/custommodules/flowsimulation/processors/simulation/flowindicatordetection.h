@@ -158,6 +158,12 @@ private:
      */
     void adaptTransformation();
 
+    /**
+     * Resets the indicator transformation matrix.
+     * @see adaptTransformation
+     */
+    void resetTransformation();
+
 
     FlowSimulationConfigPort parameterInport_;
     VesselGraphPort vesselGraphPort_;
@@ -169,6 +175,7 @@ private:
     ButtonProperty removeFlowIndicator_;
     ButtonProperty resetFlowIndicators_;
     ButtonProperty swapVelocityAndPressureBoundaries_;
+    ButtonProperty resetTransformation_;
     IntProperty angleThreshold_;
 
     StringProperty indicatorName_;
