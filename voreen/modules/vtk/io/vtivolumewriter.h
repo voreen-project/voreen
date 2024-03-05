@@ -33,7 +33,7 @@
 
 namespace voreen {
 
-vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume, bool transformVectors=false);
+VRN_CORE_API vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume, bool transformVectors=false);
 
 /**
 * This reader is capable of writing vti files specified by the VTK library.
