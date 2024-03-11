@@ -242,7 +242,7 @@ public:
 
     virtual bool operator() (T output[], const T input[]) {
 
-        auto pos = Vector<T, 3>(input[0], input[1], input[2]);
+        auto pos = Vector<T, 3>(input);
 
         if (alpha_ == 0) {
             for(int i=0; i<getTargetDim(); i++) {
@@ -268,7 +268,10 @@ public:
     }
 
     Vector<double, 3> getMax() const {
-        return volume0_.offset + volume0_.spacing * volume0_.dimensions;
+        Vector<double, 3> max = volume0_.spacing;
+        max *= volume0_.dimensions;
+        max += volume0_.offset;
+        return max;
     }
 
 private:
@@ -283,8 +286,9 @@ private:
 class VolumeDataMapperIndicator : public IndicatorF3D<T> {
 public:
 
-    VolumeDataMapperIndicator(VolumeDataMapper&& mapper)
+    VolumeDataMapperIndicator(VolumeDataMapper&& mapper, T threshold = 0.5)
         : mapper_(std::move(mapper))
+        , threshold_(threshold)
     {
         _myMin = mapper_.getMin();
         _myMax = mapper_.getMax();
@@ -293,13 +297,14 @@ public:
     virtual bool operator() (bool output[1], const T input[3]) {
         std::vector<T> target(mapper_.getTargetDim());
         auto result = mapper_(target.data(), input);
-        output[0] = target[0] > 0;
+        output[0] = target[0] >= threshold_;
         return result;
     }
 
 private:
 
     VolumeDataMapper mapper_;
+    T threshold_;
 };
 
 class VolumeTimeSeries {

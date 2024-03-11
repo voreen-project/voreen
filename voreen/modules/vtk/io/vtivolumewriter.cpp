@@ -109,9 +109,9 @@ vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* vol
             for (int y = 0; y < dims.y; y++) {
                 for (int x = 0; x < dims.x; x++) {
                     tgt::vec3 vector{
-                        representation->getVoxelNormalized(x, y, z, 0),
-                        representation->getVoxelNormalized(x, y, z, 1),
-                        representation->getVoxelNormalized(x, y, z, 2)
+                        rwm.normalizedToRealWorld(representation->getVoxelNormalized(x, y, z, 0)),
+                        rwm.normalizedToRealWorld(representation->getVoxelNormalized(x, y, z, 1)),
+                        rwm.normalizedToRealWorld(representation->getVoxelNormalized(x, y, z, 2))
                     };
                     vector = rotationMatrix * vector;
 

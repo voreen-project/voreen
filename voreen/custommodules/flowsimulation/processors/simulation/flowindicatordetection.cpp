@@ -660,6 +660,11 @@ FlowIndicator FlowIndicatorDetection::initializeIndicator(FlowIndicatorSettings&
     }
     indicator.type_ = estimateType(indicator, accumDirection);
 
+    // Pressure outlets point outwards.
+    if (indicator.type_ == FIT_PRESSURE) {
+        indicator.normal_ *= -1.0f;
+    }
+
     // Setup velocity curve.
     settings.targetVelocity_ = std::sqrt(maxMagnitudeSq);
     indicator.velocityCurve_ = createCurveFromSettings(settings);

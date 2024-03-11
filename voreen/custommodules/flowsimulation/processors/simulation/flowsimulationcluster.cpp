@@ -308,16 +308,6 @@ bool FlowSimulationCluster::isReady() const {
         setNotReadyErrorMessage("Not initialized.");
         return false;
     }
-    if(!geometryDataPort_.isReady()) {
-        setNotReadyErrorMessage("Geometry Port not ready.");
-        return false;
-    }
-
-    // Note: measuredDataPort ist optional!
-    if(measuredDataPort_.hasData() && !measuredDataPort_.isReady()) {
-        setNotReadyErrorMessage("Measured Data Port not ready.");
-        return false;
-    }
 
     if(!configPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");

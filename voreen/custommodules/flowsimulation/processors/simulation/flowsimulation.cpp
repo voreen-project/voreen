@@ -554,7 +554,6 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
 }
 
 std::map<float, std::string> FlowSimulation::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation) const {
-    int nrLength = static_cast<int>(std::to_string(volumes->size() - 1).size());
     std::map<float, std::string> result;
     for (size_t i = 0; i < volumes->size(); i++) {
         VolumeBase* volume = volumes->at(i);
