@@ -50,6 +50,7 @@ StreamlineCreator::StreamlineCreator()
     , fitAbsoluteMagnitudeThreshold_("fitAbsoluteMagnitude", "Fit absolute Threshold to Input", false)
     , stopIntegrationAngleThreshold_("stopIntegrationAngleThreshold", "Stop Integration on Angle", 180, 0, 180, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_ADVANCED)
     , filterMode_("filterModeProp", "Filtering:", Processor::INVALID_RESULT, false, Property::LOD_DEVELOPMENT)
+    , transformVelocities_("transformVelocities", "Transform Velocities", false, InvalidationLevel::INVALID_RESULT, Property::LOD_ADVANCED)
     , velocityUnitConversion_("velocityUnitConversion", "Input Velocity Unit")
     , integrationSteps_("integrationSteps", "Integration Steps", 100, 1, 10000, Processor::INVALID_RESULT, IntProperty::STATIC, Property::LOD_DEBUG)
 {
@@ -83,6 +84,8 @@ StreamlineCreator::StreamlineCreator()
         filterMode_.addOption("linear", "Linear", VolumeRAM::LINEAR);
         filterMode_.addOption("nearest", "Nearest", VolumeRAM::NEAREST);
         filterMode_.setGroupID("streamline");
+    addProperty(transformVelocities_);
+        transformVelocities_.setGroupID("streamline");
     addProperty(velocityUnitConversion_);
         // Chose the values such that multiplying with real world values we get mm(/s)
         // which (for some reason) is the default voreen length unit.
@@ -211,6 +214,7 @@ StreamlineCreatorInput StreamlineCreator::prepareComputeInput() {
             integrationSteps_.get(),
             stopIntegrationAngleThreshold_.get() * tgt::PIf / 180.0f,
             filterMode_.getValue(),
+            transformVelocities_.get(),
             volumeInport_.getThreadSafeData(),
             mask,
             std::move(seedPoints),
@@ -230,6 +234,7 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
 
     // Temp. requirements.
     const tgt::mat4 worldToVoxelMatrix = flowVolume->getWorldToVoxelMatrix();
+    const tgt::mat4 velocityTransformationMatrix = input.transformVelocities ? flowVolume->getPhysicalToWorldMatrix().getRotationalPart() : tgt::mat4::identity;
     const tgt::Bounds roi = flowVolume->getBoundingBox().getBoundingBox();
     const RealWorldMapping rwm = flowVolume->getRealWorldMapping();
 
@@ -259,7 +264,7 @@ StreamlineCreatorOutput StreamlineCreator::compute(StreamlineCreatorInput input,
             bounds
     };
 
-    const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode, worldToVoxelMatrix);
+    const SpatialSampler sampler(*representation, flowVolume->getRealWorldMapping(), input.filterMode, worldToVoxelMatrix, velocityTransformationMatrix);
 
     ThreadedTaskProgressReporter progress(progressReporter, seedPoints.size());
     bool aborted = false;

@@ -34,6 +34,7 @@ FlowMapCreator::FlowMapCreator()
     : Processor()
     , inport_(Port::INPORT, "volumelist.input", "Volume List Input", false)
     , outport_(Port::OUTPORT, "volumelist.output", "Volume List Output ", false)
+    , bypass_("bypass", "Bypass input", false)
     , numChannels_("numChannels", "Num. Channels", 3, 1, 4)
     , layout_("layout", "Layout", Processor::INVALID_RESULT, false, Property::LOD_ADVANCED)
     , mirrorX_("mirrorX", "Mirror X", false)
@@ -50,8 +51,10 @@ FlowMapCreator::FlowMapCreator()
 {
     addPort(inport_);
     inport_.addCondition(new PortConditionVolumeListEnsemble());
-    inport_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(1)));
+    inport_.Observable<PortObserver>::addObserver(this);
     addPort(outport_);
+
+    addProperty(bypass_);
 
     addProperty(numChannels_);
     ON_CHANGE(numChannels_, FlowMapCreator, onChannelCountChanged);
@@ -77,7 +80,11 @@ FlowMapCreator::FlowMapCreator()
     onChannelCountChanged();
 }
 
-FlowMapCreator::~FlowMapCreator() {}
+FlowMapCreator::~FlowMapCreator() {
+    // We need to remove the observer, since outport is destructed before inport (stack hierarchy)
+    // and the destruction of inport will clear the (already destructed) outport otherwise.
+    inport_.Observable<PortObserver>::removeObserver(this);
+}
 
 Processor* FlowMapCreator::create() const {
     return new FlowMapCreator();
@@ -124,6 +131,12 @@ void FlowMapCreator::process() {
     // Clear old data (order matters!).
     outport_.clear();
     volumes_.clear();
+
+    // Bypass input, in case the input is multi-channel volumes.
+    if (bypass_.get()) {
+        outport_.setData(input, false);
+        return;
+    }
 
     size_t numChannels = static_cast<size_t>(numChannels_.get());
     size_t numVolumes = input->size() / numChannels; // floor(x).
@@ -180,6 +193,36 @@ void FlowMapCreator::process() {
     }
 
     outport_.setData(output, true);
+}
+
+void FlowMapCreator::dataWillChange(const Port* source) {
+    tgtAssert(source == &inport_, "unexpected source");
+
+    // Clear old data (order matters!).
+    outport_.clear();
+    volumes_.clear();
+}
+
+void FlowMapCreator::dataHasChanged(const voreen::Port *source) {
+    tgtAssert(source == &inport_, "unexpected source");
+
+    // Restore default first.
+    bypass_.setReadOnlyFlag(false);
+
+    if (!inport_.isReady()) {
+        return;
+    }
+
+    const VolumeList* input = inport_.getData();
+    if (!input || input->empty()) {
+        return;
+    }
+
+    if (input->first()->getNumChannels() > 1) {
+        bypass_.set(true);
+        bypass_.setReadOnlyFlag(true);
+        LWARNING("Input volumes have more than a single channel, bypassing...");
+    }
 }
 
 }   // namespace

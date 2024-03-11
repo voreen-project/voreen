@@ -29,6 +29,7 @@
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/volumeport.h"
 #include "voreen/core/properties/colorproperty.h"
+#include "voreen/core/properties/matrixproperty.h"
 #include "voreen/core/properties/string/stringtableproperty.h"
 
 #include "../../ports/flowsimulationconfigport.h"
@@ -84,6 +85,7 @@ private:
         float targetVelocity_;
         std::string velocityCurveFile_;
         bool velocityCurvePeriodic_;
+        float velocityCurveScale_;
 
         FlowIndicatorSettings();
         FlowIndicatorSettings(VGNodeID nodeId, VGEdgeID edgeId);
@@ -150,6 +152,19 @@ private:
      */
     void swapVelocityAndPressureBoundaries();
 
+    /**
+     * Adapts the transformation of the specified indicator, such that the entire scene is rotated so
+     * that the specified indicator is axis aligned.
+     */
+    void adaptTransformation();
+
+    /**
+     * Resets the indicator transformation matrix.
+     * @see adaptTransformation
+     */
+    void resetTransformation();
+
+
     FlowSimulationConfigPort parameterInport_;
     VesselGraphPort vesselGraphPort_;
     VolumePort volumePort_;
@@ -160,6 +175,7 @@ private:
     ButtonProperty removeFlowIndicator_;
     ButtonProperty resetFlowIndicators_;
     ButtonProperty swapVelocityAndPressureBoundaries_;
+    ButtonProperty resetTransformation_;
     IntProperty angleThreshold_;
 
     StringProperty indicatorName_;
@@ -170,6 +186,8 @@ private:
     FloatProperty length_;
     BoolProperty invertDirection_;
     BoolProperty forceAxisAlignment_;
+    ButtonProperty adaptTransformation_;
+    FloatMat4Property transformationMatrix_;
     OptionProperty<FlowIndicatorType> indicatorType_;
 
     OptionProperty<FlowProfile> flowProfile_;
@@ -178,6 +196,7 @@ private:
     FloatProperty targetVelocity_;
     FileDialogProperty velocityCurveFile_;
     BoolProperty velocityCurvePeriodicity_;
+    FloatProperty velocityCurveScale_;
 
     std::vector<FlowIndicator> flowIndicators_;
     std::vector<FlowIndicatorSettings> flowIndicatorSettings_;

@@ -29,6 +29,8 @@
 #include "tgt/matrix.h"
 #include "tgt/plane.h"
 
+#include <limits>
+
 namespace tgt {
 
 /**

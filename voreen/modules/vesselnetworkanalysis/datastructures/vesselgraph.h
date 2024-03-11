@@ -32,6 +32,7 @@
 #include "tgt/matrix.h"
 #include "tgt/bounds.h"
 
+#include "voreen/core/datastructures/datainvalidationobserver.h"
 #include "voreen/core/datastructures/diskarraystorage.h"
 
 #ifndef VRN_VESSELNETWORKANALYSIS_MINIMAL_VESSELGRAPH
@@ -416,9 +417,9 @@ struct VesselGraphEdgeDeserializable : public Serializable {
 // To avoid pointer/reference invalidation nodes and edges can only be added to the graph,
 // but not removed.
 #ifndef VRN_VESSELNETWORKANALYSIS_MINIMAL_VESSELGRAPH
-class VesselGraph : public Serializable {
+class VesselGraph : public Serializable, public DataInvalidationObservable {
 #else
-class VesselGraph {
+class VesselGraph : public DataInvalidationObservable {
 #endif
 public:
     // Move data from one graph to another

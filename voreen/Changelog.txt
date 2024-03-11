@@ -13,6 +13,7 @@ Voreen Changelog
       o Add Wavefront OBJ file support to VesselGraphSave
       o Add (still experimental) VolumeRAMSwap disk representation to EnsembleAnalysisModule (enable by module properties) which enables loading of large ensembles without disk representation. Still it is recommended to use a format that natively supports disk representations, such as HDF5.
       o Add (still experimental) serialization of derived data of volumes as part of an ensemble which speeds up loading times immensely for ensembles without derived data, when using the 'Cached' loading strategy.
+      o VolumeListSave now allows to save all supported file formats
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
@@ -37,6 +38,8 @@ Voreen Changelog
       o Improve VoreenVE GUI (opt-in): the processor list is now filtered by the currently selected processor. Only processors that can actually be connected to the selection will be selectable. Additionally, the newly added processor will be connected to the old selection and becomes the new selection, allowing for more effectively creating networks.
       o CTRL+A will no longer trigger the animation editor
       o CTRL+F will set focus to the processor list search bar
+      o VTIVolumeWriter will now reslice the input volume according to its transformation matrix as vtkImageData does not store transformations
+      o VTIVolume{Reader|Writer} will now convert to and from Voreen units (mm)
 
 2021-01-28: Voreen 5.2.0
 ------------------------

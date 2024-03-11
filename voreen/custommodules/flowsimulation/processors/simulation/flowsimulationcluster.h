@@ -77,25 +77,30 @@ private:
     void enqueueSimulations();
     void fetchResults();
 
-    void stepCopyGeometryData(const std::string& simulationPathSource);
-    void stepCopyVolumeData(const std::string& simulationPathSource);
-    void stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource);
+    void stepCopyGeometryData(FlowSimulationConfig& config, const std::string& simulationPathSource);
+    void stepCopyMeasurementData(const VolumeList* volumeList, FlowSimulationConfig& config, const std::string& simulationPathSource);
+    void stepCreateSimulationConfigs(FlowSimulationConfig& config, const std::string& simulationPathSource);
 
-    void runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
-    void runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest);
+    void runLocal(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest);
+    void runCluster(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest);
 
     std::string generateCompileScript() const;
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
+    std::map<float, std::string> checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& subdirectory) const;
+
     GeometryPort geometryDataPort_;
+    VolumeListPort geometryVolumeDataPort_;
     VolumeListPort measuredDataPort_;
     FlowSimulationConfigPort configPort_;
 
     StringOptionProperty workloadManager_;
     BoolProperty useLocalInstance_;
     FileDialogProperty localInstancePath_;
-    ButtonProperty stopThreads_;
+    BoolProperty detachProcesses_;
+    BoolProperty overwriteExistingConfig_;
+    ButtonProperty stopProcesses_;
 
     StringProperty username_;
     StringProperty emailAddress_;

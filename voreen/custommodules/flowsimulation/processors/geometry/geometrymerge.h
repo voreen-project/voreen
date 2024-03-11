@@ -23,72 +23,46 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMEMERGER_H
-#define VRN_VOLUMEMERGER_H
+#ifndef VRN_GEOMETRYMERGE_H
+#define VRN_GEOMETRYMERGE_H
 
-#include "voreen/core/processors/asynccomputeprocessor.h"
-#include "voreen/core/ports/volumeport.h"
-#include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/processors/processor.h"
 
-#include "modules/hdf5/io/hdf5filevolume.h"
+#include "voreen/core/ports/geometryport.h"
+
+#include "voreen/core/properties/boolproperty.h"
 
 namespace voreen {
 
-struct VolumeMergerComputeInput {
-    PortDataPointer<VolumeList> inputVolumes;
-    int padding_;
-    std::function<float(float, float)> collisionFunction_;
-    std::unique_ptr<Volume> outputVolume;
-};
-
-struct VolumeMergerComputeOutput{
-    std::unique_ptr<Volume> outputVolume;
-};
-
 /**
- * This processor merges a list of volumes with identical spacing and number of channels into a single one.
- * E.g. some simulations frameworks like OpenLB distribute their calculations to multiple nodes.
- * Using this processors allows to combine the result to a single volume.
+ * Closes all holes of the input geometry.
  */
-class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
+class VRN_CORE_API GeometryMerge : public Processor {
 public:
-    VolumeMerger();
-    virtual ~VolumeMerger();
+    GeometryMerge();
+    virtual ~GeometryMerge();
     virtual Processor* create() const;
 
-    virtual std::string getClassName() const  { return "VolumeMerger";      }
-    virtual std::string getCategory() const   { return "Volume Processing";     }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
-
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
-
-    virtual void setPadding(int padding);
-    virtual int getPadding() const;
-
-    virtual void setAllowIntersections(bool allowIntersections);
-    virtual bool getAllowIntersections() const;
+    virtual std::string getClassName() const { return "GeometryMerge";          }
+    virtual std::string getCategory() const  { return "Geometry";               }
+    virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL;  }
 
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor merges a list of volumes with identical spacing and number of channels into a single one.\n"
-                       "E.g. some simulations frameworks like OpenLB distribute their calculations to multiple nodes.\n"
-                       "Using this processors allows to combine the result to a single volume.");
-
+        setDescription("Merges a geometry sequence into one geometry.");
     }
 
-private:
+    virtual void process();
 
-    VolumeListPort inport_;
-    VolumePort outport_;
+    GeometryPort inport_;        ///< Inport for a geometry sequence to merge.
+    GeometryPort outport_;       ///< Outport for a geometry sequence that was merged.
 
-    BoolProperty allowIntersections_;
-    IntProperty padding_;
+    BoolProperty enabled_;       ///< Determines whether the merging should be performed.
 
+    /// category used in logging
     static const std::string loggerCat_;
 };
 
-}   //namespace
+} //namespace
 
-#endif
+#endif // VRN_GEOMETRYCLOSE_H

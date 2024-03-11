@@ -42,7 +42,8 @@ public:
     SpatialSampler(const VolumeRAM* volume,
                    const RealWorldMapping& rwm,
                    VolumeRAM::Filter filter,
-                   const tgt::mat4& toVoxelMatrix = tgt::mat4::identity);
+                   const tgt::mat4& toVoxelMatrix = tgt::mat4::identity,
+                   const tgt::mat4& velocityTransformationMatrix = tgt::mat4::identity);
 
     /**
      * Samples the given volume at the given specified position.
@@ -52,7 +53,9 @@ public:
 
 private:
     const tgt::mat4 toVoxelMatrix_;
-    const bool transformationSet_;
+    const bool toVoxelMatrixSet_;
+    const tgt::mat4 velocityTransformationMatrix_;
+    const bool velocityTransformationMatrixSet_;
     std::function<tgt::vec3(tgt::vec3)> sampleFunction_;
 };
 
@@ -72,7 +75,8 @@ public:
                           float alpha,
                           const RealWorldMapping& rwm,
                           VolumeRAM::Filter filter,
-                          const tgt::mat4& toVoxelMatrix = tgt::mat4::identity);
+                          const tgt::mat4& toVoxelMatrix = tgt::mat4::identity,
+                          const tgt::mat4& velocityTransformationMatrix = tgt::mat4::identity);
 
     /**
      * Samples the given volume at the given specified position.

@@ -23,68 +23,74 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_VOLUMEMERGER_H
-#define VRN_VOLUMEMERGER_H
+#ifndef VRN_FLOWSIMULATIONRESULT_H
+#define VRN_FLOWSIMULATIONRESULT_H
 
 #include "voreen/core/processors/asynccomputeprocessor.h"
-#include "voreen/core/ports/volumeport.h"
-#include "voreen/core/properties/temppathproperty.h"
 
-#include "modules/hdf5/io/hdf5filevolume.h"
+#include "voreen/core/ports/volumeport.h"
+#include "../../ports/flowsimulationconfigport.h"
+
+#include "voreen/core/properties/buttonproperty.h"
+#include "voreen/core/properties/stringproperty.h"
+#include "voreen/core/properties/optionproperty.h"
+#include "voreen/core/properties/progressproperty.h"
+#include "voreen/core/properties/temppathproperty.h"
 
 namespace voreen {
 
-struct VolumeMergerComputeInput {
-    PortDataPointer<VolumeList> inputVolumes;
-    int padding_;
-    std::function<float(float, float)> collisionFunction_;
-    std::unique_ptr<Volume> outputVolume;
+struct FlowSimulationResultInput {
+    VolumeURL url;
 };
 
-struct VolumeMergerComputeOutput{
-    std::unique_ptr<Volume> outputVolume;
+struct FlowSimulationResultOutput {
+    std::unique_ptr<Volume> volume;
 };
 
 /**
- * This processor merges a list of volumes with identical spacing and number of channels into a single one.
- * E.g. some simulations frameworks like OpenLB distribute their calculations to multiple nodes.
- * Using this processors allows to combine the result to a single volume.
+ * This processor loads .pvd files as result from an OpenLB simulation.
+ * This processor therefore assumes the .pvd structure as in openlb 1.6.
  */
-class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
+class VRN_CORE_API FlowSimulationResult : public AsyncComputeProcessor<FlowSimulationResultInput, FlowSimulationResultOutput> {
 public:
-    VolumeMerger();
-    virtual ~VolumeMerger();
-    virtual Processor* create() const;
+    FlowSimulationResult();
+    virtual ~FlowSimulationResult();
+    virtual Processor* create() const         { return new FlowSimulationResult();     }
 
-    virtual std::string getClassName() const  { return "VolumeMerger";      }
-    virtual std::string getCategory() const   { return "Volume Processing";     }
-    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL; }
+    virtual std::string getClassName() const  { return "FlowSimulationResult";         }
+    virtual std::string getCategory() const   { return "Simulation";                   }
+    virtual CodeState getCodeState() const    { return CODE_STATE_EXPERIMENTAL;        }
+
+    virtual bool isReady() const override;
 
     virtual ComputeInput prepareComputeInput();
     virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
     virtual void processComputeOutput(ComputeOutput output);
 
-    virtual void setPadding(int padding);
-    virtual int getPadding() const;
-
-    virtual void setAllowIntersections(bool allowIntersections);
-    virtual bool getAllowIntersections() const;
-
 protected:
     virtual void setDescriptions() {
-        setDescription("This processor merges a list of volumes with identical spacing and number of channels into a single one.\n"
-                       "E.g. some simulations frameworks like OpenLB distribute their calculations to multiple nodes.\n"
-                       "Using this processors allows to combine the result to a single volume.");
-
+        setDescription("This processor loads .pvd files as result from an OpenLB simulation. "
+                       "This processor therefore assumes the .pvd structure as in openlb 1.6.");
     }
+
+    void serialize(Serializer& s) const override;
+    void deserialize(Deserializer& d) override;
 
 private:
 
-    VolumeListPort inport_;
+    void onFileChange();
+
+    std::vector<std::string> loadPvdFile(std::string filename) const;
+
     VolumePort outport_;
 
-    BoolProperty allowIntersections_;
-    IntProperty padding_;
+    FileDialogProperty inputFile_;
+    IntProperty timeStep_;
+    StringOptionProperty fields_;
+    BoolProperty selectMostRecentTimeStep_;
+
+    std::vector<std::string> timeStepPaths_;
+    std::string selectedField_;
 
     static const std::string loggerCat_;
 };

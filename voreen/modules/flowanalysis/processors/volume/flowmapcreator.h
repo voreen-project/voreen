@@ -35,7 +35,7 @@ namespace voreen {
 /**
  * Creates Flow Maps from separated x, y and z (volume) images.
  */
-class VRN_CORE_API FlowMapCreator : public Processor {
+class VRN_CORE_API FlowMapCreator : public Processor, public PortObserver {
 public:
     FlowMapCreator();
     virtual ~FlowMapCreator();
@@ -69,11 +69,18 @@ protected:
 
     virtual void process();
 
+    virtual void afterConnectionAdded(const Port* source, const Port* connectedPort) {};
+    virtual void beforeConnectionRemoved(const Port* source, const Port*) {};
+    virtual void dataWillChange(const Port* source);
+    virtual void dataHasChanged(const Port* source);
+
 private:
 
     void onChannelCountChanged();
 
     std::vector<std::unique_ptr<VolumeBase>> volumes_;
+
+    BoolProperty bypass_;
 
     IntProperty numChannels_;
     StringOptionProperty layout_;

@@ -28,6 +28,7 @@
 // processors
 #include "processors/features/wallshearstress.h"
 #include "processors/geometry/geometryclose.h"
+#include "processors/geometry/geometrymerge.h"
 #include "processors/geometry/geometrysmoothnormals.h"
 #include "processors/render/unalignedsliceviewer.h"
 #include "processors/simulation/flowcharacteristics.h"
@@ -55,7 +56,12 @@
 #include "processors/volume/volumeselectormultichannel.h"
 #include "processors/volume/volumetimestep.h"
 
+#ifdef VRN_MODULE_VTK
+#include "processors/simulation/flowsimulationresult.h"
+#endif
+
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+#include "processors/simulation/flowcenterlineanalysis.h"
 #include "processors/simulation/flowindicatordetection.h"
 #endif
 
@@ -84,6 +90,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new ConnectedComponentSelector());
 //    registerProcessor(new DebugVolumes());
     registerProcessor(new GeometryClose());
+    registerProcessor(new GeometryMerge());
     registerProcessor(new GeometrySmoothNormals());
     registerProcessor(new UnalignedSliceViewer());
     registerProcessor(new FlowCharacteristics());
@@ -109,7 +116,11 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new VolumeSelectorMultiChannel());
     registerProcessor(new VolumeTimestep());
     registerProcessor(new WallShearStress());
+#ifdef VRN_MODULE_VTK
+    registerProcessor(new FlowSimulationResult());
+#endif
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
+    registerProcessor(new FlowCenterlineAnalysis());
     registerProcessor(new FlowIndicatorDetection());
 #endif
 #ifdef VRN_MODULE_PLOTTING

@@ -33,7 +33,7 @@
 
 namespace voreen {
 
-vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume);
+VRN_CORE_API vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* volume, bool transformVectors=false);
 
 /**
 * This reader is capable of writing vti files specified by the VTK library.
@@ -49,7 +49,15 @@ public:
 
     virtual void write(const std::string& fileName, const VolumeBase* volumeHandle);
 
+    /**
+     * This function additionally transforms the vectors by the transformation matrix.
+     * This only works for 3-channel volumes.
+     */
+    virtual void writeVectorField(const std::string& fileName, const VolumeBase* volumeHandle);
+
 private:
+
+    virtual void writeInternal(const std::string& fileName, const VolumeBase* volumeHandle, bool transformVectors);
 
     static const std::string loggerCat_;
 };

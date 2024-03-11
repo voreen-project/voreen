@@ -38,11 +38,13 @@ VelocityCurveSerializable::VelocityCurveSerializable(const VelocityCurve& other)
 void VelocityCurveSerializable::serialize(Serializer& s) const {
     s.serialize("peakVelocities", peakVelocities_);
     s.serialize("periodic", periodic_);
+    s.serialize("scale", scale_);
 }
 
 void VelocityCurveSerializable::deserialize(Deserializer& s) {
     s.deserialize("peakVelocities", peakVelocities_);
     s.deserialize("periodic", periodic_);
+    s.optionalDeserialize("scale", scale_, 1.0f); // Maintain backwards compatibility.
 }
 
 FlowIndicatorSerializable::FlowIndicatorSerializable() {

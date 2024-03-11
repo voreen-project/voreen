@@ -33,6 +33,12 @@
 #include <dirent.h>
 #include <functional>
 
+#include <vtkDataArray.h>
+#include <vtkImageData.h>
+#include <vtkPointData.h>
+#include <vtkSmartPointer.h>
+#include <vtkXMLImageDataReader.h>
+
 #include "openlb_parameters.h"
 
 using namespace olb;
@@ -62,6 +68,14 @@ struct SimpleVolume {
     std::vector<S> minValues, maxValues;
     S minMagnitude, maxMagnitude;
 
+    // Only for the purpose of storing in a vector.
+    SimpleVolume() = default;
+
+    /**
+     * This constructs an zero-initialized volume.
+     * @param dimensions Dimensions of the volume
+     * @param numChannels Number of channels
+     */
     SimpleVolume(Vector<int, 3> dimensions, int numChannels)
         : data(dimensions[0]*dimensions[1]*dimensions[2]*numChannels, S(0))
         , dimensions(dimensions)
@@ -70,6 +84,77 @@ struct SimpleVolume {
         , maxValues(numChannels, std::numeric_limits<S>::lowest())
         , minMagnitude(std::numeric_limits<S>::max())
         , maxMagnitude(0) {}
+
+    /**
+     * This functions loads / loads a VTI volume from a path.
+     * @param url
+     */
+    SimpleVolume(const std::string& url)
+    {
+        static const std::string FIELD_SPECIFIER = "?fieldName=";
+        std::string path = url;
+
+        std::string fieldName = "";
+
+        // If the file contains multiple fields, we select the one declared
+        std::size_t pos = path.find(FIELD_SPECIFIER);
+        if(pos != std::string::npos) {
+            path = path.substr(0, pos);
+            fieldName = url.substr(pos + FIELD_SPECIFIER.length());
+        }
+
+        vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
+        reader->SetFileName(path.c_str());
+        reader->Update();
+
+        vtkImageData* imageData = reader->GetOutput();
+
+        vtkPointData* pointData = imageData->GetPointData();
+        if(pointData->GetNumberOfArrays() > 1 && !fieldName.empty()) {
+            pointData->SetActiveScalars(fieldName.c_str());
+        }
+
+        int extend[6];
+        imageData->GetExtent(extend);
+        int offsetX = extend[0];
+        int offsetY = extend[2];
+        int offsetZ = extend[4];
+
+        dimensions = Vector<int, 3>(imageData->GetDimensions());
+        numChannels = imageData->GetNumberOfScalarComponents();
+
+        data.resize(dimensions[0]*dimensions[1]*dimensions[2]*numChannels, S(0));
+
+        minValues.resize(numChannels, std::numeric_limits<S>::max());
+        maxValues.resize(numChannels, std::numeric_limits<S>::lowest());
+
+        minMagnitude = std::numeric_limits<S>::max();
+        maxMagnitude = 0;
+
+        imageData->GetSpacing(spacing[0], spacing[1], spacing[2]);
+        imageData->GetOrigin(offset[0], offset[1], offset[2]);
+
+        for(int z = 0; z < dimensions[2]; z++) {
+            for(int y = 0; y < dimensions[1]; y++) {
+                for(int x = 0; x < dimensions[0]; x++) {
+                    S magnitude = 0;
+                    for(int channel = 0; channel < numChannels; channel++) {
+                        float value = imageData->GetScalarComponentAsFloat(x+offsetX, y+offsetY, z+offsetZ, channel);
+                        S typedValue = static_cast<S>(value);
+                        minValues[channel] = std::min<S>(minValues[channel], value);
+                        maxValues[channel] = std::max<S>(maxValues[channel], value);
+                        magnitude += value * value;
+                        setValue(value, x, y, z, channel);
+                    }
+                    minMagnitude = std::min<S>(minMagnitude, magnitude);
+                    maxMagnitude = std::max<S>(maxMagnitude, magnitude);
+                }
+            }
+        }
+
+        minMagnitude = std::sqrt(minMagnitude);
+        maxMagnitude = std::sqrt(maxMagnitude);
+    }
 
     void setValue(S value, int x, int y, int z, int channel = 0) {
         auto index = z*dimensions[1]*dimensions[0]*numChannels + y*dimensions[0]*numChannels + x*numChannels + channel;
@@ -86,6 +171,9 @@ struct SimpleVolume {
     S getValue(int index, int channel = 0) const {
         index = index*numChannels + channel;
         return data[index];
+    }
+    S getValue(Vector<int, 3> pos, int channel = 0) const {
+        return getValue(pos[0], pos[1], pos[2], channel);
     }
 
     S getValueLinear(float x, float y, float z, int channel = 0) const {
@@ -107,24 +195,173 @@ struct SimpleVolume {
                 + getValue(urf.x, urf.y, urf.z, channel) * (    p.x)*(    p.y)*(    p.z) // urF
                 + getValue(llb.x, urf.y, urf.z, channel) * (1.f-p.x)*(    p.y)*(    p.z);// ulF
     }
+
+    S getValueLinear(Vector<T, 3> pos, int channel = 0) const {
+        return getValueLinear(pos[0], pos[1], pos[2], channel);
+    }
+
+    Vector<T, 3> convertWorldToLatticeCoortinates(Vector<T, 3> worldCoordinates) const {
+        Vector<T, 3> voxelCoordinates = worldCoordinates - offset;
+        voxelCoordinates[0] /= spacing[0];
+        voxelCoordinates[1] /= spacing[1];
+        voxelCoordinates[2] /= spacing[2];
+        return voxelCoordinates;
+    }
 };
 
-using VolumeSampler = std::function<void(UnitConverter<T, DESCRIPTOR> const&, float, std::function<void(AnalyticalF3D<T,T>&)>&, float)>;
-
-class ZeroAnalyticalF3D : public AnalyticalF3D<T, T> {
+// Allow for simulation lattice initialization by volume data.
+class VolumeDataMapper : public AnalyticalF3D<T, T> {
 public:
-    ZeroAnalyticalF3D() : AnalyticalF3D<T, T>(3) {}
+
+    VolumeDataMapper(const SimpleVolume<T>& volume0, const SimpleVolume<T>& volume1, float alpha, float multiplier = 1.0f)
+        : AnalyticalF3D<T, T>(volume0.numChannels)
+        , volume0_(volume0)
+        , volume1_(volume1)
+        , alpha_(alpha)
+        , multiplier_(multiplier)
+    {
+    }
+
+    VolumeDataMapper(const SimpleVolume<T>& volume, float multiplier = 1.0f)
+        : AnalyticalF3D<T, T>(volume.numChannels)
+        , volume0_(volume)
+        , volume1_(volume)
+        , alpha_(0)
+        , multiplier_(multiplier)
+    {
+    }
+
+    VolumeDataMapper(VolumeDataMapper&& other)
+        : AnalyticalF3D<T, T>(other.getTargetDim())
+        , volume0_(other.volume0_)
+        , volume1_(other.volume1_)
+        , alpha_(other.alpha_)
+        , multiplier_(other.multiplier_)
+    {
+    }
+
     virtual bool operator() (T output[], const T input[]) {
-        for(size_t i=0; i<3; i++) {
-            output[i] = 0;
+
+        auto pos = Vector<T, 3>(input);
+
+        if (alpha_ == 0) {
+            for(int i=0; i<getTargetDim(); i++) {
+                output[i] = volume0_.getValueLinear(volume0_.convertWorldToLatticeCoortinates(pos), i);
+                output[i] *= multiplier_;
+            }
         }
+        else {
+            for(int i=0; i<getTargetDim(); i++) {
+                auto v0 = volume0_.getValueLinear(volume0_.convertWorldToLatticeCoortinates(pos), i);
+                auto v1 = volume1_.getValueLinear(volume1_.convertWorldToLatticeCoortinates(pos), i);
+
+                output[i] = v0 * (1.0f - alpha_) + v1 * alpha_;
+                output[i] *= multiplier_;
+            }
+        }
+
         return true;
     }
-} ZeroFunctor;
+
+    Vector<double, 3> getMin() const {
+        return volume0_.offset;
+    }
+
+    Vector<double, 3> getMax() const {
+        Vector<double, 3> max = volume0_.spacing;
+        max *= volume0_.dimensions;
+        max += volume0_.offset;
+        return max;
+    }
+
+private:
+
+    const SimpleVolume<T>& volume0_;
+    const SimpleVolume<T>& volume1_;
+    const float alpha_;
+
+    const float multiplier_;
+};
+
+class VolumeDataMapperIndicator : public IndicatorF3D<T> {
+public:
+
+    VolumeDataMapperIndicator(VolumeDataMapper&& mapper, T threshold = 0.5)
+        : mapper_(std::move(mapper))
+        , threshold_(threshold)
+    {
+        _myMin = mapper_.getMin();
+        _myMax = mapper_.getMax();
+    }
+
+    virtual bool operator() (bool output[1], const T input[3]) {
+        std::vector<T> target(mapper_.getTargetDim());
+        auto result = mapper_(target.data(), input);
+        output[0] = target[0] >= threshold_;
+        return result;
+    }
+
+private:
+
+    VolumeDataMapper mapper_;
+    T threshold_;
+};
+
+class VolumeTimeSeries {
+public:
+
+    VolumeTimeSeries(const std::map<float, std::string>& volumePaths)
+        : volumePaths_(volumePaths)
+    {
+        // For now, we load all volumes into RAM.
+        // In the future, a caching strategy (such as LRU) may be required to be implemented.
+        for (auto& [time, path] : volumePaths) {
+            volumeData_[time] = SimpleVolume<T>(path);
+        }
+    }
+
+    VolumeDataMapper createSampler(float time, float multiplier=1.0f) const {
+
+        // Query time.
+        // Note that we periodically sample the volumes if the simulation time exceeds measurement time.
+        // TODO: Make adjustable, i.e., also different behavior should be allowed.
+        float start = volumeData_.begin()->first;
+        float end   = volumeData_.rbegin()->first;
+        time        = std::fmod(time - start, end - start);
+
+        auto upper = volumeData_.lower_bound(time);
+        if(volumeData_.size() == 1 || upper == volumeData_.begin()) {
+            const SimpleVolume<T>& volume = volumeData_.begin()->second;
+            return VolumeDataMapper(volume, multiplier);
+        }
+        else {
+
+            // Find the volume whose time step is right before the current time.
+            auto lower = upper--;
+
+            const float t0 = lower->first;
+            const float t1 = upper->first;
+
+            const SimpleVolume<T>& volume0 = lower->second;
+            const SimpleVolume<T>& volume1 = upper->second;
+
+            const float alpha = (time - t0) / (t1 - t0);
+            return VolumeDataMapper(volume0, volume1, alpha, multiplier);
+        }
+    }
+
+private:
+
+    std::map<float, std::string> volumePaths_;
+    mutable std::map<float, SimpleVolume<T>> volumeData_; // Left mutable for the implementation of a caching strategy.
+};
+
+
 
 class LatticePerturber : public AnalyticalF3D<T, T> {
+    static AnalyticalConst3D<T,T> Zero;
 public:
-    LatticePerturber(AnalyticalF3D<T, T>& original = ZeroFunctor, T maxNoise=1e-5)
+    LatticePerturber(AnalyticalF3D<T, T>& original = Zero, T maxNoise=1e-5)
         : AnalyticalF3D<T, T>(3)
         , original_(original)
         , rnd_(std::bind(std::uniform_real_distribution<T>(-maxNoise, maxNoise), std::mt19937(time(nullptr))))
@@ -143,10 +380,14 @@ private:
     std::function<T()> rnd_;
 };
 
+AnalyticalConst3D<T, T> LatticePerturber::Zero(0);
+
+
+
 // Stores data from stl file in geometry in form of material numbers
 bool prepareGeometry(UnitConverter<T,DESCRIPTOR> const& converter,
                      IndicatorF3D<T>& indicator,
-                     STLreader<T>& stlReader,
+                     IndicatorF3D<T>& stlReader,
                      SuperGeometry<T,3>& superGeometry,
                      const std::vector<FlowIndicator>& indicators)
 {
@@ -232,7 +473,7 @@ void defineBulkDynamics(FlowTurbulenceModel model,
 // Set up the geometry of the simulation.
 void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
                      UnitConverter<T,DESCRIPTOR> const& converter,
-                     STLreader<T>& stlReader,
+                     IndicatorF3D<T>& boundaryGeometry,
                      SuperGeometry<T,3>& superGeometry,
                      const std::vector<FlowIndicator>& indicators,
                      const Parameters& parameters)
@@ -247,7 +488,7 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
         case FBC_BOUZIDI:
             // material=2 --> no dynamics + bouzidi zero velocity
             lattice.defineDynamics<NoDynamics>(superGeometry, MAT_WALL);
-            setBouzidiZeroVelocityBoundary<T, DESCRIPTOR>(lattice, superGeometry, MAT_WALL, stlReader);
+            setBouzidiZeroVelocityBoundary<T, DESCRIPTOR>(lattice, superGeometry, MAT_WALL, boundaryGeometry);
             break;
         case FBC_BOUNCE_BACK:
             // material=2 --> bounceBack dynamics
@@ -267,7 +508,7 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
                 case FBC_BOUZIDI:
                     // no dynamics + bouzidi velocity (inflow)
                     lattice.defineDynamics<NoDynamics>(superGeometry, indicator.id_);
-                    setBouzidiZeroVelocityBoundary<T, DESCRIPTOR>(lattice, superGeometry, indicator.id_, stlReader);
+                    setBouzidiZeroVelocityBoundary<T, DESCRIPTOR>(lattice, superGeometry, indicator.id_, boundaryGeometry);
                     break;
                 case FBC_BOUNCE_BACK:
                     // bulk dynamics + velocity (inflow)
@@ -319,7 +560,7 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                         SuperGeometry<T,3>& superGeometry,
                         const std::vector<FlowIndicator>& indicators,
                         const Parameters& parameters,
-                        const VolumeSampler& volumeSampler = {}
+                        const VolumeTimeSeries* timeSeries = nullptr
                         )
 {
     float time = converter.getPhysTime(iteration);
@@ -370,17 +611,14 @@ void setBoundaryValues( SuperLattice<T, DESCRIPTOR>& lattice,
                 }
                 case FP_VOLUME:
                 {
-                    // TODO: Find better solution, e.g., a sampler shall be returned and applied in this scope.
-                    if(volumeSampler) {
-                        // For volume indicators, we normalize the velocity curve to [0, 1]
-                        // because multiplying the measurement by another velocity is confusing.
-                        // We keep, however, the velocity multiplier, so that we can basically
-                        // amplify the measurement.
-                        auto multiplier = std::min<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 1);
-                        volumeSampler(converter, time, applyFlowProfile, multiplier);
+                    auto multiplier = std::min<float>(targetPhysVelocity / indicator.velocityCurve_.getMaxVelocity(), 1);
+                    multiplier = converter.getLatticeVelocity(multiplier);
+                    if(timeSeries) {
+                        auto volumeSampler = timeSeries->createSampler(time, multiplier);
+                        applyFlowProfile(volumeSampler);
                     }
                     else {
-                        std::cerr << "No Volume Sampler defined!" << std::endl;
+                        std::cout << "No sampler specified" << std::endl;
                     }
                     break;
                 }
@@ -582,7 +820,7 @@ void writeVVDFile(IndicatorF3D<T>& indicator,
 // Computes flux at inflow and outflow
 bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
                  SuperGeometry<T,3>& superGeometry,
-                 STLreader<T>& stlReader,
+                 IndicatorF3D<T>& boundaryGeometry,
                  UnitConverter<T,DESCRIPTOR>& converter,
                  int iteration, int maxIteration,
                  const std::string& simulationOutputPath,
@@ -602,6 +840,59 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
 
         SuperVTMwriter3D<T> vtmWriter( "results" );
 
+        // TODO: In case the geometry does not change, we could keep the functor instances.
+        std::vector<std::unique_ptr<SuperLatticeF3D<T,DESCRIPTOR>>> functors;
+
+        if(flowFeatures & FF_VELOCITY) {
+            auto velocity = std::make_unique<SuperLatticePhysVelocity3D<T, DESCRIPTOR>>(lattice, converter);
+            if(writeVVD) {
+                writeVVDFile(boundaryGeometry, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "velocity", *velocity);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*velocity);
+            }
+            functors.emplace_back(std::move(velocity));
+        }
+
+        if(flowFeatures & FF_MAGNITUDE) {
+            auto velocity = std::make_unique<SuperLatticePhysVelocity3D<T, DESCRIPTOR>>(lattice, converter);
+            auto magnitude = std::make_unique<SuperEuklidNorm3D<T, DESCRIPTOR>>(*velocity);
+            if(writeVVD) {
+                writeVVDFile(boundaryGeometry, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "magnitude", *magnitude);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*magnitude);
+            }
+            functors.emplace_back(std::move(velocity));
+            functors.emplace_back(std::move(magnitude));
+        }
+
+        if(flowFeatures & FF_PRESSURE) {
+            auto pressure = std::make_unique<SuperLatticePhysPressure3D<T, DESCRIPTOR>>(lattice, converter);
+            if(writeVVD) {
+                writeVVDFile(boundaryGeometry, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "pressure", *pressure);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*pressure);
+            }
+            functors.emplace_back(std::move(pressure));
+        }
+
+        if(flowFeatures & FF_WALLSHEARSTRESS) {
+            auto wallShearStress = std::make_unique<SuperLatticePhysWallShearStress3D<T, DESCRIPTOR>>(lattice, superGeometry, MAT_WALL, converter, boundaryGeometry);
+            if(writeVVD) {
+                writeVVDFile(boundaryGeometry, converter, iteration, maxIteration, outputResolution, parameters,
+                             simulationOutputPath, "wallShearStress", *wallShearStress);
+            }
+            if(writeVTI) {
+                vtmWriter.addFunctor(*wallShearStress);
+            }
+            functors.emplace_back(std::move(wallShearStress));
+        }
+
         // Always write debug data.
 #ifndef VRN_MODULE_FLOWSIMULATION
         if(iteration == 0) {
@@ -618,51 +909,7 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
         }
 #endif
 
-        if(flowFeatures & FF_VELOCITY) {
-            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "velocity", velocity);
-            }
-            if(writeVTI) {
-                vtmWriter.write(velocity, iteration);
-            }
-        }
-
-        if(flowFeatures & FF_MAGNITUDE) {
-            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-            SuperEuklidNorm3D<T, DESCRIPTOR> magnitude(velocity);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "magnitude", magnitude);
-            }
-            if(writeVTI) {
-                vtmWriter.write(magnitude, iteration);
-            }
-        }
-
-        if(flowFeatures & FF_PRESSURE) {
-            SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "pressure", pressure);
-            }
-            if(writeVTI) {
-                vtmWriter.write(pressure, iteration);
-            }
-        }
-
-        if(flowFeatures & FF_WALLSHEARSTRESS) {
-            SuperLatticePhysWallShearStress3D<T, DESCRIPTOR> wallShearStress(lattice, superGeometry, MAT_WALL,
-                                                                             converter, stlReader);
-            if(writeVVD) {
-                writeVVDFile(stlReader, converter, iteration, maxIteration, outputResolution, parameters,
-                             simulationOutputPath, "wallShearStress", wallShearStress);
-            }
-            if(writeVTI) {
-                vtmWriter.write(wallShearStress, iteration);
-            }
-        }
+        vtmWriter.write(iteration);
 
         // Lattice statistics console output
         std::cout << "step="     << iteration << "; " <<

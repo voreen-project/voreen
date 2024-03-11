@@ -37,9 +37,7 @@
 namespace voreen {
 
 struct FlowSimulationInput {
-    std::string geometryPath;
-    const VolumeList* measuredData;
-    const FlowSimulationConfig* config;
+    std::unique_ptr<FlowSimulationConfig> config;
     size_t selectedParametrization;
     std::string simulationResultPath;
     bool deleteOldSimulations;
@@ -81,10 +79,12 @@ protected:
 
 private:
 
+    std::map<float, std::string> checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation) const;
     void runSimulation(const FlowSimulationInput& input, ProgressReporter& progressReporter) const;
     void enqueueInsituResult(const std::string& filename, VolumePort& port, std::unique_ptr<Volume> volume = nullptr) const;
 
     GeometryPort geometryDataPort_;
+    VolumeListPort geometryVolumeDataPort_;
     VolumeListPort measuredDataPort_;
     FlowSimulationConfigPort parameterPort_;
 

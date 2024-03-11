@@ -47,6 +47,7 @@ struct StreamlineCreatorInput {
     int integrationSteps;
     float stopIntegrationAngleThreshold;
     VolumeRAM::Filter filterMode;
+    bool transformVelocities;
     PortDataPointer<VolumeBase> flowVolume;
     const VolumeBase* seedMask;
     std::vector<tgt::vec3> seedPoints;
@@ -86,6 +87,7 @@ protected:
         numSeedPoints_.setDescription("Can be used to determine the number of streamlines, which should be created. It can be used as a performance parameter.");
         seedTime_.setDescription("It is used as debug output to see the current generator. See the next description for more details.");
         absoluteMagnitudeThreshold_.setDescription("Flow data points outside the threshold intervall will not be used for streamline construction.");
+        transformVelocities_.setDescription("If enabled, the velocities are transformed by the volume transformation.");
     }
 
 private:
@@ -116,6 +118,7 @@ private:
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     IntProperty stopIntegrationAngleThreshold_;         ///< stop integration when exceeding threshold?
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
+    BoolProperty transformVelocities_;                  ///< transform velocities by volume transformation?
 
     // debug
     FloatOptionProperty velocityUnitConversion_;

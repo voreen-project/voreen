@@ -14,46 +14,71 @@ enum ExitCodes {
     EXIT_CODE_DIVERGED = 8,
 };
 
-VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
-    VelocityCurve curve;
 
-    bool periodic = reader["periodic"].getAttribute("value") == "true";
-    curve.setPeriodic(periodic);
+template<typename T>
+T convertTo(const std::string& string);
 
-    const XMLreader& items = reader["peakVelocities"];
+template<>
+std::string convertTo(const std::string& string) {
+    return string;
+}
+
+template<>
+float convertTo(const std::string& string) {
+    return std::atof(string.c_str());
+}
+
+template<typename R, typename S>
+std::map<R, S> deserializeMap(const XMLreader& items) {
+    std::map<R, S> map;
+
     auto iter = items.begin();
     while(iter != items.end()) {
 
         // Read key.
         XMLreader* keyItem = *iter;
         if(keyItem->getName() != "key") {
-            std::cout << "VelocityCurve: Expected key, aborting..." << std::endl;
+            std::cout << "Expected key, aborting..." << std::endl;
             return {};
         }
 
-        float key = std::atof(keyItem->getAttribute("value").c_str());
+        auto key = convertTo<R>(keyItem->getAttribute("value"));
 
         // Go to next entry (which is expected to be the value for the key).
         if(++iter == items.end()) {
-            std::cout << "VelocityCurve: No matching value for key" << std::endl;
+            std::cout << "No matching value for key" << std::endl;
             return {};
         }
 
         // Read value.
         XMLreader* valueItem = *iter;
         if(valueItem->getName() != "value") {
-            std::cout << "VelocityCurve: Expected value, aborting..." << std::endl;
+            std::cout << "Expected value, aborting..." << std::endl;
             return {};
         }
 
-        float value = std::atof(valueItem->getAttribute("value").c_str());
+        auto value = convertTo<S>(valueItem->getAttribute("value"));
 
         // Add key-value pair.
-        curve[key] = value;
+        map[key] = value;
 
         // Next key-value pair.
         iter++;
     }
+
+    return map;
+}
+
+VelocityCurve deserializeVelocityCurve(const XMLreader& reader) {
+
+    auto values = deserializeMap<float, float>(reader["peakVelocities"]);
+    auto curve = VelocityCurve::createFromMap(values);
+
+    bool periodic = reader["periodic"].getAttribute("value") == "true";
+    curve.setPeriodic(periodic);
+
+    float scale = std::atof(reader["scale"].getAttribute("value").c_str());
+    curve.setScale(scale);
 
     return curve;
 }
@@ -152,8 +177,12 @@ int main(int argc, char* argv[]) {
     std::string outputFileFormat =           config["outputFileFormat"].getAttribute("value");
     int flowFeatures             = std::atoi(config["flowFeatures"].getAttribute("value").c_str());
 
+    auto geometryFiles           = deserializeMap<float, std::string>(config["geometryFiles"]);
+    bool geometryIsMesh          = config["geometryIsMesh"].getAttribute("value") == "true";
+    auto measuredDataFiles       = deserializeMap<float, std::string>(config["measuredDataFiles"]);
+
     auto parameters = deserializeParameters(config["flowParameters"]);
-    auto indicators = deserializeFlowIndicators(config["flowIndicators"]);
+    auto indicators = deserializeFlowIndicators(config["transformedFlowIndicators"]);
 
     clout << "Found " << indicators.size() << " Flow Indicators" << std::endl;
 
@@ -172,6 +201,9 @@ int main(int argc, char* argv[]) {
     // Writes the converter log in a file
     converter.write(simulation.c_str());
 
+    clout << "Loading measured data..." << std::endl;
+    VolumeTimeSeries measuredDataTimeSeries(measuredDataFiles);
+
     // === 2nd Step: Prepare Geometry ===
     clout << "Meshing..." << std::endl;
     olb::util::Timer<T> voxelizationTime(1);
@@ -179,9 +211,19 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of the STLreader class
     // file name, voxel size in meter, stl unit in meter, outer voxel no., inner voxel no.
-    std::string geometryFileName = "../geometry/geometry.stl";
-    STLreader<T> stlReader(geometryFileName.c_str(), converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1);
-    IndicatorLayer3D<T> extendedDomain(stlReader, converter.getConversionFactorLength());
+
+    // TODO: for now, we only support a single geometry.
+    std::unique_ptr<IndicatorF3D<T>> boundaryGeometry;
+    std::unique_ptr<VolumeTimeSeries> geometryVolumeTimeSeries;
+    if(geometryIsMesh) {
+        std::string geometryFileName = geometryFiles.begin()->second;
+        boundaryGeometry.reset(new STLreader<T>(geometryFileName, converter.getConversionFactorLength(), VOREEN_LENGTH_TO_SI, 1));
+    }
+    else {
+        geometryVolumeTimeSeries.reset(new VolumeTimeSeries(geometryFiles));
+        boundaryGeometry.reset(new VolumeDataMapperIndicator(geometryVolumeTimeSeries->createSampler(0.0f)));
+    }
+    IndicatorLayer3D<T> extendedDomain(*boundaryGeometry, converter.getConversionFactorLength());
 
     // Instantiation of a cuboidGeometry with weights
 #ifdef PARALLEL_MODE_MPI
@@ -196,7 +238,7 @@ int main(int argc, char* argv[]) {
 
     // Instantiation of a superGeometry
     SuperGeometry<T,3> superGeometry(cuboidGeometry, loadBalancer, 2);
-    bool success = prepareGeometry(converter, extendedDomain, stlReader, superGeometry, indicators);
+    bool success = prepareGeometry(converter, extendedDomain, *boundaryGeometry, superGeometry, indicators);
 
     voxelizationTime.stop();
     voxelizationTime.printSummary();
@@ -213,7 +255,7 @@ int main(int argc, char* argv[]) {
     olb::util::Timer<T> timer(converter.getLatticeTime(simulationTime), superGeometry.getStatistics().getNvoxel());
     timer.start();
 
-    prepareLattice(lattice, converter, stlReader, superGeometry, indicators, parameters);
+    prepareLattice(lattice, converter, *boundaryGeometry, superGeometry, indicators, parameters);
 
     timer.stop();
     timer.printSummary();
@@ -228,7 +270,7 @@ int main(int argc, char* argv[]) {
         return getResults(
                 lattice,
                 superGeometry,
-                stlReader,
+                *boundaryGeometry,
                 converter,
                 iteration,
                 maxIteration,

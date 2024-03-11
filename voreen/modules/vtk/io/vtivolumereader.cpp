@@ -51,9 +51,12 @@ namespace voreen {
 Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vtkImageData> imageData) {
     tgtAssert(imageData, "ImageData null");
 
+    // Voreen assumes millimeter instead of meter.
+    const double M_TO_MM = 1000.0;
+
     tgt::svec3 dimensions = tgt::ivec3::fromPointer(imageData->GetDimensions());
-    tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing());
-    tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin());
+    tgt::vec3 spacing = tgt::dvec3::fromPointer(imageData->GetSpacing()) * M_TO_MM;
+    tgt::vec3 offset = tgt::dvec3::fromPointer(imageData->GetOrigin()) * M_TO_MM;
     std::string name = origin.getSearchParameter("name");
 
     // Try to retrieve data array - favor cell data.
@@ -62,7 +65,7 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
         array = imageData->GetPointData()->GetArray(name.c_str());
     }
     else {
-        // FIXME: Somehow it seems we need to substract 1 in each dimension for cell data?
+        // FIXME: Somehow it seems we need to subtract 1 in each dimension for cell data?
         dimensions -= tgt::svec3::one;
     }
     if(!array) {

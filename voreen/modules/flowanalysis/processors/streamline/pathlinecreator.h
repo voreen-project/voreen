@@ -48,6 +48,7 @@ struct PathlineCreatorInput {
     bool enableReseeding;
     int reseedingSteps;
     VolumeRAM::Filter filterMode;
+    bool transformVelocites;
     PortDataPointer<VolumeList> flowVolumes;
     const VolumeBase* seedMask;
     std::vector<tgt::vec3> seedPoints;
@@ -125,6 +126,7 @@ private:
     BoolProperty fitAbsoluteMagnitudeThreshold_;        ///< fit magnitude on input change?
     FloatProperty temporalResolution_;                  ///< (global) temporal resolution between time steps
     OptionProperty<VolumeRAM::Filter> filterMode_;      ///< filtering inside the dataset
+    BoolProperty transformVelocities_;                   ///< transform velocities by the volume transformation?
 
     // debug
     FloatOptionProperty velocityUnitConversion_;

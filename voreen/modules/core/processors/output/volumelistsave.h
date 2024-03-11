@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/volumeprocessor.h"
 
+#include "voreen/core/io/volumeserializerpopulator.h"
 #include "voreen/core/properties/filedialogproperty.h"
 #include "voreen/core/properties/boolproperty.h"
 #include "voreen/core/properties/buttonproperty.h"
@@ -35,9 +36,6 @@
 #include "voreen/core/properties/stringproperty.h"
 #include "voreen/core/properties/progressproperty.h"
 #include "voreen/core/ports/genericport.h"
-#ifdef VRN_MODULE_HDF5
-#include "modules/hdf5/io/hdf5volumewriter.h"
-#endif
 
 #include <string>
 #include <functional>
@@ -46,7 +44,6 @@ namespace voreen {
 
 class Volume;
 class VolumeSerializer;
-class VolumeSerializerPopulator;
 
 class VRN_CORE_API VolumeListSave : public VolumeProcessor {
 public:
@@ -61,15 +58,8 @@ public:
 
 protected:
     virtual void setDescriptions() {
-        setDescription(
-                "Saves all volumes in the input VolumeList at once. The volumes will be saved as .vvd"
-#ifdef VRN_MODULE_HDF5
-                " or .h5"
-#endif
-                ".");
-#ifdef VRN_MODULE_HDF5
-        outputFormat_.setDescription("Switch between VVD or HDF5 as output format.");
-#endif
+        setDescription("Saves all volumes in the input VolumeList at once.");
+        outputFormat_.setDescription("Switch between file formats as output format.");
         useOriginFileNames_.setDescription(
                 "Whether or not to use the origin attribute of the volumes as an output name. "
                 "This property will be disabled automatically if a volume does not have an origin name or "
@@ -83,19 +73,18 @@ protected:
 
     virtual void process();
     virtual void initialize();
-    virtual void deinitialize();
 
     /**
      * Save the volume list using the method specified by outputFormat_.
      */
     void saveVolumeList();
     /**
-     * Save a volume to a vvd file.
+     * Save a volume to a file.
      * @param volumeName identifier for the given volume. Has to be unique in the list of all volumes to be saved.
      * @param volumeList list containing all volumes
      * @param i number of volume to save this call. volumeList->at(i) is the volume to be saved.
      */
-    void saveVolumeVVD(const std::string& volumeName, const VolumeList* volumeList, size_t i);
+    void saveVolume(const std::string& volumeName, const VolumeList* volumeList, size_t i);
 #ifdef VRN_MODULE_HDF5
     /**
      * Save a volume to a hdf5 file.
@@ -127,12 +116,13 @@ protected:
 
 private:
 
-    void adjustCompressionProperties();
-
     enum OutputFormat {
-        VOL_VVD,
+        VOL_ALL,
         VOL_HDF5,
     };
+
+    void adjustCompressionProperties();
+    std::deque<Option<OutputFormat>> constructFormats() const;
 
     VolumeListPort inport_;
 
@@ -141,7 +131,7 @@ private:
     // Output file for HDF5 format.
     FileDialogProperty fileNameHDF5_;
     // Output folder for VVD format.
-    FileDialogProperty folderNameVVD_;
+    FileDialogProperty folderNameAll_;
     // Whether or not to use the origin attribute of the volumes as an output name
     // This property will be disabled automatically if a volume does not have an origin name
     // or if there are duplicates.
@@ -161,11 +151,7 @@ private:
     BoolProperty enableShuffling_;
 
     // Used to serialize volumes to vvd.
-    VolumeSerializerPopulator* volumeSerializerPopulator_;
-#ifdef VRN_MODULE_HDF5
-    // Used to save hdf5 volumes
-    HDF5VolumeWriter* hdf5VolumeWriter_;
-#endif
+    VolumeSerializerPopulator volumeSerializerPopulator_;
 
     static const std::string loggerCat_; ///< category used in logging
 };

@@ -34,6 +34,7 @@
 #include "voreen/core/io/serialization/serializable.h"
 
 #include "tgt/vector.h"
+#include "tgt/matrix.h"
 
 #include <map>
 
@@ -79,7 +80,7 @@ public:
     /**
      * Returns the output resolution of the intermediate time steps for each volume and their dimension.
      * This enforces basically a resampling of the simulation domain.
-     * Note: this currently acts as the max(!) resolution. If all the features can be captured by a lower resolution
+     * Note: this currently acts as the max(!) resolution. If all the features can be captured at a lower resolution
      *       the latter will be taken.
      */
     int getOutputResolution() const;
@@ -93,17 +94,48 @@ public:
 
     /**
      * Returns the flow features as bitmask.
-     * To test for a single feature, binarily test for the available features.
+     * To test for a single feature, perform a bit test for the available features.
      */
     int getFlowFeatures() const;
     void setFlowFeatures(int flowFeatures);
+
+    /**
+     * Returns the Transformation matrix for the entire domain.
+     * This includes flow indicators.
+     */
+    tgt::mat4 getTransformationMatrix() const;
+    void setTransformationMatrix(tgt::mat4 transformation);
+    tgt::mat4 getInvertedTransformationMatrix() const;
+
+    /**
+     * Returns all time frames for which a geometry file (.stl) exists.
+     * This must contain at least one element.
+     * @param geometryFiles geometry files, can be volumes
+     * @param isMesh determines if the specified paths are meshes or volumes
+     */
+    void setGeometryFiles(const std::map<float, std::string>& geometryFiles, bool isMesh=true);
+    const std::map<float, std::string>& getGeometryFiles() const;
+
+    /**
+     * Set if the geometry files are meshes or volumes.
+     * @param isMesh determines if the specified paths are meshes or volumes
+     */
+    void setGeometryIsMesh(bool isMesh);
+    bool isGeometryMesh() const;
+
+    /**
+     * Returns all time frames mapped to a measured data volume file.
+     * This may be empty.
+     */
+    void setMeasuredDataFiles(const std::map<float, std::string>& measuredDataFiles);
+    const std::map<float, std::string>& getMeasuredDataFiles() const;
 
     /**
      * Add a flow indicator to the internal list.
      * Note: This will set the unique id within the parameter set ensemble.
      */
     void addFlowIndicator(const FlowIndicator& flowIndicator);
-    const std::vector<FlowIndicator>& getFlowIndicators() const;
+    std::vector<FlowIndicator> getFlowIndicators(bool transformed = false) const;
 
     void addFlowParameterSet(const Parameters& parameters);
     const std::vector<Parameters>& getFlowParameterSets() const;
@@ -134,6 +166,10 @@ private:
     int outputResolution_;         ///< spatial resolution of output in voxels (per dimension)
     std::string outputFileFormat_; ///< output file format
     int flowFeatures_;             ///< bitmask storing flow features
+    tgt::mat4 transformation_;     ///< transformation matrix for the domain (geometry, indicators, ...)
+    std::map<float, std::string> geometryFiles_; ///< geometry files, can be volumes
+    bool geometryIsMesh_;          ///< determines if the specified paths are meshes or volumes
+    std::map<float, std::string> measuredDataFiles_; ///< measured data files
 
     // Flow indication (in-/out flow).
     std::vector<FlowIndicator> flowIndicators_;

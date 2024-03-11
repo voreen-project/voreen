@@ -6,6 +6,9 @@ IF(NOT VRN_MODULE_FLOWANALYSIS)
     MESSAGE(FATAL_ERROR "FlowSimulation Module requires Flow Analysis Module")
 ENDIF()
 
+IF(NOT VRN_MODULE_VTK) # for loading pvd files
+    MESSAGE(WARNING "FlowSimulation Module requires VTK Module for loading .pvd files")
+ENDIF()
 IF(NOT VRN_MODULE_PYTHON) # for converting
     MESSAGE(WARNING "FlowSimulation Module requires Python Module for converter scripts")
 ENDIF()
@@ -31,6 +34,7 @@ SET(MOD_CORE_SOURCES
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
+    ${MOD_DIR}/processors/geometry/geometrymerge.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
@@ -79,6 +83,7 @@ SET(MOD_CORE_HEADERS
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
+    ${MOD_DIR}/processors/geometry/geometrymerge.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h
@@ -114,11 +119,22 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/ext/openlb/voreen/openlb_parameters.h
 )
 
+IF(VRN_MODULE_VTK)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/simulation/flowsimulationresult.h
+    )
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/simulation/flowsimulationresult.cpp
+    )
+ENDIF()
+
 IF(VRN_MODULE_VESSELNETWORKANALYSIS)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/simulation/flowcenterlineanalysis.h
         ${MOD_DIR}/processors/simulation/flowindicatordetection.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/simulation/flowcenterlineanalysis.cpp
         ${MOD_DIR}/processors/simulation/flowindicatordetection.cpp
     )
 ENDIF()

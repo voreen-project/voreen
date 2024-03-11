@@ -115,6 +115,9 @@ public:
     void setPeriodic(bool enabled);
     bool isPeriodic() const;
 
+    void setScale(float scale);
+    float getScale() const;
+
     float getMinVelocity() const;
     float getMaxVelocity() const;
 
@@ -127,10 +130,12 @@ public:
     static VelocityCurve createSinusoidalCurve(float duration, float maxValue, int steps = 30);
     static VelocityCurve createHumanHeartBeat();
     static VelocityCurve createFromCSV(const std::string& file);
+    static VelocityCurve createFromMap(const std::map<float, float>& map);
 
 protected:
     std::map<float, float> peakVelocities_;
     bool periodic_;
+    float scale_;
 };
 
 // Indicates flux through an arbitrary, circle-shaped area.

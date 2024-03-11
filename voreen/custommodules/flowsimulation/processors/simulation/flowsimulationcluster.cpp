@@ -27,10 +27,14 @@
 
 #include "voreen/core/datastructures/geometry/glmeshgeometry.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
+#include "voreen/core/datastructures/volume/volumedecorator.h"
 #include "voreen/core/ports/conditions/portconditionvolumelist.h"
 
 #include "modules/core/io/rawvolumereader.h"
 #include "modules/core/io/vvdvolumewriter.h"
+#ifdef VRN_MODULE_VTK
+#include "modules/vtk/io/vtivolumewriter.h"
+#endif
 
 #include <boost/process.hpp>
 
@@ -111,7 +115,7 @@ namespace voreen {
 class ExecutorProcess {
 public:
 
-    ExecutorProcess(const std::string& cd, const std::string& command, const std::string& name)
+    ExecutorProcess(const std::string& cd, const std::string& command, const std::string& name, bool detach)
         : cd_(cd)
         , command_(command)
         , name_(name)
@@ -127,11 +131,13 @@ public:
 
     void run() {
         // We need to change the current working directory accordingly,
-        // but also need to restore the old one afterwards.
+        // but also need to restore the old one afterward.
         auto path = boost::filesystem::current_path();
         boost::filesystem::current_path(cd_);
-        process_ = boost::process::child(command_);        
-        //process_.detach(); // Could uncomment this line if we want the simulations to continue running after voreen is closed.
+        process_ = boost::process::child(command_);
+        if (detach_) {
+            process_.detach();
+        }
         boost::filesystem::current_path(path);
     }
 
@@ -148,6 +154,7 @@ private:
     std::string cd_;
     std::string command_;
     std::string name_;
+    bool detach_;
 
     boost::process::child process_;
 };
@@ -159,11 +166,14 @@ FlowSimulationCluster::FlowSimulationCluster()
     : Processor()
     // ports
     , geometryDataPort_(Port::INPORT, "geometryDataPort", "Geometry Input", false)
+    , geometryVolumeDataPort_(Port::INPORT, "geometryVolumeDataPort", "Segmentation Input", false)
     , measuredDataPort_(Port::INPORT, "measuredDataPort", "Measured Data Input", false)
     , configPort_(Port::INPORT, "parameterPort", "Simulation Config", false)
     , useLocalInstance_("useLocalInstance", "Use local Instance", false)
-    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "EXE (*.exe)", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
-    , stopThreads_("stopThreads", "Stop Runs")
+    , localInstancePath_("localInstancePath", "Local Instance Path", "Path", "", "", FileDialogProperty::OPEN_FILE, Processor::INVALID_RESULT, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
+    , detachProcesses_("detachProcesses", "Detach Processes", true)
+    , overwriteExistingConfig_("overwriteExistingConfig", "Overwrite Existing Config", true)
+    , stopProcesses_("stopProcesses", "Stop Runs")
     , workloadManager_("institution", "Institution")
     , username_("username", "Username", "s_leis06")
     , emailAddress_("emailAddress", "E-Mail Address", "s_leis06@uni-muenster.de")
@@ -191,7 +201,10 @@ FlowSimulationCluster::FlowSimulationCluster()
     , numFinishedThreads_(0)
 {
     addPort(geometryDataPort_);
-    addPort(measuredDataPort_); // Currently ignored.
+    addPort(geometryVolumeDataPort_);
+    geometryVolumeDataPort_.addCondition(new PortConditionVolumeListEnsemble());
+    geometryVolumeDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(1)));
+    addPort(measuredDataPort_);
     measuredDataPort_.addCondition(new PortConditionVolumeListEnsemble());
     measuredDataPort_.addCondition(new PortConditionVolumeListAdapter(new PortConditionVolumeChannelCount(3)));
     addPort(configPort_);
@@ -209,9 +222,13 @@ FlowSimulationCluster::FlowSimulationCluster()
     useLocalInstance_.setGroupID("local-instance");
     addProperty(localInstancePath_);
     localInstancePath_.setGroupID("local-instance");
-    addProperty(stopThreads_);
-    ON_CHANGE(stopThreads_, FlowSimulationCluster, threadsStopped);
-    stopThreads_.setGroupID("local-instance");
+    addProperty(detachProcesses_);
+    detachProcesses_.setGroupID("local-instance");
+    addProperty(overwriteExistingConfig_);
+    overwriteExistingConfig_.setGroupID("local-instance");
+    addProperty(stopProcesses_);
+    ON_CHANGE(stopProcesses_, FlowSimulationCluster, threadsStopped);
+    stopProcesses_.setGroupID("local-instance");
     setPropertyGroupGuiName("local-instance", "Local Instance");
 
     addProperty(workloadManager_);
@@ -291,16 +308,6 @@ bool FlowSimulationCluster::isReady() const {
         setNotReadyErrorMessage("Not initialized.");
         return false;
     }
-    if(!geometryDataPort_.isReady()) {
-        setNotReadyErrorMessage("Geometry Port not ready.");
-        return false;
-    }
-
-    // Note: measuredDataPort ist optional!
-    if(measuredDataPort_.hasData() && !measuredDataPort_.isReady()) {
-        setNotReadyErrorMessage("Measured Data Port not ready.");
-        return false;
-    }
 
     if(!configPort_.isReady()) {
         setNotReadyErrorMessage("Parameter Port not ready.");
@@ -372,7 +379,7 @@ void FlowSimulationCluster::refreshClusterCode() {
     int ret = executeCommand(command);
     if (ret != EXIT_SUCCESS) {
         VoreenApplication::app()->showMessageBox("Error", "Code could not be copied", true);
-        LERROR("Data could not be copied");
+        LERROR("Code could not be copied");
         return;
     }
 
@@ -392,46 +399,46 @@ void FlowSimulationCluster::refreshClusterCode() {
         LINFO("Compilation finished");
     }
 }
-void FlowSimulationCluster::stepCopyGeometryData(const std::string& simulationPathSource) {
-    // TODO: support changing/multiple geometries.
-    const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
-    tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
-    std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
-    try {
-        std::ofstream file(geometryFilename);
-        geometryData->exportAsStl(file);
-        file.close();
-    }
-    catch (std::exception& e) {
-        std::string errorMessage = "Could not write geometry file";
-        throw VoreenException(errorMessage + e.what());
-    }
-}
-void FlowSimulationCluster::stepCopyVolumeData(const std::string& simulationPathSource) {
-    if(const VolumeList* volumeList = measuredDataPort_.getData()) {
-        tgt::FileSystem::createDirectory(simulationPathSource + "velocity/");
-        int nrLength = static_cast<int>(std::to_string(volumeList->size() - 1).size());
-        for(size_t i=0; i<volumeList->size(); i++) {
 
-            // Enumerate volumes.
-            std::ostringstream suffix;
-            suffix << std::setw(nrLength) << std::setfill('0') << i;
-            std::string volumeName = "velocity" + suffix.str() + ".vvd";
-            std::string velocityFilename = simulationPathSource + "velocity/ " + volumeName;
+void FlowSimulationCluster::stepCopyGeometryData(FlowSimulationConfig& config, const std::string& simulationPathSource) {
+    if(const auto* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData())) {
+        std::unique_ptr<GlMeshGeometryBase> geometry(dynamic_cast<GlMeshGeometryBase*>(geometryData->clone().release()));
+        tgt::FileSystem::createDirectory(simulationPathSource + "geometry/");
+        std::string geometryFilename = simulationPathSource + "geometry/" + "geometry.stl";
 
-            try {
-                VvdVolumeWriter().write(velocityFilename, volumeList->at(i));
-            } catch(SerializationException& e) {
-                LERROR("Could not write velocity file");
-                continue;
-            }
+        try {
+            std::ofstream file(geometryFilename);
+            geometry->setTransformationMatrix(config.getTransformationMatrix() * geometry->getTransformationMatrix());
+            geometry->exportAsStl(file);
+            file.close();
         }
+        catch (std::exception& e) {
+            std::string errorMessage = "Could not write geometry file: ";
+            throw VoreenException(errorMessage + e.what());
+        }
+        auto geometryFiles = std::map<float, std::string>();
+        geometryFiles[0.0f] = "geometry/geometry.stl";
+        config.setGeometryFiles(geometryFiles, true);
+    }
+    else if (const auto* segmentationData = geometryVolumeDataPort_.getData()) {
+        auto geometryFiles = checkAndConvertVolumeList(segmentationData, config.getTransformationMatrix(), simulationPathSource, "geometry");
+        config.setGeometryFiles(geometryFiles, false);
+    }
+
+    if (config.getGeometryFiles().empty()) {
+        throw VoreenException("No GlMeshGeometry data.");
     }
 }
-void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConfig* config, const std::string& simulationPathSource) {
-    for(size_t i=0; i<config->size(); i++) {
 
-        std::string parameterPathSource = simulationPathSource + config->at(i).name_ + "/";
+void FlowSimulationCluster::stepCopyMeasurementData(const VolumeList* volumeList, FlowSimulationConfig& config, const std::string& simulationPathSource) {
+    auto measurementData = checkAndConvertVolumeList(volumeList, config.getTransformationMatrix(), simulationPathSource, "measured");
+    config.setMeasuredDataFiles(measurementData);
+}
+
+void FlowSimulationCluster::stepCreateSimulationConfigs(FlowSimulationConfig& config, const std::string& simulationPathSource) {
+    for(size_t i=0; i<config.size(); i++) {
+
+        std::string parameterPathSource = simulationPathSource + config.at(i).name_ + "/";
         tgt::FileSystem::createDirectoryRecursive(parameterPathSource);
 
         // Create parameter configuration file and commit to cluster.
@@ -441,7 +448,7 @@ void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConf
             LERROR("Could not write parameter file");
             continue;
         }
-        parameterFile << config->toXMLString(i);
+        parameterFile << config.toXMLString(i);
         parameterFile.close();
 
         std::string submissionScriptFilename = parameterPathSource + "submit.cmd";
@@ -450,50 +457,44 @@ void FlowSimulationCluster::stepCreateSimulationConfigs(const FlowSimulationConf
             LERROR("Could not write submission script file");
             continue;
         }
-        submissionScriptFile << generateSubmissionScript(config->at(i).name_);
+        submissionScriptFile << generateSubmissionScript(config.at(i).name_);
         submissionScriptFile.close();
     }
 }
 
-void FlowSimulationCluster::runLocal(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
+void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest) {
     // Move directory to the very same place, the local instance is located.
     simulationPathSource = tgt::FileSystem::cleanupPath(simulationPathSource, true);
-    simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config->getName(), true);
+    simulationPathDest = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + config.getName(), true);
 
-    std::vector<std::string> failed;
-    if (tgt::FileSystem::dirExists(simulationPathDest) || !copyDirectory(simulationPathSource, simulationPathDest, true)) {
-        for (size_t i = 0; i < config->size(); i++) {
-            std::string name = config->at(i).name_;
-            if (!copyDirectory(simulationPathSource + "/" + name, simulationPathDest + "/" + name, false)) {
-                failed.push_back(name);
-            }
-        }
+    if(tgt::FileSystem::dirExists(simulationPathDest) && overwriteExistingConfig_.get()) {
+        tgt::FileSystem::deleteDirectoryRecursive(simulationPathDest);
+    }
+
+    if(!copyDirectory(simulationPathSource, simulationPathDest, true)) {
+        VoreenApplication::app()->showMessageBox("Error", "Could not copy configurations, they might already exist", true);
+        return;
     }
 
     // Enqueue jobs.
-    for (size_t i = 0; i < config->size(); i++) {
+    for (size_t i = 0; i < config.size(); i++) {
 
-        std::string ensemble = config->getName();
-        std::string run = config->at(i).name_;
-
-        if (std::find(failed.begin(), failed.end(), run) != failed.end()) {
-            LWARNING("Configuration " << ensemble << "/" << run << " is already present, skipping..");
-            continue;
-        }
+        std::string ensemble = config.getName();
+        std::string run = config.at(i).name_;
 
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
         std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
         std::string name = ensemble + "-" + run;
-        waitingThreads_.emplace_back(std::unique_ptr<ExecutorProcess>(new ExecutorProcess(workingDirectory, runCommand, name)));
+        waitingThreads_.emplace_back(
+                std::unique_ptr<ExecutorProcess>(
+                        new ExecutorProcess(workingDirectory, runCommand, name, detachProcesses_.get())
+                )
+        );
         numEnqueuedThreads_++;
         LINFO("Enqueued run " << name);
     }
-
-    if (!failed.empty()) {
-        VoreenApplication::app()->showMessageBox("Error", "Some runs could not be enqueued, they might already exist. See log for details.", true);
-    }
 }
-void FlowSimulationCluster::runCluster(const FlowSimulationConfig* config, std::string simulationPathSource, std::string simulationPathDest) {
+void FlowSimulationCluster::runCluster(FlowSimulationConfig& config, std::string simulationPathSource, std::string simulationPathDest) {
     // Copy data to cluster.
     std::string command = "scp -r " + simulationPathSource + " " + simulationPathDest;
     int ret = executeCommand(command);
@@ -506,17 +507,17 @@ void FlowSimulationCluster::runCluster(const FlowSimulationConfig* config, std::
 
     // Enqueue simulations.
     std::vector<std::string> failed;
-    for(size_t i=0; i<config->size(); i++) {
+    for(size_t i=0; i<config.size(); i++) {
 
-        progress_.setProgress(i * 1.0f / config->size());
+        progress_.setProgress(i * 1.0f / config.size());
 
-        std::string localSimulationPath = programPath_.get() + "/openlb/voreen/" + config->getName() + "/" + config->at(i).name_;
+        std::string localSimulationPath = programPath_.get() + "/openlb/voreen/" + config.getName() + "/" + config.at(i).name_;
 
         // Enqueue job.
         command = "ssh " + username_.get() + "@" + clusterAddress_.get() + " " + generateEnqueueScript(localSimulationPath);
         ret = executeCommand(command);
         if (ret != EXIT_SUCCESS) {
-            failed.push_back(config->at(i).name_);
+            failed.push_back(config.at(i).name_);
         }
     }
 
@@ -540,14 +541,17 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
-    const FlowSimulationConfig* config = configPort_.getData();
-    if (!config || config->empty()) {
+    const FlowSimulationConfig* originalConfig = configPort_.getData();
+    if (!originalConfig || originalConfig->empty()) {
         VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);
         LERROR("No parametrization");
         return;
     }
 
-    if(config->getFlowFeatures() == FF_NONE) {
+    // We need to create a copy here, since we modify the paths of the individual runs.
+    FlowSimulationConfig config(*originalConfig);
+
+    if(config.getFlowFeatures() == FF_NONE) {
         VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
         LERROR("No flow feature selected");
         return;
@@ -555,17 +559,18 @@ void FlowSimulationCluster::enqueueSimulations() {
 
     LINFO("Configuring and enqueuing Simulations...");
 
-    std::string simulationPathSource = uploadDataPath_.get() + "/" + config->getName() + "/";
+    std::string simulationPathSource = uploadDataPath_.get() + "/" + config.getName() + "/";
+    tgt::FileSystem::deleteDirectoryRecursive(simulationPathSource);
     tgt::FileSystem::createDirectoryRecursive(simulationPathSource);
     std::string simulationPathDest = username_.get() + "@" + clusterAddress_.get() + ":" + programPath_.get() + "/openlb/voreen/";
 
     try {
 
         // Copy simulation geometry.
-        stepCopyGeometryData(simulationPathSource);
+        stepCopyGeometryData(config, simulationPathSource);
 
-        // Copy velocity data.
-        stepCopyVolumeData(simulationPathSource);
+        // Copy measurement data.
+        stepCopyMeasurementData(measuredDataPort_.getData(), config, simulationPathSource);
 
         // Create configurations.
         stepCreateSimulationConfigs(config, simulationPathSource);
@@ -836,5 +841,44 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
 
     return script.str();
 }
+
+#ifdef VRN_MODULE_VTK
+std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& subdirectory) const {
+    tgt::FileSystem::createDirectory(simulationPathSource + subdirectory + "/");
+    int nrLength = static_cast<int>(std::to_string(volumes->size() - 1).size());
+
+    std::map<float, std::string> result;
+    for (size_t i = 0; i < volumes->size(); i++) {
+
+        VolumeBase* volume = volumes->at(i);
+
+        // Enumerate volumes.
+        std::ostringstream suffix;
+        suffix << std::setw(nrLength) << std::setfill('0') << i;
+        std::string volumeName = subdirectory + suffix.str() + ".vti";
+        std::string path = simulationPathSource + subdirectory + "/" + volumeName;
+
+        if(transformation != tgt::mat4::identity) {
+            std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
+                    new VolumeDecoratorReplaceTransformation(volume,
+                                                             transformation * volume->getPhysicalToWorldMatrix())
+            );
+            VTIVolumeWriter().writeVectorField(path, transformedVolume.get());
+        }
+        else {
+            VTIVolumeWriter().writeVectorField(path, volume);
+        }
+
+        std::string url = path + "?fieldName=" + volume->getModality().getName();
+        result[volume->getTimestep()] = url;
+    }
+
+    return result;
+}
+#else
+std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(const VolumeList*, tgt::mat4, const std::string&, const std::string&) const {
+    throw VoreenException("Need to convert to vti, but VTI module not enabled");
+}
+#endif
 
 }   // namespace

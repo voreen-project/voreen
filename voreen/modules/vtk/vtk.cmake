@@ -14,7 +14,7 @@ ELSE()
     SET(VRN_VTK_VERSION 8.1)
 
     LIST(APPEND VTK_LIB_NAMES #add missing
-        "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms"
+        "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms" "ImagingCore"
         "CommonExecutionModel" "CommonMath" "expat" "hdf5" "hdf5_hl" "jpeg" "metaio" "NetCDF" "netcdfcpp"
         "png" "sys" "tiff" "lz4" "zlib" "DICOMParser" "IOCore" "IOImage" "IONetCDF" "IOXML" "IOXMLParser"
     )
