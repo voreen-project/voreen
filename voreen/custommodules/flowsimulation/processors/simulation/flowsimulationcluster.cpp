@@ -534,13 +534,6 @@ void FlowSimulationCluster::runCluster(FlowSimulationConfig& config, std::string
 
 void FlowSimulationCluster::enqueueSimulations() {
 
-    const GlMeshGeometryBase* geometryData = dynamic_cast<const GlMeshGeometryBase*>(geometryDataPort_.getData());
-    if (!geometryData) {
-        VoreenApplication::app()->showMessageBox("Error", "No simulation geometry. Did you perform the segmentation?", true);
-        LERROR("Invalid simulation geometry");
-        return;
-    }
-
     const FlowSimulationConfig* originalConfig = configPort_.getData();
     if (!originalConfig || originalConfig->empty()) {
         VoreenApplication::app()->showMessageBox("Error", "No parametrization. Did you add one?", true);

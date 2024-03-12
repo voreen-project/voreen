@@ -236,6 +236,7 @@ void FlowSimulationConfig::serializeInternal(Serializer& s, size_t param) const 
     s.serialize("geometryIsMesh", geometryIsMesh_);
     s.serialize("measuredDataFiles", measuredDataFiles_);
     serializeVector<FlowIndicatorSerializable, FlowIndicator>(s, "flowIndicators", flowIndicators_);
+    serializeVector<FlowIndicatorSerializable, FlowIndicator>(s, "transformedFlowIndicators", getFlowIndicators(true));
     if(param == ALL_PARAMETER_SETS) {
         serializeVector<ParametersSerializable, Parameters>(s, "flowParametrizations", flowParameters_);
     }
