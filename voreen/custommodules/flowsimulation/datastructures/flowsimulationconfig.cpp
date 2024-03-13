@@ -50,10 +50,12 @@ FlowSimulationConfig::FlowSimulationConfig(const FlowSimulationConfig& origin)
     , outputResolution_(origin.outputResolution_)
     , outputFileFormat_(origin.outputFileFormat_)
     , flowFeatures_(origin.flowFeatures_)
+    , transformation_(origin.transformation_)
+    , geometryFiles_(origin.geometryFiles_)
+    , geometryIsMesh_(origin.geometryIsMesh_)
+    , measuredDataFiles_(origin.measuredDataFiles_)
     , flowIndicators_(origin.flowIndicators_)
     , flowParameters_(origin.flowParameters_)
-    , transformation_(origin.transformation_)
-    , geometryIsMesh_(true)
 {
 }
 
