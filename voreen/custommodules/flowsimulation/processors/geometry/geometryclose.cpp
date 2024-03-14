@@ -267,13 +267,7 @@ void GeometryClose::process() {
     }
 
     std::unique_ptr<Geometry> outputGeometry = inputGeometry->clone();
-    GlMeshGeometryUInt32Normal* geometry = dynamic_cast<GlMeshGeometryUInt32Normal*>(outputGeometry.get());
-    if(!geometry) {
-        LERROR("Currently only GlMeshGeometryUInt32Normal supported");
-        outport_.setData(nullptr);
-        return;
-    }
-
+    GlMeshGeometryBase* geometry = dynamic_cast<GlMeshGeometryBase*>(outputGeometry.get());
     if(geometry->getNumVertices() == 0) {
         LERROR("Geometry is empty!");
         outport_.setData(nullptr);
