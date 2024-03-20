@@ -27,6 +27,7 @@
 
 #include "voreen/core/io/volumeserializer.h"
 #include "voreen/core/io/volumeserializerpopulator.h"
+#include "voreen/core/io/volumewriter.h"
 #include "voreen/core/utils/stringutils.h"
 
 #include "tgt/filesystem.h"
