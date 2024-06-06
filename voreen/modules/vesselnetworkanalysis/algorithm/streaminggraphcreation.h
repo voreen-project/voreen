@@ -98,6 +98,7 @@ struct RunTree {
 // RunNode: An internal node in a tree of (regular voxel) runs that make up a branch
 struct RunNode : public RunTree {
     RunNode(std::unique_ptr<RunTree>&& left, std::unique_ptr<RunTree>&& right);
+    ~RunNode();
     void collectVoxels(std::vector<tgt::svec3>&, bool inverted = false) const;
     std::unique_ptr<RunTree> left_;
     std::unique_ptr<RunTree> right_;

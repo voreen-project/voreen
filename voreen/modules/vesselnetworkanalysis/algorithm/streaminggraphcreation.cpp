@@ -57,21 +57,69 @@ RunNode::RunNode(std::unique_ptr<RunTree>&& left, std::unique_ptr<RunTree>&& rig
     : left_(std::move(left))
     , right_(std::move(right))
 {
+    tgtAssert(left_.get() != right_.get(), "left == right");
+    tgtAssert(this != right_.get(), "this == right");
+    tgtAssert(this != left_.get(), "this == left");
+}
+
+static void collectVoxelsInternal(const RunNode* root, std::vector<tgt::svec3>& vec, bool inverted) {
+    struct StackElement {
+        const RunTree* node;
+        bool inverted;
+    };
+
+    std::vector<StackElement> stack {};
+    stack.push_back(StackElement { root, inverted });
+
+    while(!stack.empty()) {
+
+        StackElement top = stack.back();
+        stack.pop_back();
+
+        const RunNode* n;
+        const RunLeaf* l;
+        if ((n = dynamic_cast<const RunNode*>(top.node)) != nullptr) {
+            bool finalInverted = top.inverted^top.node->inverted_;
+
+            if(finalInverted) {
+                stack.push_back(StackElement { n->left_.get(), finalInverted });
+                stack.push_back(StackElement { n->right_.get(), finalInverted });
+            } else {
+                stack.push_back(StackElement { n->right_.get(), finalInverted });
+                stack.push_back(StackElement { n->left_.get(), finalInverted });
+            }
+        } else if ((l = dynamic_cast<const RunLeaf*>(top.node)) != nullptr) {
+            l->collectVoxels(vec, top.inverted);
+        }
+    }
 }
 
 void RunNode::collectVoxels(std::vector<tgt::svec3>& vec, bool inverted) const {
-    tgtAssert(left_, "left child is null")
-    tgtAssert(left_, "right child is null")
+    // Avoid stack overflow on deep trees
+    collectVoxelsInternal(this, vec, inverted);
+}
+static void dropRunNodeInternal(RunNode& root) {
+    std::vector<RunTree*> stack {};
+    stack.push_back(root.left_.release());
+    stack.push_back(root.right_.release());
 
-    bool finalInverted = inverted^inverted_;
-    if(finalInverted) {
-        right_->collectVoxels(vec, finalInverted);
-        left_->collectVoxels(vec, finalInverted);
-    } else {
-        left_->collectVoxels(vec, finalInverted);
-        right_->collectVoxels(vec, finalInverted);
+    while(!stack.empty()) {
+        RunTree* top = stack.back();
+        stack.pop_back();
+        RunNode* n;
+        if((n = dynamic_cast<RunNode*>(top)) != nullptr) {
+            stack.push_back(n->left_.release());
+            stack.push_back(n->right_.release());
+
+            delete top;
+        }
     }
 }
+RunNode::~RunNode() {
+    // Avoid stack overflow on deep trees
+    dropRunNodeInternal(*this);
+}
+
 // RunLeaf -------------------------------------------------------------------------------
 RunLeaf::RunLeaf(const RunPosition& run)
     : run_(run)
