@@ -49,29 +49,23 @@ public:
     virtual CodeState getCodeState() const   { return CODE_STATE_STABLE;          }
     virtual bool isUtility() const           { return true;                       }
 
-    virtual void invalidate(int inv = INVALID_RESULT);
-
 protected:
     virtual void setDescriptions() {
         setDescription("Permits to select one specific modality among those of all volumes within the incoming volume list. The filtered volume list contains only volumes of the specified modality.");
     }
 
     virtual void process();
-    virtual void initialize();
-    virtual void deinitialize();
 
     VolumeListPort inport_;
     VolumeListPort outport_;
 
     OptionProperty<Modality> modalityProp_;
-    Modality currentModality_;
-    VolumeList filteredList_;
 
     static const std::string loggerCat_;
 
 private:
-    void adjustFilteredList();
 
+    void updateModalityOptions();
 };
 
 }   // namespace voreen

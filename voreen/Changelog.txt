@@ -1,7 +1,7 @@
 Voreen Changelog
 ----------------
 
-(UNRELEASED): Voreen 5.2.1
+(UNRELEASED): Voreen 5.3.0
 ------------------------
 
     * Features:
@@ -40,6 +40,7 @@ Voreen Changelog
       o CTRL+F will set focus to the processor list search bar
       o VTIVolumeWriter will now reslice the input volume according to its transformation matrix as vtkImageData does not store transformations
       o VTIVolume{Reader|Writer} will now convert to and from Voreen units (mm)
+      o Fix VolumeListModalityFilter not updating correctly
 
 2021-01-28: Voreen 5.2.0
 ------------------------

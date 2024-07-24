@@ -34,70 +34,61 @@ VolumeListModalityFilter::VolumeListModalityFilter()
     : Processor(),
     inport_(Port::INPORT, "volumecollection", "VolumeList Input"),
     outport_(Port::OUTPORT, "volumecollection.filtered", "VolumeList Output"),
-    modalityProp_("modality", "modality: "),
-    currentModality_(Modality::MODALITY_ANY),
-    filteredList_()
+    modalityProp_("modality", "modality: ")
 {
     addPort(inport_);
+    ON_CHANGE(inport_, VolumeListModalityFilter, updateModalityOptions)
     addPort(outport_);
 
-    std::vector<Option<Modality> > options;
-    const std::vector<Modality>& modalities = Modality::getModalities();
-    for (size_t i = 0; i < modalities.size(); ++i) {
-        modalityProp_.addOption(modalities[i].getName(), modalities[i].getName(), modalities[i]);
-    }
-    modalityProp_.set(Modality::MODALITY_ANY.getName());
-    modalityProp_.onChange(MemberFunctionCallback<VolumeListModalityFilter>(this,
-        &VolumeListModalityFilter::adjustFilteredList));
     addProperty(modalityProp_);
+    updateModalityOptions();
 }
 
 Processor* VolumeListModalityFilter::create() const {
     return new VolumeListModalityFilter();
 }
 
-void VolumeListModalityFilter::initialize() {
-    Processor::initialize();
-    adjustFilteredList();
-}
-
-void VolumeListModalityFilter::deinitialize() {
-    outport_.setData(0);
-
-    Processor::deinitialize();
-}
-
-void VolumeListModalityFilter::invalidate(int /*inv*/) {
-    adjustFilteredList();
-}
-
 void VolumeListModalityFilter::process() {
-    // nothing
-}
 
-// private methods
-//
-
-void VolumeListModalityFilter::adjustFilteredList() {
     const VolumeList* collection = inport_.getData();
-    if ((collection == 0) || (collection->empty() == true)) {
-        filteredList_.clear();
-        outport_.setData(0);
+    if (!collection || collection->empty()) {
+        outport_.setData(nullptr);
         return;
     }
 
-    if (currentModality_.getName() != modalityProp_.get()) {
-        currentModality_ = modalityProp_.getValue();
-        filteredList_.clear();
-        if (currentModality_ != Modality::MODALITY_ANY) {
-            for (size_t i = 0; i < collection->size(); ++i) {
-                if (collection->at(i)->getModality() == currentModality_)
-                    filteredList_.add(collection->at(i));
-            }
-            outport_.setData(&filteredList_, false);
-        } else
-            outport_.setData(const_cast<VolumeList*>(inport_.getData()), false);
+    if(modalityProp_.getValue() == Modality::MODALITY_ANY) {
+        outport_.setData(collection, false);
+        return;
     }
+
+    VolumeList* filteredList = new VolumeList();
+    for (size_t i = 0; i < collection->size(); ++i) {
+        if (collection->at(i)->getModality() == modalityProp_.getValue()) {
+            filteredList->add(collection->at(i));
+        }
+    }
+    outport_.setData(filteredList, true);
 }
+
+void VolumeListModalityFilter::updateModalityOptions() {
+
+    // HACK: The way modalities are designed, we have to call their constructor in order to add them to the internal list.
+    if(auto* volumes = inport_.getData()) {
+        for(size_t i=0; i<volumes->size(); i++) {
+            volumes->at(i)->getModality(); // This adds them to the list.
+        }
+    }
+
+    bool empty = modalityProp_.getOptions().empty();
+    Modality selectedModality = empty ? Modality::MODALITY_ANY : modalityProp_.getValue();
+
+    modalityProp_.setOptions({});
+    const std::vector<Modality>& modalities = Modality::getModalities();
+    for (size_t i = 0; i < modalities.size(); ++i) {
+        modalityProp_.addOption(modalities[i].getName(), modalities[i].getName(), modalities[i]);
+    }
+
+    modalityProp_.set(selectedModality.getName());
+};
 
 }   // namespace voreen
