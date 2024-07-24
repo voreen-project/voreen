@@ -52,6 +52,15 @@ struct VolumeMergerComputeOutput{
  */
 class VRN_CORE_API VolumeMerger : public AsyncComputeProcessor<VolumeMergerComputeInput, VolumeMergerComputeOutput>  {
 public:
+
+    enum IntersectionResolutionStrategy {
+        IRS_NONE = 0,
+        IRS_LAST = 1,
+        IRS_MAX  = 2,
+        IRS_MIN  = 3,
+        IRS_AVG  = 4
+    };
+
     VolumeMerger();
     virtual ~VolumeMerger();
     virtual Processor* create() const;
@@ -67,8 +76,8 @@ public:
     virtual void setPadding(int padding);
     virtual int getPadding() const;
 
-    virtual void setAllowIntersections(bool allowIntersections);
-    virtual bool getAllowIntersections() const;
+    virtual void setIntersectionResolutionStrategy(IntersectionResolutionStrategy resolution);
+    virtual IntersectionResolutionStrategy getIntersectionResolutionStrategy() const;
 
 protected:
     virtual void setDescriptions() {
@@ -83,7 +92,7 @@ private:
     VolumeListPort inport_;
     VolumePort outport_;
 
-    BoolProperty allowIntersections_;
+    OptionProperty<IntersectionResolutionStrategy> intersectionResolutionStrategy_;
     IntProperty padding_;
 
     static const std::string loggerCat_;

@@ -206,7 +206,7 @@ FlowSimulationResult::ComputeInput FlowSimulationResult::prepareComputeInput() {
         }
 
         auto timeStep = timeStep_.get();
-        if(timeStep < 0 || timeStep >= timeStepPaths_.size()) {
+        if(timeStep < 0 || timeStep >= static_cast<int>(timeStepPaths_.size())) {
             throw InvalidInputException("Invalid time step index.", InvalidInputException::S_WARNING);
         }
         path = timeStepPaths_[timeStep];
@@ -269,7 +269,7 @@ FlowSimulationResult::ComputeOutput FlowSimulationResult::compute(ComputeInput i
 
     VolumeMerger merger;
     merger.setPadding(1);
-    merger.setAllowIntersections(true);
+    merger.setIntersectionResolutionStrategy(VolumeMerger::IRS_LAST);
     VolumeListPort port(Port::OUTPORT, "volumelist", "", false, Processor::VALID);
     port.setProcessor(const_cast<FlowSimulationResult*>(this));
     port.connect(merger.getPort("volumelist.input"));

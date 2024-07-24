@@ -36,13 +36,18 @@ VolumeMerger::VolumeMerger()
     : AsyncComputeProcessor<ComputeInput, ComputeOutput>()
     , inport_(Port::INPORT, "volumelist.input", "Volume List Input", false)
     , outport_(Port::OUTPORT, "volume.output", "Volume Output", false)
-    , allowIntersections_("allowIntersections", "Allow Intersections?", false)
+    , intersectionResolutionStrategy_("intersectionResolution", "Intersections Resolution")
     , padding_("padding", "Padding", 0, 0, 10)
 {
     addPort(inport_);
     addPort(outport_);
 
-    addProperty(allowIntersections_);
+    addProperty(intersectionResolutionStrategy_);
+    intersectionResolutionStrategy_.addOption("none", "None", IntersectionResolutionStrategy::IRS_NONE);
+    intersectionResolutionStrategy_.addOption("last", "Last", IntersectionResolutionStrategy::IRS_LAST);
+    intersectionResolutionStrategy_.addOption("max", "Max", IntersectionResolutionStrategy::IRS_MAX);
+    intersectionResolutionStrategy_.addOption("min", "Min", IntersectionResolutionStrategy::IRS_MIN);
+    intersectionResolutionStrategy_.addOption("avg", "Avg", IntersectionResolutionStrategy::IRS_AVG);
     addProperty(padding_);
 }
 
@@ -61,12 +66,12 @@ int VolumeMerger::getPadding() const {
     return padding_.get();
 }
 
-void VolumeMerger::setAllowIntersections(bool allowIntersections) {
-    allowIntersections_.set(allowIntersections);
+void VolumeMerger::setIntersectionResolutionStrategy(VolumeMerger::IntersectionResolutionStrategy strategy) {
+    intersectionResolutionStrategy_.selectByValue(strategy);
 }
 
-bool VolumeMerger::getAllowIntersections() const {
-    return allowIntersections_.get();
+VolumeMerger::IntersectionResolutionStrategy VolumeMerger::getIntersectionResolutionStrategy() const {
+    return intersectionResolutionStrategy_.getValue();
 }
 
 VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
@@ -84,6 +89,8 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     const size_t numChannels = inputList->first()->getNumChannels();
     const RealWorldMapping rwm = inputList->first()->getRealWorldMapping();
     const tgt::vec3 rwPadding(spacing * static_cast<float>(padding_.get()));
+
+    const bool intersectionsAllowed = getIntersectionResolutionStrategy() != IRS_NONE;
 
     tgt::Bounds globalBounds;
     std::vector<tgt::Bounds> processedBounds;
@@ -104,7 +111,7 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
         // TODO: add more checks
 
         tgt::Bounds localBounds(inputList->at(i)->getLLF() + rwPadding, inputList->at(i)->getURB() - rwPadding);
-        if(!allowIntersections_.get()) {
+        if(!intersectionsAllowed) {
             for (size_t j = 0; j < processedBounds.size(); j++) {
                 if (processedBounds[j].intersects(localBounds)) {
                     throw InvalidInputException("Volumes must not intersect", InvalidInputException::S_ERROR);
@@ -132,12 +139,39 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
     std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, globalBounds.getLLF()));
     outputVolume->setRealWorldMapping(rwm);
 
-    // As per default, take maximum value when two are colliding.
-    // TODO: Make user-defined.
-    auto collisionFunction = [] (float lhs, float rhs) {
-        return rhs; // Will always select the last one.
-        // return std::max(lhs, rhs); // Problematic for vector valued functions.
-    };
+    std::function<float(float, float)> collisionFunction;
+    switch (getIntersectionResolutionStrategy()) {
+    case IRS_LAST:
+        collisionFunction = [] (float lhs, float rhs) {
+            return rhs;
+        };
+        break;
+
+    case IRS_MAX:
+        collisionFunction = [] (float lhs, float rhs) {
+            return std::max(lhs, rhs);
+        };
+        break;
+
+    case IRS_MIN:
+        collisionFunction = [] (float lhs, float rhs) {
+            return std::min(lhs, rhs);
+        };
+        break;
+
+    case IRS_AVG:
+        collisionFunction = [] (float lhs, float rhs) {
+            return (lhs + rhs ) / 2;
+        };
+        break;
+
+    case IRS_NONE:
+    default:
+        collisionFunction = [] (float lhs, float rhs) {
+            return 0.0f; // Should not happen!
+        };
+        break;
+    }
 
     return VolumeMergerComputeInput{
             std::move(inputList),
