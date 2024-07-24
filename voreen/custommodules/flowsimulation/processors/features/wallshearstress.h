@@ -64,10 +64,6 @@ private:
     TransFunc1DKeysProperty transferFunction_;
 
     BoolProperty updateVertexPosition_;
-    BoolProperty optimizeVertexPositions_;
-    FloatProperty learningRate_;
-    FloatProperty stopLoss_;
-    IntProperty maxIter_;
     FloatProperty epsilon_;
     FloatProperty r_;
     BoolProperty invertNormals_;

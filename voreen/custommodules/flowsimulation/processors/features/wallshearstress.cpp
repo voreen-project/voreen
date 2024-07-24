@@ -59,10 +59,6 @@ WallShearStress::WallShearStress()
     , maxWSS_("maxWSSProp", "Expected Maximum WSS", 0.00002f, 0.0f, 1000.0f)
     , transferFunction_("transFuncProp", "Color Map")
     , updateVertexPosition_("updateVertexPosition", "Update Vertex Position", true)
-    , optimizeVertexPositions_("optimizeVertexPositionsProp", "Optimize Vertex Positions", false)
-    , learningRate_("learningRate", "Learning Rate", 0.001f, 0.0001f, 100.0f)
-    , stopLoss_("stopLoss", "Stop Loss", 0.001f, 0.0001f, 1.0f)
-    , maxIter_("maxIter", "Max. Iter", 100, 10, 1000)
     , epsilon_("epsilonProp", "Epsilon (mm)", 0.0f, 0.0f, 100.0f)
     , r_("rProp", "r (mm)", 0.1f, 0.0f, 100.0f)
     , invertNormals_("invertNormalsProp", "Invert normals", false)
@@ -91,19 +87,6 @@ WallShearStress::WallShearStress()
     addProperty(transferFunction_);
 
     addProperty(updateVertexPosition_);
-    addProperty(optimizeVertexPositions_);
-    ON_CHANGE_LAMBDA(optimizeVertexPositions_, [this] {
-        learningRate_.setVisibleFlag(optimizeVertexPositions_.get());
-        stopLoss_.setVisibleFlag(optimizeVertexPositions_.get());
-        maxIter_.setVisibleFlag(optimizeVertexPositions_.get());
-    });
-    optimizeVertexPositions_.invalidate();
-    addProperty(learningRate_);
-    learningRate_.setNumDecimals(5);
-    addProperty(stopLoss_);
-    stopLoss_.setNumDecimals(5);
-    addProperty(maxIter_);
-
 
     addProperty(epsilon_);
     epsilon_.setNumDecimals(5);
@@ -212,33 +195,6 @@ void WallShearStress::process() {
         return tgt::vec4::zero;
     };
 
-    auto optimizePos = [&] (tgt::vec3& pos, tgt::vec3 normal, float lambda = 0.01f, float stopLoss = 0.001f, size_t maxIter = 1000) {
-
-        // 1. Try to optimize the vertex position: gradient descent on vector magnitude (find minimum)!.
-
-        float p = 0;
-
-        for(size_t i=0; i<maxIter; i++) {
-
-            tgt::vec3 v_p = sample(pos, normal, p+r);
-            tgt::vec3 v_m = sample(pos, normal, p-r);
-
-            float mag_p = tgt::length(v_p);
-            float mag_m = tgt::length(v_m);
-
-            float J = (mag_p - mag_m) / (2*r);
-
-            float p_ = p - lambda * J;
-
-            if(std::abs(tgt::length(sample(pos, normal, p_)) - tgt::length(sample(pos, normal, p))) < stopLoss) {
-                pos += normal * p_;
-                return;
-            }
-
-            p = p_;
-        }
-    };
-
     const std::vector<VertexNormal>& vertices = surfaceInput->getVertices();
     std::vector<VertexColorNormal> outputVertices(vertices.size());
 
@@ -255,10 +211,6 @@ void WallShearStress::process() {
 
         tgt::vec3 pos = surfaceInput->getTransformationMatrix() * vertex.pos_;
         tgt::vec3 normal = invertNormals ? tgt::normalize(vertex.normal_) : -tgt::normalize(vertex.normal_);
-
-        if(optimizeVertexPositions_.get()) {
-            optimizePos(pos, normal, learningRate_.get(), stopLoss_.get(), maxIter_.get());
-        }
 
         tgt::vec3 vectorAtSurface = sample(pos, normal, epsilon);
         tgt::vec3 vectorInLumen = sample(pos, normal, epsilon + r);
@@ -334,12 +286,10 @@ bool WallShearStress::isReady() const {
         return false;
     }
 
-    if(!wssSurfaceOutport_.isReady()) {
+    if(!wssSurfaceOutport_.isReady() && !intensityVolume_.isReady()) {
         setNotReadyErrorMessage("No output connected");
         return false;
     }
-
-    // Note: intensity volume is optional!
 
     return true;
 }
