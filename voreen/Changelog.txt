@@ -41,6 +41,7 @@ Voreen Changelog
       o VTIVolumeWriter will now reslice the input volume according to its transformation matrix as vtkImageData does not store transformations
       o VTIVolume{Reader|Writer} will now convert to and from Voreen units (mm)
       o Fix VolumeListModalityFilter not updating correctly
+      o Set default background to monochrome white
 
 2021-01-28: Voreen 5.2.0
 ------------------------

@@ -120,7 +120,7 @@ Background::Background()
     modeProp_.addOption("radial",     "Radial");
     modeProp_.addOption("texture",    "Texture");
     modeProp_.addOption("cloud",      "Cloud");
-    modeProp_.select("gradient");
+    modeProp_.select("monochrome");
     modeProp_.onChange(MemberFunctionCallback<Background>(this, &Background::onBackgroundModeChanged));
     onBackgroundModeChanged(); // setup initial property visibilty
 
