@@ -50,6 +50,8 @@ protected:
                        "Helicity density is defined by the voxel-wise dot-product of velocity and vorticity.");
         velocityInport_.setDescription("Velocity input volume (3D vector field)");
         vorticityInport_.setDescription("Vorticity input volume (3D vector field)");
+        normalize_.setDescription("Normalize the helicity density values to the range [0, 1]");
+        absolute_.setDescription("Calculate the absolute value of the helicity density");
     }
 
     virtual bool isReady() const;
@@ -61,6 +63,7 @@ private:
     VolumePort vorticityInport_;
     VolumePort helicityDensityOutport_;
     BoolProperty normalize_;
+    BoolProperty absolute_;
 };
 
 }   //namespace
