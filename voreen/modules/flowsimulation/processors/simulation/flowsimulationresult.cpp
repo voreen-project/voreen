@@ -25,9 +25,9 @@
 
 #include "flowsimulationresult.h"
 
-#include "modules/vtk/io/vtmvolumereader.h"
-#include "custommodules/flowsimulation/processors/volume/volumemerger.h"
+#include "modules/flowsimulation/processors/volume/volumemerger.h"
 #include "modules/vtk/io/vtivolumereader.h"
+#include "modules/vtk/io/vtmvolumereader.h"
 
 #include <vtkXMLDataParser.h>
 #include <vtkXMLUtilities.h>
