@@ -6,6 +6,11 @@
                 <MetaItem name="DocumentationGraphicsItems" type="SerializableVectorMetaData::TextBoxMetaData" isOwner="true">
                     <values />
                 </MetaItem>
+                <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
+                    <values>
+                        <item type="VolumeSave" ref="ref7" />
+                    </values>
+                </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
                     <value x="-51.59053421" y="-85.719657898" />
                 </MetaItem>
@@ -45,9 +50,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSave" name="VolumeSave" id="ref3">
+                <Processor type="VolumeSave" name="VolumeSave" id="ref4">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-132" y="-83" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-129" y="-83" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
@@ -83,6 +88,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-134" y="-177" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="absolute" name="absolute" value="false" />
                         <Property mapKey="normalize" name="normalize" value="false" />
                     </Properties>
                     <Inports>
@@ -117,6 +123,7 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="42" y="-173" />
                     </MetaData>
                     <Properties>
+                        <Property mapKey="absolute" name="absolute" value="false" />
                         <Property mapKey="normalize" name="normalize" value="true" />
                     </Properties>
                     <Inports>
@@ -146,9 +153,9 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSave" name="VolumeSave 2" id="ref4">
+                <Processor type="VolumeSave" name="VolumeSave 2" id="ref5">
                     <MetaData>
-                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="77" y="-84" />
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="76" y="-83" />
                     </MetaData>
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
@@ -179,7 +186,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="VolumeSource" name="Vorticity" id="ref5">
+                <Processor type="VolumeSource" name="Vorticity" id="ref6">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="74" y="-376" />
                     </MetaData>
@@ -212,6 +219,74 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
+                <Processor type="HelicityDensity" name="Normalized Absolute HelicityDensity" id="ref3">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="273" y="-172" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="absolute" name="absolute" value="true" />
+                        <Property mapKey="normalize" name="normalize" value="true" />
+                    </Properties>
+                    <Inports>
+                        <Port name="velocity" direction="1" portID="velocity" guiName="Velocity Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                        <Port name="vorticity" direction="1" portID="vorticity" guiName="Vorticity Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports>
+                        <Port name="helicityDensity" direction="0" portID="helicityDensity" guiName="Helicity Density Output" allowMultipleConnections="true" invalidationLevel="0">
+                            <Properties>
+                                <Property mapKey="blockEvents" name="blockEvents" value="false" />
+                            </Properties>
+                        </Port>
+                    </Outports>
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
+                <Processor type="VolumeSave" name="VolumeSave 3" id="ref7">
+                    <MetaData>
+                        <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="334" y="-79" />
+                    </MetaData>
+                    <Properties>
+                        <Property mapKey="continousSave" name="continousSave" value="false" />
+                        <Property mapKey="outputFilename" name="outputFilename" watchMode="1" fileWatchEnabled="false">
+                            <paths noPathSet="false">
+                                <paths>
+                                    <item value="output/normalized_absolute_helicitydensity.vvd" />
+                                    <item value="../test-data/voreen-testdata/output/normalized_absolute_helicitydensity.vvd" />
+                                    <item value="/home/spider/programming/voreen-flow/test-data/voreen-testdata/output/normalized_absolute_helicitydensity.vvd" />
+                                </paths>
+                            </paths>
+                        </Property>
+                        <Property mapKey="save" name="save" />
+                        <Property mapKey="saveOnPathChange" name="saveOnPathChange" value="true" />
+                        <Property mapKey="volumeInfo" name="volumeInfo" />
+                    </Properties>
+                    <Inports>
+                        <Port name="volumehandle.input" direction="1" portID="volumehandle.input" guiName="Volume Input" allowMultipleConnections="false" invalidationLevel="1">
+                            <Properties>
+                                <Property mapKey="textureBorderIntensity" name="textureBorderIntensity" value="0" />
+                                <Property mapKey="textureClampMode_" name="textureClampMode_" value="clamp-to-edge" />
+                                <Property mapKey="textureFilterMode_" name="textureFilterMode_" value="linear" />
+                            </Properties>
+                        </Port>
+                    </Inports>
+                    <Outports />
+                    <CoProcessorInports />
+                    <CoProcessorOutports />
+                    <InteractionHandlers />
+                </Processor>
             </Processors>
             <Connections>
                 <Connection>
@@ -231,24 +306,32 @@
                     </Inport>
                 </Connection>
                 <Connection>
-                    <Outport name="helicityDensity">
-                        <Processor type="HelicityDensity" ref="ref1" />
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref0" />
                     </Outport>
-                    <Inport name="volumehandle.input">
-                        <Processor type="VolumeSave" ref="ref3" />
+                    <Inport name="velocity">
+                        <Processor type="HelicityDensity" ref="ref3" />
                     </Inport>
                 </Connection>
                 <Connection>
                     <Outport name="helicityDensity">
-                        <Processor type="HelicityDensity" ref="ref2" />
+                        <Processor type="HelicityDensity" ref="ref1" />
                     </Outport>
                     <Inport name="volumehandle.input">
                         <Processor type="VolumeSave" ref="ref4" />
                     </Inport>
                 </Connection>
                 <Connection>
+                    <Outport name="helicityDensity">
+                        <Processor type="HelicityDensity" ref="ref2" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref5" />
+                    </Inport>
+                </Connection>
+                <Connection>
                     <Outport name="volumehandle.volumehandle">
-                        <Processor type="VolumeSource" ref="ref5" />
+                        <Processor type="VolumeSource" ref="ref6" />
                     </Outport>
                     <Inport name="vorticity">
                         <Processor type="HelicityDensity" ref="ref1" />
@@ -256,10 +339,26 @@
                 </Connection>
                 <Connection>
                     <Outport name="volumehandle.volumehandle">
-                        <Processor type="VolumeSource" ref="ref5" />
+                        <Processor type="VolumeSource" ref="ref6" />
                     </Outport>
                     <Inport name="vorticity">
                         <Processor type="HelicityDensity" ref="ref2" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="volumehandle.volumehandle">
+                        <Processor type="VolumeSource" ref="ref6" />
+                    </Outport>
+                    <Inport name="vorticity">
+                        <Processor type="HelicityDensity" ref="ref3" />
+                    </Inport>
+                </Connection>
+                <Connection>
+                    <Outport name="helicityDensity">
+                        <Processor type="HelicityDensity" ref="ref3" />
+                    </Outport>
+                    <Inport name="volumehandle.input">
+                        <Processor type="VolumeSave" ref="ref7" />
                     </Inport>
                 </Connection>
             </Connections>
