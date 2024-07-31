@@ -13,7 +13,14 @@ Voreen Changelog
       o Add Wavefront OBJ file support to VesselGraphSave
       o Add (still experimental) VolumeRAMSwap disk representation to EnsembleAnalysisModule (enable by module properties) which enables loading of large ensembles without disk representation. Still it is recommended to use a format that natively supports disk representations, such as HDF5.
       o Add (still experimental) serialization of derived data of volumes as part of an ensemble which speeds up loading times immensely for ensembles without derived data, when using the 'Cached' loading strategy.
-      o VolumeListSave now allows to save all supported file formats
+      o VolumeListSave now allows to save all supported volume file formats
+      o Add LargeTestDataGenerator processor, useful for evaluating out-of-core methods
+      o Add noise model specific edge weight calculation to RandomWalker and OctreeWalker
+      o Add octree-based simd cpu rendering to SliceViewer (faster in some use cases, especially when scrolling through the volume)
+      o Add SuperVoxelWalker processor, an implementation of super voxel-based random walker, mostly as a baseline for RandomWalker and OctreeWalker
+      o Add VolumeArgMax processor
+      o Add (approximate) median octree aggregation function (as an alternative to mean aggregation)
+      o Add LargeVolumeDistanceTransform processor
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
@@ -33,7 +40,6 @@ Voreen Changelog
       o Enable file watching for vti and netcdf files
       o Fix corner case where spurious branches would not be deleted in VesselGraphCreator and VesselGraphRefiner under some conditions
       o Greatly improve loading time and memory consumption of VTIVolumeReader
-      o Fix precision issue with u32 values in VolumeFilterList (and potentially other processors)
       o Parallel Coordinates now properly display and are restricted to up to 256 axes (before was 128, displaying more was possible but erroneous)
       o Improve VoreenVE GUI (opt-in): the processor list is now filtered by the currently selected processor. Only processors that can actually be connected to the selection will be selectable. Additionally, the newly added processor will be connected to the old selection and becomes the new selection, allowing for more effectively creating networks.
       o CTRL+A will no longer trigger the animation editor
@@ -42,6 +48,18 @@ Voreen Changelog
       o VTIVolume{Reader|Writer} will now convert to and from Voreen units (mm)
       o Fix VolumeListModalityFilter not updating correctly
       o Set default background to monochrome white
+      o Fix precision issue for large values in uint32/int32 volumes
+      o Make binarization optimization configurable in OctreeWalker,
+      o Prefer non-homogeneous nodes when sampling neighborhood in OctreeWalker
+      o Fix race condition in RandomWalker
+      o Fix ProxyGeometry setting for out-of-core volumes in segmentation-octreewalker workspace
+      o Fix various issues with tmp path handling
+      o Fix precision issues in VesselnessExtractor
+      o Fix undefined behaviour in transfunc1dkeys, causing broken transfer functions depending on compiler configuration
+      o Fix denormalizing mapping for signed integers volumes
+      o Crash-proof OctreeWalker cache files
+      o Fix python module compilation for python 3.11
+      o Fix stack overflow when using VesselGraphCreator on malformed volumes
 
 2021-01-28: Voreen 5.2.0
 ------------------------
