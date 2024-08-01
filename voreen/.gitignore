@@ -86,6 +86,7 @@ qmake.bat
 modules/gdcm/ext/
 modules/itk/ext/
 modules/hdf5/ext/
+modules/python/ext/
 modules/vtk/ext/
 
 # qt generated .cxx and paramter files
