@@ -13,18 +13,14 @@ IF(WIN32)
     SET(GLUT_INCLUDE_DIR "${GLUT_DIR}")
 
     # set debug and release library
-    IF(VRN_MSVC2015)
-        SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2015/freeglutd.lib")
-        SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2015/freeglut.lib")
-        
-        SET(GLUT_DEBUG_DLL          "${GLUT_DIR}/lib/msvc2015/freeglutd.dll")
-        SET(GLUT_RELEASE_DLL        "${GLUT_DIR}/lib/msvc2015/freeglut.dll")
-    ELSEIF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)
+    IF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)
         SET(GLUT_DEBUG_LIBRARY      "${GLUT_DIR}/lib/msvc2017/freeglutd.lib")
         SET(GLUT_RELEASE_LIBRARY    "${GLUT_DIR}/lib/msvc2017/freeglut.lib")
         
         SET(GLUT_DEBUG_DLL          "${GLUT_DIR}/lib/msvc2017/freeglutd.dll")
         SET(GLUT_RELEASE_DLL        "${GLUT_DIR}/lib/msvc2017/freeglut.dll")
+    ELSE()
+        MESSAGE(FATAL_ERROR "Unsupported MSVC toolchain")
     ENDIF()
 
     IF (GLUT_DEBUG_LIBRARY AND GLUT_RELEASE_LIBRARY)

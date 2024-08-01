@@ -27,10 +27,10 @@ IF(WIN32)
     LIST(APPEND GDCM_DLL_NAMES ${GDCM_LIB_NAMES})
     
     # set debug and release libraries
-    IF(VRN_MSVC2015)            
-        SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2015")
-    ELSEIF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
+    IF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
         SET(GDCM_LIB_DIR "${MOD_DIR}/ext/gdcm-${VRN_GDCM_VERSION}/lib/msvc2017")
+    ELSE()
+        MESSAGE(FATAL_ERROR "Unsupported MSVC toolchain")
     ENDIF()
 
     IF(NOT EXISTS ${GDCM_LIB_DIR}/debug/gdcmCommon.lib)

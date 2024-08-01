@@ -38,11 +38,7 @@ IF (WIN32)
     SET(Boost_INCLUDE_DIRS "${Boost_DIR}/include")
     
     # set debug and release libraries
-    IF(VRN_MSVC2015)            
-        SET(Boost_LIB_DIR "${Boost_DIR}/lib/msvc2015")
-        SET(VRN_Boost_LIB_STR "-vc140-mt-${VRN_Boost_VERSION_WIN32}")
-        SET(VRN_Boost_LIB_GD_STR "-vc140-mt-gd-${VRN_Boost_VERSION_WIN32}")
-    ELSEIF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
+    IF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
         SET(Boost_LIB_DIR "${Boost_DIR}/lib/msvc2017")
         SET(VRN_Boost_LIB_STR "-vc141-mt-${VRN_Boost_VERSION_WIN32}")
         SET(VRN_Boost_LIB_GD_STR "-vc141-mt-gd-${VRN_Boost_VERSION_WIN32}")

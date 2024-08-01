@@ -8,7 +8,7 @@
                 </MetaItem>
                 <MetaItem name="ProcessorSelection" type="SerializableVectorMetaData::Processor" isOwner="false">
                     <values>
-                        <item type="SingleVolumeRaycaster" ref="ref4" />
+                        <item type="ParallelCoordinatesViewer" ref="ref5" />
                     </values>
                 </MetaItem>
                 <MetaItem name="ZoomCenter" type="Vec2MetaData">
@@ -46,9 +46,9 @@
                     <Properties>
                         <Property mapKey="clipRegion" tracking="true">
                             <bounds.llf x="0" y="0" z="0" />
-                            <bounds.urb x="82" y="82" z="83" />
+                            <bounds.urb x="83" y="83" z="68" />
                             <minValue x="0" y="0" z="0" />
-                            <maxValue x="82" y="82" z="83" />
+                            <maxValue x="83" y="83" z="68" />
                             <minRange x="0" y="0" z="0" />
                             <maxRange x="2147483647" y="2147483647" z="2147483647" />
                             <stepping x="1" y="1" z="1" />
@@ -57,7 +57,7 @@
                         <Property mapKey="resetClipPlanes" name="resetClipPlanes" />
                         <Property mapKey="resolution" name="resolution" value="1" />
                         <Property mapKey="resolutionMode" name="resolutionMode" value="subdivide" />
-                        <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="83" />
+                        <Property mapKey="resolutionvoxel" name="resolutionvoxel" value="69" />
                         <Property mapKey="threshold" name="threshold" value="1" />
                         <Property mapKey="transferfunction" name="transferfunction" domainFittingStrategy="1" computeHistogram="true">
                             <MetaData>
@@ -162,15 +162,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-2" y="-410" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="42000" minValue="1.659999967" frustLeft="-0.687594533" frustRight="0.687594533" frustBottom="-0.687594533" frustTop="0.687594533" frustNear="1.659999967" frustFar="42168" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000295165" id="ref21">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="42000" minValue="1.659999967" frustLeft="-0.687594533" frustRight="0.687594533" frustBottom="-0.687594533" frustTop="0.687594533" frustNear="1.659999967" frustFar="42168" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000298147" id="ref21">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="237.387680054" y="-175.611541748" z="-67.619682312" />
-                            <focus x="80.616668701" y="80.616668701" z="81.599998474" />
-                            <upVector x="-0.341254205" y="0.453683585" z="-0.823235512" />
+                            <position x="37.620689392" y="-236.826446533" z="-33.462715149" />
+                            <focus x="80.628570557" y="80.628570557" z="65.881156921" />
+                            <upVector x="-0.109258719" y="0.441279113" z="-0.890693784" />
                             <trackball moveCenter="false">
-                                <center x="80.616668701" y="80.616668701" z="81.599998474" />
+                                <center x="80.628570557" y="80.628570557" z="65.881156921" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -210,18 +210,18 @@
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
@@ -231,13 +231,13 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-489" y="-510" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="event_property_hover" name="event_property_hover" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="event_property_mouse" name="event_property_mouse" enabled="true" mouseAction="127" mouseButtons="5" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="event_property_hover" name="event_property_hover" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="event_property_mouse" name="event_property_mouse" enabled="true" mouseButtons="5" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="property_density_blending" name="property_density_blending" value="true" />
                         <Property mapKey="property_density_selected_samples" name="property_density_selected_samples" value="1" />
                         <Property mapKey="property_density_visible_samples" name="property_density_visible_samples" value="4" />
-                        <Property mapKey="property_field_interval" minValue="0" maxValue="2570.014404297" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
-                            <value x="0" y="2570.014404297" />
+                        <Property mapKey="property_field_interval" minValue="0" maxValue="314.713562012" minRange="0" maxRange="340282346638528859811704183484516925440" stepping="0.01" tracking="true">
+                            <value x="0" y="314.713562012" />
                         </Property>
                         <Property mapKey="property_section" name="property_section" id="ref23" />
                         <Property mapKey="property_selected_field" name="property_selected_field" guiName="Adjust interval of Field:" value="Magnitude">
@@ -286,6 +286,47 @@
                                     <GuiColor r="0" g="0" b="0" a="0" />
                                 </Option>
                             </Options>
+                        </Property>
+                        <Property mapKey="property_selected_member_intern" name="property_selected_member_intern">
+                            <selectedRow />
+                            <values>
+                                <item>
+                                    <First value="sense_10" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_15" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_20" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_25" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_30" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_35" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_40" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_45" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                                <item>
+                                    <First value="sense_50" />
+                                    <Second x="0" y="0" z="0" />
+                                </item>
+                            </values>
                         </Property>
                         <Property mapKey="property_selected_samples" name="property_selected_samples" />
                         <Property mapKey="property_selected_timestep" name="property_selected_timestep" value="0" />
@@ -476,9 +517,21 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
-                                <domain x="0" y="2570.014404297" />
+                                <domain x="0" y="314.713562012" />
                                 <threshold x="0" y="1" />
-                                <Keys />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0.076792836" split="true">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                        <colorR r="33" g="0" b="108" a="19" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.100000001" split="false">
+                                        <colorL r="43" g="0" b="141" a="25" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.132194489" split="true">
+                                        <colorL r="58" g="0" b="176" a="33" />
+                                        <colorR r="0" g="0" b="0" a="0" />
+                                    </key>
+                                </Keys>
                             </TransferFunction>
                         </Property>
                         <Property mapKey="property_trans_func_intern1" name="property_trans_func_intern1" domainFittingStrategy="1" computeHistogram="true">
@@ -679,7 +732,7 @@
                 <Processor type="Canvas" name="Canvas" id="ref12">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-74" y="314" />
-                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="527" y="83" width="1216" height="1197" />
+                        <MetaItem name="ProcessorWidget" type="WindowStateMetaData" visible="true" x="579" y="94" width="1216" height="1197" />
                         <MetaItem name="preferedApplicationModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedApplicationModeCanvasPosition" type="IVec2MetaData">
                             <value x="0" y="-25" />
@@ -689,7 +742,7 @@
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasFS" type="BoolMetaData" value="false" />
                         <MetaItem name="preferedNetworkModeCanvasPosition" type="IVec2MetaData">
-                            <value x="527" y="83" />
+                            <value x="579" y="94" />
                         </MetaItem>
                         <MetaItem name="preferedNetworkModeCanvasSize" type="IVec2MetaData">
                             <value x="1216" y="1197" />
@@ -726,15 +779,15 @@
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="358" y="-396" />
                     </MetaData>
                     <Properties>
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="42000" minValue="1.659999967" frustLeft="-0.687594533" frustRight="0.687594533" frustBottom="-0.687594533" frustTop="0.687594533" frustNear="1.659999967" frustFar="42168" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000295165" id="ref22">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="42000" minValue="1.659999967" frustLeft="-0.687594533" frustRight="0.687594533" frustBottom="-0.687594533" frustTop="0.687594533" frustNear="1.659999967" frustFar="42168" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000298147" id="ref22">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="237.387680054" y="-175.611541748" z="-67.619682312" />
-                            <focus x="80.616668701" y="80.616668701" z="81.599998474" />
-                            <upVector x="-0.341254205" y="0.453683585" z="-0.823235512" />
+                            <position x="37.620689392" y="-236.826446533" z="-33.462715149" />
+                            <focus x="80.628570557" y="80.628570557" z="65.881156921" />
+                            <upVector x="-0.109258719" y="0.441279113" z="-0.890693784" />
                             <trackball moveCenter="false">
-                                <center x="80.616668701" y="80.616668701" z="81.599998474" />
+                                <center x="80.628570557" y="80.628570557" z="65.881156921" />
                             </trackball>
                             <sceneLLF x="0" y="0" z="0" />
                             <sceneURB x="0" y="0" z="0" />
@@ -774,23 +827,23 @@
                         <Handler name="cameraHandler">
                             <Properties>
                                 <Property mapKey="cameraHandler.interactionMetaphor" name="cameraHandler.interactionMetaphor" value="trackball" />
-                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseAction="0" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseAction="0" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseAction="0" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseAction="0" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseAction="0" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseAction="0" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
-                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseAction="127" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
-                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseAction="16" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
-                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseAction="127" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveBackward" name="cameraHandler.moveBackward" enabled="true" mouseButtons="0" keyCode="115" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveDown" name="cameraHandler.moveDown" enabled="true" mouseButtons="0" keyCode="102" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveForward" name="cameraHandler.moveForward" enabled="true" mouseButtons="0" keyCode="119" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveLeft" name="cameraHandler.moveLeft" enabled="true" mouseButtons="0" keyCode="97" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveRight" name="cameraHandler.moveRight" enabled="true" mouseButtons="0" keyCode="100" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.moveUp" name="cameraHandler.moveUp" enabled="true" mouseButtons="0" keyCode="114" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.multitouch" name="cameraHandler.multitouch" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotate" name="cameraHandler.rotate" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.rotatecont" name="cameraHandler.rotatecont" enabled="true" mouseButtons="1" keyCode="0" modifier="2" shareEvents="false" />
+                                <Property mapKey="cameraHandler.shift" name="cameraHandler.shift" enabled="true" mouseButtons="1" keyCode="0" modifier="1" shareEvents="false" />
+                                <Property mapKey="cameraHandler.wheelZoom" name="cameraHandler.wheelZoom" enabled="true" mouseButtons="96" keyCode="0" modifier="0" shareEvents="false" />
+                                <Property mapKey="cameraHandler.zoom" name="cameraHandler.zoom" enabled="true" mouseButtons="4" keyCode="0" modifier="0" shareEvents="false" />
                             </Properties>
                         </Handler>
                     </InteractionHandlers>
                 </Processor>
-                <Processor type="EnsembleFilter" name="EnsembleFilter" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref10">
+                <Processor type="EnsembleFilter" name="EnsembleFilter" hash="fef2f274191fef4036504bb40a053e52" id="ref10">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-134" y="-855" />
                     </MetaData>
@@ -968,11 +1021,11 @@
                                 <paths>
                                     <item value="../volumes/aneurysm" />
                                     <item value="resource/voreenve/volumes/aneurysm" />
-                                    <item value="/home/spider/programming/voreen-flow/voreen/resource/voreenve/volumes/aneurysm" />
+                                    <item value="C:/voreen-development/voreen/resource/voreenve/volumes/aneurysm" />
                                 </paths>
                             </paths>
                         </Property>
-                        <Property mapKey="hash" name="hash" value="a5ab9131c2fdd9b9db12ae519fecad90" />
+                        <Property mapKey="hash" name="hash" value="fef2f274191fef4036504bb40a053e52" />
                         <Property mapKey="loadDataset" name="loadDataset" />
                         <Property mapKey="loadedMembers" name="loadedMembers" columnCount="5" selectedRow="-1">
                             <columnLabels>
@@ -1050,10 +1103,12 @@
                         </Property>
                         <Property mapKey="loadingStrategy" name="loadingStrategy" value="cached" />
                         <Property mapKey="memberProgress" name="memberProgress" />
+                        <Property mapKey="overrideFieldName" name="overrideFieldName" value="false" />
                         <Property mapKey="overrideTime" name="overrideTime" value="false" />
                         <Property mapKey="printEnsemble" name="printEnsemble" watchMode="1" fileWatchEnabled="false">
                             <paths noPathSet="true" />
                         </Property>
+                        <Property mapKey="showProgressDialog" name="showProgressDialog" value="false" />
                         <Property mapKey="timeStepProgress" name="timeStepProgress" />
                     </Properties>
                     <Inports />
@@ -1080,8 +1135,9 @@
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" />
                         <Property mapKey="property_sections" name="property_sections" id="ref24" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 125 ms" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 25.076 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
                     <Inports>
@@ -1106,18 +1162,18 @@
                     </MetaData>
                     <Properties>
                         <Property mapKey="applyLightAttenuation" name="applyLightAttenuation" value="false" />
-                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="42000" minValue="1.659999967" frustLeft="-0.687594533" frustRight="0.687594533" frustBottom="-0.687594533" frustTop="0.687594533" frustNear="1.659999967" frustFar="42168" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000295165" id="ref25">
+                        <Property mapKey="camera" name="camera" projectionMode="1" maxValue="42000" minValue="1.659999967" frustLeft="-0.687594533" frustRight="0.687594533" frustBottom="-0.687594533" frustTop="0.687594533" frustNear="1.659999967" frustFar="42168" fovy="45" eyeMode="1" eyeSeparation="65" axisMode="0" stereoFocalLengh="600" stereoWidth="450" stereoRelativeFocalLength="0.050000001" useRealWorldFrustum="0" centerOption="0" adaptOnChange="true" useOrthoZoomFactor="false" orthoZoomFactor="0.000298147" id="ref25">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="237.387680054" y="-175.611541748" z="-67.619682312" />
-                            <focus x="80.616668701" y="80.616668701" z="81.599998474" />
-                            <upVector x="-0.341254205" y="0.453683585" z="-0.823235512" />
+                            <position x="37.620689392" y="-236.826446533" z="-33.462715149" />
+                            <focus x="80.628570557" y="80.628570557" z="65.881156921" />
+                            <upVector x="-0.109258719" y="0.441279113" z="-0.890693784" />
                             <trackball moveCenter="false">
-                                <center x="80.616668701" y="80.616668701" z="81.599998474" />
+                                <center x="80.628570557" y="80.628570557" z="65.881156921" />
                             </trackball>
-                            <sceneLLF x="-2.383333206" y="-2.383333206" z="-2.400000095" />
-                            <sceneURB x="163.616668701" y="163.616668701" z="165.600006104" />
+                            <sceneLLF x="-2.37142849" y="-2.37142849" z="-2.118840694" />
+                            <sceneURB x="163.628570557" y="163.628570557" z="133.881164551" />
                         </Property>
                         <Property mapKey="channelShift1" name="channelShift1">
                             <value x="0" y="0" z="0" />
@@ -1201,10 +1257,10 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="2886.797363281">
-                            <value x="1.246673584" y="0.446670532" z="1.279998779" w="1" />
-                            <Center x="80.616668701" y="80.616668701" z="81.599998474" />
-                            <LightPos x="106.091369629" y="65.856460571" z="59.880508423" w="1" />
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="2713.079589844">
+                            <value x="1.258575439" y="0.458572388" z="-14.438842773" w="1" />
+                            <Center x="80.628570557" y="80.628570557" z="65.881156921" />
+                            <LightPos x="58.44644165" y="60.793109894" z="109.846878052" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
                             <value x="0.600000024" y="0.600000024" z="0.600000024" w="1" />
@@ -1501,14 +1557,14 @@
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
-                            <position x="82" y="82" z="377.158905029" />
-                            <focus x="82" y="82" z="83" />
+                            <position x="82.011901855" y="82.011901855" z="361.173400879" />
+                            <focus x="82.011901855" y="82.011901855" z="67.01449585" />
                             <upVector x="0" y="1" z="0" />
                             <trackball moveCenter="false">
-                                <center x="82" y="82" z="83" />
+                                <center x="82.011901855" y="82.011901855" z="67.01449585" />
                             </trackball>
-                            <sceneLLF x="-1" y="-1" z="-1" />
-                            <sceneURB x="165" y="165" z="167" />
+                            <sceneLLF x="-0.988095224" y="-0.988095224" z="-0.98550725" />
+                            <sceneURB x="165.011901855" y="165.011901855" z="135.01449585" />
                         </Property>
                         <Property mapKey="channelShift1" name="channelShift1">
                             <value x="0" y="0" z="0" />
@@ -1592,9 +1648,9 @@
                         <Property mapKey="lightDiffuse" name="lightDiffuse">
                             <value x="0.800000012" y="0.800000012" z="0.800000012" w="1" />
                         </Property>
-                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="2886.797363281">
-                            <value x="84.300003052" y="83.5" z="84.5" w="1" />
-                            <Center x="82" y="82" z="83" />
+                        <Property mapKey="lightPosition" name="lightPosition" FollowCam="false" MaxDist="2713.079589844">
+                            <value x="84.311904907" y="83.511901855" z="68.51449585" w="1" />
+                            <Center x="82.011901855" y="82.011901855" z="67.01449585" />
                             <LightPos x="2.300003052" y="1.5" z="1.5" w="1" />
                         </Property>
                         <Property mapKey="lightSpecular" name="lightSpecular">
@@ -1603,7 +1659,7 @@
                         <Property mapKey="materialShininess" name="materialShininess" value="60" />
                         <Property mapKey="raycast.prg" name="raycast.prg">
                             <MetaData>
-                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="-25" width="700" height="700" />
+                                <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" />
                             </MetaData>
                             <components>
                                 <item shaderType="0" originalFilename="passthrough.vert" modified="false" />
@@ -1797,9 +1853,21 @@
                             </MetaData>
                             <TransferFunction type="TransFuncIntensity" alphaMode="1" filter="0" dataType="5121" gammaValue="1">
                                 <texDimensions x="1024" y="1" z="1" />
-                                <domain x="0" y="2570.014404297" />
+                                <domain x="0" y="314.713562012" />
                                 <threshold x="0" y="1" />
-                                <Keys />
+                                <Keys>
+                                    <key type="TransFuncMappingKey" intensity="0.076792836" split="true">
+                                        <colorL r="0" g="0" b="0" a="0" />
+                                        <colorR r="33" g="0" b="108" a="19" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.100000001" split="false">
+                                        <colorL r="43" g="0" b="141" a="25" />
+                                    </key>
+                                    <key type="TransFuncMappingKey" intensity="0.132194489" split="true">
+                                        <colorL r="58" g="0" b="176" a="33" />
+                                        <colorR r="0" g="0" b="0" a="0" />
+                                    </key>
+                                </Keys>
                             </TransferFunction>
                         </Property>
                         <Property mapKey="transferFunction1" name="transferFunction1" domainFittingStrategy="1" computeHistogram="true">
@@ -1899,7 +1967,7 @@
                     <CoProcessorOutports />
                     <InteractionHandlers />
                 </Processor>
-                <Processor type="ParallelCoordinatesAxesCreator" name="ParallelCoordinatesAxesCreator" hash="a5ab9131c2fdd9b9db12ae519fecad90" id="ref15">
+                <Processor type="ParallelCoordinatesAxesCreator" name="ParallelCoordinatesAxesCreator" hash="fef2f274191fef4036504bb40a053e52" id="ref15">
                     <MetaData>
                         <MetaItem name="ProcessorGraphicsItem" type="PositionMetaData" x="-505" y="-630" />
                     </MetaData>
@@ -1985,11 +2053,14 @@
                                 </item>
                             </values>
                         </Property>
+                        <Property mapKey="property_required_memory" name="property_required_memory" value="4.5 MB" />
                         <Property mapKey="property_seed_time" name="property_seed_time" value="1611525418" />
                         <Property mapKey="property_spatial_sample_count" name="property_spatial_sample_count" value="32768" />
                         <Property mapKey="property_temporal_sample_count" name="property_temporal_sample_count" value="1" />
-                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 387 ms" />
+                        <Property mapKey="sampleRegion" name="sampleRegion" value="bounds" />
+                        <Property mapKey="statusDisplay" name="statusDisplay" value="Finished in 1.000 sec" />
                         <Property mapKey="stopUpdateButton" name="stopUpdateButton" />
+                        <Property mapKey="suppressErrorMessages" name="suppressErrorMessages" value="false" />
                         <Property mapKey="synchronousComputation" name="synchronousComputation" value="false" />
                     </Properties>
                     <Inports>
@@ -2052,7 +2123,7 @@
                         <Property mapKey="lineWidth" name="lineWidth" value="1" />
                         <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
                         <Property mapKey="maximized" name="maximized" value="0" />
-                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="overlay" name="overlay" value="false" />
                         <Property mapKey="position" name="position" value="0.5" />
                         <Property mapKey="showGrid" name="showGrid" value="true" />
@@ -2101,7 +2172,7 @@
                         <Property mapKey="lineWidth" name="lineWidth" value="1" />
                         <Property mapKey="maximizeOnDoubleClick" name="maximizeOnDoubleClick" value="true" />
                         <Property mapKey="maximized" name="maximized" value="0" />
-                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseAction="8" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.maximize" name="mouseEvent.maximize" enabled="true" mouseButtons="1" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="overlay" name="overlay" value="false" />
                         <Property mapKey="position" name="position" value="0.395989984" />
                         <Property mapKey="showGrid" name="showGrid" value="true" />
@@ -2151,8 +2222,8 @@
                         <Property mapKey="layout1" name="layout1" value="NW" />
                         <Property mapKey="layout2" name="layout2" value="NW" />
                         <Property mapKey="layout3" name="layout3" value="NW" />
-                        <Property mapKey="mouseEvent.EnterExit" name="mouseEvent.EnterExit" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.EnterExit" name="mouseEvent.EnterExit" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="-25" width="700" height="700" />
@@ -2227,8 +2298,8 @@
                         <Property mapKey="layout1" name="layout1" value="NW" />
                         <Property mapKey="layout2" name="layout2" value="NW" />
                         <Property mapKey="layout3" name="layout3" value="NW" />
-                        <Property mapKey="mouseEvent.EnterExit" name="mouseEvent.EnterExit" enabled="true" mouseAction="96" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
-                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseAction="1" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.EnterExit" name="mouseEvent.EnterExit" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
+                        <Property mapKey="mouseEvent.move" name="mouseEvent.move" enabled="true" mouseButtons="0" keyCode="0" modifier="0" shareEvents="false" />
                         <Property mapKey="shader.program" name="shader.program">
                             <MetaData>
                                 <MetaItem name="ToolWindow" type="WindowStateMetaData" visible="false" x="0" y="-25" width="700" height="700" />

@@ -13,10 +13,10 @@ IF(WIN32)
     )
     
     # set debug and release libraries
-    IF(VRN_MSVC2015)            
-        SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2015")
-    ELSEIF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
+    IF(VRN_MSVC2017 OR VRN_MSVC2019 OR VRN_MSVC2022)            
         SET(HDF5_LIB_DIR "${MOD_DIR}/ext/hdf5/lib/msvc2017")
+    ELSE()
+        MESSAGE(FATAL_ERROR "Unsupported MSVC toolchain")
     ENDIF()
     
     # set libraries

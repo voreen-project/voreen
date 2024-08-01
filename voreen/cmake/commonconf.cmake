@@ -42,13 +42,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VRN_BINARY_OUTPUT_DIR})
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${VRN_BINARY_OUTPUT_DIR})
 
 # detect compiler and architecture
-IF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 Win64" OR
-   ${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015 Win64" OR
-   (${CMAKE_GENERATOR} STREQUAL "Visual Studio 14 2015" AND "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
-    SET(VRN_MSVC2015 TRUE)
-    SET(VRN_MSVC TRUE)
-    MESSAGE(STATUS "Visual Studio 2015 Build")
-ELSEIF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 Win64" OR
+IF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 Win64" OR
        ${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64" OR
        (${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017" AND "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
     SET(VRN_MSVC2017 TRUE)
@@ -173,19 +167,7 @@ IF(VRN_MSVC)
         MESSAGE(STATUS "* Install directory (CMAKE_INSTALL_PREFIX): ${CMAKE_INSTALL_PREFIX}")
 
         MESSAGE(STATUS "* Adding Visual Studio redist libraries to install target")
-        IF(VRN_MSVC2015)
-            GET_FILENAME_COMPONENT(VS_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\SxS\\VS7;14.0]" REALPATH)
-            IF(NOT EXISTS ${VS_DIR})
-                MESSAGE(WARNING "Visual Studio directory not found: ${VS_DIR}")
-            ELSE()
-                MESSAGE(STATUS "  - ${VS_DIR}/VC/redist/x64/Microsoft.VC140.CRT/msvcp140.dll")
-                MESSAGE(STATUS "  - ${VS_DIR}/VC/redist/x64/Microsoft.VC140.CRT/vcruntime.dll")
-                MESSAGE(STATUS "  - ${VS_DIR}/VC/redist/x64/Microsoft.VC140.OpenMP/vcomp140.dll")
-                INSTALL(FILES "${VS_DIR}/VC/redist/x64/Microsoft.VC140.CRT/msvcp140.dll" DESTINATION .)
-                INSTALL(FILES "${VS_DIR}/VC/redist/x64/Microsoft.VC140.CRT/vcruntime140.dll" DESTINATION .)
-                INSTALL(FILES "${VS_DIR}/VC/redist/x64/Microsoft.VC140.OpenMP/vcomp140.dll" DESTINATION .)
-            ENDIF()
-        ELSEIF(VRN_MSVC2017)
+        IF(VRN_MSVC2017)
             GET_FILENAME_COMPONENT(VS_DIR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\SxS\\VS7;15.0]" REALPATH)
             GET_FILENAME_COMPONENT(VS_VER "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\DevDiv\\vc\\Servicing\\14.0\\RuntimeDebug;Version]" NAME)
             IF(NOT EXISTS "${VS_DIR}/VC/Redist/MSVC/${VS_VER}")
@@ -241,7 +223,7 @@ IF(VRN_MSVC)
                 INSTALL(FILES "${vswhere_output}/Microsoft.${toolset_version}.OpenMP/vcomp140.dll" DESTINATION .)
             ENDIF()
         ELSE()
-            MESSAGE(WARNING "Deploying redist libraries only supported for Visual Studio 2015-2022.")
+            MESSAGE(WARNING "Deploying redist libraries only supported for Visual Studio 2017, 2019, 2022.")
         ENDIF()
     ELSE(VRN_DEPLOYMENT)
         # hardcode Voreen base path, if binary output dir has been modified and we are not in deployment mode

@@ -31,6 +31,7 @@ OPTION(VRN_MODULE_TIFF                              "Volume readers for multi-im
 OPTION(VRN_MODULE_OPENCL                            "Provides an OpenCL wrapper and OpenCL-based processors"                                    OFF)
 OPTION(VRN_MODULE_OPENMP                            "Activates OpenMP code for parallelization"                                                 OFF)
 OPTION(VRN_MODULE_BIGDATAIMAGEPROCESSING            "Provides image processing support for very large volumes"                                  OFF)
+OPTION(VRN_MODULE_FLOWSIMULATION                    "Integration of OpenLB into Voreen, allowing to create flow simulation ensembles"           OFF)
 OPTION(VRN_MODULE_VESSELNETWORKANALYSIS             "Provides processors for analyzing volumetric vessel structures"                            OFF)
 
 # dicom support
@@ -39,6 +40,9 @@ OPTION(VRN_MODULE_GDCM                              "Provides a DICOM volume rea
 # itk support
 OPTION(VRN_MODULE_ITK                               "Wrapper for ITK filters as Voreen processors"                                              OFF)
 OPTION(VRN_MODULE_ITK_GENERATED                     "Automatically generated Voreen processors as wrappers for ITK filters"                     OFF)
+
+# vtk support
+OPTION(VRN_MODULE_VTK                               "Adds support for reading/writing vtk image data among others"                              OFF)
 
 # additional modules
 OPTION(VRN_MODULE_DEPRECATED                        "Deprecated code to be removed in future releases"                                          OFF)

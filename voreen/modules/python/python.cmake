@@ -7,32 +7,32 @@ ENDIF()
 ################################################################################
 
 IF(WIN32)
-    SET(VRN_USE_PYTHON_VERSION python37)
-    SET(MOD_DEFINITIONS "-DVRN_USE_PYTHON_VERSION=\"${VRN_USE_PYTHON_VERSION}\"")
+    SET(VRN_USE_PYTHON_VERSION 312)
+    SET(MOD_DEFINITIONS "-DVRN_USE_PYTHON_VERSION=\"Python${VRN_USE_PYTHON_VERSION}\"")
 
-    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/include")
+    SET(MOD_INCLUDE_DIRECTORIES "${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/include")
 
     SET(MOD_RELEASE_DLLS
-        "${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/${VRN_USE_PYTHON_VERSION}.dll"
+        "${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/python${VRN_USE_PYTHON_VERSION}.dll"
     )
     SET(MOD_DEBUG_DLLS
-        "${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/${VRN_USE_PYTHON_VERSION}_d.dll"
+        "${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/python${VRN_USE_PYTHON_VERSION}_d.dll"
     )
     SET(MOD_RELEASE_LIBRARIES
-        "${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/libs/${VRN_USE_PYTHON_VERSION}.lib"
+        "${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/libs/python${VRN_USE_PYTHON_VERSION}.lib"
     )
     SET(MOD_DEBUG_LIBRARIES
-        "${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/libs/${VRN_USE_PYTHON_VERSION}_d.lib"
+        "${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/libs/python${VRN_USE_PYTHON_VERSION}_d.lib"
     )
     
     # deployment
     SET(MOD_INSTALL_DIRECTORIES
-        ${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/lib
+        ${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/lib
         ${MOD_DIR}/scripts
         ${MOD_DIR}/workspaces
     )
     SET(MOD_INSTALL_FILES
-        ${MOD_DIR}/ext/${VRN_USE_PYTHON_VERSION}/LICENSE.txt
+        ${MOD_DIR}/ext/Python${VRN_USE_PYTHON_VERSION}/LICENSE.txt
     )
 
 ELSEIF(UNIX)

@@ -90,7 +90,10 @@ modules/ensembleanalysis
 
 modules/ffmpeg/*
 modules/ffmpeg/videoencoder
+
 modules/flowanalysis
+
+modules/flowsimulation
 
 modules/gdcm/*
 modules/gdcm/dicts
