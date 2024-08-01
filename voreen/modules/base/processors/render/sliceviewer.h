@@ -63,8 +63,10 @@ typedef OctreeSliceTexture<uint8_t> OctreeSliceTextureControl;
 template<typename Pixel>
 OctreeSliceTexture<Pixel>::OctreeSliceTexture(GLint format, GLint datatype, tgt::Texture::Filter filter)
     : buf_()
-    , texture_(tgt::svec3(2,2,1), format, format, datatype, filter, tgt::Texture::CLAMP_TO_EDGE, nullptr, false)
+    , texture_(tgt::svec3(3,3,1), format, format, datatype, filter, tgt::Texture::CLAMP_TO_EDGE, nullptr, false)
 {
+    updateDimensions(tgt::svec2(2,2));
+    uploadTexture();
 }
 
 template<typename Pixel>
