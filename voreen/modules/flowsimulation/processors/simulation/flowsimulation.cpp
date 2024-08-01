@@ -2,7 +2,7 @@
  *                                                                                 *
  * Voreen - The Volume Rendering Engine                                            *
  *                                                                                 *
- * Copyright (C) 2005-2018 University of Muenster, Germany,                        *
+ * Copyright (C) 2005-2024 University of Muenster, Germany,                        *
  * Department of Computer Science.                                                 *
  * For a list of authors please refer to the file "CREDITS.txt".                   *
  *                                                                                 *
