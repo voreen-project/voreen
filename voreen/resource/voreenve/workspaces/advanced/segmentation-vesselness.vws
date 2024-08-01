@@ -1921,12 +1921,7 @@
                         <Property mapKey="manualUpdateButton_" name="manualUpdateButton_" />
                         <Property mapKey="outputVolumeDeflateLevel" name="outputVolumeDeflateLevel" value="1" />
                         <Property mapKey="outputVolumeFilePath" name="outputVolumeFilePath" guiName="Thresholded Binary Segmentation File" watchMode="3" fileWatchEnabled="false" useGeneratedPath="false">
-                            <paths noPathSet="false">
-                                <paths>
-                                    <item value="../../../../../../home/dominik/segmentation.h5" />
-                                    <item value="../../../home/dominik/segmentation.h5" />
-                                    <item value="/home/dominik/segmentation.h5" />
-                                </paths>
+                            <paths noPathSet="true">
                             </paths>
                         </Property>
                         <Property mapKey="progressDisplay" name="progressDisplay" guiName="Progress (Thresholding)" />
@@ -1994,12 +1989,7 @@
                     <Properties>
                         <Property mapKey="continousSave" name="continousSave" value="false" />
                         <Property mapKey="outputFilename" name="outputFilename" guiName="Vesselness File" watchMode="1" fileWatchEnabled="false">
-                            <paths noPathSet="false">
-                                <paths>
-                                    <item value="../../../../../../home/dominik/vesselness.vvd" />
-                                    <item value="../../../home/dominik/vesselness.vvd" />
-                                    <item value="/home/dominik/vesselness.vvd" />
-                                </paths>
+                            <paths noPathSet="true">
                             </paths>
                         </Property>
                         <Property mapKey="save" name="save" guiName="Save Vesselness" />
