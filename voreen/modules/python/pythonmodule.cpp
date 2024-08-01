@@ -23,6 +23,9 @@
  *                                                                                 *
  ***********************************************************************************/
 
+
+// See https://docs.python.org/3/c-api/arg.html#strings-and-buffers
+#define PY_SSIZE_T_CLEAN
 // include this at very first
 #include <Python.h>
 #include "modules/python/pythonmodule.h"
@@ -60,7 +63,7 @@ std::vector<PythonOutputListener*> PythonModule::outputListeners_;
 
 static PyObject* voreen_print(PyObject* /*self*/, PyObject* args) {
     char* msg;
-    int len;
+    Py_ssize_t len;
     int isStderr;
     if (!PyArg_ParseTuple(args, "s#i", &msg, &len, &isStderr)) {
         LWARNINGC("voreen.Python.voreen_print", "failed to parse log message");
