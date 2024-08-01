@@ -21,11 +21,13 @@ Voreen Changelog
       o Add VolumeArgMax processor
       o Add (approximate) median octree aggregation function (as an alternative to mean aggregation)
       o Add LargeVolumeDistanceTransform processor
+      o Add FlowSimulation module, integrating OpenLB into Voreen. It allows to generate flow simulations or ensembles thereof.
 
     * Framework/API Changes:
       o EnsembleDatasets no longer care about volume base type
-      o Duration is no longer a property of (Ensemble) TimeSteps. It can be simply derived from two consecutive time steps.
-      o Added CMake support for Visual Studio 2019 and 2022.
+      o Duration is no longer a property of (Ensemble) TimeSteps. It can be simply derived from two consecutive time steps
+      o Added CMake support for Visual Studio 2019 and 2022
+      o Removed CMake support for Visual Studio 2015
 
     * Bug Fixes/Minor Changes:
       o Handle real world mapping properly for EnsembleMean and EnsembleVariance
