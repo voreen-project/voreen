@@ -6,6 +6,7 @@ Alexander Bock
 Benjamin Bolte
 Helge Böschen
 Mathias Dehne
+Adrian Derstroff
 Stefan Diepenbrock
 Christian Döring
 Dominik Drees
@@ -32,6 +33,7 @@ Reza Nawrozi
 Borislav Petkov
 Jörg-Stefan Praßni
 Stephan Rademacher
+Hennes Rave
 Rainer Reich
 Mona Riemenschneider
 Timo Ropinski
