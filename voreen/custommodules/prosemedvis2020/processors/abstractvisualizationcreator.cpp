@@ -28,7 +28,7 @@
 #include "modules/plotting/datastructures/plotcell.h"
 #include "modules/plotting/datastructures/plotdata.h"
 #include "modules/plotting/datastructures/plotrow.h"
-#include "custommodules/flowsimulation/utils/utils.h"
+#include "modules/flowsimulation/utils/utils.h"
 #include "voreen/core/datastructures/geometry/pointlistgeometry.h"
 #include "voreen/core/datastructures/geometry/pointsegmentlistgeometry.h"
 namespace voreen {

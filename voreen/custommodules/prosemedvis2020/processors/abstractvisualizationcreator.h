@@ -33,7 +33,7 @@
 #include "../ports/concretevesselgraphport.h"
 #include "voreen/core/ports/genericport.h"
 #include "voreen/core/ports/geometryport.h"
-#include "custommodules/flowsimulation/ports/flowsimulationconfigport.h"
+#include "modules/flowsimulation/ports/flowsimulationconfigport.h"
 
 #include "../datastructures/templatevesselgraph.h"
 #include "../datastructures/concretevesselgraph.h"

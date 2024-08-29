@@ -26,7 +26,7 @@
 #include "concretevesselgraphcreator.h"
 #include "modules/vesselnetworkanalysis/datastructures/vesselgraph.h"
 #include "voreen/core/datastructures/diskarraystorage.h"
-#include "custommodules/flowsimulation/utils/utils.h"
+#include "modules/flowsimulation/utils/utils.h"
 namespace voreen {
     
     ConcreteVesselGraphCreator::ConcreteVesselGraphCreator() : Processor(),
