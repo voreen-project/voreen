@@ -136,7 +136,8 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 
-    std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, globalBounds.getLLF()));
+    auto offset = globalBounds.getLLF() + spacing * 0.5f; // We have to account for the extra voxel.
+    std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, offset));
     outputVolume->setRealWorldMapping(rwm);
 
     std::function<float(float, float)> collisionFunction;
