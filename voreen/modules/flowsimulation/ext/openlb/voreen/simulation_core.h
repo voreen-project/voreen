@@ -832,8 +832,7 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
                  bool enforce = false)
 {
     const int outputIter = maxIteration / numTimeSteps;
-
-    if (iteration % outputIter == 0 || enforce) {
+    if (outputIter == 0 || iteration % outputIter == 0 || enforce) {
 
         bool writeVVD = outputFormat == ".vvd";
         bool writeVTI = outputFormat == ".vti";

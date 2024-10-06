@@ -62,6 +62,16 @@ public:
 
     virtual bool isReady() const;
 
+    virtual ComputeInput prepareComputeInput();
+    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
+    virtual void processComputeOutput(ComputeOutput output);
+
+    void setNumCuboids(int num);
+    int getNumCuboids() const;
+
+    void setSimulationResultPath(const std::string& path);
+    std::string getSimulationResultPath() const;
+
 protected:
     virtual void setDescriptions() {
         setDescription("This processor performs simulations using the incoming parameter set on the given geometry.");
@@ -69,10 +79,6 @@ protected:
 
     virtual void adjustPropertiesToInput();
     virtual void clearOutports();
-
-    virtual ComputeInput prepareComputeInput();
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const;
-    virtual void processComputeOutput(ComputeOutput output);
 
     virtual void serialize(Serializer& s) const;
     virtual void deserialize(Deserializer& s);

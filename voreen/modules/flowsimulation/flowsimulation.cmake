@@ -249,12 +249,14 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/simulation/flowsimulation.h
+        ${MOD_DIR}/processors/features/pressure.h
         ${MOD_DIR}/processors/geometry/geometryinsidetest.h
+        ${MOD_DIR}/processors/simulation/flowsimulation.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/simulation/flowsimulation.cpp
+        ${MOD_DIR}/processors/features/pressure.cpp
         ${MOD_DIR}/processors/geometry/geometryinsidetest.cpp
+        ${MOD_DIR}/processors/simulation/flowsimulation.cpp
     )
 ENDIF()
 

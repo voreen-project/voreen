@@ -73,8 +73,9 @@
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
-#include "processors/simulation/flowsimulation.h"
+#include "processors/features/pressure.h"
 #include "processors/geometry/geometryinsidetest.h"
+#include "processors/simulation/flowsimulation.h"
 #endif
 
 namespace voreen {
@@ -128,8 +129,9 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new RoiAnalysis());
 #endif
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
-    registerProcessor(new GeometryInsideTest());
     registerProcessor(new FlowSimulation());
+    registerProcessor(new GeometryInsideTest());
+    registerProcessor(new Pressure());
 #endif
 }
 

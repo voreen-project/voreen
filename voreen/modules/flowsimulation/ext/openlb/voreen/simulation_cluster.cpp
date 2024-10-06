@@ -186,8 +186,6 @@ int main(int argc, char* argv[]) {
 
     clout << "Found " << indicators.size() << " Flow Indicators" << std::endl;
 
-    // TODO: implement measured data support!
-
     UnitConverterFromResolutionAndRelaxationTime<T, DESCRIPTOR> converter(
                 parameters.spatialResolution_,      // Resolution that charPhysLength is resolved by.
             (T) parameters.relaxationTime_,         // Relaxation time

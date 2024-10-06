@@ -149,13 +149,17 @@ const std::map<float, std::string>& FlowSimulationConfig::getMeasuredDataFiles()
     return measuredDataFiles_;
 }
 
-void FlowSimulationConfig::addFlowIndicator(const FlowIndicator& flowIndicator) {
+void FlowSimulationConfig::addFlowIndicator(const FlowIndicator& flowIndicator, bool keepId) {
     notifyPendingDataInvalidation();
 
     // Copy the indicator and set its id.
     FlowIndicator indicator = flowIndicator;
-    indicator.id_ = generateIndicatorId();
-    flowIndicators_.push_back(indicator);
+
+    if(!keepId) {
+        indicator.id_ = generateIndicatorId();
+    }
+
+    flowIndicators_.emplace_back(indicator);
 }
 
 std::vector<FlowIndicator> FlowSimulationConfig::getFlowIndicators(bool transformed) const {

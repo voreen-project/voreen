@@ -132,9 +132,9 @@ public:
 
     /**
      * Add a flow indicator to the internal list.
-     * Note: This will set the unique id within the parameter set ensemble.
+     * Note: This will set the unique id within the parameter set ensemble, unless explicitly kept.
      */
-    void addFlowIndicator(const FlowIndicator& flowIndicator);
+    void addFlowIndicator(const FlowIndicator& flowIndicator, bool keepId=false);
     std::vector<FlowIndicator> getFlowIndicators(bool transformed = false) const;
 
     void addFlowParameterSet(const Parameters& parameters);

@@ -186,6 +186,22 @@ void FlowSimulation::clearOutports() {
     // It may be available even if the processor is not ready.
 }
 
+void FlowSimulation::setNumCuboids(int num) {
+    numCuboids_.set(num);
+}
+
+int FlowSimulation::getNumCuboids() const {
+    return numCuboids_.get();
+}
+
+void FlowSimulation::setSimulationResultPath(const std::string &path) {
+    simulationResults_.set(path);
+}
+
+std::string FlowSimulation::getSimulationResultPath() const {
+    return simulationResults_.get();
+}
+
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
     tgtAssert(parameterPort_.isDataInvalidationObservable(), "FlowParametrizationPort must be DataInvalidationObservable!");
@@ -493,10 +509,41 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         );
     };
 
+    // Writes velocity and pressure to their respective debug ports.
+    auto writeDebugData = [&] () {
+        {
+            // Write velocity file.
+            SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
+            auto velocityVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), velocity);
+            auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume, physicalToWorldMatrix);
+            std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
+            enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
+        }
+        {
+            // Write pressure file.
+            SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
+            auto pressureVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), pressure);
+            auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume, physicalToWorldMatrix);
+            std::string filename = "pressure" + std::to_string(swapVelocityFile) + ".h5";
+            enqueueInsituResult(simulationResultPath + filename, debugPressurePort_, std::move(volume));
+        }
+    };
+
+    // The simulation loop.
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
         setBoundaryValues(lattice, converter, iteration, superGeometry, config.getFlowIndicators(true), parameters, &measuredDataTimeSeries);
+
+        // Store debug data.
+        const int outputIter = maxIteration / config.getNumTimeSteps();
+        if (outputIter == 0 || iteration % outputIter == 0) {
+            writeDebugData();
+
+            // As the old file might still be in use, we need two files in order
+            // to ensure that we can write the current time step.
+            swapVelocityFile = !swapVelocityFile;
+        }
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();
@@ -506,34 +553,8 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
         if(abort) {
             LWARNING("Simulation diverged!");
         }
-
-        // Store last velocity.
-        const int outputIter = maxIteration / config.getNumTimeSteps();
-        if (abort || iteration % outputIter == 0) {
-            {
-                // Write velocity file.
-                SuperLatticePhysVelocity3D<T, DESCRIPTOR> velocity(lattice, converter);
-                auto velocityVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), velocity);
-                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_3xFloat>(velocityVolume, physicalToWorldMatrix);
-                std::string filename = "velocity" + std::to_string(swapVelocityFile) + ".h5";
-                enqueueInsituResult(simulationResultPath + filename, debugVelocityPort_, std::move(volume));
-            }
-            {
-                // Write pressure file.
-                SuperLatticePhysPressure3D<T, DESCRIPTOR> pressure(lattice, converter);
-                auto pressureVolume = sampleVolume<float>(*boundaryGeometry, converter, config.getOutputResolution(), pressure);
-                auto volume = utils::wrapSimpleIntoVoreenVolume<VolumeRAM_Float>(pressureVolume, physicalToWorldMatrix);
-                std::string filename = "pressure" + std::to_string(swapVelocityFile) + ".h5";
-                enqueueInsituResult(simulationResultPath + filename, debugPressurePort_, std::move(volume));
-            }
-
-            // As the old file might still be in use, we need two files in order
-            // to ensure that we can write the current time step.
-            swapVelocityFile = !swapVelocityFile;
-        }
-
         // === 8th Step: Check for convergence.
-        if(!abort) {
+        else {
             converge.takeValue(lattice.getStatistics().getAverageEnergy(), true);
             if (converge.hasConverged()) {
                 LINFO("Simulation converged!");
@@ -541,6 +562,7 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
             }
         }
 
+        // Write last valid time step.
         if(abort) {
             checkpoint(iteration, true);
             break;
