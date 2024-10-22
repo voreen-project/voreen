@@ -60,8 +60,9 @@
 #endif
 
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
-#include "processors/simulation/flowcenterlineanalysis.h"
 #include "processors/simulation/flowindicatordetection.h"
+#include "processors/utility/relativepressurefromvesselgraph.h"
+#include "processors/utility/vesselgraphtoflowindicator.h"
 #endif
 
 #ifdef VRN_MODULE_PLOTTING
@@ -69,6 +70,10 @@
 #include "processors/plotting/flowprofilestacking.h"
 #include "processors/plotting/regionofinterestanalysis.h"
 #include "processors/plotting/roianalysis.h"
+#endif
+
+#if defined(VRN_MODULE_VESSELNETWORKANALYSIS) and defined(VRN_MODULE_PLOTTING)
+#include "processors/plotting/flowcenterlineanalysis.h"
 #endif
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
@@ -121,6 +126,8 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 #ifdef VRN_MODULE_VESSELNETWORKANALYSIS
     registerProcessor(new FlowCenterlineAnalysis());
     registerProcessor(new FlowIndicatorDetection());
+    registerProcessor(new RelativePressureFromVesselGraph());
+    registerProcessor(new VesselGraphToFlowIndicator());
 #endif
 #ifdef VRN_MODULE_PLOTTING
     registerProcessor(new FlowIndicatorAnalysis());

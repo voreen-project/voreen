@@ -37,6 +37,7 @@ namespace voreen {
 
 struct FlowIndicatorAnalysisInput {
     PortDataPointer<VolumeList> volumes;
+    PortDataPointer<VolumeBase> sampleMask;
     std::vector<FlowIndicator> indicators;
     std::unique_ptr<PlotData> output;
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
@@ -55,6 +56,8 @@ public:
     virtual std::string getCategory() const  { return "Plotting"; }
     virtual std::string getClassName() const { return "FlowIndicatorAnalysis"; }
     virtual CodeState getCodeState() const   { return CODE_STATE_EXPERIMENTAL; }
+
+    virtual bool isReady() const;
 
 protected:
 
@@ -79,6 +82,7 @@ private:
 
     VolumeListPort volumeListPort_;
     FlowSimulationConfigPort parameterPort_;
+    VolumePort maskPort_;
     PlotPort outport_;
 
     StringOptionProperty outputQuantity_;

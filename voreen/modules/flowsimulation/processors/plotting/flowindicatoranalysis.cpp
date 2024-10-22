@@ -41,6 +41,7 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     : AsyncComputeProcessor()
     , volumeListPort_(Port::INPORT, "input.volumelist", "Volume List Port")
     , parameterPort_(Port::INPORT, "input.parameter", "Parameter Port")
+    , maskPort_(Port::INPORT, "input.mask", "Sample Mask Port (Optional)")
     , outport_(Port::OUTPORT,"output.plot", "Plot Port")
     , outputQuantity_("outputQuantity", "Output Quantity")
     , indicator_("indicator", "Indicator", Processor::INVALID_RESULT, true)
@@ -52,6 +53,7 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     addPort(parameterPort_);
     ON_CHANGE(parameterPort_, FlowIndicatorAnalysis, onParametersChange);
     volumeListPort_.addCondition(new PortConditionVolumeListEnsemble());
+    addPort(maskPort_);
     addPort(outport_);
 
     addProperty(outputQuantity_);
@@ -60,10 +62,6 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     outputQuantity_.addOption("medianMagnitude", "Median Magnitude");
     outputQuantity_.addOption("meanComponents", "Mean Components");
     outputQuantity_.setGroupID("output");
-    ON_CHANGE_LAMBDA(outputQuantity_, [this]{
-        indicator_.setReadOnlyFlag(outputQuantity_.get() != "meanComponents");
-    });
-    outputQuantity_.invalidate();
 
     addProperty(indicator_);
     indicator_.setGroupID("output");
@@ -82,6 +80,29 @@ FlowIndicatorAnalysis::FlowIndicatorAnalysis()
     //setPropertyGroupVisible("export", false); //TODO: can essentially be replaced by PlotDataExport
 }
 
+bool FlowIndicatorAnalysis::isReady() const {
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Processor not initialized");
+        return false;
+    }
+
+    auto* volumeList = volumeListPort_.getData();
+    if(!volumeList || volumeList->empty()) {
+        setNotReadyErrorMessage("No volume list");
+        return false;
+    }
+
+    auto* config = parameterPort_.getData();
+    if(!config) {
+        setNotReadyErrorMessage("No parameter config");
+        return false;
+    }
+
+    // Note: Sample mask is optional.
+
+    return true;
+}
+
 void FlowIndicatorAnalysis::onParametersChange() {
     if(!parameterPort_.hasData()) {
         return;
@@ -89,6 +110,11 @@ void FlowIndicatorAnalysis::onParametersChange() {
 
     std::string selected = indicator_.get();
     indicator_.setOptions(std::deque<Option<std::string>>());
+
+    // Add "all" as extra option.
+    // TODO: make sure that no indicator has been named "all".
+    indicator_.addOption("all", "all");
+
     for(const FlowIndicator& indicator : parameterPort_.getData()->getFlowIndicators()) {
         std::string id = indicator.name_;//std::to_string(indicator.id_); // Name seems more intuitive than id!
         indicator_.addOption(id, indicator.name_);
@@ -118,55 +144,60 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
     }
 
     std::vector<FlowIndicator> indicators;
+    for(const FlowIndicator& indicator : parameterSetEnsemble->getFlowIndicators()) {
+        if(indicator.name_ == indicator_.getValue() || indicator_.getValue() == "all") {
+            indicators.push_back(indicator);
+        }
+    }
+
     std::function<std::vector<float>(const std::vector<tgt::vec3>&)> outputFunc;
     std::unique_ptr<PlotData> output;
 
     if(outputQuantity_.get() == "meanComponents") {
-        outputFunc = [numChannels] (const std::vector<tgt::vec3>& samples) {
+        outputFunc = [] (const std::vector<tgt::vec3>& samples) {
             tgt::vec3 mean = tgt::vec3::zero;
             for(const auto& sample : samples) {
                 mean += sample;
             }
 
-            std::vector<float> output(numChannels);
-            for(size_t i=0; i<numChannels; i++) {
-                output[i] = mean[i] / static_cast<float>(samples.size());
-            }
+            mean /= static_cast<float>(samples.size());
+
+            std::vector<float> output(2);
+            output[0] = std::sqrt(mean.x*mean.x + mean.y*mean.y);
+            output[1] = mean.z;
+
             return output;
         };
 
-        for(const FlowIndicator& indicator : parameterSetEnsemble->getFlowIndicators()) {
-            if(indicator.name_ == indicator_.getValue()) {
-                indicators.push_back(indicator);
-                break;
-            }
+        auto numIndicators = indicators.size();
+        tgtAssert(numIndicators > 0, "invalid state");
+
+        int numComponents = numChannels;
+        if (numChannels == 3 && transformSamples_.get()) {
+            numComponents = 2;
         }
 
-        tgtAssert(!indicators.empty(), "invalid state");
-
-        output.reset(new PlotData(1, numChannels));
-        if(numChannels == 1) {
-            output->setColumnLabel(1, indicators.front().name_);
-        }
-        else if(numChannels == 3) {
-            if(transformSamples_.get()) {
-                output->setColumnLabel(1, "InP 1"); // in plane
-                output->setColumnLabel(2, "InP 2"); // in plane
-                output->setColumnLabel(3, "ThP"); // through plane
+        output.reset(new PlotData(1, numComponents * numIndicators));
+        for (size_t i=0; i<indicators.size(); i++) {
+            auto name = indicators[i].name_;
+            if(numChannels == 1) {
+                output->setColumnLabel(i + 1, name);
             }
-            else {
-                output->setColumnLabel(1, "x");
-                output->setColumnLabel(2, "y");
-                output->setColumnLabel(3, "z");
+            else if(numChannels == 3) {
+                auto suffix = " - " + name;
+                if(transformSamples_.get()) {
+                    output->setColumnLabel(i * 2 + 1, "InP" + suffix); // in plane
+                    output->setColumnLabel(i * 2 + 2, "ThP" + suffix); // through plane
+                }
+                else {
+                    output->setColumnLabel(i * 3 + 1, "x" + suffix);
+                    output->setColumnLabel(i * 3 + 2, "y" + suffix);
+                    output->setColumnLabel(i * 3 + 3, "z" + suffix);
+                }
             }
-
         }
     }
     else {
-
-        for(const FlowIndicator& indicator : parameterSetEnsemble->getFlowIndicators()) {
-            indicators.push_back(indicator);
-        }
 
         output.reset(new PlotData(1, indicators.size()));
         output->setColumnLabel(0, "Time [s]");
@@ -209,8 +240,11 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
         }
     }
 
+    auto sampleMask = maskPort_.getThreadSafeData();
+
     return FlowIndicatorAnalysisInput {
         std::move(volumes),
+        std::move(sampleMask),
         std::move(indicators),
         std::move(output),
         std::move(outputFunc),
@@ -221,6 +255,7 @@ FlowIndicatorAnalysisInput FlowIndicatorAnalysis::prepareComputeInput() {
 FlowIndicatorAnalysisOutput FlowIndicatorAnalysis::compute(FlowIndicatorAnalysisInput input, ProgressReporter& progressReporter) const {
 
     auto volumes = std::move(input.volumes);
+    auto sampleMask = std::move(input.sampleMask);
     auto indicators = std::move(input.indicators);
     std::unique_ptr<PlotData> data = std::move(input.output);
     auto outputFunc = std::move(input.outputFunc);
@@ -246,7 +281,7 @@ FlowIndicatorAnalysisOutput FlowIndicatorAnalysis::compute(FlowIndicatorAnalysis
         }
         for(const FlowIndicator& indicator : indicators) {
             // Gather samples.
-            std::vector<tgt::vec3> samples = utils::sampleDisk(volume, indicator.center_, indicator.normal_, indicator.radius_, input.transformSamples);
+            std::vector<tgt::vec3> samples = utils::sampleCylinder(volume, indicator.center_, indicator.normal_, indicator.radius_, input.transformSamples, 0, sampleMask);
 
             // Generate output.
             std::vector<float> output = outputFunc(samples);

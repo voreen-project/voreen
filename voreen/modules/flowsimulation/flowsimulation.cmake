@@ -128,12 +128,14 @@ ENDIF()
 
 IF(VRN_MODULE_VESSELNETWORKANALYSIS)
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/simulation/flowcenterlineanalysis.h
         ${MOD_DIR}/processors/simulation/flowindicatordetection.h
+        ${MOD_DIR}/processors/utility/relativepressurefromvesselgraph.h
+        ${MOD_DIR}/processors/utility/vesselgraphtoflowindicator.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/simulation/flowcenterlineanalysis.cpp
         ${MOD_DIR}/processors/simulation/flowindicatordetection.cpp
+        ${MOD_DIR}/processors/utility/relativepressurefromvesselgraph.cpp
+        ${MOD_DIR}/processors/utility/vesselgraphtoflowindicator.cpp
     )
 ENDIF()
 
@@ -149,6 +151,15 @@ IF(VRN_MODULE_PLOTTING)
         ${MOD_DIR}/processors/plotting/flowprofilestacking.cpp
         ${MOD_DIR}/processors/plotting/regionofinterestanalysis.cpp
         ${MOD_DIR}/processors/plotting/roianalysis.cpp
+    )
+ENDIF()
+
+IF(VRN_MODULE_VESSELNETWORKANALYSIS AND VRN_MODULE_PLOTTING)
+    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
+        ${MOD_DIR}/processors/plotting/flowcenterlineanalysis.h
+    )
+    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
+        ${MOD_DIR}/processors/plotting/flowcenterlineanalysis.cpp
     )
 ENDIF()
 

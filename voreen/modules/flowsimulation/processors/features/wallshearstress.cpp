@@ -129,7 +129,7 @@ void WallShearStress::process() {
     }
 
     // The intensity volume stores all wss values in a volume to be processed further.
-    VolumeRAM_Float* intensityVolume = new VolumeRAM_Float(volumeData->getDimensions());
+    VolumeRAM_3xFloat* intensityVolume = new VolumeRAM_3xFloat(volumeData->getDimensions());
     intensityVolume->clear();
 
     const float dynamicViscosity = kinematicViscosity_.get() * 10e-6f * density_.get();
@@ -217,35 +217,36 @@ void WallShearStress::process() {
 
         // Calculate WSS magnitude.
         tgt::vec3 v_parallel = parallel(vectorInLumen - vectorAtSurface, normal) * toMilliMeterPerSecond / r;
+        tgt::vec3 wss_vec = dynamicViscosity * v_parallel;
 
         float wsr = tgt::length(v_parallel);
-        float wss = dynamicViscosity * wsr;
+        float wss_mag = dynamicViscosity * wsr;
 
 //#pragma omp critical
         {
             tgt::svec3 p = worldToVoxel * pos;
 
             if(!tgt::hor(tgt::greaterThanEqual(p, intensityVolume->getDimensions()))) {
-                size_t idx = VolumeRAM_Float::calcPos(intensityVolume->getDimensions(), p);
-                if(intensityVolume->voxel(p) > 0.0f) {
+                size_t idx = VolumeRAM_3xFloat::calcPos(intensityVolume->getDimensions(), p);
+                if(tgt::lengthSq(intensityVolume->voxel(p)) > 0.0f) {
 
                     access[idx]++;
 
-                    float delta = wss - intensityVolume->voxel(p);
+                    tgt::vec3 delta = wss_vec - intensityVolume->voxel(p);
                     intensityVolume->voxel(p) = intensityVolume->voxel(p) + delta / (float)(access[idx] + 1);
                 }
                 else {
-                    intensityVolume->voxel(p) = wss;
+                    intensityVolume->voxel(p) = wss_vec;
                 }
             }
 
-            stats.addSample(wss);
+            stats.addSample(wss_mag);
         }
 
         // Normalize to [0, 1].
-        wss = (wss / (maxWSS_.get()));
+        wss_mag = (wss_mag / (maxWSS_.get()));
 
-        tgt::vec4 col = interpolationFromIntensity(wss);
+        tgt::vec4 col = interpolationFromIntensity(wss_mag);
         //tgt::vec4 col = tgt::vec4(normal, 1.0f);
 
         if(updateVertexPosition_.get()) {

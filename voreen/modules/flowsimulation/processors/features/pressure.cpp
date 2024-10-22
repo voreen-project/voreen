@@ -112,17 +112,21 @@ FlowSimulationInput Pressure::prepareComputeInput() {
     parameters.characteristicLength_ = characteristicLength * 0.001f; // Convert to meters.
     parameters.characteristicVelocity_ = maxVelocityMagnitude * 1.1f; // Grant some wiggle room.
     parameters.inletVelocityMultiplier_ = 1.0f;
-    parameters.relaxationTime_ = 1.0f;
+    // parameters.relaxationTime_ = 1.0f;
     parameters.latticePerturbation_ = false;
     parameters.wallBoundaryCondition_ = FBC_BOUNCE_BACK;
-    parameters.spatialResolution_ = resolution;
+    // parameters.spatialResolution_ = resolution;
+
+    // Modify relaxation time and resolution for better convergence.
+    parameters.relaxationTime_ = 0.51f;
+    parameters.spatialResolution_ = resolution * 2;
 
     auto* config = new FlowSimulationConfig("pressure");
     config->addFlowIndicator(indicator, true);
     config->addFlowParameterSet(parameters);
     config->setFlowFeatures(FF_PRESSURE); // To prevent simulation to emit warning.
     config->setNumTimeSteps(1);
-    config->setSimulationTime(0.0f);
+    config->setSimulationTime(0.0001f);
     config->setOutputResolution(resolution);
     config->setOutputFileFormat("vti");
 

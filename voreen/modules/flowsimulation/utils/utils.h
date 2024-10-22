@@ -54,9 +54,10 @@ tgt::mat4 createTransformationMatrix(const tgt::vec3& position, const tgt::vec3&
  * @param transformSamples determines if the samples should be transformed into a plane defined by the disk
  *                         Note that that you can only rely on the through-plane component!
  * @param numSamples Number of samples to distribute uniformly across the disk surface.
- *                   If set to 0, it will be estimated automatically.
+ *                   If set to <= 0, it will be estimated automatically.
+ * @param sampleMask Optional mask volume to sample only where the mask is non-zero.
  */
-std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, bool transformSamples = false, size_t numSamples = 0);
+std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, bool transformSamples = false, size_t numSamples = 0, const VolumeBase* sampleMask = nullptr);
 
 /**
  * Samples a cylinder randomly inside a 3D vector field volume.
@@ -70,9 +71,23 @@ std::vector<tgt::vec3> sampleDisk(const VolumeBase* volume, const tgt::vec3& ori
  * @param transformSamples determines if the samples should be transformed into a plane defined by the cylinder
  *                         Note that that you can only rely on the through-plane component!
  * @param numSamples Number of samples to distribute uniformly across the cylinder volume.
- *                   If set to 0, it will be estimated automatically.
+ *                   If set to <= 0, it will be estimated automatically.
+ * @param sampleMask Optional mask volume to sample only where the mask is non-zero.
  */
-std::vector<tgt::vec3> sampleCylinder(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, float length, bool transformSamples = false, size_t numSamples = 0);
+std::vector<tgt::vec3> sampleCylinder(const VolumeBase* volume, const tgt::vec3& origin, const tgt::vec3& normal, float radius, float length, bool transformSamples = false, size_t numSamples = 0, const VolumeBase* sampleMask = nullptr);
+
+/**
+ * Samples a sphere randomly inside a 3D vector field volume.
+ * Returns all sampled values.
+ *
+ * @param volume The vector field volume
+ * @param origin The spheres' center of gravity
+ * @param radius The spheres' radius
+ * @param numSamples Number of samples to distribute uniformly across the sphere volume.
+ *                   If set to <= 0, it will be estimated automatically.
+ * @param sampleMask Optional mask volume to sample only where the mask is non-zero.
+ */
+std::vector<tgt::vec3> sampleSphere(const VolumeBase* volume, const tgt::vec3& origin, float radius, size_t numSamples = 0, const VolumeBase* sampleMask = nullptr);
 
 }
 

@@ -121,10 +121,6 @@ MatchingResult FlowCenterlineAnalysis::performMatching(std::unique_ptr<VesselGra
 
     MatchingResult result;
 
-    tgt::vec3 p0 = vesselGraph->getNode(onering[0]).pos_;
-    tgt::vec3 p1 = vesselGraph->getNode(onering[1]).pos_;
-    tgt::vec3 p2 = vesselGraph->getNode(onering[2]).pos_;
-
     auto e1 = vesselGraph->getNode(onering[0]).getEdges().front();
     auto e2 = vesselGraph->getNode(onering[1]).getEdges().front();
     auto e3 = vesselGraph->getNode(onering[2]).getEdges().front();
@@ -172,8 +168,6 @@ MatchingResult FlowCenterlineAnalysis::performMatching(std::unique_ptr<VesselGra
         n3 = onering[0];
         n4 = onering[1];
     }
-
-    tgt::vec3 pos = vesselGraph->getNode(n3).pos_ + 0.5f * (vesselGraph->getNode(n4).pos_ - vesselGraph->getNode(n3).pos_);
 
     tgt::plane nodePlane(vesselGraph->getNode(result.nodeMapping[MatchingResult::MPA]).pos_,
                          vesselGraph->getNode(n3).pos_,
