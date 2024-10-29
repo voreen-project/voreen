@@ -1,9 +1,5 @@
-Voreen - The Volume Rendering Engine
-====================================
-http://voreen.uni-muenster.de
+# Voreen - The Volume Rendering Engine
 
-About
------
 Voreen is an open source rapid application development framework for the interactive visualization 
 and analysis of multi-modal volumetric data sets. It provides GPU-based volume rendering and data 
 analysis techniques and offers high flexibility when developing new analysis workflows in 
@@ -16,10 +12,10 @@ Graphics Research Group at the University of Münster as part of the collaborativ
 SFB 656 MoBil (Project Z1, Project Ö). Since 2018, Voreen is collaboratively developed by the Pattern 
 Recognition and Image Analysis (PRIA) Research Group and the VISualization & graphIX (VISIX) Research Group.
 
-For build instructions and further information, please refer to the project website.
+For build instructions and further information, please refer to the [project website](http://voreen.uni-muenster.de).
 
-Directory Structure
--------------------
+## Directory Structure
+
 include                         - framework headers
 src                             - framework source files
 modules                         - standard plugin modules
