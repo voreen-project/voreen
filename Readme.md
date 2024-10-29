@@ -16,26 +16,29 @@ For build instructions and further information, please refer to the [project web
 
 ## Directory Structure
 
-include                         - framework headers
-src                             - framework source files
-modules                         - standard plugin modules
-custommodules                   - location for custom (third-party) modules
-bin                             - location where compiled binaries are written to
 
-apps                            - applications using voreen
-apps/simple                     - simple Qt- and GLUT-based applications
-apps/voreenve                   - main Voreen application - the Voreen Visualization Environment
-apps/voreentool                 - command-line interface to the Voreen library, executing workspaces/networks
-
-data                            - location for user-generated data (log files, settings, screenshots, ...)
-
-resource                        - contains read-only resources, grouped by the corresponding Voreen component (i.e., voreencore, voreenqt, voreenve)
-resource/<...>/fonts            - (possibly) necessary fonts
-resource/<...>/geometry         - sample geometry data
-resource/<...>/scripts          - Python scripts which can be executed from within Voreen
-resource/<...>/transferfuncs    - pre-defined transfer functions
-resource/<...>/volumes          - sample volume data
-resource/<...>/workspaces       - sample Voreen workspaces
-
-doc                             - documentation
-ext                             - external dependencies to other libraries
+| directory | purpose |
+| --------- | ------- |
+|include                         | framework headers |
+|src                             | framework source files |
+|modules                         | standard plugin modules |
+|custommodules                   | location for custom (third-party) modules |
+|bin                             | location where compiled binaries are written to |
+| | |
+|apps                            | applications using voreen |
+|apps/simple                     | simple Qt- and GLUT-based applications |
+|apps/voreenve                   | main Voreen application - the Voreen Visualization Environment |
+|apps/voreentool                 | command-line interface to the Voreen library, executing workspaces/networks |
+| | |
+|data                            | location for user-generated data (log files, settings, screenshots, ...) |
+| | |
+|resource                        | contains read-only resources, grouped by the corresponding Voreen component (i.e., voreencore, voreenqt, voreenve) |
+|resource/<...>/fonts            | (possibly) necessary fonts |
+|resource/<...>/geometry         | sample geometry data |
+|resource/<...>/scripts          | Python scripts which can be executed from within Voreen |
+|resource/<...>/transferfuncs    | pre-defined transfer functions |
+|resource/<...>/volumes          | sample volume data |
+|resource/<...>/workspaces       | sample Voreen workspaces |
+| | |
+|doc                             | documentation |
+|ext                             | external dependencies to other libraries |
