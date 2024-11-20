@@ -45,6 +45,8 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include "tgt/logmanager.h"
 #include "tgt/event/eventlistener.h"
 #include "tgt/event/eventhandler.h"
