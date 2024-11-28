@@ -34,10 +34,12 @@ VesselGraphToFlowIndicator::VesselGraphToFlowIndicator()
     , flowParametrizationInport_(Port::INPORT, "flowparametrization.inport", "Flow Parametrization Input")
     , flowParametrizationOutport_(Port::OUTPORT, "flowparametrization.outport", "Flow Parametrization Output")
     , vesselGraphInport_(Port::INPORT, "vesselgraph.inport", "Vessel Graph Input")
+    , maskPort_(Port::INPORT, "mask.inport", "(Optional) Mask Input")
 {
     addPort(flowParametrizationInport_);
     addPort(flowParametrizationOutport_);
     addPort(vesselGraphInport_);
+    addPort(maskPort_);
 }
 
 void VesselGraphToFlowIndicator::process() {
@@ -45,9 +47,24 @@ void VesselGraphToFlowIndicator::process() {
     // TODO: set by properties.
     float relativeRadiusCorrection = 1.0f;
     int numberOfReferenceNodes = 2;
+    int padding = 1;
 
     // Add indicators.
     auto* config = new FlowSimulationConfig(*flowParametrizationInport_.getData());
+
+    // Setup mask.
+    std::function<bool(tgt::vec3)> insideMask;
+    auto* maskVolume = maskPort_.getData();
+    if(maskVolume) {
+        tgt::mat4 worldToVoxel = maskVolume->getWorldToVoxelMatrix();
+        VolumeRAMRepresentationLock lock(maskVolume);
+        insideMask = [=](const tgt::vec3& position) {
+            return lock->getVoxelNormalized(worldToVoxel * position) != 0.0f;
+        };
+    }
+    else {
+        insideMask = [](tgt::vec3) { return true; };
+    }
 
     // Add flow indicators.
     auto vesselGraph = vesselGraphInport_.getData();
@@ -58,7 +75,7 @@ void VesselGraphToFlowIndicator::process() {
             continue;
         }
 
-        for(size_t i=0; i<numVoxels; i++) {
+        for(size_t i=padding; i<numVoxels-padding; i++) {
 
             size_t mid = i;
             size_t num = numberOfReferenceNodes; // Number of reference nodes in both directions.
@@ -90,11 +107,35 @@ void VesselGraphToFlowIndicator::process() {
             indicator.length_ = tgt::distance(front->pos_, back->pos_);
             indicator.radius_ = relativeRadiusCorrection * radius;
 
-            config->addFlowIndicator(indicator);
+            if(insideMask(indicator.center_)) {
+                config->addFlowIndicator(indicator);
+            }
         }
     }
 
     flowParametrizationOutport_.setData(config);
+}
+
+bool VesselGraphToFlowIndicator::isReady() const {
+
+    if (!isInitialized()) {
+        setNotReadyErrorMessage("Not initialized");
+        return false;
+    }
+
+    if (!vesselGraphInport_.isReady()) {
+        setNotReadyErrorMessage("No vessel graph");
+        return false;
+    }
+
+    if (!flowParametrizationInport_.isReady()) {
+        setNotReadyErrorMessage("No flow parametrization");
+        return false;
+    }
+
+    // Mask is optional.
+
+    return true;
 }
 
 }   // namespace

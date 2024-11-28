@@ -28,6 +28,8 @@
 
 #include "voreen/core/processors/processor.h"
 
+#include "voreen/core/ports/volumeport.h"
+
 #include "../../ports/flowsimulationconfigport.h"
 #include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 
@@ -53,11 +55,13 @@ protected:
     }
 
     virtual void process();
+    virtual bool isReady() const;
 
 private:
 
     VesselGraphPort vesselGraphInport_;
     FlowSimulationConfigPort flowParametrizationInport_;
+    VolumePort maskPort_;
     FlowSimulationConfigPort flowParametrizationOutport_;
 
     static const std::string loggerCat_;
