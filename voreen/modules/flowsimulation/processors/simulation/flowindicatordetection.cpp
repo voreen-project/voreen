@@ -378,14 +378,14 @@ void FlowIndicatorDetection::updateIndicatorUI() {
     cloneFlowIndicator_.setReadOnlyFlag(!settingsEditable);
     removeFlowIndicator_.setReadOnlyFlag(!settingsEditable);
     centerlinePosition_.setReadOnlyFlag(!settingsEditable);
+    invertDirection_.setReadOnlyFlag(!settingsEditable);
+    forceAxisAlignment_.setReadOnlyFlag(!settingsEditable);
+    relativeRadiusCorrection_.setReadOnlyFlag(!settingsEditable);
 
     indicatorName_.setReadOnlyFlag(!validSelection);
     indicatorColor_.setReadOnlyFlag(!validSelection);
     radius_.setReadOnlyFlag(!validSelection);
-    relativeRadiusCorrection_.setReadOnlyFlag(!validSelection);
     length_.setReadOnlyFlag(!validSelection);
-    invertDirection_.setReadOnlyFlag(!validSelection);
-    forceAxisAlignment_.setReadOnlyFlag(!validSelection);
     adaptTransformation_.setReadOnlyFlag(!validSelection);
     indicatorType_.setReadOnlyFlag(!validSelection);
 
