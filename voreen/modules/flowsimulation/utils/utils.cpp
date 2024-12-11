@@ -198,7 +198,7 @@ std::vector<tgt::vec3> sampleSphere(const VolumeBase* volume, const tgt::vec3& o
         float voxelsPerRadius = radius / diag;
         numSamples = 2.0f * 4.0f / 3.0f * tgt::PIf * voxelsPerRadius * voxelsPerRadius; // Use twice as many samples as minimally required.
         if(numSamples < 1) {
-            LWARNINGC("SampleCylinder", "radius might be too small for proper sampling");
+            LWARNINGC("SampleSphere", "radius might be too small for proper sampling");
             numSamples = 10;
         }
     }
@@ -252,6 +252,8 @@ std::vector<tgt::vec3> sampleSphere(const VolumeBase* volume, const tgt::vec3& o
         // Sample the cylinder:
         samplePositions.reserve(numSamples);
 
+        auto bounds = volume->getBoundingBox().getBoundingBox();
+
         for(size_t i=0; i<numSamples; i++) {
             // Generate a random position.
             float r     = radius * std::sqrt(rnd());
@@ -260,7 +262,10 @@ std::vector<tgt::vec3> sampleSphere(const VolumeBase* volume, const tgt::vec3& o
 
             tgt::vec3 pos(r * std::sin(theta) * std::cos(phi), r * std::sin(theta) * std::sin(phi), r * std::cos(theta));
             pos += origin; // Transform to world position.
-            samplePositions.push_back(pos);
+
+            if(bounds.containsPoint(pos)) {
+                samplePositions.push_back(pos);
+            }
         }
     }
 
