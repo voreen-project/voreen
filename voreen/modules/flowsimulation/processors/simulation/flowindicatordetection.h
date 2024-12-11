@@ -78,6 +78,7 @@ private:
         float relativeRadiusCorrection_;
         bool invertDirection_;
         bool forceAxisAlignment_;
+        bool transformationAdapted_;
 
         // Other settings.
         std::string velocityCurveType_;
@@ -186,7 +187,7 @@ private:
     FloatProperty length_;
     BoolProperty invertDirection_;
     BoolProperty forceAxisAlignment_;
-    ButtonProperty adaptTransformation_;
+    BoolProperty adaptTransformation_;
     FloatMat4Property transformationMatrix_;
     OptionProperty<FlowIndicatorType> indicatorType_;
 

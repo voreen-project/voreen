@@ -61,6 +61,7 @@ FlowIndicatorDetection::FlowIndicatorSettings::FlowIndicatorSettings(VGNodeID no
     , relativeRadiusCorrection_(1.0f)
     , invertDirection_(false)
     , forceAxisAlignment_(false)
+    , transformationAdapted_(false)
     , velocityCurveType_("sinus")
     , velocityCurveDuration_(0.25f)
     , targetVelocity_(0.0f)
@@ -77,6 +78,7 @@ void FlowIndicatorDetection::FlowIndicatorSettings::serialize(Serializer& s) con
     s.serialize("relativeRadiusCorrection", relativeRadiusCorrection_);
     s.serialize("invertDirection", invertDirection_);
     s.serialize("forceAxisAlignment", forceAxisAlignment_);
+    s.serialize("transformationAdapted", transformationAdapted_);
     s.serialize("velocityCurveType", velocityCurveType_);
     s.serialize("velocityCurveDuration", velocityCurveDuration_);
     s.serialize("targetVelocity", targetVelocity_);
@@ -95,6 +97,7 @@ void FlowIndicatorDetection::FlowIndicatorSettings::deserialize(Deserializer& s)
     s.optionalDeserialize("relativeRadiusCorrection", relativeRadiusCorrection_, 1.0f);
     s.deserialize("invertDirection", invertDirection_);
     s.deserialize("forceAxisAlignment", forceAxisAlignment_);
+    s.optionalDeserialize("transformationAdapted", transformationAdapted_, false);
     s.deserialize("velocityCurveType", velocityCurveType_);
     s.deserialize("velocityCurveDuration", velocityCurveDuration_);
     s.deserialize("targetVelocity", targetVelocity_);
@@ -126,7 +129,7 @@ FlowIndicatorDetection::FlowIndicatorDetection()
     , relativeRadiusCorrection_("relativeRadiusCorrection", "Relative Radius Correction", 1.0f, 0.1f, 2.0f, Processor::INVALID_RESULT, FloatProperty::STATIC, Property::LOD_ADVANCED)
     , invertDirection_("invertDirection", "Invert Direction", false)
     , forceAxisAlignment_("forceAxisAlignment", "Force Axis Alignment", false)
-    , adaptTransformation_("adaptTransformation", "Align Grid to Indicator")
+    , adaptTransformation_("adaptTransformation", "Align Grid to Indicator", false)
     , transformationMatrix_("transformationMatrix", "Transformation Matrix (Linking)", tgt::mat4::identity, tgt::mat4(-99999), tgt::mat4(99999))
     , indicatorType_("flowType", "Flow Type")
     , flowProfile_("flowProfile", "Flow Profile")
@@ -360,6 +363,9 @@ void FlowIndicatorDetection::updateIndicatorUI() {
         length_.set(indicator.length_);
         invertDirection_.set(settings.invertDirection_);
         forceAxisAlignment_.set(settings.forceAxisAlignment_);
+        adaptTransformation_.blockCallbacks(true); // Only manual changes should trigger callback!
+        adaptTransformation_.set(settings.transformationAdapted_);
+        adaptTransformation_.blockCallbacks(false);
         indicatorType_.selectByValue(indicator.type_);
         isRoleSwapped = indicator.roleSwapped_;
 
@@ -419,6 +425,7 @@ void FlowIndicatorDetection::onIndicatorConfigChange(bool needReinitialization) 
         settings.relativeRadiusCorrection_ = relativeRadiusCorrection_.get();
         settings.invertDirection_ = invertDirection_.get();
         settings.forceAxisAlignment_ = forceAxisAlignment_.get();
+        settings.transformationAdapted_ = adaptTransformation_.get();
         settings.velocityCurveType_ = velocityCurveType_.get();
         settings.velocityCurveDuration_ = velocityCurveDuration_.get();
         settings.targetVelocity_ = targetVelocity_.get();
@@ -741,15 +748,32 @@ void FlowIndicatorDetection::adaptTransformation() {
     if(flowIndicatorTable_.getNumRows() > 0 && indicatorIdx < flowIndicators_.size()) {
         auto& indicator = flowIndicators_.at(indicatorIdx);
 
-        auto rotation = utils::createTransformationMatrix(indicator.center_, indicator.normal_).getRotationalPart();
-        tgt::mat4 transformationMatrix;
-        rotation.invert(transformationMatrix);
-        transformationMatrix_.set(transformationMatrix);
+        bool isSelected = adaptTransformation_.get();
+        if(isSelected) {
+            auto rotation = utils::createTransformationMatrix(indicator.center_, indicator.normal_);//.getRotationalPart();
+            tgt::mat4 transformationMatrix;
+            rotation.invert(transformationMatrix);
+            transformationMatrix_.set(transformationMatrix);
+        }
+        else {
+            transformationMatrix_.set(tgt::mat4::identity);
+        }
+
+        for (size_t i = 0; i < flowIndicatorSettings_.size(); i++) {
+            auto& settings = flowIndicatorSettings_.at(i);
+            settings.transformationAdapted_ = i == indicatorIdx && isSelected;
+        }
+        updateIndicatorUI();
     }
 }
 
 void FlowIndicatorDetection::resetTransformation() {
     transformationMatrix_.set(tgt::mat4::identity);
+    for (auto& settings : flowIndicatorSettings_) {
+        settings.transformationAdapted_ = false;
+    }
+    updateIndicatorUI();
+    LINFO("Transformation Matrix reset");
 }
 
 }   // namespace
