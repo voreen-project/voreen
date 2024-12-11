@@ -1,13 +1,15 @@
 # list of files and directories that should be included in the snapshot source release (windows and unix)
 
+# parent
+../Changelog.txt
+../CREDITS.txt
+../LICENSE.txt
+../LICENSE-academic.txt
+
 # root
-Changelog.txt
 CMakeLists.txt
 config-default.cmake
-CREDITS.txt
 Doxyfile
-LICENSE.txt
-LICENSE-academic.txt
 readme.txt
 logo.txt
 

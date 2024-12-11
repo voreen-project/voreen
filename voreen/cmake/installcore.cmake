@@ -1,10 +1,10 @@
 # copy all core data
 # root dir
 INSTALL(FILES   
-            Changelog.txt
-            CREDITS.txt
-            LICENSE.txt
-            LICENSE-academic.txt
+            ../Changelog.txt
+            ../CREDITS.txt
+            ../LICENSE.txt
+            ../LICENSE-academic.txt
         DESTINATION .
 )
 

@@ -1,10 +1,10 @@
 # list of core files and directories that should be included in the windows binary distribution
 
-# root
-Changelog.txt
-CREDITS.txt
-LICENSE.txt
-LICENSE-academic.txt
+# parent
+../Changelog.txt
+../CREDITS.txt
+../LICENSE.txt
+../LICENSE-academic.txt
 
 # binaries
 bin/Release/voreenve.exe:./
