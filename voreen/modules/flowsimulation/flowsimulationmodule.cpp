@@ -33,6 +33,7 @@
 #include "processors/render/unalignedsliceviewer.h"
 #include "processors/simulation/flowcharacteristics.h"
 #include "processors/simulation/flowensemblecreator.h"
+#include "processors/simulation/flowindicatorfluid.h"
 #include "processors/simulation/flowindicatorrenderer.h"
 #include "processors/simulation/flowparametrizationensemble.h"
 #include "processors/simulation/flowparametrizationrun.h"
@@ -78,7 +79,6 @@
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
-#include "processors/features/pressure.h"
 #include "processors/geometry/geometryinsidetest.h"
 #include "processors/simulation/flowsimulation.h"
 #endif
@@ -99,6 +99,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new UnalignedSliceViewer());
     registerProcessor(new FlowCharacteristics());
     registerProcessor(new FlowEnsembleCreator());
+    registerProcessor(new FlowIndicatorFluid());
     registerProcessor(new FlowIndicatorRenderer());
     registerProcessor(new FlowParametrizationEnsemble());
     registerProcessor(new FlowParametrizationRun());
@@ -138,7 +139,6 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
     registerProcessor(new FlowSimulation());
     registerProcessor(new GeometryInsideTest());
-    registerProcessor(new Pressure());
 #endif
 }
 

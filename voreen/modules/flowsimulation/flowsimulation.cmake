@@ -39,6 +39,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
     ${MOD_DIR}/processors/simulation/flowcharacteristics.cpp
     ${MOD_DIR}/processors/simulation/flowensemblecreator.cpp
+    ${MOD_DIR}/processors/simulation/flowindicatorfluid.cpp
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
     ${MOD_DIR}/processors/simulation/flowparametrizationensemble.cpp
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.cpp
@@ -87,6 +88,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
     ${MOD_DIR}/processors/simulation/flowcharacteristics.h
     ${MOD_DIR}/processors/simulation/flowensemblecreator.h
+    ${MOD_DIR}/processors/simulation/flowindicatorfluid.h
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
     ${MOD_DIR}/processors/simulation/flowparametrizationensemble.h
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.h
@@ -260,12 +262,10 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
 
     SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/features/pressure.h
         ${MOD_DIR}/processors/geometry/geometryinsidetest.h
         ${MOD_DIR}/processors/simulation/flowsimulation.h
     )
     SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/features/pressure.cpp
         ${MOD_DIR}/processors/geometry/geometryinsidetest.cpp
         ${MOD_DIR}/processors/simulation/flowsimulation.cpp
     )

@@ -23,58 +23,39 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#ifndef VRN_PRESSURE_H
-#define VRN_PRESSURE_H
+#include "flowindicatorfluid.h"
 
-#include "voreen/core/processors/asynccomputeprocessor.h"
-#include "voreen/core/ports/volumeport.h"
-#include "voreen/core/ports/geometryport.h"
-#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
-
-#include "../../processors/simulation/flowsimulation.h"
 
 namespace voreen {
 
-class VRN_CORE_API Pressure : public AsyncComputeProcessor<FlowSimulationInput, FlowSimulationOutput> {
-public:
+const std::string FlowIndicatorFluid::loggerCat_("voreen.flowsimulation.FlowIndicatorFluid");
 
-    Pressure();
-    virtual ~Pressure();
-    virtual Processor* create() const;
+FlowIndicatorFluid::FlowIndicatorFluid()
+    : Processor()
+    , configInport_(Port::INPORT, "flowConfig.inport", "Flow Config Input")
+    , configOutport_(Port::OUTPORT, "flowConfig.outport", "Flow Config Output")
+    , startDuration_("startDuration", "Start Duration", 0.0f, 0.0f, 10.0f)
+{
+    addPort(configInport_);
+    addPort(configOutport_);
 
-    virtual std::string getClassName() const { return "Pressure"; }
-    virtual std::string getCategory() const { return "Volume Processing"; }
-    virtual CodeState getCodeState() const { return CODE_STATE_EXPERIMENTAL; }
-
-    virtual bool isReady() const;
-
-protected:
-    virtual void setDescriptions() {
-        setDescription("Calculates the Pressure for a flow Input and a lumen or surface. Output unit is Pa.");
-    }
-
-    virtual ComputeInput prepareComputeInput() override;
-    virtual ComputeOutput compute(ComputeInput input, ProgressReporter& progressReporter) const override;
-    virtual void processComputeOutput(ComputeOutput output) override;
-
-private:
-    GeometryPort geometryDataPort_;
-    VolumePort geometryVolumeDataPort_;
-    VolumePort measuredDataPort_;
-    mutable VolumePort pressurePort_;
-
-    FloatProperty kinematicViscosity_;
-    FloatProperty density_;
-
-    FlowSimulation flowSimulation_;
-
-    GeometryPort geometryDataPortInternal_;
-    VolumeListPort geometryVolumeDataPortInternal_;
-    VolumeListPort measuredDataPortInternal_;
-    FlowSimulationConfigPort configPortInternal_;
-
-};
-
+    addProperty(startDuration_);
 }
 
-#endif
+void FlowIndicatorFluid::process() {
+
+    // Here, we just set the output according to our currently set indicators.
+    FlowSimulationConfig* config = new FlowSimulationConfig(*configInport_.getData());
+
+    FlowIndicator indicator;
+    indicator.type_ = FIT_VELOCITY;
+    indicator.flowProfile_ = FP_VOLUME;
+    indicator.id_ = MAT_FLUID;
+    indicator.velocityCurve_ = VelocityCurve::createSinusoidalCurve(startDuration_.get(), 1.0f);
+
+    config->addFlowIndicator(indicator, true);
+
+    configOutport_.setData(config);
+}
+
+}   // namespace
