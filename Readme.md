@@ -9,8 +9,9 @@ It is licensed under the terms of the GNU General Public License version 2.
 
 The Voreen project has been initiated and was originally maintained by the Visualization & Computer 
 Graphics Research Group at the University of Münster as part of the collaborative research center 
-SFB 656 MoBil (Project Z1, Project Ö). Since 2018, Voreen is collaboratively developed by the Pattern 
+SFB 656 MoBil (Project Z1, Project Ö). Since 2018, Voreen has been collaboratively developed by the Pattern 
 Recognition and Image Analysis (PRIA) Research Group and the VISualization & graphIX (VISIX) Research Group.
+Since October 2024, development has moved to github to enable contributions from the public.
 
 For build instructions and further information, please refer to the [project website](http://voreen.uni-muenster.de).
 
