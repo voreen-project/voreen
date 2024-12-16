@@ -27,6 +27,9 @@
 
 #include "voreen/core/ports/conditions/portconditionvolumetype.h"
 
+#include "voreen/core/datastructures/geometry/geometrysequence.h"
+#include "voreen/core/datastructures/geometry/glmeshgeometry.h"
+
 #include "../../utils/utils.h"
 
 namespace voreen {
@@ -37,13 +40,15 @@ RelativePressureFromVesselGraph::RelativePressureFromVesselGraph()
     : Processor()
     , vesselGraphInport_(Port::INPORT, "vesselgraph.inport", "Vessel Graph Input")
     , pressureVolumeInport_(Port::INPORT, "pressurevolume.inport", "Pressure Volume Input")
+    , sampleRegionsOutport_(Port::OUTPORT, "sampleRegions.outport", "Sample Regions Output")
     , relativePressureOutport_(Port::OUTPORT, "relativepressure.outport", "Relative Pressure Output", false, Processor::VALID)
-    , relativePressure_("relativePressure", "Relative Pressure", 0.0f, -10000.0f, 10000.0f, Processor::VALID)
+    , relativePressure_("relativePressure", "Relative Pressure", 0.0f, -99999999.0f, 99999999.0f, Processor::VALID)
 {
     addPort(vesselGraphInport_);
     addPort(pressureVolumeInport_);
     pressureVolumeInport_.addCondition(new PortConditionVolumeChannelCount(1));
 
+    addPort(sampleRegionsOutport_);
     addPort(relativePressureOutport_);
 
     addProperty(relativePressure_);
@@ -51,14 +56,29 @@ RelativePressureFromVesselGraph::RelativePressureFromVesselGraph()
 }
 
 bool RelativePressureFromVesselGraph::isReady() const {
-    bool ready = Processor::isReady();
+    if(!isInitialized()) {
+        setNotReadyErrorMessage("Processor is not initialized");
+        return false;
+    }
 
-    if(ready && vesselGraphInport_.getData()->getEdges().size() != 1) {
+    if(!vesselGraphInport_.hasData()) {
+        setNotReadyErrorMessage("No VesselGraph input");
+        return false;
+    }
+
+    if(vesselGraphInport_.getData()->getEdges().size() != 1) {
         setNotReadyErrorMessage("VesselGraph needs exactly one edge");
         return false;
     }
 
-    return ready;
+    if(!pressureVolumeInport_.hasData()) {
+        setNotReadyErrorMessage("No pressure volume input");
+        return false;
+    }
+
+    // Outputs are optional.
+
+    return true;
 }
 
 void RelativePressureFromVesselGraph::process() {
@@ -66,6 +86,7 @@ void RelativePressureFromVesselGraph::process() {
     // TODO: set by properties.
     float relativeRadiusCorrection = 1.0f;
 
+    GeometrySequence* sampleRegions = new GeometrySequence();
 
     auto* volume = pressureVolumeInport_.getData();
 
@@ -77,8 +98,25 @@ void RelativePressureFromVesselGraph::process() {
             continue;
         }
 
-        auto samplesP0 = utils::sampleSphere(volume, edge.getNode1().pos_, edge.getNode1().radius_ * relativeRadiusCorrection);
-        auto samplesP1 = utils::sampleSphere(volume, edge.getNode2().pos_, edge.getNode2().radius_ * relativeRadiusCorrection);
+        auto& node0 = edge.getVoxels()[0];
+        auto& node1 = edge.getVoxels()[numVoxels - 1];
+
+        auto pos0 = node0.pos_;
+        auto radius0 = node0.avgDistToSurface_ * relativeRadiusCorrection;
+
+        auto pos1 = node1.pos_;
+        auto radius1 = node1.avgDistToSurface_ * relativeRadiusCorrection;
+
+        auto sampleRegion0 = new GlMeshGeometryUInt32Color();
+        sampleRegion0->setSphereGeometry(radius0, pos0, tgt::vec4(1.0f, 0.0f, 0.0f, 1.0f), 32);
+        sampleRegions->addGeometry(sampleRegion0);
+
+        auto sampleRegion1 = new GlMeshGeometryUInt32Color();
+        sampleRegion1->setSphereGeometry(radius1, pos1, tgt::vec4(0.0f, 0.0f, 1.0f, 1.0f), 32);
+        sampleRegions->addGeometry(sampleRegion1);
+
+        auto samplesP0 = utils::sampleSphere(volume, pos0, radius0);
+        auto samplesP1 = utils::sampleSphere(volume, pos1, radius1);
 
         auto calcAveragePressure = [](const std::vector<tgt::vec3>& samples) {
             float meanMagnitude = 0.0f;
@@ -99,6 +137,8 @@ void RelativePressureFromVesselGraph::process() {
         auto* relativePressureVolume = new Volume(relativePressureVolumeData, tgt::vec3::one, tgt::vec3::zero);
         relativePressureOutport_.setData(relativePressureVolume);
     }
+
+    sampleRegionsOutport_.setData(sampleRegions);
 }
 
 }   // namespace
