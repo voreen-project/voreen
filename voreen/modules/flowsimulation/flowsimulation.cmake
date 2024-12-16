@@ -211,6 +211,28 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
         LIST(APPEND OLB_OPTIONS "OMPFLAGS=-fopenmp")
     ENDIF()
 
+    # Link against VTK.
+    SET(OLB_LDFLAGS "")
+    IF(VRN_MODULE_VTK)
+        FIND_PACKAGE(VTK REQUIRED)
+        FOREACH (DIR ${VTK_INCLUDE_DIRS})
+            LIST(APPEND OLB_CXXFLAGS "-I${DIR}")
+        ENDFOREACH ()
+        SET(VTK_VERSION ${VTK_VERSION_MAJOR}.${VTK_VERSION_MINOR})
+        #SET(LIBS ${VTK_LIBRARIES})
+        SET(LIBS "vtkCommonCore" "vtkIOXML" "vtkCommonDataModel") # We only need these.
+        MESSAGE(STATUS ${LIBS})
+        FOREACH (LIB ${LIBS})
+            LIST(APPEND OLB_LDFLAGS "-l${LIB}-${VTK_VERSION}")
+        ENDFOREACH ()
+
+        # TODO: In a newer version of OpenLB, instead something like this should be possible:
+        #LIST(APPEND OLB_OPTIONS "FEATURES=VTK")
+        #LIST(APPEND OLB_OPTIONS "VTK_VERSION=${VTK_VERSION}")
+    ELSE()
+        MESSAGE(WARNING "VTK module required for building OpenLB target!")
+    ENDIF()
+
     # Set default compiler.
     SET(OLB_CXX "g++")
     SET(OLB_CC "gcc")
@@ -246,7 +268,7 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
         SET(OLB_CXXFLAGS ${OLB_CXXFLAGS} -Wall -march=native -mtune=native)
     ENDIF()
 
-    LIST(APPEND OLB_OPTIONS "CXX=${OLB_CXX}" "CC=${OLB_CC}" "CXXFLAGS=\"${OLB_CXXFLAGS}\"" "PLATFORMS=\"${OLB_PLATFORMS}\"")
+    LIST(APPEND OLB_OPTIONS "CXX=${OLB_CXX}" "CC=${OLB_CC}" "CXXFLAGS=\"${OLB_CXXFLAGS}\"" "LDFLAGS=\"${OLB_LDFLAGS}\"" "PLATFORMS=\"${OLB_PLATFORMS}\"")
 
     SET(OpenLB_DIR ${MOD_DIR}/ext/openlb)
     SET(OpenLB_INCLUDE_DIR ${OpenLB_DIR}/src)
