@@ -28,6 +28,7 @@
 
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/volumeport.h"
+#include "voreen/core/ports/geometryport.h"
 
 #include "modules/vesselnetworkanalysis/ports/vesselgraphport.h"
 
@@ -60,6 +61,7 @@ private:
     VesselGraphPort vesselGraphInport_;
     VolumePort pressureVolumeInport_;
 
+    GeometryPort sampleRegionsOutport_;
     VolumePort relativePressureOutport_;
 
     FloatProperty relativePressure_;
