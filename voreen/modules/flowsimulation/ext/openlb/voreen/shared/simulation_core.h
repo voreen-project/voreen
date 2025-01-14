@@ -141,10 +141,10 @@ struct SimpleVolume {
                     for(int channel = 0; channel < numChannels; channel++) {
                         float value = imageData->GetScalarComponentAsFloat(x+offsetX, y+offsetY, z+offsetZ, channel);
                         S typedValue = static_cast<S>(value);
-                        minValues[channel] = std::min<S>(minValues[channel], value);
-                        maxValues[channel] = std::max<S>(maxValues[channel], value);
-                        magnitude += value * value;
-                        setValue(value, x, y, z, channel);
+                        minValues[channel] = std::min<S>(minValues[channel], typedValue);
+                        maxValues[channel] = std::max<S>(maxValues[channel], typedValue);
+                        magnitude += typedValue * typedValue;
+                        setValue(typedValue, x, y, z, channel);
                     }
                     minMagnitude = std::min<S>(minMagnitude, magnitude);
                     maxMagnitude = std::max<S>(maxMagnitude, magnitude);
