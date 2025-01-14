@@ -6,20 +6,38 @@ SET(MOD_CORE_MODULECLASS VTKModule)
 
 
 IF(UNIX)
+
     FIND_PACKAGE(VTK REQUIRED)
-    INCLUDE(${VTK_USE_FILE})
-    SET(MOD_LIBRARIES ${VTK_LIBRARIES})
+    IF(${VTK_VERSION} VERSION_LESS "8.9")
+        INCLUDE(${VTK_USE_FILE})
+        SET(MOD_LIBRARIES ${VTK_LIBRARIES})
+    ELSE()
+        FIND_PACKAGE(VTK REQUIRED COMPONENTS)
+        SET(ALL_VTK_INCLUDE_DIRS)
+        FOREACH(COMPONENT ${VTK_LIBRARIES})
+            GET_TARGET_PROPERTY(INCLUDE_DIRS ${COMPONENT} INTERFACE_INCLUDE_DIRECTORIES)
+            IF(INCLUDE_DIRS)
+                LIST(APPEND ALL_VTK_INCLUDE_DIRS ${INCLUDE_DIRS})
+            ENDIF()  
+        ENDFOREACH()
+
+        LIST(REMOVE_DUPLICATES ALL_VTK_INCLUDE_DIRS)
+        
+        SET(MOD_INCLUDE_DIRS ${ALL_VTK_INCLUDE_DIRS})
+        SET(MOD_LIBRARIES ${VTK_LIBRARIES})
+    ENDIF()
+
 ELSE()
 
     SET(VRN_VTK_VERSION 8.1)
 
-    LIST(APPEND VTK_LIB_NAMES #add missing
+    LIST(APPEND VTK_REQUIRED_COMPONENTS #add missing
         "CommonCore" "CommonDataModel" "CommonMisc" "CommonSystem" "CommonTransforms" "ImagingCore"
         "CommonExecutionModel" "CommonMath" "expat" "hdf5" "hdf5_hl" "jpeg" "metaio" "NetCDF" "netcdfcpp"
         "png" "sys" "tiff" "lz4" "zlib" "DICOMParser" "IOCore" "IOImage" "IONetCDF" "IOXML" "IOXMLParser"
     )
 
-    FOREACH(elem ${VTK_LIB_NAMES})
+    FOREACH(elem ${VTK_REQUIRED_COMPONENTS})
         LIST(APPEND MOD_DEBUG_LIBRARIES   "${MOD_DIR}/ext/vtk/lib/debug/vtk${elem}-${VRN_VTK_VERSION}.lib")
         LIST(APPEND MOD_DEBUG_DLLS        "${MOD_DIR}/ext/vtk/lib/debug/vtk${elem}-${VRN_VTK_VERSION}.dll")
         LIST(APPEND MOD_RELEASE_LIBRARIES "${MOD_DIR}/ext/vtk/lib/release/vtk${elem}-${VRN_VTK_VERSION}.lib")

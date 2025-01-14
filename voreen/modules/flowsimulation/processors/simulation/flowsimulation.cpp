@@ -40,7 +40,7 @@
 #include "modules/vtk/io/vtivolumewriter.h"
 #endif
 
-#include "../../ext/openlb/voreen/simulation_core.h"
+#include "../../ext/openlb/voreen/shared/simulation_core.h"
 
 #include <thread>
 

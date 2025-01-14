@@ -26,7 +26,7 @@
 #ifndef VRN_FLOWPARAMETERS_H
 #define VRN_FLOWPARAMETERS_H
 
-#include "../ext/openlb/voreen/openlb_parameters.h"
+#include "../ext/openlb/voreen/shared/openlb_parameters.h"
 
 #include "voreen/core/voreencoreapi.h"
 

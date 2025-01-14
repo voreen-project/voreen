@@ -1,8 +1,8 @@
 ################################################################################
 # Project file for the tgt library
 ################################################################################
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16.3 FATAL_ERROR)
 PROJECT(tgt)
-CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1 FATAL_ERROR)
 INCLUDE(../../cmake/commonconf.cmake)
 
 MESSAGE(STATUS "Configuring tgt Library")
@@ -76,11 +76,11 @@ LIST(APPEND TGT_HEADERS
 
 IF(NOT VRN_OPENGL_COMPATIBILITY_PROFILE)
     LIST(APPEND TGT_SOURCES
-    gl_core.cpp
-    immediatemode/gl.cpp
+        gl_core.cpp
+        immediatemode/gl.cpp
     )
     LIST(APPEND TGT_HEADERS
-    immediatemode/gl.h
+        immediatemode/gl.h
     )
 ENDIF()
 

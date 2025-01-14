@@ -37,14 +37,12 @@ IF(WIN32)
 
 ELSEIF(UNIX)
     MESSAGE(STATUS "Trying to find Python 3 version...")
-    FIND_PACKAGE(PythonLibs "3")
-    IF(PYTHONLIBS_FOUND)
-        MESSAGE(STATUS "  - Found Python library")
-        SET(MOD_INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
-        SET(MOD_LIBRARIES ${PYTHON_LIBRARIES})
-    ELSE()
-        MESSAGE(FATAL_ERROR "Python library not found!")
-    ENDIF()
+    
+    FIND_PACKAGE(Python3 COMPONENTS Interpreter Development REQUIRED)
+    
+    SET(MOD_INCLUDE_DIRECTORIES ${PYTHON_INCLUDE_DIRS})
+    SET(MOD_LIBRARIES ${PYTHON_LIBRARIES})
+    MESSAGE(STATUS ${MOD_LIBRARIES})
     
     # deployment
     SET(MOD_INSTALL_DIRECTORIES

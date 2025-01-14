@@ -1,5 +1,5 @@
-#include "simulation_core.h"
-#include "openlb_parameters.cpp" // We treat the definition file as header, we anyways only include it once.
+#include "shared/simulation_core.h"
+#include "shared/openlb_parameters.cpp" // We treat the definition file as header, we anyway only include it once.
 
 ////////// Globals //////////////////
 // Meta

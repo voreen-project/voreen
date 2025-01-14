@@ -31,6 +31,7 @@
 #include <set>
 #include <utility>
 #include <string>
+#include <cstdint>
 
 // Forward-declaration of ADf type marker
 struct AD;

@@ -26,7 +26,7 @@
 #include "voreen/core/io/serialization/serializer.h"
 #include "voreen/core/io/serialization/deserializer.h"
 
-#include "../ext/openlb/voreen/openlb_parameters.h"
+#include "../ext/openlb/voreen/shared/openlb_parameters.h"
 
 namespace voreen {
 

@@ -67,7 +67,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/utils/utils.cpp
     
     # openlb
-    ${MOD_DIR}/ext/openlb/voreen/openlb_parameters.cpp
+    ${MOD_DIR}/ext/openlb/voreen/shared/openlb_parameters.cpp
 )
 
 SET(MOD_CORE_HEADERS
@@ -116,7 +116,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/utils/utils.h
     
     # openlb
-    ${MOD_DIR}/ext/openlb/voreen/openlb_parameters.h
+    ${MOD_DIR}/ext/openlb/voreen/shared/openlb_parameters.h
 )
 
 IF(VRN_MODULE_VTK)
@@ -215,16 +215,40 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     SET(OLB_LDFLAGS "")
     IF(VRN_MODULE_VTK)
         FIND_PACKAGE(VTK REQUIRED)
-        FOREACH (DIR ${VTK_INCLUDE_DIRS})
-            LIST(APPEND OLB_CXXFLAGS "-I${DIR}")
-        ENDFOREACH ()
-        SET(VTK_VERSION ${VTK_VERSION_MAJOR}.${VTK_VERSION_MINOR})
-        #SET(LIBS ${VTK_LIBRARIES})
-        SET(LIBS "vtkCommonCore" "vtkIOXML" "vtkCommonDataModel") # We only need these.
-        MESSAGE(STATUS ${LIBS})
-        FOREACH (LIB ${LIBS})
-            LIST(APPEND OLB_LDFLAGS "-l${LIB}-${VTK_VERSION}")
-        ENDFOREACH ()
+        SET(VTK_REQUIRED_COMPONENTS CommonCore IOXML CommonDataModel)
+
+        IF(${VTK_VERSION} VERSION_LESS "8.9")
+            FOREACH (DIR ${VTK_INCLUDE_DIRS})
+                LIST(APPEND OLB_CXXFLAGS "-I${DIR}")
+            ENDFOREACH ()
+
+            FOREACH (COMPONENT ${VTK_REQUIRED_COMPONENTS})
+                LIST(APPEND OLB_LDFLAGS "-lvtk${COMPONENT}-${VTK_VERSION_MAJOR}.${VTK_VERSION_MINOR}")
+            ENDFOREACH ()
+        ELSE()
+            # Specify required components for modern VTK
+            FIND_PACKAGE(VTK REQUIRED COMPONENTS ${VTK_REQUIRED_COMPONENTS})
+            
+            SET(ALL_VTK_INCLUDE_DIRS)
+            
+            FOREACH(COMPONENT ${VTK_LIBRARIES})
+                GET_TARGET_PROPERTY(INCLUDE_DIRS ${COMPONENT} INTERFACE_INCLUDE_DIRECTORIES)
+                IF(INCLUDE_DIRS)
+                    LIST(APPEND ALL_VTK_INCLUDE_DIRS ${INCLUDE_DIRS})
+                ENDIF()
+                
+            ENDFOREACH()
+
+            LIST(REMOVE_DUPLICATES ALL_VTK_INCLUDE_DIRS)
+
+            FOREACH (DIR ${ALL_VTK_INCLUDE_DIRS})
+                LIST(APPEND OLB_CXXFLAGS "-I${DIR}")
+            ENDFOREACH ()
+
+            FOREACH (COMPONENT ${VTK_LIBRARIES})
+                LIST(APPEND OLB_LDFLAGS "-lvtk${COMPONENT}-${VTK_VERSION_MAJOR}.${VTK_VERSION_MINOR}")
+            ENDFOREACH ()
+        ENDIF()
 
         # TODO: In a newer version of OpenLB, instead something like this should be possible:
         #LIST(APPEND OLB_OPTIONS "FEATURES=VTK")

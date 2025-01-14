@@ -1,5 +1,5 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16.3 FATAL_ERROR)
 PROJECT(processornetworktest)
-CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1 FATAL_ERROR)
 INCLUDE(../../../cmake/commonconf.cmake)
 
 MESSAGE(STATUS "Configuring ProcessorNetworkTest Application")

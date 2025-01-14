@@ -1,8 +1,8 @@
 ################################################################################
 # Project file for the Voreen-Qt library
 ################################################################################
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16.3 FATAL_ERROR)
 PROJECT(voreen_qt)
-CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1 FATAL_ERROR)
 INCLUDE(../../cmake/commonconf.cmake)
 
 MESSAGE(STATUS "Configuring voreen_qt Library")
