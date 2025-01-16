@@ -13,7 +13,9 @@ SFB 656 MoBil (Project Z1, Project Ö). Since 2018, Voreen has been collaborativ
 Recognition and Image Analysis (PRIA) Research Group and the VISualization & graphIX (VISIX) Research Group.
 Since October 2024, development has moved to github to enable contributions from the public.
 
-For build instructions and further information, please refer to the [project website](http://voreen.uni-muenster.de).
+For build instructions and further information, please refer to the [wiki](https://github.com/voreen-project/voreen/wiki).
+
+Note: This project is being continuously populated from the original [project website](http://voreen.uni-muenster.de).
 
 ## Directory Structure
 
