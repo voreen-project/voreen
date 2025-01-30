@@ -17,6 +17,8 @@ For build instructions and further information, please refer to the [wiki](https
 
 Note: This project is being continuously populated from the original [project website](http://voreen.uni-muenster.de).
 
+The documentation progress is described [here](https://github.com/voreen-project/voreen/issues/16).
+
 ## Directory Structure
 
 
