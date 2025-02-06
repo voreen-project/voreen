@@ -245,9 +245,15 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
                 LIST(APPEND OLB_CXXFLAGS "-I${DIR}")
             ENDFOREACH ()
 
-            FOREACH (COMPONENT ${VTK_LIBRARIES})
+            FOREACH (COMPONENT ${VTK_REQUIRED_COMPONENTS})
                 LIST(APPEND OLB_LDFLAGS "-lvtk${COMPONENT}-${VTK_VERSION_MAJOR}.${VTK_VERSION_MINOR}")
             ENDFOREACH ()
+
+            # TODO: ideally, we want to use the exposed VTK_LIBRARIES directly.
+            # However, they the linker does not understand e.g. "-lVTK::CommonCore-9.1"
+            #FOREACH (COMPONENT ${VTK_LIBRARIES})
+            #    LIST(APPEND OLB_LDFLAGS "-l${COMPONENT}-${VTK_VERSION_MAJOR}.${VTK_VERSION_MINOR}")
+            #ENDFOREACH ()
         ENDIF()
 
         # TODO: In a newer version of OpenLB, instead something like this should be possible:
