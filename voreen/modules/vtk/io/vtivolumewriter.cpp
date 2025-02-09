@@ -187,6 +187,7 @@ void VTIVolumeWriter::writeInternal(const std::string& fileName, const VolumeBas
 
     vtkSmartPointer<vtkXMLImageDataWriter> writer = vtkSmartPointer<vtkXMLImageDataWriter>::New();
     writer->SetFileName(fileName.c_str());
+    writer->SetDataModeToBinary();  // Avoids XML precision issues
     writer->SetInputData(createVtkImageDataFromVolume(volumeHandle, isVectorField));
     if(!writer->Write()) {
         throw tgt::IOException("File could not be written");
