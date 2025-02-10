@@ -74,7 +74,7 @@ public:
     {}
 
     ScopeGuard( ScopeGuard&& other )
-        : cleanup_( move( other.cleanup_ ) )
+        : cleanup_( std::move( other.cleanup_ ) )
     { other.dismiss(); }
 
     ScopeGuard& operator=(ScopeGuard const&) = delete;
