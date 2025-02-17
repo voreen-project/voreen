@@ -126,13 +126,15 @@ static std::pair<std::vector<float>, std::vector<float>> collect_neighborhoods(c
 
     tgt::ivec3 overlap_begin = tgt::max(begin1, begin2);
     tgt::ivec3 overlap_end = tgt::max(tgt::min(end1, end2), overlap_begin);
+    tgt::vec3 overlap_center = tgt::vec3(overlap_end - tgt::ivec3::one + overlap_begin) * 0.5f;
 
     std::vector<float> n1final;
     n1final.resize(num_voxels_max);
     float* n1_begin = n1final.data();
     float* n1_cur = n1_begin;
 
-    tgt::ivec3 from_b1_to_b2 = best_center2-best_center1;
+    tgt::vec3 from_b1_to_b2 = best_center2-best_center1;
+    tgt::vec3 from_p1_to_p2 = p2-p1;
 
     std::vector<float> n2final;
     n2final.resize(num_voxels_max);
@@ -175,15 +177,19 @@ static std::pair<std::vector<float>, std::vector<float>> collect_neighborhoods(c
                     size_t non_overlap_end;
                     if(yIn) {
                         for (size_t x = overlap_begin.x; x < overlap_end.x; ++x) {
+
                             size_t i = yIndex + x;
                             float val = image.voxel(i);
 
                             tgt::ivec3 n(x,y,z);
-                            int along_axis = tgt::dot(n, from_b1_to_b2);
-                            along_axis = (along_axis << 16) + neighborhood_counter;
-                            *o_cur = std::make_pair(val,along_axis);
-                            ++o_cur;
-                            ++neighborhood_counter;
+                            tgt::vec3 centered = tgt::vec3(n) - overlap_center;
+                            float along_axis = tgt::dot(centered, from_b1_to_b2);
+                            float along_axis_p = tgt::dot(centered, from_p1_to_p2);
+                            along_axis = (along_axis * 1e5) + along_axis_p;
+                            if(along_axis != 0) {
+                                *o_cur = std::make_pair(val, along_axis);
+                                ++o_cur;
+                            }
                         }
                         bool overlap_at_begin = overlap_begin.x == begin1.x;
                         non_overlap_begin = overlap_at_begin ? overlap_end.x : begin1.x;
@@ -211,7 +217,6 @@ static std::pair<std::vector<float>, std::vector<float>> collect_neighborhoods(c
     } else {
         process_non_overlap_single(image.voxel(), dim, begin1, end1, overlap_begin, overlap_end, n1_cur);
         process_non_overlap_single(image.voxel(), dim, begin2, end2, overlap_begin, overlap_end, n2_cur);
-        size_t neighborhood_counter = 0;
         for (size_t z = overlap_begin.z; z < overlap_end.z; ++z) {
 
             size_t zIndex = sliceSize * z;
@@ -225,11 +230,14 @@ static std::pair<std::vector<float>, std::vector<float>> collect_neighborhoods(c
                     float val = image.voxel(i);
 
                     tgt::ivec3 n(x,y,z);
-                    int along_axis = tgt::dot(n, from_b1_to_b2);
-                    along_axis = (along_axis << 16) + neighborhood_counter;
-                    *o_cur = std::make_pair(val,along_axis);
-                    ++o_cur;
-                    ++neighborhood_counter;
+                    tgt::vec3 centered = overlap_center - tgt::vec3(n);
+                    float along_axis = tgt::dot(centered, from_b1_to_b2);
+                    float along_axis_p = tgt::dot(centered, from_p1_to_p2);
+                    along_axis = (along_axis * 1e5) + along_axis_p;
+                    if(along_axis != 0) {
+                        *o_cur = std::make_pair(val, along_axis);
+                        ++o_cur;
+                    }
                 }
             }
         }
