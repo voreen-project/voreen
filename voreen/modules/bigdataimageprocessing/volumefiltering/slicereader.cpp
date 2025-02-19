@@ -516,10 +516,12 @@ VolumeFilterStackBuilder::VolumeFilterStackBuilder(const VolumeBase& volume)
 
 VolumeFilterStackBuilder& VolumeFilterStackBuilder::addLayer(std::unique_ptr<VolumeFilter> conv) {
     tgtAssert(top_.get(), "No top. Did you .build() already?");
-    top_ = std::unique_ptr<SliceReader>(new FilteringSliceReader(
-                std::unique_ptr<CachingSliceReader>(new CachingSliceReader(std::move(top_), conv->zExtent())),
-                std::move(conv)
-                ));
+
+    // FIXME: Making the CacheSlizeReader an own variable is a hack, because some compilers (e.g. g++ 13.3.0) evaluate
+    //  it to nullptr, if used directly in the constructor of FilteringSliceReader. This is a bug in the compiler.
+    auto cache = std::unique_ptr<CachingSliceReader>(new CachingSliceReader(std::move(top_), conv->zExtent()));
+
+    top_ = std::unique_ptr<SliceReader>(new FilteringSliceReader(std::move(cache), std::move(conv)));
     return *this;
 }
 
