@@ -104,6 +104,11 @@ struct SimpleVolume {
         }
 
         vtkSmartPointer<vtkXMLImageDataReader> reader = vtkSmartPointer<vtkXMLImageDataReader>::New();
+        if(!reader->CanReadFile(path.c_str())) {
+            std::cout << "[SimpleVolume] File can't be read: " << path << std::endl;
+            exit(1); // Would crash otherwise.
+        }
+
         reader->SetFileName(path.c_str());
         reader->Update();
 
@@ -893,7 +898,6 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
         }
 
         // Always write debug data.
-#ifndef VRN_MODULE_FLOWSIMULATION
         if(iteration == 0) {
             SuperLatticeGeometry3D<T, DESCRIPTOR> geometry( lattice, superGeometry );
             vtmWriter.write( geometry );
@@ -906,7 +910,6 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
 
             vtmWriter.createMasterFile();
         }
-#endif
 
         vtmWriter.write(iteration);
 
