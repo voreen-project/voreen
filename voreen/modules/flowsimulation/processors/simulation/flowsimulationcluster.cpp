@@ -338,8 +338,8 @@ void FlowSimulationCluster::process() {
         auto thread = std::move(waitingThreads_.front());
         waitingThreads_.pop_front();
 
-        LINFO("Run " << thread->getName() << " started");
         thread->run();
+        LINFO("Run " << thread->getName() << " started");
         runningThreads_.push_back(std::move(thread));
     }
 
@@ -547,6 +547,14 @@ void FlowSimulationCluster::enqueueSimulations() {
     if(config.getFlowFeatures() == FF_NONE) {
         VoreenApplication::app()->showMessageBox("Error", "No flow feature selected. Did you add one?", true);
         LERROR("No flow feature selected");
+        return;
+    }
+
+    // Make sure we have a binary selected.
+    if(useLocalInstance_.get() && localInstancePath_.get().empty()) {
+        VoreenApplication::app()->showMessageBox("Error",
+                                                 "No local instance binary selected. It is normally located here: "
+                                                 "'voreen/modules/flowsimulation/ext/openlb/voreen/simulation_cluster'", true);
         return;
     }
 

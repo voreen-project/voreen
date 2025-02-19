@@ -286,7 +286,7 @@ int main(int argc, char* argv[]) {
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
-        setBoundaryValues(lattice, converter, iteration, superGeometry, indicators, parameters);
+        setBoundaryValues(lattice, converter, iteration, superGeometry, indicators, parameters, &measuredDataTimeSeries);
 
         // === 6th Step: Collide and Stream Execution ===
         lattice.collideAndStream();

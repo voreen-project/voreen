@@ -68,7 +68,10 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
 
 void FlowParametrizationEnsemble::process() {
 
-    FlowSimulationConfig* config = new FlowSimulationConfig(ensembleName_.get());
+    auto trimmedEnsembleName = ensembleName_.get();
+    std::replace(trimmedEnsembleName.begin(), trimmedEnsembleName.end(), ' ', '_');
+
+    FlowSimulationConfig* config = new FlowSimulationConfig(trimmedEnsembleName);
     config->setSimulationTime(simulationTime_.get());
     config->setNumTimeSteps(numTimeSteps_.get());
     config->setOutputResolution(outputResolution_.get());

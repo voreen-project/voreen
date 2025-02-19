@@ -191,6 +191,9 @@ void FlowParametrizationRun::addParametrizations() {
         }
     }
 
+    // Replace spaces with underscores (spaces might cause problems as the names are treated as paths later).
+    std::replace(name.begin(), name.end(), ' ', '_');
+
     PARAMETER_DISCRETIZATION_BEGIN(spatialResolution, int)
     PARAMETER_DISCRETIZATION_BEGIN(relaxationTime, float)
     PARAMETER_DISCRETIZATION_BEGIN(viscosity, float)
