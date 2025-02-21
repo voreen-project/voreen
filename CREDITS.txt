@@ -28,6 +28,7 @@ Florian Lindemann
 Markus Madeja
 Jörg Mensmann
 Jennis Meyer-Spradow
+Thomas Miro
 Zoha Moztarzadeh
 Reza Nawrozi
 Borislav Petkov
