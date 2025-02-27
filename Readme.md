@@ -1,5 +1,7 @@
 # Voreen - The Volume Rendering Engine
 
+![voreen](https://github.com/user-attachments/assets/b0598278-54f1-45a3-b94a-e17c35e0e0be)
+
 Voreen is an open source rapid application development framework for the interactive visualization 
 and analysis of multi-modal volumetric data sets. It provides GPU-based volume rendering and data 
 analysis techniques and offers high flexibility when developing new analysis workflows in 
