@@ -203,8 +203,9 @@ void PythonPlugin::runScript() {
             //compilerLogWidget_->setPlainText(compilerLogWidget_->toPlainText() + QString("finished."));
         }
         else {
+            // We append the runtime error so the user might better find the origin of the error.
             compilerLogWidget_->setTextColor(Qt::red);
-            compilerLogWidget_->setPlainText("Runtime Error:\n" + QString::fromStdString(script_->getLog()));
+            compilerLogWidget_->append("\n\nRuntime Error:\n" + QString::fromStdString(script_->getLog()));
             codeEdit_->moveCursorToPosition(script_->getErrorLine() - 1);
         }
     }
