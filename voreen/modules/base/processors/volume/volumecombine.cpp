@@ -166,9 +166,9 @@ void VolumeCombine::process() {
     // standard combination with resampling
     else {
         if (referenceVolume_.isSelected("first"))
-            combinedVolume = createCombinedVolume(firstVolume, secondVolume);
+            combinedVolume = firstVolume->clone();
         else
-            combinedVolume = createCombinedVolume(secondVolume, firstVolume);
+            combinedVolume = secondVolume->clone();
 
         if (combinedVolume) {
             LINFO("Creating combined volume with dimensions " << combinedVolume->getDimensions() << " using "
