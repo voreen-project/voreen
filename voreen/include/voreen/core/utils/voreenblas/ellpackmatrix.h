@@ -176,7 +176,7 @@ void voreen::EllpackMatrix<T>::initializeBuffers() {
 
     size_t numElms = numRows_*numColsPerRow_;
     std::fill_n(M_, numElms, static_cast<T>(0));
-    std::fill_n(indices_, numElms, -1);
+    std::fill_n(indices_, numElms, static_cast<size_t>(-1));
 }
 
 template<class T>
@@ -249,7 +249,7 @@ T& voreen::EllpackMatrix<T>::getWritableValue(size_t row, size_t col) {
     for (size_t index = range.first; index != range.second; ++index) {
         auto& c = indices_[index];
         // Cols are filled from 0 to .. and never freed. Thus, if we find -1, the entry does not exist, yet.
-        if (c == col || c == -1) {
+        if (c == col || c == static_cast<size_t>(-1)) {
             c = col;
             return M_[index];
         }
@@ -296,7 +296,7 @@ size_t voreen::EllpackMatrix<T>::getNumRowEntries(size_t row) const {
 
     size_t entries = 0;
     for (size_t i=0; i<numColsPerRow_; i++) {
-        if (indices_[internalIndex(row, i)] == -1) {
+        if (indices_[internalIndex(row, i)] == static_cast<size_t>(-1)) {
             entries++;
         }
     }
@@ -376,7 +376,7 @@ bool voreen::EllpackMatrix<T>::isSymmetric() const {
     for (size_t row=0; row < numRows_; row++) {
         for (size_t colIndex=0; colIndex<getNumColsPerRow(); colIndex++) {
             size_t col = getColumn(row, colIndex);
-            if(col == -1) {
+            if(col == static_cast<size_t>(-1)) {
                 break;
             }
             if (getValue(row, col) != getValue(col, row))
@@ -425,10 +425,10 @@ size_t voreen::EllpackMatrix<T>::getNextFreeIndex(size_t row) const {
 #endif
     auto range = rowIndexRange(row);
     for (size_t index = range.first; index != range.second; ++index) {
-        if (indices_[index] == -1)
+        if (indices_[index] == static_cast<size_t>(-1))
             return index;
     }
-    return -1;
+    return static_cast<size_t>(-1);
 }
 
 #endif

@@ -61,7 +61,7 @@ void VoreenBlasCPU::sSpMVEll(const EllpackMatrix<float>& mat, const float* vec, 
         result[row] = 0.f;
         for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
             size_t col = mat.getColumn(row, colIndex);
-            if(col != -1) {
+            if(col != static_cast<size_t>(-1)) {
                 result[row] += mat.getValueByIndex(row, colIndex) * vec[col];
             }
         }
@@ -77,7 +77,7 @@ void VoreenBlasCPU::hSpMVEll(const EllpackMatrix<int16_t>& mat, const float* vec
         result[row] = 0.f;
         for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
             size_t col = mat.getColumn(row, colIndex);
-            if(col != -1) {
+            if(col != static_cast<size_t>(-1)) {
                 result[row] += (mat.getValueByIndex(row, colIndex) * vec[col]) / maxValue;
             }
         }
@@ -94,7 +94,7 @@ float VoreenBlasCPU::sSpInnerProductEll(const EllpackMatrix<float>& mat, const f
         float dot = 0.f;
         for (size_t colIndex=0; colIndex < numColsPerRow; ++colIndex) {
             size_t col = mat.getColumn(row, colIndex);
-            if(col != -1) {
+            if(col != static_cast<size_t>(-1)) {
                 dot += mat.getValueByIndex(row, colIndex) * vecy[col];
             }
         }

@@ -87,6 +87,7 @@ static inline T rescaleInternal(const T& value, RescaleStrategyType strategy) {
                     });
         default:
             tgtAssert(false, "Invalid strategy");
+            return T();
     }
 }
 
@@ -118,6 +119,7 @@ SliceReaderMetaData RescaleFilter<T>::getMetaData(const SliceReaderMetaData& bas
                             "exp(" + baseUnit + ")");
             default:
                 tgtAssert(false, "Invalid strategy");
+                return RealWorldMapping();
         }
     } ();
     auto md = SliceReaderMetaData::fromBase(base);
