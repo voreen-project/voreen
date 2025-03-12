@@ -179,7 +179,7 @@ ENDIF()
 IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     IF(VRN_MSVC)
         # We might add support in the future, but for now we have to output an error message.
-        MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC")
+        MESSAGE(FATAL_ERROR "OpenLB currently not supported by MSVC. You can, however, build OpenLB using WSL.")
     ENDIF()
 
     # OpenLB requires c++17 standard.
@@ -260,7 +260,7 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
         #LIST(APPEND OLB_OPTIONS "FEATURES=VTK")
         #LIST(APPEND OLB_OPTIONS "VTK_VERSION=${VTK_VERSION}")
     ELSE()
-        MESSAGE(WARNING "VTK module required for building OpenLB target!")
+        MESSAGE(FATAL_ERROR "VTK module required for building OpenLB target!")
     ENDIF()
 
     # Set default compiler.

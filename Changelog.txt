@@ -4,6 +4,8 @@ Voreen Changelog
 (UNRELEASED): Voreen 5.3.1
 ------------------------
 
+    * Features:
+      o FlowSimulationCluster: enable local decoupled simulation on windows using WSL
 
     * Bug Fixes/Minor Changes:
       o VTIVolumeWriter: fix (sometimes) corrupted written multi-channel volumes

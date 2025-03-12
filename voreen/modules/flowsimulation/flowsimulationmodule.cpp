@@ -73,7 +73,7 @@
 #include "processors/plotting/roianalysis.h"
 #endif
 
-#if defined(VRN_MODULE_VESSELNETWORKANALYSIS) and defined(VRN_MODULE_PLOTTING)
+#if defined(VRN_MODULE_VESSELNETWORKANALYSIS) && defined(VRN_MODULE_PLOTTING)
 #include "processors/plotting/flowcenterlineanalysis.h"
 #endif
 

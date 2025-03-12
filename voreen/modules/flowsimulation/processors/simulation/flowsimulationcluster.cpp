@@ -39,6 +39,9 @@
 #include <boost/process.hpp>
 
 
+#include "voreen/core/utils/stringutils.h"
+
+
 namespace {
 
     /**
@@ -133,11 +136,22 @@ public:
         // We need to change the current working directory accordingly,
         // but also need to restore the old one afterward.
         auto path = boost::filesystem::current_path();
-        boost::filesystem::current_path(cd_);
-        process_ = boost::process::child(command_);
-        if (detach_) {
-            process_.detach();
+
+        try {
+            if (!cd_.empty())
+            {
+                boost::filesystem::current_path(cd_);
+            }
+            
+            process_ = boost::process::child(command_);
+            if (detach_) {
+                process_.detach();
+            }
         }
+        catch (std::exception& e) {
+            LERRORC("ExecutorProcess", "Could not execute command: " << e.what());
+        }
+        
         boost::filesystem::current_path(path);
     }
 
@@ -417,7 +431,7 @@ void FlowSimulationCluster::stepCopyGeometryData(FlowSimulationConfig& config, c
             throw VoreenException(errorMessage + e.what());
         }
         auto geometryFiles = std::map<float, std::string>();
-        geometryFiles[0.0f] = "geometry/geometry.stl";
+        geometryFiles[0.0f] = "../geometry/geometry.stl";
         config.setGeometryFiles(geometryFiles, true);
     }
     else if (const auto* segmentationData = geometryVolumeDataPort_.getData()) {
@@ -476,14 +490,98 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         return;
     }
 
+#ifdef WIN32
+
+    // Note: At this point we made sure the path starts with "\\\\wsl.localhost" or "//wsl.localhost", so we can safely assume it is a WSL path.
+    auto cleanedLocalInstancePath = tgt::FileSystem::cleanupPath(localInstancePath_.get(), true);
+
+    auto extractDistroFromPath = [](const std::string& path) {
+        // After cleaning, path looks like: "\\wsl.localhost\Ubuntu-24.04\home\user\..."
+        // We return "Ubuntu-24.04".
+        auto pathComponents = tgt::FileSystem::splitPath(path);
+        for (auto i = 0; i < pathComponents.size(); i++) {
+            if (pathComponents[i] == "wsl.localhost") {
+                return pathComponents[i + 1]; // Next component is the distro name.
+            }
+        }
+        return std::string{};
+    };
+
+    std::string distro = extractDistroFromPath(cleanedLocalInstancePath);
+    if (distro.empty())
+    {
+        VoreenApplication::app()->showMessageBox("Error", "Could not extract distro (e.g. Ubuntu-24.04) from path, make sure path is pointing to WSL instance", true);
+        return;
+    }
+
+    auto convertPathForWSL = [&](const std::string& path) {
+        // Path looks like: "\\wsl.localhost\Ubuntu-20.04\home\user\..."
+        // We return "/home/user/...".
+        auto pathComponents = tgt::FileSystem::splitPath(path);
+
+        // Path is on host system.
+        auto colon = path.find(':');
+        if (colon != std::string::npos)
+        {
+            // Path is absolute and looks like: "C:\Users\user\Documents\..." 
+            // We return "/mnt/c/Users/user/Documents/...".
+            auto driveLetter = toLower(pathComponents[0].substr(0, colon));
+            return "/mnt/" + driveLetter + "/" + strJoin(std::vector<std::string>(pathComponents.begin() + 1, pathComponents.end()), "/");
+        }
+
+        // Path is in WSL.
+        if(startsWith(path, "\\\\wsl.localhost"))
+        {
+            for (auto i = 0; i < pathComponents.size(); i++) {
+                if (pathComponents[i] == distro) {
+                    // Next components are the working directory.
+                    return "/" + strJoin(std::vector<std::string>(pathComponents.begin() + i + 1, pathComponents.end()), "/");
+                }
+            }
+        }
+        
+        return std::string{};
+    };
+
+    std::string cwd = convertPathForWSL(tgt::FileSystem::dirName(cleanedLocalInstancePath));
+    if (cwd.empty())
+    {
+        VoreenApplication::app()->showMessageBox("Error", "Could not extract working directory from path. Network paths are not supported!", true);
+        return;
+    }
+
+    auto makeRunCommand = [&](const std::string& ensemble, const std::string& run) {  
+
+        const auto binaryName = convertPathForWSL(cleanedLocalInstancePath);
+        const auto outputPath = convertPathForWSL(tgt::FileSystem::cleanupPath(simulationResults_.get()));
+
+        std::stringstream ss;
+        ss << "wsl.exe" << " "
+            << "-d" << " " << distro << " "
+            << "--cd" << " " << cwd << "/" << ensemble << "/" << run << " "
+            << binaryName << " "
+            << ensemble << " " << run << " " << outputPath
+            << "/"; // Add a trailing '/' !;
+
+        return ss.str();
+    };
+
+#endif
+
     // Enqueue jobs.
     for (size_t i = 0; i < config.size(); i++) {
 
         std::string ensemble = config.getName();
         std::string run = config.at(i).name_;
 
+#ifdef WIN32
+        std::string workingDirectory = ""; // Is part of the run command on Windows.
+        std::string runCommand = makeRunCommand(ensemble, run);
+#else
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
         std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
+#endif
+
         std::string name = ensemble + "-" + run;
         waitingThreads_.emplace_back(
                 std::unique_ptr<ExecutorProcess>(
@@ -551,11 +649,31 @@ void FlowSimulationCluster::enqueueSimulations() {
     }
 
     // Make sure we have a binary selected.
-    if(useLocalInstance_.get() && localInstancePath_.get().empty()) {
-        VoreenApplication::app()->showMessageBox("Error",
-                                                 "No local instance binary selected. It is normally located here: "
-                                                 "'voreen/modules/flowsimulation/ext/openlb/voreen/simulation_cluster'", true);
-        return;
+    if(useLocalInstance_.get()) {
+        if (localInstancePath_.get().empty()) {
+            VoreenApplication::app()->showMessageBox("Error",
+                "No local instance path selected. It is normally located here: "
+                "'voreen/modules/flowsimulation/ext/openlb/'", true);
+            LERROR("No local instance path selected");
+            return;
+        }
+        
+#ifdef WIN32
+        // On windows, we only support binaries compiled with WSL!
+        // Note, that the QFileDialog returns linux style paths, converting "\\\\" to "//"!
+        // But when deserialized, the path is converted back to windows style.
+        if(!startsWith(tgt::FileSystem::cleanupPath(localInstancePath_.get()), "\\\\wsl.localhost")) {
+            VoreenApplication::app()->showMessageBox("Error", "Expected path to binary inside WSL", true);
+            LERROR("Expected path to binary inside WSL");
+            return;
+        }
+#else
+        if(!tgt::FileSystem::fileExists(localInstancePath_.get())) {
+            VoreenApplication::app()->showMessageBox("Error", "Local instance binary does not exist. Have you compiled it?", true);
+            LERROR("Local instance binary does not exist");
+            return;
+        }
+#endif
     }
 
     LINFO("Configuring and enqueuing Simulations...");
@@ -844,8 +962,13 @@ std::string FlowSimulationCluster::generateSubmissionScript(const std::string& p
 }
 
 #ifdef VRN_MODULE_VTK
-std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& subdirectory) const {
-    tgt::FileSystem::createDirectory(simulationPathSource + subdirectory + "/");
+std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& volumeType) const {
+
+    if(!volumes) {
+        return {};
+    }
+
+    tgt::FileSystem::createDirectory(simulationPathSource + volumeType + "/");
     int nrLength = static_cast<int>(std::to_string(volumes->size() - 1).size());
 
     std::map<float, std::string> result;
@@ -856,8 +979,8 @@ std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(co
         // Enumerate volumes.
         std::ostringstream suffix;
         suffix << std::setw(nrLength) << std::setfill('0') << i;
-        std::string volumeName = subdirectory + suffix.str() + ".vti";
-        std::string path = simulationPathSource + subdirectory + "/" + volumeName;
+        std::string fileName = volumeType + suffix.str() + ".vti";
+        std::string path = simulationPathSource + volumeType + "/" + fileName;
 
         if(transformation != tgt::mat4::identity) {
             std::unique_ptr<VolumeDecoratorReplace> transformedVolume(
@@ -870,7 +993,7 @@ std::map<float, std::string> FlowSimulationCluster::checkAndConvertVolumeList(co
             VTIVolumeWriter().writeVectorField(path, volume);
         }
 
-        std::string url = path + "?fieldName=" + volume->getModality().getName();
+        std::string url = "../" + volumeType + "/" + fileName + "?fieldName=" + volume->getModality().getName();
         result[volume->getTimestep()] = url;
     }
 

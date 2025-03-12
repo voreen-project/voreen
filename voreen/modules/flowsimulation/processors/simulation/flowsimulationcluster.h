@@ -88,7 +88,7 @@ private:
     std::string generateEnqueueScript(const std::string& parametrizationPath) const;
     std::string generateSubmissionScript(const std::string& parametrizationName) const;
 
-    std::map<float, std::string> checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& subdirectory) const;
+    std::map<float, std::string> checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation, const std::string& simulationPathSource, const std::string& volumeType) const;
 
     GeometryPort geometryDataPort_;
     VolumeListPort geometryVolumeDataPort_;
