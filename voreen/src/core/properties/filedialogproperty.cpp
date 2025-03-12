@@ -105,14 +105,14 @@ void FileDialogProperty::set(const std::string& value) {
     // Determine if set was called recursively.
     // We only want to modify the file watch on the first recursion level.
     bool recursion = recursiveSet_;
-    if (!recursiveSet_) {
+    if (!recursiveSet_ && getWatchMode() != WatchMode::ALWAYS_OFF) {
         recursiveSet_ = true;
         removeWatch(get());
     }
 
     StringProperty::set(value);
 
-    if (!recursion) {
+    if (!recursion && getWatchMode() != WatchMode::ALWAYS_OFF) {
         bool success = addWatch(get());
         if (!success) {
             LWARNING("Parent directory of " << tgt::FileSystem::fileName(value) << " does not exist. Resetting path.");
