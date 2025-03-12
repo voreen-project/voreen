@@ -93,11 +93,11 @@ void FileDialogPropertyWidget::setProperty() {
 
         QString filename;
         if (property_->getFileMode() == FileDialogProperty::OPEN_FILE) {
-            filename = QFileDialog::getOpenFileName(QWidget::parentWidget(), dialogCaption, directory, fileFilter, nullptr, QFileDialog::DontUseNativeDialog);
+            filename = QFileDialog::getOpenFileName(QWidget::parentWidget(), dialogCaption, directory, fileFilter, nullptr);
         }
         else if (property_->getFileMode() == FileDialogProperty::SAVE_FILE) {
             QString selectedFilter;
-            filename = QFileDialog::getSaveFileName(QWidget::parentWidget(), dialogCaption, directory, fileFilter, &selectedFilter, QFileDialog::DontUseNativeDialog);
+            filename = QFileDialog::getSaveFileName(QWidget::parentWidget(), dialogCaption, directory, fileFilter, &selectedFilter);
 
             // Create regular expression to parse the file filter string for the extension.
             // This is necessary, since the QFileDialog will not add the file extension by default.
@@ -113,7 +113,7 @@ void FileDialogPropertyWidget::setProperty() {
             }
         }
         else if (property_->getFileMode() == FileDialogProperty::DIRECTORY) {
-            filename = QFileDialog::getExistingDirectory(QWidget::parentWidget(), dialogCaption, QString::fromStdString(property_->get()), QFileDialog::DontUseNativeDialog);
+            filename = QFileDialog::getExistingDirectory(QWidget::parentWidget(), dialogCaption, QString::fromStdString(property_->get()));
         }
 
         if (!filename.isEmpty()) {

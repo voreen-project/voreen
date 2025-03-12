@@ -165,7 +165,7 @@ void VolumeIOHelper::showFileOpenDialog() {
     // create dialog
     QFileDialog fileDialog(parent_, tr("Load Volume..."), openDir.absolutePath(), "");
     fileDialog.setNameFilters(filters);
-    fileDialog.setOption(QFileDialog::DontUseNativeDialog);
+    //fileDialog.setOption(QFileDialog::DontUseNativeDialog);
     fileDialog.setSidebarUrls(urls);
     fileDialog.setViewMode(QFileDialog::Detail);
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
