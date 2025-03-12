@@ -873,77 +873,114 @@ bool FileSystem::comparePaths(const std::string& path1, const std::string& path2
     return (pathAbs1 == pathAbs2);
 }
 
-string FileSystem::cleanupPath(std::string path, bool native /*= true*/) {
-
+std::string FileSystem::cleanupPath(std::string path, bool native /*= true*/) {
     if (path.empty())
         return "";
 
-    // remove double path separators
-    string::size_type p_start = 0;
-#ifdef WIN32
-    // do not convert windows network path prefix "\\", if on windows
-    if (path.length() >= 2 && path.substr(0, 2) == "\\\\")
-        p_start = 2;
-#endif
-    string::size_type p = p_start;
-    while (p != string::npos) {
-        string::size_type p_next;
-        p_next = path.find("//", p);
-        if (p_next == string::npos)
-            p_next = path.find("\\\\", p);
-        if (p_next == string::npos)
-            p_next = path.find("\\/", p);
-        if (p_next == string::npos)
-            p_next = path.find("/\\", p);
-
-        if (p_next != string::npos)
-            path = path.substr(0, p_next) + path.substr(p_next + 1);
-
-        p = p_next;
+    // 1) Check if this is a network/server path
+    bool isServerPath = false;
+    if (path.size() >= 2) {
+        // For uniform handling, treat both "\\" and "//" as "server" prefixes
+        if ((path[0] == '\\' && path[1] == '\\') ||
+            (path[0] == '/' && path[1] == '/')) {
+            isServerPath = true;
+        }
     }
 
-    // remove './' - note that path must not be empty.
-    if(path.length() > 1) {
-        string::iterator prev = path.begin(), iter = path.begin();
-        while(iter+1 != path.end()) {
-            string::iterator next = iter+1;
-            if(*iter == '.' && *next == goodSlash_ && *prev != '.') {
-                // prev does not change
+    // 2) Remove the two-character prefix so that we don’t break it later
+    std::string prefix;
+    if (isServerPath) {
+        prefix = path.substr(0, 2); // "\\" or "//"
+        path.erase(0, 2);          // remove it from the front
+    }
+
+    // 3) Remove double path separators *within* the remainder (excluding prefix)
+    {
+        std::string::size_type p = 0;
+        while (true) {
+            // Search for any kind of doubled slash within [p..end]
+            std::string::size_type p_next = path.find("//", p);
+            if (p_next == std::string::npos)
+                p_next = path.find("\\\\", p);
+            if (p_next == std::string::npos)
+                p_next = path.find("\\/", p);
+            if (p_next == std::string::npos)
+                p_next = path.find("/\\", p);
+
+            if (p_next == std::string::npos)
+                break;
+
+            // Remove one of the redundant slashes
+            path.erase(p_next, 1);
+
+            // Continue searching from same position (since we collapsed)
+            p = p_next;
+        }
+    }
+
+    // 4) Remove "./" pieces
+    if (path.size() > 1) {
+        auto prev = path.begin();
+        for (auto iter = path.begin(); (iter + 1) != path.end();) {
+            auto next = iter + 1;
+            // Suppose path like  "something/./something"
+            // Then *iter == '.' && *next == '/'  => remove the "./"
+            if (*iter == '.' && (*next == '/' || *next == '\\') && *prev != '.') {
+                // Erase two chars: the '.' and the slash
                 iter = path.erase(path.erase(iter));
             }
             else {
                 prev = iter;
-                iter++;
+                ++iter;
             }
         }
 
-        // remove leading './' separately
-        if(path.length() > 2 && path[0] == '.' && path[1] == goodSlash_)
-            path = path.substr(2);
+        // Also remove any leading "./"
+        if (path.size() > 2 && path[0] == '.' && (path[1] == '/' || path[1] == '\\'))
+            path.erase(0, 2);
     }
 
-    // remove trailing separator
-    if (path.find_last_of(PATH_SEPARATORS) == path.size() - 1)
-        path = path.substr(0, path.size() - 1);
+    // 5) Remove a trailing slash if it exists
+    if (!path.empty()) {
+        char back = path.back();
+        if (back == '/' || back == '\\')
+            path.pop_back();
+    }
 
-    // convert to win or unix separators
+    // 6) Convert everything to either Windows separators or Unix separators
+    bool convertToWin =
 #ifdef WIN32
-    bool convertToWin = native;
+        native;  // if on Windows, “native” means backslashes
 #else
-    bool convertToWin = false;
+        false;   // if on non-Windows, always convert to forward slashes
 #endif
-    if (convertToWin) {
-        // convert to native windows separators
-        path = replaceAllCharacters(path, '/', '\\');
 
-        // convert drive letter to uppercase
-        if ((path.size()>1) && isalpha(path[0]) && (path[1] == ':'))
-            std::transform(path.begin(), path.begin()+1, path.begin(), toupper);
+    if (convertToWin) {
+        // Replace all forward slashes with backslash
+        for (auto& ch : path) {
+            if (ch == '/')
+                ch = '\\';
+        }
     }
     else {
-        // convert to unix separators
-        tgtAssert(p_start <= path.length(), "invalid p_start param"); // see above
-        path = path.substr(0, p_start) + replaceAllCharacters(path.substr(p_start), '\\', '/');
+        // Replace all backslashes with forward slash
+        for (auto& ch : path) {
+            if (ch == '\\')
+                ch = '/';
+        }
+    }
+
+    // 7) If we originally had a server path, add back the two-character prefix
+    if (isServerPath) {
+        // If “native” and we’re on Windows, you want a `\\` prefix
+        // Otherwise you want a `//` prefix
+        std::string finalPrefix = convertToWin ? "\\\\" : "//";
+        path = finalPrefix + path;
+    }
+
+    // 8) Lastly, if it’s a Windows path with a drive letter, upcase the letter
+    if (convertToWin && path.size() > 1 && std::isalpha(path[0]) && path[1] == ':') {
+        path[0] = static_cast<char>(std::toupper(path[0]));
     }
 
     return path;
