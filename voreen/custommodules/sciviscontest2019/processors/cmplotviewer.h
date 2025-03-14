@@ -46,56 +46,56 @@ namespace voreen {
 class VRN_CORE_API CMPlotViewer : public RenderProcessor {
 
 public:
-	CMPlotViewer();
-	~CMPlotViewer();
+    CMPlotViewer();
+    ~CMPlotViewer();
 
-	virtual Processor*  create() const { return new CMPlotViewer(); }
-	virtual std::string getClassName() const { return "CMPlotViewer"; }
-	virtual std::string getCategory() const { return "Plotting"; }
+    virtual Processor*  create() const { return new CMPlotViewer(); }
+    virtual std::string getClassName() const { return "CMPlotViewer"; }
+    virtual std::string getCategory() const { return "Plotting"; }
 
 protected:
-	virtual void setDescriptions() { setDescription("Processor that draws particle plots."); }
-	virtual void process();
+    virtual void setDescriptions() { setDescription("Processor that draws particle plots."); }
+    virtual void process();
 
-	virtual void initialize();
-	virtual void deinitialize();
+    virtual void initialize();
+    virtual void deinitialize();
 
 private:
 
-	void renderData(tgt::vec2 viewPortOffset, tgt::vec2 viewPortSize);
-	void renderAxes();
+    void renderData(tgt::vec2 viewPortOffset, tgt::vec2 viewPortSize);
+    void renderAxes();
 
-	void inDataChange();
-	void rowSelected();
-	void deleteRow();
-	void colorSelection();
+    void inDataChange();
+    void rowSelected();
+    void deleteRow();
+    void colorSelection();
 
-	std::vector<bool> rowSelected_;
+    std::vector<bool> rowSelected_;
 
-	CMPlotPort inport_;
-	RenderPort outport_;
+    CMPlotPort inport_;
+    RenderPort outport_;
 
-	FloatProperty lineThickness_;
+    FloatProperty lineThickness_;
 
-	OptionProperty<std::string> rowSelector_;
-	StringListProperty rowSelection_;
-	ColorProperty colorProp_;
-	ButtonProperty deletebtn_;
+    OptionProperty<std::string> rowSelector_;
+    StringListProperty rowSelection_;
+    ColorProperty colorProp_;
+    ButtonProperty deletebtn_;
 
-	std::unique_ptr<PlotLibrary> plotLib_;
+    std::unique_ptr<PlotLibrary> plotLib_;
 
-	std::vector<tgt::vec3> plotColors;
-	std::vector<int> selectedRows_;
-	//std::vector<CMPlotDataRow&> selectedRows_;
+    std::vector<tgt::vec3> plotColors;
+    std::vector<int> selectedRows_;
+    //std::vector<CMPlotDataRow&> selectedRows_;
 
-	GLuint vao_;
-	GLuint ssbo_;
-	GLuint ebo_;
-	GLuint vertexShader_;
-	GLuint fragmentShader_;
-	GLuint shaderProgram_;
+    GLuint vao_;
+    GLuint ssbo_;
+    GLuint ebo_;
+    GLuint vertexShader_;
+    GLuint fragmentShader_;
+    GLuint shaderProgram_;
 
-	//static const std::string loggerCat_; ///< category used in logging
+    //static const std::string loggerCat_; ///< category used in logging
 
 };
 

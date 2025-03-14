@@ -283,7 +283,8 @@ namespace voreen {
         PermutationMatrix<Dynamic, Dynamic> perm(numPoints);
         perm.setIdentity();
         std::srand(0);
-        std::random_shuffle(perm.indices().data(), perm.indices().data() + perm.indices().size());
+        auto rng = std::mt19937(std::random_device()());
+        std::shuffle(perm.indices().data(), perm.indices().data() + perm.indices().size(), rng);
         distances = perm.transpose() * distances * perm;
 
         MatrixXf smallResult(k, numDimensions);

@@ -85,6 +85,9 @@ ELSE()
     MESSAGE(STATUS "Precompiled Headers: Disabled")
 ENDIF()
 
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # platform-dependent configuration
 IF(VRN_MSVC)
     LIST(APPEND VRN_DEFINITIONS -DNOMINMAX -D_CRT_SECURE_NO_DEPRECATE -DPSAPI_VERSION=1)
@@ -251,9 +254,6 @@ ELSEIF(UNIX)
         ENDIF()
     ENDIF()
 
-    SET(CMAKE_CXX_STANDARD 11)
-    SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${CMAKE_CXX_FLAGS_RELEASE}")
     # enable optimization level 1 for debug build as -Wuninitialized is ignored otherwise
     #set(CMAKE_CXX_FLAGS_DEBUG "-O1 ${CMAKE_CXX_FLAGS_DEBUG}")
@@ -306,7 +306,7 @@ IF(APPLE)
     set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
     
     # on apple build against the new native libc++
-    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-stdlib=libc++ ${CMAKE_CXX_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "-stdlib=libc++ ${CMAKE_EXE_LINKER_FLAGS}")
     set(CMAKE_SHARED_LINKER_FLAGS "-stdlib=libc++ ${CMAKE_SHARED_LINKER_FLAGS}")
 ENDIF(APPLE)
