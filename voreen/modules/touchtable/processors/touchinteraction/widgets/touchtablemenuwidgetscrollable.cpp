@@ -59,7 +59,7 @@ void TouchTableMenuWidgetScrollable::render() {
 void TouchTableMenuWidgetScrollable::initialize() {
     TouchTableMenuWidget::initialize();
 
-    scrollableMenu_.setSelectionHandler(std::bind1st(std::mem_fun(&TouchTableMenuWidgetScrollable::handleScrollableMenuSelection), this));
+    scrollableMenu_.setSelectionHandler(std::bind(&TouchTableMenuWidgetScrollable::handleScrollableMenuSelection, this, std::placeholders::_1));
 }
 
 void TouchTableMenuWidgetScrollable::deinitialize() {
@@ -69,7 +69,7 @@ void TouchTableMenuWidgetScrollable::deinitialize() {
 void TouchTableMenuWidgetScrollable::updateComponentAttributes() {
     TouchTableMenuWidget::updateComponentAttributes();
 
-    scrollableMenu_.setSelectionHandler(std::bind1st(std::mem_fun(&TouchTableMenuWidgetScrollable::handleScrollableMenuSelection), this));
+    scrollableMenu_.setSelectionHandler(std::bind(&TouchTableMenuWidgetScrollable::handleScrollableMenuSelection, this, std::placeholders::_1));
     updateScrollableMenuPosition();
 
     scrollableMenu_.placeContentMenu();

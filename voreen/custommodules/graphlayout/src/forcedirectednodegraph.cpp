@@ -28,6 +28,7 @@
 #include "tgt/tgt_math.h"
 
 #include <algorithm>
+#include <random>
 
 namespace voreen {
 
@@ -58,7 +59,8 @@ void ForceDirectedNodeGraph::initLayout() {
     for (std::map<int, NodeGraphNode*>::iterator it = nodes_.begin(); it != nodes_.end(); ++it) {
         shuffledNodes.push_back(it->second);
     }
-    std::random_shuffle(shuffledNodes.begin(), shuffledNodes.end());
+    auto rng = std::mt19937(std::random_device{}());
+    std::shuffle(shuffledNodes.begin(), shuffledNodes.end(), rng);
 
     double currAngle = angle;
     for (std::vector<NodeGraphNode*>::iterator it = shuffledNodes.begin(); it != shuffledNodes.end(); ++it, currAngle += angle) {

@@ -195,11 +195,11 @@ void VolumeComparison::process() {
 #ifdef VRN_MODULE_OPENMP
 #pragma omp for
 #endif
-        for (size_t z = llf.z; z <= urb.z; ++z) {
+        for (long z = static_cast<long>(llf.z); z <= static_cast<long>(urb.z); ++z) {
 
             // we do not know how large a single slice is, so we only load one slice at a time for each volume
-            std::unique_ptr<VolumeRAM> slice1(volume1.getSlice(z));
-            std::unique_ptr<VolumeRAM> slice2(volume2.getSlice(z));
+            std::unique_ptr<VolumeRAM> slice1(volume1.getSlice(static_cast<size_t>(z)));
+            std::unique_ptr<VolumeRAM> slice2(volume2.getSlice(static_cast<size_t>(z)));
             tgtAssert(slice1, "No slice 1");
             tgtAssert(slice2, "No slice 2");
 

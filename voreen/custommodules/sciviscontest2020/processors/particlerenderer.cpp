@@ -25,6 +25,8 @@
 
 #include "particlerenderer.h"
 
+#include <random>
+
 namespace voreen {
 
 ParticleRenderer::ParticleRenderer() : RenderProcessor(),
@@ -202,7 +204,8 @@ void ParticleRenderer::updateMesh()
             if( volumeMask->getVoxelNormalized( x, y, z ) > 0.0 )
                 voxels.push_back( tgt::vec3( x, y, z ) + tgt::vec3( 0.5f, 0.5f, 0.5f ) );
         }
-        std::random_shuffle( voxels.begin(), voxels.end() );
+        auto rng = std::mt19937(std::random_device{}());
+        std::shuffle(voxels.begin(), voxels.end(), rng);
         if( voxels.size() < lines.size() ) lines.resize( voxels.size() );
 
 #pragma omp parallel for

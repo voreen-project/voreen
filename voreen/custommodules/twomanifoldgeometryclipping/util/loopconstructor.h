@@ -47,7 +47,7 @@ bool lexicographicalEdgeSort(const ClipEdge<T>& e1, const ClipEdge<T>& e2) {
 
 // compare function for std::find_if to find the successor to an edge
 template<typename T>
-struct successor_compare : public std::unary_function<ClipEdge<T>, bool> {
+struct successor_compare {
 
     explicit successor_compare(const ClipEdge<T>& edge, float epsilon = 0.f) 
         : baseEdge_(edge) 

@@ -69,7 +69,7 @@ protected:
 
 public:
     BinaryOperatorCondition(TemplateProperty<T>* observed, const S& value,
-                            std::binary_function<T, S, bool> function, const Callback& action,
+                            std::function<bool(T, S)> function, const Callback& action,
                             const Callback& elseaction)
         : TemplatePropertyCondition<T, S>(observed, value, action, elseaction), function_(function)
     {}
@@ -80,7 +80,7 @@ public:
     virtual bool met() const throw() { return function_(observed_->get(), value_); }
 
 private:
-    std::binary_function<T, T, bool> function_;
+    std::function<bool(T, S)> function_;
 };
 
 /*template<class T>
