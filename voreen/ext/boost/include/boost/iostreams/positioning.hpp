@@ -93,7 +93,15 @@ inline stream_offset fpos_t_to_offset(std::fpos_t pos)
 inline std::fpos_t streampos_to_fpos_t(std::streampos pos)
 {
 #  if defined (_CPPLIB_VER) || defined(__IBMCPP__)
-    return pos.seekpos();
+    #ifdef _MSC_VER
+        #if _MSC_VER >= 1915  // Visual Studio 2017 (15.8) and later
+            return static_cast<std::fpos_t>(pos); // Use standard-compliant alternative
+        #else
+            return pos.seekpos(); // Older MSVC versions that still support seekpos()
+        #endif
+    #else
+        return pos.seekpos(); // Non-MSVC compilers
+    #endif
 #  else
     return pos.get_fpos_t();
 #  endif
