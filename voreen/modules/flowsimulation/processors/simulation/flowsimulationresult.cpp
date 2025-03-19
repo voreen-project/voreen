@@ -141,6 +141,9 @@ void FlowSimulationResult::onFileChange() {
     }
 
     if (selectMostRecentTimeStep_.get()) {
+        // HACK: Since the .pvd file might be updated before all volumes are written to disk
+        //  this might crash. As a workaround, we select the second to last time step.
+        int timeStep = std::max(timeStep_.getMaxValue() - 1, 0);
         timeStep_.set(timeStep_.getMaxValue());
     }
 
