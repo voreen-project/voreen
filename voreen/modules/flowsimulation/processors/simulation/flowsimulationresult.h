@@ -78,6 +78,8 @@ protected:
 
 private:
 
+    void removeEnqueuedCommands();
+    void updateInsituData();
     void onFileChange();
 
     std::vector<std::string> loadPvdFile(std::string filename) const;

@@ -65,6 +65,7 @@ FlowSimulationResult::FlowSimulationResult()
 }
 
 FlowSimulationResult::~FlowSimulationResult() {
+    removeEnqueuedCommands();
 }
 
 bool FlowSimulationResult::isReady() const {
@@ -106,7 +107,13 @@ std::vector<std::string> FlowSimulationResult::loadPvdFile(std::string file) con
     return files;
 }
 
-void FlowSimulationResult::onFileChange() {
+void FlowSimulationResult::removeEnqueuedCommands() {
+    if (VoreenApplication* app = VoreenApplication::app()) {
+        app->getCommandQueue()->removeAll(this);
+    }
+}
+
+void FlowSimulationResult::updateInsituData() {
 
     // Don't do anything unless deserialization has finished.
     if(firstProcessAfterDeserialization()) {
@@ -144,7 +151,7 @@ void FlowSimulationResult::onFileChange() {
         // HACK: Since the .pvd file might be updated before all volumes are written to disk
         //  this might crash. As a workaround, we select the second to last time step.
         int timeStep = std::max(timeStep_.getMaxValue() - 1, 0);
-        timeStep_.set(timeStep_.getMaxValue());
+        timeStep_.set(timeStep);
     }
 
     auto queryFieldsFromFile = [&] (const std::string& file) {
@@ -193,6 +200,17 @@ void FlowSimulationResult::onFileChange() {
     // Select previously selected field.
     if (fields_.hasKey(selectedField_)) {
         fields_.select(selectedField_);
+    }
+}
+
+void FlowSimulationResult::onFileChange() {
+    // Updates that have not been executed so far will be replaced by the next update.
+    removeEnqueuedCommands();
+
+    if (auto* app = VoreenApplication::app()) {
+        app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([&] {
+            updateInsituData();
+        }));
     }
 }
 
