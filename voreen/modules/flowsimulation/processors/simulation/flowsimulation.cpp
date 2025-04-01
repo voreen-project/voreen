@@ -40,6 +40,8 @@
 #include "modules/vtk/io/vtivolumewriter.h"
 #endif
 
+#ifndef WIN32
+
 #include "../../ext/openlb/voreen/shared/simulation_core.h"
 
 #include <thread>
@@ -94,6 +96,7 @@ void indicateErroneousVoxels(SimpleVolume<uint8_t>& volume) {
 
 }
 
+#endif
 
 namespace voreen {
 
@@ -152,6 +155,8 @@ FlowSimulation::~FlowSimulation() {
     }
 }
 
+#ifndef WIN32
+
 bool FlowSimulation::isReady() const {
     if(!isInitialized()) {
         setNotReadyErrorMessage("Not initialized.");
@@ -167,6 +172,15 @@ bool FlowSimulation::isReady() const {
 
     return true;
 }
+
+#else
+
+bool FlowSimulation::isReady() const {
+    setNotReadyErrorMessage("Processor not available on Windows");
+    return false;
+}
+
+#endif
 
 void FlowSimulation::adjustPropertiesToInput() {
     const FlowSimulationConfig* config = parameterPort_.getData();
@@ -201,6 +215,8 @@ void FlowSimulation::setSimulationResultPath(const std::string &path) {
 std::string FlowSimulation::getSimulationResultPath() const {
     return simulationResults_.get();
 }
+
+#ifndef WIN32
 
 FlowSimulationInput FlowSimulation::prepareComputeInput() {
 
@@ -325,8 +341,20 @@ FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput input, Progress
     }
 
     // Done.
-    return FlowSimulationOutput{};
+    return {};
 }
+
+#else
+
+FlowSimulationInput FlowSimulation::prepareComputeInput() {
+    throw InvalidInputException("This processor is not available on windows", InvalidInputException::S_ERROR);
+}
+
+FlowSimulationOutput FlowSimulation::compute(FlowSimulationInput, ProgressReporter&) const {
+    return {};
+}
+
+#endif
 
 void FlowSimulation::processComputeOutput(FlowSimulationOutput output) {
     // Nothing to do (yet).
@@ -395,6 +423,8 @@ void FlowSimulation::enqueueInsituResult(const std::string& filename, VolumePort
         }
     }));
 }
+
+#ifndef WIN32
 
 void FlowSimulation::runSimulation(const FlowSimulationInput& input,
                                    ProgressReporter& progressReporter) const {
@@ -574,6 +604,12 @@ void FlowSimulation::runSimulation(const FlowSimulationInput& input,
     progressReporter.setProgress(1.0f);
     LINFO("Finished simulation run: " << parameters.name_);
 }
+
+#else
+
+void FlowSimulation::runSimulation(const FlowSimulationInput&, ProgressReporter&) const {}
+
+#endif
 
 std::map<float, std::string> FlowSimulation::checkAndConvertVolumeList(const VolumeList* volumes, tgt::mat4 transformation) const {
     std::map<float, std::string> result;

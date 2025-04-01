@@ -49,9 +49,6 @@ protected:
         setDescription("Creates a binary volume for the incoming geometry."
                        "Value 1 determines inside, value 0 means outside."
                        "Ensure that the geometry has been converted to mm!");
-        method_.setDescription("Method to be used for inside/outside test."
-                               "Fast requires the geometry to be a close mesh."
-                               "Accucate, however, can take a while to calculate.");
         dimensions_.setDescription("Dimension of the longest side of the output volume.");
         path_.setDescription("Path where the input geometry will be stored.");
     }
@@ -64,7 +61,6 @@ private:
     GeometryPort inport_;
     VolumePort outport_;
 
-    IntOptionProperty method_;
     IntProperty dimensions_;
     TempPathProperty path_;
 

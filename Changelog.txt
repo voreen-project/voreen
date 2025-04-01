@@ -6,6 +6,7 @@ Voreen Changelog
 
     * Features:
       o FlowSimulationCluster: enable local decoupled simulation on windows using WSL
+      o Make GeometryInsideTest available on Windows
 
     * Framework/API Changes:
       o Bump C++ standard to c++17 and update references
@@ -17,6 +18,7 @@ Voreen Changelog
       o Fix tgt::FileSystem::cleanupPath to properly support UNC/network paths
       o Use native file dialog in VolumeIOHelper and FileDialogPropertyWidget to support UNC/network paths
       o FileDialogProperty: Disable path reset in case of non-existing parent directory for paths that must not be watched
+      o Make mocked FlowSimulation processor available on windows to increase portability of workspaces
 
 
 2024-08-02: Voreen 5.3.0

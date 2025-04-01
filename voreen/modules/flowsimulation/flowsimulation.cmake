@@ -34,6 +34,7 @@ SET(MOD_CORE_SOURCES
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.cpp
     ${MOD_DIR}/processors/geometry/geometryclose.cpp
+    ${MOD_DIR}/processors/geometry/geometryinsidetest.cpp
     ${MOD_DIR}/processors/geometry/geometrymerge.cpp
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.cpp
     ${MOD_DIR}/processors/render/unalignedsliceviewer.cpp
@@ -43,6 +44,7 @@ SET(MOD_CORE_SOURCES
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.cpp
     ${MOD_DIR}/processors/simulation/flowparametrizationensemble.cpp
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.cpp
+    ${MOD_DIR}/processors/simulation/flowsimulation.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.cpp
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.cpp
     ${MOD_DIR}/processors/volume/connectedcomponentselector.cpp
@@ -83,6 +85,7 @@ SET(MOD_CORE_HEADERS
     # processors
     ${MOD_DIR}/processors/features/wallshearstress.h
     ${MOD_DIR}/processors/geometry/geometryclose.h
+    ${MOD_DIR}/processors/geometry/geometryinsidetest.h
     ${MOD_DIR}/processors/geometry/geometrymerge.h
     ${MOD_DIR}/processors/geometry/geometrysmoothnormals.h
     ${MOD_DIR}/processors/render/unalignedsliceviewer.h
@@ -92,6 +95,7 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/simulation/flowindicatorrenderer.h
     ${MOD_DIR}/processors/simulation/flowparametrizationensemble.h
     ${MOD_DIR}/processors/simulation/flowparametrizationrun.h
+    ${MOD_DIR}/processors/simulation/flowsimulation.h
     ${MOD_DIR}/processors/simulation/flowsimulationcluster.h
     ${MOD_DIR}/processors/simulation/flowsimulationgeometry.h
     ${MOD_DIR}/processors/volume/connectedcomponentselector.h
@@ -312,15 +316,6 @@ IF(VRN_FLOWSIMULATION_BUILD_OPENLB)
     # so the user needs to manually build the OpenLB target first..
     ADD_CUSTOM_TARGET(OpenLB COMMAND ${OLB_OPTIONS} make WORKING_DIRECTORY ${OpenLB_DIR}/voreen)
     ADD_DEFINITIONS("-DVRN_FLOWSIMULATION_USE_OPENLB")
-
-    SET(MOD_CORE_HEADERS ${MOD_CORE_HEADERS}
-        ${MOD_DIR}/processors/geometry/geometryinsidetest.h
-        ${MOD_DIR}/processors/simulation/flowsimulation.h
-    )
-    SET(MOD_CORE_SOURCES ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/geometry/geometryinsidetest.cpp
-        ${MOD_DIR}/processors/simulation/flowsimulation.cpp
-    )
 ENDIF()
 
 ################################################################################

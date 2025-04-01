@@ -28,6 +28,7 @@
 // processors
 #include "processors/features/wallshearstress.h"
 #include "processors/geometry/geometryclose.h"
+#include "processors/geometry/geometryinsidetest.h"
 #include "processors/geometry/geometrymerge.h"
 #include "processors/geometry/geometrysmoothnormals.h"
 #include "processors/render/unalignedsliceviewer.h"
@@ -37,6 +38,7 @@
 #include "processors/simulation/flowindicatorrenderer.h"
 #include "processors/simulation/flowparametrizationensemble.h"
 #include "processors/simulation/flowparametrizationrun.h"
+#include "processors/simulation/flowsimulation.h"
 #include "processors/simulation/flowsimulationcluster.h"
 #include "processors/simulation/flowsimulationgeometry.h"
 #include "processors/volume/connectedcomponentselector.h"
@@ -79,8 +81,6 @@
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
-#include "processors/geometry/geometryinsidetest.h"
-#include "processors/simulation/flowsimulation.h"
 #endif
 
 namespace voreen {
@@ -94,6 +94,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     // processors
     registerProcessor(new ConnectedComponentSelector());
     registerProcessor(new GeometryClose());
+    registerProcessor(new GeometryInsideTest());
     registerProcessor(new GeometryMerge());
     registerProcessor(new GeometrySmoothNormals());
     registerProcessor(new UnalignedSliceViewer());
@@ -103,6 +104,7 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new FlowIndicatorRenderer());
     registerProcessor(new FlowParametrizationEnsemble());
     registerProcessor(new FlowParametrizationRun());
+    registerProcessor(new FlowSimulation());
     registerProcessor(new FlowSimulationCluster());
     registerProcessor(new FlowSimulationGeometry());
     registerProcessor(new FlowTestDataGenerator());
@@ -135,10 +137,6 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
     registerProcessor(new FlowProfileStacking());
     registerProcessor(new RegionOfInterestAnalysis());
     registerProcessor(new RoiAnalysis());
-#endif
-#ifdef VRN_FLOWSIMULATION_USE_OPENLB
-    registerProcessor(new FlowSimulation());
-    registerProcessor(new GeometryInsideTest());
 #endif
 }
 
