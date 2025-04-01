@@ -50,7 +50,6 @@ protected:
                        "Value 1 determines inside, value 0 means outside."
                        "Ensure that the geometry has been converted to mm!");
         dimensions_.setDescription("Dimension of the longest side of the output volume.");
-        path_.setDescription("Path where the input geometry will be stored.");
     }
 
     virtual bool isReady() const;
@@ -62,7 +61,6 @@ private:
     VolumePort outport_;
 
     IntProperty dimensions_;
-    TempPathProperty path_;
 
     static const std::string loggerCat_;
 };

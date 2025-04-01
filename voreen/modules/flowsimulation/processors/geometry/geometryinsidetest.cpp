@@ -1085,14 +1085,12 @@ GeometryInsideTest::GeometryInsideTest()
     , inport_(Port::INPORT, "geometryinsidetest.inport", "")
     , outport_(Port::OUTPORT, "geometryinsidetest.outport", "ID Volume Output", false)
     , dimensions_("dimensions", "Dimensions", 256, 32, 1024)
-    , path_("path", "STL geometry", "Path", "", "STL (*.stl)", FileDialogProperty::OPEN_FILE)
 {
     addPort(inport_);
     addPort(outport_);
 
     addProperty(dimensions_);
     dimensions_.setTracking(false);
-    addProperty(path_);
 }
 
 Processor* GeometryInsideTest::create() const {
