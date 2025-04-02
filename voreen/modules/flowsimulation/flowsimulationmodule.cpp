@@ -81,6 +81,7 @@
 
 #ifdef VRN_FLOWSIMULATION_USE_OPENLB
 #include <olb3D.h>
+#include <olb3D.hh>
 #endif
 
 namespace voreen {

@@ -29,8 +29,7 @@
 #include "voreen/core/processors/processor.h"
 #include "voreen/core/ports/geometryport.h"
 #include "voreen/core/ports/volumeport.h"
-#include "voreen/core/properties/optionproperty.h"
-#include "voreen/core/properties/temppathproperty.h"
+#include "voreen/core/properties/intproperty.h"
 
 namespace voreen {
 

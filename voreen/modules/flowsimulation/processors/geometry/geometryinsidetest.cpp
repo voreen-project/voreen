@@ -117,7 +117,7 @@ struct STLtriangle {
 
         return true;
     }
-
+/*
     tgt::Vector3<T> closestPtPointTriangle(const tgt::Vector3<T> &pt) const {
         const T nEps = -std::numeric_limits<T>::epsilon();
         const T Eps = std::numeric_limits<T>::epsilon();
@@ -170,7 +170,7 @@ struct STLtriangle {
 
         return u * point[0] + v * point[1] + w * point[2];
     }
-
+*/
     /// A triangle contains 3 Points
     std::vector<tgt::Vector3<T>> point;
 
@@ -259,7 +259,7 @@ public:
     tgt::Vector3<T> getCenter() {
         return (point[0] + point[1] + point[2]) / 3.0f;
     }
-
+/*
     /// Returns Pt0-Pt1
     std::vector<T> getE0() {
         return point[0] - point[1];
@@ -288,6 +288,7 @@ public:
         }
         return false;
     }
+*/
 };
 
 template<typename T>
@@ -421,11 +422,12 @@ public:
     tgt::Vector3<T> &getMax() {
         return _max;
     };
+    /*
     /// Returns maxDist squared
     float maxDist2() const {
         return _maxDist2;
     }
-
+*/
     /// Compute intersection between Ray and set of triangles; returns true if intersection is found
     bool testRayIntersect(const std::set<unsigned int> &tris, const tgt::Vector3<T> &pt, const tgt::Vector3<T> &dir,
                           tgt::Vector3<T> &q, T &alpha) {
@@ -589,7 +591,7 @@ public:
 
         return intersections;
     }
-
+/*
     /// Test intersection of ray with all triangles in Octree
     /// q contains point of closest intersection to pt in direction direction
     bool closestIntersection(const tgt::Vector3<T> &pt, const tgt::Vector3<T> &direction, tgt::Vector3<T> &q, T &a) {
@@ -675,7 +677,7 @@ public:
         rayInside += right;
         rayInside %= 2;
     }
-
+*/
     /// Computes intersection of ray with Octree boundaries
     void intersectRayNode(const tgt::Vector3<T> &pt, const tgt::Vector3<T> &dir, tgt::Vector3<T> &s) {
         T t, d;
@@ -1184,16 +1186,13 @@ void GeometryInsideTest::process() {
 
     auto inside = [&] (const tgt::vec3& input)
     {
-        const int OUTSIDE = 0;
-        const int INSIDE = 255;
-
         float coords = tree.getRadius();
         tgt::vec3 c(tree.getCenter());
         if (c[0] - coords < input[0] && input[0] < c[0] + coords && c[1] - coords < input[1]
             && input[1] < c[1] + coords && c[2] - coords < input[2] && input[2] < c[2] + coords) {
-            return tree.find(input)->getInside() ? INSIDE : OUTSIDE;
+            return tree.find(input)->getInside();
         }
-        return OUTSIDE;
+        return false;
     };
 
 
@@ -1207,14 +1206,17 @@ void GeometryInsideTest::process() {
 
     auto voxelToWorldMatrix = outputVolume->getVoxelToWorldMatrix();
 
+    constexpr int OUTSIDE = 0;
+    constexpr int INSIDE = 255;
+
 #ifdef VRN_MODULE_OPENMP
 #pragma omp parallel for
 #endif
-    for(int z=0; z<dim.z; z++) {
-        for(int y=0; y<dim.y; y++) {
-            for(int x=0; x<dim.x; x++) {
+    for(long z=0; z<static_cast<long>(dim.z); z++) {
+        for(size_t y=0; y<dim.y; y++) {
+            for(size_t x=0; x<dim.x; x++) {
                 tgt::vec3 pos = voxelToWorldMatrix * tgt::vec3(x, y, z);
-                idVolume->voxel(x, y, z) = inside(pos);
+                idVolume->voxel(x, y, z) = inside(pos) ? INSIDE : OUTSIDE;
             }
         }
     }
