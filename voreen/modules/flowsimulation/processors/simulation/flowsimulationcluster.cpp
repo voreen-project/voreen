@@ -500,6 +500,10 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         return;
     }
 
+    auto quotes = [] (std::string str) {
+        return "\"" + str + "\"";
+    };
+
 #ifdef WIN32
 
     // Note: At this point we made sure the path starts with "\\\\wsl.localhost" or "//wsl.localhost", so we can safely assume it is a WSL path.
@@ -523,10 +527,6 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         VoreenApplication::app()->showMessageBox("Error", "Could not extract distro (e.g. Ubuntu-24.04) from path, make sure path is pointing to WSL instance", true);
         return;
     }
-
-    auto quotes = [] (std::string str) {
-            return "\"" + str + "\"";
-    };
 
     auto convertPathForWSL = [&](const std::string& path) {
         // Path looks like: "\\wsl.localhost\Ubuntu-20.04\home\user\..."
