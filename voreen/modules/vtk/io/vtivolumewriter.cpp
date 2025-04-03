@@ -27,8 +27,11 @@
 
 #include <vtkAbstractArray.h>
 #include <vtkDataArray.h>
+#include <vtkDoubleArray.h>
+#include <vtkFloatArray.h>
 #include <vtkImageData.h>
 #include <vtkImageReslice.h>
+#include <vtkIntArray.h>
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
@@ -154,6 +157,33 @@ vtkSmartPointer<vtkImageData> createVtkImageDataFromVolume(const VolumeBase* vol
 
         // Override image data.
         imageData = reslice->GetOutput();
+    }
+
+    // Finally, add the meta data.
+    for (auto& key : volume->getMetaDataKeys()) {
+        auto* md = volume->getMetaData(key);
+
+        if (auto* intMd = dynamic_cast<const IntMetaData*>(md)) {
+            auto* array = vtkIntArray::New();
+            array->SetName(key.c_str());
+            array->SetNumberOfComponents(1);
+            array->InsertNextValue(intMd->getValue());
+            imageData->GetFieldData()->AddArray(array);
+        }
+        else if (auto* floatMd = dynamic_cast<const FloatMetaData*>(md)) {
+            auto* array = vtkFloatArray::New();
+            array->SetName(key.c_str());
+            array->SetNumberOfComponents(1);
+            array->InsertNextValue(floatMd->getValue());
+            imageData->GetFieldData()->AddArray(array);
+        }
+        else if (auto* doubleMd = dynamic_cast<const DoubleMetaData*>(md)) {
+            auto* array = vtkDoubleArray::New();
+            array->SetName(key.c_str());
+            array->SetNumberOfComponents(1);
+            array->InsertNextValue(doubleMd->getValue());
+            imageData->GetFieldData()->AddArray(array);
+        }
     }
 
     return imageData;

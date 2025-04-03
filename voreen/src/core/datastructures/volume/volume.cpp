@@ -51,7 +51,6 @@ Volume::Volume(VolumeRepresentation* const volume, const tgt::vec3& spacing, con
 {
     format_ = volume->getFormat();
     baseType_ = volume->getBaseType();
-    // const cast is safe because we get a non-const volume originally
     determineOpenGLTypes(format_);
 
     setSpacing(spacing);

@@ -144,16 +144,16 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
     for(int i = 0; i < imageData->GetFieldData()->GetNumberOfArrays(); i++) {
         vtkAbstractArray* array = imageData->GetFieldData()->GetAbstractArray(i);
 
-        MetaDataBase* metaData = nullptr;
+        std::unique_ptr<MetaDataBase> metaData = nullptr;
         switch (array->GetDataType()) {
         case VTK_INT:
-            metaData = new IntMetaData(vtkIntArray::FastDownCast(array)->GetValue(0));
+            metaData = std::make_unique<IntMetaData>(vtkIntArray::FastDownCast(array)->GetValue(0));
             break;
         case VTK_FLOAT:
-            metaData = new FloatMetaData(vtkFloatArray::FastDownCast(array)->GetValue(0));
+            metaData = std::make_unique<FloatMetaData>(vtkFloatArray::FastDownCast(array)->GetValue(0));
             break;
         case VTK_DOUBLE:
-            metaData = new DoubleMetaData(vtkDoubleArray::FastDownCast(array)->GetValue(0));
+            metaData = std::make_unique<DoubleMetaData>(vtkDoubleArray::FastDownCast(array)->GetValue(0));
             break;
         default:
             //LWARNING("Unsupported Meta Data found: " << array->GetName());
@@ -163,7 +163,13 @@ Volume* createVolumeFromVtkImageData(const VolumeURL& origin, vtkSmartPointer<vt
         if(!metaData)
             continue;
 
-        volume->getMetaDataContainer().addMetaData(array->GetName(), metaData);
+        // We discard those already present in the volume, such as offset and spacing.
+        std::string name = array->GetName();
+        if(volume->getMetaDataContainer().hasMetaData(name)) {
+            continue;
+        }
+
+        volume->getMetaDataContainer().addMetaData(name, metaData.release());
     }
 
     return volume;

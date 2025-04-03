@@ -12,7 +12,7 @@ Voreen Changelog
       o Bump C++ standard to c++17 and update references
 
     * Bug Fixes/Minor Changes:
-      o VTIVolumeWriter: fix (sometimes) corrupted written multi-channel volumes
+      o VTIVolumeWriter: fix (sometimes) corrupted written multi-channel volumes, write supported meta data
       o Fix crash of VolumeFilterList for some compilers (e.g. g++ 13.3.0, shipped with Ubuntu 24.04)
       o VolumeCombine: Fix ID cases sometimes producing off-by-one output dimensions
       o Fix tgt::FileSystem::cleanupPath to properly support UNC/network paths
