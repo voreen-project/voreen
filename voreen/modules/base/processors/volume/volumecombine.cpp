@@ -220,6 +220,9 @@ void VolumeCombine::combineVolumes(Volume* combinedVolume, const VolumeBase* fir
     const size_t combinedVolChan = combinedVolume->getNumChannels();
     const size_t otherVolumeChan = otherVolume->getNumChannels();
 
+    const RealWorldMapping rwm1 = firstVolume->getRealWorldMapping();
+    const RealWorldMapping rwm2 = secondVolume->getRealWorldMapping();
+
     VRN_FOR_EACH_VOXEL_WITH_PROGRESS(pos, tgt::svec3::zero, combinedVolDim, const_cast<VolumeCombine*>(this)) {
         for (size_t referenceChannel = 0; referenceChannel < combinedVolChan; ++referenceChannel) {
             size_t otherChannel = (combinedVolChan == otherVolumeChan) ? referenceChannel : 0;
@@ -253,6 +256,10 @@ void VolumeCombine::combineVolumes(Volume* combinedVolume, const VolumeBase* fir
                 LERROR("Unknown filter mode: " << filteringMode_.get());
                 return;
             }
+
+            // Apply real world mapping.
+            valFirst = rwm1.normalizedToRealWorld(valFirst);
+            valSecond = rwm2.normalizedToRealWorld(valSecond);
 
             // apply operation to sampled values (note: a switch-block within a volume traversal loop
             // should normally be avoided, however in this case the main operations are way more expensive)
@@ -337,11 +344,18 @@ void VolumeCombine::combineVolumesOnCommonGrid(Volume* combinedVolume, const Vol
     const size_t combinedVolChan = combinedVolume->getNumChannels();
     const size_t otherVolumeChan = otherVolume->getNumChannels();
 
+    const RealWorldMapping rwm1 = firstVolume->getRealWorldMapping();
+    const RealWorldMapping rwm2 = secondVolume->getRealWorldMapping();
+
     VRN_FOR_EACH_VOXEL_WITH_PROGRESS(pos, tgt::svec3::zero, combinedVolDim, const_cast<VolumeCombine*>(this)) {
         for (size_t referenceChannel = 0; referenceChannel < combinedVolChan; ++referenceChannel) {
             size_t otherChannel = (combinedVolChan == otherVolumeChan) ? referenceChannel : 0;
             float valFirst = v1->getVoxelNormalized(pos, referenceChannel);
             float valSecond = v2->getVoxelNormalized(pos, otherChannel);
+
+            // Apply real world mapping.
+            valFirst = rwm1.normalizedToRealWorld(valFirst);
+            valSecond = rwm2.normalizedToRealWorld(valSecond);
 
             // apply operation to input voxel values
             float result = 0.f;
@@ -461,6 +475,7 @@ Volume* VolumeCombine::createCombinedVolume(const VolumeBase* refVolume, const V
     s /= vec3(combinedDim);
     combinedVolume->setSpacing(s);
     combinedVolume->setPhysicalToWorldMatrix(refVolume->getPhysicalToWorldMatrix());
+    combinedVolume->setRealWorldMapping(RealWorldMapping{});
 
     return combinedVolume;
 }
