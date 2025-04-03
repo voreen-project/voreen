@@ -58,7 +58,7 @@ FlowParametrizationEnsemble::FlowParametrizationEnsemble()
     addFeature("Velocity", FF_VELOCITY);
     addFeature("Magnitude", FF_MAGNITUDE);
     addFeature("Pressure", FF_PRESSURE);
-    addFeature("Wall Shear Stress", FF_WALLSHEARSTRESS);
+    //addFeature("Wall Shear Stress", FF_WALLSHEARSTRESS); // This is way too slow in the current OpenLB implementation.
     flowFeatures_.addInstance("Velocity"); // Default selection.
     flowFeatures_.setItemLabel("Features");
     flowFeatures_.setInstanceLabel("In use");

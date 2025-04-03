@@ -360,14 +360,14 @@ void FlowSimulationCluster::process() {
         runningThreads_.push_back(std::move(thread));
     }
 
-    if (!runningThreads_.empty()) {
+    if (runningThreads_.size() + waitingThreads_.size() > 0) {
         if (auto* app = VoreenApplication::app()) {
             app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this] {
                 invalidate(INVALID_RESULT);
             }));
         }
         else {
-            LWARNING("Could not poll for running threads, VoreenApplication not available");
+            LWARNING("Could not poll for threads, VoreenApplication not available");
         }
     }
 }

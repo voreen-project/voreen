@@ -50,7 +50,7 @@ FlowSimulationResult::FlowSimulationResult()
     : AsyncComputeProcessor()
     , outport_(Port::OUTPORT, "outport", "Outport")
     , inputFile_("inputFile", "Input File", "Load PVD file", "", "*.pvd", FileDialogProperty::OPEN_FILE, VALID, Property::LOD_DEFAULT, VoreenFileWatchListener::OPTIONAL_ON)
-    , fields_("fields", "Fields")
+    , fields_("fields", "Fields", INVALID_RESULT, true)
     , timeStep_("timestep", "Timestep", 0, 0, 1, INVALID_RESULT, IntProperty::DYNAMIC)
     , selectMostRecentTimeStep_("selectMostRecentTimeStep", "Select Most Recent Timestep", true)
 {
@@ -115,15 +115,11 @@ void FlowSimulationResult::removeEnqueuedCommands() {
 
 void FlowSimulationResult::updateInsituData() {
 
-    // Don't do anything unless deserialization has finished.
-    if(firstProcessAfterDeserialization()) {
-        return;
-    }
-
     fields_.setOptions(std::deque<Option<std::string>>());
 
     if(!tgt::FileSystem::fileExists(inputFile_.get())) {
         inputFile_.set("");
+        fields_.addOption("none", "file not found", "");
         fields_.invalidate();
         return;
     }
