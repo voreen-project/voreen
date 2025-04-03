@@ -131,9 +131,10 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto trimQuotes = [](std::string& str) {
+    auto trimQuotes = [](std::string str) {
         if (str.front() == '"') str.erase(str.begin());
         if (str.back() == '"') str.erase(str.end() - 1);
+        return str;
     };
 
     //std::string simulation = argv[0];
