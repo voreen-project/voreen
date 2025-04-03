@@ -122,6 +122,7 @@ public:
         : cd_(cd)
         , command_(command)
         , name_(name)
+        , detach_(detach)
     {}
 
     ~ExecutorProcess() {
@@ -593,7 +594,7 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         std::string runCommand = makeRunCommand(ensemble, run);
 #else
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
-        std::string runCommand = localInstancePath_.get() + " " + quotes(ensemble) + " " + quotes(run) + " " + quotes(simulationResults_.get()) + "/"; // Add a trailing '/' !;
+        std::string runCommand = localInstancePath_.get() + " " + quotes(ensemble) + " " + quotes(run) + " " + quotes(simulationResults_.get() + "/"); // Add a trailing '/' !;
 #endif
 
         std::string name = ensemble + "-" + run;
