@@ -314,6 +314,9 @@ FlowSimulationCluster::FlowSimulationCluster()
 }
 
 FlowSimulationCluster::~FlowSimulationCluster() {
+    if (auto* app = VoreenApplication::app()) {
+        app->getCommandQueue()->removeAll(this);
+    }
     threadsStopped();
 }
 
@@ -358,7 +361,14 @@ void FlowSimulationCluster::process() {
     }
 
     if (!runningThreads_.empty()) {
-        invalidate(INVALID_RESULT);
+        if (auto* app = VoreenApplication::app()) {
+            app->getCommandQueue()->enqueue(this, LambdaFunctionCallback([this] {
+                invalidate(INVALID_RESULT);
+            }));
+        }
+        else {
+            LWARNING("Could not poll for running threads, VoreenApplication not available");
+        }
     }
 }
 
@@ -555,12 +565,16 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         const auto binaryName = convertPathForWSL(cleanedLocalInstancePath);
         const auto outputPath = convertPathForWSL(tgt::FileSystem::cleanupPath(simulationResults_.get()));
 
+        auto quotes = [] (std::string str) {
+            return "\"" + str + "\"";
+        };
+
         std::stringstream ss;
         ss << "wsl.exe" << " "
             << "-d" << " " << distro << " "
             << "--cd" << " " << cwd << "/" << ensemble << "/" << run << " "
             << binaryName << " "
-            << ensemble << " " << run << " " << outputPath
+            << quotes(ensemble) << " " << quotes(run) << " " << quotes(outputPath)
             << "/"; // Add a trailing '/' !;
 
         return ss.str();
