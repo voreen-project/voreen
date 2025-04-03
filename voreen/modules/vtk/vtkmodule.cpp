@@ -25,6 +25,9 @@
 
 #include "vtkmodule.h"
 
+#include <vtkSmartPointer.h>
+#include <vtkOutputWindow.h>
+
 #include "io/netcdfvolumereader.h"
 #include "io/niftivolumewriter.h"
 #include "io/vtivolumereader.h"
@@ -32,6 +35,36 @@
 #include "io/vtmvolumereader.h"
 
 namespace voreen {
+
+class VtkOutputRedirect : public vtkOutputWindow
+{
+public:
+    vtkTypeMacro(VtkOutputRedirect, vtkOutputWindow);
+    static VtkOutputRedirect* New()
+    {
+        return new VtkOutputRedirect;
+    }
+
+    void DisplayText(const char* text) override
+    {
+        LINFOC("VTK", text);
+    }
+
+    void DisplayErrorText(const char* text) override
+    {
+        LERRORC("VTK", text);
+    }
+
+    void DisplayWarningText(const char* text) override
+    {
+        LWARNINGC("VTK", text);
+    }
+
+    void DisplayGenericWarningText(const char* text) override
+    {
+        LDEBUGC("VTK", text);
+    }
+};
 
 VTKModule::VTKModule(const std::string& modulePath)
     : VoreenModule(modulePath)
@@ -44,6 +77,10 @@ VTKModule::VTKModule(const std::string& modulePath)
     registerVolumeReader(new VTMVolumeReader());
     registerVolumeWriter(new NiftiVolumeWriter());
     registerVolumeWriter(new VTIVolumeWriter());
+
+    // On windows, the VTK library might log warnings in an annoying window popping up.
+    // We redirect the output to our own logging mechanism (for consistency on every OS).
+    vtkOutputWindow::SetInstance(vtkSmartPointer<VtkOutputRedirect>::New());
 }
 
 } // namespace

@@ -20,6 +20,7 @@ Voreen Changelog
       o FileDialogProperty: Disable path reset in case of non-existing parent directory for paths that must not be watched
       o Make mocked FlowSimulation processor available on windows to increase portability of workspaces
       o Avoid division by zero in VolumeOperatorMagnitude
+      o Redirect VTK log output to Voreen console to prevent the vtk output window popping up on Windows
 
 
 2024-08-02: Voreen 5.3.0
