@@ -84,10 +84,12 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
         throw InvalidInputException("No volume", InvalidInputException::S_ERROR);
     }
 
+    auto* referenceVolume = inputList->first();
+
     // Gather reference values.
-    const tgt::vec3 spacing = inputList->first()->getSpacing();
-    const size_t numChannels = inputList->first()->getNumChannels();
-    const RealWorldMapping rwm = inputList->first()->getRealWorldMapping();
+    const tgt::vec3 spacing = referenceVolume->getSpacing();
+    const size_t numChannels = referenceVolume->getNumChannels();
+    const RealWorldMapping rwm = referenceVolume->getRealWorldMapping();
     const tgt::vec3 rwPadding(spacing * static_cast<float>(padding_.get()));
 
     const bool intersectionsAllowed = getIntersectionResolutionStrategy() != IRS_NONE;
@@ -125,7 +127,7 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
 
     outport_.setData(nullptr);
 
-    const std::string format = inputList->first()->getFormat();
+    const std::string format = referenceVolume->getFormat();
     const tgt::svec3 dim = tgt::iround(globalBounds.diagonal() / spacing);
 
     VolumeRAM* outputVolumeData = nullptr;
@@ -136,8 +138,12 @@ VolumeMergerComputeInput VolumeMerger::prepareComputeInput() {
         throw InvalidInputException("Could not create output volume.", InvalidInputException::S_ERROR);
     }
 
+    // We take all meta data values from the reference volume, but need to take care that the transformation is reset.
     auto offset = globalBounds.getLLF() + spacing * 0.5f; // We have to account for the extra voxel.
-    std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, spacing, offset));
+    std::unique_ptr<Volume> outputVolume(new Volume(outputVolumeData, referenceVolume));
+    outputVolume->setSpacing(spacing);
+    outputVolume->setOffset(offset);
+    outputVolume->setPhysicalToWorldMatrix(tgt::mat4::identity);
     outputVolume->setRealWorldMapping(rwm);
 
     std::function<float(float, float)> collisionFunction;
