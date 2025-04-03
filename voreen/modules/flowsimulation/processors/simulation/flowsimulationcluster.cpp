@@ -524,6 +524,10 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         return;
     }
 
+    auto quotes = [] (std::string str) {
+            return "\"" + str + "\"";
+    };
+
     auto convertPathForWSL = [&](const std::string& path) {
         // Path looks like: "\\wsl.localhost\Ubuntu-20.04\home\user\..."
         // We return "/home/user/...".
@@ -565,10 +569,6 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         const auto binaryName = convertPathForWSL(cleanedLocalInstancePath);
         const auto outputPath = convertPathForWSL(tgt::FileSystem::cleanupPath(simulationResults_.get()));
 
-        auto quotes = [] (std::string str) {
-            return "\"" + str + "\"";
-        };
-
         std::stringstream ss;
         ss << "wsl.exe" << " "
             << "-d" << " " << distro << " "
@@ -593,7 +593,7 @@ void FlowSimulationCluster::runLocal(FlowSimulationConfig& config, std::string s
         std::string runCommand = makeRunCommand(ensemble, run);
 #else
         std::string workingDirectory = tgt::FileSystem::cleanupPath(tgt::FileSystem::dirName(localInstancePath_.get()) + "/" + ensemble + "/" + run, true);
-        std::string runCommand = localInstancePath_.get() + " " + ensemble + " " + run + " " + simulationResults_.get() + "/"; // Add a trailing '/' !;
+        std::string runCommand = localInstancePath_.get() + " " + quotes(ensemble) + " " + quotes(run) + " " + quotes(simulationResults_.get()) + "/"; // Add a trailing '/' !;
 #endif
 
         std::string name = ensemble + "-" + run;
@@ -688,6 +688,12 @@ void FlowSimulationCluster::enqueueSimulations() {
             return;
         }
 #endif
+    }
+
+    if(!tgt::FileSystem::dirExists(simulationResults_.get())) {
+        VoreenApplication::app()->showMessageBox("Error", "Output path does not exist.", true);
+            LERROR("Output path does not exist");
+            return;
     }
 
     LINFO("Configuring and enqueuing Simulations...");
