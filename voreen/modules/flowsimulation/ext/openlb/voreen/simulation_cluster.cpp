@@ -131,12 +131,17 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    auto trimQuotes = [](std::string& str) {
+        if (str.front() == '"') str.erase(str.begin());
+        if (str.back() == '"') str.erase(str.end() - 1);
+    };
+
     //std::string simulation = argv[0];
-    std::string ensemble = argv[1];
-    std::string run = argv[2];
+    std::string ensemble = trimQuotes(argv[1]);
+    std::string run = trimQuotes(argv[2]);
 
     //std::string output = base; // hardcoded path
-    std::string output = argv[3];
+    std::string output = trimQuotes(argv[3]);
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
     rank = singleton::mpi().getRank();
