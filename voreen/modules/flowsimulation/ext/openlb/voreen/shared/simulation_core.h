@@ -911,7 +911,7 @@ bool getResults( SuperLattice<T, DESCRIPTOR>& lattice,
             vtmWriter.createMasterFile();
         }
 
-        vtmWriter.write(iteration);
+        vtmWriter.write(iteration, converter.getPhysTime(iteration));
 
         // Lattice statistics console output
         std::cout << "step="     << iteration << "; " <<

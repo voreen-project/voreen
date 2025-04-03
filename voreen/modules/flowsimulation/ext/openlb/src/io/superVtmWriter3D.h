@@ -54,10 +54,10 @@ public:
   ///  writes functors stored in pointerVec
   ///  every thread writes a vti file with data from his cuboids
   ///  the vti files are linked in a pvd file
-  void write(int iT=0);
+  void write(int iT=0, T timestep=T(0));
   ///  writes functor instantaneously, same vti-pvd file structure as above
-  void write(SuperF3D<T,W>& f, int iT=0);
-  void write(std::shared_ptr<SuperF3D<T,W>> ptr_f, int iT=0);
+  void write(SuperF3D<T,W>& f, int iT=0, T timestep=T(0));
+  void write(std::shared_ptr<SuperF3D<T,W>> ptr_f, int iT=0, T timestep=T(0));
   ///  have to be called before calling write(int iT=0), since it creates
   //   the master pvd file, where all vti are linked!
   void createMasterFile();
@@ -74,7 +74,7 @@ public:
 private:
   ///  performes <VTKFile ...>, <ImageData ...>, <PieceExtent ...> and <PointData ...>
   void preambleVTI(const std::string& fullName, const Vector<int,3> extent0, const Vector<int,3> extent1,
-                   T origin[], T delta);
+                   T origin[], T delta, T timestep);
   ///  performes </ImageData> and </VTKFile>
   void closeVTI(const std::string& fullNamePiece);
   ///  performes <VTKFile ...> and <Collection>

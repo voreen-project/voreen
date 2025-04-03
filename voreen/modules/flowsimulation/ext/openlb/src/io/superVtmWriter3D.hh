@@ -56,7 +56,7 @@ SuperVTMwriter3D<T,W>::SuperVTMwriter3D( const std::string& name, bool binary, b
 {}
 
 template<typename T, typename W>
-void SuperVTMwriter3D<T,W>::write(int iT)
+void SuperVTMwriter3D<T,W>::write(int iT, T timestep)
 {
   int rank = 0;
 #ifdef PARALLEL_MODE_MPI
@@ -109,7 +109,7 @@ void SuperVTMwriter3D<T,W>::write(int iT)
       T originPhysR[3] = {T()};
       cGeometry.getPhysR(originPhysR,originLatticeR);
 
-      preambleVTI(fullNameVTI, extent0, extent1, originPhysR, delta);
+      preambleVTI(fullNameVTI, extent0, extent1, originPhysR, delta, timestep);
       for (auto it : _pointerVec) {
         dataArray(fullNameVTI, *it, load.glob(iCloc), extent1);
       }
@@ -120,7 +120,7 @@ void SuperVTMwriter3D<T,W>::write(int iT)
 }
 
 template<typename T, typename W>
-void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT)
+void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT, T timestep)
 {
   CuboidGeometry3D<T> const& cGeometry = f.getSuperStructure().getCuboidGeometry();
   LoadBalancer<T>& load = f.getSuperStructure().getLoadBalancer();
@@ -162,7 +162,7 @@ void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT)
     T originPhysR[3] = {T()};
     cGeometry.getPhysR(originPhysR,originLatticeR);
 
-    preambleVTI(fullNameVTI, extent0, extent1, originPhysR, delta);
+    preambleVTI(fullNameVTI, extent0, extent1, originPhysR, delta, timestep);
 
     dataArray(fullNameVTI, f, load.glob(iCloc), extent1);
     closePiece(fullNameVTI);
@@ -172,9 +172,9 @@ void SuperVTMwriter3D<T,W>::write(SuperF3D<T,W>& f, int iT)
 
 
 template<typename T, typename W>
-void SuperVTMwriter3D<T,W>::write(std::shared_ptr<SuperF3D<T,W>> ptr_f, int iT)
+void SuperVTMwriter3D<T,W>::write(std::shared_ptr<SuperF3D<T,W>> ptr_f, int iT, T timestep)
 {
-  write(*ptr_f, iT);
+  write(*ptr_f, iT, timestep);
 }
 
 template<typename T, typename W>
@@ -224,7 +224,7 @@ std::string SuperVTMwriter3D<T,W>::getName() const
 ////////////////////private member functions///////////////////////////////////
 template<typename T, typename W>
 void SuperVTMwriter3D<T,W>::preambleVTI (const std::string& fullName,
-    const Vector<int,3> extent0, const Vector<int,3> extent1, T origin[], T delta)
+    const Vector<int,3> extent0, const Vector<int,3> extent1, T origin[], T delta, T timestep)
 {
   double d_delta = delta;
   double d_origin[3] = {origin[0], origin[1], origin[2]};
@@ -247,6 +247,9 @@ void SuperVTMwriter3D<T,W>::preambleVTI (const std::string& fullName,
        << extent0[2] <<" "<< extent1[2]
        << "\" Origin=\"" << d_origin[0] << " " << d_origin[1] << " " << d_origin[2]
        << "\" Spacing=\"" << d_delta << " " << d_delta << " " << d_delta << "\">\n";
+  fout << "<FieldData><DataArray type=\"Float32\" Name=\"Timestep\" NumberOfTuples=\"1\" format=\"ascii\">"
+       << timestep
+       << "</DataArray></FieldData>\n";
   fout << "<Piece Extent=\""
        << extent0[0] <<" "<< extent1[0] <<" "
        << extent0[1] <<" "<< extent1[1] <<" "
