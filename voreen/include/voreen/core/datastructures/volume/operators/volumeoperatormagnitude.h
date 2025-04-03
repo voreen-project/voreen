@@ -66,6 +66,11 @@ Volume* VolumeOperatorMagnitude::apply(const VolumeBase* srcVolume) {
     // we need to find out the max vector magnitude of the input first
     float maxMagnitude = srcVolume->getDerivedData<VolumeMinMaxMagnitude>()->getMaxMagnitude();
 
+    // In case the input volume is (nearly) empty, we do not normalize to avoid division by zero.
+    if (maxMagnitude < std::numeric_limits<float>::epsilon()) {
+        maxMagnitude = 1.0f;
+    }
+
     // now we can normalize magnitudes to the range [0, 1] for storing floats
     tgt::svec3 pos;
     for (pos.z = 0; pos.z < dim.z; pos.z++) {
