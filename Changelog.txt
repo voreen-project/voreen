@@ -23,6 +23,7 @@ Voreen Changelog
       o Redirect VTK log output to Voreen console to prevent the vtk output window popping up on Windows
       o Make VolumeMerger handle volume meta data
       o Make VolumeCombine utilize real world mapping
+      o DynamicPythonProcessor: Add "Run Script" button to allow manual script execution from application mode
 
 
 2024-08-02: Voreen 5.3.0

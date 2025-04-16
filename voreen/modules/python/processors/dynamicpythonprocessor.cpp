@@ -40,6 +40,7 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     , portList_("portList", "Port List", true)
     , enabled_("enabled", "Enabled", true)
     , pythonProperty_("pythonScript", "Python Script")
+    , runScriptButton_("runScriptButton", "Run Script", Processor::VALID)
     , valid_(false)
 {
     // Add available ports.
@@ -58,6 +59,11 @@ DynamicPythonProcessor::DynamicPythonProcessor()
     //addProperty(pythonProperty_); // Don't add property here, since the editor is included as processor widget!
     pythonProperty_.setOwner(this); // ..but override owner!
     ON_CHANGE(pythonProperty_, DynamicPythonProcessor, onScriptChange);
+
+    addProperty(runScriptButton_);
+    ON_CHANGE_LAMBDA(runScriptButton_, [this] {
+        pythonScript_.run(true);
+    });
 }
 
 DynamicPythonProcessor::~DynamicPythonProcessor() {

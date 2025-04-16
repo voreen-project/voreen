@@ -80,6 +80,7 @@ private:
     BoolProperty enabled_;
     PythonProperty pythonProperty_;
     PythonScript pythonScript_;
+    ButtonProperty runScriptButton_;
 
     bool valid_;
 
