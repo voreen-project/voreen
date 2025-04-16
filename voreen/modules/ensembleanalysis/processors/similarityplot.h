@@ -180,8 +180,11 @@ private:
     StringListProperty renderedMembers_;
 
     StringListProperty firstSelectedMember_;
+    StringProperty firstSelectedMemberName_;
     FloatIntervalProperty firstSelectedTimeInterval_;
+
     StringListProperty secondSelectedMember_;
+    StringProperty secondSelectedMemberName_;
     FloatIntervalProperty secondSelectedTimeInterval_;
 
     FileDialogProperty saveFileDialog_;

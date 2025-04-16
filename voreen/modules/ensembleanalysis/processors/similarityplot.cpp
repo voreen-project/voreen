@@ -99,8 +99,10 @@ SimilarityPlot::SimilarityPlot()
     , renderedField_("renderedChannel", "Field")
     , renderedMembers_("renderedMembers", "Rendered Members")
     , firstSelectedMember_("selectedMembers", "First selected Members")
+    , firstSelectedMemberName_("selectedMembersName", "First selected Members Name", "no selection")
     , firstSelectedTimeInterval_("selectedTimeSteps", "First selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , secondSelectedMember_("referenceMember", "Second selected Member")
+    , secondSelectedMemberName_("referenceMemberName", "Second selected Member Name", "no selection")
     , secondSelectedTimeInterval_("referenceTimeStep", "Second selected Time Interval", tgt::vec2(0.0f, 0.0f), 0.0f, 0.0f)
     , saveFileDialog_("saveFileDialog", "Export Embedding", "Select file...", VoreenApplication::app()->getUserDataPath(),
                       "Voreen MDS Embedding (*.vmds)", FileDialogProperty::SAVE_FILE, Processor::INVALID_PATH, Property::LOD_DEFAULT, VoreenFileWatchListener::ALWAYS_OFF)
@@ -188,10 +190,14 @@ SimilarityPlot::SimilarityPlot()
     // Selection (Linking)
     addProperty(firstSelectedMember_);
         firstSelectedMember_.setGroupID("selection");
+    addProperty(firstSelectedMemberName_);
+        firstSelectedMemberName_.setGroupID("selection");
     addProperty(firstSelectedTimeInterval_);
         firstSelectedTimeInterval_.setGroupID("selection");
     addProperty(secondSelectedMember_);
         secondSelectedMember_.setGroupID("selection");
+    addProperty(secondSelectedMemberName_);
+        secondSelectedMemberName_.setGroupID("selection");
     addProperty(secondSelectedTimeInterval_);
         secondSelectedTimeInterval_.setGroupID("selection");
     setPropertyGroupGuiName("selection", "Selection");
@@ -784,10 +790,12 @@ void SimilarityPlot::mouseEvent(tgt::MouseEvent* e) {
             float upper = std::ceil(timeStep.getTime() * 100.0f) / 100.0f;
             if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_LEFT) {
                 firstSelectedMember_.setSelectedRowIndices(memberIndices);
+                firstSelectedMemberName_.set(members[r].getName());
                 firstSelectedTimeInterval_.set(tgt::vec2(lower, upper));
             }
             else if (e->button() == tgt::MouseEvent::MOUSE_BUTTON_RIGHT) {
                 secondSelectedMember_.setSelectedRowIndices(memberIndices);
+                secondSelectedMemberName_.set(members[r].getName());
                 secondSelectedTimeInterval_.set(tgt::vec2(lower, upper));
             }
 
