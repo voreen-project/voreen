@@ -463,7 +463,7 @@ void VolumeIOHelper::loadRawVolume(const std::string& filenameStd) {
     else if (objectModel.find("TENSOR_") == 0)
         numChannels = 6;
 
-    uint64_t rawSize = headerSkip + static_cast<uint64_t>(formatBytes) * static_cast<uint64_t>(numChannels) * static_cast<uint64_t>(dim.x) * static_cast<uint64_t>(dim.y) * static_cast<uint64_t>(dim.z) * static_cast<uint64_t>(numFrames);
+    qint64 rawSize = headerSkip + formatBytes * numChannels * static_cast<qint64>(dim.x) * static_cast<qint64>(dim.y) * static_cast<qint64>(dim.z) * numFrames;
 
     // inform/query user, if file size does not match
     if (QFile(filename).size() != rawSize) {
