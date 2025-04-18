@@ -489,7 +489,11 @@ void VolumeIOHelper::loadRawVolume(const std::string& filenameStd) {
         for (int frame=0; frame < numFrames; ++frame) {
             RawVolumeReader rawReader(progressBar_);
             rawReader.setReadHints(dim, spacing, objectModel, format, frame, headerSkip, bigEndian);
-            VolumeList* collection = rawReader.read(filename.toStdString());
+            #ifdef _WIN32
+            VolumeList* collection = rawReader.read(filename.toLocal8Bit().constData());
+            #else
+            VolumeList* collection = rawReader.read(filename.toUtf8().constData());
+            #endif
             if (collection && !collection->empty()) {
                 tgtAssert(collection->size() == 1, "More than one raw volume returned");
                 Volume* volumeHandle = static_cast<Volume*>(collection->first());
