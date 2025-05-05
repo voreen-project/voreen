@@ -663,6 +663,39 @@ void FlowSimulationCluster::enqueueSimulations() {
         return;
     }
 
+    bool steeredSimulation = false;
+    for(const auto& indicator : config.getFlowIndicators()) {
+        if(indicator.type_ == FIT_VELOCITY && indicator.flowProfile_ == FP_VOLUME) {
+            steeredSimulation = true;
+            break;
+        }
+    }
+
+    const VolumeList* measuredData = measuredDataPort_.getData();
+
+    if(steeredSimulation) {
+        if(!measuredData || measuredData->empty()) {
+            VoreenApplication::app()->showMessageBox("Error", "At least one indicator requires measured data input", true);
+            LERROR("No measured data");
+            return;
+        }
+    }
+    else {
+        float maxVelocity = 0.0f;
+        for(const auto& indicator : config.getFlowIndicators()) {
+            float velocity = indicator.velocityCurve_.getMaxVelocity();
+            if(indicator.type_ == FIT_VELOCITY && velocity > maxVelocity) {
+                maxVelocity = velocity;
+                break;
+            }
+        }
+        if(maxVelocity <= std::numeric_limits<float>::lowest()) {
+            VoreenApplication::app()->showMessageBox("Error", "No measured data input required, but max velocity is set", true);
+            LERROR("No measured data input required, but max velocity is set");
+            return;
+        }
+    }
+
     // Make sure we have a binary selected.
     if(useLocalInstance_.get()) {
         if (localInstancePath_.get().empty()) {
@@ -710,7 +743,7 @@ void FlowSimulationCluster::enqueueSimulations() {
         stepCopyGeometryData(config, simulationPathSource);
 
         // Copy measurement data.
-        stepCopyMeasurementData(measuredDataPort_.getData(), config, simulationPathSource);
+        stepCopyMeasurementData(measuredData, config, simulationPathSource);
 
         // Create configurations.
         stepCreateSimulationConfigs(config, simulationPathSource);
