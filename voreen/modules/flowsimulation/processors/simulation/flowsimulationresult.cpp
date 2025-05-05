@@ -115,6 +115,8 @@ void FlowSimulationResult::removeEnqueuedCommands() {
 
 void FlowSimulationResult::updateInsituData() {
 
+    // We only want actual user input to trigger the callback.
+    fields_.blockCallbacks(true);
     fields_.setOptions(std::deque<Option<std::string>>());
 
     if(!tgt::FileSystem::fileExists(inputFile_.get())) {
@@ -165,9 +167,6 @@ void FlowSimulationResult::updateInsituData() {
         return fields;
     };
 
-    // Begin editing options.
-    fields_.blockCallbacks(true);
-
     // We probe all vtm files in that directory, such as cuboid and material file.
     // These are not mentioned in the pvd file.
     auto baseDir = tgt::FileSystem::dirName(pvdFile);
@@ -190,13 +189,12 @@ void FlowSimulationResult::updateInsituData() {
         }
     }
 
-    // End editing options.
-    fields_.blockCallbacks(false);
-
     // Select previously selected field.
     if (fields_.hasKey(selectedField_)) {
         fields_.select(selectedField_);
     }
+
+    fields_.blockCallbacks(false);
 }
 
 void FlowSimulationResult::onFileChange() {
