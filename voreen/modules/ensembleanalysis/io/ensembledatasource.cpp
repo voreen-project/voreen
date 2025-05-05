@@ -147,13 +147,27 @@ void EnsembleDataSource::buildEnsembleDataset() {
     // Delete old data.
     clearEnsembleDataset();
 
-    std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset());
+    // Check if the ensemble path is valid.
+    if(!tgt::FileSystem::dirExists(ensemblePath_.get())) {
+        LWARNING("Ensemble path does not exist, resetting path");
+        ensemblePath_.set("");
+        return;
+    }
 
+    // Check if the ensemble is empty.
     std::vector<std::string> members = tgt::FileSystem::listSubDirectories(ensemblePath_.get(), true);
+    if(members.empty()) {
+        LWARNING("Ensemble is empty, resetting path");
+        ensemblePath_.set("");
+        return;
+    }
+
     float progressPerMember = 1.0f / members.size();
 
     EnsembleVolumeReader reader;
     ColorMap::InterpolationIterator colorIter = colorMap_.get().getInterpolationIterator(members.size());
+
+   std::unique_ptr<EnsembleDataset> dataset(new EnsembleDataset());
 
     for(size_t i=0; i<members.size(); i++) {
 
