@@ -689,9 +689,9 @@ void FlowSimulationCluster::enqueueSimulations() {
                 break;
             }
         }
-        if(maxVelocity <= std::numeric_limits<float>::lowest()) {
-            VoreenApplication::app()->showMessageBox("Error", "No measured data input required, but max velocity is set", true);
-            LERROR("No measured data input required, but max velocity is set");
+        if(maxVelocity <= std::numeric_limits<float>::min()) {
+            VoreenApplication::app()->showMessageBox("Error", "All velocity indicators have zero velocity", true);
+            LERROR("All velocity indicators have zero velocity");
             return;
         }
     }
