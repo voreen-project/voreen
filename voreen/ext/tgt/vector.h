@@ -62,6 +62,7 @@ DEFINE_GDB_SCRIPT("voreen/tools/gdb/gdb-vector-pretty-printers.py")
 
 #include "tgt/tgt_math.h"
 #include "boost/array.hpp"
+#include "boost/container_hash/hash.hpp"
 
 /*
     Performance remarks:
