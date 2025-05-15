@@ -117,7 +117,7 @@ void FileDialogPropertyWidget::setProperty() {
         }
 
         if (!filename.isEmpty()) {
-            property_->set(filename.toStdString());
+            property_->set(filename.toUtf8().constData());
             emit valueModifiedByUser();
         }
     }

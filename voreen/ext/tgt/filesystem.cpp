@@ -26,15 +26,17 @@
 #include "tgt/types.h"
 
 #include <algorithm>
-#include <string>
 #include <cstring>
 #include <cctype> // std::tolower
 #include <iostream>
-#include <sstream>
 #include <fstream>
+#include <filesystem>
+#include <sstream>
 #include <stack>
+#include <string>
 #include <sys/stat.h>
 #include <time.h>
+
 
 #ifndef WIN32
 #include <stdio.h>
@@ -887,7 +889,7 @@ std::string FileSystem::cleanupPath(std::string path, bool native /*= true*/) {
         }
     }
 
-    // 2) Remove the two-character prefix so that we don’t break it later
+    // 2) Remove the two-character prefix so that we donï¿½t break it later
     std::string prefix;
     if (isServerPath) {
         prefix = path.substr(0, 2); // "\\" or "//"
@@ -950,7 +952,7 @@ std::string FileSystem::cleanupPath(std::string path, bool native /*= true*/) {
     // 6) Convert everything to either Windows separators or Unix separators
     bool convertToWin =
 #ifdef WIN32
-        native;  // if on Windows, “native” means backslashes
+        native;  // if on Windows, ï¿½nativeï¿½ means backslashes
 #else
         false;   // if on non-Windows, always convert to forward slashes
 #endif
@@ -972,13 +974,13 @@ std::string FileSystem::cleanupPath(std::string path, bool native /*= true*/) {
 
     // 7) If we originally had a server path, add back the two-character prefix
     if (isServerPath) {
-        // If “native” and we’re on Windows, you want a `\\` prefix
+        // If ï¿½nativeï¿½ and weï¿½re on Windows, you want a `\\` prefix
         // Otherwise you want a `//` prefix
         std::string finalPrefix = convertToWin ? "\\\\" : "//";
         path = finalPrefix + path;
     }
 
-    // 8) Lastly, if it’s a Windows path with a drive letter, upcase the letter
+    // 8) Lastly, if itï¿½s a Windows path with a drive letter, upcase the letter
     if (convertToWin && path.size() > 1 && std::isalpha(path[0]) && path[1] == ':') {
         path[0] = static_cast<char>(std::toupper(path[0]));
     }
@@ -1116,6 +1118,24 @@ bool FileSystem::clearDirectory(const std::string& directory) {
     return success;
 }
 
+FILE* FileSystem::openFile(const std::string& filename, const std::string& mode)
+{
+#ifdef _WIN32
+    std::wstring wpath = std::filesystem::u8path(filename).native();
+    std::wstring wmode = std::wstring(mode.begin(), mode.end());
+
+    FILE* fp = nullptr;
+#if defined(_MSC_VER) && _MSC_VER >= 1400        // VS 2005 +
+    _wfopen_s(&fp, wpath.c_str(), wmode.c_str()); // secure version
+#else
+    fp = _wfopen(wpath.c_str(), wmode.c_str());
+#endif
+    return fp;            // nullptr if it failed
+#else                     // POSIX, macOS, Linux: UTF-8 already works
+    return std::fopen(filename.c_str(), mode);
+#endif
+}
+
 bool FileSystem::deleteFile(const std::string& filename) {
     if (filename.empty())
         return false;
@@ -1192,16 +1212,7 @@ bool FileSystem::fileExists(const std::string& filename) {
     if (filename.empty())
         return false;
 
-    std::string converted = replaceAllCharacters(filename, badSlash_, goodSlash_);
-    removeTrailingCharacters(converted, goodSlash_);
-
-#ifdef WIN32
-    WIN32_FILE_ATTRIBUTE_DATA fad;
-    return (GetFileAttributesEx(converted.c_str(), GetFileExInfoStandard, &fad) != 0);
-#else
-    struct stat st;
-    return (stat(converted.c_str(), &st) == 0);
-#endif
+    return std::filesystem::exists(std::filesystem::u8path(filename));
 }
 
 uint64_t FileSystem::dirSize(const std::string& directory, const bool recursive) {
@@ -1300,18 +1311,8 @@ time_t FileSystem::fileAccessTime(const std::string& filename) {
 }
 
 bool FileSystem::dirExists(const string& dirpath) {
-#ifdef WIN32
-    DWORD result = GetFileAttributes(dirpath.c_str());
-    return (result != INVALID_FILE_ATTRIBUTES) && (result & FILE_ATTRIBUTE_DIRECTORY);
-#else
-    DIR* dir = opendir(dirpath.c_str());
-    if (dir) {
-        closedir(dir);
-        return true;
-    }
-    else
-        return false;
-#endif
+    auto utf8Path = std::filesystem::u8path(dirpath);
+    return std::filesystem::exists(utf8Path) && std::filesystem::is_directory(utf8Path);
 }
 
 std::vector<std::string> FileSystem::readDirectory(const std::string& directory, const bool sort,

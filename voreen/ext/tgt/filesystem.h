@@ -392,6 +392,13 @@ public:
     static bool clearDirectory(const std::string& directory);
 
     /**
+     * Returns a FILE handle to a file given a path that may contain UTF8 characters.
+     * This is a wrapper around the C standard library function fopen to work with wide characters
+     * @return FILE handle to a file or NULL if the file could not be opened
+     */
+    static FILE* openFile(const std::string& filename, const std::string& mode);
+
+    /**
      * Deletes the file with the given filename.
      *
      * @param   filename    name of the file to be deleted
