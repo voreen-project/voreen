@@ -35,6 +35,7 @@
 #include "voreen/core/utils/hashing.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <typeinfo>
 #include <fstream>
 
@@ -115,8 +116,7 @@ VolumeRAM* VolumeDiskRaw::loadVolume() const {
     if (!volume)
         throw VoreenException("Failed to create VolumeRAM");
 
-    FILE* fin;
-    fin = fopen(getFileName().c_str(),"rb");
+    FILE* fin = tgt::FileSystem::openFile(getFileName().c_str(),"rb");
 
     if (fin == 0) {
         throw tgt::IOException("Unable to open raw file for reading", getFileName());
@@ -177,7 +177,7 @@ VolumeRAM* VolumeDiskRaw::loadSlices(const size_t firstSlice, const size_t lastS
         throw VoreenException("Failed to create VolumeRAM");
 
     //open file
-    std::ifstream infile(getFileName().c_str(), std::ios::in | std::ios::binary);
+    std::ifstream infile(std::filesystem::u8path(getFileName()), std::ios::in | std::ios::binary);
     if (infile.fail())
         throw tgt::FileException("Failed to open file for reading: " + getFileName());
 
@@ -235,7 +235,7 @@ VolumeRAM* VolumeDiskRaw::loadBrick(const tgt::svec3& brickOffset, const tgt::sv
     LDEBUG("Loading brick: offset=" << brickOffset << ", dim=" << brickDim);
 
     // open file
-    std::ifstream infile(getFileName().c_str(), std::ios::in | std::ios::binary);
+    std::ifstream infile(std::filesystem::u8path(getFileName()), std::ios::in | std::ios::binary);
     if (infile.fail())
         throw tgt::FileException("Failed to open file for reading: " + getFileName());
 

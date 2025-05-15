@@ -128,8 +128,7 @@ VolumeList* RawVolumeReader::readSlices(const std::string &url, size_t firstSlic
     if (h.dimensions_ == tgt::ivec3::zero)
         throw tgt::CorruptedFileException("No readHints set.", fileName);
 
-    FILE* fin;
-    fin = fopen(fileName.c_str(),"rb");
+    FILE* fin = tgt::FileSystem::openFile(fileName.c_str(),"rb");
 
     if (fin == 0)
         throw tgt::IOException("Unable to open raw file for reading", fileName);
@@ -511,8 +510,7 @@ VolumeList* RawVolumeReader::readBrick(const std::string &url, tgt::ivec3 brickS
         throw tgt::CorruptedFileException("No readHints set.", fileName);
     }
 
-    FILE* fin;
-    fin = fopen(fileName.c_str(),"rb");
+    FILE* fin = tgt::FileSystem::openFile(fileName.c_str(),"rb");
 
     if (fin == 0)
         throw tgt::IOException("Unable to open raw file for reading", fileName);

@@ -183,7 +183,7 @@ void VolumeIOHelper::showFileOpenDialog() {
     const QStringList& lst = fileDialog.selectedFiles();
     QStringList::const_iterator it = lst.begin();
     for (; it != lst.end(); ++it)
-        filenames.push_back(it->toStdString());
+        filenames.push_back(it->toUtf8().constData());
     if (filenames.empty()) {
         LWARNING("no files selected");
         return;
@@ -323,7 +323,7 @@ void VolumeIOHelper::showFileSaveDialog(const VolumeBase* volume) {
         LWARNING("more than one file selected");
         return;
     }
-    std::string filepath = lst.first().toStdString();
+    std::string filepath = lst.first().toUtf8().constData();
 
     // retrieve the user selected file filter
     QString selectedFilter = saveAsDialog.selectedNameFilter();
@@ -489,7 +489,7 @@ void VolumeIOHelper::loadRawVolume(const std::string& filenameStd) {
         for (int frame=0; frame < numFrames; ++frame) {
             RawVolumeReader rawReader(progressBar_);
             rawReader.setReadHints(dim, spacing, objectModel, format, frame, headerSkip, bigEndian);
-            VolumeList* collection = rawReader.read(filename.toStdString());
+            VolumeList* collection = rawReader.read(filenameStd);
             if (collection && !collection->empty()) {
                 tgtAssert(collection->size() == 1, "More than one raw volume returned");
                 Volume* volumeHandle = static_cast<Volume*>(collection->first());
@@ -507,7 +507,7 @@ void VolumeIOHelper::loadRawVolume(const std::string& filenameStd) {
         errorMessageDialog->showMessage(e.what());
     }
     catch (std::bad_alloc&) {
-        LERROR("bad allocation while reading file: " << filename.toStdString());
+        LERROR("bad allocation while reading file: " << filenameStd);
         QErrorMessage* errorMessageDialog = new QErrorMessage(VoreenApplicationQt::qtApp()->getMainWindow());
         errorMessageDialog->showMessage("Bad allocation while reading file: " + filename);
     }
