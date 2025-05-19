@@ -1132,7 +1132,7 @@ FILE* FileSystem::openFileUTF8(const std::string& filename, const std::string& m
 #endif
     return fp;            // nullptr if it failed
 #else                     // POSIX, macOS, Linux: UTF-8 already works
-    return std::fopen(filename.c_str(), mode);
+    return std::fopen(filename.c_str(), mode.c_str());
 #endif
 }
 
