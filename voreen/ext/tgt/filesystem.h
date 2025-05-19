@@ -396,7 +396,7 @@ public:
      * This is a wrapper around the C standard library function fopen to work with wide characters
      * @return FILE handle to a file or NULL if the file could not be opened
      */
-    static FILE* openFile(const std::string& filename, const std::string& mode);
+    static FILE* openFileUTF8(const std::string& filename, const std::string& mode);
 
     /**
      * Deletes the file with the given filename.

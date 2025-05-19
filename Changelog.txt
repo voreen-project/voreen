@@ -24,6 +24,7 @@ Voreen Changelog
       o Make VolumeMerger handle volume meta data
       o Make VolumeCombine utilize real world mapping
       o DynamicPythonProcessor: Add "Run Script" button to allow manual script execution from application mode
+      o Allow loading and saving of {raw, vvd}-volumes and workspaces from paths containing non-UTF8 characters
 
 
 2024-08-02: Voreen 5.3.0

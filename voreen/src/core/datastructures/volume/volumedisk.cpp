@@ -116,7 +116,7 @@ VolumeRAM* VolumeDiskRaw::loadVolume() const {
     if (!volume)
         throw VoreenException("Failed to create VolumeRAM");
 
-    FILE* fin = tgt::FileSystem::openFile(getFileName().c_str(),"rb");
+    FILE* fin = tgt::FileSystem::openFileUTF8(getFileName().c_str(),"rb");
 
     if (fin == 0) {
         throw tgt::IOException("Unable to open raw file for reading", getFileName());

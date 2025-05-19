@@ -1118,9 +1118,9 @@ bool FileSystem::clearDirectory(const std::string& directory) {
     return success;
 }
 
-FILE* FileSystem::openFile(const std::string& filename, const std::string& mode)
+FILE* FileSystem::openFileUTF8(const std::string& filename, const std::string& mode)
 {
-#ifdef _WIN32
+#ifdef WIN32
     std::wstring wpath = std::filesystem::u8path(filename).native();
     std::wstring wmode = std::wstring(mode.begin(), mode.end());
 

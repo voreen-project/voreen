@@ -60,7 +60,7 @@ VolumeList* VvdVolumeReader::read(const std::string &url) {
     std::string fileName = origin.getPath();
 
     // open file for reading
-    std::fstream fileStream(std::filesystem::u8path(fileName.c_str()), std::ios_base::in);
+    std::fstream fileStream(std::filesystem::u8path(fileName), std::ios_base::in);
     if (fileStream.fail()) {
         throw tgt::FileException("Failed to open file '" + tgt::FileSystem::absolutePath(fileName) + "' for reading.");
     }

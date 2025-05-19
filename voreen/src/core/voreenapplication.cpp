@@ -206,6 +206,10 @@ void VoreenApplication::printAsciiLogo() const {
 #endif
 }
 
+#ifdef WIN32
+static UINT8 originalCP = 0;
+#endif
+
 VoreenApplication::VoreenApplication(const std::string& binaryName, const std::string& guiName, const std::string& description,
                                      int argc, char** argv, ApplicationFeatures appType)
     : PropertyOwner(binaryName, guiName)
@@ -520,6 +524,13 @@ void VoreenApplication::initialize() {
 
     if (initialized_)
         throw VoreenException("Application already initialized");
+
+#ifdef WIN32
+    // Store original code page.
+    originalCP = GetConsoleOutputCP();
+    // Set console code page to UTF-8.
+    SetConsoleOutputCP(CP_UTF8);
+#endif
 
     //
     // Path detection
@@ -850,6 +861,12 @@ void VoreenApplication::deinitialize() {
     VoreenQualityMode::deinit();
 
     initialized_ = false;
+
+#ifdef WIN32
+    // Restore original code page.
+    SetConsoleOutputCP(originalCP);
+    originalCP = 0;
+#endif
 }
 
 void VoreenApplication::initializeGL() {

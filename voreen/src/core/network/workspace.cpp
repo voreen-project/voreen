@@ -42,6 +42,7 @@
 #endif
 
 #include <cstdio>
+#include <filesystem>
 #include <sstream>
 
 namespace voreen {
@@ -363,7 +364,7 @@ std::vector<std::string> Workspace::getErrors() const {
 
 void Workspace::load(const std::string& filename, const std::string& workDir) {
     // open file for reading
-    std::fstream fileStream(filename.c_str(), std::ios_base::in);
+    std::fstream fileStream(std::filesystem::u8path(filename), std::ios_base::in);
     if (fileStream.fail()) {
         //LERROR("Failed to open file '" << tgt::FileSystem::absolutePath(filename) << "' for reading.");
         throw SerializationException("Failed to open workspace file '" + tgt::FileSystem::absolutePath(filename) + "' for reading.");
@@ -442,7 +443,7 @@ void Workspace::save(const std::string& filename, bool overwrite, const std::str
     // For added data security we write to a temporary file and afterwards move it into place
     // (which should be an atomic operation).
     const std::string tmpfilename = filename + ".tmp";
-    std::fstream fileStream(tmpfilename.c_str(), std::ios_base::out);
+    std::fstream fileStream(std::filesystem::u8path(tmpfilename), std::ios_base::out);
     if (fileStream.fail())
         throw SerializationException("Failed to open file '" + tmpfilename + "' for writing.");
 
@@ -461,22 +462,9 @@ void Workspace::save(const std::string& filename, bool overwrite, const std::str
 
     // Finally move the temporary file into place. It is important that this happens in-place,
     // without deleting the old file first.
-    bool success;
-#ifdef WIN32
-    // rename() does not replace existing files on Windows, so we have to use this
-    success = (MoveFileEx(tmpfilename.c_str(), filename.c_str(),
-                          MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != 0);
-
-#else
-    // atomic replace
-    success = (rename(tmpfilename.c_str(), filename.c_str()) == 0);
-#endif
-    if (!success) {
-#ifdef WIN32
-        _unlink(tmpfilename.c_str()); // ignore failure here
-#else
-        unlink(tmpfilename.c_str()); // ignore failure here
-#endif
+    try {
+        std::filesystem::rename(std::filesystem::u8path(tmpfilename), std::filesystem::u8path(filename));
+    } catch (...) {
         throw SerializationException("Failed to rename temporary file '" + tmpfilename + "' to '"
                                      + filename + "'");
     }

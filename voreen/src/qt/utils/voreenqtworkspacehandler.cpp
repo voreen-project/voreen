@@ -150,10 +150,12 @@ void VoreenQtWorkspaceHandler::openWorkspace(const QString& filename) {
     if (!askSave())
         return;
 
+    const std::string fileNameUTF8 = filename.toUtf8().constData();
+
     // check if workspace to load is a test workspace (i.e. located inside a */test/* subdirectory)
     // if so, query user whether the test data path should be used as workDir
     QString workDir;
-    std::vector<std::string> pathComponents = tgt::FileSystem::splitPath(filename.toStdString());
+    std::vector<std::string> pathComponents = tgt::FileSystem::splitPath(fileNameUTF8);
     if (std::find(pathComponents.begin(), pathComponents.end(), "test") != pathComponents.end()) {
         tgtAssert(VoreenApplication::app(), "Voreen app not instantiated");
         if (VoreenApplication::app()->getTestDataPath() != "") {
@@ -173,7 +175,7 @@ void VoreenQtWorkspaceHandler::openWorkspace(const QString& filename) {
         }
     }
 
-    LINFO("Loading workspace " << tgt::FileSystem::absolutePath(filename.toStdString()));
+    LINFO("Loading workspace " << tgt::FileSystem::absolutePath(fileNameUTF8));
     if (!workDir.isEmpty())
         LINFO("Workspace working path: " << tgt::FileSystem::cleanupPath(workDir.toStdString()));
 
@@ -205,7 +207,7 @@ void VoreenQtWorkspaceHandler::openWorkspace(const QString& filename) {
 
     // load workspace
     try {
-        workspace_->load(filename.toStdString(), workDir.toStdString());
+        workspace_->load(fileNameUTF8, workDir.toStdString());
     }
     catch (SerializationException& e) {
         QApplication::restoreOverrideCursor();
@@ -280,10 +282,12 @@ bool VoreenQtWorkspaceHandler::saveWorkspace() {
         return saveWorkspaceAs();
     }
 
+    const std::string fileNameUTF8 = filename.toUtf8().constData();
+
     // check if workspace is saved as a test workspace (i.e. located inside a test subdirectory)
     // if so, query user whether the test data path should be used as workDir
     QString workDir;
-    std::vector<std::string> pathComponents = tgt::FileSystem::splitPath(filename.toStdString());
+    std::vector<std::string> pathComponents = tgt::FileSystem::splitPath(fileNameUTF8);
     if (std::find(pathComponents.begin(), pathComponents.end(), "test") != pathComponents.end()) {
         tgtAssert(VoreenApplication::app(), "Voreen app not instantiated");
         if (VoreenApplication::app()->getTestDataPath() != "") {
@@ -303,14 +307,16 @@ bool VoreenQtWorkspaceHandler::saveWorkspace() {
         }
     }
 
+    const std::string workDirUTF8 = workDir.toUtf8().constData();
+
     if (workDir.isEmpty())
-        LINFO("Saving workspace to " << tgt::FileSystem::cleanupPath(filename.toStdString()));
+        LINFO("Saving workspace to " << tgt::FileSystem::cleanupPath(fileNameUTF8));
     else
-        LINFO("Saving workspace to " << tgt::FileSystem::cleanupPath(filename.toStdString()) << " with working path " << tgt::FileSystem::cleanupPath(workDir.toStdString()));
+        LINFO("Saving workspace to " << tgt::FileSystem::cleanupPath(fileNameUTF8) << " with working path " << tgt::FileSystem::cleanupPath(workDirUTF8));
 
     try {
         readOnlyWorkspace_ = false;
-        workspace_->save(filename.toStdString(), true, workDir.toStdString());
+        workspace_->save(fileNameUTF8, true, workDirUTF8);
     }
     catch (SerializationException& e) {
         LERROR("Could not save workspace: " << e.what());
@@ -319,7 +325,7 @@ bool VoreenQtWorkspaceHandler::saveWorkspace() {
         return false;
     }
 
-    lastUsedWorkspacePath_ = QString::fromStdString(tgt::FileSystem::dirName(filename.toStdString()));
+    lastUsedWorkspacePath_ = QString::fromStdString(tgt::FileSystem::dirName(fileNameUTF8));
     if (mainWindow_)
         mainWindow_->setWorkspace(workspace_);
 
