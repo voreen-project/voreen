@@ -106,6 +106,21 @@ namespace {
         return false;
     }
 
+    std::string exitCodeToString(int code) {
+        switch(code)
+        {
+        case 0: return "EXIT_SUCESS";
+        case 1: return "EXIT_FAILURE";
+        case 2: return "Normal";
+        case 3: return "Converged";
+        case 4: return "Diverged";
+        case 5: return "Invalid Arguments";
+        case 6: return "Failed to create output directory";
+        case 7: return "Model contains errors";
+        default: return "Unknown (exit_code=" + std::to_string(code) + ")";
+        }
+    }
+
 }
 
 
@@ -160,8 +175,8 @@ public:
         return name_;
     }
 
-    bool successful() const {
-        return process_.exit_code() == EXIT_SUCCESS;
+    int getExitCode() const {
+        return process_.exit_code();
     }
 
 private:
@@ -342,7 +357,7 @@ void FlowSimulationCluster::process() {
     for (auto iter = runningThreads_.begin(); iter != runningThreads_.end();) {
         auto run = iter->get();
         if (run->isFinished()) {
-            LINFO("Run " << run->getName() << " finished " << (run->successful() ? "successfully" : "unsuccessfully"));
+            LINFO("Run " << run->getName() << " ended (Reason: " << exitCodeToString(run->getExitCode()) << ")");
             iter = runningThreads_.erase(iter);
             progress_.setProgress(static_cast<float>(++numFinishedThreads_) / static_cast<float>(numEnqueuedThreads_));
         }
@@ -351,7 +366,12 @@ void FlowSimulationCluster::process() {
         }
     }
 
-    size_t maxNumThreads = boost::thread::hardware_concurrency();
+#ifdef WIN32
+    // Since a WSL update somewhere between April and September 2025, we experience issues starting multiple processes.
+    const size_t maxNumThreads = 1;
+#else
+    const size_t maxNumThreads = boost::thread::hardware_concurrency();
+#endif
     while (!waitingThreads_.empty() && runningThreads_.size() < maxNumThreads) {
         auto thread = std::move(waitingThreads_.front());
         waitingThreads_.pop_front();

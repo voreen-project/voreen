@@ -4,15 +4,19 @@
 ////////// Globals //////////////////
 // Meta
 const std::string simulation = "simulation_cluster";
-const std::string base = "/scratch/tmp/s_leis06/simulations/";
 
 enum ExitCodes {
-    EXIT_CODE_SUCCESS = EXIT_SUCCESS,
-    EXIT_CODE_FAILURE = EXIT_FAILURE,
-    EXIT_CODE_FINISHED = 6,
-    EXIT_CODE_CONVERGED = 7,
-    EXIT_CODE_DIVERGED = 8,
+    //EXIT_SUCCESS                      = 0, // Reserved
+    //EXIT_FAILURE                      = 1, // Reserved
+    EXIT_CODE_NORMAL                  = 2,
+    EXIT_CODE_CONVERGED               = 3,
+    EXIT_CODE_DIVERGED                = 4,
+    EXIT_CODE_INVALID_ARGUMENTS       = 5,
+    EXIT_CODE_FAILED_OUTPUT_DIRECTORY = 6,
+    EXIT_CODE_MODEL_ERROR             = 7,
 };
+
+
 
 
 template<typename T>
@@ -128,7 +132,7 @@ int main(int argc, char* argv[]) {
     if(argc != 4) {
         std::cout << "Invalid number of arguments! Usage:" << std::endl;
         std::cout << "./" << simulation << " <ensemble name> <run name> <output directory>" << std::endl;
-        return EXIT_FAILURE;
+        return EXIT_CODE_INVALID_ARGUMENTS;
     }
 
     auto trimQuotes = [](std::string str) {
@@ -140,8 +144,6 @@ int main(int argc, char* argv[]) {
     //std::string simulation = argv[0];
     std::string ensemble = trimQuotes(argv[1]);
     std::string run = trimQuotes(argv[2]);
-
-    //std::string output = base; // hardcoded path
     std::string output = trimQuotes(argv[3]);
     int rank = 0;
 #ifdef PARALLEL_MODE_MPI
@@ -157,7 +159,7 @@ int main(int argc, char* argv[]) {
         struct stat statbuf;
         if (stat(output.c_str(), &statbuf) != 0 && mkdir(output.c_str(), mode) != 0) {
             std::cout << "Could not create output directory: '" << output << "'" << std::endl;
-            return EXIT_FAILURE;
+            return EXIT_CODE_FAILED_OUTPUT_DIRECTORY;
         }
     }
     else {
@@ -249,7 +251,7 @@ int main(int argc, char* argv[]) {
 
     if(!success) {
         clout << "The model contains errors! Check resolution and geometry." << std::endl;
-        return EXIT_FAILURE;
+        return EXIT_CODE_MODEL_ERROR;
     }
 
     // === 3rd Step: Prepare Lattice ===
@@ -288,7 +290,7 @@ int main(int argc, char* argv[]) {
         );
     };
 
-    ExitCodes exitCode = EXIT_CODE_FINISHED;
+    ExitCodes exitCode = EXIT_CODE_NORMAL;
     for (int iteration = 0; iteration <= maxIteration; iteration++) {
 
         // === 5th Step: Definition of Initial and Boundary Conditions ===
