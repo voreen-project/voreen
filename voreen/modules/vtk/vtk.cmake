@@ -7,12 +7,27 @@ SET(MOD_CORE_MODULECLASS VTKModule)
 
 IF(UNIX)
 
-    FIND_PACKAGE(VTK REQUIRED)
+    SET(VTK_REQUIRED_COMPONENTS
+        CommonCore
+        CommonDataModel
+        CommonExecutionModel
+        CommonMath
+        CommonMisc
+        CommonSystem
+        CommonTransforms
+        ImagingCore
+        IOCore
+        IOImage
+        IONetCDF
+        IOXML
+        IOXMLParser
+    )
+
+    FIND_PACKAGE(VTK REQUIRED COMPONENTS ${VTK_REQUIRED_COMPONENTS})
     IF(${VTK_VERSION} VERSION_LESS "8.9")
         INCLUDE(${VTK_USE_FILE})
         SET(MOD_LIBRARIES ${VTK_LIBRARIES})
     ELSE()
-        FIND_PACKAGE(VTK REQUIRED COMPONENTS)
         SET(ALL_VTK_INCLUDE_DIRS)
         FOREACH(COMPONENT ${VTK_LIBRARIES})
             GET_TARGET_PROPERTY(INCLUDE_DIRS ${COMPONENT} INTERFACE_INCLUDE_DIRECTORIES)
@@ -67,5 +82,4 @@ SET(MOD_CORE_HEADERS
     ${MOD_DIR}/io/vtivolumewriter.h
     ${MOD_DIR}/io/vtmvolumereader.h
 )
-
 
