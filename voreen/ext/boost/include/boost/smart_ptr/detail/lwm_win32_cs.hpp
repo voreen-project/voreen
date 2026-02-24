@@ -65,6 +65,30 @@ extern "C" __declspec(dllimport) void __stdcall DeleteCriticalSection(::_RTL_CRI
 
 typedef ::CRITICAL_SECTION critical_section;
 
+#if BOOST_PLAT_WINDOWS_RUNTIME
+inline void InitializeCriticalSectionEx(::_RTL_CRITICAL_SECTION* cs, unsigned long spin_count, unsigned long flags)
+{
+    ::InitializeCriticalSectionEx(reinterpret_cast< ::LPCRITICAL_SECTION >(cs), spin_count, flags);
+}
+#else
+inline void InitializeCriticalSection(::_RTL_CRITICAL_SECTION* cs)
+{
+    ::InitializeCriticalSection(reinterpret_cast< ::LPCRITICAL_SECTION >(cs));
+}
+#endif
+inline void EnterCriticalSection(::_RTL_CRITICAL_SECTION* cs)
+{
+    ::EnterCriticalSection(reinterpret_cast< ::LPCRITICAL_SECTION >(cs));
+}
+inline void LeaveCriticalSection(::_RTL_CRITICAL_SECTION* cs)
+{
+    ::LeaveCriticalSection(reinterpret_cast< ::LPCRITICAL_SECTION >(cs));
+}
+inline void DeleteCriticalSection(::_RTL_CRITICAL_SECTION* cs)
+{
+    ::DeleteCriticalSection(reinterpret_cast< ::LPCRITICAL_SECTION >(cs));
+}
+
 #endif // #ifndef BOOST_USE_WINDOWS_H
 
 class lightweight_mutex
