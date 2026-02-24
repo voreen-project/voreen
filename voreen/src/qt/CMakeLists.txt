@@ -531,24 +531,21 @@ LIST(APPEND VRN_QT_HEADERS_NONMOC ${VRN_MODULE_QT_HEADERS_NONMOC})
 # QMAKE_CHANGED must be set to true, to allow changing Qt versions by changing the qmake.exe in QT_QMAKE_EXECUTABLE
 SET(QT_QMAKE_CHANGED TRUE)
 # find Qt library
-SET(VRN_QT_COMPONENTS Core Gui Widgets Svg)
+SET(VRN_QT_COMPONENTS Core Gui Widgets Svg OpenGLWidgets)
 IF(QT_USE_QTNETWORK)
     LIST(APPEND VRN_QT_COMPONENTS Network)
 ENDIF()
 IF(QT_USE_QTWEBENGINEWIDGETS)
     LIST(APPEND VRN_QT_COMPONENTS WebEngineWidgets)
 ENDIF()
-FIND_PACKAGE(Qt5 COMPONENTS ${VRN_QT_COMPONENTS} REQUIRED)
+FIND_PACKAGE(Qt6 ${VRN_REQUIRED_QT_VERSION} COMPONENTS ${VRN_QT_COMPONENTS} REQUIRED)
 # create list of libraries
-set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Svg ${QT5SVG_LIBRARIES})
-set(QT_INCLUDE_DIRECTORIES ${Qt5Core_INCLUDES} ${Qt5Gui_INCLUDES} ${Qt5Widgets_INCLUDES} ${Qt5Svg_INCLUDES})
+set(QT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::OpenGLWidgets)
 IF(QT_USE_QTNETWORK)
-    LIST(APPEND QT_LIBRARIES Qt5::Network)
-    LIST(APPEND QT_INCLUDE_DIRECTORIES ${Qt5Network_INCLUDES})
+    LIST(APPEND QT_LIBRARIES Qt6::Network)
 ENDIF()
 IF(QT_USE_QTWEBENGINEWIDGETS)
-    LIST(APPEND QT_LIBRARIES Qt5::WebEngineWidgets)
-    LIST(APPEND QT_INCLUDE_DIRECTORIES ${Qt5WebEngineWidgets_INCLUDES})
+    LIST(APPEND QT_LIBRARIES Qt6::WebEngineWidgets)
 ENDIF()
 
 ################################################################################
@@ -590,12 +587,11 @@ LIST(APPEND VRN_QT_HEADERS_NONMOC ${REGISTRATION_FILE})
 # define library target
 ################################################################################
 
-# Qt moc
-QT5_WRAP_CPP(VRN_QT_MOC_SOURCES ${VRN_QT_HEADERS})
-LIST(APPEND VRN_QT_SOURCES ${VRN_QT_MOC_SOURCES})
-
 # Qt ui and resources
-QT5_ADD_RESOURCES(VRN_QT_RESOURCES_RCC vrn_qt.qrc ${VRN_MODULE_QT_RESOURCES})
+SET(VRN_QT_RESOURCES
+    vrn_qt.qrc
+    ${VRN_MODULE_QT_RESOURCES}
+)
 
 # add msvc pch
 IF (VRN_PRECOMPILED_HEADER AND MSVC)
@@ -605,7 +601,7 @@ ENDIF()
 # define target
 ADD_LIBRARY(voreen_qt
     ${VRN_QT_SOURCES} ${VRN_QT_HEADERS} ${VRN_QT_HEADERS_NONMOC}
-    ${VRN_QT_RESOURCES_RCC}
+    ${VRN_QT_RESOURCES}
     ${VRN_QT_FORMS_HEADERS})
 ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
 IF(MSVC)
@@ -623,22 +619,21 @@ IF(VRN_GROUP_SOURCE_FILES)
 ENDIF()
 
 # add Qt dependency
-INCLUDE_DIRECTORIES(${QT_INCLUDE_DIRECTORIES})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}) #< location of generated ui headers in out-of-source builds
-ADD_DEFINITIONS(${QT_DEFINITIONS})
 TARGET_LINK_LIBRARIES(voreen_qt ${QT_LIBRARIES})
+SET_TARGET_PROPERTIES(voreen_qt PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
 
 # add gcc pch
 IF (VRN_PRECOMPILED_HEADER AND CMAKE_COMPILER_IS_GNUCXX)
     ADD_GCC_PRECOMPILED_HEADER(voreen_qt pch_qt.h)
 ENDIF()
 
-# Copy Qt5 DLLs using windeployqt.exe tool.
+# Copy Qt6 DLLs using windeployqt.exe tool.
 # The tool will be executed right after voreen_qt has been build, since
 # the binary will be scanned for Qt dependencies by the tool.
 IF(WIN32)
     UNSET(WINDEPLOYQT_EXE CACHE) #Old path might not longer exist.
-    FIND_PROGRAM(WINDEPLOYQT_EXE windeployqt PATHS ${Qt5_DIR}/../../../bin/)
+    FIND_PROGRAM(WINDEPLOYQT_EXE windeployqt PATHS ${Qt6_DIR}/../../../bin/)
     IF(NOT WINDEPLOYQT_EXE)
         MESSAGE(FATAL_ERROR "Unable to find windeployqt.exe")
     ENDIF()

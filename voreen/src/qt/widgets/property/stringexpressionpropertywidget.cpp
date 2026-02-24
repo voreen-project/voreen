@@ -48,7 +48,7 @@ StringExpressionPropertyWidget::StringExpressionPropertyWidget(StringExpressionP
 
     // label
     nameLabel_ = new CustomLabel(prop_->getGuiName().c_str(), const_cast<StringExpressionPropertyWidget*>(this),
-        const_cast<StringExpressionPropertyWidget*>(this), 0, false, true);
+        const_cast<StringExpressionPropertyWidget*>(this), Qt::WindowFlags(), false, true);
     nameLabel_->setMinimumWidth(80);
     //nameLabel_->setWordWrap(true);
     QFontInfo fontInfo(font());

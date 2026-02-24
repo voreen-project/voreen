@@ -43,6 +43,7 @@
 #include <QVBoxLayout>
 #include <QDesktopServices>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 namespace voreen {
 

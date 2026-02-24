@@ -161,7 +161,7 @@ QWidget *PlotSelectionEntryItemDelegate::createEditor(QWidget* parent, const QSt
             if (!label.empty())
                 editor->addItem(QString::fromStdString(label), i);
             else
-                editor->addItem(QString(i), i);
+                editor->addItem(QString::number(i), i);
         }
 
         return editor;

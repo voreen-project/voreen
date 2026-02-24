@@ -26,9 +26,12 @@
 #ifndef VRN_RENDERTARGETVIEWER_H
 #define VRN_RENDERTARGETVIEWER_H
 
+#include <map>
 #include <vector>
 
 #include <QAction>
+#include <QList>
+#include <QWidget>
 //#include <QtOpenGL/QGLWidget>
 
 #include "voreen/core/network/processornetwork.h"
@@ -40,6 +43,13 @@
 namespace tgt {
     class QtCanvas;
 }
+
+class QActionGroup;
+class QCloseEvent;
+class QKeyEvent;
+class QMenu;
+class QMouseEvent;
+class QWheelEvent;
 
 namespace voreen {
 

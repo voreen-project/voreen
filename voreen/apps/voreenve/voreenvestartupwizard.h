@@ -31,7 +31,7 @@ namespace voreen{
     class VoreenVeStartupWizard :public VoreenStartupWizard{
         Q_OBJECT
 public:
-    VoreenVeStartupWizard( QStringList recentWorkspaceNames, QStringList standardWorkspaceNames, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    VoreenVeStartupWizard(QStringList recentWorkspaceNames, QStringList standardWorkspaceNames, QWidget* parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
     //~VoreenVeStartupWizard();
     virtual QLabel* getLogoLabel();
 

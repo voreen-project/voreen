@@ -30,9 +30,22 @@
 
 #include <QDialog>
 #include <QApplication>
+#include <QGuiApplication>
 #include <QMainWindow>
-#include <QDesktopWidget>
 #include <QMoveEvent>
+#include <QScreen>
+
+namespace {
+
+QRect availableScreenGeometryForPoint(const QPoint& point) {
+    if (QScreen* screen = QGuiApplication::screenAt(point))
+        return screen->availableGeometry();
+    if (QScreen* screen = QGuiApplication::primaryScreen())
+        return screen->availableGeometry();
+    return QRect();
+}
+
+} // namespace
 
 namespace voreen {
 
@@ -84,7 +97,7 @@ void QProcessorWidget::setPosition(int x, int y) {
     }
 
     // check whether top-left corner lies inside the available screen geometry
-    QRect screenGeometry = QApplication::desktop()->availableGeometry(QPoint(xrel+25,yrel+25));
+    QRect screenGeometry = availableScreenGeometryForPoint(QPoint(xrel+25, yrel+25));
     if (screenGeometry.contains(QPoint(xrel+25,yrel+25))) {
         QWidget::move(xrel, yrel);
     }

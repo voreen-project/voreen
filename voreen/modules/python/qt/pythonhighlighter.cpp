@@ -41,7 +41,7 @@ void PythonHighlighter::setupComments() {
     m_singleLineCommentFormat.setForeground(Qt::darkGreen);
     m_singleLineCommentFormat.setFontItalic(true);
 
-    rule.pattern = QRegExp("#[^\n]*");
+    rule.pattern = QRegularExpression("#[^\n]*");
     rule.format = m_singleLineCommentFormat;
     m_rules.append(rule);
 }
@@ -52,12 +52,12 @@ void PythonHighlighter::setupNumberRules() {
     m_integerFormat.setForeground(Qt::magenta);
     m_floatFormat.setForeground(Qt::darkBlue);
 
-    rule.pattern = QRegExp("\\b[0-9]+\\b");
+    rule.pattern = QRegularExpression("\\b[0-9]+\\b");
     rule.format = m_integerFormat;
     m_rules.append(rule);
 
     // must be appended after integer rule to "overwrite" it.
-    rule.pattern = QRegExp("\\b[0-9]\\.[0-9]+\\b");
+    rule.pattern = QRegularExpression("\\b[0-9]\\.[0-9]+\\b");
     rule.format = m_floatFormat;
     m_rules.append(rule);
 }
@@ -103,7 +103,7 @@ void PythonHighlighter::setupKeywords() {
                     ;
 
     foreach(QString pattern, keywordPatterns) {
-        rule.pattern = QRegExp(pattern);
+        rule.pattern = QRegularExpression(pattern);
         rule.format = m_keywordFormat;
         m_rules.append(rule);
     }

@@ -107,7 +107,7 @@ void VolumeReaderSelectionDialog::setURL(const std::string& url) {
     // if the string overflows the label, add points in the middle (ElideMiddle) and set tooltip
     QString str = QString::fromStdString(url_);
     QFontMetrics fm(fileLabel_->font());
-    if (fileLabel_->width() < fm.width(str) ){
+    if (fileLabel_->width() < fm.horizontalAdvance(str)) {
         fileLabel_->setText(fileLabel_->fontMetrics().elidedText(str, Qt::ElideMiddle, fileLabel_->width()));
         fileLabel_->setToolTip(str);
     }

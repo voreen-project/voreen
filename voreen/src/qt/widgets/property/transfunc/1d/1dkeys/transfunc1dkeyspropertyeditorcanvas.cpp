@@ -40,6 +40,7 @@
 #include <QPainter>
 #include <QString>
 #include <QToolTip>
+#include <QTransform>
 #include <QImage>
 
 #include <iostream>
@@ -532,12 +533,11 @@ void TransFunc1DKeysPropertyEditorCanvas::paintEvent(QPaintEvent* event) {
     QPainter paint(this);
 
     // put origin in lower lefthand corner
-    QMatrix m;
+    QTransform m;
     m.translate(0.0, static_cast<float>(height())-1);
     m.scale(1.f, -1.f);
-    paint.setMatrix(m);
+    paint.setTransform(m);
     //draw white field
-    paint.setMatrixEnabled(true);
     paint.setRenderHint(QPainter::Antialiasing, false);
     paint.setPen(Qt::NoPen);
     paint.setBrush(Qt::white);
@@ -650,7 +650,7 @@ void TransFunc1DKeysPropertyEditorCanvas::drawAxes(QPainter* painter) {
 
     painter->scale(-1.f, 1.f);
     painter->rotate(180.f);
-    painter->drawText(static_cast<int>(width() - painter->fontMetrics().width(X_AXIS_TEXT) - 2.78f * AXIS_OFFSET), static_cast<int>(-1 * (origin.y+1.0f - 0.8f * AXIS_OFFSET)), X_AXIS_TEXT);
+    painter->drawText(static_cast<int>(width() - painter->fontMetrics().horizontalAdvance(X_AXIS_TEXT) - 2.78f * AXIS_OFFSET), static_cast<int>(-1 * (origin.y+1.0f - 0.8f * AXIS_OFFSET)), X_AXIS_TEXT);
     painter->drawText(static_cast<int>(1.6f * AXIS_OFFSET), static_cast<int>(-1 * (height() - 1.85f * AXIS_OFFSET)), Y_AXIS_TEXT);
     painter->rotate(180.f);
     painter->scale(-1.f, 1.f);
@@ -658,10 +658,11 @@ void TransFunc1DKeysPropertyEditorCanvas::drawAxes(QPainter* painter) {
 
 void TransFunc1DKeysPropertyEditorCanvas::drawHistogram(QPainter* painter) {
     if (!histogram_) {
-        painter->setMatrixEnabled(false);
+        painter->save();
+        painter->resetTransform();
         painter->setPen(Qt::red);
         painter->drawText(QRectF(0, 7, width() - 1, height() - 8), tr("No volume or calculating histogram"), QTextOption(Qt::AlignHCenter));
-        painter->setMatrixEnabled(true);
+        painter->restore();
     } else {
         if (histogramCache_ == 0 || histogramCache_->rect() != rect()) {
             delete histogramCache_;

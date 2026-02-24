@@ -38,6 +38,7 @@
 #include <QUrl>
 #include <QDesktopServices>
 #include <QErrorMessage>
+#include <QStandardPaths>
 
 namespace voreen {
 
@@ -80,7 +81,7 @@ void MatrixPropertyWidget::save() {
     QFileDialog fileDialog(this, tr("Save Matrix As..."), VoreenApplication::app()->getUserDataPath().c_str());
     fileDialog.setFileMode(QFileDialog::AnyFile);
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
-    fileDialog.setConfirmOverwrite(true);
+    fileDialog.setOption(QFileDialog::DontConfirmOverwrite, false);
     fileDialog.setOption(QFileDialog::DontUseNativeDialog);
 
     QStringList filters;

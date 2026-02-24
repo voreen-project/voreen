@@ -268,7 +268,7 @@ void SplitGraphicsView::deleteCurrentDragedArrow() {
 //---------------------------------------------------------------------------------------------------------------
 void SplitGraphicsView::wheelEvent(QWheelEvent* event) {
     QPointF newPos = propertyList_->pos();
-    newPos.setY(newPos.y() + event->delta()/2.0);
+    newPos.setY(newPos.y() + event->angleDelta().y() / 2.0);
 
     QRectF listBoundingRect = propertyList_->boundingRect();
 

@@ -74,7 +74,7 @@ AnimationLineWidgetBase::AnimationLineWidgetBase(AnimationInfoWidgetBase* parent
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     lineLayout_ = new QGridLayout();
-    lineLayout_->setMargin(0);
+    lineLayout_->setContentsMargins(0, 0, 0, 0);
     lineLayout_->setSpacing(30);
     setLayout(lineLayout_);
 
@@ -160,7 +160,7 @@ AnimationInfoWidgetBase::AnimationInfoWidgetBase(QWidget* parent)
 
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     mainLayout_ = new QVBoxLayout(this);
-    mainLayout_->setMargin(0);
+    mainLayout_->setContentsMargins(0, 0, 0, 0);
     mainLayout_->setSpacing(0);
     mainLayout_->setAlignment(Qt::AlignTop);
 }

@@ -44,7 +44,7 @@ VecPropertyWidget<WIDGETTYPE, VECTORPROP, ELEMTYPE>::VecPropertyWidget(VECTORPRO
     vectorProp_(prop)
 {
     myLayout_->setSpacing(0);
-    myLayout_->setMargin(1);
+    myLayout_->setContentsMargins(1, 1, 1, 1);
     myLayout_->setContentsMargins(0, 0, 0, 0);
 
     widgets_ = new WIDGETTYPE*[numComponents_];

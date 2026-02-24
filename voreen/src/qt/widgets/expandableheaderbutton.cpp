@@ -41,7 +41,7 @@ ExpandableHeaderButton::ExpandableHeaderButton(const QString& name, QWidget* par
 {
     QHBoxLayout* frameLayout = new QHBoxLayout(this);
     frameLayout->setSpacing(0);
-    frameLayout->setMargin(0);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
     setFrameShape(QFrame::StyledPanel);
 
     expandLabel_ = new QLabel();

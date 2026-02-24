@@ -174,7 +174,7 @@ static void cpu_getid(int func, int* data) {
 }
 #  endif
 #elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM64)
-#  if (defined(__GNUC__) && ((__GNUC__ > 2) || (__GNUC__ == 2 && __GNUC_MINOR__ >= 16)))
+#  if defined(__linux__) && (defined(__GNUC__) && ((__GNUC__ > 2) || (__GNUC__ == 2 && __GNUC_MINOR__ >= 16)))
 #    define CPU__IMPL_GETAUXVAL
 #    include <sys/auxv.h>
 #  endif
@@ -184,7 +184,7 @@ static once cpu_once = ONCE_INIT;
 
 #if defined(CPU_ARCH_X86) || defined(CPU_ARCH_X86_64)
 static unsigned int cpuinfo[8 * 4] = { 0, };
-#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM_64)
+#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM64)
 static unsigned long cpuinfo[2] = { 0, };
 #endif
 
@@ -194,9 +194,14 @@ static void cpu_init(void) {
   for (i = 0 ; i < 8 ; i++) {
     cpu_getid(i, (int*) &(cpuinfo[i * 4]));
   }
-#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM_64)
+#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM64)
+#  if defined(CPU__IMPL_GETAUXVAL)
   cpuinfo[0] = getauxval (AT_HWCAP);
   cpuinfo[1] = getauxval (AT_HWCAP2);
+#  else
+  cpuinfo[0] = 0;
+  cpuinfo[1] = 0;
+#  endif
 #endif
 }
 
@@ -206,14 +211,14 @@ namespace tgt {
 int cpuFeatureCheck (enum PSnipCPUFeature feature) {
 #if defined(CPU_ARCH_X86) || defined(CPU_ARCH_X86_64)
   unsigned int i, r, b;
-#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM_64)
+#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM64)
   unsigned long b, i;
 #endif
 
 #if defined(CPU_ARCH_X86) || defined(CPU_ARCH_X86_64)
   if ((feature & CPU_FEATURE_CPU_MASK) != CPU_FEATURE_X86)
     return 0;
-#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM_64)
+#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM64)
   if ((feature & CPU_FEATURE_CPU_MASK) != CPU_FEATURE_ARM)
     return 0;
 #else
@@ -239,7 +244,7 @@ int cpuFeatureCheck (enum PSnipCPUFeature feature) {
     return 0;
 
   return (cpuinfo[(i * 4) + r] >> b) & 1;
-#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM_64)
+#elif defined(CPU_ARCH_ARM) || defined(CPU_ARCH_ARM64)
   b = 1 << ((feature & 0xff) - 1);
   i = cpuinfo[(feature >> 0x08) & 0xff];
   return (cpuinfo[(feature >> 0x08) & 0xff] & b) == b;

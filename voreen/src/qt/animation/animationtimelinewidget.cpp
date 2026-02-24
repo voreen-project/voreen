@@ -117,7 +117,7 @@ AnimationTimelineWidget::AnimationTimelineWidget(Animation* animation, Animation
     connect(parent, SIGNAL(currentFrameChanged(int)), overviewTimeline_, SLOT(setCurrentFrame(int)));
     connect(overviewTimeline_, SIGNAL(currentFrameChanged(int)), parent, SLOT(setCurrentFrame(int)));
     connect(this, SIGNAL(scrollBarOrder(int)), overviewTimeline_, SLOT(scrollBarOrder(int)));
-    connect(this, SIGNAL(sceneOrder(QMatrix)), overviewTimeline_, SLOT(sceneOrder(QMatrix)));
+    connect(this, SIGNAL(sceneOrder(QTransform)), overviewTimeline_, SLOT(sceneOrder(QTransform)));
 
     connect(overviewTimeline_, SIGNAL(addKeyframe(QPointF)), this, SLOT(addKeyframe(QPointF)));
     connect(overviewTimeline_, SIGNAL(removeKeyframe(KeyframeGraphicsItem*)), this, SLOT(removeKeyframe(KeyframeGraphicsItem*)));
@@ -126,7 +126,7 @@ AnimationTimelineWidget::AnimationTimelineWidget(Animation* animation, Animation
     connect(overviewTimeline_, SIGNAL(recordAt(int)), this, SLOT(recordAt(int)));
     connect(this, SIGNAL(playingSignal(bool)), overviewTimeline_, SLOT(playingStateChanged(bool)));
 
-    mainLayout_->setMargin(1);
+    mainLayout_->setContentsMargins(1, 1, 1, 1);
     mainLayout_->setSpacing(1);
     mainLayout_->setAlignment(Qt::AlignTop);
 
@@ -930,4 +930,3 @@ void AnimationTimelineWidget::setApplicationModeConfig(ApplicationModeConfigurat
 }
 
 } // namespace voreen
-

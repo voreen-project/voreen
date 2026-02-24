@@ -43,25 +43,25 @@ void SyntaxHighlighter::highlightBlock(const QString& text) {
         return;
 
     // check out all rules
-    foreach (highlightRule_t rule, m_rules) {
-        QRegExp expression(rule.pattern);
-        int index = text.indexOf(expression);
-
-        while (index >= 0) {
-            int length = expression.matchedLength();
-            setFormat(index, length, rule.format);
-            index = text.indexOf(expression, index + length);
+    foreach (const highlightRule_t& rule, m_rules) {
+        QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
+        while (matchIterator.hasNext()) {
+            const QRegularExpressionMatch match = matchIterator.next();
+            setFormat(match.capturedStart(), match.capturedLength(), rule.format);
         }
     }
 
     setCurrentBlockState(0);
 
     int startIndex = 0;
-    if (previousBlockState() != 1)
-        startIndex = text.indexOf(m_commentStartExpression);
+    if (previousBlockState() != 1) {
+        const QRegularExpressionMatch startMatch = m_commentStartExpression.match(text);
+        startIndex = startMatch.capturedStart();
+    }
 
     while (startIndex >= 0) {
-        int endIndex = text.indexOf(m_commentEndExpression, startIndex);
+        const QRegularExpressionMatch endMatch = m_commentEndExpression.match(text, startIndex);
+        int endIndex = endMatch.capturedStart();
         int commentLength;
 
         if (endIndex == startIndex)
@@ -71,10 +71,11 @@ void SyntaxHighlighter::highlightBlock(const QString& text) {
             setCurrentBlockState(1);
             commentLength = text.length() - startIndex;
         } else
-            commentLength = endIndex - startIndex + m_commentEndExpression.matchedLength();
+            commentLength = endIndex - startIndex + endMatch.capturedLength();
 
         setFormat(startIndex, commentLength, m_multiLineCommentFormat);
-        startIndex = text.indexOf(m_commentStartExpression, startIndex + commentLength);
+        const QRegularExpressionMatch nextStartMatch = m_commentStartExpression.match(text, startIndex + commentLength);
+        startIndex = nextStartMatch.capturedStart();
     }
 }
 

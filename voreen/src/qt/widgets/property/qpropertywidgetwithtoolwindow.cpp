@@ -32,10 +32,20 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QGuiApplication>
 #include <QMainWindow>
-#include <QDesktopWidget>
+#include <QScreen>
 
 namespace {
+
+QRect availableScreenGeometryForPoint(const QPoint& point) {
+    if (QScreen* screen = QGuiApplication::screenAt(point))
+        return screen->availableGeometry();
+    if (QScreen* screen = QGuiApplication::primaryScreen())
+        return screen->availableGeometry();
+    return QRect();
+}
+
     const std::string META_DATA_NAME = "ToolWindow";
 }
 
@@ -123,7 +133,7 @@ void QPropertyWidgetWithToolWindow::createToolWindow(Qt::DockWidgetArea area, co
         }
 
         // check whether serialized left-top corner lies inside the available screen geometry
-        QRect screenGeometry = QApplication::desktop()->availableGeometry(QPoint(xrel+25, yrel+25));
+        QRect screenGeometry = availableScreenGeometryForPoint(QPoint(xrel+25, yrel+25));
         if (screenGeometry.contains(QPoint(xrel+25, yrel+25))) {
             toolWindow_->move(xrel, yrel);
         }

@@ -19,11 +19,6 @@ IF(UNIX)
             MESSAGE(STATUS "Found libXi at ${LIBXI}, using it to handle touch events.")
             SET(MOD_LIBRARIES ${LIBXI})
             LIST(APPEND VRN_DEFINITIONS "-DUSE_XINPUT2")
-            
-            # TODO: suitable position?
-            LIST(APPEND VRN_QT_COMPONENTS X11Extras)
-            LIST(APPEND QT_LIBRARIES Qt5::X11Extras)
-            
         ENDIF()
     ENDIF()
 ENDIF()

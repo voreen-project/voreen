@@ -48,15 +48,15 @@ void OpenCLHighlighter::setupComments() {
     m_singleLineCommentFormat.setForeground(Qt::darkGreen);
     m_singleLineCommentFormat.setFontItalic(true);
 
-    rule.pattern = QRegExp("//[^\n]*");
+    rule.pattern = QRegularExpression("//[^\n]*");
     rule.format = m_singleLineCommentFormat;
     m_rules.append(rule);
 
     m_multiLineCommentFormat.setForeground(Qt::darkGreen);
     m_multiLineCommentFormat.setFontItalic(true);
 
-    m_commentStartExpression = QRegExp("/\\*");
-    m_commentEndExpression = QRegExp("\\*/");
+    m_commentStartExpression = QRegularExpression("/\\*");
+    m_commentEndExpression = QRegularExpression("\\*/");
 }
 
 void OpenCLHighlighter::setupPreprocessor() {
@@ -64,7 +64,7 @@ void OpenCLHighlighter::setupPreprocessor() {
 
     // highlight each line beginning with #
     highlightRule_t rule;
-    rule.pattern = QRegExp("#[^\n]*");
+    rule.pattern = QRegularExpression("#[^\n]*");
     rule.format = m_preprocessorFormat;
     m_rules.append(rule);
 }
@@ -75,12 +75,12 @@ void OpenCLHighlighter::setupNumberRules() {
     m_integerFormat.setForeground(Qt::magenta);
     m_floatFormat.setForeground(Qt::darkBlue);
 
-    rule.pattern = QRegExp("\\b[0-9]+\\b");
+    rule.pattern = QRegularExpression("\\b[0-9]+\\b");
     rule.format = m_integerFormat;
     m_rules.append(rule);
 
     // must be appended after integer rule to "overwrite" it.
-    rule.pattern = QRegExp("\\b[0-9]\\.[0-9]+\\b");
+    rule.pattern = QRegularExpression("\\b[0-9]\\.[0-9]+\\b");
     rule.format = m_floatFormat;
     m_rules.append(rule);
 }
@@ -109,7 +109,7 @@ void OpenCLHighlighter::setupRegisters() {
         ;
 
     foreach(QString pattern, keywordPatterns) {
-        rule.pattern = QRegExp(pattern);
+        rule.pattern = QRegularExpression(pattern);
         rule.format = m_registerFormat;
         m_rules.append(rule);
     }
@@ -191,7 +191,7 @@ void OpenCLHighlighter::setupBuiltInFunctions() {
         ;
 
     foreach(QString pattern, keywordPatterns) {
-        rule.pattern = QRegExp(pattern);
+        rule.pattern = QRegularExpression(pattern);
         rule.format = m_builtInFunctionFormat;
         m_rules.append(rule);
     }
@@ -233,7 +233,7 @@ void OpenCLHighlighter::setupKeywords() {
                     ;
 
     foreach(QString pattern, keywordPatterns) {
-        rule.pattern = QRegExp(pattern);
+        rule.pattern = QRegularExpression(pattern);
         rule.format = m_keywordFormat;
         m_rules.append(rule);
     }
@@ -275,7 +275,7 @@ void OpenCLHighlighter::setupKeywords() {
                      ;
 
     foreach(QString pattern, constantPatterns) {
-        rule.pattern = QRegExp(pattern);
+        rule.pattern = QRegularExpression(pattern);
         rule.format = m_keywordFormat;
         m_rules.append(rule);
     }
@@ -309,7 +309,7 @@ void OpenCLHighlighter::setupReservedKeywords() {
                     //<< "\\bsizeof\\b" << "\\bcast\\b" << "\\bnamespace\\b" << "\\busing\\b";
 
     //foreach(QString pattern, keywordPatterns) {
-        //rule.pattern = QRegExp(pattern);
+        //rule.pattern = QRegularExpression(pattern);
         //rule.format = m_reservedKeywordFormat;
         //m_rules.append(rule);
     //}

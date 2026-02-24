@@ -27,6 +27,7 @@
 #define VRN_ENTEREXITPUSHBUTTON_H
 
 #include <QPushButton>
+#include <QEnterEvent>
 
 #include "voreen/qt/voreenqtapi.h"
 
@@ -40,7 +41,7 @@ public:
     EnterExitPushButton(const QIcon& icon, const QString& text, QWidget* parent = 0);
 
 protected:
-    void enterEvent(QEvent* event);
+    void enterEvent(QEnterEvent* event);
     void leaveEvent(QEvent* event);
 
 signals:

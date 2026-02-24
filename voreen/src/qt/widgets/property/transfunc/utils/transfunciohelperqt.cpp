@@ -36,6 +36,7 @@
 #include <QList>
 #include <QUrl>
 #include <QDesktopServices>
+#include <QStandardPaths>
 
 namespace voreen {
 

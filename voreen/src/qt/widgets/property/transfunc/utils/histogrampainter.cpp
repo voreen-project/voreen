@@ -30,6 +30,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPoint>
+#include <QTransform>
 
 namespace voreen {
 
@@ -88,11 +89,10 @@ void HistogramPainter::paintEvent(QPaintEvent* event) {
         QPainter paint(cache_);
 
         // put origin in lower lefthand corner
-        QMatrix m;
+        QTransform m;
         m.translate(0.0, static_cast<float>(height())-1);
         m.scale(1.f, -1.f);
-        paint.setMatrix(m);
-        paint.setMatrixEnabled(true);
+        paint.setTransform(m);
 
         if (histogram_) {
             // draw histogram

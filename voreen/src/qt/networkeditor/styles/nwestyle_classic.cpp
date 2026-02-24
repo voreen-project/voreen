@@ -58,6 +58,7 @@
 #include <QPainterPath>
 #include <QStyle>
 #include <QStyleOption>
+#include <QTransform>
 #include <QtSvg/QSvgRenderer>
 
 namespace voreen{
@@ -176,7 +177,7 @@ QPolygonF createArrowHead(QPointF helpPoint, const QPointF& basePoint) {
          else
             angle = acos(-p.y()/sp);
 
-    QMatrix mat;
+    QTransform mat;
     mat.translate(basePoint.x(),basePoint.y());
     mat.rotate(angle * 180.f / tgt::PI);
     mat.translate(-basePoint.x(),-basePoint.y());

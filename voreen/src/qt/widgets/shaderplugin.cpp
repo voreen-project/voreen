@@ -35,6 +35,7 @@
 #include <QLabel>
 #include <QShortcut>
 #include <QDesktopServices>
+#include <QStandardPaths>
 
 namespace voreen {
 

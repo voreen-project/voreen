@@ -63,7 +63,7 @@ void ClickableLabel::mouseDoubleClickEvent(QMouseEvent* e) {
     e->ignore();
 }
 
-void ClickableLabel::enterEvent(QEvent* e) {
+void ClickableLabel::enterEvent(QEnterEvent* e) {
     setCursor(hoverCursor_);
     setForegroundRole(QPalette::Text);
     e->ignore();

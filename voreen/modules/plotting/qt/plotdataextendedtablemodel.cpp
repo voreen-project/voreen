@@ -115,7 +115,7 @@ QVariant PlotDataExtendedTableModel::data(const QModelIndex &index, int role) co
         return QVariant(Qt::AlignRight | Qt::AlignVCenter);
     }
 
-    if (index.row() < addLines_ && (role == Qt::DisplayRole || role == Qt::BackgroundColorRole))
+    if (index.row() < addLines_ && (role == Qt::DisplayRole || role == Qt::BackgroundRole))
         return QVariant();
 
     if ((index.row() >=  addLines_) && (role == Qt::DisplayRole))

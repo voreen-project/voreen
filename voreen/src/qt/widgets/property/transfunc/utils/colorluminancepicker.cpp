@@ -153,8 +153,8 @@ void ColorLuminancePicker::paintEvent(QPaintEvent* /*event*/) {
     p.drawPixmap(1, C_OFF_, *pix_);
     const QPalette &g = palette();
     qDrawShadePanel(&p, r, g, true);
-    p.setPen(g.foreground().color());
-    p.setBrush(g.foreground());
+    p.setPen(g.color(QPalette::WindowText));
+    p.setBrush(g.brush(QPalette::WindowText));
 
     // arrow
     QPolygon a;

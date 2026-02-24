@@ -54,6 +54,7 @@
 #include <QMessageBox>
 #include <QUrl>
 #include <QSettings>
+#include <QStandardPaths>
 
 namespace voreen {
 
@@ -307,7 +308,7 @@ void VolumeIOHelper::showFileSaveDialog(const VolumeBase* volume) {
     saveAsDialog.setViewMode(QFileDialog::Detail);
     saveAsDialog.setAcceptMode(QFileDialog::AcceptSave);
     saveAsDialog.setFileMode(QFileDialog::AnyFile);
-    saveAsDialog.setConfirmOverwrite(true);
+    saveAsDialog.setOption(QFileDialog::DontConfirmOverwrite, false);
 
     // execute dialog
     if (saveAsDialog.exec() != QDialog::Accepted)

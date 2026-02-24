@@ -262,7 +262,6 @@ void NetworkEditor::setWorkspace(Workspace* workspace)  {
 
     generateGraphicsItems();
 
-    resetMatrix();
     resetTransform();
 
     // do not scale immediately when we might be in visualization mode and this window might
@@ -1528,7 +1527,7 @@ void NetworkEditor::initilizeEditorButtons() {
     pal.setColor(generalLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     generalLinkingLayerButtonContainer_->setPalette(pal);
     QBoxLayout* generalLinkingLayerButtonLayout = new QHBoxLayout(generalLinkingLayerButtonContainer_);
-    generalLinkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
+    generalLinkingLayerButtonLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     //create buttons
     hideCameraLinksButton_ = new QToolButton;
         hideCameraLinksButton_->setIcon(QIcon(":/qt/icons/hide-linking-camera.png"));
@@ -1560,7 +1559,7 @@ void NetworkEditor::initilizeEditorButtons() {
     pal.setColor(cameraLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     cameraLinkingLayerButtonContainer_->setPalette(pal);
     QBoxLayout* cameraLinkingLayerButtonLayout = new QHBoxLayout(cameraLinkingLayerButtonContainer_);
-    cameraLinkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
+    cameraLinkingLayerButtonLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     //create buttons
     linkCamerasAutoButton_ = new QToolButton;
         linkCamerasAutoButton_->setIcon(QIcon(":/qt/icons/linking-camera-auto.png"));
@@ -1590,7 +1589,7 @@ void NetworkEditor::initilizeEditorButtons() {
     pal.setColor(portSizeLinkingLayerButtonContainer_->backgroundRole(), currentStyle_->getButtonBackgroundColor());
     portSizeLinkingLayerButtonContainer_->setPalette(pal);
     QBoxLayout* portSizeLinkingLayerButtonLayout = new QHBoxLayout(portSizeLinkingLayerButtonContainer_);
-    portSizeLinkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
+    portSizeLinkingLayerButtonLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     //create buttons
     linkPortSizeAutoButton_ = new QToolButton;
         linkPortSizeAutoButton_->setIcon(QIcon(":/qt/icons/linking-port-auto.png"));
@@ -1622,7 +1621,7 @@ void NetworkEditor::initilizeEditorButtons() {
     linkingLayerButtonContainer_->setMinimumSize(NWEButtonBackgroundMargin*2+NWEMainButtonSize.width(),1);
 
     QBoxLayout* linkingLayerButtonLayout = new QVBoxLayout(linkingLayerButtonContainer_);
-    linkingLayerButtonLayout->setMargin(NWEButtonBackgroundMargin);
+    linkingLayerButtonLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     linkingLayerButtonLayout->addSpacing(NWEMainButtonSize.height()+NWEButtonBackgroundMargin+NWEMarginLayerToLinking);
     //create buttons
     generalLinkingButton_ = new QToolButton;
@@ -1656,7 +1655,7 @@ void NetworkEditor::initilizeEditorButtons() {
 //layer buttons
     layerButtonContainer_ = new QWidget(this);
     QBoxLayout* layerButtonLayout = new QHBoxLayout(layerButtonContainer_);
-    layerButtonLayout->setMargin(NWEButtonBackgroundMargin);
+    layerButtonLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     //create buttons
     dataFlowLayerButton_ = new QToolButton;
         dataFlowLayerButton_->setIcon(QIcon(":/qt/icons/dataflow-mode.png"));
@@ -1682,7 +1681,7 @@ void NetworkEditor::initilizeEditorButtons() {
 //stop network button
     stopButtonContainer_ = new QWidget(this);
     QBoxLayout* stopButtonLayout = new QHBoxLayout(stopButtonContainer_);
-    stopButtonLayout->setMargin(NWEButtonBackgroundMargin);
+    stopButtonLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     stopNetworkEvaluatorButton_ = new QToolButton;
     stopNetworkEvaluatorButton_->setIcon(QIcon(":/qt/icons/player-pause.png"));
     stopNetworkEvaluatorButton_->setIconSize(NWEMainButtonSize);
@@ -1694,7 +1693,7 @@ void NetworkEditor::initilizeEditorButtons() {
 //navigation
     navigationButtonContainer_ = new QWidget(this);
     QHBoxLayout* navigationButtonContainerLayout = new QHBoxLayout(navigationButtonContainer_);
-    navigationButtonContainerLayout->setMargin(NWEButtonBackgroundMargin);
+    navigationButtonContainerLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     //create buttons
     selectCursorButton_ = new QToolButton;
         selectCursorButton_->setIcon(QIcon(":/qt/icons/cursor_arrow.svg"));
@@ -1718,7 +1717,7 @@ void NetworkEditor::initilizeEditorButtons() {
 //layout
     layoutButtonContainer_ = new QWidget(this);
     QHBoxLayout* layoutButtonContainerLayout = new QHBoxLayout(layoutButtonContainer_);
-    layoutButtonContainerLayout->setMargin(NWEButtonBackgroundMargin);
+    layoutButtonContainerLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
 
     centerViewButton_ = new QToolButton;
         centerViewButton_->setIcon(QIcon(":/qt/icons/center.png"));
@@ -1737,7 +1736,7 @@ void NetworkEditor::initilizeEditorButtons() {
 //documentation
     documentationButtonContainer_ = new QWidget(this);
     QHBoxLayout* documenationButtonContainerLayout = new QHBoxLayout(documentationButtonContainer_);
-    documenationButtonContainerLayout->setMargin(NWEButtonBackgroundMargin);
+    documenationButtonContainerLayout->setContentsMargins(NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin, NWEButtonBackgroundMargin);
     documentationButton_ = new QToolButton(this);
         documentationButton_->setIcon(QIcon(":/qt/icons/docu-icons.png"));
         documentationButton_->setIconSize(NWEMainButtonSize);
@@ -2088,7 +2087,6 @@ void NetworkEditor::sortSubNetwork() {
 
 
 void NetworkEditor::setViewCenter() {
-    resetMatrix();
     resetTransform();
     if (!getProcessorNetwork()){
         centerOn(0.0,0.0);
@@ -2226,7 +2224,8 @@ void NetworkEditor::resizeEvent(QResizeEvent* event) {
 }
 
 void NetworkEditor::wheelEvent(QWheelEvent *event) {
-    float factor = pow(2.0, event->delta() / 360.0);
+    const int delta = event->angleDelta().y();
+    float factor = pow(2.0f, static_cast<float>(delta) / 360.0f);
     scale(factor, factor);
 }
 

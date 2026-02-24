@@ -42,6 +42,7 @@
 #include "voreen/core/utils/commandlineparser.h"
 
 #include <QDesktopServices>
+#include <QActionGroup>
 #include <QMenuBar>
 #include <QToolBar>
 #include <QMdiSubWindow>

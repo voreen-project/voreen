@@ -98,7 +98,7 @@ VolumeURLPropertyWidget::VolumeURLPropertyWidget(VolumeURLProperty* volumeHandle
     QHBoxLayout* volumeLayout = new QHBoxLayout();
     volumeLayout->setContentsMargins(0, 0, 4, 0);
     volumeLayout->setSpacing(4);
-    volumeLayout->setMargin(0);
+    volumeLayout->setContentsMargins(0, 0, 0, 0);
     volumeLayout->addWidget(loadButton_, 1);
     volumeLayout->addWidget(clearButton_, 1);
 

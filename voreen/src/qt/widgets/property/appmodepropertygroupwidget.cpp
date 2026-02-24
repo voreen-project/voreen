@@ -55,7 +55,7 @@ AppModePropertyGroupWidget::AppModePropertyGroupWidget(const std::string& groupN
     mainLayout_ = new QVBoxLayout();
     mainLayout_->setContentsMargins(1, 1, 1, 1);
     mainLayout_->setSpacing(0);
-    //mainLayout_->setMargin(0);
+    //mainLayout_->setContentsMargins(0, 0, 0, 0);
     setLayout(mainLayout_);
 
     header_ = new ExpandableHeaderButton(groupName.c_str(), this, expanded_);

@@ -44,7 +44,7 @@ inline QStringList stringListFromStdString(const std::string& string) {
 
 // reinterpret_cast to store the pointers as integer values in variants
 inline QVariant processorToVariant(Processor* processor) {
-    return qVariantFromValue((void*)processor);
+    return QVariant::fromValue(static_cast<void*>(processor));
 }
 
 inline Processor* variantToProcessor(const QVariant& variant) {
@@ -52,7 +52,7 @@ inline Processor* variantToProcessor(const QVariant& variant) {
 }
 
 inline QVariant propertyToVariant(Property* property) {
-    return qVariantFromValue((void*)property);
+    return QVariant::fromValue(static_cast<void*>(property));
 }
 
 inline Property* variantToProperty(const QVariant& variant) {

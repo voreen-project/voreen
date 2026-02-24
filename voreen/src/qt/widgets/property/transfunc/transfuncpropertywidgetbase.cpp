@@ -39,6 +39,7 @@
 #include "tgt/glcontextmanager.h"
 
 #include <QMenu>
+#include <QActionGroup>
 #include <QToolButton>
 #include <QToolTip>
 

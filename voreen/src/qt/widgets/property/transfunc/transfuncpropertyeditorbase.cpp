@@ -73,7 +73,7 @@ void TransFuncPropertyEditorBase::layoutComponents() {
     splitter->addWidget(right);
     //create main layout
     QHBoxLayout* mainLayout = new QHBoxLayout();
-    mainLayout->setMargin(4);
+    mainLayout->setContentsMargins(4, 4, 4, 4);
     mainLayout->addWidget(splitter);
     //set main layout
     setLayout(mainLayout);

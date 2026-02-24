@@ -2,7 +2,7 @@ name: Build and Test (all modules, no opencl)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main qt6 ]
   pull_request:
     branches: [ main ]
 
@@ -31,10 +31,10 @@ jobs:
             libvtk9-dev libgdcm-dev libgdcm-tools \
             xvfb
 
-      - name: Install Qt 5.15.2
+      - name: Install Qt 6.10.2
         uses: jurplel/install-qt-action@v4
         with:
-          version: '5.15.2'
+          version: '6.10.2'
           host: 'linux'
           target: 'desktop'
           arch: 'gcc_64'
@@ -110,13 +110,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Qt 5.15.2
+      - name: Install Qt 6.10.2
         uses: jurplel/install-qt-action@v4
         with:
-          version: '5.15.2'
+          version: '6.10.2'
           host: 'windows'
           target: 'desktop'
-          arch: 'win64_msvc2019_64'
+          arch: 'win64_msvc2022_64'
           cache: 'true'
 
       - name: Download pre-built 3rd-party libraries

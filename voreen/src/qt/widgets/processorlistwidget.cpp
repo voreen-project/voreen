@@ -38,6 +38,7 @@
 #include <QMimeData>
 #include <QDrag>
 #include <QAction>
+#include <QActionGroup>
 #include <QApplication>
 #include <QContextMenuEvent>
 #include <QHeaderView>
@@ -648,7 +649,7 @@ void ProcessorListTreeWidget::mousePressEvent(QMouseEvent *event) {
     //drag->setPixmap(pixmap);
     //drag->setHotSpot(event->pos()-item->pos());
 
-    drag->start(Qt::CopyAction);
+    drag->exec(Qt::CopyAction);
 
 }
 

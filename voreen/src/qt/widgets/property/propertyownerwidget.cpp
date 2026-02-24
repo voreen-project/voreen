@@ -58,7 +58,7 @@ PropertyOwnerWidget::PropertyOwnerWidget(PropertyOwner* propertyOwner, QWidget* 
     mainLayout_ = new QVBoxLayout(this);
     mainLayout_->setContentsMargins(0, 0, 0, 0);
     mainLayout_->setSpacing(0);
-    mainLayout_->setMargin(0);
+    mainLayout_->setContentsMargins(0, 0, 0, 0);
 
     //setUpdatesEnabled(false); //?
 

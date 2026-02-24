@@ -27,7 +27,7 @@
 #define VRN_PROGRESSDIALOG_H
 
 #include <QProgressDialog>
-#include <QTime>
+#include <QElapsedTimer>
 #include <memory>
 
 #include "voreen/core/io/progressbar.h"
@@ -54,7 +54,7 @@ public:
 protected:
 
     QWidget* parent_;
-    QTime updateTime_;
+    QElapsedTimer updateTime_;
     std::unique_ptr<QProgressDialog> progressDialog_;
 };
 

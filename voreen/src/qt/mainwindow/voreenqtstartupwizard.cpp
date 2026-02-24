@@ -28,6 +28,7 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QFileDialog>
+#include <QStandardPaths>
 #include <QUrl>
 #include <QDesktopServices>
 #include "tgt/assert.h"

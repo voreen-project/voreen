@@ -47,7 +47,9 @@
 #include "processors/volumeuncertaintymeasure.h"
 #include "processors/slicepoints/slicepointrenderer2d.h"
 #include "processors/slicepoints/slicepointrenderer3d.h"
+#ifdef VRN_STAGING_HAS_SIMDRAYCASTER
 #include "processors/simdraycaster/simdraycaster.h"
+#endif
 
 namespace voreen {
 
@@ -78,7 +80,9 @@ StagingModule::StagingModule(const std::string& modulePath)
     registerSerializableType(new VolumeUncertaintyMeasure());
     registerSerializableType(new SlicePointRenderer2D());
     registerSerializableType(new SlicePointRenderer3D());
+#ifdef VRN_STAGING_HAS_SIMDRAYCASTER
     registerSerializableType(new SIMDRayCaster());
+#endif
     #ifdef GL_COMPUTE_SHADER //disable compilation for old gl headers
         registerSerializableType(new Particles());
     #endif

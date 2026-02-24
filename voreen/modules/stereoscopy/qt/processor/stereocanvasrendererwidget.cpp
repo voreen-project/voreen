@@ -59,7 +59,7 @@ void StereoCanvasRendererWidget::initialize() {
     }
 
     // Create canvas, request stereo rendering.
-    canvasWidget_ = new tgt::QtCanvas(canvasRenderer->getGuiName(), getSize(), tgt::GLCanvas::RGBADDQ, this, 0);
+    canvasWidget_ = new tgt::QtCanvas(canvasRenderer->getGuiName(), getSize(), tgt::GLCanvas::RGBADDQ, this, Qt::WindowFlags());
     if(!canvasWidget_->isQuadBuffered()) { // Check, if request was successful.
         OptionProperty<StereoCanvasRenderer::StereoMode>* prop = dynamic_cast<OptionProperty<StereoCanvasRenderer::StereoMode>* >(canvasRenderer->getProperty("stereoModeProp"));
         tgtAssert(prop, "No stereoModeProp found");

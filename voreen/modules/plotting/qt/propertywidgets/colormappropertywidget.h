@@ -40,7 +40,7 @@ class ColorMapProperty;
 class ClickableColorMapLabel : public QLabel {
     Q_OBJECT
 public:
-    ClickableColorMapLabel(const QString& text, QWidget* parent=0, Qt::WindowFlags f=0);
+    ClickableColorMapLabel(const QString& text, QWidget* parent=0, Qt::WindowFlags f=Qt::WindowFlags());
     void setColorMap(const ColorMap& cm);
 
 signals:

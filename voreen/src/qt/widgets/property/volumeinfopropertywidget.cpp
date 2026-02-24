@@ -89,13 +89,13 @@ VolumeInfoPropertyWidget::VolumeInfoPropertyWidget(VolumeInfoProperty* volumeInf
     QHBoxLayout* volumeLayout = new QHBoxLayout();
     volumeLayout->setContentsMargins(0, 0, 4, 0);
     volumeLayout->setSpacing(4);
-    volumeLayout->setMargin(0);
+    volumeLayout->setContentsMargins(0, 0, 0, 0);
 
     mainLayout->addLayout(volumeLayout);
 
     previewLayout->addWidget(previewLabel_);
     previewLayout->addLayout(infoLayout);
-    infoLayout->addWidget(pathLabel_, 0, 0, 1, 2, 0);
+    infoLayout->addWidget(pathLabel_, 0, 0, 1, 2, Qt::Alignment());
     infoLayout->addWidget(dimensionLabelCaption_, 1, 0);
     infoLayout->addWidget(spacingLabelCaption_, 2, 0);
     infoLayout->addWidget(memSizeLabelCaption_, 3, 0);

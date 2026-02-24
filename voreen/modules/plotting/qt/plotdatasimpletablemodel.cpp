@@ -80,16 +80,16 @@ QVariant PlotDataSimpleTableModel::data(const QModelIndex &index, int role) cons
     if (role == Qt::DisplayRole)
         return getCellAt(index.row(), index.column());
 
-    if (role == Qt::BackgroundColorRole && getPlotCellAt(index.row(),index.column()).isHighlighted()) {
+    if (role == Qt::BackgroundRole && getPlotCellAt(index.row(),index.column()).isHighlighted()) {
         return highlightedColor_;
     }
-    else if (role == Qt::BackgroundColorRole && selectedColumn_ == index.column()) {
+    else if (role == Qt::BackgroundRole && selectedColumn_ == index.column()) {
         return selectColumnColor_;
     }
-    else if (role == Qt::BackgroundColorRole && pData_->getKeyColumnCount() > index.column()) {
+    else if (role == Qt::BackgroundRole && pData_->getKeyColumnCount() > index.column()) {
         return keyColumnColor_;
     }
-    else if (role == Qt::BackgroundColorRole && pData_->getKeyColumnCount() <= index.column()) {
+    else if (role == Qt::BackgroundRole && pData_->getKeyColumnCount() <= index.column()) {
         return dataColumnColor_;
     }
 

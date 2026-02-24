@@ -338,7 +338,7 @@ bool VoreenQtWorkspaceHandler::saveWorkspaceAs() {
     QFileDialog fileDialog(mainWindow_, tr("Save Workspace As..."), QDir(lastUsedWorkspacePath_).absolutePath());
     fileDialog.setFileMode(QFileDialog::AnyFile);
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
-    fileDialog.setConfirmOverwrite(true);
+    fileDialog.setOption(QFileDialog::DontConfirmOverwrite, false);
     fileDialog.setOption(QFileDialog::DontUseNativeDialog);
 
     QStringList filters;

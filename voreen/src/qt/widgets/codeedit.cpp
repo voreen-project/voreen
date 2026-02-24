@@ -50,7 +50,7 @@ CodeEdit::CodeEdit(bool readonly, int fontSize, QWidget* parent)
     font.setPointSize(fontSize);
     setFont(font);
     QFontMetrics metrics(font);
-    setTabStopWidth(metrics.width(" ")*4);
+    setTabStopDistance(metrics.horizontalAdvance(QLatin1Char(' ')) * 4.0);
 
     // TODO Are these even necessary for QTextBrowser?
     connect(this, SIGNAL(textChanged()), this, SLOT(updateStatusAreaWidth()));
@@ -84,7 +84,7 @@ int CodeEdit::statusAreaWidth() {
         ++digits;
     }
 
-    int space = 3 + fontMetrics().width(QLatin1Char('9')) * digits;
+    int space = 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
 
     return space;
 }
@@ -98,7 +98,7 @@ void CodeEdit::updateFontSize(unsigned char s) {
     newFont.setPointSize(s);
     setFont(newFont);
     QFontMetrics metrics(newFont);
-    setTabStopWidth(metrics.width(" ")*4);
+    setTabStopDistance(metrics.horizontalAdvance(QLatin1Char(' ')) * 4.0);
     updateStatusAreaWidth();
 }
 

@@ -79,6 +79,7 @@
 
 #include <QApplication>
 #include <QDesktopServices>
+#include <QGuiApplication>
 #include <QVariant>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -86,7 +87,6 @@
 #include <QMdiSubWindow>
 #include <QFileInfo>
 #include <QToolBar>
-#include <QDesktopWidget>
 #include <QScreen>
 
 namespace voreen {
@@ -510,7 +510,9 @@ void VoreenQtMainWindow::loadSettings() {
 
     // ensure that the main window is restored on a visible screen
     // particular, when switching between different multi desktops modes
-    QRect screenGeometry = QApplication::desktop()->screen()->geometry();
+    QRect screenGeometry;
+    if (QScreen* screen = QGuiApplication::primaryScreen())
+        screenGeometry = screen->virtualGeometry();
 
     // modify screen geometry to account maximized windows having negative position
     screenGeometry.setRect(screenGeometry.x() - 10, screenGeometry.y() - 10,
@@ -935,7 +937,7 @@ void VoreenQtMainWindow::initializeMenuEntities() {
                 action->setCheckable(true);
                 action->setChecked(true);
                 connect(action,SIGNAL(toggled(bool)),(*it)->getToolBarAction(),SLOT(setVisible(bool)));
-                (*it)->getToolBarAction()->setData(qVariantFromValue((void*)action));
+                (*it)->getToolBarAction()->setData(QVariant::fromValue(static_cast<void*>(action)));
                 connect((*it)->getToolBarAction(),SIGNAL(changed()),this,SLOT(changeToolbarVisibilityItem()));
                 //add to toolbar
                 toolBarVisibleMenu_->addAction(action);
@@ -962,7 +964,7 @@ void VoreenQtMainWindow::initializeMenuEntities() {
                 action->setCheckable(true);
                 action->setChecked(true);
                 connect(action,SIGNAL(toggled(bool)),(*it)->getToolBarAction(),SLOT(setVisible(bool)));
-                (*it)->getToolBarAction()->setData(qVariantFromValue((void*)action));
+                (*it)->getToolBarAction()->setData(QVariant::fromValue(static_cast<void*>(action)));
                 connect((*it)->getToolBarAction(),SIGNAL(changed()),this,SLOT(changeToolbarVisibilityItem()));
                 //add to toolbar
                 toolBarVisibleMenu_->addAction(action);
@@ -988,7 +990,7 @@ void VoreenQtMainWindow::initializeMenuEntities() {
                 action->setCheckable(true);
                 action->setChecked(true);
                 connect(action,SIGNAL(toggled(bool)),(*it)->getToolBarAction(),SLOT(setVisible(bool)));
-                (*it)->getToolBarAction()->setData(qVariantFromValue((void*)action));
+                (*it)->getToolBarAction()->setData(QVariant::fromValue(static_cast<void*>(action)));
                 connect((*it)->getToolBarAction(),SIGNAL(changed()),this,SLOT(changeToolbarVisibilityItem()));
                 //add to toolbar
                 toolBarVisibleMenu_->addAction(action);
@@ -1016,7 +1018,7 @@ void VoreenQtMainWindow::initializeMenuEntities() {
                 action->setCheckable(true);
                 action->setChecked(true);
                 connect(action,SIGNAL(toggled(bool)),(*it)->getToolBarAction(),SLOT(setVisible(bool)));
-                (*it)->getToolBarAction()->setData(qVariantFromValue((void*)action));
+                (*it)->getToolBarAction()->setData(QVariant::fromValue(static_cast<void*>(action)));
                 connect((*it)->getToolBarAction(),SIGNAL(changed()),this,SLOT(changeToolbarVisibilityItem()));
                 //add to toolbar
                 toolBarVisibleMenu_->addAction(action);
@@ -1044,7 +1046,7 @@ void VoreenQtMainWindow::initializeMenuEntities() {
                 action->setCheckable(true);
                 action->setChecked(true);
                 connect(action,SIGNAL(toggled(bool)),(*it)->getToolBarAction(),SLOT(setVisible(bool)));
-                (*it)->getToolBarAction()->setData(qVariantFromValue((void*)action));
+                (*it)->getToolBarAction()->setData(QVariant::fromValue(static_cast<void*>(action)));
                 connect((*it)->getToolBarAction(),SIGNAL(changed()),this,SLOT(changeToolbarVisibilityItem()));
                 //add to toolbar
                 toolBarVisibleMenu_->addAction(action);

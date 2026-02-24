@@ -191,7 +191,7 @@ void AnimationKeyframeWidget::createHeader() {
 
     headerWidget_ = new QWidget(this);
     headerLayout_ = new QGridLayout(headerWidget_);
-    headerLayout_->setMargin(0);
+    headerLayout_->setContentsMargins(0, 0, 0, 0);
     headerLayout_->setSpacing(30);
 
     //QSpacerItem* spacer = new QSpacerItem(46, 0);
@@ -293,7 +293,7 @@ void AnimationKeyframeWidget::addPropertyTimeline(PropertyTimeline* prop) {
             QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 3px 0 3px; }");
 
         QVBoxLayout* boxLayout = new QVBoxLayout(/*this*/);
-        boxLayout->setMargin(4);
+        boxLayout->setContentsMargins(4, 4, 4, 4);
         boxLayout->setSpacing(4);
         boxLayout->setAlignment(Qt::AlignTop);
         groupBox->setLayout(boxLayout);

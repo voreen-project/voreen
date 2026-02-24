@@ -64,7 +64,7 @@ void VoreenToolWindowTitle::paintEvent(QPaintEvent* /*e*/) {
     // outline
     painter.setPen(QPen(QBrush(Qt::black), 2.0));
     QPainterPath outline;
-    outline.addRoundRect(0, 0, button_rect.width(), button_rect.height(), roundness, roundness);
+    outline.addRoundedRect(0, 0, button_rect.width(), button_rect.height(), roundness, roundness);
     painter.setOpacity(1.0);
     painter.drawPath(outline);
 
@@ -74,11 +74,11 @@ void VoreenToolWindowTitle::paintEvent(QPaintEvent* /*e*/) {
 
     // main button
     QPainterPath painter_path;
-    painter_path.addRoundRect(1, 1, button_rect.width() - 2, button_rect.height() - 2, roundness, roundness);
+    painter_path.addRoundedRect(1, 1, button_rect.width() - 2, button_rect.height() - 2, roundness, roundness);
     painter.setClipPath(painter_path);
 
     painter.setOpacity(1.0);
-    painter.drawRoundRect(1, 1, button_rect.width() - 2, button_rect.height() - 2, roundness, roundness);
+    painter.drawRoundedRect(1, 1, button_rect.width() - 2, button_rect.height() - 2, roundness, roundness);
 
     // text
     QDockWidget* dockWidget = qobject_cast<QDockWidget*>(parentWidget());

@@ -28,7 +28,6 @@
 #include "tgt/tgt_math.h"
 #include <sstream>
 #include <chrono>
-#include <immintrin.h>
 
 #include "tgt/gpucapabilities.h"
 #include "tgt/glmath.h"
@@ -38,6 +37,13 @@
 #include "tgt/vector.h"
 #include "tgt/memory.h"
 #include "tgt/arch.h"
+
+#if defined(CPU_ARCH_X86) || defined(CPU_ARCH_X86_64)
+#include <immintrin.h>
+#define VRN_SLICEVIEWER_HAS_AVX_INTRINSICS 1
+#else
+#define VRN_SLICEVIEWER_HAS_AVX_INTRINSICS 0
+#endif
 
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 #include "voreen/core/voreenapplication.h"
@@ -531,6 +537,7 @@ CacheFallback::CacheFallback(tgt::svec3 brickDataSize, size_t numChannels)
     , nextOut(0)
 {}
 
+#if VRN_SLICEVIEWER_HAS_AVX_INTRINSICS
 #ifndef _mm256_set_m128
 #define _mm256_set_m128(v1, v2) _mm256_insertf128_ps(_mm256_castps128_ps256(v2), v1, 1)
 #endif
@@ -725,6 +732,7 @@ float CacheAvx::sample(__m128 posi, __m128 pos, tgt::ivec3 volDim, const OctreeB
     return rawVal;
 }
 END_FUNC_WITH_TARGET_FEATURE()
+#endif // VRN_SLICEVIEWER_HAS_AVX_INTRINSICS
 
 uint16_t CacheFallback::sample(tgt::ivec3 posi, tgt::vec3 pos, tgt::ivec3 volDim, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels) {
     int cacheEntry = -1;
@@ -834,6 +842,7 @@ boost::optional<uint16_t> SampleLinearFallback::sample(tgt::vec3 pos, tgt::ivec3
     return v;
 }
 
+#if VRN_SLICEVIEWER_HAS_AVX_INTRINSICS
 struct SampleNearestAvx {
     typedef CacheAvx Cache;
     static boost::optional<uint16_t> sample(tgt::vec3 pos, tgt::ivec3 volDim, Cache& cache, const OctreeBrickPoolManagerBase& brickPoolManager, const LocatedVolumeOctreeNodeConst& root, tgt::svec3 brickDataSize, size_t level, int channel, size_t numChannels);
@@ -940,6 +949,7 @@ boost::optional<uint16_t> SampleLinearAvx::sample(tgt::vec3 pos, tgt::ivec3 volD
     return _mm_cvtss_f32(sum);
 }
 END_FUNC_WITH_TARGET_FEATURE()
+#endif // VRN_SLICEVIEWER_HAS_AVX_INTRINSICS
 
 template<typename SampleFn>
 static DeadlineResult renderOctreeSlice(OctreeSliceTextureColor& texture, OctreeSliceTextureControl& texControl, const VolumeOctree& octree, tgt::ivec2 pixBegin, tgt::ivec2 pixEnd, tgt::mat4 pixelToVoxelMats[4], size_t level, OctreeSliceViewProgress& progress, TimePoint deadline) {
@@ -1103,19 +1113,27 @@ void SliceViewer::renderFromOctree() {
         DeadlineResult res;
         switch(inport_.getTextureFilterModeProperty().getValue()) {
             case GL_LINEAR:
+#if VRN_SLICEVIEWER_HAS_AVX_INTRINSICS
                 if(tgt::cpuFeatureCheck(tgt::CPU_FEATURE_X86_AVX2)) {
                     res = renderOctreeSlice<SampleLinearAvx>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
                 } else {
                     res = renderOctreeSlice<SampleLinearFallback>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
                 }
-                    break;
+#else
+                res = renderOctreeSlice<SampleLinearFallback>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+#endif
+                break;
             case GL_NEAREST:
+#if VRN_SLICEVIEWER_HAS_AVX_INTRINSICS
                 if(tgt::cpuFeatureCheck(tgt::CPU_FEATURE_X86_AVX2)) {
                     res = renderOctreeSlice<SampleNearestAvx>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
                 } else {
                     res = renderOctreeSlice<SampleNearestFallback>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
                 }
-                    break;
+#else
+                res = renderOctreeSlice<SampleNearestFallback>(*texture, *textureControl, octree, begin, end, pixelToVoxelMats, level, octreeRenderProgress_, deadline);
+#endif
+                break;
         }
         if(res  == DeadlineResult::Succeeded) {
             octreeRenderProgress_.nextSlice_ += 1;

@@ -34,6 +34,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QLabel>
+#include <QRegularExpression>
 
 #include "tgt/filesystem.h"
 
@@ -101,13 +102,14 @@ void FileDialogPropertyWidget::setProperty() {
 
             // Create regular expression to parse the file filter string for the extension.
             // This is necessary, since the QFileDialog will not add the file extension by default.
-            QRegExp filter_regex(QLatin1String("(?:^\\*\\.(?!.*\\()|\\(\\*\\.)(\\w+(.\\w+)*)"));
+            QRegularExpression filter_regex(QLatin1String("(?:^\\*\\.(?!.*\\()|\\(\\*\\.)(\\w+(.\\w+)*)"));
 
             // add the first extension of the selected file filter to the filename, if it is not present in the file name
             QFileInfo info(filename);
             if (info.suffix().isEmpty() && !selectedFilter.isEmpty()) {
-                if (filter_regex.indexIn(selectedFilter) != -1) {
-                    QString extension = filter_regex.cap(1);
+                const QRegularExpressionMatch filterMatch = filter_regex.match(selectedFilter);
+                if (filterMatch.hasMatch()) {
+                    QString extension = filterMatch.captured(1);
                     filename += QLatin1String(".") + extension;
                 }
             }

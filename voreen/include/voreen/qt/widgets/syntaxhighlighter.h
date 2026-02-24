@@ -29,6 +29,7 @@
 #ifndef VRN_SYNTAXHIGHLIGHTER_H
 #define VRN_SYNTAXHIGHLIGHTER_H
 
+#include <QRegularExpression>
 #include <QSyntaxHighlighter>
 
 #include "voreen/qt/voreenqtapi.h"
@@ -48,14 +49,14 @@ protected:
 
     // rules
     typedef struct highlightRule_s {
-        QRegExp pattern;
+        QRegularExpression pattern;
         QTextCharFormat format;
     } highlightRule_t;
     QList<highlightRule_t> m_rules;
 
     // comment expressions
-    QRegExp m_commentStartExpression;
-    QRegExp m_commentEndExpression;
+    QRegularExpression m_commentStartExpression;
+    QRegularExpression m_commentEndExpression;
 
     // format infos
     QTextCharFormat m_keywordFormat;

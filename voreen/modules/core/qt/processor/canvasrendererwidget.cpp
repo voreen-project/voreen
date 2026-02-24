@@ -78,7 +78,7 @@ void CanvasRendererWidget::initialize() {
     }
 
     bool doubleBuffering = VoreenApplication::app()->useDoubleBuffering();
-    canvasWidget_ = new tgt::QtCanvas(canvasRenderer->getGuiName(), getSize(), doubleBuffering ? tgt::GLCanvas::RGBADD : tgt::GLCanvas::RGBAD, this, 0);
+    canvasWidget_ = new tgt::QtCanvas(canvasRenderer->getGuiName(), getSize(), doubleBuffering ? tgt::GLCanvas::RGBADD : tgt::GLCanvas::RGBAD, this, Qt::WindowFlags());
     QGridLayout* layout = new QGridLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(canvasWidget_, 0, 0);

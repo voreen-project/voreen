@@ -28,18 +28,7 @@ SET(MOD_CORE_SOURCES
 
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer2d.cpp
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer3d.cpp
-
-    ${MOD_DIR}/processors/simdraycaster/simdraycaster.cpp
-	
-    ${MOD_DIR}/utils/simdraycaster/jobqueue.cpp
-    ${MOD_DIR}/utils/simdraycaster/memory.cpp
-    ${MOD_DIR}/utils/simdraycaster/performancemetric.cpp
 )
-
-if (UNIX)
-    SET_SOURCE_FILES_PROPERTIES(${MOD_DIR}/processors/simdraycaster/raycaster_sse41.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
-    SET_SOURCE_FILES_PROPERTIES(${MOD_DIR}/processors/simdraycaster/raycaster_sse3.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -msse3")
-endif (UNIX) 
 
 SET(MOD_CORE_HEADERS
     ${MOD_DIR}/processors/alignedsliceproxygeometry.h
@@ -65,44 +54,62 @@ SET(MOD_CORE_HEADERS
 
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer2d.h
     ${MOD_DIR}/processors/slicepoints/slicepointrenderer3d.h
-
-    ${MOD_DIR}/processors/simdraycaster/raycast_generic.h
-    ${MOD_DIR}/processors/simdraycaster/simdraycaster.h
-	
-    ${MOD_DIR}/utils/simdraycaster/brickedvolume.h
-    ${MOD_DIR}/utils/simdraycaster/brickedvolumebase.h
-    ${MOD_DIR}/utils/simdraycaster/jobqueue.h
-    ${MOD_DIR}/utils/simdraycaster/memory.h
-    ${MOD_DIR}/utils/simdraycaster/performancemetric.h
 )
 
+SET(VRN_STAGING_SIMDRAYCASTER_AVAILABLE FALSE)
 IF(WIN32)
-    SET(MOD_CORE_SOURCES
-        ${MOD_CORE_SOURCES}
-        ${MOD_DIR}/processors/simdraycaster/raycaster_sse41.cpp
+    IF(CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|X64|x64|x86_64|i[3-6]86|x86)$")
+        SET(VRN_STAGING_SIMDRAYCASTER_AVAILABLE TRUE)
+    ENDIF()
+ELSE()
+    INCLUDE(CheckCXXCompilerFlag)
+    IF(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|i[3-6]86|x86)$")
+        CHECK_CXX_COMPILER_FLAG("-msse3" VRN_STAGING_COMPILER_SUPPORTS_SSE3)
+        IF(VRN_STAGING_COMPILER_SUPPORTS_SSE3)
+            SET(VRN_STAGING_SIMDRAYCASTER_AVAILABLE TRUE)
+        ENDIF()
+    ENDIF()
+ENDIF()
+
+IF(VRN_STAGING_SIMDRAYCASTER_AVAILABLE)
+    LIST(APPEND MOD_CORE_SOURCES
+        ${MOD_DIR}/processors/simdraycaster/simdraycaster.cpp
+        ${MOD_DIR}/utils/simdraycaster/jobqueue.cpp
+        ${MOD_DIR}/utils/simdraycaster/memory.cpp
+        ${MOD_DIR}/utils/simdraycaster/performancemetric.cpp
         ${MOD_DIR}/processors/simdraycaster/raycaster_sse3.cpp
     )
+    LIST(APPEND MOD_CORE_HEADERS
+        ${MOD_DIR}/processors/simdraycaster/raycast_generic.h
+        ${MOD_DIR}/processors/simdraycaster/simdraycaster.h
+        ${MOD_DIR}/utils/simdraycaster/brickedvolume.h
+        ${MOD_DIR}/utils/simdraycaster/brickedvolumebase.h
+        ${MOD_DIR}/utils/simdraycaster/jobqueue.h
+        ${MOD_DIR}/utils/simdraycaster/memory.h
+        ${MOD_DIR}/utils/simdraycaster/performancemetric.h
+    )
+
+    LIST(APPEND VRN_MODULE_DEFINITIONS "-DVRN_STAGING_HAS_SIMDRAYCASTER")
     LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE3")
-    LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE41")
-ELSE(WIN32)
-    OPTION (VRN_USE_SSE41 
-            "Use the sse 4.1 Instruction set extension" ON) 
-    IF(VRN_USE_SSE41)
-        SET(MOD_CORE_SOURCES
-            ${MOD_CORE_SOURCES}
-            ${MOD_DIR}/processors/simdraycaster/raycaster_sse3.cpp
-            ${MOD_DIR}/processors/simdraycaster/raycaster_sse41.cpp
-        )
-        LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE3")
-        LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE41 -msse4.1")
-    ELSE(VRN_USE_SSE41)
-        SET(MOD_CORE_SOURCES
-            ${MOD_CORE_SOURCES}
-            ${MOD_DIR}/processors/simdraycaster/raycaster_sse3.cpp
-        )
-        LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE3 -msse3")
-    ENDIF(VRN_USE_SSE41)
-ENDIF(WIN32)
+
+    IF(WIN32)
+        LIST(APPEND MOD_CORE_SOURCES ${MOD_DIR}/processors/simdraycaster/raycaster_sse41.cpp)
+        LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE41")
+    ELSE()
+        SET_SOURCE_FILES_PROPERTIES(${MOD_DIR}/processors/simdraycaster/raycaster_sse3.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -msse3")
+        OPTION(VRN_USE_SSE41 "Use the sse 4.1 Instruction set extension" ON)
+        IF(VRN_USE_SSE41)
+            CHECK_CXX_COMPILER_FLAG("-msse4.1" VRN_STAGING_COMPILER_SUPPORTS_SSE41)
+            IF(VRN_STAGING_COMPILER_SUPPORTS_SSE41)
+                LIST(APPEND MOD_CORE_SOURCES ${MOD_DIR}/processors/simdraycaster/raycaster_sse41.cpp)
+                SET_SOURCE_FILES_PROPERTIES(${MOD_DIR}/processors/simdraycaster/raycaster_sse41.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
+                LIST(APPEND VRN_MODULE_DEFINITIONS "-DSIMD_SSE41")
+            ENDIF()
+        ENDIF()
+    ENDIF()
+ELSE()
+    MESSAGE(STATUS "Staging module: SIMDRaycaster disabled (no SSE support detected)")
+ENDIF()
 
 # deployment
 SET(MOD_INSTALL_DIRECTORIES

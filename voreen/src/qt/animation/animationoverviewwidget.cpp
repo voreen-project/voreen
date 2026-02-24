@@ -179,7 +179,7 @@ AnimationOverviewWidget::AnimationOverviewWidget(QWidget* parent, NetworkEvaluat
     previews_.clear();
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
 
-    mainLayout->setMargin(1);
+    mainLayout->setContentsMargins(1, 1, 1, 1);
     mainLayout->setSpacing(1);
     setFixedHeight(70 + PREVIEW_SIZE);
 
@@ -390,7 +390,7 @@ void AnimationOverviewWidget::selectCanvasRenderer() {
        renderPreviews();
 }
 
-void AnimationOverviewWidget::sceneOrder(QMatrix matrix) {
+void AnimationOverviewWidget::sceneOrder(QTransform matrix) {
     matrix_ = matrix;
     zoom_ = static_cast<int>(matrix.m11());
 }

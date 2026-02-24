@@ -32,6 +32,7 @@
 
 #include <QCoreApplication>
 #include <QInputEvent>
+#include <QInputDevice>
 #include <QOpenGLContext>
 #include <QOpenGLWidget>
 #include <QOpenGLWindow>
@@ -351,7 +352,7 @@ void QtCanvas::toggleFullScreen() {
     that are associated with this canvas. The same is true for the other event-handling
     methods.
 */
-void QtCanvas::enterEvent(QEvent* e) {
+void QtCanvas::enterEvent(QEnterEvent* e) {
     tgt::MouseEvent* enterEv = new tgt::MouseEvent(0, 0, tgt::MouseEvent::ENTER,
         tgt::MouseEvent::MODIFIER_NONE, tgt::MouseEvent::MOUSE_BUTTON_NONE, tgt::ivec2(width(), height()));
     broadcastEvent(enterEv);
@@ -400,9 +401,10 @@ void QtCanvas::mouseDoubleClickEvent(QMouseEvent* e) {
 // does not distinguish correctly between UP and DOWN => works fine in voreen!
 void QtCanvas::wheelEvent(QWheelEvent* e) {
     tgt::MouseEvent::MouseButtons b = tgt::MouseEvent::MOUSE_WHEEL_DOWN;
-    if (e->delta() > 0)
+    if (e->angleDelta().y() > 0)
         b = tgt::MouseEvent::MOUSE_WHEEL_UP;
-    tgt::MouseEvent* wheelEv = new tgt::MouseEvent(e->x(),e->y(), tgt::MouseEvent::WHEEL,
+    const QPointF pos = e->position();
+    tgt::MouseEvent* wheelEv = new tgt::MouseEvent(static_cast<int>(pos.x()), static_cast<int>(pos.y()), tgt::MouseEvent::WHEEL,
                                                    getModifier(e), b, tgt::ivec2(width(), height()));
     broadcastEvent(wheelEv);
     QWidget::wheelEvent(e);
@@ -441,7 +443,9 @@ bool QtCanvas::event(QEvent *event) {
         QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
         event->accept();
 
-        qint8 deviceType = touchEvent->device()->type();
+        tgt::TouchEvent::DeviceType deviceType = tgt::TouchEvent::TouchScreen;
+        if (touchEvent->device() && touchEvent->device()->type() == QInputDevice::DeviceType::TouchPad)
+            deviceType = tgt::TouchEvent::TouchPad;
         std::deque<tgt::TouchPoint> tps;
         int states = 0;
 
@@ -462,7 +466,7 @@ bool QtCanvas::event(QEvent *event) {
             tps.push_back(tp);
         }
 
-        tgt::TouchEvent * te = new tgt::TouchEvent(tgt::Event::MODIFIER_NONE, (tgt::TouchPoint::State)states, (tgt::TouchEvent::DeviceType)deviceType, tps);
+        tgt::TouchEvent* te = new tgt::TouchEvent(tgt::Event::MODIFIER_NONE, (tgt::TouchPoint::State)states, deviceType, tps);
         broadcastEvent(te);
 
         break;
@@ -490,7 +494,7 @@ tgt::MouseEvent::MouseButtons QtCanvas::getButton(QMouseEvent* e) {
             return tgt::MouseEvent::MOUSE_BUTTON_LEFT;
         case Qt::RightButton:
             return tgt::MouseEvent::MOUSE_BUTTON_RIGHT;
-        case Qt::MidButton:
+        case Qt::MiddleButton:
             return tgt::MouseEvent::MOUSE_BUTTON_MIDDLE;
         default:
             return tgt::MouseEvent::MOUSE_BUTTON_NONE;
@@ -504,7 +508,7 @@ tgt::MouseEvent::MouseButtons QtCanvas::getButtons(QMouseEvent* e) {
         buttons |= tgt::MouseEvent::MOUSE_BUTTON_LEFT;
     if (e->buttons() & Qt::RightButton)
         buttons |= tgt::MouseEvent::MOUSE_BUTTON_RIGHT;
-    if (e->buttons() & Qt::MidButton)
+    if (e->buttons() & Qt::MiddleButton)
         buttons |= tgt::MouseEvent::MOUSE_BUTTON_MIDDLE;
 
     return static_cast<tgt::MouseEvent::MouseButtons>(buttons);

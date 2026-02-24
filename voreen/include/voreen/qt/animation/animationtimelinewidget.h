@@ -37,6 +37,7 @@
 
 #include <QWidget>
 #include <QGraphicsRectItem>
+#include <QTransform>
 
 class AnimatedProcessor;
 class AnimationOverviewWidget;
@@ -221,7 +222,7 @@ signals:
 
     void showActiveTimelines();
     /// orders a scene translation via the given matrix
-    void sceneOrder(QMatrix);
+    void sceneOrder(QTransform);
     /// order to distribute vertical scrollbarpositions
     void scrollBarOrder(int);
     /// signals a framechange

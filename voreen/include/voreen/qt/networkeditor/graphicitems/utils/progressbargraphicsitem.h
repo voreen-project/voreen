@@ -31,7 +31,7 @@
 
 #include "../../editor_settings.h"
 
-#include <QTime>
+#include <QElapsedTimer>
 
 namespace voreen {
 
@@ -84,7 +84,7 @@ public:
 protected:
     qreal width_;
     qreal height_;
-    QTime time_;
+    QElapsedTimer time_;
 
     QColor backgroundColor1_;
     QColor backgroundColor2_;

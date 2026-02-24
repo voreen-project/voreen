@@ -163,7 +163,7 @@ void QPropertyWidget::mouseMoveEvent(QMouseEvent* event) {
 
 CustomLabel* QPropertyWidget::getOrCreateNameLabel() const {
     if (!nameLabel_) {
-        nameLabel_ = new CustomLabel(prop_->getGuiName().c_str(), const_cast<QPropertyWidget*>(this), const_cast<QPropertyWidget*>(this), 0, false, true);
+        nameLabel_ = new CustomLabel(prop_->getGuiName().c_str(), const_cast<QPropertyWidget*>(this), const_cast<QPropertyWidget*>(this), Qt::WindowFlags(), false, true);
         nameLabel_->setMinimumWidth(80);
         nameLabel_->setWordWrap(true);
         QFontInfo fontInfo(font());

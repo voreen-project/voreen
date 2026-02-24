@@ -61,7 +61,7 @@ void ProgressDialog::update() {
     // This is either done by show() or simply by setProgress();
     // It will also be freshly created if hide() was called before.
     if (!progressDialog_) {
-        if (updateTime_.isNull()) {
+        if (!updateTime_.isValid()) {
             updateTime_.start();
         }
         else if(updateTime_.elapsed() >= minimalShowWait) {
@@ -100,7 +100,7 @@ void ProgressDialog::hide() {
     // Delete the dialog.
     progressDialog_.reset();
     // Reset time to null.
-    updateTime_ = QTime();
+    updateTime_.invalidate();
 }
 
 void ProgressDialog::forceUpdate() {

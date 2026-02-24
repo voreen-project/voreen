@@ -28,7 +28,7 @@
 
 #include "voreen/qt/widgets/property/qpropertywidget.h"
 
-#include <QTime>
+#include <QElapsedTimer>
 
 class QProgressBar;
 
@@ -45,7 +45,7 @@ protected slots:
     virtual void updateFromPropertySlot();
 
 private:
-    QTime time_;    ///< prevent crash in release mode
+    QElapsedTimer time_;    ///< prevent crash in release mode
     ProgressProperty* property_;
     QProgressBar* progressBar_;
 

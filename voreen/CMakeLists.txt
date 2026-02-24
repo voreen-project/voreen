@@ -101,18 +101,15 @@ ENDIF()
 # add qt module applications
 IF(VRN_MODULE_QT_APPLICATIONS)
     MESSAGE(STATUS "Adding Qt module applications:")
-    SET(VRN_QT_COMPONENTS Gui Widgets Svg)
+    SET(VRN_QT_COMPONENTS Gui Widgets Svg OpenGLWidgets)
     IF(QT_USE_QTNETWORK)
         LIST(APPEND VRN_QT_COMPONENTS Network)
     ENDIF()
-    FIND_PACKAGE(Qt5Core ${VRN_REQUIRED_QT_VERSION} REQUIRED)
-    FIND_PACKAGE(Qt5 COMPONENTS ${VRN_QT_COMPONENTS} REQUIRED)
+    FIND_PACKAGE(Qt6 ${VRN_REQUIRED_QT_VERSION} COMPONENTS ${VRN_QT_COMPONENTS} REQUIRED)
     # create list of libraries
-    set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Svg ${QT5SVG_LIBRARIES})
-    set(QT_INCLUDE_DIRECTORIES ${Qt5Core_INCLUDES} ${Qt5Gui_INCLUDES} ${Qt5Widgets_INCLUDES}  ${Qt5Svg_INCLUDES})
+    set(QT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::OpenGLWidgets)
     IF(QT_USE_QTNETWORK)
-        LIST(APPEND QT_LIBRARIES Qt5::Network)
-        LIST(APPEND QT_INCLUDE_DIRECTORIES ${Qt5Network_INCLUDES})
+        LIST(APPEND QT_LIBRARIES Qt6::Network)
     ENDIF()
 
     SET(cur_qt_app_name "")
@@ -124,15 +121,13 @@ IF(VRN_MODULE_QT_APPLICATIONS)
         IF(${qt_app_ext} STREQUAL ".cpp") # cpp file => new binary
             IF(NOT ${cur_qt_app_name} STREQUAL "")  # finish previous binary, if present
                 MESSAGE(STATUS "* ${cur_qt_app_cpp_rel}")
-                QT5_WRAP_UI(cur_qt_app_ui_headers_processed ${cur_qt_app_ui_headers})
-                ADD_EXECUTABLE(${cur_qt_app_name} ${cur_qt_app_cpp} ${cur_qt_app_ui_headers_processed})
+                ADD_EXECUTABLE(${cur_qt_app_name} ${cur_qt_app_cpp} ${cur_qt_app_ui_headers})
                 ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
                 INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
                 TARGET_LINK_LIBRARIES(${cur_qt_app_name} tgt voreen_core voreen_qt ${VRN_EXTERNAL_LIBRARIES} )
                 # add Qt dependency
-                INCLUDE_DIRECTORIES(${QT_INCLUDE_DIRECTORIES})
-                ADD_DEFINITIONS(${QT_DEFINITIONS})
                 TARGET_LINK_LIBRARIES(${cur_qt_app_name} ${QT_LIBRARIES})
+                SET_TARGET_PROPERTIES(${cur_qt_app_name} PROPERTIES AUTOUIC ON)
             ENDIF()
             
             # init new binary 
@@ -147,15 +142,13 @@ IF(VRN_MODULE_QT_APPLICATIONS)
     
     IF(NOT ${cur_qt_app_name} STREQUAL "") # finish last binary, if present
         MESSAGE(STATUS "* ${cur_qt_app_cpp_rel}")
-        QT5_WRAP_UI(cur_qt_app_ui_headers_processed ${cur_qt_app_ui_headers})
-        ADD_EXECUTABLE(${cur_qt_app_name} ${cur_qt_app_cpp} ${cur_qt_app_ui_headers_processed})
+        ADD_EXECUTABLE(${cur_qt_app_name} ${cur_qt_app_cpp} ${cur_qt_app_ui_headers})
         ADD_DEFINITIONS(${VRN_DEFINITIONS} ${VRN_MODULE_DEFINITIONS})
         INCLUDE_DIRECTORIES(${VRN_INCLUDE_DIRECTORIES})
         TARGET_LINK_LIBRARIES(${cur_qt_app_name} tgt voreen_core voreen_qt ${VRN_EXTERNAL_LIBRARIES} )
         # add Qt dependency
-        INCLUDE_DIRECTORIES(${QT_INCLUDE_DIRECTORIES})
-        ADD_DEFINITIONS(${QT_DEFINITIONS})
         TARGET_LINK_LIBRARIES(${cur_qt_app_name} ${QT_LIBRARIES})
+        SET_TARGET_PROPERTIES(${cur_qt_app_name} PROPERTIES AUTOUIC ON)
      ENDIF()
 ENDIF()
 

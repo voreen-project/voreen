@@ -40,7 +40,7 @@ SliderSpinBoxWidget::SliderSpinBoxWidget(QWidget* parent)
 {
     layout_ = new QHBoxLayout(this);
     layout_->setSpacing(6);
-    layout_->setMargin(0);
+    layout_->setContentsMargins(0, 0, 0, 0);
     slider_ = new QSlider(this);
     slider_->setOrientation(Qt::Horizontal);
     slider_->setTickPosition(QSlider::NoTicks);
@@ -175,7 +175,7 @@ DoubleSliderSpinBoxWidget::DoubleSliderSpinBoxWidget(QWidget* parent )
 {
     layout_ = new QHBoxLayout(this);
     layout_->setSpacing(6);
-    layout_->setMargin(0);
+    layout_->setContentsMargins(0, 0, 0, 0);
     slider_ = new QSlider(this);
     slider_->setOrientation(Qt::Horizontal);
     slider_->setTickPosition(QSlider::NoTicks);

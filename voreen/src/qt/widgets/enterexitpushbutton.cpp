@@ -40,7 +40,7 @@ EnterExitPushButton::EnterExitPushButton(const QIcon& icon, const QString& text,
 {}
 
 
-void EnterExitPushButton::enterEvent(QEvent* event) {
+void EnterExitPushButton::enterEvent(QEnterEvent* event) {
     emit enterEventSignal();
     QPushButton::enterEvent(event);
 }

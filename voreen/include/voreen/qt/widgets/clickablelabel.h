@@ -26,6 +26,7 @@
 #ifndef CLICKABLELABEL_H
 #define CLICKABLELABEL_H
 
+#include <QEnterEvent>
 #include <QLabel>
 #include <QMouseEvent>
 
@@ -36,13 +37,13 @@ namespace voreen {
 class ClickableLabel : public QLabel {
     Q_OBJECT
 public:
-    ClickableLabel(const char * text, QWidget * parent, Qt::WindowFlags f = 0,
+    ClickableLabel(const char * text, QWidget * parent, Qt::WindowFlags f = Qt::WindowFlags(),
                     Qt::CursorShape hoverCursor = Qt::PointingHandCursor);
 
     virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseReleaseEvent(QMouseEvent* e);
     virtual void mouseDoubleClickEvent(QMouseEvent* e);
-    virtual void enterEvent(QEvent *e);
+    virtual void enterEvent(QEnterEvent *e);
     virtual void leaveEvent(QEvent *e);
 
 public slots:

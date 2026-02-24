@@ -43,11 +43,16 @@
 #include <QMouseEvent>
 #include <QString>
 #include <QMenu>
+#include <QActionGroup>
 #include <QFileDialog>
 #include <QApplication>
 #include <QUrl>
+#include <QStandardPaths>
 #include <QMessageBox>
 #include <QLayout>
+#include <QKeyEvent>
+#include <QWheelEvent>
+#include <QCloseEvent>
 #include <QDesktopServices>
 #include <QWidget>
 
@@ -462,7 +467,7 @@ void RenderTargetViewer::mousePressEvent(QMouseEvent* e) {
             showType_[selectedRenderPortIndex_] |= CheckerboardPattern;
     }
 
-    if (maximizeOnePort_ && e->button() == Qt::MidButton) {
+    if (maximizeOnePort_ && e->button() == Qt::MiddleButton) {
         zoomScale_ = 1.0f;
     }
 
@@ -500,7 +505,7 @@ void RenderTargetViewer::wheelEvent(QWheelEvent* e) {
         zoomMouseX_ = mouseX_;
         zoomMouseY_ = mouseY_;
     }
-    zoomScale_ = std::max(1.0f, zoomScale_ + (e->delta()/1200.0f));
+    zoomScale_ = std::max(1.0f, zoomScale_ + (e->angleDelta().y() / 1200.0f));
 
     zoomTranslateX_ = -((zoomScale_*zoomOffsetX_)-mouseX_)/zoomScale_;
     zoomTranslateY_ = -((zoomScale_*zoomOffsetY_)-mouseY_)/zoomScale_;

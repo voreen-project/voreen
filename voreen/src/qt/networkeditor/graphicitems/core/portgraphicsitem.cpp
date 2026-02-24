@@ -50,6 +50,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QFileDialog>
 #include <QUrl>
+#include <QStandardPaths>
 #include <QDesktopServices>
 #include <QAction>
 

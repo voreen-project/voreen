@@ -39,6 +39,7 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QStandardPaths>
 #include <QToolButton>
 
 namespace voreen {

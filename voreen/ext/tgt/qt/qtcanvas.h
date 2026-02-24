@@ -32,6 +32,7 @@
 #endif
 
 #include <QWidget>
+#include <QEnterEvent>
 #include <QSurfaceFormat>
 
 #include <memory>
@@ -105,7 +106,7 @@ protected:
 protected:
 
     // Inherited from QWidget
-    virtual void enterEvent(QEvent* e);
+    virtual void enterEvent(QEnterEvent* e);
     virtual void leaveEvent(QEvent* e);
     virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseReleaseEvent(QMouseEvent* e);

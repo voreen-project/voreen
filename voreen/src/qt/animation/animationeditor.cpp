@@ -33,6 +33,7 @@
 #include "voreen/core/animation/serializationfactories.h"
 
 #include <QCheckBox>
+#include <QActionGroup>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QLCDNumber>
@@ -87,7 +88,7 @@ AnimationEditor::AnimationEditor(NetworkEvaluator* eval, Workspace* workspace, Q
     }
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setMargin(0);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
     QToolBar* toolbar = new QToolBar(this);

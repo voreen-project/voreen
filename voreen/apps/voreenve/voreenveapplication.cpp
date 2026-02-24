@@ -35,8 +35,13 @@
 
 #if !defined(WIN32) && !defined(APPLE) && defined(USE_XINPUT2)
 
-#include <QX11Info>
 #include <QTouchEvent>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QX11Info>
+#else
+#include <QGuiApplication>
+#include <QNativeInterface>
+#endif
 
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput.h>
@@ -46,6 +51,26 @@
 #include <linux/input.h>
 #include <xorg/xserver-properties.h>
 
+#endif
+
+#if !defined(WIN32) && !defined(APPLE) && defined(USE_XINPUT2)
+namespace {
+
+Display* getQtX11Display() {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    return QX11Info::display();
+#else
+#if QT_CONFIG(xcb)
+    if (qGuiApp) {
+        if (auto* x11App = qGuiApp->nativeInterface<QNativeInterface::QX11Application>())
+            return x11App->display();
+    }
+#endif
+    return nullptr;
+#endif
+}
+
+} // namespace
 #endif
 
 namespace voreen {
@@ -144,7 +169,9 @@ void VoreenVEApplication::initXinput() {
         return;
 
     int event, error;
-    display_ = QX11Info::display();
+    display_ = getQtX11Display();
+    if (!display_)
+        throw std::runtime_error("Unable to acquire X11 display handle from Qt");
 
     if (!XQueryExtension(display_, "XInputExtension", &xi_opcode_, &event, &error))
         throw std::runtime_error("Could not find XInputExtension");
@@ -155,7 +182,9 @@ void VoreenVEApplication::sendTouchEventsTo(QWidget *w) {
     Window win;
     Display *dpy;
 
-    dpy = QX11Info::display();
+    if (!display_)
+        initXinput();
+    dpy = display_;
     win = w->winId();
 
     memset(&mask, 0, sizeof(XIEventMask));

@@ -31,6 +31,9 @@
 
 #if !defined(WIN32) && !defined(APPLE) && defined(USE_XINPUT2)
 #include <QTouchEvent>
+
+typedef struct _XDisplay Display;
+typedef union _XEvent XEvent;
 #endif
 
 namespace voreen {

@@ -24,13 +24,17 @@
 #include "cpucapabilities.h"
 namespace tgt{
     // from http://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
-#ifdef _WIN32
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+#define TGT_CPUID_X86 1
+#endif
+
+#if defined(_WIN32) && defined(TGT_CPUID_X86)
 
     //  Windows
 #include <intrin.h>
 #define cpuid(info,x)    __cpuidex(info,x,0)
 
-#else
+#elif defined(TGT_CPUID_X86)
 
     //  GCC Inline Assembly
     static void cpuid(int CPUInfo[4],int InfoType){
@@ -42,6 +46,11 @@ namespace tgt{
             "=d" (CPUInfo[3]) :
         "a" (InfoType), "c" (0)
             );
+    }
+
+#else
+    static void cpuid(int CPUInfo[4], int /*InfoType*/) {
+        CPUInfo[0] = CPUInfo[1] = CPUInfo[2] = CPUInfo[3] = 0;
     }
 
 #endif
@@ -116,7 +125,39 @@ namespace tgt{
     bool CPUCapabilities::hasAVX512VBMI(){
         return HW_AVX512VBMI;
     }
-    CPUCapabilities::CPUCapabilities(){
+    CPUCapabilities::CPUCapabilities()
+        : HW_MMX(false)
+        , HW_x64(false)
+        , HW_ABM(false)
+        , HW_RDRAND(false)
+        , HW_BMI1(false)
+        , HW_BMI2(false)
+        , HW_ADX(false)
+        , HW_PREFETCHWT1(false)
+        , HW_SSE(false)
+        , HW_SSE2(false)
+        , HW_SSE3(false)
+        , HW_SSSE3(false)
+        , HW_SSE41(false)
+        , HW_SSE42(false)
+        , HW_SSE4a(false)
+        , HW_AES(false)
+        , HW_SHA(false)
+        , HW_AVX(false)
+        , HW_XOP(false)
+        , HW_FMA3(false)
+        , HW_FMA4(false)
+        , HW_AVX2(false)
+        , HW_AVX512F(false)
+        , HW_AVX512CD(false)
+        , HW_AVX512PF(false)
+        , HW_AVX512ER(false)
+        , HW_AVX512VL(false)
+        , HW_AVX512BW(false)
+        , HW_AVX512DQ(false)
+        , HW_AVX512IFMA(false)
+        , HW_AVX512VBMI(false)
+    {
         static bool inizialized = false;
         if (inizialized){
             return;

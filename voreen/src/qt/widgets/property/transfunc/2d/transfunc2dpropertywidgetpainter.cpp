@@ -528,19 +528,19 @@ void TransFunc2DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         ittPos.setY(-bttMetr.height()+3);
         //gamma
         qText = QString(1,QChar(0x03b3)) + QString("=");
-        ittWidth += bttMetr.width(qText);
+        ittWidth += bttMetr.horizontalAdvance(qText);
         //value
         ittText << ftos(gammaSliderX_->getGammaValue(),2) << "</b>";
-        ittWidth += bttMetr.width(ftos(gammaSliderX_->getGammaValue(),2).c_str());
+        ittWidth += bttMetr.horizontalAdvance(ftos(gammaSliderX_->getGammaValue(),2).c_str());
         qText = QString("<b>") + qText + QString(ittText.str().c_str());
         break;
     case GAMMA_SLIDER_Y:
         //gamma
         qText = QString(1,QChar(0x03b3)) + QString("=");
-        ittWidth += bttMetr.width(qText);
+        ittWidth += bttMetr.horizontalAdvance(qText);
         //value
         ittText << ftos(gammaSliderY_->getGammaValue(),2) << "</b>";
-        ittWidth += bttMetr.width(ftos(gammaSliderY_->getGammaValue(),2).c_str());
+        ittWidth += bttMetr.horizontalAdvance(ftos(gammaSliderY_->getGammaValue(),2).c_str());
         qText = QString("<b>") + qText + QString(ittText.str().c_str());
         //position
         ittPos.setX(canvas_->getPhysicalWidth() - ittWidth/2 - 3);
@@ -552,9 +552,9 @@ void TransFunc2DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         ittPos.setY(canvas_->getHeight()+10);
         ittText << "<nobr>Domain: [ <b>" << ftos(domainSlider_->getDomainValue().x,percision) << "</b> , " <<
                                     ftos(domainSlider_->getDomainValue().y,percision) << " ]</nobr>";
-        ittWidth += ttMetr.width("Domain: [  ,  ]");
-        ittWidth += bttMetr.width(ftos(domainSlider_->getDomainValue().x,percision).c_str());
-        ittWidth += ttMetr.width(ftos(domainSlider_->getDomainValue().y,percision).c_str());
+        ittWidth += ttMetr.horizontalAdvance("Domain: [  ,  ]");
+        ittWidth += bttMetr.horizontalAdvance(ftos(domainSlider_->getDomainValue().x,percision).c_str());
+        ittWidth += ttMetr.horizontalAdvance(ftos(domainSlider_->getDomainValue().y,percision).c_str());
         qText = QString(ittText.str().c_str());
         break;
     case DOMAIN_RIGHT_SLIDER:
@@ -562,9 +562,9 @@ void TransFunc2DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         ittPos.setY(canvas_->getHeight()+10);
         ittText << "<nobr>Domain: [ " + ftos(domainSlider_->getDomainValue().x,percision) << " , <b>" <<
                                 ftos(domainSlider_->getDomainValue().y,percision) << "</b> ]</nobr>";
-        ittWidth += ttMetr.width("Domain: [  ,  ]");
-        ittWidth += ttMetr.width(ftos(domainSlider_->getDomainValue().x,percision).c_str());
-        ittWidth += bttMetr.width(ftos(domainSlider_->getDomainValue().y,percision).c_str());
+        ittWidth += ttMetr.horizontalAdvance("Domain: [  ,  ]");
+        ittWidth += ttMetr.horizontalAdvance(ftos(domainSlider_->getDomainValue().x,percision).c_str());
+        ittWidth += bttMetr.horizontalAdvance(ftos(domainSlider_->getDomainValue().y,percision).c_str());
         qText = QString(ittText.str().c_str());
         break;
     case DOMAIN_BOTH_SLIDER:
@@ -572,9 +572,9 @@ void TransFunc2DPropertyWidgetPainter::createInfoToolTip(QPoint mousePos) {
         ittPos.setY(canvas_->getHeight()+10);
         ittText << "<nobr>Domain: [ <b>" << ftos(domainSlider_->getDomainValue().x,percision) << "</b> , <b>" +
                                     ftos(domainSlider_->getDomainValue().y,percision) << "</b> ]</nobr>";
-        ittWidth += ttMetr.width("Domain: [  ,  ]");
-        ittWidth += bttMetr.width(ftos(domainSlider_->getDomainValue().x,percision).c_str());
-        ittWidth += bttMetr.width(ftos(domainSlider_->getDomainValue().y,percision).c_str());
+        ittWidth += ttMetr.horizontalAdvance("Domain: [  ,  ]");
+        ittWidth += bttMetr.horizontalAdvance(ftos(domainSlider_->getDomainValue().x,percision).c_str());
+        ittWidth += bttMetr.horizontalAdvance(ftos(domainSlider_->getDomainValue().y,percision).c_str());
         qText = QString(ittText.str().c_str());
         break;*/
     default:

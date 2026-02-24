@@ -53,7 +53,7 @@ QWidget* WorkspaceDescriptionMenuEntity::createWidget() const {
     QWidget* wdWidget = new QWidget();
 
     QVBoxLayout* wdLayout = new QVBoxLayout(wdWidget);
-        wdLayout->setMargin(0);
+    wdLayout->setContentsMargins(0, 0, 0, 0);
     wdEditor_ = new QTextEdit();
     wdEditor_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(wdEditor_,SIGNAL(customContextMenuRequested(const QPoint&)),this,SLOT(showWDEditorContextMenu(const QPoint &)));

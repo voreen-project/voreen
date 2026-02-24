@@ -36,6 +36,7 @@
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QTransform>
 
 class QGraphicsScene;
 class QGraphicsRectItem;
@@ -120,7 +121,7 @@ public slots:
     void keyframeContextMenuRequest(KeyframeGraphicsItem*, QPoint);
     /// sets the current frame
     void setCurrentFrame(int);
-    void sceneOrder(QMatrix);
+    void sceneOrder(QTransform);
     void scrollBarOrder(int);
     void setFps(int);
     void setDuration(int);
@@ -135,7 +136,7 @@ protected:
     QGraphicsScene* overviewScene_;
     AnimationOverviewView* overviewView_;
     int xPosition_;
-    QMatrix matrix_;
+    QTransform matrix_;
     /// highlights the area which is shown in the propertytimelinewidgets
     //QGraphicsRectItem* highlight_;
     QGraphicsRectItem* highlightBar_;
