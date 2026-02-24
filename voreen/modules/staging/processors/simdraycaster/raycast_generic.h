@@ -46,6 +46,16 @@ using namespace tgt;
 #define SSE_GET_COMP(vec, comp) ((float*)&(vec))[comp]
 #define swizzle4(ssea, sseb, x,y,z,w) _mm_shuffle_ps(ssea, sseb, _MM_SHUFFLE(w,z,y,x) )
 
+#ifndef VRN_SIMDRAYCASTER_HADD4_PS_DEFINED
+#define VRN_SIMDRAYCASTER_HADD4_PS_DEFINED
+inline __m128 vrnHadd4Ps(__m128 v) {
+    // SSE2-compatible horizontal sum with broadcasted result in all lanes.
+    __m128 sum2 = _mm_add_ps(v, _mm_movehl_ps(v, v));
+    __m128 sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, _MM_SHUFFLE(1, 1, 1, 1)));
+    return _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(0, 0, 0, 0));
+}
+#endif
+
 #ifndef RAYCASTERPARAMTERS_DEFINED
 #define RAYCASTERPARAMTERS_DEFINED
 // Configuration of the raycaster
@@ -143,8 +153,7 @@ void FN_NAME(RayCasterParameters p){
 
             // distance between entry and exit point
             __m128 len = _mm_mul_ps(raycastingRange, raycastingRange);
-            len = _mm_hadd_ps(len, len);
-            len = _mm_hadd_ps(len, len);
+            len = vrnHadd4Ps(len);
             len = _mm_sqrt_ps(len);
 
             float lens = SSE_GET_COMP(len, 0);
@@ -189,9 +198,9 @@ void FN_NAME(RayCasterParameters p){
                 __m128i interpolationPosInt = _mm_cvtps_epi32(interpolationPos);
                 
                 // Get components of the position
-                size_t x = _mm_extract_epi32(interpolationPosInt, 0);
-                size_t y = _mm_extract_epi32(interpolationPosInt, 1);
-                size_t z = _mm_extract_epi32(interpolationPosInt, 2);
+                size_t x = static_cast<size_t>(_mm_cvtsi128_si32(interpolationPosInt));
+                size_t y = static_cast<size_t>(_mm_cvtsi128_si32(_mm_srli_si128(interpolationPosInt, 4)));
+                size_t z = static_cast<size_t>(_mm_cvtsi128_si32(_mm_srli_si128(interpolationPosInt, 8)));
 
                 // Generate registers with weights in efficient order
                 __m128 z0011  = swizzle4(weights, _1mweights, 2, 2, 2, 2); // z z 1-z 1-z
@@ -239,8 +248,7 @@ void FN_NAME(RayCasterParameters p){
                 yz = _mm_mul_ps(yz, tfnormalizationfactor);
                 __m128 resultForSample = _mm_mul_ps(yz, _mm_add_ps(_mm_mul_ps(v1, x1111),
                                                      _mm_mul_ps(v2, x0000)));
-                resultForSample = _mm_hadd_ps(resultForSample, resultForSample);
-                resultForSample = _mm_hadd_ps(resultForSample, resultForSample);
+                resultForSample = vrnHadd4Ps(resultForSample);
 
                 // apply transfer function
 #ifndef MIP
@@ -304,4 +312,3 @@ void FN_NAME(RayCasterParameters p){
     }
 }
 //#endif
-

@@ -33,6 +33,11 @@
 #include <iostream>
 #include <fstream>
 
+#ifdef WIN32
+#include <io.h>
+#include <windows.h>
+#endif
+
 #ifdef __unix__
 #include <unistd.h>
 #endif
@@ -125,7 +130,7 @@ public:
         bool success;
 #ifdef WIN32
         // rename() does not replace existing files on Windows, so we have to use this
-        success = (MoveFileEx(tmpfilename.c_str(), filename.c_str(),
+        success = (::MoveFileExA(tmpfilename.c_str(), filename.c_str(),
                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != 0);
 
 #else
