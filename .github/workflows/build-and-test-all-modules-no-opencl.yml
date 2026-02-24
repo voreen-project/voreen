@@ -2,7 +2,7 @@ name: Build and Test (all modules, no opencl)
 
 on:
   push:
-    branches: [ main qt6 ]
+    branches: [ qt6 ]
   pull_request:
     branches: [ main ]
 
