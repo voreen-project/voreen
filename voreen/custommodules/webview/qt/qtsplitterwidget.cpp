@@ -77,7 +77,8 @@ void QtSplitterWidget::updateFromProcessor() {
 
     // First update size. At this point, there still is a match between processor and widget.
     if(processor_->getSizes().size() == static_cast<size_t>(splitter_->count())) {
-        splitter_->setSizes(QList<int>::fromStdList(processor_->getSizes()));
+        auto sizes = processor_->getSizes();
+        splitter_->setSizes(QList<int>(sizes.begin(), sizes.end()));
     }
 
     std::set<QWidget*> orphanedWidgets;
@@ -133,7 +134,8 @@ void QtSplitterWidget::updateFromProcessor() {
 }
 
 void QtSplitterWidget::splitterMoved() {
-    processor_->setSizes(splitter_->sizes().toStdList());
+    auto sizes = splitter_->sizes();
+    processor_->setSizes(std::list<int>(sizes.begin(), sizes.end()));
 }
 
 } //namespace voreen
