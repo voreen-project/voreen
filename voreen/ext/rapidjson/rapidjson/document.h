@@ -23,6 +23,7 @@
 #include "memorystream.h"
 #include "encodedstream.h"
 #include <new>      // placement new
+#include <cstddef>  // std::ptrdiff_t
 #include <limits>
 
 RAPIDJSON_DIAG_PUSH
@@ -98,18 +99,21 @@ struct GenericMember {
     \see GenericMember, GenericValue::MemberIterator, GenericValue::ConstMemberIterator
  */
 template <bool Const, typename Encoding, typename Allocator>
-class GenericMemberIterator
-    : public std::iterator<std::random_access_iterator_tag
-        , typename internal::MaybeAddConst<Const,GenericMember<Encoding,Allocator> >::Type> {
+class GenericMemberIterator {
 
     friend class GenericValue<Encoding,Allocator>;
     template <bool, typename, typename> friend class GenericMemberIterator;
 
     typedef GenericMember<Encoding,Allocator> PlainType;
     typedef typename internal::MaybeAddConst<Const,PlainType>::Type ValueType;
-    typedef std::iterator<std::random_access_iterator_tag,ValueType> BaseType;
 
 public:
+    typedef std::random_access_iterator_tag iterator_category;
+    typedef ValueType value_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef ValueType* pointer;
+    typedef ValueType& reference;
+
     //! Iterator type itself
     typedef GenericMemberIterator Iterator;
     //! Constant iterator type
@@ -118,11 +122,11 @@ public:
     typedef GenericMemberIterator<false,Encoding,Allocator> NonConstIterator;
 
     //! Pointer to (const) GenericMember
-    typedef typename BaseType::pointer         Pointer;
+    typedef pointer         Pointer;
     //! Reference to (const) GenericMember
-    typedef typename BaseType::reference       Reference;
+    typedef reference       Reference;
     //! Signed integer type (e.g. \c ptrdiff_t)
-    typedef typename BaseType::difference_type DifferenceType;
+    typedef difference_type DifferenceType;
 
     //! Default constructor (singular value)
     /*! Creates an iterator pointing to no element.
