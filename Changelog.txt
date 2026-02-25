@@ -10,6 +10,7 @@ Voreen Changelog
 
     * Framework/API Changes:
       o Bump C++ standard to c++17 and update references
+      o Move SIMD raycaster into own (custom) module since it is strongly arch dependent
 
     * Bug Fixes/Minor Changes:
       o VTIVolumeWriter: fix (sometimes) corrupted written multi-channel volumes, write supported meta data
@@ -26,6 +27,7 @@ Voreen Changelog
       o DynamicPythonProcessor: Add "Run Script" button to allow manual script execution from application mode
       o Allow loading and saving of {raw, vvd}-volumes and workspaces from paths containing non-UTF8 characters
       o HelicityDensity: Fix division by zero
+      o Added support for Visual Studio 2026
 
 
 2024-08-02: Voreen 5.3.0

@@ -25,9 +25,9 @@
 
 #include "simdraycaster.h"
 
-#include "../../utils/simdraycaster/jobqueue.h"
-#include "../../utils/simdraycaster/memory.h"
-#include "../../utils/simdraycaster/brickedvolume.h"
+#include "../utils/jobqueue.h"
+#include "../utils/memory.h"
+#include "../utils/brickedvolume.h"
 
 #include "tgt/cpucapabilities.h"
 

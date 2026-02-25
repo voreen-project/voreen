@@ -26,8 +26,8 @@
 #ifndef VRN_SIMDRAYCASTER_H
 #define VRN_SIMDRAYCASTER_H
 
-#include "../../utils/simdraycaster/brickedvolumebase.h"
-#include "../../utils/simdraycaster/performancemetric.h"
+#include "../utils/brickedvolumebase.h"
+#include "../utils/performancemetric.h"
 
 #include "voreen/core/processors/renderprocessor.h"
 #include "voreen/core/processors/volumeraycaster.h"
