@@ -528,6 +528,10 @@ LIST(APPEND VRN_QT_SOURCES ${VRN_MODULE_QT_SOURCES})
 LIST(APPEND VRN_QT_HEADERS ${VRN_MODULE_QT_HEADERS})
 LIST(APPEND VRN_QT_HEADERS_NONMOC ${VRN_MODULE_QT_HEADERS_NONMOC})
 
+# Explicitly disable vulkan which would otherwise be included by Qt.
+SET(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders ON CACHE BOOL "" FORCE)
+SET(CMAKE_DISABLE_FIND_PACKAGE_Vulkan            ON CACHE BOOL "" FORCE)
+
 # QMAKE_CHANGED must be set to true, to allow changing Qt versions by changing the qmake.exe in QT_QMAKE_EXECUTABLE
 SET(QT_QMAKE_CHANGED TRUE)
 # find Qt library
