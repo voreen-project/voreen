@@ -23,33 +23,21 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            cmake cmake-gui ninja-build g++ \
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build g++ \
+            qt6-base-dev qt6-svg-dev \
             libglew-dev libboost-all-dev libdevil-dev libgdcm-dev libtiff5-dev \
             libswscale-dev libavcodec-dev libavformat-dev freeglut3-dev \
             libhdf5-dev liblz4-dev clinfo opencl-headers python3-dev \
-            libvtk9-dev libgdcm-dev libgdcm-tools \
+            libvtk9-dev libgdcm-tools \
             xvfb
-
-      - name: Install Qt 6.10.x
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.10.*'
-          host: 'linux'
-          target: 'desktop'
-          arch: 'linux_gcc_64'
-          install-deps: 'true'
-          cache: 'true'
 
       - name: Configure (CMake, Linux)
         run: |
           cmake -S voreen -B cmake-build-debug \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -C ci/all_modules.cmake \
-            -DCMAKE_PREFIX_PATH="${QT_ROOT_DIR}"
-        env:
-          QT_ROOT_DIR: ${{ env.QT_ROOT_DIR }}
+            -C ci/all_modules.cmake
 
       - name: Build (Linux)
         run: |
