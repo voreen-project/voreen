@@ -28,6 +28,13 @@
 #include "tgt/logmanager.h"
 #include "voreen/core/datastructures/volume/volumeatomic.h"
 
+namespace voreen {
+
+// Must be constructed before static HDF5 initialization below uses it.
+boost::recursive_mutex hdf5libMutex;
+
+} // namespace voreen
+
 namespace {
 
 // Loggercat for hdf5 error stack printing
@@ -103,8 +110,6 @@ bool init = initHDF5Lib();
 
 
 namespace voreen {
-
-boost::recursive_mutex hdf5libMutex;
 
 H5::StrType getUTF8StrType() {
     boost::lock_guard<boost::recursive_mutex> lock(hdf5libMutex);

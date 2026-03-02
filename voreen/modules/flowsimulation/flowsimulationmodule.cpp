@@ -79,11 +79,6 @@
 #include "processors/plotting/flowcenterlineanalysis.h"
 #endif
 
-#ifdef VRN_FLOWSIMULATION_USE_OPENLB
-#include <olb3D.h>
-#include <olb3D.hh>
-#endif
-
 namespace voreen {
 
 FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
@@ -143,11 +138,6 @@ FlowSimulationModule::FlowSimulationModule(const std::string& modulePath)
 
 void FlowSimulationModule::initialize() {
     VoreenModule::initialize();
-
-#ifdef VRN_FLOWSIMULATION_USE_OPENLB
-    olb::olbInit(nullptr, nullptr);
-    olb::singleton::directories().setOutputDir(VoreenApplication::app()->getTemporaryPath("simulation")+"/");
-#endif
 }
 
 void FlowSimulationModule::deinitialize() {

@@ -398,6 +398,12 @@ static bool isAtSampleBorder(const tgt::svec3& p, const tgt::svec3& volumedim) {
         LERROR((errormsg)); \
         __debugbreak(); \
     }
+#elif defined(__APPLE__)
+#define RELEASE_ASSERT(assertion, errormsg) \
+    if(!(assertion)) { \
+        LERROR((errormsg)); \
+        __builtin_debugtrap(); \
+    }
 #else
 #define RELEASE_ASSERT(assertion, errormsg) \
     if(!(assertion)) { \

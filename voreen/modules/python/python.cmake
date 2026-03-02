@@ -43,6 +43,26 @@ ELSEIF(UNIX)
     SET(MOD_INCLUDE_DIRECTORIES ${Python3_INCLUDE_DIRS})
     SET(MOD_LIBRARIES ${Python3_LIBRARIES})
     MESSAGE(STATUS ${MOD_LIBRARIES})
+
+    # On macOS, Python framework libraries often use an @rpath install name
+    # (e.g. @rpath/Python3.framework/Versions/3.9/Python3). Ensure the parent
+    # Frameworks directory is part of runtime search paths.
+    IF(APPLE)
+        FOREACH(_py_lib ${Python3_LIBRARIES})
+            IF(_py_lib MATCHES ".*/Frameworks/[^/]+\\.framework/Versions/[^/]+/lib/[^/]+$")
+                GET_FILENAME_COMPONENT(_py_lib_dir "${_py_lib}" DIRECTORY)              # .../Versions/X.Y/lib
+                GET_FILENAME_COMPONENT(_py_version_dir "${_py_lib_dir}" DIRECTORY)      # .../Versions/X.Y
+                GET_FILENAME_COMPONENT(_py_versions_dir "${_py_version_dir}" DIRECTORY) # .../Versions
+                GET_FILENAME_COMPONENT(_py_framework_dir "${_py_versions_dir}" DIRECTORY)# .../*.framework
+                GET_FILENAME_COMPONENT(_py_frameworks_dir "${_py_framework_dir}" DIRECTORY) # .../Frameworks
+
+                LIST(APPEND CMAKE_BUILD_RPATH "${_py_frameworks_dir}")
+                LIST(APPEND CMAKE_INSTALL_RPATH "${_py_frameworks_dir}")
+            ENDIF()
+        ENDFOREACH()
+        LIST(REMOVE_DUPLICATES CMAKE_BUILD_RPATH)
+        LIST(REMOVE_DUPLICATES CMAKE_INSTALL_RPATH)
+    ENDIF()
     
     # deployment
     SET(MOD_INSTALL_DIRECTORIES

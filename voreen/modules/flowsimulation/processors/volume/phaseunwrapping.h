@@ -44,7 +44,6 @@ public:
     virtual Processor* create() const;
     virtual std::string getClassName() const         { return "PhaseUnwrapping";         }
     virtual std::string getCategory() const          { return "Volume Processing";       }
-    virtual std::string setDescriptions() const      { return "Volume Processing";       }
     virtual CodeState getCodeState() const           { return CODE_STATE_EXPERIMENTAL;   }
     virtual bool isReady() const;
     virtual void process();

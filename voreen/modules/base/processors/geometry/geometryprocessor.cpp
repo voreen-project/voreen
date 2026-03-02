@@ -32,6 +32,7 @@
 #include "tgt/textureunit.h"
 #include "tgt/glmath.h"
 #include "tgt/vector.h"
+#include "tgt/gpucapabilities.h"
 
 using tgt::vec4;
 using tgt::vec3;
@@ -62,6 +63,7 @@ GeometryProcessor::GeometryProcessor()
     , atomicFragmentCounterBuffer_(0)
     , fragmentStorageBuffer_(0)
     , fragmentStorageTexture_(0)
+    , oitSupported_(true)
     , updateSceneAdaptation_(false)
 {
     addProperty(renderGeometries_);
@@ -121,6 +123,10 @@ void GeometryProcessor::initialize() {
 
     composeShader_.setHeader(generateHeader());
     composeShader_.rebuild();
+
+    if(!supportsOIT()) {
+        disableOIT("missing required OpenGL extensions.");
+    }
 
     setupOITShaders();
 
@@ -328,6 +334,10 @@ void GeometryProcessor::adjustOITProperties() {
 }
 
 void GeometryProcessor::blendOITBuffer() {
+    if(!oitSupported_) {
+        return;
+    }
+
     tgt::Shader* shader = oirBlendShader_.getShader();
     if(!shader) {
         LWARNING("No blend shader");
@@ -364,6 +374,10 @@ void GeometryProcessor::blendOITBuffer() {
 
 
 void GeometryProcessor::renderIntoOITBuffer(RenderPort& p) {
+    if(!oitSupported_) {
+        return;
+    }
+
     tgt::Shader* shader = oirAddImageShader_.getShader();
     if(!shader) {
         LWARNING("No Image add shader");
@@ -401,6 +415,10 @@ void GeometryProcessor::renderIntoOITBuffer(RenderPort& p) {
 
 
 void GeometryProcessor::clearOITBuffers() {
+    if(!oitSupported_) {
+        return;
+    }
+
     if(!outport_.isReady()) {
         //LWARNING("Clear: Outport not ready");
         return;
@@ -426,6 +444,10 @@ void GeometryProcessor::clearOITBuffers() {
 }
 
 void GeometryProcessor::setupOITBuffers() {
+    if(!oitSupported_) {
+        return;
+    }
+
     if(!outport_.isReady()) {
         //LWARNING("Setup: Outport not ready");
         return;
@@ -515,12 +537,43 @@ void GeometryProcessor::setupOITBuffers() {
     LGL_ERROR;
 }
 void GeometryProcessor::setupOITShaders() {
+    if(!oitSupported_) {
+        return;
+    }
+
     std::string maxFragmentsDefine =
         "#define MAX_FRAGMENTS " + std::to_string(maxFragmentsPerPixel_.get().y);
 
     oirBlendShader_.setHeader(maxFragmentsDefine);
-    oirBlendShader_.rebuild();
-    oirAddImageShader_.rebuild();
+    const bool blendOk = oirBlendShader_.rebuild();
+    const bool addOk = oirAddImageShader_.rebuild();
+
+    if(!blendOk || !addOk || !oirBlendShader_.hasValidShader() || !oirAddImageShader_.hasValidShader()) {
+        disableOIT("OIT shader compilation/linking failed.");
+    }
+}
+
+bool GeometryProcessor::supportsOIT() const {
+    return GpuCaps.isExtensionSupported("GL_ARB_shader_atomic_counters")
+        && GpuCaps.isExtensionSupported("GL_ARB_shader_image_load_store")
+        && GpuCaps.isExtensionSupported("GL_ARB_shading_language_420pack");
+}
+
+void GeometryProcessor::disableOIT(const std::string& reason) {
+    const bool wasSupported = oitSupported_;
+    oitSupported_ = false;
+    applyOrderIndependentTransparency_.setReadOnlyFlag(true);
+    maxFragmentsPerPixel_.setReadOnlyFlag(true);
+
+    if(applyOrderIndependentTransparency_.get()) {
+        applyOrderIndependentTransparency_.set(false);
+    } else {
+        adjustOITProperties();
+    }
+
+    if(wasSupported) {
+        LWARNING("Order-independent transparency disabled in GeometryProcessor: " << reason);
+    }
 }
 
 void GeometryProcessor::compose(RenderPort& r1, RenderPort& r2) {

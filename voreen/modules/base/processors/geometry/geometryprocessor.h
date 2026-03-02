@@ -87,6 +87,8 @@ protected:
     void clearOITBuffers();
     void setupOITBuffers();
     void setupOITShaders();
+    bool supportsOIT() const;
+    void disableOIT(const std::string& reason);
     void compose(RenderPort& r1, RenderPort& r2);
 
     void maxFragmentsPerPixelChanged();
@@ -112,6 +114,7 @@ private:
     // Configuration properties for OIT
     IntIntervalProperty maxFragmentsPerPixel_;
     BoolProperty applyOrderIndependentTransparency_;
+    bool oitSupported_;
 
     IDManager idManager_;
 

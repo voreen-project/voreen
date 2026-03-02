@@ -286,6 +286,7 @@ ELSEIF(UNIX)
         set(CMAKE_CXX_FLAGS "-Wno-unused-variable ${CMAKE_CXX_FLAGS}")
         set(CMAKE_CXX_FLAGS "-Wno-reorder ${CMAKE_CXX_FLAGS}")
         set(CMAKE_CXX_FLAGS "-Wno-parentheses ${CMAKE_CXX_FLAGS}")
+        set(CMAKE_CXX_FLAGS "-Wno-missing-template-arg-list-after-template-kw ${CMAKE_CXX_FLAGS}")
         set(CMAKE_CXX_FLAGS "-Wno-inconsistent-missing-override ${CMAKE_CXX_FLAGS}") #someone should probably fix this at some point
         set(CMAKE_CXX_FLAGS "-Wno-potentially-evaluated-expression ${CMAKE_CXX_FLAGS}")
         set(CMAKE_CXX_FLAGS "-Wno-missing-braces ${CMAKE_CXX_FLAGS}") #but we enable missing-field-initializers!
@@ -565,6 +566,15 @@ ENDFOREACH(module_basedir ${MODULE_BASEDIR_LIST})
 message(STATUS "Collected module include directories: ${VRN_MODULE_INCLUDE_DIRECTORIES}")
 
 MESSAGE(STATUS "--------------------------------------------------------------------------------")
+
+# On macOS, explicitly adding /usr/include (or its SDK-expanded path) can break
+# libc++ header lookup order (<cstddef>/<cstdlib> -> <stddef.h>/<stdlib.h>).
+IF(APPLE)
+    LIST(FILTER VRN_COMMON_INCLUDE_DIRECTORIES EXCLUDE REGEX "^/usr/include$")
+    LIST(FILTER VRN_MODULE_INCLUDE_DIRECTORIES EXCLUDE REGEX "^/usr/include$")
+    LIST(FILTER VRN_COMMON_INCLUDE_DIRECTORIES EXCLUDE REGEX ".*/SDKs/MacOSX\\.sdk/usr/include$")
+    LIST(FILTER VRN_MODULE_INCLUDE_DIRECTORIES EXCLUDE REGEX ".*/SDKs/MacOSX\\.sdk/usr/include$")
+ENDIF()
 
 # Create commonly used list of all include directories
 # FIRST include module directories so that commonly system directories do not shadow specialized

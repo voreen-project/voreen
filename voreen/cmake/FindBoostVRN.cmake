@@ -72,7 +72,36 @@ IF (WIN32)
     ENDIF()
 
 ELSE(WIN32)
-    FIND_PACKAGE(Boost ${VRN_Boost_VERSION_UNIX} REQUIRED ${Boost_DYNAMIC_NAMES} )
+    SET(Boost_DYNAMIC_NAMES_UNIX ${Boost_DYNAMIC_NAMES})
+    # Boost.System is header-only in newer Boost releases and may not ship as
+    # separate component package (e.g. Homebrew Boost 1.90).
+    LIST(REMOVE_ITEM Boost_DYNAMIC_NAMES_UNIX "system")
+
+    # Homebrew and most Unix package managers provide release variants only.
+    SET(Boost_USE_RELEASE_LIBS ON)
+    SET(Boost_USE_DEBUG_LIBS OFF)
+    SET(Boost_USE_DEBUG_RUNTIME OFF)
+    SET(Boost_NO_WARN_NEW_VERSIONS ON)
+
+    IF(POLICY CMP0167)
+        CMAKE_POLICY(PUSH)
+        CMAKE_POLICY(SET CMP0167 OLD)
+    ENDIF()
+
+    # Prefer classic FindBoost module lookup first to avoid Homebrew BoostConfig
+    # component package issues (e.g. missing boost_systemConfig.cmake).
+    SET(Boost_NO_BOOST_CMAKE ON)
+    FIND_PACKAGE(Boost ${VRN_Boost_VERSION_UNIX} QUIET COMPONENTS ${Boost_DYNAMIC_NAMES_UNIX})
+
+    # Fallback: use default behavior (can resolve via BoostConfig.cmake).
+    IF(NOT Boost_FOUND)
+        UNSET(Boost_NO_BOOST_CMAKE)
+        FIND_PACKAGE(Boost ${VRN_Boost_VERSION_UNIX} REQUIRED COMPONENTS ${Boost_DYNAMIC_NAMES_UNIX})
+    ENDIF()
+
+    IF(POLICY CMP0167)
+        CMAKE_POLICY(POP)
+    ENDIF()
 ENDIF(WIN32)
 
 MARK_AS_ADVANCED(Boost_DIR Boost_INCLUDE_DIRS)

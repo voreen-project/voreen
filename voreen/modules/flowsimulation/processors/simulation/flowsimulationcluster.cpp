@@ -36,7 +36,20 @@
 #include "modules/vtk/io/vtivolumewriter.h"
 #endif
 
+#include <boost/filesystem.hpp>
+
+#if defined(__has_include)
+#if __has_include(<boost/process/v1/child.hpp>)
+#include <boost/process/v1/child.hpp>
+namespace bp = boost::process::v1;
+#else
 #include <boost/process.hpp>
+namespace bp = boost::process;
+#endif
+#else
+#include <boost/process.hpp>
+namespace bp = boost::process;
+#endif
 
 
 #include "voreen/core/utils/stringutils.h"
@@ -159,7 +172,7 @@ public:
                 boost::filesystem::current_path(cd_);
             }
             
-            process_ = boost::process::child(command_);
+            process_ = bp::child(command_);
             if (detach_) {
                 process_.detach();
             }
@@ -186,7 +199,7 @@ private:
     std::string name_;
     bool detach_;
 
-    boost::process::child process_;
+    bp::child process_;
 };
 
 
