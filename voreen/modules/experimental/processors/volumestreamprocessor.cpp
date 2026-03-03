@@ -611,7 +611,7 @@ void VolumeStreamProcessor::loadStream() {
         step_.set(0);
         step_.setMaxValue(steps - 1);
     }
-    catch (tgt::FileException) {
+    catch (const tgt::FileException&) {
         LERROR("loading failed");
     }
     catch (std::bad_alloc) {

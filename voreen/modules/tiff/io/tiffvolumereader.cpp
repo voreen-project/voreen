@@ -36,6 +36,7 @@
 #include <fstream>
 #include <iostream>
 #include <assert.h>
+#include <cstdint>
 
 #include "tgt/exception.h"
 #include "tgt/vector.h"
@@ -84,7 +85,7 @@ VolumeList* TiffVolumeReader::read(const std::string &url) {
     if (dimensions.z == 1)
         throw tgt::CorruptedFileException("TIFF file contains only a single image, but TIFF stack expected", fileName);
 
-    uint16 depth, bps;
+    uint16_t depth, bps;
     tif = TIFFOpen(fileName.c_str(), "r");
 
     if (!tif) {
@@ -93,7 +94,7 @@ VolumeList* TiffVolumeReader::read(const std::string &url) {
     }
     else {
         //TIFFReadDirectory(tif));
-        uint32 width, height;
+        uint32_t width, height;
 
         TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
         TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
@@ -102,7 +103,7 @@ VolumeList* TiffVolumeReader::read(const std::string &url) {
         dimensions.x = width;
         dimensions.y = height;
 
-        uint16 count;
+        uint16_t count;
         void *data;
         int slices;
         if (TIFFGetField(tif, 33471, &count, &data)) {
@@ -185,8 +186,8 @@ VolumeList* TiffVolumeReader::read(const std::string &url) {
             maxValue[i] = 0;
         }
         //(TIFFReadDirectory(tif));
-        uint32 width, height;
-        uint16 depth_, bps_;
+        uint32_t width, height;
+        uint16_t depth_, bps_;
 
         for (int i=0; i < dimensions.z*band; i++) {
             TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);

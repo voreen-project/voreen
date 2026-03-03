@@ -41,6 +41,7 @@
 #include <fstream>
 #include <iostream>
 #include <assert.h>
+#include <cstdint>
 
 #include "tgt/exception.h"
 #include "tgt/vector.h"
@@ -178,7 +179,8 @@ VolumeList* OMETiffVolumeReader::read(const std::string &url) {
     VolumeList* volumeList = new VolumeList();
     for (size_t c=0; c<stack.sizeC_; c++) {
         for (size_t t=0; t<stack.sizeT_; t++) {
-            if ((c == requestedChannel || requestedChannel == -1) && (t == requestedTimestep || requestedTimestep == -1)) {
+            if ((requestedChannel == -1 || c == static_cast<size_t>(requestedChannel)) &&
+                (requestedTimestep == -1 || t == static_cast<size_t>(requestedTimestep))) {
                 VolumeDiskOmeTiff* diskRep = new VolumeDiskOmeTiff(stack.datatype_, stack.volumeDim_, stack, c, t);
                 tgt::vec3 offset = -(stack.voxelSpacing_*(tgt::vec3)stack.volumeDim_) / 2.f;
                 Volume* volumeHandle = new Volume(diskRep, stack.voxelSpacing_, offset);
@@ -340,7 +342,9 @@ std::vector<VolumeRAM*> OMETiffVolumeReader::loadVolumesIntoRam(const OMETiffSta
         TIFF* curTiffFile = 0;
 
         // check firstZ, firstC, firstT parameters of current file against current coordinates
-        if (curFile.firstZ_ != curZ || curFile.firstC_ != curC || curFile.firstT_ != curT) {
+        if (curFile.firstZ_ != static_cast<size_t>(curZ) ||
+            curFile.firstC_ != static_cast<size_t>(curC) ||
+            curFile.firstT_ != static_cast<size_t>(curT)) {
             LWARNING("First Z/T/C values of Tiff file '" << curFile.filename_ << "' do not match expected values");
             //deleteVolumes(volumes);
             //raiseIOException("First Z/T/C values of Tiff file do not match expected values", curFile.filename_, getProgressBar());
@@ -471,7 +475,8 @@ std::vector<VolumeRAM*> OMETiffVolumeReader::loadVolumesIntoRam(const OMETiffSta
     std::vector<VolumeRAM*> result;
     for (size_t c=0; c<volumes.size(); c++) {
         for (size_t t=0; t<volumes[c].size(); t++) {
-            if ((requestedChannel == -1 || c == requestedChannel) && (requestedTimestep == -1 || t == requestedTimestep))
+            if ((requestedChannel == -1 || c == static_cast<size_t>(requestedChannel)) &&
+                (requestedTimestep == -1 || t == static_cast<size_t>(requestedTimestep)))
                 tgtAssert(volumes.at(c).at(t), "missing volume"); //< current channel/timestep is expected to have been created
             if (volumes[c][t]) {
                 result.push_back(volumes.at(c).at(t));
@@ -508,8 +513,8 @@ void OMETiffVolumeReader::readTiffDirectory(TIFF* tiffFile, const std::string& d
     tgtAssert(bitsPerVoxel > 0, "invalid bits per voxel");
 
     // read properties from tiff file and check against passed parameters
-    uint32 width, height;
-    uint16 depth, bps;
+    uint32_t width, height;
+    uint16_t depth, bps;
     TIFFGetField(tiffFile, TIFFTAG_IMAGEWIDTH, &width);
     TIFFGetField(tiffFile, TIFFTAG_IMAGELENGTH, &height);
     TIFFGetField(tiffFile, TIFFTAG_SAMPLESPERPIXEL, &depth);

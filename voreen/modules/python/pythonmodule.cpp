@@ -156,9 +156,11 @@ void PythonModule::initialize() {
     //
     LINFO("Python version: " << Py_GetVersion());
 
-    // Pass program name to the Python interpreter
+    // Pass program name to the Python interpreter (deprecated since Python 3.11)
+#if PY_VERSION_HEX < 0x030B0000
     static wchar_t str_pyvoreen[] = L"PyVoreen";
     Py_SetProgramName(str_pyvoreen);
+#endif
 
 #ifdef WIN32
 #ifndef VRN_USE_PYTHON_VERSION
@@ -291,7 +293,34 @@ void PythonModule::runScript(const std::string& filename, bool logErrors) {
 }
 
 void PythonModule::setArgv(int argc, wchar_t* argv[]) {
+#if PY_VERSION_HEX >= 0x030B0000
+    PyObject* pyArgv = PyList_New(argc);
+    if (!pyArgv) {
+        LWARNING("Failed to allocate Python argv list");
+        PyErr_Clear();
+        return;
+    }
+
+    for (int i = 0; i < argc; ++i) {
+        const wchar_t* arg = (argv && argv[i]) ? argv[i] : L"";
+        PyObject* pyArg = PyUnicode_FromWideChar(arg, -1);
+        if (!pyArg) {
+            LWARNING("Failed to convert argv entry to Python unicode");
+            Py_DECREF(pyArgv);
+            PyErr_Clear();
+            return;
+        }
+        PyList_SET_ITEM(pyArgv, i, pyArg); // steals reference
+    }
+
+    if (PySys_SetObject("argv", pyArgv) != 0) {
+        LWARNING("Failed to set Python sys.argv");
+        PyErr_Clear();
+    }
+    Py_DECREF(pyArgv);
+#else
     PySys_SetArgv(argc, argv);
+#endif
 }
 
 void PythonModule::addModulePath(const std::string& path) {

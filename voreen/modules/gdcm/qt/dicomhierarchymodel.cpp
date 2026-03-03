@@ -134,7 +134,7 @@ void DicomHierarchyModel::fetchMore ( const QModelIndex & parent ) {
             //find all studies
             studies = gdcmReader_->findNetworkStudies(url_,scpAet_,scpPort_,node->getDicomHierarchyID());
         }
-        catch (tgt::FileException e) {
+        catch (const tgt::FileException& e) {
             LERROR(e.what());
             QMessageBox::warning(0,"Could not find studies", e.what());
             return;
@@ -157,7 +157,7 @@ void DicomHierarchyModel::fetchMore ( const QModelIndex & parent ) {
             //find all series
             series = gdcmReader_->findNetworkSeries(url_,scpAet_,scpPort_,node->parent_->getDicomHierarchyID(),node->getDicomHierarchyID());
         }
-        catch (tgt::FileException e) {
+        catch (const tgt::FileException& e) {
             LERROR(e.what());
             QMessageBox::warning(0,"Could not find series", e.what());
             return;

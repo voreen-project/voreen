@@ -375,8 +375,8 @@ void NetworkEditor::createContextMenuActions() {
     connect(createNewTextNoteAction_, SIGNAL(triggered()), this, SLOT(createNewTextNoteSlot()));
     connect(createNewTextFrameAction_, SIGNAL(triggered()), this, SLOT(createNewTextFrameSlot()));
 
-    copyAction_->setShortcut(Qt::CTRL | Qt::Key_C);
-    pasteAction_->setShortcut(Qt::CTRL | Qt::Key_V);
+    copyAction_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    pasteAction_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
     //replaceAction_
     deleteAction_->setShortcut(Qt::Key_Delete);
 
@@ -1662,7 +1662,7 @@ void NetworkEditor::initilizeEditorButtons() {
         dataFlowLayerButton_->setIconSize(NWEMainButtonSize);
         dataFlowLayerButton_->setToolTip(tr("Switch to data flow mode (ctrl+1)"));
         dataFlowLayerButton_->setCheckable(true);
-        dataFlowLayerButton_->setShortcut(Qt::CTRL | Qt::Key_1);
+        dataFlowLayerButton_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_1));
         connect(dataFlowLayerButton_, SIGNAL(clicked()), this, SLOT(setLayerToDataFlow()));
         layerButtonLayout->addWidget(dataFlowLayerButton_);
     linkingLayerButton_ = new QToolButton;
@@ -1670,7 +1670,7 @@ void NetworkEditor::initilizeEditorButtons() {
         linkingLayerButton_->setIconSize(NWEMainButtonSize);
         linkingLayerButton_->setToolTip(tr("Switch to linking mode (ctrl+2)"));
         linkingLayerButton_->setCheckable(true);
-        linkingLayerButton_->setShortcut(Qt::CTRL | Qt::Key_2);
+        linkingLayerButton_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_2));
         connect(linkingLayerButton_, SIGNAL(clicked()), this, SLOT(setLayerToLinking()));
         layerButtonLayout->addWidget(linkingLayerButton_);
     // add to button group, so only one can be checked at the same time

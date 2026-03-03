@@ -683,7 +683,7 @@ bool CommandStreaming::execute(const std::vector<std::string>& /*parameters*/) {
         flog << "incompressible blocks: " << log_incompressible << std::endl;
 
     }
-    catch (tgt::FileException) {
+    catch (const tgt::FileException&) {
         LERROR("loading failed");
         return false;
     }

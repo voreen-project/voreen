@@ -844,7 +844,7 @@ vector<string> GdcmVolumeReader::getFilesInSeries(vector<string> filenames, stri
             if (series == seriesInstanceUID)
                 result.push_back(*fileIterator);
         }
-        catch(tgt::FileException) {
+        catch(const tgt::FileException&) {
             //file is not a DICOM file... just ignore it
             LINFO("Ignoring file " + (*fileIterator) + " because it is not a DICOM file...");
         }
@@ -1307,7 +1307,7 @@ VolumeList* GdcmVolumeReader::readDicomDir(const VolumeURL &origin) {
                     o.addSearchParameter("SeriesInstanceUID", seriesIterator->getSeriesInstanceUID());
                     vc = subdivideAndLoadDicomFiles(seriesFilenames, o);
                 }
-                catch(tgt::FileException f) {
+                catch(const tgt::FileException& f) {
                     string s(f.what());
                     LERROR(s);
                     vc = 0;
@@ -1443,7 +1443,7 @@ VolumeList* GdcmVolumeReader::subdivideAndLoadDicomFiles(const std::vector<std::
                     try {
                         vh = readDicomFiles(*groupIterator, origin);
                     }
-                    catch(tgt::FileException f) {
+                    catch(const tgt::FileException& f) {
                         string s(f.what());
                         LERROR(s);
                         vh = 0;

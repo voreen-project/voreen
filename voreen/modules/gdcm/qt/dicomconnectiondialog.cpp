@@ -222,7 +222,7 @@ void DicomConnectionDialog::submitFindPatients() {
         //find all patients
         patients = gdcmReader_->findNetworkPatients(urlField_->text().toStdString(),scpAetField_->text().toStdString(),static_cast<uint16_t>(stoi(scpPortField_->text().toStdString())));
     }
-    catch (tgt::FileException e) {
+    catch (const tgt::FileException& e) {
         LERROR(e.what());
         QMessageBox::warning(this,"Could not establish connection", e.what());
 
@@ -454,7 +454,7 @@ void DicomConnectionDialog::refreshPatients() {
         //find all patients
         patients = gdcmReader_->findNetworkPatients(model_->getUrl(),model_->getScpAet(),model_->getScpPort());
     }
-    catch (tgt::FileException e) {
+    catch (const tgt::FileException& e) {
         LERROR(e.what());
         QMessageBox::warning(this,"Could not establish connection", e.what());
         submitButton_->setDisabled(false);
