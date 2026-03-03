@@ -61,8 +61,9 @@ public:
     }
 
     void mousePressEvent(QMouseEvent* event) {
+        const QPoint eventPos = event->position().toPoint();
         if (event->button() == Qt::LeftButton) {
-            dragStartPosition_ = event->pos();
+            dragStartPosition_ = eventPos;
             QListWidgetItem* selectedItem = itemAt(dragStartPosition_);
             if(selectedItem) {
                 setCurrentRow(row(selectedItem));
@@ -71,9 +72,10 @@ public:
     }
 
     void mouseMoveEvent(QMouseEvent* event) {
+        const QPoint eventPos = event->position().toPoint();
         if (!(event->buttons() & Qt::LeftButton))
             return;
-        if ((event->pos() - dragStartPosition_).manhattanLength()
+        if ((eventPos - dragStartPosition_).manhattanLength()
             < QApplication::startDragDistance())
             return;
 
@@ -170,8 +172,9 @@ public:
     }
 
     void mousePressEvent(QMouseEvent* event) {
+        const QPoint eventPos = event->position().toPoint();
         if (event->button() & (Qt::LeftButton | Qt::RightButton)) {
-            dragStartPosition_ = event->pos();
+            dragStartPosition_ = eventPos;
             QListWidgetItem* selectedItem = itemAt(dragStartPosition_);
             if(selectedItem) {
                 property_->setSelectedInstance(row(selectedItem));
@@ -183,9 +186,10 @@ public:
     }
 
     void mouseMoveEvent(QMouseEvent* event) {
+        const QPoint eventPos = event->position().toPoint();
         if (!(event->buttons() & Qt::LeftButton))
             return;
-        if ((event->pos() - dragStartPosition_).manhattanLength()
+        if ((eventPos - dragStartPosition_).manhattanLength()
             < QApplication::startDragDistance())
             return;
 
@@ -224,7 +228,7 @@ public:
 
     void dropEvent(QDropEvent* event) {
         if(event->mimeData()->hasFormat("filter/instance")) {
-            int position = row(itemAt(event->pos()));
+            int position = row(itemAt(event->position().toPoint()));
             if(position == -1) {
                 event->ignore();
                 return;

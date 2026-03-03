@@ -375,8 +375,8 @@ void NetworkEditor::createContextMenuActions() {
     connect(createNewTextNoteAction_, SIGNAL(triggered()), this, SLOT(createNewTextNoteSlot()));
     connect(createNewTextFrameAction_, SIGNAL(triggered()), this, SLOT(createNewTextFrameSlot()));
 
-    copyAction_->setShortcut(Qt::CTRL + Qt::Key_C);
-    pasteAction_->setShortcut(Qt::CTRL + Qt::Key_V);
+    copyAction_->setShortcut(Qt::CTRL | Qt::Key_C);
+    pasteAction_->setShortcut(Qt::CTRL | Qt::Key_V);
     //replaceAction_
     deleteAction_->setShortcut(Qt::Key_Delete);
 
@@ -729,24 +729,24 @@ void NetworkEditor::generateGraphicsItems() {
     if (!getProcessorNetwork())
         return;
 
-    foreach (Processor* proc, getProcessorNetwork()->getProcessors())
+    for (Processor* proc : getProcessorNetwork()->getProcessors())
         createProcessorGraphicsItem(proc);
 
-    foreach (Processor* proc, getProcessorNetwork()->getProcessors()) {
+    for (Processor* proc : getProcessorNetwork()->getProcessors()) {
         std::vector<Port*> outports = proc->getOutports();
         std::vector<CoProcessorPort*> coprocessoroutports = proc->getCoProcessorOutports();
         // append coprocessoroutports to outports because we can handle them identically
         outports.insert(outports.end(), coprocessoroutports.begin(), coprocessoroutports.end());
 
-        foreach (Port* port, outports) {
+        for (Port* port : outports) {
             std::vector<const Port*> connectedPorts = port->getConnected();
 
-            foreach (const Port* connectedPort, connectedPorts)
+            for (const Port* connectedPort : connectedPorts)
                 getPortGraphicsItem(port)->addGraphicalConnection(getPortGraphicsItem(connectedPort));
         }
     }
 
-    foreach (PropertyLink* link, getProcessorNetwork()->getPropertyLinks()) {
+    for (PropertyLink* link : getProcessorNetwork()->getPropertyLinks()) {
         createLinkArrowForPropertyLink(link);
     }
 }
@@ -1662,7 +1662,7 @@ void NetworkEditor::initilizeEditorButtons() {
         dataFlowLayerButton_->setIconSize(NWEMainButtonSize);
         dataFlowLayerButton_->setToolTip(tr("Switch to data flow mode (ctrl+1)"));
         dataFlowLayerButton_->setCheckable(true);
-        dataFlowLayerButton_->setShortcut(Qt::CTRL + Qt::Key_1);
+        dataFlowLayerButton_->setShortcut(Qt::CTRL | Qt::Key_1);
         connect(dataFlowLayerButton_, SIGNAL(clicked()), this, SLOT(setLayerToDataFlow()));
         layerButtonLayout->addWidget(dataFlowLayerButton_);
     linkingLayerButton_ = new QToolButton;
@@ -1670,7 +1670,7 @@ void NetworkEditor::initilizeEditorButtons() {
         linkingLayerButton_->setIconSize(NWEMainButtonSize);
         linkingLayerButton_->setToolTip(tr("Switch to linking mode (ctrl+2)"));
         linkingLayerButton_->setCheckable(true);
-        linkingLayerButton_->setShortcut(Qt::CTRL + Qt::Key_2);
+        linkingLayerButton_->setShortcut(Qt::CTRL | Qt::Key_2);
         connect(linkingLayerButton_, SIGNAL(clicked()), this, SLOT(setLayerToLinking()));
         layerButtonLayout->addWidget(linkingLayerButton_);
     // add to button group, so only one can be checked at the same time
@@ -2230,10 +2230,11 @@ void NetworkEditor::wheelEvent(QWheelEvent *event) {
 }
 
 void NetworkEditor::mousePressEvent(QMouseEvent* event) {
+    const QPoint eventPos = event->position().toPoint();
     // shift and left button activate translation of scene.
     if (event->button() == Qt::LeftButton && (event->modifiers() == Qt::ShiftModifier || currentCursorMode_ == NetworkEditorCursorMoveMode)) {
         translateScene_ = true;
-        translateSceneVector_ = mapToScene(event->pos());
+        translateSceneVector_ = mapToScene(eventPos);
         lastTranslateCenter_ =  mapToScene(viewport()->rect().center());
         setCursor(Qt::ClosedHandCursor);
     }
@@ -2241,16 +2242,17 @@ void NetworkEditor::mousePressEvent(QMouseEvent* event) {
         if(!(event->button() & Qt::RightButton))
             QGraphicsView::mousePressEvent(event);
         else
-            nextTextBoxPos_ = event->pos();
+            nextTextBoxPos_ = eventPos;
 }
 
 void NetworkEditor::mouseMoveEvent(QMouseEvent* event) {
+    const QPoint eventPos = event->position().toPoint();
     if (translateScene_) {
         //set new center
-        translateSceneVector_ -= mapToScene(event->pos());
+        translateSceneVector_ -= mapToScene(eventPos);
         lastTranslateCenter_ += translateSceneVector_;
         centerOn(lastTranslateCenter_);
-        translateSceneVector_ = mapToScene(event->pos());
+        translateSceneVector_ = mapToScene(eventPos);
         //save new center
         if (getProcessorNetwork()) {
             if (getProcessorNetwork()->getMetaDataContainer().hasMetaData("ZoomCenter")) {
@@ -2280,7 +2282,7 @@ void NetworkEditor::mouseReleaseEvent(QMouseEvent* event) {
             }
         }
     } else {
-       nextTextBoxPos_ = event->pos();
+       nextTextBoxPos_ = event->position().toPoint();
        QGraphicsView::mouseReleaseEvent(event);
     }
 }
@@ -2327,7 +2329,8 @@ void NetworkEditor::dragEnterEvent(QDragEnterEvent* event) {
 }
 
 void NetworkEditor::dragMoveEvent(QDragMoveEvent* event) {
-    QGraphicsItem* item = itemAt(event->pos());
+    const QPoint eventPos = event->position().toPoint();
+    QGraphicsItem* item = itemAt(eventPos);
 
     // Remove old selection.
     if (selectedItem_) {
@@ -2381,7 +2384,8 @@ void NetworkEditor::dropEvent(QDropEvent* event) {
         return;
     }
 
-    QGraphicsItem* lowerItem = itemAt(event->pos());
+    const QPoint eventPos = event->position().toPoint();
+    QGraphicsItem* lowerItem = itemAt(eventPos);
     if (event->mimeData()->hasText()) {
         event->setDropAction(Qt::CopyAction);
         event->accept();
@@ -2430,7 +2434,7 @@ void NetworkEditor::dropEvent(QDropEvent* event) {
                         PortGraphicsItem* srcItem = selectedPortArrow->getSourceItem();
                         PortGraphicsItem* dstItem = selectedPortArrow->getDestinationItem();
                         getProcessorNetwork()->addProcessorInConnection(srcItem->getPort(), dstItem->getPort(), proc);
-                        p = mapToScene(event->pos());
+                        p = mapToScene(eventPos);
                         hasBeenReplaced = true;     // not really replaced, but has been handled already
                         break;
                     }
@@ -2441,7 +2445,7 @@ void NetworkEditor::dropEvent(QDropEvent* event) {
                         if (port->isOutport() && getProcessorNetwork()->canTakeOverConnections(port->getPort(), proc)) {
                             getProcessorNetwork()->takeOverConnections(port->getPort(), proc);
                             port->setScale(1.0); // restore scale from prior drag move event
-                            p = mapToScene(event->pos());
+                            p = mapToScene(eventPos);
                             hasBeenReplaced = true;
                         }
                         break;
@@ -2456,7 +2460,7 @@ void NetworkEditor::dropEvent(QDropEvent* event) {
         if (!hasBeenReplaced) {
             // not replaced / not handled before
             getProcessorNetwork()->addProcessor(proc, processorName);
-            p = mapToScene(event->pos());
+            p = mapToScene(eventPos);
         }
         tgtAssert(processorItemMap_.contains(proc), "processorItemMap didn't contain the processor");
         item = processorItemMap_[proc];
@@ -2871,7 +2875,8 @@ void NetworkEditor::contextMenuEvent(QContextMenuEvent* event) {
         selectedItems.clear();
     }
 
-    QGraphicsItem* item = itemAt(event->pos());
+    const QPoint eventPos = event->pos();
+    QGraphicsItem* item = itemAt(eventPos);
 
     //move to parent item
     if (item) {

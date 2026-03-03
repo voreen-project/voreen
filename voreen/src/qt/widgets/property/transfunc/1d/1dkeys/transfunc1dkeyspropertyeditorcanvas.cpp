@@ -166,7 +166,7 @@ void TransFunc1DKeysPropertyEditorCanvas::showKeyContextMenu(QMouseEvent* event)
     // allow deletion of keys only if there are at least two of them
     deleteAction_->setEnabled(tfProp_->get()->getNumKeys() > 1);
 
-    keyContextMenu_.popup(event->globalPos());
+    keyContextMenu_.popup(event->globalPosition().toPoint());
 }
 
 void TransFunc1DKeysPropertyEditorCanvas::colorChangeActionSlot() {
@@ -268,15 +268,16 @@ void TransFunc1DKeysPropertyEditorCanvas::mousePressEvent(QMouseEvent* event) {
         emit toggleInteractionModeSignal(true);
 
     event->accept();
+    const QPoint eventPos = event->position().toPoint();
 
     //check, if a line is been hit
-    dragLine_ = isLineHit(tgt::vec2(event->x(), event->y()));
+    dragLine_ = isLineHit(tgt::vec2(eventPos.x(), eventPos.y()));
     if (dragLine_ >= 0 && event->modifiers() == Qt::ShiftModifier) {
-        dragLineStartY_ = event->y();
+        dragLineStartY_ = eventPos.y();
         return;
     }
 
-    tgt::vec2 sHit = tgt::vec2(event->x(), static_cast<float>(height()) - event->y());
+    tgt::vec2 sHit = tgt::vec2(eventPos.x(), static_cast<float>(height()) - eventPos.y());
     tgt::vec2 hit = stow(sHit);
 
     // see if a key was selected
@@ -325,7 +326,7 @@ void TransFunc1DKeysPropertyEditorCanvas::mousePressEvent(QMouseEvent* event) {
         isKeyBeingDraged_ = true;
         //keep values within valid range
         hit = tgt::clamp(hit, 0.f, 1.f);
-        updateToolTipCoordinates(event->pos(), hit);
+        updateToolTipCoordinates(eventPos, hit);
         if (selectedKey_->isSplit() && !isLeftPartSelected_)
             emit colorChangedSignal(Col2QColor(selectedKey_->getColorR()));
         else
@@ -342,7 +343,7 @@ void TransFunc1DKeysPropertyEditorCanvas::mousePressEvent(QMouseEvent* event) {
         insertNewKey(hit); //calls invalidate
         isKeyBeingDraged_ = true;
         dragLine_ = -1;
-        updateToolTipCoordinates(event->pos(), hit);
+        updateToolTipCoordinates(eventPos, hit);
         update();
         emit colorChangedSignal(Col2QColor(selectedKey_->getColorL()));
 
@@ -351,21 +352,22 @@ void TransFunc1DKeysPropertyEditorCanvas::mousePressEvent(QMouseEvent* event) {
 
 void TransFunc1DKeysPropertyEditorCanvas::mouseMoveEvent(QMouseEvent* event) {
     event->accept();
-    mousePos_ = event->pos();
+    const QPoint eventPos = event->position().toPoint();
+    mousePos_ = eventPos;
 
-    tgt::vec2 sHit = tgt::vec2(event->x(), static_cast<float>(height()) - event->y());
+    tgt::vec2 sHit = tgt::vec2(eventPos.x(), static_cast<float>(height()) - eventPos.y());
     tgt::vec2 hit = stow(sHit);
 
 
-    if (!isKeyBeingDraged_ && isLineHit(tgt::vec2(event->x(), event->y())) >= 0 && event->modifiers() == Qt::ShiftModifier)
+    if (!isKeyBeingDraged_ && isLineHit(tgt::vec2(eventPos.x(), eventPos.y())) >= 0 && event->modifiers() == Qt::ShiftModifier)
         setCursor(Qt::SizeVerCursor);
     else
         unsetCursor();
 
     if (dragLine_ >= 0) {
         // a line between 2 keys is moved (shift modifier was used)
-        float delta = dragLineStartY_ - event->y();
-        dragLineStartY_ = event->y();
+        float delta = dragLineStartY_ - eventPos.y();
+        dragLineStartY_ = eventPos.y();
         //left key
         TransFuncMappingKey* key = tfProp_->get()->getKey(dragLine_);
         if (dragLineAlphaLeft_ == -1.f)
@@ -407,7 +409,7 @@ void TransFunc1DKeysPropertyEditorCanvas::mouseMoveEvent(QMouseEvent* event) {
     hit = tgt::clamp(hit, 0.f, 1.f);
 
     if (selectedKey_ != 0) {
-        updateToolTipCoordinates(event->pos(), hit);
+        updateToolTipCoordinates(eventPos, hit);
         if (event->modifiers() != Qt::ShiftModifier) {
             selectedKey_->setIntensity(hit.x);
         }

@@ -188,7 +188,7 @@ namespace voreen {
         deleteAction_->setEnabled(tfProp_->get()->getNumCurves() > 1);
         deleteAction_->setChecked(selectedCurve_ && !selectedCurve_->isActive());
 
-        keyContextMenu_.popup(event->globalPos());
+        keyContextMenu_.popup(event->globalPosition().toPoint());
     }
 
     void TransFunc1DGaussianPropertyEditorCanvas::colorChangeActionSlot() {
@@ -333,13 +333,15 @@ namespace voreen {
     //      Mouse events and other
     //-------------------------------------------------------------------------------------------------------------
     void TransFunc1DGaussianPropertyEditorCanvas::mousePressEvent(QMouseEvent* event) {
+        const QPoint eventPos = event->position().toPoint();
+
         //activate interaction mode
         if (event->button() == Qt::LeftButton)
             emit toggleInteractionModeSignal(true);
 
         event->accept();
 
-        tgt::vec2 sHit = tgt::vec2(event->x(), static_cast<float>(height()) - event->y());
+        tgt::vec2 sHit = tgt::vec2(eventPos.x(), static_cast<float>(height()) - eventPos.y());
         tgt::vec2 hit = stow(sHit);
 
         // see if a curve was selected at one of its three markers
@@ -430,7 +432,7 @@ namespace voreen {
             isKeyBeingDraged_ = true;
             //keep values within valid range
             hit = tgt::clamp(hit, 0.f, 1.f);
-            updateToolTipCoordinates(event->pos(), hit);
+            updateToolTipCoordinates(eventPos, hit);
 
             // update the color shown in the color picker
             if (selectedPart_ == PEAK_LEFT) {
@@ -456,17 +458,18 @@ namespace voreen {
         {
             insertNewCurve(hit); //calls invalidate
             isKeyBeingDraged_ = true;
-            updateToolTipCoordinates(event->pos(), hit);
+            updateToolTipCoordinates(eventPos, hit);
             update();
             emit colorChangedSignal(Col2QColor(selectedCurve_->getColorL()));
         }
     }
 
     void TransFunc1DGaussianPropertyEditorCanvas::mouseMoveEvent(QMouseEvent* event) {
+        const QPoint eventPos = event->position().toPoint();
         event->accept();
-        mousePos_ = event->pos();
+        mousePos_ = eventPos;
 
-        tgt::vec2 sHit = tgt::vec2(event->x(), static_cast<float>(height()) - event->y());
+        tgt::vec2 sHit = tgt::vec2(eventPos.x(), static_cast<float>(height()) - eventPos.y());
         tgt::vec2 hit = stow(sHit);
 
         // return when no key is dragged
@@ -482,7 +485,7 @@ namespace voreen {
 
         // marker gets dragged
         if (selectedCurve_ != 0) {
-            updateToolTipCoordinates(event->pos(), hit);
+            updateToolTipCoordinates(eventPos, hit);
 
             // a peak marker is dragged
             if (selectedPart_ == PEAK_LEFT || selectedPart_ == PEAK_RIGHT) {

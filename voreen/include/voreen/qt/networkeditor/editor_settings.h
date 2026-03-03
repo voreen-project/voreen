@@ -166,7 +166,7 @@ template<class T>
 QList<T> stdVectorToQList(const std::vector<T>& vec) {
     QList<T> result;
 
-    foreach (T i, vec)
+    for (const T& i : vec)
         result.append(i);
 
     return result;
@@ -176,7 +176,7 @@ template<class T>
 std::vector<T> qListToStdVector(const QList<T>& vec) {
     std::vector<T> result;
 
-    foreach (T i, vec)
+    for (const T& i : vec)
         result.push_back(i);
 
     return result;
@@ -186,7 +186,7 @@ template<class T, class U>
 QList<U> convertQList(const QList<T>& list, bool ignoreFailedConversion = true) {
     QList<U> result;
 
-    foreach (T item, list) {
+    for (const T& item : list) {
         U castItem = dynamic_cast<U>(item);
 
         if (!ignoreFailedConversion) {

@@ -26,7 +26,7 @@
 #include "tgt/filesystem.h"
 
 #include <ctime>
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef WIN32
     #include <windows.h>
@@ -78,9 +78,9 @@ std::string Log::getTimeString() {
     tm *now = 0;
     time(&long_time);
     now = localtime(&long_time);
-    char SzBuffer[256];
-    sprintf(SzBuffer, "%.2i:%.2i:%.2i", now->tm_hour, now->tm_min, now->tm_sec);
-    string temp(SzBuffer);
+    char szBuffer[256];
+    std::snprintf(szBuffer, sizeof(szBuffer), "%.2i:%.2i:%.2i", now->tm_hour, now->tm_min, now->tm_sec);
+    string temp(szBuffer);
     return temp;
 }
 
@@ -89,9 +89,9 @@ std::string Log::getDateString() {
     tm *now = 0;
     time(&long_time);
     now = localtime(&long_time);
-    char SzBuffer[256];
-    sprintf(SzBuffer, "%.2i.%.2i.%.4i", now->tm_mday, now->tm_mon + 1, now->tm_year + 1900);
-    string temp(SzBuffer);
+    char szBuffer[256];
+    std::snprintf(szBuffer, sizeof(szBuffer), "%.2i.%.2i.%.4i", now->tm_mday, now->tm_mon + 1, now->tm_year + 1900);
+    string temp(szBuffer);
     return temp;
 }
 

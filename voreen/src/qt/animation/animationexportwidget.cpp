@@ -40,6 +40,8 @@
 
 #include "voreen/core/utils/voreenqualitymode.h"
 
+#include <cstdio>
+
 namespace voreen {
 
 AnimationExportWidget::AnimationExportWidget(QWidget* parent, Animation* animation, NetworkEvaluator* network,
@@ -374,7 +376,7 @@ void AnimationExportWidget::renderingStep(){
             // render frame to file
             char fn[1024];
 
-            sprintf(fn, "%s%05d%s", std::string(recordPathName_ + "/frame").c_str(), currentFrame_, ".png");
+            std::snprintf(fn, sizeof(fn), "%s%05d%s", std::string(recordPathName_ + "/frame").c_str(), currentFrame_, ".png");
             try {
                 canvasRenderer_->renderToImage(fn, tgt::ivec2(spinWidth_->value(), spinHeight_->value()));
             }

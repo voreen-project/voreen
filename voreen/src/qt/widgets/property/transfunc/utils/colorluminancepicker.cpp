@@ -114,11 +114,11 @@ void ColorLuminancePicker::updateAllMembers(int h, int s , int v) {
 //-------------------------------------------------------------------------------
 void ColorLuminancePicker::mousePressEvent(QMouseEvent* event) {
     emit toggleInteractionModeSignal(true);
-    updateValue(yPositionToValue(event->y()));
+    updateValue(yPositionToValue(static_cast<int>(event->position().y())));
 }
 
 void ColorLuminancePicker::mouseMoveEvent(QMouseEvent* event) {
-    updateValue(yPositionToValue(event->y()));
+    updateValue(yPositionToValue(static_cast<int>(event->position().y())));
 }
 
 void ColorLuminancePicker::mouseReleaseEvent(QMouseEvent* event) {

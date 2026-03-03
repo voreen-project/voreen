@@ -180,8 +180,10 @@ void PythonModule::initialize() {
     if (!Py_IsInitialized())
         throw VoreenException("Failed to initialize Python interpreter");
 
-    // required in order to use threads.
+    // Deprecated/no-op since Python 3.7.
+#if PY_VERSION_HEX < 0x03070000
     PyEval_InitThreads();
+#endif
 
     // init ResourceManager search path
     addPath("");

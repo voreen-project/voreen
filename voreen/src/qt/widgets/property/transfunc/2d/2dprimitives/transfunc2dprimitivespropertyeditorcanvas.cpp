@@ -240,13 +240,15 @@ void TransFunc2DPrimitivesPropertyEditorCanvas::newPrimitiveAddedSlot(TransFuncP
 //      Mouse events and other
 //-------------------------------------------------------------------------------------------------------------
 void TransFunc2DPrimitivesPropertyEditorCanvas::mousePressEvent(QMouseEvent* event) {
+    const QPoint eventPos = event->position().toPoint();
+
     //activate interaction mode
     if (event->button() == Qt::LeftButton)
         emit toggleInteractionModeSignal(true);
 
     event->accept();
 
-    tgt::vec2 sHit = tgt::vec2(event->x(), static_cast<float>(height()) - event->y());
+    tgt::vec2 sHit = tgt::vec2(eventPos.x(), static_cast<float>(height()) - eventPos.y());
     tgt::vec2 hit = pixelToNormalized(sHit);
 
     // see if a key was selected
@@ -285,9 +287,9 @@ void TransFunc2DPrimitivesPropertyEditorCanvas::mousePressEvent(QMouseEvent* eve
     //handle right click
     if (event->button() == Qt::RightButton) {
         if (selectedKey_) {
-            keyContextMenu_.popup(event->globalPos());
+            keyContextMenu_.popup(event->globalPosition().toPoint());
         } else if(selectedPrimitive_) {
-            primitiveContextMenu_.popup(event->globalPos());
+            primitiveContextMenu_.popup(event->globalPosition().toPoint());
         } else {
             //reset color
             emit colorChangedSignal(QColor(0,0,0,0));
@@ -300,9 +302,9 @@ void TransFunc2DPrimitivesPropertyEditorCanvas::mousePressEvent(QMouseEvent* eve
     if (selectedPrimitive_ != 0 && event->button() == Qt::LeftButton) {
         isBeingDraged_ = true;
         //keep values within valid range
-        lastMousePos_ = event->pos();
+        lastMousePos_ = eventPos;
         hit = tgt::clamp(hit, 0.f, 1.f);
-        updateToolTipCoordinates(event->pos(), hit);
+        updateToolTipCoordinates(eventPos, hit);
         update();
         return;
     }
@@ -314,9 +316,10 @@ void TransFunc2DPrimitivesPropertyEditorCanvas::mousePressEvent(QMouseEvent* eve
 }
 
 void TransFunc2DPrimitivesPropertyEditorCanvas::mouseMoveEvent(QMouseEvent* event) {
+    const QPoint eventPos = event->position().toPoint();
     event->accept();
 
-    tgt::vec2 pixelHit = tgt::vec2(event->x(), static_cast<float>(height()) - event->y());
+    tgt::vec2 pixelHit = tgt::vec2(eventPos.x(), static_cast<float>(height()) - eventPos.y());
     tgt::vec2 normalizedHit = pixelToNormalized(pixelHit);
 
     if (isBeingDraged_) {
@@ -328,10 +331,10 @@ void TransFunc2DPrimitivesPropertyEditorCanvas::mouseMoveEvent(QMouseEvent* even
         } else {
             tgtAssert(false, "should not get here!");
         }
-        updateToolTipCoordinates(event->pos(), tgt::clamp(normalizedHit,0.f,1.f));
+        updateToolTipCoordinates(eventPos, tgt::clamp(normalizedHit,0.f,1.f));
         tfProp_->get()->invalidateTexture();
         tfProp_->invalidate(); //update called from tf invalidate
-        lastMousePos_ = event->pos();
+        lastMousePos_ = eventPos;
     } else {
         //Nothing to do here
         unsetCursor();

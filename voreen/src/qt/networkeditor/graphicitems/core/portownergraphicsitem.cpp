@@ -383,7 +383,7 @@ void PortOwnerGraphicsItem::layoutChildItems() {
             propertyList_.setVisible(false);
             propertyList_.setIsVisibleInEditor(false);
             propertyListButton_.setVisible(false);
-            foreach (Processor* processor, getProcessors()){
+            for (Processor* processor : getProcessors()) {
                 if(!processor->getPropertiesByType<CameraProperty>().empty()){
                     propertyListButton_.setVisible(true);
                     setFlag(ItemIsSelectable);
@@ -401,8 +401,8 @@ void PortOwnerGraphicsItem::layoutChildItems() {
             propertyList_.setVisible(false);
             propertyList_.setIsVisibleInEditor(false);
             propertyListButton_.setVisible(false);
-            foreach (Processor* processor, getProcessors()){
-                foreach(Port* port, processor->getPorts()) {
+            for (Processor* processor : getProcessors()) {
+                for (Port* port : processor->getPorts()) {
                     if(!port->getPropertiesByType<RenderSizeOriginProperty>().empty() ||
                        !port->getPropertiesByType<RenderSizeReceiveProperty>().empty()){
                         setFlag(ItemIsSelectable);
@@ -445,7 +445,7 @@ void PortOwnerGraphicsItem::layoutChildItems() {
             propertyList_.setVisible(false);
             propertyList_.setIsVisibleInEditor(false);
             propertyListButton_.setVisible(false);
-            foreach (Processor* processor, getProcessors()){
+            for (Processor* processor : getProcessors()) {
                 if(!processor->getPropertiesByType<CameraProperty>().empty()){
                     propertyListButton_.setVisible(true);
                     break;

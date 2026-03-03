@@ -134,23 +134,24 @@ void DoubleSlider::paintEvent(QPaintEvent* event) {
 }
 
 void DoubleSlider::mousePressEvent(QMouseEvent* e) {
+    const QPoint eventPos = e->position().toPoint();
     e->accept();
-    globalMousePos_ = e->globalPos();
+    globalMousePos_ = e->globalPosition().toPoint();
     //calculate which marker is nearest to mouse position
     int leftTopMarker, rightBottomMarker;
     if(vertical_) {
-        normalizedMousePos_ = static_cast<float>(e->pos().y()-leftTopOffset_) / static_cast<float>(height()-leftTopOffset_-rightBottomOffset_);
+        normalizedMousePos_ = static_cast<float>(eventPos.y()-leftTopOffset_) / static_cast<float>(height()-leftTopOffset_-rightBottomOffset_);
         leftTopMarker =  tgt::iround(minValue_ * (height()-leftTopOffset_-rightBottomOffset_) + leftTopOffset_);
         rightBottomMarker = tgt::iround(maxValue_ * (height()-leftTopOffset_-rightBottomOffset_) + leftTopOffset_);
     } else {
-        normalizedMousePos_ = static_cast<float>(e->pos().x()-leftTopOffset_) / static_cast<float>(width()-leftTopOffset_-rightBottomOffset_);
+        normalizedMousePos_ = static_cast<float>(eventPos.x()-leftTopOffset_) / static_cast<float>(width()-leftTopOffset_-rightBottomOffset_);
         leftTopMarker =  tgt::iround(minValue_ * (width()-leftTopOffset_-rightBottomOffset_) + leftTopOffset_);
         rightBottomMarker = tgt::iround(maxValue_ * (width()-leftTopOffset_-rightBottomOffset_) + leftTopOffset_);
     }
 
     mV1_ = minValue_; mV2_ = maxValue_;
     if (e->button() == Qt::LeftButton) {
-        int pos = (vertical_ ? e->pos().y() : e->pos().x());
+        int pos = (vertical_ ? eventPos.y() : eventPos.x());
         if (pos < (leftTopMarker + sliderWidthHeight_)) {
             leftTopSliderActive_ = true;
             rightBottomSliderActive_ = false;
@@ -173,13 +174,14 @@ void DoubleSlider::mousePressEvent(QMouseEvent* e) {
 }
 
 void DoubleSlider::mouseMoveEvent(QMouseEvent* e){
+    const QPoint eventPos = e->position().toPoint();
     e->accept();
-    globalMousePos_ = e->globalPos();
+    globalMousePos_ = e->globalPosition().toPoint();
     float normalizedMousePosTmp;
     if(vertical_)
-        normalizedMousePosTmp = static_cast<float>((e->pos()).y()-leftTopOffset_) / static_cast<float>(height()-leftTopOffset_-rightBottomOffset_);
+        normalizedMousePosTmp = static_cast<float>(eventPos.y()-leftTopOffset_) / static_cast<float>(height()-leftTopOffset_-rightBottomOffset_);
     else
-        normalizedMousePosTmp = static_cast<float>((e->pos()).x()-leftTopOffset_) / static_cast<float>(width()-leftTopOffset_-rightBottomOffset_);
+        normalizedMousePosTmp = static_cast<float>(eventPos.x()-leftTopOffset_) / static_cast<float>(width()-leftTopOffset_-rightBottomOffset_);
 
     if (normalizedMousePosTmp > 1.f)
         normalizedMousePosTmp = 1.f;

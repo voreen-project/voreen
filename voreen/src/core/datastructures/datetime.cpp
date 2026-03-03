@@ -86,30 +86,29 @@ std::ostream& operator<<(std::ostream& os, const DateTime& dateTime) {
 }
 
 std::string DateTime::toString(bool withMillis) const {
-    char* charString = new char[30];
+    char charString[30] = {0};
     if (type_ == DATETIME) {
         if (withMillis)
-            sprintf(charString, "%04d-%02d-%02d %02d:%02d:%02d,%03d",
+            std::snprintf(charString, sizeof(charString), "%04d-%02d-%02d %02d:%02d:%02d,%03d",
                 getYear(), getMonth(), getDay(), getHour(), getMinute(), getSecond(), getMillisecond());
         else
-            sprintf(charString, "%04d-%02d-%02d %02d:%02d:%02d",
+            std::snprintf(charString, sizeof(charString), "%04d-%02d-%02d %02d:%02d:%02d",
                 getYear(), getMonth(), getDay(), getHour(), getMinute(), getSecond());
     }
     else if (type_ == DATE) {
-        sprintf(charString, "%04d-%02d-%02d", getYear(), getMonth(), getDay());
+        std::snprintf(charString, sizeof(charString), "%04d-%02d-%02d", getYear(), getMonth(), getDay());
     }
     else if (type_ == TIME) {
         if (withMillis)
-            sprintf(charString, "%02d:%02d:%02d,%03d", getHour(), getMinute(), getSecond(), getMillisecond());
+            std::snprintf(charString, sizeof(charString), "%02d:%02d:%02d,%03d", getHour(), getMinute(), getSecond(), getMillisecond());
         else
-            sprintf(charString, "%02d:%02d:%02d", getHour(), getMinute(), getSecond());
+            std::snprintf(charString, sizeof(charString), "%02d:%02d:%02d", getHour(), getMinute(), getSecond());
     }
     else {
         LERRORC("voreen.DateTime", "invalid type");
     }
 
     std::string result(charString);
-    delete[] charString;
     return result;
 }
 

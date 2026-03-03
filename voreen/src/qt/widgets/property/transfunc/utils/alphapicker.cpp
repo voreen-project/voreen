@@ -109,11 +109,11 @@ void AlphaPicker::updateAllMembers(int h, int s , int v, int a) {
 //-------------------------------------------------------------------------------
 void AlphaPicker::mousePressEvent(QMouseEvent* event) {
     emit toggleInteractionModeSignal(true);
-    updateAlpha(yPositionToAlpha(event->y()));
+    updateAlpha(yPositionToAlpha(static_cast<int>(event->position().y())));
 }
 
 void AlphaPicker::mouseMoveEvent(QMouseEvent* event) {
-    updateAlpha(yPositionToAlpha(event->y()));
+    updateAlpha(yPositionToAlpha(static_cast<int>(event->position().y())));
 }
 
 void AlphaPicker::mouseReleaseEvent(QMouseEvent* event) {

@@ -96,8 +96,8 @@ void NetworkModeConfigDialog::resetSettings() {
         nwe_->resetAllProperties();
         //HACK: forces items to repaint
         QApplication::processEvents();
-        QApplication::setActiveWindow(nwe_);
-        QApplication::setActiveWindow(this);
+        nwe_->activateWindow();
+        this->activateWindow();
     }
 }
 

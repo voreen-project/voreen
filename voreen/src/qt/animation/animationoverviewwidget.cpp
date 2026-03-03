@@ -90,12 +90,13 @@ void AnimationOverviewView::setDuration(int duration) {
 }
 
 void AnimationOverviewView::contextMenuEvent(QContextMenuEvent* e) {
-    if (KeyframeGraphicsItem* key = dynamic_cast<KeyframeGraphicsItem*>(scene_->itemAt(mapToScene(e->pos()).x(), mapToScene(e->pos()).y(), QTransform())))
-        emit keyframeContextMenuRequest(key, e->pos());
-    else if (scene_->itemAt(mapToScene(e->pos()).x(), mapToScene(e->pos()).y(), QTransform()) == highlightBar_)
+    const QPoint eventPos = e->pos();
+    if (KeyframeGraphicsItem* key = dynamic_cast<KeyframeGraphicsItem*>(scene_->itemAt(mapToScene(eventPos).x(), mapToScene(eventPos).y(), QTransform())))
+        emit keyframeContextMenuRequest(key, eventPos);
+    else if (scene_->itemAt(mapToScene(eventPos).x(), mapToScene(eventPos).y(), QTransform()) == highlightBar_)
         return;
     else
-        emit contextMenuRequest(e->pos());
+        emit contextMenuRequest(eventPos);
 }
 
 void AnimationOverviewView::setCurrentFrame(int frame) {
@@ -104,23 +105,24 @@ void AnimationOverviewView::setCurrentFrame(int frame) {
 }
 
 void AnimationOverviewView::mousePressEvent(QMouseEvent* e) {
+    const QPoint eventPos = e->position().toPoint();
 
-    if (scene_->itemAt(mapToScene(e->pos()).x(), mapToScene(e->pos()).y(), QTransform())
-        && (scene_->itemAt(mapToScene(e->pos()).x(), mapToScene(e->pos()).y(), QTransform())->boundingRect() == highlightBar_->boundingRect()
-            || scene_->itemAt(mapToScene(e->pos()).x(), mapToScene(e->pos()).y(), QTransform())->boundingRect() == currentFrameGraphicsItem_->boundingRect())
+    if (scene_->itemAt(mapToScene(eventPos).x(), mapToScene(eventPos).y(), QTransform())
+        && (scene_->itemAt(mapToScene(eventPos).x(), mapToScene(eventPos).y(), QTransform())->boundingRect() == highlightBar_->boundingRect()
+            || scene_->itemAt(mapToScene(eventPos).x(), mapToScene(eventPos).y(), QTransform())->boundingRect() == currentFrameGraphicsItem_->boundingRect())
         && e->button() == Qt::LeftButton) {
         QScrollBar* scroll = horizontalScrollBar();
-        if (e->x()+ scroll->value() >= 0 && e->x()+ scroll->value() <= duration_) {
-            currentFrameGraphicsItem_->setPos(e->x() + scroll->value(), 0);
+        if (eventPos.x()+ scroll->value() >= 0 && eventPos.x()+ scroll->value() <= duration_) {
+            currentFrameGraphicsItem_->setPos(eventPos.x() + scroll->value(), 0);
             slide_ = true;
-            emit currentFrameChanged(e->x() + scroll->value());
+            emit currentFrameChanged(eventPos.x() + scroll->value());
         }
     }
-    else if((e->button() == Qt::LeftButton) /*&& !scene_->itemAt(mapToScene(e->pos()).x(), mapToScene(e->pos()).y())*/) {
+    else if((e->button() == Qt::LeftButton) /*&& !scene_->itemAt(mapToScene(eventPos).x(), mapToScene(eventPos).y())*/) {
 
         if(!(e->modifiers() & Qt::CTRL))
             //interval selected
-            emit intervalSelectedAt(mapToScene(e->pos()));
+            emit intervalSelectedAt(mapToScene(eventPos));
         else {
             clearSelection();
             emit clearSelection();
@@ -130,17 +132,18 @@ void AnimationOverviewView::mousePressEvent(QMouseEvent* e) {
 }
 
 void AnimationOverviewView::mouseMoveEvent(QMouseEvent* e) {
+    const QPoint eventPos = e->position().toPoint();
     QScrollBar* scroll = horizontalScrollBar();
 
-    if (slide_ && e->x()+ scroll->value() >= 0 && e->x() + scroll->value() <= duration_) {
-        currentFrameGraphicsItem_->setPos(e->x() + scroll->value(), 0);
-        emit currentFrameChanged(e->x() + scroll->value());
+    if (slide_ && eventPos.x()+ scroll->value() >= 0 && eventPos.x() + scroll->value() <= duration_) {
+        currentFrameGraphicsItem_->setPos(eventPos.x() + scroll->value(), 0);
+        emit currentFrameChanged(eventPos.x() + scroll->value());
     }
-    else if (slide_ && e->x()+ scroll->value() > duration_) {
+    else if (slide_ && eventPos.x()+ scroll->value() > duration_) {
         currentFrameGraphicsItem_->setPos(duration_, 0);
         emit currentFrameChanged(static_cast<int>(duration_));
     }
-    else if (slide_ && e->x()+ scroll->value() < 0) {
+    else if (slide_ && eventPos.x()+ scroll->value() < 0) {
         currentFrameGraphicsItem_->setPos(0, 0);
         emit currentFrameChanged(0);
     }

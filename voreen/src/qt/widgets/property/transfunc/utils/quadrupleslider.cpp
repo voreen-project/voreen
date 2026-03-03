@@ -160,10 +160,11 @@ void QuadrupleSlider::paintEvent(QPaintEvent* event) {
 }
 
 void QuadrupleSlider::mousePressEvent(QMouseEvent* e) {
+    const QPoint eventPos = e->position().toPoint();
     e->accept();
-    globalMousePos_ = e->globalPos();
+    globalMousePos_ = e->globalPosition().toPoint();
     //calculate which marker is nearest to mouse position
-    normalizedMousePos_ = static_cast<float>(e->pos().x()-leftOffset_) / static_cast<float>(width()-leftOffset_-rightOffset_);
+    normalizedMousePos_ = static_cast<float>(eventPos.x()-leftOffset_) / static_cast<float>(width()-leftOffset_-rightOffset_);
     int leftMainMarker =  tgt::iround(minValueMain_ * (width()-leftOffset_-rightOffset_) + leftOffset_);
     int rightMainMarker = tgt::iround(maxValueMain_ * (width()-leftOffset_-rightOffset_) + leftOffset_);
     int leftExtraMarker =  tgt::iround(minValueExtra_ * (width()-leftOffset_-rightOffset_) + leftOffset_);
@@ -173,33 +174,33 @@ void QuadrupleSlider::mousePressEvent(QMouseEvent* e) {
     mV2_ = maxValueMain_;
 
     if (e->button() == Qt::LeftButton) {
-        if( useExtraSlider_ && ( (sliderExtraWidth_)*(e->pos().y()-(0.4f*height())) - (0.2f*height())*(e->pos().x() - leftExtraMarker) >= 0 ) &&
-          (e->pos().x() <= (leftExtraMarker + sliderExtraWidth_)) && (e->pos().x() >= leftExtraMarker) && (e->pos().y() <= height())) {
+        if( useExtraSlider_ && ( (sliderExtraWidth_)*(eventPos.y()-(0.4f*height())) - (0.2f*height())*(eventPos.x() - leftExtraMarker) >= 0 ) &&
+          (eventPos.x() <= (leftExtraMarker + sliderExtraWidth_)) && (eventPos.x() >= leftExtraMarker) && (eventPos.y() <= height())) {
             leftMainSliderActive_ = false;
             rightMainSliderActive_ = false;
             leftExtraSliderActive_ = true;
             rightExtraSliderActive_ = false;
         }
-        else if( useExtraSlider_ && ( (sliderExtraWidth_)*(e->pos().y()-(0.6f*height())) - (-0.2f*height())*(e->pos().x() - (rightExtraMarker - sliderExtraWidth_)) >= 0 ) &&
-          (e->pos().x() <= rightExtraMarker) && (e->pos().x() >= (rightExtraMarker -  + sliderExtraWidth_)) && (e->pos().y() <= height())) {
+        else if( useExtraSlider_ && ( (sliderExtraWidth_)*(eventPos.y()-(0.6f*height())) - (-0.2f*height())*(eventPos.x() - (rightExtraMarker - sliderExtraWidth_)) >= 0 ) &&
+          (eventPos.x() <= rightExtraMarker) && (eventPos.x() >= (rightExtraMarker -  + sliderExtraWidth_)) && (eventPos.y() <= height())) {
             leftMainSliderActive_ = false;
             rightMainSliderActive_ = false;
             leftExtraSliderActive_ = false;
             rightExtraSliderActive_ = true;
         }
-        else if (e->pos().x() < (leftMainMarker + sliderMainWidth_)) {
+        else if (eventPos.x() < (leftMainMarker + sliderMainWidth_)) {
             leftMainSliderActive_ = true;
             rightMainSliderActive_ = false;
             leftExtraSliderActive_ = false;
             rightExtraSliderActive_ = false;
         }
-        else if(e->pos().x() > (rightMainMarker - sliderMainWidth_)) {
+        else if(eventPos.x() > (rightMainMarker - sliderMainWidth_)) {
             leftMainSliderActive_ = false;
             rightMainSliderActive_ = true;
             leftExtraSliderActive_ = false;
             rightExtraSliderActive_ = false;
         }
-        else if((leftMainMarker < e->pos().x()) && (rightMainMarker > e->pos().x())){
+        else if((leftMainMarker < eventPos.x()) && (rightMainMarker > eventPos.x())){
             leftMainSliderActive_ = true;
             rightMainSliderActive_ = true;
             leftExtraSliderActive_ = false;
@@ -216,9 +217,10 @@ void QuadrupleSlider::mousePressEvent(QMouseEvent* e) {
 }
 
 void QuadrupleSlider::mouseMoveEvent(QMouseEvent* e){
+    const QPoint eventPos = e->position().toPoint();
     e->accept();
-    globalMousePos_ = e->globalPos();
-    float normalizedMousePosTmp = static_cast<float>((e->pos()).x()-leftOffset_) / static_cast<float>(width()-leftOffset_-rightOffset_);
+    globalMousePos_ = e->globalPosition().toPoint();
+    float normalizedMousePosTmp = static_cast<float>(eventPos.x()-leftOffset_) / static_cast<float>(width()-leftOffset_-rightOffset_);
     if (normalizedMousePosTmp > 1.f)
         normalizedMousePosTmp = 1.f;
     else if (normalizedMousePosTmp < 0.f)

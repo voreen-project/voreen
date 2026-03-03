@@ -144,7 +144,7 @@ ConsolePlugin::ConsolePlugin(QWidget* parent, tgt::LogLevel logLevel, bool autoS
 
     clearText_ = new QAction("Erase All", consoleText_);
     connect(clearText_, SIGNAL(triggered()), consoleText_, SLOT(clear()));
-    clearText_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+    clearText_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
     ctrlButtonDown_ = false;
 
     disableAction_ = new QAction("Disable", this);

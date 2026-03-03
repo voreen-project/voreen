@@ -74,18 +74,18 @@ std::string itos(long unsigned int i, int stringLength /*= -1*/, char fillChar /
 std::string ftos(float f, int precision /* =-1*/) {
     char buffer[50];
     if (precision > -1)
-        sprintf(buffer, "%.*f", precision, f);
+        std::snprintf(buffer, sizeof(buffer), "%.*f", precision, f);
     else
-        sprintf(buffer, "%f", f);
+        std::snprintf(buffer, sizeof(buffer), "%f", f);
     return std::string(buffer);
 }
 
 std::string dtos(double d, int precision /* = -1*/) {
     char buffer[50];
     if (precision > -1)
-        sprintf(buffer, "%.*f", precision, d);
+        std::snprintf(buffer, sizeof(buffer), "%.*f", precision, d);
     else
-        sprintf(buffer, "%f", d);
+        std::snprintf(buffer, sizeof(buffer), "%f", d);
     return std::string(buffer);
 }
 

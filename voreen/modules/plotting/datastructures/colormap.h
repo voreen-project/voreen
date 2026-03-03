@@ -49,8 +49,14 @@ public:
      * Interpolates between the held colors of a given ColorMap in n steps (color map and n given
      * at iterator instantiation).
      **/
-    class InterpolationIterator : public std::iterator<std::forward_iterator_tag, tgt::Color> {
+    class InterpolationIterator {
     public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = tgt::Color;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const value_type*;
+        using reference = value_type;
+
         /// constructor
         InterpolationIterator(const ColorMap* map, int currentIndex, int maximum_)
         : map_(map)
@@ -90,8 +96,14 @@ public:
     /**
      * Creates an infinite sequence of colors generated out of the colors in the given ColorMap.
      **/
-    class GeneratingIterator : public std::iterator<std::forward_iterator_tag, tgt::Color> {
+    class GeneratingIterator {
         public:
+            using iterator_category = std::forward_iterator_tag;
+            using value_type = tgt::Color;
+            using difference_type = std::ptrdiff_t;
+            using pointer = const value_type*;
+            using reference = value_type;
+
             /// constructor
             GeneratingIterator(const ColorMap* map, int currentIndex)
             : map_(map)
@@ -218,4 +230,3 @@ private:
 } // namespace voreen
 
 #endif // VRN_COLORMAP_H
-

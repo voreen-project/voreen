@@ -23,7 +23,7 @@
  *                                                                                 *
  ***********************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "voreen/core/utils/hashing.h"
 #include "md5/md5.h"
@@ -37,13 +37,13 @@ std::string VoreenHash::getHash(const void* data, size_t size) {
     unsigned char result[16];
     MD5_Final(result, &ctx);
 
-    unsigned char output[2 * 16 + 1];
+    char output[2 * 16 + 1];
     for (int i=0; i<16; i++) {
-        sprintf((char *) output + (2 * i), "%02x", result[i]);
+        std::snprintf(output + (2 * i), 3, "%02x", result[i]);
     }
     output[2 * 16 ] = '\0';
 
-    return std::string((const char*)output);
+    return std::string(output);
 }
 
 std::string VoreenHash::getHash(const std::string& s) {

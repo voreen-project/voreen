@@ -59,8 +59,14 @@ public:
     /**
      * Iterator adapter for the held PlotSelectionEntries iterating just over entries with renderLabel flag set.
      **/
-    class LabelSelectionIterator : public std::iterator<std::bidirectional_iterator_tag, PlotSelection> {
+    class LabelSelectionIterator {
     public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = PlotSelection;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+
         /**
          * Constructor for a new LabelSelectionIterator.
          * Current position will be the first element with renderLabel flag set in \a selectionEntries

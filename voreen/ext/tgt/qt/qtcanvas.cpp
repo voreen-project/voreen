@@ -367,7 +367,8 @@ void QtCanvas::leaveEvent(QEvent* e) {
 }
 
 void QtCanvas::mousePressEvent(QMouseEvent* e) {
-    tgt::MouseEvent* prEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::PRESSED,
+    const QPoint eventPos = e->position().toPoint();
+    tgt::MouseEvent* prEv = new tgt::MouseEvent(eventPos.x(), eventPos.y(), tgt::MouseEvent::PRESSED,
         getModifier(e), getButton(e), tgt::ivec2(width(), height()));
     broadcastEvent(prEv);
     QWidget::mousePressEvent(e);
@@ -375,7 +376,8 @@ void QtCanvas::mousePressEvent(QMouseEvent* e) {
 
 // See mousePressEvent
 void QtCanvas::mouseReleaseEvent (QMouseEvent* e) {
-    tgt::MouseEvent* relEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::RELEASED,
+    const QPoint eventPos = e->position().toPoint();
+    tgt::MouseEvent* relEv = new tgt::MouseEvent(eventPos.x(), eventPos.y(), tgt::MouseEvent::RELEASED,
         getModifier(e), getButton(e), tgt::ivec2(width(), height()));
     broadcastEvent(relEv);
     QWidget::mouseReleaseEvent(e);
@@ -383,7 +385,8 @@ void QtCanvas::mouseReleaseEvent (QMouseEvent* e) {
 
 // See mousePressEvent
 void QtCanvas::mouseMoveEvent(QMouseEvent*  e) {
-    tgt::MouseEvent* movEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::MOTION,
+    const QPoint eventPos = e->position().toPoint();
+    tgt::MouseEvent* movEv = new tgt::MouseEvent(eventPos.x(), eventPos.y(), tgt::MouseEvent::MOTION,
         getModifier(e), getButtons(e), tgt::ivec2(width(), height())); // FIXME: submit information which mouse buttons are pressed
     broadcastEvent(movEv);
     QWidget::mouseMoveEvent(e);
@@ -391,7 +394,8 @@ void QtCanvas::mouseMoveEvent(QMouseEvent*  e) {
 
 // See mousePressEvent
 void QtCanvas::mouseDoubleClickEvent(QMouseEvent* e) {
-    tgt::MouseEvent* dcEv = new tgt::MouseEvent(e->x(), e->y(), tgt::MouseEvent::DOUBLECLICK,
+    const QPoint eventPos = e->position().toPoint();
+    tgt::MouseEvent* dcEv = new tgt::MouseEvent(eventPos.x(), eventPos.y(), tgt::MouseEvent::DOUBLECLICK,
                                                 getModifier(e), getButton(e), tgt::ivec2(width(), height()));
     broadcastEvent(dcEv);
     QWidget::mouseDoubleClickEvent(e);
@@ -440,7 +444,7 @@ bool QtCanvas::event(QEvent *event) {
     case QEvent::TouchEnd:
     {
         QTouchEvent* touchEvent = static_cast<QTouchEvent*>(event);
-        QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+        QList<QEventPoint> touchPoints = touchEvent->points();
         event->accept();
 
         tgt::TouchEvent::DeviceType deviceType = tgt::TouchEvent::TouchScreen;
@@ -449,9 +453,9 @@ bool QtCanvas::event(QEvent *event) {
         std::deque<tgt::TouchPoint> tps;
         int states = 0;
 
-        foreach(const QTouchEvent::TouchPoint &p, touchPoints) {
+        foreach(const QEventPoint &p, touchPoints) {
             int id = p.id();
-            tgt::vec2 pos(p.pos().x(), p.pos().y());
+            tgt::vec2 pos(p.position().x(), p.position().y());
             int state = p.state();
             //bool primary = p.isPrimary();
 

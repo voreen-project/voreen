@@ -434,7 +434,7 @@ void RenderTargetViewer::mousePressEvent(QMouseEvent* e) {
         saveScreenshotACT_->setVisible(maximizeOnePort_);
         saveScreenshotWithOverlayACT_->setVisible(maximizeOnePort_);
 
-        QAction* currentAction = contextMenuMEN_->exec(e->globalPos());
+        QAction* currentAction = contextMenuMEN_->exec(e->globalPosition().toPoint());
         if (currentAction == saveScreenshotACT_)
             takeScreenshot(false);
         else if (currentAction == saveScreenshotWithOverlayACT_)
