@@ -37,6 +37,7 @@
 
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QFrame>
 #include <QToolButton>
 #include <QLabel>
 
@@ -292,10 +293,10 @@ void PropertyListWidget::createCommonWidgets() {
         if (currentLevelOfDetailWidget) {
             currentLevelOfDetail_.addWidget(currentLevelOfDetailWidget);
 
-            QWidget* lodWidget = new QWidget();
-            lodWidget->setObjectName("PLW_LODWIDGET");
-            lodWidget->setStyleSheet("QWidget#PLW_LODWIDGET {background-color:white; border: 1px solid black }");
-            QGridLayout* gridLayout = new QGridLayout();
+            QFrame* lodWidget = new QFrame();
+            lodWidget->setFrameShape(QFrame::StyledPanel);
+            lodWidget->setFrameShadow(QFrame::Plain);
+            QGridLayout* gridLayout = new QGridLayout(lodWidget);
             gridLayout->setContentsMargins(4, 4, 4, 4); // 4 4 4 4
             gridLayout->setSpacing(2);
             gridLayout->setColumnStretch(0, 1);
@@ -304,7 +305,6 @@ void PropertyListWidget::createCommonWidgets() {
             gridLayout->addWidget(dynamic_cast<QPropertyWidget*>(currentLevelOfDetailWidget)->getOrCreateNameLabel(), 0, 0, 1, 1);
             gridLayout->addWidget(dynamic_cast<QPropertyWidget*>(currentLevelOfDetailWidget), 0, 1, 1, 1);
 
-            lodWidget->setLayout(gridLayout);
             networkModeContainerLayout_->addWidget(lodWidget);
         }
 
