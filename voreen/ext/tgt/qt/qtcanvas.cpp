@@ -84,7 +84,15 @@ public:
         QResizeEvent event(size(), size());
         resizeEvent(&event); // Enforces OpenGL initialization.
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        // With Qt 6, NoPartialUpdate invalidates the internal QOpenGLWidget FBO
+        // via discardFramebuffer() before and after paintGL(). On some drivers this
+        // emits spurious attachment-related GL warnings. Voreen repaints the full
+        // canvas every frame, so preserving the FBO contents between frames is fine.
+        setUpdateBehavior(PartialUpdate);
+#else
         setUpdateBehavior(NoPartialUpdate);
+#endif
         setMouseTracking(true);
         initialized_ = true;
     }
