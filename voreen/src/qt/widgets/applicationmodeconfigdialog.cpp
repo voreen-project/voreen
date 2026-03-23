@@ -179,7 +179,8 @@ QWidget* ApplicationModeConfigDialog::layoutMainCanvas() {
     // internal widget
     mainCanvasRendererCB_ = new QComboBox(this);
     groupLayout->addWidget(mainCanvasRendererCB_);
-    connect(mainCanvasRendererCB_,SIGNAL(currentIndexChanged(QString)),this,SLOT(handleMainCanvasChange(QString)));
+    connect(mainCanvasRendererCB_, &QComboBox::currentTextChanged,
+            this, &ApplicationModeConfigDialog::handleMainCanvasChange);
     return mainCanvasGroupBox;
 }
 
@@ -751,7 +752,13 @@ void ApplicationModeConfigDialog::updateTreeHeaders() {
 MenuEntityVisibilityBox::MenuEntityVisibilityBox(std::string name)
     : menuEntityName_(name)
 {
-    connect(this,SIGNAL(stateChanged(int)),this,SLOT(handleStateChanged(int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(this, &QCheckBox::checkStateChanged, this,
+            [this](Qt::CheckState state) { handleStateChanged(static_cast<int>(state)); });
+#else
+    connect(this, &QCheckBox::stateChanged,
+            this, &MenuEntityVisibilityBox::handleStateChanged);
+#endif
 }
 
 void MenuEntityVisibilityBox::handleStateChanged(int checkState) {

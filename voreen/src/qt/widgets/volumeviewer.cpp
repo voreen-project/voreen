@@ -140,8 +140,13 @@ VolumeViewer::VolumeViewer(QWidget* parent)
 
     connect(updateButton_, SIGNAL(clicked()),
         this, SLOT(updateFromNetwork()));
-    connect(autoUpdateCheckbox_, SIGNAL(stateChanged(int)),
-        this, SLOT(updateStateChanged(int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(autoUpdateCheckbox_, &QCheckBox::checkStateChanged, this,
+        [this](Qt::CheckState state) { updateStateChanged(static_cast<int>(state)); });
+#else
+    connect(autoUpdateCheckbox_, &QCheckBox::stateChanged,
+        this, &VolumeViewer::updateStateChanged);
+#endif
 
     connect(volumeInfos_, SIGNAL(exportVolumes()),
         this, SLOT(exportVolumes()));

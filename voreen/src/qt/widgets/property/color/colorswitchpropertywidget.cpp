@@ -62,7 +62,13 @@ ColorSwitchPropertyWidget::ColorSwitchPropertyWidget(ColorSwitchProperty* prop, 
     connect(activeColorLabel_, SIGNAL(colorChangedSignal(QColor)), this, SLOT(changeActiveColor(QColor)));
 
     connect(inactiveColorLabel_, SIGNAL(colorChangedSignal(QColor)), this, SLOT(changeInactiveColor(QColor)));
-    connect(useActiveColor_, SIGNAL(stateChanged(int)), this, SLOT(useActiveColorClicked(int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(useActiveColor_, &QCheckBox::checkStateChanged, this,
+            [this](Qt::CheckState state) { useActiveColorClicked(static_cast<int>(state)); });
+#else
+    connect(useActiveColor_, &QCheckBox::stateChanged,
+            this, &ColorSwitchPropertyWidget::useActiveColorClicked);
+#endif
     setMinimumHeight(18);
 }
 

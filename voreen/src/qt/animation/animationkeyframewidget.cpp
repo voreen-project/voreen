@@ -243,7 +243,8 @@ void AnimationKeyframeWidget::clear() {
     timelineWidgets_.clear();
 
     // remove header widget so that it is not destroyed
-    mainLayout_->removeWidget(headerWidget_);
+    if (headerWidget_)
+        mainLayout_->removeWidget(headerWidget_);
 
     // remove and delete everything still present on the layout
     removeWidgetsFromLayout(mainLayout_);
@@ -275,7 +276,7 @@ void AnimationKeyframeWidget::addPropertyTimeline(PropertyTimeline* prop) {
     //if this is the first property timeline: create header, but don't add it to the layout, else: remove from layout
     if (!headerWidget_ && !headerLayout_)
         createHeader();
-    else
+    else if (headerWidget_)
         mainLayout_->removeWidget(headerWidget_);
 
     //remove all group boxes from layout

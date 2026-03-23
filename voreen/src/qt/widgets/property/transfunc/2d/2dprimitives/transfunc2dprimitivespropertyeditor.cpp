@@ -149,7 +149,13 @@ QWidget* TransFunc2DPrimitivesPropertyEditor::layoutLeftComponents() {
         //toggle options
     computeHistogram_ = new QCheckBox("Auto-compute Histogram");
     computeHistogram_->setChecked(true);
-    connect(computeHistogram_, SIGNAL(stateChanged(int)),this,SLOT(computeHistogramToggled(int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(computeHistogram_, &QCheckBox::checkStateChanged, this,
+            [this](Qt::CheckState state) { computeHistogramToggled(static_cast<int>(state)); });
+#else
+    connect(computeHistogram_, &QCheckBox::stateChanged,
+            this, &TransFunc2DPrimitivesPropertyEditor::computeHistogramToggled);
+#endif
 
     showHistogramCB_ = new QCheckBox("Show Histogram");
     showHistogramCB_->setChecked(true);
@@ -159,9 +165,21 @@ QWidget* TransFunc2DPrimitivesPropertyEditor::layoutLeftComponents() {
     histogramBrightnessSlider_->setValue(20);
     showTextureCB_ = new QCheckBox("Show Background");
     showTextureCB_->setChecked(true);
-    connect(showHistogramCB_, SIGNAL(stateChanged(int)),this,SLOT(showHistogramToggled(int)));
+ #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(showHistogramCB_, &QCheckBox::checkStateChanged, this,
+            [this](Qt::CheckState state) { showHistogramToggled(static_cast<int>(state)); });
+#else
+    connect(showHistogramCB_, &QCheckBox::stateChanged,
+            this, &TransFunc2DPrimitivesPropertyEditor::showHistogramToggled);
+#endif
     connect(histogramBrightnessSlider_,SIGNAL(sliderMoved(int)),mappingCanvas_,SLOT(setHistogramBrightness(int)));
-    connect(showTextureCB_, SIGNAL(stateChanged(int)),this,SLOT(showTextureToggled(int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    connect(showTextureCB_, &QCheckBox::checkStateChanged, this,
+            [this](Qt::CheckState state) { showTextureToggled(static_cast<int>(state)); });
+#else
+    connect(showTextureCB_, &QCheckBox::stateChanged,
+            this, &TransFunc2DPrimitivesPropertyEditor::showTextureToggled);
+#endif
     QVBoxLayout* checkBoxLayout = new QVBoxLayout();
     checkBoxLayout->setAlignment(Qt::AlignCenter);
     checkBoxLayout->addWidget(computeHistogram_);

@@ -33,6 +33,9 @@ VoreenVeStartupWizard::VoreenVeStartupWizard(QStringList recentWorkspaceNames, Q
         // yet.
         windowsLayout_->addWidget(getLogoLabel());
 
+        adjustSize();
+        resize(sizeHint());
+
 }
 
 QLabel* VoreenVeStartupWizard::getLogoLabel(){

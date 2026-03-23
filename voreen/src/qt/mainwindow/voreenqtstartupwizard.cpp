@@ -118,6 +118,7 @@ VoreenStartupWizard::VoreenStartupWizard( QStringList recentWorkspaceNames, QStr
     buttonLayout_->addStretch();
     //buttonLayout_->addWidget(newWorkspaceButton_, 0, Qt::AlignRight);
     buttonLayout_->addWidget(openButton_, 0, Qt::AlignRight);
+
 }
 VoreenStartupWizard::~VoreenStartupWizard(){
     recentWorkspaces_->reset();

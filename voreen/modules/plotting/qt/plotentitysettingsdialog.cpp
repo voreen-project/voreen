@@ -156,8 +156,17 @@ void PlotEntitySettingsDialog::createWidgets() {
             connect(cbOptionalColumn_, SIGNAL(activated(int)), this, SLOT(cbOptionalColumnChanged(int)));
             connect(cbStickBottomColumn_, SIGNAL(activated(int)), this, SLOT(cbStickBottomColumnChanged(int)));
             connect(cbStyle_, SIGNAL(activated(int)), this, SLOT(cbStyleChanged(int)));
-            connect(chbSpline_, SIGNAL(stateChanged(int)), this, SLOT(chbSplineChanged()));
-            connect(chbErrorbar_, SIGNAL(stateChanged(int)), this, SLOT(chbErrorbarChanged()));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+            connect(chbSpline_, &QCheckBox::checkStateChanged, this,
+                [this](Qt::CheckState) { chbSplineChanged(); });
+            connect(chbErrorbar_, &QCheckBox::checkStateChanged, this,
+                [this](Qt::CheckState) { chbErrorbarChanged(); });
+#else
+            connect(chbSpline_, &QCheckBox::stateChanged, this,
+                [this](int) { chbSplineChanged(); });
+            connect(chbErrorbar_, &QCheckBox::stateChanged, this,
+                [this](int) { chbErrorbarChanged(); });
+#endif
             connect(cclrSecond_, SIGNAL(colorChangedSignal(QColor)), this, SLOT(secondColorChanged(QColor)));
             connect(cclrThird_, SIGNAL(colorChangedSignal(QColor)), this, SLOT(firstColorChanged(QColor)));
             connect(cclrFourth_, SIGNAL(colorChangedSignal(QColor)), this, SLOT(secondColorChanged(QColor)));
@@ -215,8 +224,17 @@ void PlotEntitySettingsDialog::createWidgets() {
             //create connection
             connect(cbColorMap_, SIGNAL(activated(int)), this, SLOT(cbColorMapChanged(int)));
             connect(cclrSecond_, SIGNAL(colorChangedSignal(QColor)), this, SLOT(secondColorChanged(QColor)));
-            connect(chbWireOnly_, SIGNAL(stateChanged(int)), this, SLOT(chbWireOnlyChanged()));
-            connect(chbHeightMap_, SIGNAL(stateChanged(int)), this, SLOT(chbHeightMapChanged()));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+            connect(chbWireOnly_, &QCheckBox::checkStateChanged, this,
+                [this](Qt::CheckState) { chbWireOnlyChanged(); });
+            connect(chbHeightMap_, &QCheckBox::checkStateChanged, this,
+                [this](Qt::CheckState) { chbHeightMapChanged(); });
+#else
+            connect(chbWireOnly_, &QCheckBox::stateChanged, this,
+                [this](int) { chbWireOnlyChanged(); });
+            connect(chbHeightMap_, &QCheckBox::stateChanged, this,
+                [this](int) { chbHeightMapChanged(); });
+#endif
             connect(cbOptionalColumn_, SIGNAL(activated(int)), this, SLOT(cbOptionalColumnChanged(int)));
             setLayout(gridLayout);
             break;
