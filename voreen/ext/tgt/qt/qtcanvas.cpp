@@ -69,8 +69,8 @@ protected:
  * This is basically the old QOpenGLWidget-based Qt rendering backend.
  * It has been tested successfully for some time now and is stable.
  * However, it is quite slow compared to the newer backend (see below).
- * Additionally, it does NOT support stereo rendering due to the
- * internal framebuffer being used by Qt which has only a single color attachment.
+ * It remains the most QWidget-friendly backend because Qt composites it into
+ * the widget hierarchy instead of embedding a separate native child window.
  */
 class CanvasBackendQOpenGLWidget : public CanvasBackend, public QOpenGLWidget {
 public:
@@ -159,6 +159,7 @@ public:
         , initialized_(false)
     {
         setFormat(format);
+        setFlags(flags() | Qt::FramelessWindowHint);
         create();
         QResizeEvent event(size(), size());
         resizeEvent(&event); // Enforces OpenGL initialization.
@@ -247,7 +248,10 @@ QtCanvas::QtCanvas(const std::string& title,
     GLContextStateGuard guard;
 
     // Select the backend.
-    bool useExperimentalQtOpenGLBackend = buffers & QUAD_BUFFER; // Stereo rendering requires new backend.
+    // Keep the QOpenGLWindow backend for explicit stereo requests. QOpenGLWidget
+    // gained stereo support in Qt 6.5, but the direct-window backend still offers
+    // the less abstract, more "native child window" rendering path.
+    bool useExperimentalQtOpenGLBackend = buffers & QUAD_BUFFER;
 #ifdef VRN_USE_EXPERIMENTAL_QT_OPENGL_BACKEND
     useExperimentalQtOpenGLBackend = true; // This enforces the new backend.
 #endif
