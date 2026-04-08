@@ -61,13 +61,13 @@ AppModePropertyGroupWidget::AppModePropertyGroupWidget(const std::string& groupN
     header_ = new ExpandableHeaderButton(groupName.c_str(), this, expanded_);
     connect(header_, SIGNAL(toggled(bool)), this, SLOT(updateState()));
     header_->setFrameShape(QFrame::StyledPanel);
-    header_->setBackgroundRole(QPalette::ButtonText);
+    header_->setBackgroundRole(QPalette::Button);
+    header_->setAutoFillBackground(true);
     QFont headerFont = header_->font();
     headerFont.setBold(true);
     //headerFont.setItalic(true);
     //headerFont.setPointSize(headerFont.pointSize()+1);
     header_->setFontStyle(headerFont);
-    header_->setStyleSheet("QFrame { background-color: #d7d7d7; }");
     mainLayout_->addWidget(header_);
     mainLayout_->addSpacing(-1);
 
@@ -78,7 +78,8 @@ AppModePropertyGroupWidget::AppModePropertyGroupWidget(const std::string& groupN
     propertyLayout_->setColumnStretch(0, 1);
     propertyLayout_->setColumnStretch(1, 2);
     propertyFrame_->setFrameShape(QFrame::StyledPanel);
-    propertyFrame_->setStyleSheet("QFrame { background-color: white; }");
+    propertyFrame_->setBackgroundRole(QPalette::Base);
+    propertyFrame_->setAutoFillBackground(true);
     mainLayout_->addWidget(propertyFrame_);
 
 }

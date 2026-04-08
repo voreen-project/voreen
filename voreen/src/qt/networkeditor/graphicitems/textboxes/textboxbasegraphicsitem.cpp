@@ -104,6 +104,7 @@ void TextBoxBaseGraphicsItem::copyFromMeta(TextBoxMetaData* meta) {
             contentEditor_->setFont(font);
         }
         contentEditor_->setPlainText(meta->getContent().c_str());
+        updateContentEditorTextColor();
     }
     showCaption_ = meta->getShowCaption();
     if(toggleCaptionAction_) {
@@ -151,6 +152,16 @@ const QGraphicsTextItem* TextBoxBaseGraphicsItem::getCaptionItem() const {
 
 QTextEdit* TextBoxBaseGraphicsItem::getContentEditor() const {
     return contentEditor_;
+}
+
+void TextBoxBaseGraphicsItem::updateContentEditorTextColor() {
+    if (contentEditor_) {
+        QPalette palette = contentEditor_->palette();
+        palette.setColor(QPalette::Text, fontColor_);
+        palette.setColor(QPalette::WindowText, fontColor_);
+        contentEditor_->setPalette(palette);
+        contentEditor_->setTextColor(fontColor_);
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------
@@ -202,6 +213,7 @@ void TextBoxBaseGraphicsItem::createChildItems() {
     contentEditor_->setFont(font);
     contentItem_->setWidget(contentEditor_);
     contentItem_->setOpacity(0.99999); // HACK: Workaround for Qt5 bug: QTBUG-55070
+    updateContentEditorTextColor();
 
     //update editor
     contentEditDisabled_ = false; //is switched back in next call
@@ -500,7 +512,8 @@ void TextBoxBaseGraphicsItem::switchContentEditModeSlot() {
             contentEditor_->setTextCursor(cur);
         } else {
             lastEditStyleSheet_ = contentEditor_->styleSheet();
-            contentEditor_->setStyleSheet("background-color: white");
+            contentEditor_->setStyleSheet(QString("background-color: white; color: rgb(%1, %2, %3);")
+                .arg(fontColor_.red()).arg(fontColor_.green()).arg(fontColor_.blue()));
             contentEditor_->moveCursor(QTextCursor::End);
             contentEditor_->setReadOnly(false);
             contentEditor_->viewport()->setCursor(QCursor(Qt::IBeamCursor));
@@ -508,6 +521,7 @@ void TextBoxBaseGraphicsItem::switchContentEditModeSlot() {
             //force new focus
             contentEditor_->setFocus();
         }
+        updateContentEditorTextColor();
     }
 }
 
@@ -586,6 +600,7 @@ void TextBoxBaseGraphicsItem::changeColorHelper(QAction* act, bool changeFontCol
         if(changeFontColor) {
             fontColor_ = tmpColor;
             captionItem_->setDefaultTextColor(fontColor_);
+            updateContentEditorTextColor();
         } else {
             baseColor_ = tmpColor;
         }

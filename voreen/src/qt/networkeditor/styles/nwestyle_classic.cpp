@@ -1387,7 +1387,8 @@ void NWEStyle_Classic::TextBoxGI_initializePaintSettings(TextBoxGraphicsItem* it
     //set background color
     std::stringstream sstream;
     sstream << "background-color: rgb(" << getTextBoxBaseMainColor().red() << "," << getTextBoxBaseMainColor().green() <<
-               "," << getTextBoxBaseMainColor().blue() << ")";
+               "," << getTextBoxBaseMainColor().blue() << "); color: rgb(" << item->getFontColor().red() << "," <<
+               item->getFontColor().green() << "," << item->getFontColor().blue() << ")";
     item->getContentEditor()->setStyleSheet(sstream.str().c_str());
     //restore font size
     item->getContentEditor()->setFont(font);

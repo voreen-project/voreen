@@ -74,6 +74,8 @@ public:
     const QGraphicsTextItem* getCaptionItem() const;
     /// returns the text editor
     QTextEdit* getContentEditor() const;
+    /// applies the note's font color to the content editor independently of the global palette
+    void updateContentEditorTextColor();
 
     //--------------------------------------------------------------------------------
     //      nwebasegraphicsitem functions

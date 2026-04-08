@@ -85,9 +85,9 @@ int main(int argc, char** argv) {
     vapp.getCommandLineParser()->addFlagOption("resetSettings", resetSettings, CommandLineParser::MainOption,
         "Restores window settings and default paths");
 
-    bool useStylesheet;
+    bool useStylesheet = false;
     vapp.getCommandLineParser()->addOption("useStylesheet", useStylesheet, CommandLineParser::AdditionalOption,
-        "Use VoreenVE style sheet", true, "true");
+        "Use the legacy VoreenVE style sheet", false, "false");
 
     // initialize application (also loads modules and initializes them)
     try {
