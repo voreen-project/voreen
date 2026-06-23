@@ -555,7 +555,7 @@ void prepareLattice( SuperLattice<T, DESCRIPTOR>& lattice,
 
     // Lattice initialize
     lattice.setParameter<descriptors::OMEGA>(omega);
-    lattice.setParameter<collision::LES::Smagorinsky>(0.1);
+    lattice.setParameter<collision::LES::Smagorinsky>(parameters.smagorinskyConstant_);
     lattice.initialize();
 }
 
