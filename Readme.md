@@ -17,6 +17,17 @@ Since October 2024, development has moved to github to enable contributions from
 
 For build instructions and further information, please refer to the [wiki](https://github.com/voreen-project/voreen/wiki).
 
+## Qt Version Compatibility
+
+Voreen currently supports different Qt versions depending on the branch:
+
+| Branch | Qt version |
+| ------ | ---------- |
+| `main` | Qt5 |
+| `qt6`  | Qt6 |
+
+When following wiki build instructions, make sure to choose the Qt version that matches the branch you are building.
+
 Note: This project is being continuously populated from the original [project website](http://voreen.uni-muenster.de).
 
 The documentation progress is described [here](https://github.com/voreen-project/voreen/issues/16).
